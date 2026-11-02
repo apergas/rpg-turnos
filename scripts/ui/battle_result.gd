@@ -37,9 +37,15 @@ func _ready() -> void:
 	hide()
 
 
-func show_victory(exp_gained: int, total_exp: int) -> void:
+## new_level is 0 when the hero did not level up.
+func show_victory(exp_gained: int, total_exp: int, new_level := 0, got_potion := false) -> void:
 	_title.text = "¡Victoria!"
-	_detail.text = "+%d EXP  (total: %d)" % [exp_gained, total_exp]
+	var lines := PackedStringArray(["+%d EXP  (total: %d)" % [exp_gained, total_exp]])
+	if new_level > 0:
+		lines.append("¡Nivel %d!" % new_level)
+	if got_potion:
+		lines.append("+1 %s" % Inventory.display_name(Inventory.POTION))
+	_detail.text = "\n".join(lines)
 	_open()
 
 

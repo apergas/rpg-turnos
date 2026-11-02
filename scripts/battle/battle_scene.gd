@@ -1,8 +1,9 @@
 class_name BattleScene extends Node3D
 ## One battle: builds the stage, actors, camera and UI, asks the HUD for the hero's
-## order, lets BattleEngine resolve the round and plays the events back. Call setup()
+## command, lets BattleEngine resolve the round and plays the events back. Call setup()
 ## before adding it to the tree; it emits finished(won) when the player continues.
-## With `-- --autoplay` it picks "Atacar" by itself and continues on its own.
+## With `-- --autoplay` it picks commands by itself (_autoplay_command), prints every
+## battle message and continues on its own.
 
 signal finished(won: bool)
 
@@ -16,14 +17,21 @@ const CAMERA_POS := Vector3(0.8, 2.6, 6.0)
 const CAMERA_FOV := 50.0
 ## How far the camera moves toward the target during an attack (0..1).
 const CAMERA_FOCUS := 0.18
+## Autoplay drinks a potion below this share of max HP.
+const AUTOPLAY_POTION_RATIO := 0.4
+## Autoplay casts only while the enemy has more HP than this.
+const AUTOPLAY_CAST_MIN_HP := 12
 
 var engine: BattleEngine
 var hero: Combatant
 var enemy: Combatant
+var inventory: Inventory
 
 var _rng := RandomNumberGenerator.new()
 var _autoplay := false
 var _done := false
+var _new_level := 0
+var _got_potion := false
 var _hero_actor: BattleActor
 var _enemy_actor: BattleActor
 var _camera: Camera3D
@@ -34,15 +42,17 @@ var _hud: BattleHud
 var _result: BattleResult
 
 
-## The hero is used as is, so HP and EXP changes stay with the caller; the enemy
-## data is duplicated so the .tres file never changes.
-func setup(hero_ref: Combatant, enemy_data: Combatant) -> void:
+## The hero and the inventory are used as is, so HP, MP, EXP and potions stay with the
+## caller; the enemy data is duplicated so the .tres file never changes.
+func setup(hero_ref: Combatant, enemy_data: Combatant, inv: Inventory) -> void:
 	hero = hero_ref
 	enemy = enemy_data.duplicate() as Combatant
+	inventory = inv
 
 
 func _ready() -> void:
-	assert(hero != null and enemy != null, "Call setup() before adding BattleScene to the tree")
+	assert(hero != null and enemy != null and inventory != null,
+		"Call setup() before adding BattleScene to the tree")
 	_rng.randomize()
 	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
 	BattleStage.build(self)
@@ -57,27 +67,45 @@ func _ready() -> void:
 	_result = RESULT_SCENE.instantiate() as BattleResult
 	ui.add_child(_result)
 	_result.continue_requested.connect(_finish)
-	engine = BattleEngine.new(hero, enemy, _rng)
-	_hud.set_hero(hero)
-	await _hud.show_message("¡Un %s salvaje aparece!" % enemy.display_name)
+	engine = BattleEngine.new(hero, enemy, _rng, inventory)
+	_hud.set_hero(hero, inventory.count(Inventory.POTION))
+	await _say("¡Un %s salvaje aparece!" % enemy.display_name)
 	_ask_command()
 
 
 func _ask_command() -> void:
 	if _autoplay:
 		await get_tree().create_timer(0.4).timeout
-		_on_command_chosen(BattleEngine.CMD_ATTACK)
+		_on_command_chosen(_autoplay_command())
 	else:
 		_hud.show_menu()
 
 
-func _on_command_chosen(cmd: String) -> void:
+## Potion when low on HP, Llama while the enemy is still healthy, otherwise Atacar.
+func _autoplay_command() -> Dictionary:
+	var potion := BattleEngine.cmd_item(Inventory.POTION)
+	if hero.hp < hero.max_hp * AUTOPLAY_POTION_RATIO and engine.can_use(potion):
+		return potion
+	if not hero.skills.is_empty():
+		var spell := BattleEngine.cmd_skill(hero.skills[0])
+		if enemy.hp > AUTOPLAY_CAST_MIN_HP and engine.can_use(spell):
+			return spell
+	return BattleEngine.cmd_attack()
+
+
+func _on_command_chosen(cmd: Dictionary) -> void:
 	_hud.hide_menu()
 	for event in engine.resolve_round(cmd):
 		await _play_event(event)
-	if engine.state == BattleEngine.State.ONGOING:
-		_ask_command()
-	elif _autoplay:
+	match engine.state:
+		BattleEngine.State.ONGOING:
+			_ask_command()
+			return
+		BattleEngine.State.WON:
+			_result.show_victory(enemy.exp_reward, hero.experience, _new_level, _got_potion)
+		BattleEngine.State.LOST:
+			_result.show_defeat()
+	if _autoplay:
 		await get_tree().create_timer(2.0).timeout
 		_result.hide()
 		_finish()
@@ -91,39 +119,80 @@ func _finish() -> void:
 	finished.emit(engine.state == BattleEngine.State.WON)
 
 
+## Every battle message goes through here; autoplay also prints it.
+func _say(text: String) -> void:
+	if _autoplay:
+		print(text)
+	await _hud.show_message(text)
+
+
 func _play_event(event: Dictionary) -> void:
 	match event.type:
 		BattleEvent.ATTACK:
 			var target := _actor(event.target)
-			await _hud.show_message("¡%s ataca!" % _fighter(event.actor).display_name)
+			await _say("¡%s ataca!" % _fighter(event.actor).display_name)
 			_focus_camera(target)
 			await _actor(event.actor).play_attack(target.global_position)
+		BattleEvent.SKILL:
+			if event.actor == BattleEvent.HERO:
+				_hud.update_mp(event.mp_left, hero.max_mp)
+			await _say("¡%s lanza %s!" % [_fighter(event.actor).display_name, event.name])
+			_focus_camera(_actor(event.target))
+			await _actor(event.actor).play_cast()
 		BattleEvent.MISS:
 			await _actor(event.target).play_dodge()
 			_reset_camera()
-			await _hud.show_message("¡Pero falla!")
+			await _say("¡Pero falla!")
 		BattleEvent.DAMAGE:
 			if event.crit:
 				_shake_camera()
-			await _actor(event.target).play_hit(event.amount, event.crit)
+			if event.magic:
+				await _actor(event.target).play_burn(event.amount)
+			else:
+				await _actor(event.target).play_hit(event.amount, event.crit)
 			_reset_camera()
 			if event.target == BattleEvent.HERO:
 				_hud.update_hp(event.hp_left, hero.max_hp)
 			if event.crit:
-				await _hud.show_message("¡Golpe crítico!")
-			await _hud.show_message("¡%s recibe %d de daño!" % [
+				await _say("¡Golpe crítico!")
+			await _say("¡%s recibe %d de daño!" % [
 				_fighter(event.target).display_name, event.amount])
+		BattleEvent.ITEM:
+			_hud.set_potions(inventory.count(Inventory.POTION))
+			await _say("¡%s usa una %s!" % [_fighter(event.actor).display_name, event.name])
+		BattleEvent.HEAL:
+			await _actor(event.target).play_heal(event.amount)
+			if event.target == BattleEvent.HERO:
+				_hud.update_hp(event.hp_left, hero.max_hp)
+			await _say("¡%s recupera %d PV!" % [
+				_fighter(event.target).display_name, event.amount])
+		BattleEvent.STAGGER:
+			await _actor(event.actor).play_stagger()
+			await _say("El %s se tambalea." % _fighter(event.actor).display_name)
 		BattleEvent.DEFEATED:
 			await _actor(event.target).play_defeat()
 			if event.target == BattleEvent.ENEMY:
-				await _hud.show_message("¡%s ha sido derrotado!" % enemy.display_name)
+				await _say("¡%s ha sido derrotado!" % enemy.display_name)
 			else:
-				await _hud.show_message("¡Has sido derrotado...!")
+				await _say("¡Has sido derrotado...!")
 		BattleEvent.VICTORY:
-			await _hud.show_message("¡Has ganado! Obtienes %d EXP." % event.exp)
-			_result.show_victory(event.exp, hero.experience)
-		BattleEvent.DEFEAT:
-			_result.show_defeat()
+			await _say("¡Has ganado! Obtienes %d EXP." % event.exp)
+		BattleEvent.LEVEL_UP:
+			_new_level = event.level
+			_hud.update_level(event.level)
+			_hud.update_hp(hero.hp, hero.max_hp)
+			_hud.update_mp(hero.mp, hero.max_mp)
+			await _say("¡%s sube al nivel %d!" % [hero.display_name, event.level])
+			await _say(_gains_text(event.gains))
+		BattleEvent.DROP:
+			_got_potion = true
+			await _say("¡El %s ha dejado una %s!" % [
+				enemy.display_name, Inventory.display_name(event.item)])
+
+
+func _gains_text(gains: Dictionary) -> String:
+	return "PV +%d  PM +%d  ATK +%d  DEF +%d  VEL +%d" % [
+		gains.max_hp, gains.max_mp, gains.attack, gains.defense, gains.speed]
 
 
 func _spawn_actor(look: BattleActor.Look, pos: Vector3, facing: Vector3) -> BattleActor:

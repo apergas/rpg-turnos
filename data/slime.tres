@@ -11,3 +11,8 @@ attack = 7
 defense = 3
 speed = 5
 exp_reward = 4
+ai_weights = {
+"attack": 80,
+"stagger": 20
+}
+potion_drop_chance = 0.25
