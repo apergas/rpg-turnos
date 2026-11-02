@@ -32,7 +32,7 @@ Un combate jugable de **un héroe contra un slime**, por **rondas al estilo Drag
 
 | Archivo | Responsabilidad | Depende de |
 |---|---|---|
-| `scripts/battle/combatant.gd` (`Combatant`, `Resource`) | Datos de un luchador: `display_name`, `max_hp`, `hp`, `attack`, `defense`, `speed`, `exp_reward`, `exp` (acumulada; solo se usa en el héroe) | — |
+| `scripts/battle/combatant.gd` (`Combatant`, `Resource`) | Datos de un luchador: `display_name`, `max_hp`, `hp`, `attack`, `defense`, `speed`, `exp_reward`, `experience` (EXP acumulada; solo se usa en el héroe; no se llama `exp` para no tapar la función nativa `exp()`) | — |
 | `data/hero.tres`, `data/slime.tres` | Estadísticas iniciales (ver Reglas) | `Combatant` |
 | `scripts/battle/battle_event.gd` (`BattleEvent`) | Constantes de tipo y constructores de eventos (diccionarios) | — |
 | `scripts/battle/battle_engine.gd` (`BattleEngine`, `RefCounted`) | Resuelve rondas y devuelve eventos; no toca nodos | `Combatant`, `BattleEvent`, `RandomNumberGenerator` |
@@ -51,7 +51,7 @@ var events: Array[Dictionary] = engine.resolve_round(BattleEngine.CMD_ATTACK)
 engine.state  # ONGOING, WON o LOST
 ```
 
-El motor modifica directamente los `Combatant` que recibe. La escena, al empezar cada combate, crea copias (`duplicate()`) de `hero.tres` y `slime.tres` y traslada a la copia nueva del héroe la `exp` acumulada en combates anteriores; así los `.tres` nunca se alteran. Al ganar, el motor suma `exp_reward` del enemigo a `exp` del héroe. En este paso la EXP vive solo en memoria (no se guarda en disco).
+El motor modifica directamente los `Combatant` que recibe. La escena, al empezar cada combate, crea copias (`duplicate()`) de `hero.tres` y `slime.tres` y traslada a la copia nueva del héroe la `experience` acumulada en combates anteriores; así los `.tres` nunca se alteran. Al ganar, el motor suma `exp_reward` del enemigo a `experience` del héroe. En este paso la EXP vive solo en memoria (no se guarda en disco).
 
 ### Eventos
 
@@ -88,7 +88,7 @@ Ronda:
    - El daño mínimo final es 1. Los PV no bajan de 0.
 4. Un combatiente con 0 PV no actúa; la ronda acaba en cuanto uno cae.
 
-Fin: si el enemigo cae → `WON`, evento `victory{exp}` y EXP sumada al héroe. Si el héroe cae → `LOST`, evento `defeat`. Llamar a `resolve_round` con el combate terminado devuelve un array vacío.
+Fin: si el enemigo cae → `WON`, evento `victory{exp}` y EXP sumada a `experience` del héroe. Si el héroe cae → `LOST`, evento `defeat`. Llamar a `resolve_round` con el combate terminado devuelve un array vacío.
 
 Todo el azar sale del `RandomNumberGenerator` inyectado; en el juego se usa `rng.randomize()`.
 
