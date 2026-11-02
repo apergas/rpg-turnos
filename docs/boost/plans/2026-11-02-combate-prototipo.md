@@ -1,6 +1,8 @@
 # Prototipo de combate por turnos — plan de implementación
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use boost:subagent-driven-development (recommended) or boost:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use boost:subagent-driven-development to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+>
+> **Modo de ejecución decidido por el usuario (2026-11-02): subagentes, uno nuevo por tarea** (boost:subagent-driven-development), con revisión entre tareas. No ejecutar inline. Estado: **pendiente de ejecutar**; no empezar hasta que el usuario lo pida.
 >
 > **Este proyecto NO lleva tests** (ver `CLAUDE.md`, sección "No tests — ever"). Ignora cualquier paso de TDD de los skills: no crees `tests/`, scripts de test ni frameworks. Cada tarea se verifica con `--import`, `--check-only` y, al final, ejecutando el juego.
 
