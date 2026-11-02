@@ -55,8 +55,8 @@ func set_active(active: bool) -> void:
 	process_mode = Node.PROCESS_MODE_INHERIT if active else Node.PROCESS_MODE_DISABLED
 	visible = active
 	_ui.visible = active
+	_camera.current = active
 	if active:
-		_camera.current = true
 		_meter.reset()
 		_waiting = false
 		_player.input_enabled = true

@@ -87,11 +87,13 @@ static func _add_path(root: Node3D) -> void:
 		var b := PATH_POINTS[i + 1]
 		var d := b - a
 		var mesh := PlaneMesh.new()
-		# Each strip runs half a width past both ends so the corners stay covered.
-		mesh.size = Vector2(PATH_HALF_WIDTH * 2.0, d.length() + PATH_HALF_WIDTH * 2.0)
+		mesh.size = Vector2(PATH_HALF_WIDTH * 2.0, d.length())
 		var mid := (a + b) / 2.0 + Vector3(0, 0.01, 0)
 		var yaw := rad_to_deg(atan2(d.x, d.z))
 		BattleStage.add_mesh(root, mesh, BattleStage.DIRT, mid, Vector3.ONE, Vector3(0, yaw, 0))
+	# Round the inner bends so the drawn path matches is_on_path (union of capsules).
+	for i in range(1, PATH_POINTS.size() - 1):
+		_add_disc(root, PATH_POINTS[i], PATH_HALF_WIDTH)
 	_add_disc(root, SPAWN_POS, SPAWN_RADIUS)
 	_add_disc(root, CLEARING_POS, CLEARING_RADIUS)
 

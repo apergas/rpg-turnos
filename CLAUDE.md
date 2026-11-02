@@ -45,7 +45,7 @@ Verify by hand instead: `--check-only` on changed scripts, run the game, read th
 - Run the game: `.\tools\godot.cmd --path .`
 - Run the game on autoplay (walks a route, fights picking "Atacar", continues by itself): `.\tools\godot.cmd --path . -- --autoplay`
 - Run only the world map (prints encounters instead of fighting): `.\tools\godot.cmd --path . res://scenes/world/world.tscn -- --autoplay`
-- Record frames to check visuals (1280x720 PNGs, ~1 MB each; delete the folder afterwards): `.\tools\godot.cmd --path . --write-movie <dir>\f.png --fixed-fps 10 --quit-after 600 -- --autoplay`
+- Record frames to check visuals (not headless; writes `f00000000.png`, ...; 1280x720 PNGs, ~1 MB each; delete the folder afterwards): `.\tools\godot.cmd --path . --write-movie <dir>\f.png --fixed-fps 10 --quit-after 600 -- --autoplay`
 
 The `godot` MCP tools (`run_project`, `get_debug_output`, ...) need `projectPath` set to this directory.
 
