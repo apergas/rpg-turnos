@@ -51,6 +51,9 @@ func show_defeat() -> void:
 
 func _open() -> void:
 	show()
+	_retry.disabled = true
+	await get_tree().create_timer(0.3).timeout
+	_retry.disabled = false
 	_retry.grab_focus()
 
 

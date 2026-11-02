@@ -15,6 +15,9 @@ var _hp_bar: ProgressBar
 var _menu: PanelContainer
 var _attack_button: Button
 var _message: Label
+var _hero_name := ""
+var _hp_fill := StyleBoxFlat.new()
+var _menu_active := false
 var _advance_requested := false
 
 
@@ -27,6 +30,7 @@ func _ready() -> void:
 
 
 func set_hero(c: Combatant) -> void:
+	_hero_name = c.display_name
 	_name_label.text = c.display_name
 	update_hp(c.hp, c.max_hp)
 
@@ -35,15 +39,30 @@ func update_hp(hp: int, max_hp: int) -> void:
 	_hp_label.text = "PV %d / %d" % [hp, max_hp]
 	_hp_bar.max_value = max_hp
 	_hp_bar.value = hp
+	var ratio := float(hp) / maxf(1.0, max_hp)
+	if ratio <= 0.25:
+		_hp_fill.bg_color = Color(0.85, 0.15, 0.15)
+	elif ratio <= 0.5:
+		_hp_fill.bg_color = Color(0.9, 0.8, 0.15)
+	else:
+		_hp_fill.bg_color = Color(0.2, 0.75, 0.25)
 
 
+## The menu keeps its layout slot (only fades out) so the message window never resizes.
 func show_menu() -> void:
-	_menu.show()
+	_menu_active = true
+	_menu.modulate.a = 1.0
+	_attack_button.disabled = false
+	_message.text = "¿Qué hará %s?" % _hero_name
+	_message.visible_characters = -1
 	_attack_button.grab_focus()
 
 
 func hide_menu() -> void:
-	_menu.hide()
+	_menu_active = false
+	_menu.modulate.a = 0.0
+	_attack_button.release_focus()
+	_attack_button.disabled = true
 
 
 func show_message(text: String) -> void:
@@ -80,6 +99,10 @@ static func make_window() -> PanelContainer:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _menu_active and event.is_action_pressed("ui_accept"):
+		get_viewport().set_input_as_handled()
+		_on_attack_pressed()
+		return
 	var mouse := event as InputEventMouseButton
 	var click := mouse != null and mouse.pressed and mouse.button_index == MOUSE_BUTTON_LEFT
 	if click or event.is_action_pressed("ui_accept"):
@@ -100,6 +123,8 @@ func _build_status() -> void:
 	_hp_bar = ProgressBar.new()
 	_hp_bar.show_percentage = false
 	_hp_bar.custom_minimum_size = Vector2(0, 10)
+	_hp_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hp_bar.add_theme_stylebox_override("fill", _hp_fill)
 	box.add_child(_hp_bar)
 
 

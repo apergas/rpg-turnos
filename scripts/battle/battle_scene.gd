@@ -26,6 +26,8 @@ var _hero_actor: BattleActor
 var _enemy_actor: BattleActor
 var _camera: Camera3D
 var _camera_home: Vector3
+var _cam_tween: Tween
+var _shake_tween: Tween
 var _hud: BattleHud
 var _result: BattleResult
 
@@ -137,22 +139,33 @@ func _build_camera() -> void:
 
 func _focus_camera(target: Node3D) -> void:
 	var goal := _camera_home.lerp(target.global_position + Vector3(0, 1, 0), CAMERA_FOCUS)
-	create_tween().tween_property(_camera, "global_position", goal, 0.25) \
+	_new_cam_tween().tween_property(_camera, "global_position", goal, 0.25) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
 func _reset_camera() -> void:
-	create_tween().tween_property(_camera, "global_position", _camera_home, 0.3) \
+	_new_cam_tween().tween_property(_camera, "global_position", _camera_home, 0.3) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
 func _shake_camera() -> void:
+	if _shake_tween:
+		_shake_tween.kill()
 	var t := create_tween()
+	_shake_tween = t
 	for i in 6:
 		t.tween_property(_camera, "h_offset", randf_range(-0.12, 0.12), 0.04)
 		t.parallel().tween_property(_camera, "v_offset", randf_range(-0.08, 0.08), 0.04)
 	t.tween_property(_camera, "h_offset", 0.0, 0.04)
 	t.parallel().tween_property(_camera, "v_offset", 0.0, 0.04)
+
+
+## Only one camera position tween at a time, otherwise two tweens fight over it.
+func _new_cam_tween() -> Tween:
+	if _cam_tween:
+		_cam_tween.kill()
+	_cam_tween = create_tween()
+	return _cam_tween
 
 
 func _actor(side: String) -> BattleActor:
