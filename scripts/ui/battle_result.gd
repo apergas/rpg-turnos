@@ -1,12 +1,12 @@
 class_name BattleResult extends Control
-## End-of-battle overlay: victory or defeat text and a "Luchar otra vez" button.
-## Starts hidden; the button hides it and emits retry_requested.
+## End-of-battle overlay: victory or defeat text and a "Continuar" button.
+## Starts hidden; the button hides it and emits continue_requested.
 
-signal retry_requested
+signal continue_requested
 
 var _title: Label
 var _detail: Label
-var _retry: Button
+var _continue: Button
 
 
 func _ready() -> void:
@@ -29,11 +29,11 @@ func _ready() -> void:
 	box.add_child(_title)
 	_detail = _label(24)
 	box.add_child(_detail)
-	_retry = Button.new()
-	_retry.text = "Luchar otra vez"
-	_retry.add_theme_font_size_override("font_size", 24)
-	_retry.pressed.connect(_on_retry_pressed)
-	box.add_child(_retry)
+	_continue = Button.new()
+	_continue.text = "Continuar"
+	_continue.add_theme_font_size_override("font_size", 24)
+	_continue.pressed.connect(_on_continue_pressed)
+	box.add_child(_continue)
 	hide()
 
 
@@ -45,16 +45,16 @@ func show_victory(exp_gained: int, total_exp: int) -> void:
 
 func show_defeat() -> void:
 	_title.text = "Has sido derrotado"
-	_detail.text = "Inténtalo de nuevo."
+	_detail.text = "Volverás al inicio."
 	_open()
 
 
 func _open() -> void:
 	show()
-	_retry.disabled = true
+	_continue.disabled = true
 	await get_tree().create_timer(0.3).timeout
-	_retry.disabled = false
-	_retry.grab_focus()
+	_continue.disabled = false
+	_continue.grab_focus()
 
 
 func _label(size: int) -> Label:
@@ -65,6 +65,6 @@ func _label(size: int) -> Label:
 	return label
 
 
-func _on_retry_pressed() -> void:
+func _on_continue_pressed() -> void:
 	hide()
-	retry_requested.emit()
+	continue_requested.emit()

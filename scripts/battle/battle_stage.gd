@@ -1,6 +1,7 @@
 class_name BattleStage extends RefCounted
 ## Builds the battle backdrop from primitives: sky, warm sun, fog, grass field,
-## dirt path, rocks and distant hills.
+## dirt path, rocks and distant hills. The environment and mesh helpers are shared
+## with WorldStage.
 
 const GRASS := Color(0.32, 0.55, 0.22)
 const DIRT := Color(0.62, 0.5, 0.34)
@@ -26,18 +27,45 @@ const HILLS := [
 
 
 static func build(root: Node3D) -> void:
-	_add_environment(root)
-	_add_sun(root)
+	build_environment(root)
 	var ground := PlaneMesh.new()
 	ground.size = Vector2(160, 160)
-	_add_mesh(root, ground, GRASS, Vector3.ZERO)
+	add_mesh(root, ground, GRASS, Vector3.ZERO)
 	var path := PlaneMesh.new()
 	path.size = Vector2(2.6, 30)
-	_add_mesh(root, path, DIRT, Vector3(-0.2, 0.01, -0.3), Vector3.ONE, Vector3(0, -21, 0))
+	add_mesh(root, path, DIRT, Vector3(-0.2, 0.01, -0.3), Vector3.ONE, Vector3(0, -21, 0))
 	for rock in ROCKS:
-		_add_mesh(root, _unit_sphere(), ROCK, rock[0], rock[1])
+		add_mesh(root, unit_sphere(), ROCK, rock[0], rock[1])
 	for hill in HILLS:
-		_add_mesh(root, _unit_sphere(), HILL, hill[0], hill[1])
+		add_mesh(root, unit_sphere(), HILL, hill[0], hill[1])
+
+
+## Sky, tonemap, fog and the warm sun shared by every outdoor scene.
+static func build_environment(root: Node3D) -> void:
+	_add_environment(root)
+	_add_sun(root)
+
+
+static func add_mesh(root: Node3D, mesh: Mesh, color: Color, pos: Vector3, \
+		scl := Vector3.ONE, rot_deg := Vector3.ZERO) -> MeshInstance3D:
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.roughness = 1.0
+	var mi := MeshInstance3D.new()
+	mi.mesh = mesh
+	mi.material_override = mat
+	mi.position = pos
+	mi.scale = scl
+	mi.rotation_degrees = rot_deg
+	root.add_child(mi)
+	return mi
+
+
+static func unit_sphere() -> SphereMesh:
+	var mesh := SphereMesh.new()
+	mesh.radius = 1.0
+	mesh.height = 2.0
+	return mesh
 
 
 static func _add_environment(root: Node3D) -> void:
@@ -71,24 +99,3 @@ static func _add_sun(root: Node3D) -> void:
 	sun.shadow_enabled = true
 	sun.rotation_degrees = Vector3(-40, 35, 0)
 	root.add_child(sun)
-
-
-static func _add_mesh(root: Node3D, mesh: Mesh, color: Color, pos: Vector3, \
-		scl := Vector3.ONE, rot_deg := Vector3.ZERO) -> void:
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = color
-	mat.roughness = 1.0
-	var mi := MeshInstance3D.new()
-	mi.mesh = mesh
-	mi.material_override = mat
-	mi.position = pos
-	mi.scale = scl
-	mi.rotation_degrees = rot_deg
-	root.add_child(mi)
-
-
-static func _unit_sphere() -> SphereMesh:
-	var mesh := SphereMesh.new()
-	mesh.radius = 1.0
-	mesh.height = 2.0
-	return mesh
