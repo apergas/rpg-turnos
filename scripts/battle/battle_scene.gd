@@ -1,10 +1,11 @@
-extends Node3D
-## Battle screen: builds the stage, actors, camera and UI, asks the HUD for the
-## hero's order, lets BattleEngine resolve the round and plays the events back.
-## Run with `-- --autoplay` to pick "Atacar" automatically and restart after each battle.
+class_name BattleScene extends Node3D
+## One battle: builds the stage, actors, camera and UI, asks the HUD for the hero's
+## order, lets BattleEngine resolve the round and plays the events back. Call setup()
+## before adding it to the tree; it emits finished(won) when the player continues.
+## With `-- --autoplay` it picks "Atacar" by itself and continues on its own.
 
-const HERO_DATA := preload("res://data/hero.tres")
-const SLIME_DATA := preload("res://data/slime.tres")
+signal finished(won: bool)
+
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
 const HUD_SCENE := preload("res://scenes/ui/battle_hud.tscn")
 const RESULT_SCENE := preload("res://scenes/ui/battle_result.tscn")
@@ -22,6 +23,7 @@ var enemy: Combatant
 
 var _rng := RandomNumberGenerator.new()
 var _autoplay := false
+var _done := false
 var _hero_actor: BattleActor
 var _enemy_actor: BattleActor
 var _camera: Camera3D
@@ -32,7 +34,15 @@ var _hud: BattleHud
 var _result: BattleResult
 
 
+## The hero is used as is, so HP and EXP changes stay with the caller; the enemy
+## data is duplicated so the .tres file never changes.
+func setup(hero_ref: Combatant, enemy_data: Combatant) -> void:
+	hero = hero_ref
+	enemy = enemy_data.duplicate() as Combatant
+
+
 func _ready() -> void:
+	assert(hero != null and enemy != null, "Call setup() before adding BattleScene to the tree")
 	_rng.randomize()
 	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
 	BattleStage.build(self)
@@ -46,18 +56,8 @@ func _ready() -> void:
 	_hud.command_chosen.connect(_on_command_chosen)
 	_result = RESULT_SCENE.instantiate() as BattleResult
 	ui.add_child(_result)
-	_result.retry_requested.connect(_start_battle)
-	_start_battle()
-
-
-func _start_battle() -> void:
-	var carried_exp := hero.experience if hero else 0
-	hero = HERO_DATA.duplicate() as Combatant
-	hero.experience = carried_exp
-	enemy = SLIME_DATA.duplicate() as Combatant
+	_result.continue_requested.connect(_finish)
 	engine = BattleEngine.new(hero, enemy, _rng)
-	_hero_actor.reset()
-	_enemy_actor.reset()
 	_hud.set_hero(hero)
 	await _hud.show_message("¡Un %s salvaje aparece!" % enemy.display_name)
 	_ask_command()
@@ -80,7 +80,15 @@ func _on_command_chosen(cmd: String) -> void:
 	elif _autoplay:
 		await get_tree().create_timer(2.0).timeout
 		_result.hide()
-		_start_battle()
+		_finish()
+
+
+## Emits finished once, whether the player pressed "Continuar" or autoplay did.
+func _finish() -> void:
+	if _done:
+		return
+	_done = true
+	finished.emit(engine.state == BattleEngine.State.WON)
 
 
 func _play_event(event: Dictionary) -> void:
