@@ -3,7 +3,7 @@ class_name BattleHud extends Control
 ## window (bottom). show_message() can be awaited: it types the text out and returns
 ## when the player advances (click, Enter, Space) or after a short auto-advance.
 
-signal command_chosen(cmd: String)
+signal command_chosen(cmd: Dictionary)
 
 const CHAR_TIME := 0.025
 const AUTO_ADVANCE := 0.6
@@ -170,4 +170,4 @@ func _label() -> Label:
 
 func _on_attack_pressed() -> void:
 	hide_menu()
-	command_chosen.emit(BattleEngine.CMD_ATTACK)
+	command_chosen.emit(BattleEngine.cmd_attack())

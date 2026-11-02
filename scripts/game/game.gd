@@ -33,7 +33,7 @@ func _on_encounter() -> void:
 	await _fade_to(1.0)
 	_world.set_active(false)
 	var battle: BattleScene = BATTLE_SCENE.instantiate()
-	battle.setup(state.hero, SLIME_DATA)
+	battle.setup(state.hero, SLIME_DATA, state.inventory)
 	add_child(battle)
 	await _fade_to(0.0)
 	var won: bool = await battle.finished
