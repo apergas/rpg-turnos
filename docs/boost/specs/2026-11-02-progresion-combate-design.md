@@ -56,7 +56,7 @@ Modificados:
 |---|---|
 | `scripts/battle/combatant.gd` | `level`, `max_mp`, `mp`, `skills: Array[Skill]`, `ai_weights: Dictionary`, `potion_drop_chance: float` |
 | `data/hero.tres`, `data/slime.tres` | Héroe con nivel, PM y Llama. Slime con `ai_weights = {"attack": 80, "stagger": 20}` y `potion_drop_chance = 0.25` |
-| `scripts/battle/battle_event.gd` | Eventos nuevos: `SKILL` (actor, target, nombre, mp_left), `ITEM` (actor, nombre), `HEAL` (target, amount, hp_left), `STAGGER` (actor), `LEVEL_UP` (level, gains), `DROP` (item) |
+| `scripts/battle/battle_event.gd` | `damage()` gana `magic` (para la animación de fuego). Eventos nuevos: `SKILL` (actor, target, nombre, mp_left), `ITEM` (actor, nombre), `HEAL` (target, amount, hp_left), `STAGGER` (actor), `LEVEL_UP` (level, gains), `DROP` (item) |
 | `scripts/battle/battle_engine.gd` | Constructor `(hero, enemy, rng, inventory)`. Comandos como diccionarios creados con `static cmd_attack()`, `cmd_skill(skill)` y `cmd_item(id)`. `resolve_round(cmd: Dictionary)`. El enemigo elige su comando con `ai_weights`. En la victoria suma la EXP, llama a `Leveling.apply` y tira el botín. Afirma que el comando sea válido (PM y pociones) |
 | `scripts/game/game_state.gd` | `inventory: Inventory` con 3 pociones; `heal_full()` también llena los PM |
 | `scripts/battle/battle_scene.gd` | `setup(hero, enemy_data, inventory)`; reproduce los eventos nuevos; autoplay con una política simple (ver Verificación) |
@@ -70,7 +70,7 @@ Modificados:
 ## Mensajes (español)
 
 - `¡Héroe lanza Llama!` y después el daño, con el mensaje de siempre: `¡Slime recibe N de daño!`
-- `¡Héroe usa una Poción! Recupera N PV.`
+- `¡Héroe usa una Poción!` y después `¡Héroe recupera N PV!`
 - `El Slime se tambalea.`
 - `¡Héroe sube al nivel N!`, seguido de `PV +5  PM +2  ATK +2  DEF +1  VEL +1`
 - `¡El Slime ha dejado una Poción!`
@@ -86,6 +86,7 @@ Modificados:
 ## Verificación (sin tests)
 
 - `--check-only` en cada script cambiado e `--import` tras añadir clases nuevas.
+- Con `--autoplay` la escena también imprime cada mensaje del combate, de modo que la salida muestra qué ha pasado.
 - Autoplay de combate (`-- --autoplay`): poción si PV < 40 % y quedan pociones; si no, Llama si hay PM y el enemigo tiene más de 12 PV; si no, Atacar. Así se recorren las tres ramas. En la salida no debe aparecer ningún ERROR ni WARNING.
 - Recorrido largo de autoplay (`--quit-after` alto) hasta ver al menos una subida de nivel y un botín. Se graban fotogramas para comprobar el menú, el HUD con PM, el mensaje de nivel y el estado del mapa.
 - Prueba a mano del usuario antes del merge.
