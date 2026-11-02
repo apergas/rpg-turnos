@@ -68,7 +68,7 @@ func _ready() -> void:
 	ui.add_child(_result)
 	_result.continue_requested.connect(_finish)
 	engine = BattleEngine.new(hero, enemy, _rng, inventory)
-	_hud.set_hero(hero)
+	_hud.set_hero(hero, inventory.count(Inventory.POTION))
 	await _say("¡Un %s salvaje aparece!" % enemy.display_name)
 	_ask_command()
 
@@ -134,8 +134,11 @@ func _play_event(event: Dictionary) -> void:
 			_focus_camera(target)
 			await _actor(event.actor).play_attack(target.global_position)
 		BattleEvent.SKILL:
+			if event.actor == BattleEvent.HERO:
+				_hud.update_mp(event.mp_left, hero.max_mp)
 			await _say("¡%s lanza %s!" % [_fighter(event.actor).display_name, event.name])
 			_focus_camera(_actor(event.target))
+			await _actor(event.actor).play_cast()
 		BattleEvent.MISS:
 			await _actor(event.target).play_dodge()
 			_reset_camera()
@@ -143,7 +146,10 @@ func _play_event(event: Dictionary) -> void:
 		BattleEvent.DAMAGE:
 			if event.crit:
 				_shake_camera()
-			await _actor(event.target).play_hit(event.amount, event.crit)
+			if event.magic:
+				await _actor(event.target).play_burn(event.amount)
+			else:
+				await _actor(event.target).play_hit(event.amount, event.crit)
 			_reset_camera()
 			if event.target == BattleEvent.HERO:
 				_hud.update_hp(event.hp_left, hero.max_hp)
@@ -152,13 +158,16 @@ func _play_event(event: Dictionary) -> void:
 			await _say("¡%s recibe %d de daño!" % [
 				_fighter(event.target).display_name, event.amount])
 		BattleEvent.ITEM:
+			_hud.set_potions(inventory.count(Inventory.POTION))
 			await _say("¡%s usa una %s!" % [_fighter(event.actor).display_name, event.name])
 		BattleEvent.HEAL:
+			await _actor(event.target).play_heal(event.amount)
 			if event.target == BattleEvent.HERO:
 				_hud.update_hp(event.hp_left, hero.max_hp)
 			await _say("¡%s recupera %d PV!" % [
 				_fighter(event.target).display_name, event.amount])
 		BattleEvent.STAGGER:
+			await _actor(event.actor).play_stagger()
 			await _say("El %s se tambalea." % _fighter(event.actor).display_name)
 		BattleEvent.DEFEATED:
 			await _actor(event.target).play_defeat()
@@ -170,7 +179,9 @@ func _play_event(event: Dictionary) -> void:
 			await _say("¡Has ganado! Obtienes %d EXP." % event.exp)
 		BattleEvent.LEVEL_UP:
 			_new_level = event.level
+			_hud.update_level(event.level)
 			_hud.update_hp(hero.hp, hero.max_hp)
+			_hud.update_mp(hero.mp, hero.max_mp)
 			await _say("¡%s sube al nivel %d!" % [hero.display_name, event.level])
 			await _say(_gains_text(event.gains))
 		BattleEvent.DROP:

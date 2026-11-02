@@ -1,7 +1,10 @@
 class_name BattleHud extends Control
 ## Dragon Quest style battle UI: hero status (top left), command menu and message
-## window (bottom). show_message() can be awaited: it types the text out and returns
-## when the player advances (click, Enter, Space) or after a short auto-advance.
+## window (bottom). The menu lists "Atacar", the hero's first skill and the potion;
+## the last two are disabled without enough MP or potions. Up / down move between
+## commands, Enter / Space or a click choose one. show_message() can be awaited: it
+## types the text out and returns when the player advances (click, Enter, Space) or
+## after a short auto-advance.
 
 signal command_chosen(cmd: Dictionary)
 
@@ -12,10 +15,14 @@ const FONT_SIZE := 24
 var _name_label: Label
 var _hp_label: Label
 var _hp_bar: ProgressBar
+var _mp_label: Label
 var _menu: PanelContainer
 var _attack_button: Button
+var _skill_button: Button
+var _item_button: Button
 var _message: Label
-var _hero_name := ""
+var _hero: Combatant
+var _potions := 0
 var _hp_fill := StyleBoxFlat.new()
 var _menu_active := false
 var _advance_requested := false
@@ -29,10 +36,16 @@ func _ready() -> void:
 	hide_menu()
 
 
-func set_hero(c: Combatant) -> void:
-	_hero_name = c.display_name
-	_name_label.text = c.display_name
+func set_hero(c: Combatant, potions: int) -> void:
+	_hero = c
+	_potions = potions
+	update_level(c.level)
 	update_hp(c.hp, c.max_hp)
+	update_mp(c.mp, c.max_mp)
+
+
+func update_level(level: int) -> void:
+	_name_label.text = "%s  Nv %d" % [_hero.display_name, level]
 
 
 func update_hp(hp: int, max_hp: int) -> void:
@@ -48,12 +61,27 @@ func update_hp(hp: int, max_hp: int) -> void:
 		_hp_fill.bg_color = Color(0.2, 0.75, 0.25)
 
 
+func update_mp(mp: int, max_mp: int) -> void:
+	_mp_label.text = "PM %d / %d" % [mp, max_mp]
+
+
+func set_potions(n: int) -> void:
+	_potions = n
+
+
 ## The menu keeps its layout slot (only fades out) so the message window never resizes.
 func show_menu() -> void:
 	_menu_active = true
 	_menu.modulate.a = 1.0
-	_attack_button.disabled = false
-	_message.text = "¿Qué hará %s?" % _hero_name
+	_set_enabled(_attack_button, true)
+	var skill := _skill()
+	_skill_button.visible = skill != null
+	if skill != null:
+		_skill_button.text = "%s (%d PM)" % [skill.display_name, skill.mp_cost]
+		_set_enabled(_skill_button, _hero.mp >= skill.mp_cost)
+	_item_button.text = "%s ×%d" % [Inventory.display_name(Inventory.POTION), _potions]
+	_set_enabled(_item_button, _potions > 0)
+	_message.text = "¿Qué hará %s?" % _hero.display_name
 	_message.visible_characters = -1
 	_attack_button.grab_focus()
 
@@ -61,8 +89,8 @@ func show_menu() -> void:
 func hide_menu() -> void:
 	_menu_active = false
 	_menu.modulate.a = 0.0
-	_attack_button.release_focus()
-	_attack_button.disabled = true
+	for button in [_attack_button, _skill_button, _item_button]:
+		_set_enabled(button, false)
 
 
 func show_message(text: String) -> void:
@@ -98,10 +126,9 @@ static func make_window() -> PanelContainer:
 	return panel
 
 
+## While the menu is open the focused button handles Enter / Space itself.
 func _unhandled_input(event: InputEvent) -> void:
-	if _menu_active and event.is_action_pressed("ui_accept"):
-		get_viewport().set_input_as_handled()
-		_on_attack_pressed()
+	if _menu_active:
 		return
 	var mouse := event as InputEventMouseButton
 	var click := mouse != null and mouse.pressed and mouse.button_index == MOUSE_BUTTON_LEFT
@@ -126,6 +153,8 @@ func _build_status() -> void:
 	_hp_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hp_bar.add_theme_stylebox_override("fill", _hp_fill)
 	box.add_child(_hp_bar)
+	_mp_label = _label()
+	box.add_child(_mp_label)
 
 
 func _build_bottom() -> void:
@@ -133,24 +162,27 @@ func _build_bottom() -> void:
 	row.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	row.offset_left = 24
 	row.offset_right = -24
-	row.offset_top = -170
+	row.offset_top = -200
 	row.offset_bottom = -24
 	row.add_theme_constant_override("separation", 16)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(row)
 
 	_menu = make_window()
-	_menu.custom_minimum_size = Vector2(200, 0)
+	_menu.custom_minimum_size = Vector2(220, 0)
 	row.add_child(_menu)
 	var commands := VBoxContainer.new()
+	commands.add_theme_constant_override("separation", 0)
 	_menu.add_child(commands)
-	_attack_button = Button.new()
-	_attack_button.text = "Atacar"
-	_attack_button.flat = true
-	_attack_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_attack_button.add_theme_font_size_override("font_size", FONT_SIZE)
-	_attack_button.pressed.connect(_on_attack_pressed)
+	_attack_button = _command_button("Atacar")
+	_attack_button.pressed.connect(func() -> void: _choose(BattleEngine.cmd_attack()))
 	commands.add_child(_attack_button)
+	_skill_button = _command_button("")
+	_skill_button.pressed.connect(func() -> void: _choose(BattleEngine.cmd_skill(_skill())))
+	commands.add_child(_skill_button)
+	_item_button = _command_button("")
+	_item_button.pressed.connect(func() -> void: _choose(BattleEngine.cmd_item(Inventory.POTION)))
+	commands.add_child(_item_button)
 
 	var message_window := make_window()
 	message_window.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -161,6 +193,29 @@ func _build_bottom() -> void:
 	message_window.add_child(_message)
 
 
+func _command_button(text: String) -> Button:
+	var button := Button.new()
+	button.text = text
+	button.flat = true
+	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	button.add_theme_font_size_override("font_size", FONT_SIZE)
+	return button
+
+
+## Disabled buttons also leave the focus chain, so up / down skip them.
+func _set_enabled(button: Button, enabled: bool) -> void:
+	button.disabled = not enabled
+	button.focus_mode = Control.FOCUS_ALL if enabled else Control.FOCUS_NONE
+	if not enabled:
+		button.release_focus()
+
+
+func _skill() -> Skill:
+	if _hero == null or _hero.skills.is_empty():
+		return null
+	return _hero.skills[0]
+
+
 func _label() -> Label:
 	var label := Label.new()
 	label.add_theme_font_size_override("font_size", FONT_SIZE)
@@ -168,6 +223,8 @@ func _label() -> Label:
 	return label
 
 
-func _on_attack_pressed() -> void:
+func _choose(cmd: Dictionary) -> void:
+	if not _menu_active:
+		return
 	hide_menu()
-	command_chosen.emit(BattleEngine.cmd_attack())
+	command_chosen.emit(cmd)

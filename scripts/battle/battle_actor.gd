@@ -4,6 +4,9 @@ class_name BattleActor extends Node3D
 
 enum Look { HERO, SLIME }
 
+const FIRE_COLOR := Color(1.0, 0.45, 0.1)
+const HEAL_COLOR := Color(0.3, 1.0, 0.4)
+
 @export var look := Look.HERO
 
 ## Height of the floating damage numbers.
@@ -90,6 +93,56 @@ func play_defeat() -> void:
 	hide()
 
 
+## Small hop with an orange glow, before a spell.
+func play_cast() -> void:
+	_set_flash(true, FIRE_COLOR)
+	var t := create_tween()
+	t.tween_property(_body, "position:y", 0.35, 0.15) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	t.tween_property(_body, "position:y", 0.0, 0.15) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	await t.finished
+	_set_flash(false)
+
+
+## A ball of fire grows on the actor and fades while the hit plays.
+func play_burn(amount: int) -> void:
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.albedo_color = FIRE_COLOR
+	var ball := MeshInstance3D.new()
+	ball.mesh = _sphere(0.5)
+	ball.material_override = mat
+	ball.position = Vector3(0, _top * 0.45, 0)
+	ball.scale = Vector3.ONE * 0.2
+	add_child(ball)
+	var t := create_tween()
+	t.tween_property(ball, "scale", Vector3.ONE * 1.6, 0.3) \
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	t.parallel().tween_property(mat, "albedo_color:a", 0.0, 0.3).set_delay(0.1)
+	t.tween_callback(ball.queue_free)
+	await play_hit(amount, false)
+	if t.is_running():
+		await t.finished
+
+
+## Green glow and a green number going up.
+func play_heal(amount: int) -> void:
+	_spawn_number(amount, false, HEAL_COLOR)
+	_set_flash(true, HEAL_COLOR)
+	await get_tree().create_timer(0.35).timeout
+	_set_flash(false)
+
+
+## Wobbles side to side, for a fighter that loses its turn.
+func play_stagger() -> void:
+	var t := create_tween()
+	for angle in [12.0, -12.0, 8.0, 0.0]:
+		t.tween_property(_body, "rotation_degrees:z", angle, 0.1)
+	await t.finished
+
+
 func _build_hero() -> void:
 	_top = 2.1
 	_add_mesh(_capsule(0.32, 1.2), Color(0.75, 0.12, 0.12), Vector3(0, 0.6, 0))  # body / tunic
@@ -119,7 +172,7 @@ func _start_bounce() -> void:
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
-func _spawn_number(amount: int, crit: bool) -> void:
+func _spawn_number(amount: int, crit: bool, color := Color.WHITE) -> void:
 	var label := Label3D.new()
 	label.text = str(amount)
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -127,7 +180,7 @@ func _spawn_number(amount: int, crit: bool) -> void:
 	label.pixel_size = 0.005
 	label.font_size = 96 if crit else 64
 	label.outline_size = 16
-	label.modulate = Color(1.0, 0.85, 0.2) if crit else Color.WHITE
+	label.modulate = Color(1.0, 0.85, 0.2) if crit else color
 	label.position = Vector3(0, _top, 0)
 	add_child(label)
 	var t := label.create_tween().set_parallel()
@@ -136,10 +189,10 @@ func _spawn_number(amount: int, crit: bool) -> void:
 	t.chain().tween_callback(label.queue_free)
 
 
-func _set_flash(on: bool) -> void:
+func _set_flash(on: bool, color := Color.WHITE) -> void:
 	for mat in _materials:
 		mat.emission_enabled = on
-		mat.emission = Color.WHITE
+		mat.emission = color
 		mat.emission_energy_multiplier = 1.5
 
 
