@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-`rpg-turnos`: a 3D turn-based RPG with a Dragon Quest-like look, made with Godot 4.7.2 (Forward+). The work is done from Claude Code, not the Godot editor, so scenes (`.tscn`) and scripts (`.gd`) are written directly as text files. Design specs live in `docs/boost/specs/`.
+`rpg-turnos`: a 3D turn-based RPG with a Dragon Quest-like look, made with Godot 4.7.2 (Compatibility renderer, so the same build runs on the web). The work is done from Claude Code, not the Godot editor, so scenes (`.tscn`) and scripts (`.gd`) are written directly as text files. Design specs live in `docs/boost/specs/`.
 
 ## Layout
 
@@ -46,6 +46,12 @@ Verify by hand instead: `--check-only` on changed scripts, run the game, read th
 - Run the game on autoplay (walks a route, fights picking "Atacar", continues by itself): `.\tools\godot.cmd --path . -- --autoplay`
 - Run only the world map (prints encounters instead of fighting): `.\tools\godot.cmd --path . res://scenes/world/world.tscn -- --autoplay`
 - Record frames to check visuals (not headless; writes `f00000000.png`, ...; 1280x720 PNGs, ~1 MB each; delete the folder afterwards): `.\tools\godot.cmd --path . --write-movie <dir>\f.png --fixed-fps 10 --quit-after 600 -- --autoplay`
+
+- Export for the web (export templates for 4.7.2 must be installed): `.\tools\godot.cmd --headless --path . --export-release "Web" build/web/index.html`. The `Web` preset in `export_presets.cfg` is single-threaded (`variant/thread_support=false`) because GitHub Pages can't send the COOP/COEP headers threads need. Preview it with any static server on `build/web`.
+
+## Web deploy
+
+`.github/workflows/pages.yml` downloads Godot 4.7.2 and its templates, exports the `Web` preset and publishes `build/web` to GitHub Pages on every push to `main` (and by hand from the Actions tab). The repo's Settings → Pages → Source must be "GitHub Actions". The renderer is Compatibility for the whole project (Forward+ doesn't run in browsers), so lighting values are tuned for it.
 
 The `godot` MCP tools (`run_project`, `get_debug_output`, ...) need `projectPath` set to this directory.
 

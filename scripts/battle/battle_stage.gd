@@ -95,7 +95,9 @@ static func _add_environment(root: Node3D) -> void:
 static func _add_sun(root: Node3D) -> void:
 	var sun := DirectionalLight3D.new()
 	sun.light_color = Color(1.0, 0.9, 0.75)
-	sun.light_energy = 1.3
+	# Tuned for the Compatibility renderer (needed for the web build); 1.3 looked
+	# right under Forward+ but washes everything out here.
+	sun.light_energy = 0.6
 	sun.shadow_enabled = true
 	sun.rotation_degrees = Vector3(-40, 35, 0)
 	root.add_child(sun)

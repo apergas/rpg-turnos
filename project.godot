@@ -13,7 +13,7 @@ config_version=5
 config/name="rpg-turnos"
 config/version="0.1"
 run/main_scene="res://scenes/game/game.tscn"
-config/features=PackedStringArray("4.7", "Forward Plus")
+config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [display]
@@ -29,4 +29,6 @@ window/stretch/aspect="expand"
 
 [rendering]
 
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
 rendering_device/driver.windows="d3d12"
