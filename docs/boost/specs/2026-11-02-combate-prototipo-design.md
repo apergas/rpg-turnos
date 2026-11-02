@@ -24,7 +24,7 @@ Un combate jugable de **un héroe contra un slime**, por **rondas al estilo Drag
 - Godot **4.7.2**, renderizador **Forward+**, física 3D **Jolt**.
 - Ventana base 1280×720, stretch `canvas_items` / aspect `expand`.
 - Tooling copiado de `godot-example` (git-ignorado en `tools/`): `tools\godot.cmd`, Node portable, servidor MCP de Godot; `.mcp.json` registra el MCP con `GODOT_PATH` al exe de consola 4.7.2.
-- `tests\run_all.ps1` ejecuta todos los `tests/test_*.gd` (tras `--import`); `tests/.gdignore` los mantiene fuera del proyecto.
+- **Sin tests unitarios ni automatizados**, en ningún momento del proyecto (decisión del usuario, prevalece sobre cualquier skill que pida TDD o tests). La verificación es manual: ejecutar el juego y comprobarlo visualmente.
 - Git local con gitflow: `main`, `develop`, trabajo en `feature/<nombre>` mergeado con `--no-ff` a `develop`. Sin remoto por ahora.
 - `CLAUDE.md` propio describiendo proyecto, layout, comandos y convenciones (mismas notas que `godot-example`: scripts y escenas escritos como texto, autoloads no usados desde scripts `class_name`, etc.).
 
@@ -90,7 +90,7 @@ Ronda:
 
 Fin: si el enemigo cae → `WON`, evento `victory{exp}` y EXP sumada al héroe. Si el héroe cae → `LOST`, evento `defeat`. Llamar a `resolve_round` con el combate terminado devuelve un array vacío.
 
-Todo el azar sale del `RandomNumberGenerator` inyectado. Tests: semilla fija. Juego: `rng.randomize()`.
+Todo el azar sale del `RandomNumberGenerator` inyectado; en el juego se usa `rng.randomize()`.
 
 ## Presentación
 
@@ -106,7 +106,7 @@ Actores (`BattleActor` con una propiedad `look` que elige forma):
 
 Cámara: `Camera3D` detrás y por encima del héroe, en diagonal, mirando al slime. Al atacar, acerca un poco el encuadre al objetivo y vuelve; en crítico, sacudida breve.
 
-Animaciones (`BattleActor`, todas devuelven señal/await y respetan `instant` para tests):
+Animaciones (`BattleActor`, todas se pueden esperar con `await`):
 
 | Método | Efecto |
 |---|---|
@@ -121,25 +121,18 @@ HUD (estilo DQ, parte inferior):
 - Menú de comandos: solo "Atacar" (ratón, Enter o Espacio). Oculto mientras se reproducen eventos. Señal `command_chosen(cmd)`.
 - `BattleResult`: overlay con "¡Victoria! +4 EXP (total N)" o "Has sido derrotado", botón "Luchar otra vez" que reinicia el combate con PV llenos (la EXP del héroe se conserva).
 
-`BattleScene` expone `instant_mode := false`: si es `true`, animaciones y texto se resuelven sin esperas (para tests).
+## Verificación (sin tests)
 
-## Tests (headless, `extends SceneTree`, imprimen `PASS`/`FAIL`, código 0/1)
+No se escriben tests unitarios ni automatizados. Se verifica a mano:
 
-| Test | Comprueba |
-|---|---|
-| `test_01_damage.gd` | Rangos de daño normal; mínimo 1; crítico ignora DEF y aplica ×1,5; misma semilla → mismos resultados |
-| `test_01_round_order.gd` | En miles de semillas el más rápido actúa primero la mayoría de veces (>60 %) pero no siempre (<100 %) |
-| `test_01_battle_flow.gd` | Quien cae no actúa; estados `WON`/`LOST`; EXP sumada al ganar; secuencia de eventos correcta; ronda tras el final devuelve vacío |
-| `test_01_battle_sim.gd` | 1.000 combates con semillas distintas: todos terminan en ≤20 rondas; el héroe gana >90 % |
-| `test_01_battle_scene.gd` | La escena carga sin errores; con `instant_mode` y "Atacar" inyectado repetidamente llega a mostrar `BattleResult`; "Luchar otra vez" reinicia con PV llenos |
-
-Además, comprobación visual: ejecutar con el MCP de Godot, capturar el combate y revisar cámara, luz y mensajes.
+- Validar cada script con `.\tools\godot.cmd --headless --path . --check-only --script <ruta>` y que el proyecto arranque sin errores en la salida.
+- Ejecutar el juego (con el MCP de Godot o `.\tools\godot.cmd --path .`), jugar varios combates y capturar pantalla para revisar cámara, luz, animaciones, mensajes, victoria, derrota y "Luchar otra vez".
 
 ## Criterios de terminado
 
 - `.\tools\godot.cmd --path .` abre directamente el combate (`run/main_scene` = `battle_scene.tscn`).
 - Se puede pulsar "Atacar" hasta ganar o perder; "Luchar otra vez" reinicia.
-- `powershell -ExecutionPolicy Bypass -File .\tests\run_all.ps1` pasa entero.
+- El juego arranca y se juega sin errores en la salida de Godot.
 - Trabajo commiteado en `feature/combate-prototipo` y mergeado a `develop` con `--no-ff`.
 
 ## Fuera de alcance
