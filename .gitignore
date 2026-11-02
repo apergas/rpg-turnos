@@ -11,3 +11,6 @@
 
 # Plans (local only, not versioned)
 /plans/
+
+# Local preview server config
+/.claude/launch.json

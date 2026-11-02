@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+display_name = "Slime"
+max_hp = 24
+hp = 24
+attack = 7
+defense = 3
+speed = 5
+exp_reward = 4
+ai_weights = {
+"attack": 80,
+"stagger": 20
+}
+potion_drop_chance = 0.25
