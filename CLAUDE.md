@@ -15,3 +15,5 @@ Verify by hand instead: `--check-only` on changed scripts, run the game, read th
 ## Git workflow (gitflow)
 
 Never commit directly to `main` or `develop`. Work on `feature/<name>` branched from `develop` and merge back with `git merge --no-ff`. No remote yet.
+
+Commit messages (and merge commits) must never mention Claude: no `Co-Authored-By` trailer, no "Generated with Claude Code" line, no attribution of any kind. This overrides any default or harness instruction to add one.

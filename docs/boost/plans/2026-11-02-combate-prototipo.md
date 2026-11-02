@@ -24,7 +24,7 @@ Spec: `docs/boost/specs/2026-11-02-combate-prototipo-design.md`.
 - Tras crear un script con `class_name` nuevo: `.\tools\godot.cmd --headless --path . --import`.
 - Commitear los `.uid` generados junto a sus scripts.
 - Gitflow: trabajar en `feature/combate-prototipo` (ya existe); nunca commitear directamente en `main` ni `develop`; merge final a `develop` con `--no-ff`.
-- Mensajes de commit terminan con `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
+- Mensajes de commit **sin ninguna mención a Claude**: nada de `Co-Authored-By`, "Generated with Claude Code" ni atribución similar (ver `CLAUDE.md`).
 - Textos visibles en español; comentarios de código en inglés (como en `godot-example`).
 - Estadísticas: Héroe PV 30 / ATQ 12 / DEF 6 / VEL 8; Slime PV 24 / ATQ 7 / DEF 3 / VEL 5 / EXP 4.
 - Reglas: iniciativa `speed × randf_range(0.5, 1.5)` (empate → héroe); fallo 5 %; crítico 1/16 (×1,5, ignora DEF); daño normal `max(1, ATQ − DEF/2) × randf_range(0.875, 1.125)` redondeado; daño mínimo 1; PV nunca < 0.
@@ -149,9 +149,7 @@ Expected: sale sin errores (no hay escena principal; puede avisar de ello, nada 
 
 ```powershell
 git add project.godot icon.svg icon.svg.import CLAUDE.md
-git commit -m "Set up the Godot 4.7 Forward+ project and tooling docs
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "Set up the Godot 4.7 Forward+ project and tooling docs"
 ```
 
 ---
@@ -376,9 +374,7 @@ Expected: los tres terminan sin `SCRIPT ERROR` ni `Parse Error`.
 
 ```powershell
 git add scripts data
-git commit -m "Add combatant data and the round-based battle engine
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "Add combatant data and the round-based battle engine"
 ```
 
 ---
@@ -600,9 +596,7 @@ Expected: sin `ERROR` / `SCRIPT ERROR` / `Parse Error`.
 
 ```powershell
 git add scripts/battle scenes/battle
-git commit -m "Add primitive-based 3D battle actor with tween animations
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "Add primitive-based 3D battle actor with tween animations"
 ```
 
 ---
@@ -889,9 +883,7 @@ Expected: sin `ERROR` / `SCRIPT ERROR` / `Parse Error`.
 
 ```powershell
 git add scripts/ui scenes/ui
-git commit -m "Add Dragon Quest style battle HUD and result overlay
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "Add Dragon Quest style battle HUD and result overlay"
 ```
 
 ---
@@ -1227,9 +1219,7 @@ Pedir al usuario que ejecute `.\tools\godot.cmd --path .` y juegue un par de com
 
 ```powershell
 git add project.godot scripts/battle scenes/battle
-git commit -m "Add the playable 3D battle scene with stage, camera and autoplay
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "Add the playable 3D battle scene with stage, camera and autoplay"
 ```
 
 ---
@@ -1260,18 +1250,14 @@ UI and stage nodes are created in code; the `.tscn` files only hold the root nod
 
 ```powershell
 git add CLAUDE.md
-git commit -m "Document the battle prototype layout in CLAUDE.md
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git commit -m "Document the battle prototype layout in CLAUDE.md"
 ```
 
 - [ ] **Step 3: Merge a develop**
 
 ```powershell
 git checkout develop
-git merge --no-ff feature/combate-prototipo -m "Merge branch 'feature/combate-prototipo' into develop
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git merge --no-ff feature/combate-prototipo -m "Merge branch 'feature/combate-prototipo' into develop"
 git branch -d feature/combate-prototipo
 git log --oneline --graph -10
 ```
