@@ -21,7 +21,7 @@ func _ready() -> void:
 	state = GameState.new(HERO_DATA)
 	_world = WORLD_SCENE.instantiate()
 	add_child(_world)
-	_world.refresh_status(state.hero)
+	_world.refresh_status(state.hero, state.inventory.count(Inventory.POTION))
 	_world.encounter_triggered.connect(_on_encounter)
 	_build_fade()
 
@@ -42,7 +42,7 @@ func _on_encounter() -> void:
 	if not won:
 		state.heal_full()
 		_world.respawn()
-	_world.refresh_status(state.hero)
+	_world.refresh_status(state.hero, state.inventory.count(Inventory.POTION))
 	_world.set_active(true)
 	await _fade_to(0.0)
 	if not won:

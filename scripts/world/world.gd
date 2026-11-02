@@ -17,7 +17,9 @@ var _camera: FollowCamera
 var _ui: CanvasLayer
 var _name_label: Label
 var _hp_label: Label
+var _mp_label: Label
 var _exp_label: Label
+var _potion_label: Label
 var _notice: Label
 var _waiting := false
 
@@ -36,7 +38,7 @@ func _ready() -> void:
 	respawn()
 	_camera.current = true
 	if get_parent() == get_tree().root:
-		refresh_status(HERO_DATA)
+		refresh_status(HERO_DATA, Inventory.START_POTIONS)
 		encounter_triggered.connect(_on_standalone_encounter)
 
 
@@ -70,10 +72,16 @@ func respawn() -> void:
 	_meter.reset()
 
 
-func refresh_status(hero: Combatant) -> void:
-	_name_label.text = hero.display_name
+func refresh_status(hero: Combatant, potions: int) -> void:
+	_name_label.text = "%s  Nv %d" % [hero.display_name, hero.level]
 	_hp_label.text = "PV %d / %d" % [hero.hp, hero.max_hp]
-	_exp_label.text = "EXP %d" % hero.experience
+	_mp_label.text = "PM %d / %d" % [hero.mp, hero.max_mp]
+	var next := Leveling.exp_for_next(hero.level)
+	if next < 0:
+		_exp_label.text = "EXP %d" % hero.experience
+	else:
+		_exp_label.text = "EXP %d / %d" % [hero.experience, next]
+	_potion_label.text = "%s ×%d" % [Inventory.display_name(Inventory.POTION), potions]
 
 
 ## Shows a short line under the status for NOTICE_TIME seconds.
@@ -103,8 +111,12 @@ func _build_status() -> void:
 	box.add_child(_name_label)
 	_hp_label = _label()
 	box.add_child(_hp_label)
+	_mp_label = _label()
+	box.add_child(_mp_label)
 	_exp_label = _label()
 	box.add_child(_exp_label)
+	_potion_label = _label()
+	box.add_child(_potion_label)
 	_notice = _label()
 	_notice.hide()
 	box.add_child(_notice)
