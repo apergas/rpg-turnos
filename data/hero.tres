@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+display_name = "Héroe"
+max_hp = 30
+hp = 30
+attack = 12
+defense = 6
+speed = 8
