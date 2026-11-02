@@ -202,10 +202,12 @@ func _command_button(text: String) -> Button:
 	return button
 
 
-## Disabled buttons also leave the focus chain, so up / down skip them.
+## Disabled buttons also leave the focus chain (so up / down skip them) and let mouse
+## clicks through (so a click over the hidden menu still advances messages).
 func _set_enabled(button: Button, enabled: bool) -> void:
 	button.disabled = not enabled
 	button.focus_mode = Control.FOCUS_ALL if enabled else Control.FOCUS_NONE
+	button.mouse_filter = Control.MOUSE_FILTER_STOP if enabled else Control.MOUSE_FILTER_IGNORE
 	if not enabled:
 		button.release_focus()
 
