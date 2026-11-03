@@ -32,6 +32,8 @@ var _autoplay := false
 var _done := false
 var _new_level := 0
 var _got_potion := false
+## Color of the last spell cast, used for the hit that follows it.
+var _spell_color := BattleActor.FIRE_COLOR
 var _hero_actor: BattleActor
 var _enemy_actor: BattleActor
 var _camera: Camera3D
@@ -57,7 +59,8 @@ func _ready() -> void:
 	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
 	BattleStage.build(self)
 	_hero_actor = _spawn_actor(BattleActor.Look.HERO, HERO_POS, ENEMY_POS)
-	_enemy_actor = _spawn_actor(BattleActor.Look.SLIME, ENEMY_POS, HERO_POS)
+	var enemy_look := BattleActor.Look.KING_SLIME if enemy.is_boss else BattleActor.Look.SLIME
+	_enemy_actor = _spawn_actor(enemy_look, ENEMY_POS, HERO_POS)
 	_build_camera()
 	var ui := CanvasLayer.new()
 	add_child(ui)
@@ -69,7 +72,8 @@ func _ready() -> void:
 	_result.continue_requested.connect(_finish)
 	engine = BattleEngine.new(hero, enemy, _rng, inventory)
 	_hud.set_hero(hero, inventory.count(Inventory.POTION))
-	await _say("¡Un %s salvaje aparece!" % enemy.display_name)
+	var intro := "¡El %s te cierra el paso!" if enemy.is_boss else "¡Un %s salvaje aparece!"
+	await _say(intro % enemy.display_name)
 	_ask_command()
 
 
@@ -136,9 +140,10 @@ func _play_event(event: Dictionary) -> void:
 		BattleEvent.SKILL:
 			if event.actor == BattleEvent.HERO:
 				_hud.update_mp(event.mp_left, hero.max_mp)
+			_spell_color = event.color
 			await _say("¡%s lanza %s!" % [_fighter(event.actor).display_name, event.name])
 			_focus_camera(_actor(event.target))
-			await _actor(event.actor).play_cast()
+			await _actor(event.actor).play_cast(_spell_color)
 		BattleEvent.MISS:
 			await _actor(event.target).play_dodge()
 			_reset_camera()
@@ -147,7 +152,7 @@ func _play_event(event: Dictionary) -> void:
 			if event.crit:
 				_shake_camera()
 			if event.magic:
-				await _actor(event.target).play_burn(event.amount)
+				await _actor(event.target).play_burn(event.amount, _spell_color)
 			else:
 				await _actor(event.target).play_hit(event.amount, event.crit)
 			_reset_camera()

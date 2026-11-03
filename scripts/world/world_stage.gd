@@ -1,6 +1,6 @@
 class_name WorldStage extends RefCounted
 ## Builds the world map from primitives: a 60 x 60 m grass field with a dirt path
-## from the spawn point (south) to an empty clearing (north), rocks and invisible
+## from the spawn point (south) to the village of Villaclaro in a clearing (north), rocks and invisible
 ## walls with collision, and hills outside the field. Same sky and sun as battles.
 
 const FIELD_HALF := 30.0
@@ -9,6 +9,21 @@ const SPAWN_RADIUS := 4.0
 const CLEARING_POS := Vector3(0, 0, -22)
 const CLEARING_RADIUS := 8.0
 const PATH_HALF_WIDTH := 1.5
+## Where the old woman stands and where the Rey Slime waits once the quest unlocks it.
+const NPC_POS := Vector3(-2.5, 0, -20)
+const BOSS_POS := Vector3(0, 0, -27.5)
+## [position, yaw in degrees] of each village house; the yaw turns the door to the clearing.
+const HOUSES := [
+	[Vector3(-5.5, 0, -25), 60.0],
+	[Vector3(5.5, 0, -25), -60.0],
+]
+const HOUSE_SIZE := Vector3(3, 2.5, 3)
+const WELL_POS := Vector3(4.5, 0, -19)
+const WELL_RADIUS := 0.8
+const WALL_COLOR := Color(0.93, 0.87, 0.72)
+const ROOF_COLOR := Color(0.72, 0.2, 0.15)
+const DOOR_COLOR := Color(0.4, 0.25, 0.12)
+const WATER_COLOR := Color(0.2, 0.4, 0.8)
 ## Corners of the dirt path, from the spawn point to the clearing.
 const PATH_POINTS: Array[Vector3] = [
 	Vector3(0, 0, 26),
@@ -50,6 +65,7 @@ static func build(root: Node3D) -> void:
 	_add_path(root)
 	for rock in ROCKS:
 		_add_rock(root, rock[0], rock[1])
+	_add_village(root)
 	for hill in HILLS:
 		BattleStage.add_mesh(root, BattleStage.unit_sphere(), BattleStage.HILL, hill[0], hill[1])
 	_add_walls(root)
@@ -68,6 +84,17 @@ static func is_on_path(pos: Vector3) -> bool:
 		if p.distance_to(Geometry2D.get_closest_point_to_segment(p, a, b)) < PATH_HALF_WIDTH:
 			return true
 	return false
+
+
+## Upright cylinder collider standing on the ground, for village props and figures.
+static func add_cylinder_shape(body: StaticBody3D, radius: float, height: float) -> void:
+	var cylinder := CylinderShape3D.new()
+	cylinder.radius = radius
+	cylinder.height = height
+	var shape := CollisionShape3D.new()
+	shape.shape = cylinder
+	shape.position = Vector3(0, height / 2.0, 0)
+	body.add_child(shape)
 
 
 static func _add_ground(root: Node3D) -> void:
@@ -116,6 +143,47 @@ static func _add_rock(root: Node3D, pos: Vector3, scl: Vector3) -> void:
 	box.size = scl * 1.6
 	var shape := CollisionShape3D.new()
 	shape.shape = box
+	body.add_child(shape)
+
+
+static func _add_village(root: Node3D) -> void:
+	for house in HOUSES:
+		_add_house(root, house[0], house[1])
+	var well := StaticBody3D.new()
+	well.position = WELL_POS
+	root.add_child(well)
+	var stone := CylinderMesh.new()
+	stone.top_radius = WELL_RADIUS
+	stone.bottom_radius = WELL_RADIUS
+	stone.height = 0.8
+	BattleStage.add_mesh(well, stone, BattleStage.ROCK, Vector3(0, 0.4, 0))
+	var water := CylinderMesh.new()
+	water.top_radius = WELL_RADIUS - 0.2
+	water.bottom_radius = WELL_RADIUS - 0.2
+	water.height = 0.02
+	BattleStage.add_mesh(well, water, WATER_COLOR, Vector3(0, 0.8, 0))
+	add_cylinder_shape(well, WELL_RADIUS, 0.8)
+
+
+static func _add_house(root: Node3D, pos: Vector3, yaw: float) -> void:
+	var body := StaticBody3D.new()
+	body.position = pos
+	body.rotation_degrees = Vector3(0, yaw, 0)
+	root.add_child(body)
+	var walls := BoxMesh.new()
+	walls.size = HOUSE_SIZE
+	BattleStage.add_mesh(body, walls, WALL_COLOR, Vector3(0, HOUSE_SIZE.y / 2.0, 0))
+	var roof := PrismMesh.new()
+	roof.size = Vector3(HOUSE_SIZE.x + 0.4, 1.4, HOUSE_SIZE.z + 0.4)
+	BattleStage.add_mesh(body, roof, ROOF_COLOR, Vector3(0, HOUSE_SIZE.y + 0.7, 0))
+	var door := BoxMesh.new()
+	door.size = Vector3(0.8, 1.4, 0.05)
+	BattleStage.add_mesh(body, door, DOOR_COLOR, Vector3(0, 0.7, HOUSE_SIZE.z / 2.0 + 0.03))
+	var box := BoxShape3D.new()
+	box.size = HOUSE_SIZE
+	var shape := CollisionShape3D.new()
+	shape.shape = box
+	shape.position = Vector3(0, HOUSE_SIZE.y / 2.0, 0)
 	body.add_child(shape)
 
 

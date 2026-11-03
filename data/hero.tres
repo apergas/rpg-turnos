@@ -6,6 +6,7 @@
 
 [resource]
 script = ExtResource("1_combatant")
+id = "hero"
 display_name = "Héroe"
 level = 1
 max_hp = 30

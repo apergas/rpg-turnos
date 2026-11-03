@@ -6,3 +6,5 @@ class_name Skill extends Resource
 @export var display_name := ""
 @export var mp_cost := 0
 @export var power := 0
+## Color of the caster's glow and of the ball that hits the target.
+@export var color := Color(1.0, 0.45, 0.1)
