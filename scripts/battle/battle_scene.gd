@@ -153,6 +153,7 @@ func _play_event(event: Dictionary) -> void:
 				_shake_camera()
 			if event.magic:
 				await _actor(event.target).play_burn(event.amount, _spell_color)
+				_spell_color = BattleActor.FIRE_COLOR
 			else:
 				await _actor(event.target).play_hit(event.amount, event.crit)
 			_reset_camera()
@@ -185,8 +186,8 @@ func _play_event(event: Dictionary) -> void:
 		BattleEvent.LEVEL_UP:
 			_new_level = event.level
 			_hud.update_level(event.level)
-			_hud.update_hp(hero.hp, hero.max_hp)
-			_hud.update_mp(hero.mp, hero.max_mp)
+			_hud.update_hp(event.hp, event.max_hp)
+			_hud.update_mp(event.mp, event.max_mp)
 			await _say("¡%s sube al nivel %d!" % [hero.display_name, event.level])
 			await _say(_gains_text(event.gains))
 		BattleEvent.DROP:

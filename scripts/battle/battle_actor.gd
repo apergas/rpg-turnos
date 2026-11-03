@@ -186,11 +186,7 @@ func _build_king_slime() -> void:
 	_add_mesh(_cylinder(0.38, 0.22), GOLD, Vector3(0, 1.5, 0))  # crown band
 	for i in 5:
 		var angle := TAU * i / 5.0
-		var spike := CylinderMesh.new()
-		spike.top_radius = 0.0
-		spike.bottom_radius = 0.1
-		spike.height = 0.3
-		_add_mesh(spike, GOLD, Vector3(cos(angle) * 0.3, 1.76, sin(angle) * 0.3))  # crown spike
+		_add_mesh(_cone(0.1, 0.3), GOLD, Vector3(cos(angle) * 0.3, 1.76, sin(angle) * 0.3))  # spike
 
 
 func _start_bounce() -> void:
@@ -272,4 +268,10 @@ static func _cylinder(radius: float, height: float) -> CylinderMesh:
 	mesh.top_radius = radius
 	mesh.bottom_radius = radius
 	mesh.height = height
+	return mesh
+
+
+static func _cone(radius: float, height: float) -> CylinderMesh:
+	var mesh := _cylinder(radius, height)
+	mesh.top_radius = 0.0
 	return mesh
