@@ -1,8 +1,9 @@
 class_name WorldStage extends RefCounted
-## Builds the world map from primitives: a 60 x 60 m field of tall grass (Vegetation)
-## with a bare dirt path from the spawn point (south) to the village of Villaclaro in a
-## clearing (north), rocks and invisible walls with collision, and hills outside the
-## field. Same sky and sun as battles.
+## Builds the world map: a 60 x 60 m field of tall grass (Vegetation) with a bare dirt
+## path from the spawn point (south) to the village of Villaclaro in a clearing
+## (north), low-poly houses, well and rocks with hand-made colliders, trees (denser
+## toward the edges, with trunk colliders) and bushes scattered with fixed seeds,
+## invisible walls, and hills outside the field. Same sky and sun as battles.
 
 const FIELD_HALF := 30.0
 const SPAWN_POS := Vector3(0, 0, 26)
@@ -21,18 +22,18 @@ const GRASS_FLOOR := Color(0.08, 0.22, 0.05)
 ## Where the old woman stands and where the Rey Slime waits once the quest unlocks it.
 const NPC_POS := Vector3(-2.5, 0, -20)
 const BOSS_POS := Vector3(0, 0, -27.5)
-## [position, yaw in degrees] of each village house; the yaw turns the door to the clearing.
+const HOUSE_A := preload("res://assets/medieval/building_home_A_red.gltf")
+const HOUSE_B := preload("res://assets/medieval/building_home_B_red.gltf")
+const WELL := preload("res://assets/medieval/building_well_red.gltf")
+## The Medieval Hexagon buildings are miniatures (a house is 0.8 m wide, 0.9 m tall).
+const BUILDING_SCALE := 3.5
+## [position, yaw in degrees, model] of each village house. The door is on the model's
+## +Z side; the yaw turns it to the clearing.
 const HOUSES := [
-	[Vector3(-5.5, 0, -25), 60.0],
-	[Vector3(5.5, 0, -25), -60.0],
+	[Vector3(-5.5, 0, -25), 60.0, HOUSE_A],
+	[Vector3(5.5, 0, -25), -60.0, HOUSE_B],
 ]
-const HOUSE_SIZE := Vector3(3, 2.5, 3)
 const WELL_POS := Vector3(4.5, 0, -19)
-const WELL_RADIUS := 0.8
-const WALL_COLOR := Color(0.93, 0.87, 0.72)
-const ROOF_COLOR := Color(0.72, 0.2, 0.15)
-const DOOR_COLOR := Color(0.4, 0.25, 0.12)
-const WATER_COLOR := Color(0.2, 0.4, 0.8)
 ## Corners of the dirt path, from the spawn point to the clearing.
 const PATH_POINTS: Array[Vector3] = [
 	Vector3(0, 0, 26),
@@ -41,20 +42,47 @@ const PATH_POINTS: Array[Vector3] = [
 	Vector3(2, 0, -12),
 	Vector3(0, 0, -22),
 ]
-## [position, scale] of each rock (unit spheres, half buried), kept off the path
-## and off the autoplay route.
+## [position, rock model (BattleStage.ROCK_SCENES), scale, yaw in degrees] of each
+## rock, kept off the path and off the autoplay route.
 const ROCKS := [
-	[Vector3(-20, 0.4, -16), Vector3(1.4, 1.0, 1.2)],
-	[Vector3(-22, 0.5, 14), Vector3(1.8, 1.2, 1.5)],
-	[Vector3(18, 0.4, -18), Vector3(1.5, 1.0, 1.3)],
-	[Vector3(22, 0.6, 16), Vector3(2.0, 1.4, 1.6)],
-	[Vector3(-10, 0.3, -18), Vector3(1.0, 0.7, 0.9)],
-	[Vector3(12, 0.4, -20), Vector3(1.3, 0.9, 1.1)],
-	[Vector3(-12, 0.3, 23), Vector3(1.1, 0.8, 1.0)],
-	[Vector3(24, 0.5, 0), Vector3(1.6, 1.1, 1.4)],
-	[Vector3(-24, 0.4, -2), Vector3(1.5, 1.0, 1.2)],
-	[Vector3(7, 0.3, -15), Vector3(0.9, 0.6, 0.8)],
+	[Vector3(-20, 0, -16), 2, 8.0, 15.0],
+	[Vector3(-22, 0, 14), 4, 9.0, 60.0],
+	[Vector3(18, 0, -18), 3, 9.0, 130.0],
+	[Vector3(22, 0, 16), 4, 10.0, 200.0],
+	[Vector3(-10, 0, -18), 1, 8.0, 290.0],
+	[Vector3(12, 0, -20), 2, 9.0, 80.0],
+	[Vector3(-12, 0, 23), 0, 10.0, 170.0],
+	[Vector3(24, 0, 0), 3, 10.0, 240.0],
+	[Vector3(-24, 0, -2), 2, 10.0, 320.0],
+	[Vector3(7, 0, -15), 1, 7.0, 45.0],
 ]
+## Trees: TREE_TRIES random spots over a square of TREE_AREA_HALF with a fixed seed. A
+## spot is kept with a chance that rises from TREE_CENTER_CHANCE (up to TREE_RISE_FROM
+## from the centre) to 1 at the field's edge, and only if it is clear of the path, the
+## autoplay route, the rocks and the other trees.
+const TREE_SEED := 23
+const TREE_TRIES := 600
+const TREE_AREA_HALF := 36.0
+const TREE_CENTER_CHANCE := 0.05
+const TREE_RISE_FROM := 8.0
+const TREE_SPACING := 3.2
+const TREE_PATH_MARGIN := 3.0
+const TREE_ROUTE_MARGIN := 2.5
+const TREE_ROCK_MARGIN := 1.5
+const TREE_SCALE := Vector2(3.6, 4.4)
+## Past this distance from the centre (largest of |x| and |z|) trees are clumps.
+const CLUMP_FROM := 27.0
+## Colliders (only inside the walls): a trunk for single trees, a wider one for clumps.
+const TRUNK_RADIUS := 0.35
+const CLUMP_RADIUS := 2.0
+const TREE_COLLIDER_HEIGHT := 3.0
+## Bushes: BUSH_TRIES random spots inside the walls with a fixed seed, kept off the path
+## and the rocks. They have no collider; the hero walks through them like the grass.
+const BUSH_SEED := 31
+const BUSH_TRIES := 220
+const BUSH_SCALE := Vector2(0.7, 1.2)
+const BUSH_PATH_MARGIN := 0.8
+const BUSH_ROCK_MARGIN := 0.6
 ## [position, scale] of each hill (unit spheres, half buried) around the field.
 const HILLS := [
 	[Vector3(-40, -5, -42), Vector3(22, 10, 22)],
@@ -74,8 +102,10 @@ static func build(root: Node3D) -> ShaderMaterial:
 	_add_ground(root)
 	_add_path(root)
 	for rock in ROCKS:
-		_add_rock(root, rock[0], rock[1])
+		_add_solid_model(root, BattleStage.ROCK_SCENES[rock[1]], rock[0], rock[2], rock[3])
 	_add_village(root)
+	_add_trees(root)
+	_add_bushes(root)
 	for hill in HILLS:
 		BattleStage.add_mesh(root, BattleStage.unit_sphere(), BattleStage.HILL, hill[0], hill[1])
 	_add_walls(root)
@@ -104,13 +134,7 @@ static func is_on_path(pos: Vector3, margin := 0.0) -> bool:
 static func is_grass_free(pos: Vector3) -> bool:
 	if is_on_path(pos, GRASS_PATH_MARGIN):
 		return false
-	var p := Vector2(pos.x, pos.z)
-	for rock in ROCKS:
-		var scl: Vector3 = rock[1]
-		var center := Vector2(rock[0].x, rock[0].z)
-		if p.distance_to(center) < maxf(scl.x, scl.z) + GRASS_ROCK_MARGIN:
-			return false
-	return true
+	return not _near_rock(pos, GRASS_ROCK_MARGIN)
 
 
 ## Upright cylinder collider standing on the ground, for village props and figures.
@@ -160,58 +184,117 @@ static func _add_disc(root: Node3D, center: Vector3, radius: float) -> void:
 	BattleStage.add_mesh(root, mesh, BattleStage.DIRT, center + Vector3(0, 0.01, 0))
 
 
-static func _add_rock(root: Node3D, pos: Vector3, scl: Vector3) -> void:
+## An imported model on a static body, with a box collider fitted to its mesh (the
+## free models bring no collision of their own).
+static func _add_solid_model(root: Node3D, scene: PackedScene, pos: Vector3, scl: float, \
+		yaw_deg: float) -> void:
 	var body := StaticBody3D.new()
 	body.position = pos
+	body.rotation_degrees = Vector3(0, yaw_deg, 0)
 	root.add_child(body)
-	BattleStage.add_mesh(body, BattleStage.unit_sphere(), BattleStage.ROCK, Vector3.ZERO, scl)
-	# Box collider instead of a scaled sphere: physics shapes must not be scaled.
+	var model := BattleStage.add_model(body, scene, Vector3.ZERO, scl)
+	var bounds := BattleStage.model_aabb(model)
 	var box := BoxShape3D.new()
-	box.size = scl * 1.6
+	box.size = bounds.size * scl
 	var shape := CollisionShape3D.new()
 	shape.shape = box
+	shape.position = bounds.get_center() * scl
 	body.add_child(shape)
 
 
 static func _add_village(root: Node3D) -> void:
 	for house in HOUSES:
-		_add_house(root, house[0], house[1])
-	var well := StaticBody3D.new()
-	well.position = WELL_POS
-	root.add_child(well)
-	var stone := CylinderMesh.new()
-	stone.top_radius = WELL_RADIUS
-	stone.bottom_radius = WELL_RADIUS
-	stone.height = 0.8
-	BattleStage.add_mesh(well, stone, BattleStage.ROCK, Vector3(0, 0.4, 0))
-	var water := CylinderMesh.new()
-	water.top_radius = WELL_RADIUS - 0.2
-	water.bottom_radius = WELL_RADIUS - 0.2
-	water.height = 0.02
-	BattleStage.add_mesh(well, water, WATER_COLOR, Vector3(0, 0.8, 0))
-	add_cylinder_shape(well, WELL_RADIUS, 0.8)
+		_add_solid_model(root, house[2], house[0], BUILDING_SCALE, house[1])
+	_add_solid_model(root, WELL, WELL_POS, BUILDING_SCALE, 0.0)
 
 
-static func _add_house(root: Node3D, pos: Vector3, yaw: float) -> void:
-	var body := StaticBody3D.new()
-	body.position = pos
-	body.rotation_degrees = Vector3(0, yaw, 0)
-	root.add_child(body)
-	var walls := BoxMesh.new()
-	walls.size = HOUSE_SIZE
-	BattleStage.add_mesh(body, walls, WALL_COLOR, Vector3(0, HOUSE_SIZE.y / 2.0, 0))
-	var roof := PrismMesh.new()
-	roof.size = Vector3(HOUSE_SIZE.x + 0.4, 1.4, HOUSE_SIZE.z + 0.4)
-	BattleStage.add_mesh(body, roof, ROOF_COLOR, Vector3(0, HOUSE_SIZE.y + 0.7, 0))
-	var door := BoxMesh.new()
-	door.size = Vector3(0.8, 1.4, 0.05)
-	BattleStage.add_mesh(body, door, DOOR_COLOR, Vector3(0, 0.7, HOUSE_SIZE.z / 2.0 + 0.03))
-	var box := BoxShape3D.new()
-	box.size = HOUSE_SIZE
-	var shape := CollisionShape3D.new()
-	shape.shape = box
-	shape.position = Vector3(0, HOUSE_SIZE.y / 2.0, 0)
-	body.add_child(shape)
+static func _add_trees(root: Node3D) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = TREE_SEED
+	var placed: Array[Vector2] = []
+	var single_a: Array[Transform3D] = []
+	var single_b: Array[Transform3D] = []
+	var clumps: Array[Transform3D] = []
+	for i in TREE_TRIES:
+		# Every roll is made even for spots left out, so the layout stays stable.
+		var pos := Vector3(rng.randf_range(-TREE_AREA_HALF, TREE_AREA_HALF), 0.0,
+			rng.randf_range(-TREE_AREA_HALF, TREE_AREA_HALF))
+		var roll := rng.randf()
+		var yaw := rng.randf() * TAU
+		var scl := rng.randf_range(TREE_SCALE.x, TREE_SCALE.y)
+		var use_a := rng.randf() < 0.5
+		var edge := maxf(absf(pos.x), absf(pos.z))
+		var rise := clampf((edge - TREE_RISE_FROM) / (FIELD_HALF - TREE_RISE_FROM), 0.0, 1.0)
+		if roll > lerpf(TREE_CENTER_CHANCE, 1.0, rise) or not _tree_fits(pos, placed):
+			continue
+		placed.append(Vector2(pos.x, pos.z))
+		var xform := Transform3D(Basis(Vector3.UP, yaw).scaled(Vector3.ONE * scl), pos)
+		var clump := edge > CLUMP_FROM
+		if clump:
+			clumps.append(xform)
+		elif use_a:
+			single_a.append(xform)
+		else:
+			single_b.append(xform)
+		if edge < FIELD_HALF:
+			var body := StaticBody3D.new()
+			body.position = pos
+			root.add_child(body)
+			add_cylinder_shape(body, CLUMP_RADIUS if clump else TRUNK_RADIUS,
+				TREE_COLLIDER_HEIGHT)
+	LowPoly.add_multimesh(root, BattleStage.scene_mesh(BattleStage.TREE_SCENES[0]), single_a)
+	LowPoly.add_multimesh(root, BattleStage.scene_mesh(BattleStage.TREE_SCENES[1]), single_b)
+	LowPoly.add_multimesh(root, BattleStage.scene_mesh(BattleStage.TREE_SCENES[2]), clumps)
+
+
+static func _tree_fits(pos: Vector3, placed: Array[Vector2]) -> bool:
+	if is_on_path(pos, TREE_PATH_MARGIN) or _near_route(pos, TREE_ROUTE_MARGIN):
+		return false
+	if _near_rock(pos, TREE_ROCK_MARGIN):
+		return false
+	var p := Vector2(pos.x, pos.z)
+	for other in placed:
+		if p.distance_to(other) < TREE_SPACING:
+			return false
+	return true
+
+
+static func _add_bushes(root: Node3D) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = BUSH_SEED
+	var bushes: Array[Transform3D] = []
+	for i in BUSH_TRIES:
+		var pos := Vector3(rng.randf_range(-FIELD_HALF, FIELD_HALF), 0.0,
+			rng.randf_range(-FIELD_HALF, FIELD_HALF))
+		var yaw := rng.randf() * TAU
+		var scl := rng.randf_range(BUSH_SCALE.x, BUSH_SCALE.y)
+		if is_on_path(pos, BUSH_PATH_MARGIN) or _near_rock(pos, BUSH_ROCK_MARGIN):
+			continue
+		bushes.append(Transform3D(Basis(Vector3.UP, yaw).scaled(Vector3.ONE * scl), pos))
+	LowPoly.add_multimesh(root, LowPoly.bush_mesh(), bushes)
+
+
+## True within margin of a rock's footprint.
+static func _near_rock(pos: Vector3, margin: float) -> bool:
+	var p := Vector2(pos.x, pos.z)
+	for rock in ROCKS:
+		var center := Vector2(rock[0].x, rock[0].z)
+		if p.distance_to(center) < BattleStage.rock_radius(rock) + margin:
+			return true
+	return false
+
+
+## True within margin of the loop Player walks on --autoplay, so no tree blocks it.
+static func _near_route(pos: Vector3, margin: float) -> bool:
+	var p := Vector2(pos.x, pos.z)
+	var route := Player.AUTOPLAY_ROUTE
+	for i in route.size():
+		var a := Vector2(route[i].x, route[i].z)
+		var next := route[(i + 1) % route.size()]
+		var b := Vector2(next.x, next.z)
+		if p.distance_to(Geometry2D.get_closest_point_to_segment(p, a, b)) < margin:
+			return true
+	return false
 
 
 static func _add_walls(root: Node3D) -> void:

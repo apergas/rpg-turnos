@@ -14,3 +14,6 @@
 
 # Local preview server config
 /.claude/launch.json
+
+# Downloaded asset packs (CC0); only the models in use are copied to assets/
+assets_src/

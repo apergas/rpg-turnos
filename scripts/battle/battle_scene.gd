@@ -182,6 +182,7 @@ func _play_event(event: Dictionary) -> void:
 			else:
 				await _say("¡Has sido derrotado...!")
 		BattleEvent.VICTORY:
+			_hero_actor.play_cheer()
 			await _say("¡Has ganado! Obtienes %d EXP." % event.exp)
 		BattleEvent.LEVEL_UP:
 			_new_level = event.level

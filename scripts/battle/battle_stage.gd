@@ -1,21 +1,56 @@
 class_name BattleStage extends RefCounted
-## Builds the battle backdrop from primitives: sky, warm sun, fog, grass field with
-## tall grass (Vegetation) around the fighters, dirt path, rocks and distant hills. The
-## environment and mesh helpers are shared with WorldStage.
+## Builds the battle backdrop: sky, warm sun, fog, grass field with tall grass
+## (Vegetation) around the fighters, dirt path, low-poly rocks, trees and bushes, and
+## distant hills. The environment, the mesh and model helpers and the rock and tree
+## models are shared with WorldStage.
 
 const GRASS := Color(0.32, 0.55, 0.22)
 const DIRT := Color(0.62, 0.5, 0.34)
-const ROCK := Color(0.5, 0.5, 0.52)
 const HILL := Color(0.27, 0.47, 0.22)
 const HAZE := Color(0.78, 0.84, 0.92)
 
-## [position, scale] of each rock (unit spheres).
+## KayKit Medieval Hexagon rocks A to E (index used by the ROCKS tables).
+const ROCK_SCENES: Array[PackedScene] = [
+	preload("res://assets/medieval/rock_single_A.gltf"),
+	preload("res://assets/medieval/rock_single_B.gltf"),
+	preload("res://assets/medieval/rock_single_C.gltf"),
+	preload("res://assets/medieval/rock_single_D.gltf"),
+	preload("res://assets/medieval/rock_single_E.gltf"),
+]
+## Half the widest side of each rock model at scale 1 (measured AABBs), in metres.
+const ROCK_RADII: Array[float] = [0.15, 0.145, 0.175, 0.145, 0.245]
+## Single tree A, single tree B and a clump of trees (index used by the TREES tables).
+const TREE_SCENES: Array[PackedScene] = [
+	preload("res://assets/medieval/tree_single_A.gltf"),
+	preload("res://assets/medieval/tree_single_B.gltf"),
+	preload("res://assets/medieval/trees_A_medium.gltf"),
+]
+## [position, rock model, scale, yaw in degrees] of each rock.
 const ROCKS := [
-	[Vector3(-5.5, 0.3, -6.0), Vector3(1.2, 0.8, 1.0)],
-	[Vector3(4.5, 0.4, -8.0), Vector3(1.6, 1.1, 1.3)],
-	[Vector3(6.5, 0.2, -2.5), Vector3(0.8, 0.5, 0.7)],
-	[Vector3(-7.0, 0.5, -12.0), Vector3(2.0, 1.4, 1.6)],
-	[Vector3(2.5, 0.15, -4.5), Vector3(0.5, 0.35, 0.45)],
+	[Vector3(-5.5, 0, -6.0), 2, 7.0, 30.0],
+	[Vector3(4.5, 0, -8.0), 4, 8.0, 110.0],
+	[Vector3(6.5, 0, -2.5), 1, 5.0, 200.0],
+	[Vector3(-7.0, 0, -12.0), 4, 10.0, 250.0],
+	[Vector3(2.5, 0, -4.5), 0, 4.0, 80.0],
+]
+## [position, tree model, scale, yaw in degrees] of each tree, behind the fighters.
+const TREES := [
+	[Vector3(-10, 0, -15), 0, 4.0, 20.0],
+	[Vector3(-14, 0, -7), 1, 4.2, 70.0],
+	[Vector3(11, 0, -17), 2, 4.0, 0.0],
+	[Vector3(15, 0, -8), 0, 3.8, 140.0],
+	[Vector3(-4, 0, -21), 2, 4.5, 200.0],
+	[Vector3(4, 0, -24), 1, 4.4, 300.0],
+	[Vector3(-18, 0, -18), 2, 4.0, 90.0],
+]
+## [position, scale] of each bush.
+const BUSHES := [
+	[Vector3(-4.5, 0, -3.5), 0.9],
+	[Vector3(5.0, 0, -5.5), 0.8],
+	[Vector3(-8.5, 0, -9.0), 1.1],
+	[Vector3(8.5, 0, -11.0), 1.0],
+	[Vector3(1.0, 0, -12.5), 0.9],
+	[Vector3(-6.0, 0, 1.0), 0.8],
 ]
 ## [position, scale] of each hill (unit spheres, half buried).
 const HILLS := [
@@ -47,7 +82,14 @@ static func build(root: Node3D) -> void:
 	add_mesh(root, path, DIRT, PATH_CENTER + Vector3(0, 0.01, 0), Vector3.ONE,
 		Vector3(0, PATH_YAW_DEG, 0))
 	for rock in ROCKS:
-		add_mesh(root, unit_sphere(), ROCK, rock[0], rock[1])
+		add_model(root, ROCK_SCENES[rock[1]], rock[0], rock[2], rock[3])
+	for tree in TREES:
+		add_model(root, TREE_SCENES[tree[1]], tree[0], tree[2], tree[3])
+	var bushes: Array[Transform3D] = []
+	for i in BUSHES.size():
+		bushes.append(Transform3D(Basis(Vector3.UP, i * 0.8).scaled(Vector3.ONE * BUSHES[i][1]),
+			BUSHES[i][0]))
+	LowPoly.add_multimesh(root, LowPoly.bush_mesh(), bushes)
 	for hill in HILLS:
 		add_mesh(root, unit_sphere(), HILL, hill[0], hill[1])
 	Vegetation.build(root, GRASS_AREA, _is_grass_free, GRASS_SEED)
@@ -74,6 +116,36 @@ static func add_mesh(root: Node3D, mesh: Mesh, color: Color, pos: Vector3, \
 	return mi
 
 
+## An imported model (its own materials) standing at pos, scaled evenly and turned
+## yaw_deg around Y.
+static func add_model(root: Node3D, scene: PackedScene, pos: Vector3, scl: float, \
+		yaw_deg := 0.0) -> Node3D:
+	var model: Node3D = scene.instantiate()
+	model.position = pos
+	model.scale = Vector3.ONE * scl
+	model.rotation_degrees = Vector3(0, yaw_deg, 0)
+	root.add_child(model)
+	return model
+
+
+## The mesh of a single-mesh model (the Medieval Hexagon ones), for MultiMeshes.
+static func scene_mesh(scene: PackedScene) -> Mesh:
+	var model := scene.instantiate()
+	var mesh := (model.get_child(0) as MeshInstance3D).mesh
+	model.free()
+	return mesh
+
+
+## Bounds of a single-mesh model at scale 1, in its own axes.
+static func model_aabb(model: Node3D) -> AABB:
+	return (model.get_child(0) as MeshInstance3D).get_aabb()
+
+
+## Footprint radius of a [position, rock model, scale, yaw] entry.
+static func rock_radius(rock: Array) -> float:
+	return ROCK_RADII[rock[1]] * rock[2]
+
+
 static func unit_sphere() -> SphereMesh:
 	var mesh := SphereMesh.new()
 	mesh.radius = 1.0
@@ -91,8 +163,7 @@ static func _is_grass_free(pos: Vector3) -> bool:
 			and absf(local.z) < PATH_SIZE.y / 2.0 + GRASS_MARGIN:
 		return false
 	for rock in ROCKS:
-		var scl: Vector3 = rock[1]
-		if p.distance_to(Vector2(rock[0].x, rock[0].z)) < maxf(scl.x, scl.z) + GRASS_MARGIN:
+		if p.distance_to(Vector2(rock[0].x, rock[0].z)) < rock_radius(rock) + GRASS_MARGIN:
 			return false
 	return true
 
