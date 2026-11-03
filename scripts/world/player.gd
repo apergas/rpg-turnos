@@ -1,7 +1,8 @@
 class_name Player extends CharacterBody3D
 ## Hero on the world map. Moves with WASD / arrows in screen axes (the top-down camera
-## never turns: up is north, -Z), turns smoothly toward where it walks and bobs while
-## moving. Its model is a BattleActor.
+## never turns: up is north, -Z), or walks to a point given by move_to() (a click or
+## tap on the ground; keys cancel it). Turns smoothly toward where it walks and bobs
+## while moving. Its model is a BattleActor.
 ## With `-- --autoplay` it walks AUTOPLAY_ROUTE in a loop instead of reading keys.
 
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
@@ -25,14 +26,22 @@ const AUTOPLAY_ROUTE: Array[Vector3] = [
 	Vector3(-6, 0, 18),
 ]
 const ROUTE_REACHED := 0.6
+## How close to a move_to() point counts as arrived.
+const TARGET_REACHED := 0.3
+## A move_to() walk gives up after this many frames moving under a quarter of SPEED
+## (walking into a rock or a wall).
+const STUCK_FRAMES := 12
 
 var input_enabled := true
 ## Horizontal meters moved during the last physics frame.
 var last_step_m := 0.0
+## Point being walked to after a click or tap (y = 0); null when there is none.
+var move_target: Variant = null
 
 var _model: BattleActor
 var _autoplay := false
 var _route_index := 0
+var _stuck_frames := 0
 var _bob_tween: Tween
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 
@@ -57,9 +66,19 @@ func place(pos: Vector3, facing_yaw: float) -> void:
 	velocity = Vector3.ZERO
 	_model.rotation.y = facing_yaw
 	last_step_m = 0.0
+	move_target = null
+
+
+## Walks to point (only its X and Z count) until it arrives, gets stuck or a key is
+## pressed.
+func move_to(point: Vector3) -> void:
+	move_target = Vector3(point.x, 0.0, point.z)
+	_stuck_frames = 0
 
 
 func _physics_process(delta: float) -> void:
+	if not input_enabled:
+		move_target = null
 	var dir := _wanted_direction() if input_enabled else Vector3.ZERO
 	velocity.x = dir.x * SPEED
 	velocity.z = dir.z * SPEED
@@ -72,6 +91,10 @@ func _physics_process(delta: float) -> void:
 	var moved := global_position - before
 	moved.y = 0.0
 	last_step_m = moved.length()
+	if move_target != null and dir != Vector3.ZERO:
+		_stuck_frames = _stuck_frames + 1 if last_step_m < SPEED * delta * 0.25 else 0
+		if _stuck_frames > STUCK_FRAMES:
+			move_target = null
 	if dir != Vector3.ZERO:
 		var target_yaw := atan2(-dir.x, -dir.z)  # the model faces -Z
 		_model.rotation.y = lerp_angle(_model.rotation.y, target_yaw, minf(1.0, TURN_SPEED * delta))
@@ -91,10 +114,22 @@ func _wanted_direction() -> Vector3:
 	if Input.is_physical_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_DOWN):
 		keys.y += 1.0
 	if keys == Vector2.ZERO:
-		return Vector3.ZERO
+		return _target_direction()
+	move_target = null
 	keys = keys.normalized()
 	# The camera sits south of the player looking north: screen up is -Z, right is +X.
 	return Vector3(keys.x, 0.0, keys.y)
+
+
+func _target_direction() -> Vector3:
+	if move_target == null:
+		return Vector3.ZERO
+	var to_goal: Vector3 = move_target - global_position
+	to_goal.y = 0.0
+	if to_goal.length() < TARGET_REACHED:
+		move_target = null
+		return Vector3.ZERO
+	return to_goal.normalized()
 
 
 func _route_direction() -> Vector3:
