@@ -2,8 +2,8 @@ class_name EncounterMeter extends RefCounted
 ## Random encounter rule. Only meters walked on grass count. After reset() the first
 ## GRACE_M meters are free; after that every full meter has CHANCE_PER_M of a battle.
 
-const GRACE_M := 5.0
-const CHANCE_PER_M := 0.08
+const GRACE_M := 15.0
+const CHANCE_PER_M := 0.006
 
 var _rng: RandomNumberGenerator
 var _grace := GRACE_M

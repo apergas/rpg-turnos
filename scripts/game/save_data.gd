@@ -1,9 +1,11 @@
 class_name SaveData extends RefCounted
 ## Turns the session into a Dictionary that SaveStore writes as JSON, and back. Pure:
 ## no nodes, no files. JSON reads every number as a float, so apply() converts them.
-## VERSION goes in every save so a later format can migrate older files.
+## VERSION goes in every save so a later format can migrate older files. Version 2 (full
+## combat) adds the gold and changes how the hero grows, so version 1 saves are refused.
+## The spells are not saved: Leveling.sync_skills() gives them back from the level.
 
-const VERSION := 1
+const VERSION := 2
 ## Combatant fields of the hero that change while playing (the rest come from hero.tres).
 const HERO_FIELDS: Array[String] = ["level", "experience", "hp", "max_hp", "mp", "max_mp",
 	"attack", "defense", "speed"]
@@ -18,6 +20,7 @@ static func from_state(state: GameState, player_pos: Vector3, play_time: float) 
 		"hero": hero,
 		"inventory": state.inventory.to_dict(),
 		"quest": {"stage": state.quest.stage, "kills": state.quest.kills},
+		"gold": state.gold,
 		"position": [player_pos.x, player_pos.z],
 		"play_time": play_time,
 	}
@@ -30,6 +33,8 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 		return {"valid": false, "position": Vector3.ZERO, "play_time": 0.0}
 	for field in HERO_FIELDS:
 		state.hero.set(field, int(data.hero[field]))
+	Leveling.sync_skills(state.hero)
+	state.gold = int(data.gold)
 	var items := {}
 	for id: String in data.inventory:
 		items[id] = int(data.inventory[id])
@@ -60,6 +65,8 @@ static func is_valid(data: Dictionary) -> bool:
 			return false
 	var quest: Variant = data.get("quest")
 	if not (quest is Dictionary and quest.get("stage") is float and quest.get("kills") is float):
+		return false
+	if not data.get("gold") is float:
 		return false
 	var pos: Variant = data.get("position")
 	if not (pos is Array and pos.size() == 2 and pos[0] is float and pos[1] is float):
