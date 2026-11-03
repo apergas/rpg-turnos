@@ -1,35 +1,119 @@
 class_name BattleActor extends Node3D
-## 3D stand-in for a combatant built from primitive meshes. The model faces -Z, so
-## look_at() the opponent. Animations are tweens on the inner body and can be awaited.
+## 3D figure of a fighter or a villager. The hero and the old woman are KayKit models
+## with their own animations; the slimes are faceted low-poly blobs built in code (see
+## LOOKS). Set look before add_child. The figure faces -Z, so look_at() the opponent.
+## Every play_* can be awaited: it returns when its animation and its tween are done.
 
 enum Look { HERO, SLIME, VILLAGER, KING_SLIME }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
 const GOLD := Color(1.0, 0.8, 0.2)
+const KNIGHT := preload("res://assets/characters/Knight.glb")
+const MAGE := preload("res://assets/characters/Mage.glb")
+## KayKit characters are 2.47 units tall (helmet included); 0.65 makes the hero 1.6 m.
+const CHARACTER_SCALE := 0.65
+## The AnimationPlayer inside a KayKit character scene.
+const ANIM_PLAYER_PATH := "AnimationPlayer"
+const BLEND_TIME := 0.15
+## One-shot animations (attack, spell, hit, dodge, death, cheer) play this much faster.
+const ACTION_SPEED := 1.3
+## The run cycle covers ~1 m/s at this scale; sped up so the feet keep closer pace with
+## the 5 m/s of the map.
+const WALK_SPEED := 1.8
+## Strength of the additive flash on hits, spells and heals.
+const FLASH_ALPHA := 0.6
+## Animation played for each role, the same for both KayKit characters.
+const CHARACTER_ANIMS := {
+	"idle": "Idle",
+	"walk": "Running_A",
+	"attack": "1H_Melee_Attack_Slice_Diagonal",
+	"cast": "Spellcast_Shoot",
+	"hit": "Hit_A",
+	"dodge": "Dodge_Backward",
+	"death": "Death_A",
+	"cheer": "Cheer",
+}
+## Side profile of a slime (x = radius, y = height), bottom to top: a drop with a tip.
+const SLIME_PROFILE: Array[Vector2] = [
+	Vector2(0.0, 0.0), Vector2(0.48, 0.0), Vector2(0.62, 0.18), Vector2(0.58, 0.42),
+	Vector2(0.44, 0.64), Vector2(0.24, 0.8), Vector2(0.08, 0.9), Vector2(0.0, 0.98),
+]
+const SLIME_SEGMENTS := 9
+## Everything that changes between looks. Characters: scene, scale, top (height of the
+## damage numbers), hide (prop nodes of the model to hide) and anims. Slimes: color,
+## scale (the whole blob, eyes and crown included), top and crown.
+const LOOKS := {
+	Look.HERO: {
+		"scene": KNIGHT,
+		"scale": CHARACTER_SCALE,
+		"top": 1.9,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/1H_Sword_Offhand",
+			"Rig/Skeleton3D/handslot_l/Badge_Shield",
+			"Rig/Skeleton3D/handslot_l/Rectangle_Shield",
+			"Rig/Skeleton3D/handslot_l/Spike_Shield",
+			"Rig/Skeleton3D/handslot_r/2H_Sword",
+		],
+		"anims": CHARACTER_ANIMS,
+	},
+	Look.VILLAGER: {
+		"scene": MAGE,
+		"scale": CHARACTER_SCALE,
+		"top": 2.2,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/Spellbook",
+			"Rig/Skeleton3D/handslot_l/Spellbook_open",
+			"Rig/Skeleton3D/handslot_r/1H_Wand",
+		],
+		"anims": CHARACTER_ANIMS,
+	},
+	Look.SLIME: {
+		"color": Color(0.55, 0.3, 0.85),
+		"scale": 1.0,
+		"top": 1.3,
+		"crown": false,
+	},
+	Look.KING_SLIME: {
+		"color": Color(0.3, 0.45, 0.9),
+		"scale": 1.6,
+		"top": 2.1,
+		"crown": true,
+	},
+}
 
 @export var look := Look.HERO
 
 ## Height of the floating damage numbers.
 var _top := 2.0
-## Visual root moved and scaled by the animations; the actor node itself stays put.
+## Visual root moved and scaled by the tweens; the actor node itself stays put.
 var _body: Node3D
+## Every mesh of the figure, for the flash overlay.
+var _meshes: Array[MeshInstance3D] = []
+## Slime materials only (faded on defeat); the KayKit materials are left as imported.
 var _materials: Array[StandardMaterial3D] = []
+var _flash: StandardMaterial3D
+## Characters only; null for slimes.
+var _anim: AnimationPlayer
+var _anims: Dictionary = {}
 var _idle_tween: Tween
 
 
 func _ready() -> void:
 	_body = Node3D.new()
 	add_child(_body)
-	match look:
-		Look.HERO:
-			_build_hero()
-		Look.SLIME:
-			_build_slime()
-		Look.VILLAGER:
-			_build_villager()
-		Look.KING_SLIME:
-			_build_king_slime()
+	var data: Dictionary = LOOKS[look]
+	_top = data.top
+	if data.has("scene"):
+		_build_character(data)
+	else:
+		_build_slime(data)
+	for node in _body.find_children("*", "MeshInstance3D", true, false):
+		_meshes.append(node as MeshInstance3D)
+	_flash = StandardMaterial3D.new()
+	_flash.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_flash.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_flash.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 	reset()
 
 
@@ -37,32 +121,49 @@ func _ready() -> void:
 func reset() -> void:
 	show()
 	_body.position = Vector3.ZERO
+	_body.rotation = Vector3.ZERO
 	_body.scale = Vector3.ONE
 	_set_flash(false)
 	for mat in _materials:
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
 		mat.albedo_color.a = 1.0
-	if look == Look.SLIME or look == Look.KING_SLIME:
+	if _anim:
+		_anim.play(_anims.idle, 0.0)
+	else:
 		_start_bounce()
 
 
-## Lunges toward the target and steps back.
+## Map only: the walk (run) cycle while on is true, else the idle one. Slimes ignore it.
+func set_walking(on: bool) -> void:
+	if _anim == null:
+		return
+	var anim_name: String = _anims.walk if on else _anims.idle
+	if _anim.current_animation != anim_name:
+		_anim.play(anim_name, BLEND_TIME, WALK_SPEED if on else 1.0)
+
+
+## Swings (characters) and lunges toward the target and steps back.
 func play_attack(target_pos: Vector3) -> void:
+	var timer := _start("attack")
 	var base := global_position
 	var dir := target_pos - base
 	dir.y = 0.0
 	var lunge := dir.normalized() * minf(1.2, dir.length() * 0.4)
 	var t := create_tween()
+	if timer:
+		t.tween_interval(0.15)  # the swing winds up before the step
 	t.tween_property(_body, "global_position", base + lunge, 0.15) \
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	t.tween_property(_body, "global_position", base, 0.2) \
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
 	await t.finished
+	await _end(timer)
 
 
-## White flash, small knockback and a floating damage number.
+## Hit animation, white flash, small knockback and a floating damage number.
 func play_hit(amount: int, crit: bool) -> void:
 	_spawn_number(amount, crit)
+	var timer := _start("hit")
 	var base := global_position
 	var knockback := global_basis.z.normalized() * (0.5 if crit else 0.3)
 	_set_flash(true)
@@ -71,21 +172,29 @@ func play_hit(amount: int, crit: bool) -> void:
 	t.tween_callback(_set_flash.bind(false))
 	t.tween_property(_body, "global_position", base, 0.15)
 	await t.finished
+	await _end(timer)
 
 
-## Side step used when an attack misses.
+## Jumps back when an attack misses.
 func play_dodge() -> void:
+	var timer := _start("dodge")
 	var base := global_position
-	var side := global_basis.x.normalized() * 0.6
+	var back := global_basis.z.normalized() * 0.6
 	var t := create_tween()
-	t.tween_property(_body, "global_position", base + side, 0.1) \
+	t.tween_property(_body, "global_position", base + back, 0.1) \
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	t.tween_property(_body, "global_position", base, 0.15)
 	await t.finished
+	await _end(timer)
 
 
-## Squashes, shrinks and fades out, then hides.
+## Characters fall with the death animation and stay down. Slimes squash, shrink and
+## fade out, then hide.
 func play_defeat() -> void:
+	if _anim:
+		var timer := _start("death")
+		await timer.timeout
+		return
 	if _idle_tween:
 		_idle_tween.kill()
 	for mat in _materials:
@@ -98,16 +207,17 @@ func play_defeat() -> void:
 	hide()
 
 
-## Small hop with a glow in the spell's color, before a spell.
+## Glow in the spell's color with the cast animation (characters) or a small hop
+## (slimes), before a spell.
 func play_cast(color := FIRE_COLOR) -> void:
 	_set_flash(true, color)
-	var t := create_tween()
-	t.tween_property(_body, "position:y", 0.35, 0.15) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	t.tween_property(_body, "position:y", 0.0, 0.15) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	await t.finished
+	var timer := _start("cast")
+	if timer:
+		await timer.timeout
+	else:
+		await _hop()
 	_set_flash(false)
+	await _end(timer)
 
 
 ## A ball in the spell's color grows on the actor and fades while the hit plays.
@@ -148,47 +258,49 @@ func play_stagger() -> void:
 	await t.finished
 
 
-func _build_hero() -> void:
-	_top = 2.1
-	_add_mesh(_capsule(0.32, 1.2), Color(0.75, 0.12, 0.12), Vector3(0, 0.6, 0))  # body / tunic
-	_add_mesh(_sphere(0.27), Color(0.96, 0.78, 0.62), Vector3(0, 1.45, 0))  # head
-	_add_mesh(_sphere(0.29), Color(0.92, 0.62, 0.2), Vector3(0, 1.52, 0.06), \
-		Vector3.ZERO, Vector3(1.0, 0.85, 1.0))  # hair, seen from behind
-	_add_mesh(_box(Vector3(0.08, 0.9, 0.04)), Color(0.75, 0.75, 0.8), \
-		Vector3(0.42, 0.85, -0.2), Vector3(-30, 0, 0))  # sword
+## Celebrates a victory: the cheer animation (characters) or a hop (slimes).
+func play_cheer() -> void:
+	var timer := _start("cheer")
+	if timer == null:
+		await _hop()
+	await _end(timer)
 
 
-func _build_slime() -> void:
-	_top = 1.4
-	_add_mesh(_sphere(0.6), Color(0.55, 0.3, 0.85), Vector3(0, 0.45, 0), \
-		Vector3.ZERO, Vector3(1.0, 0.75, 1.0))  # body
+func _build_character(data: Dictionary) -> void:
+	var model: Node3D = (data.scene as PackedScene).instantiate()
+	model.scale = Vector3.ONE * data.scale
+	# KayKit characters face +Z; turned around they face -Z like every BattleActor.
+	model.rotation.y = PI
+	_body.add_child(model)
+	for path in data.hide:
+		(model.get_node(path) as Node3D).hide()
+	_anims = data.anims
+	_anim = model.get_node(ANIM_PLAYER_PATH) as AnimationPlayer
+	# The imported animations do not loop; idle and walk must.
+	for role in ["idle", "walk"]:
+		_anim.get_animation(_anims[role]).loop_mode = Animation.LOOP_LINEAR
+
+
+func _build_slime(data: Dictionary) -> void:
+	var color: Color = data.color
+	var blob := Node3D.new()
+	blob.scale = Vector3.ONE * data.scale
+	_body.add_child(blob)
+	_add_mesh(blob, LowPoly.blob(SLIME_PROFILE, SLIME_SEGMENTS), color, Vector3.ZERO, 0.6)
 	for x in [-0.2, 0.2]:
-		_add_mesh(_sphere(0.13), Color.WHITE, Vector3(x, 0.6, -0.48))  # eye
-		_add_mesh(_sphere(0.06), Color(0.05, 0.05, 0.05), Vector3(x, 0.6, -0.6))  # pupil
+		_add_mesh(blob, _sphere(0.12), Color.WHITE, Vector3(x, 0.5, -0.44))  # eye
+		_add_mesh(blob, _sphere(0.055), Color(0.05, 0.05, 0.05), Vector3(x, 0.5, -0.55))  # pupil
+	if data.crown:
+		var band := _cylinder(0.27, 0.14)
+		band.top_radius = 0.22
+		_add_mesh(blob, band, GOLD, Vector3(0, 0.86, 0), 0.4)
+		for i in 5:
+			var angle := TAU * i / 5.0
+			_add_mesh(blob, _cone(0.06, 0.16), GOLD,
+				Vector3(cos(angle) * 0.19, 1.01, sin(angle) * 0.19), 0.4)  # spike
 
 
-func _build_villager() -> void:
-	_top = 2.0
-	_add_mesh(_capsule(0.34, 1.2), Color(0.45, 0.25, 0.6), Vector3(0, 0.6, 0))  # robe
-	_add_mesh(_sphere(0.26), Color(0.94, 0.78, 0.66), Vector3(0, 1.42, 0))  # head
-	_add_mesh(_sphere(0.28), Color(0.92, 0.92, 0.95), Vector3(0, 1.5, 0.06), \
-		Vector3.ZERO, Vector3(1.0, 0.85, 1.0))  # white hair
-	_add_mesh(_cylinder(0.04, 1.6), Color(0.45, 0.3, 0.15), Vector3(0.42, 0.8, -0.1))  # staff
-
-
-func _build_king_slime() -> void:
-	_top = 2.4
-	_add_mesh(_sphere(0.6), Color(0.3, 0.45, 0.9), Vector3(0, 0.72, 0), \
-		Vector3.ZERO, Vector3(1.6, 1.2, 1.6))  # body
-	for x in [-0.32, 0.32]:
-		_add_mesh(_sphere(0.2), Color.WHITE, Vector3(x, 0.96, -0.82))  # eye
-		_add_mesh(_sphere(0.09), Color(0.05, 0.05, 0.05), Vector3(x, 0.96, -1.0))  # pupil
-	_add_mesh(_cylinder(0.38, 0.22), GOLD, Vector3(0, 1.5, 0))  # crown band
-	for i in 5:
-		var angle := TAU * i / 5.0
-		_add_mesh(_cone(0.1, 0.3), GOLD, Vector3(cos(angle) * 0.3, 1.76, sin(angle) * 0.3))  # spike
-
-
+## Squash-and-stretch loop of the slimes while they wait.
 func _start_bounce() -> void:
 	if _idle_tween:
 		_idle_tween.kill()
@@ -197,6 +309,34 @@ func _start_bounce() -> void:
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_idle_tween.tween_property(_body, "scale", Vector3.ONE, 0.35) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+func _hop() -> void:
+	var t := create_tween()
+	t.tween_property(_body, "position:y", 0.35, 0.15) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	t.tween_property(_body, "position:y", 0.0, 0.15) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	await t.finished
+
+
+## Plays the role's animation once at ACTION_SPEED and returns a timer that runs out
+## when it ends; null for slimes, which have no animations.
+func _start(role: String) -> SceneTreeTimer:
+	if _anim == null:
+		return null
+	var anim_name: String = _anims[role]
+	_anim.play(anim_name, BLEND_TIME, ACTION_SPEED)
+	return get_tree().create_timer(_anim.get_animation(anim_name).length / ACTION_SPEED)
+
+
+## Waits for a timer from _start() (if any) and goes back to the idle loop.
+func _end(timer: SceneTreeTimer) -> void:
+	if timer == null:
+		return
+	if timer.time_left > 0.0:
+		await timer.timeout
+	_anim.play(_anims.idle, BLEND_TIME)
 
 
 func _spawn_number(amount: int, crit: bool, color := Color.WHITE) -> void:
@@ -216,11 +356,11 @@ func _spawn_number(amount: int, crit: bool, color := Color.WHITE) -> void:
 	t.chain().tween_callback(label.queue_free)
 
 
+## Additive overlay on every mesh, so it works on the imported materials too.
 func _set_flash(on: bool, color := Color.WHITE) -> void:
-	for mat in _materials:
-		mat.emission_enabled = on
-		mat.emission = color
-		mat.emission_energy_multiplier = 1.5
+	_flash.albedo_color = Color(color, FLASH_ALPHA)
+	for mi in _meshes:
+		mi.material_overlay = _flash if on else null
 
 
 func _set_alpha(alpha: float) -> void:
@@ -228,38 +368,25 @@ func _set_alpha(alpha: float) -> void:
 		mat.albedo_color.a = alpha
 
 
-func _add_mesh(mesh: Mesh, color: Color, pos: Vector3, rot_deg := Vector3.ZERO, \
-		scl := Vector3.ONE) -> void:
+func _add_mesh(parent: Node3D, mesh: Mesh, color: Color, pos: Vector3, \
+		roughness := 0.8) -> void:
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = color
-	mat.roughness = 0.8
+	mat.roughness = roughness
 	_materials.append(mat)
 	var mi := MeshInstance3D.new()
 	mi.mesh = mesh
 	mi.material_override = mat
 	mi.position = pos
-	mi.rotation_degrees = rot_deg
-	mi.scale = scl
-	_body.add_child(mi)
+	parent.add_child(mi)
 
 
 static func _sphere(radius: float) -> SphereMesh:
 	var mesh := SphereMesh.new()
 	mesh.radius = radius
 	mesh.height = radius * 2.0
-	return mesh
-
-
-static func _capsule(radius: float, height: float) -> CapsuleMesh:
-	var mesh := CapsuleMesh.new()
-	mesh.radius = radius
-	mesh.height = height
-	return mesh
-
-
-static func _box(size: Vector3) -> BoxMesh:
-	var mesh := BoxMesh.new()
-	mesh.size = size
+	mesh.radial_segments = 10
+	mesh.rings = 5
 	return mesh
 
 
@@ -268,6 +395,7 @@ static func _cylinder(radius: float, height: float) -> CylinderMesh:
 	mesh.top_radius = radius
 	mesh.bottom_radius = radius
 	mesh.height = height
+	mesh.radial_segments = 8
 	return mesh
 
 

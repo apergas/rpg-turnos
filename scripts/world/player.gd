@@ -1,16 +1,15 @@
 class_name Player extends CharacterBody3D
 ## Hero on the world map. Moves with WASD / arrows in screen axes (the top-down camera
 ## never turns: up is north, -Z), or walks to a point given by move_to() (a click or
-## tap on the ground; keys cancel it). Turns smoothly toward where it walks and bobs
-## while moving. Its model is a BattleActor.
+## tap on the ground; keys cancel it). Turns smoothly toward where it walks and plays
+## the walk animation while moving, the idle one when stopped. Its model is a
+## BattleActor.
 ## With `-- --autoplay` it walks AUTOPLAY_ROUTE in a loop instead of reading keys.
 
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
 const SPEED := 5.0
 ## How fast the model turns toward the walking direction (radians per second, roughly).
 const TURN_SPEED := 10.0
-const BOB_HEIGHT := 0.08
-const BOB_TIME := 0.18
 ## Points walked in a loop by --autoplay: mostly grass, clear of rocks, and through the
 ## village, next to the old woman and to where the Rey Slime appears.
 const AUTOPLAY_ROUTE: Array[Vector3] = [
@@ -42,7 +41,6 @@ var _model: BattleActor
 var _autoplay := false
 var _route_index := 0
 var _stuck_frames := 0
-var _bob_tween: Tween
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 
 
@@ -98,7 +96,7 @@ func _physics_process(delta: float) -> void:
 	if dir != Vector3.ZERO:
 		var target_yaw := atan2(-dir.x, -dir.z)  # the model faces -Z
 		_model.rotation.y = lerp_angle(_model.rotation.y, target_yaw, minf(1.0, TURN_SPEED * delta))
-	_set_bobbing(dir != Vector3.ZERO)
+	_model.set_walking(dir != Vector3.ZERO)
 
 
 func _wanted_direction() -> Vector3:
@@ -139,18 +137,3 @@ func _route_direction() -> Vector3:
 		_route_index = (_route_index + 1) % AUTOPLAY_ROUTE.size()
 		return Vector3.ZERO
 	return to_goal.normalized()
-
-
-func _set_bobbing(on: bool) -> void:
-	if on == (_bob_tween != null):
-		return
-	if _bob_tween:
-		_bob_tween.kill()
-		_bob_tween = null
-		_model.position.y = 0.0
-		return
-	_bob_tween = create_tween().set_loops()
-	_bob_tween.tween_property(_model, "position:y", BOB_HEIGHT, BOB_TIME) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	_bob_tween.tween_property(_model, "position:y", 0.0, BOB_TIME) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
