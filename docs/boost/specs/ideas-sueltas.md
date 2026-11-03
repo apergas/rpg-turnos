@@ -14,7 +14,7 @@ Formato: una sección por idea, con la fecha, la idea en palabras del usuario y 
   - Ahora el menú de combate se maneja con las flechas arriba y abajo, Enter o Espacio, o con clic.
   - W y S moverían el cursor del menú igual que las flechas.
   - Con varios enemigos (fase de combate), A y D podrían servir para elegir el objetivo.
-- **Estado:** pendiente.
+- **Estado:** hecha en la fase 3: [diseño](2026-11-03-combate-completo-design.md) y [plan](../plans/2026-11-03-combate-completo.md).
 
 ## Más encuentros con enemigos
 
