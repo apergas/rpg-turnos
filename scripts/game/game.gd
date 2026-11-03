@@ -5,13 +5,17 @@ class_name Game extends Node
 ## grace survive the battle. A defeat heals the hero and sends them back to the spawn
 ## point; EXP is kept. Talking to the old woman heals, moves the quest on and, once the
 ## slimes are reported, brings out the Rey Slime. Picks the music (map, village,
-## battle, boss) and autosaves after talking and after every won battle.
+## battle, boss), autosaves after talking and after every won battle, and opens the
+## pause menu. Emits quit_to_title when the player goes back to the title.
 ## Run on its own (res://scenes/game/game.tscn) it starts a new game with its own
 ## AudioDirector and default options.
 ##
 ## `-- --autoplay --autoplay-save`: after the first autosave that follows a won battle
 ## it prints the saved values ("Guardado: ...") and goes back to the title, which loads
 ## the save at once; the loaded game prints the same values ("Cargado: ...").
+## `-- --autoplay --autoplay-menu`: MENU_TOUR_DELAY seconds into the map (still inside
+## the encounter grace) it shows every page of the pause menu (PauseMenu.tour()), to
+## record frames of it.
 
 signal quit_to_title
 
@@ -25,6 +29,7 @@ const HEAL_LINE := "Descansas un momento. PV y PM recuperados."
 const SAFE_NOTICE := "¡Villaclaro está a salvo!"
 const SAVED_NOTICE := "Partida guardada."
 const LOAD_FAILED_NOTICE := "No se pudo cargar la partida. Empiezas de nuevo."
+const MENU_TOUR_DELAY := 1.0
 
 var state: GameState
 ## Seconds played, saved with the game; stops while paused.
@@ -32,12 +37,14 @@ var play_time := 0.0
 
 var _world: World
 var _fade: ColorRect
+var _pause: PauseMenu
 var _audio: AudioDirector
 var _options: GameOptions
 var _save := {}
 var _busy := false
 var _autoplay := false
 var _autoplay_save := false
+var _autoplay_menu := false
 var _last_quest_text := ""
 
 
@@ -53,6 +60,7 @@ func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
 	_autoplay = args.has("--autoplay")
 	_autoplay_save = _autoplay and args.has("--autoplay-save")
+	_autoplay_menu = _autoplay and args.has("--autoplay-menu")
 	if _options == null:
 		_options = GameOptions.new()
 	if _audio == null:
@@ -80,9 +88,12 @@ func _ready() -> void:
 	_world.set_boss_present(state.quest.boss_available())
 	_refresh_status()
 	_build_fade()
+	_build_pause()
 	_play_map_music()
 	if load_failed:
 		_world.show_notice(LOAD_FAILED_NOTICE)
+	if _autoplay_menu:
+		get_tree().create_timer(MENU_TOUR_DELAY).timeout.connect(_pause.tour)
 
 
 func _process(delta: float) -> void:
@@ -92,7 +103,7 @@ func _process(delta: float) -> void:
 func _on_encounter(boss: bool) -> void:
 	if _busy:
 		return
-	_busy = true
+	_set_busy(true)
 	var enemy_data: Combatant = BOSS_DATA if boss else SLIME_DATA
 	await _fade_to(1.0)
 	_world.set_active(false)
@@ -127,14 +138,14 @@ func _on_encounter(boss: bool) -> void:
 			print("Guardado: %s" % _summary(data))
 			quit_to_title.emit()
 			return
-	_busy = false
+	_set_busy(false)
 
 
 ## The old woman always heals; what she says and gives comes from the quest.
 func _on_talk() -> void:
 	if _busy:
 		return
-	_busy = true
+	_set_busy(true)
 	var result := state.quest.talk()
 	var lines: Array[String] = []
 	lines.append_array(result.lines)
@@ -146,7 +157,7 @@ func _on_talk() -> void:
 	await _world.show_dialogue(Quest.NPC_NAME, lines)
 	_world.set_boss_present(state.quest.boss_available())
 	_autosave(true)
-	_busy = false
+	_set_busy(false)
 
 
 ## Writes the save file; shows SAVED_NOTICE if notice. Returns the saved data, or an
@@ -161,9 +172,25 @@ func _autosave(notice: bool) -> Dictionary:
 	return data
 
 
+func _on_save_requested() -> void:
+	var data := SaveData.from_state(state, _world.player_position(), play_time)
+	_pause.show_save_result(SaveStore.save_game(data))
+
+
+func _on_title_requested() -> void:
+	get_tree().paused = false
+	quit_to_title.emit()
+
+
 ## Map music, or the village one inside the clearing.
 func _play_map_music() -> void:
 	_audio.play_music(MusicLibrary.VILLAGE if _world.in_village() else MusicLibrary.MAP)
+
+
+## The pause menu only opens on the map with nothing else going on.
+func _set_busy(busy: bool) -> void:
+	_busy = busy
+	_pause.available = not busy and not _autoplay
 
 
 ## Updates the map's status window; on autoplay also prints each new quest line.
@@ -189,6 +216,19 @@ func _build_fade() -> void:
 	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_fade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	layer.add_child(_fade)
+
+
+func _build_pause() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 5
+	add_child(layer)
+	_pause = PauseMenu.new()
+	_pause.setup(state, _options, _audio)
+	layer.add_child(_pause)
+	_pause.save_requested.connect(_on_save_requested)
+	_pause.title_requested.connect(_on_title_requested)
+	_pause.state_changed.connect(_refresh_status)
+	_pause.available = not _autoplay
 
 
 func _fade_to(alpha: float) -> void:
