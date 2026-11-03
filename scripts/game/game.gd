@@ -42,6 +42,7 @@ var _audio: AudioDirector
 var _options: GameOptions
 var _save := {}
 var _busy := false
+var _leaving := false
 var _autoplay := false
 var _autoplay_save := false
 var _autoplay_menu := false
@@ -179,8 +180,15 @@ func _on_save_requested() -> void:
 	_pause.show_save_result(SaveStore.save_game(data))
 
 
+## The tree stays paused (TitleScreen unpauses when it frees this game), so the map can't
+## walk or roll an encounter during the fade; the menu is shut and deaf meanwhile.
 func _on_title_requested() -> void:
-	get_tree().paused = false
+	if _leaving:
+		return
+	_leaving = true
+	_set_busy(true)
+	_pause.hide()
+	_pause.set_process_unhandled_input(false)
 	quit_to_title.emit()
 
 

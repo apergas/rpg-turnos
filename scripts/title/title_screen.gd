@@ -128,11 +128,17 @@ func _start_game(save: Dictionary) -> void:
 
 
 func _on_quit_to_title() -> void:
-	get_tree().paused = false
+	if _game == null:
+		return
+	# The tree may be paused (pause menu); the fade tween keeps running, the game stays frozen.
 	await _fade_to(1.0)
-	remove_child(_game)
-	_game.queue_free()
+	if _game == null:
+		return
+	var old := _game
 	_game = null
+	remove_child(old)
+	old.queue_free()
+	get_tree().paused = false
 	if _autoplay_save:
 		_autoplay_save = false
 		_starting = false
@@ -238,5 +244,6 @@ func _build_fade() -> void:
 
 func _fade_to(alpha: float) -> void:
 	var t := create_tween()
+	t.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	t.tween_property(_fade, "color:a", alpha, FADE_TIME)
 	await t.finished
