@@ -13,6 +13,7 @@ var _autoplay := false
 var _listening := false
 var _speaker: Label
 var _line: Label
+var _audio: AudioDirector
 
 
 func _ready() -> void:
@@ -36,9 +37,16 @@ func _ready() -> void:
 	hide()
 
 
+## Plays the dialogue sound when a dialogue opens. Without it the box is silent.
+func set_audio(audio: AudioDirector) -> void:
+	_audio = audio
+
+
 func say(speaker: String, lines: Array[String]) -> void:
 	_speaker.text = speaker
 	show()
+	if _audio:
+		_audio.play_sfx(SfxLibrary.DIALOGUE)
 	for text in lines:
 		_line.text = text
 		if _autoplay:

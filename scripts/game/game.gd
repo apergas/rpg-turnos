@@ -4,6 +4,8 @@ extends Node
 ## camera and the encounter grace survive the battle. A defeat heals the hero and
 ## sends them back to the spawn point; EXP is kept. Talking to the old woman heals,
 ## moves the quest on and, once the slimes are reported, brings out the Rey Slime.
+## Owns an AudioDirector and picks the music: map, village (inside the clearing),
+## battle and boss; the battle itself plays the victory and defeat music.
 
 const HERO_DATA := preload("res://data/hero.tres")
 const SLIME_DATA := preload("res://data/slime.tres")
@@ -18,6 +20,8 @@ var state: GameState
 
 var _world: World
 var _fade: ColorRect
+var _audio: AudioDirector
+var _options: GameOptions
 var _busy := false
 var _autoplay := false
 var _last_quest_text := ""
@@ -25,13 +29,20 @@ var _last_quest_text := ""
 
 func _ready() -> void:
 	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
+	_options = GameOptions.new()
+	_audio = AudioDirector.new()
+	add_child(_audio)
+	_audio.set_volumes(_options.music_volume, _options.sfx_volume)
 	state = GameState.new(HERO_DATA)
 	_world = WORLD_SCENE.instantiate()
 	add_child(_world)
+	_world.set_audio(_audio)
 	_refresh_status()
 	_world.encounter_triggered.connect(_on_encounter)
 	_world.talk_requested.connect(_on_talk)
+	_world.village_changed.connect(func(_inside: bool) -> void: _play_map_music())
 	_build_fade()
+	_play_map_music()
 
 
 func _on_encounter(boss: bool) -> void:
@@ -41,8 +52,11 @@ func _on_encounter(boss: bool) -> void:
 	var enemy_data: Combatant = BOSS_DATA if boss else SLIME_DATA
 	await _fade_to(1.0)
 	_world.set_active(false)
+	_audio.play_music(MusicLibrary.BOSS if boss else MusicLibrary.BATTLE)
 	var battle: BattleScene = BATTLE_SCENE.instantiate()
 	battle.setup(state.hero, enemy_data, state.inventory)
+	battle.set_audio(_audio)
+	battle.char_time = _options.char_time()
 	add_child(battle)
 	await _fade_to(0.0)
 	var won: bool = await battle.finished
@@ -57,6 +71,7 @@ func _on_encounter(boss: bool) -> void:
 		_world.respawn()
 	_refresh_status()
 	_world.set_active(true)
+	_play_map_music()
 	await _fade_to(0.0)
 	if not won:
 		_world.show_notice("Has vuelto al inicio.")
@@ -81,6 +96,11 @@ func _on_talk() -> void:
 	await _world.show_dialogue(Quest.NPC_NAME, lines)
 	_world.set_boss_present(state.quest.boss_available())
 	_busy = false
+
+
+## Map music, or the village one inside the clearing.
+func _play_map_music() -> void:
+	_audio.play_music(MusicLibrary.VILLAGE if _world.in_village() else MusicLibrary.MAP)
 
 
 ## Updates the map's status window; on autoplay also prints each new quest line.
