@@ -64,9 +64,12 @@ static func stagger(actor: String) -> Dictionary:
 	return {"type": STAGGER, "actor": actor}
 
 
-## gains holds the stat increases of one level (see Leveling.GAINS).
-static func level_up(level: int, gains: Dictionary) -> Dictionary:
-	return {"type": LEVEL_UP, "level": level, "gains": gains}
+## gains holds the stat increases of one level (see Leveling.GAINS); hp, max_hp, mp and
+## max_mp are the hero's values right after that level, so several level ups in a row
+## each show their own numbers.
+static func level_up(level: int, gains: Dictionary, hero: Combatant) -> Dictionary:
+	return {"type": LEVEL_UP, "level": level, "gains": gains, "hp": hero.hp,
+		"max_hp": hero.max_hp, "mp": hero.mp, "max_mp": hero.max_mp}
 
 
 static func drop(item_id: String) -> Dictionary:

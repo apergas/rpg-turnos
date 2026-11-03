@@ -1,7 +1,8 @@
 class_name WorldStage extends RefCounted
 ## Builds the world map from primitives: a 60 x 60 m grass field with a dirt path
-## from the spawn point (south) to the village of Villaclaro in a clearing (north), rocks and invisible
-## walls with collision, and hills outside the field. Same sky and sun as battles.
+## from the spawn point (south) to the village of Villaclaro in a clearing (north),
+## rocks and invisible walls with collision, and hills outside the field. Same sky and
+## sun as battles.
 
 const FIELD_HALF := 30.0
 const SPAWN_POS := Vector3(0, 0, 26)

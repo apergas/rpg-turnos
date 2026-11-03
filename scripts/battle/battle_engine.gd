@@ -48,7 +48,8 @@ static func cmd_item(id: String) -> Dictionary:
 	return {"type": CMD_ITEM, "item": id}
 
 
-## True if the hero can use the command right now (enough MP, item in stock).
+## True if the hero can use the command right now (enough MP; item in stock and HP to
+## heal).
 func can_use(cmd: Dictionary) -> bool:
 	match cmd.type:
 		CMD_ATTACK:
@@ -56,7 +57,7 @@ func can_use(cmd: Dictionary) -> bool:
 		CMD_SKILL:
 			return hero.mp >= (cmd.skill as Skill).mp_cost
 		CMD_ITEM:
-			return inventory.count(cmd.item) > 0
+			return inventory.count(cmd.item) > 0 and hero.hp < hero.max_hp
 	return false
 
 
