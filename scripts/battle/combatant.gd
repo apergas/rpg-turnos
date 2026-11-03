@@ -1,34 +1,67 @@
 class_name Combatant extends Resource
-## Stats of one fighter. Battles work on duplicates, so the .tres files never change.
+## Stats of one fighter. Battles work on duplicates of the enemy data, so the .tres
+## files never change; the hero is a duplicate of hero.tres that lives the whole session.
 
 @export var display_name := ""
-## Data id, used by the quest to count kills ("hero", "slime", "rey_slime").
+## Data id: the quest counts kills by it and the battle picks the enemy's figure by it
+## ("hero", "slime", "bat", "mushroom", "rey_slime").
 @export var id := ""
+## Feminine name ("la Seta saltarina"): the battle messages use la / una / -a.
+@export var female := false
 @export var level := 1
 @export var max_hp := 1
 @export var hp := 1
 @export var max_mp := 0
 @export var mp := 0
+## Base attack and defense (the hero's grow with each level). Battles use
+## total_attack() / total_defense(), which add the equipment bonuses.
 @export var attack := 1
 @export var defense := 0
+## Hero only: fixed bonuses of the starting equipment (Palo +2 ATK, Ropa +2 DEF) until
+## equipment becomes a system of its own.
+@export var equip_attack := 0
+@export var equip_defense := 0
 @export var speed := 1
 @export var skills: Array[Skill] = []
-## EXP the winner gets for defeating this fighter.
+## Hero only: spell learned on reaching each level (level -> Skill).
+@export var learn := {}
+## EXP and gold the winner gets for defeating this fighter.
 @export var exp_reward := 0
+@export var gold_reward := 0
 ## EXP accumulated so far (only meaningful for the hero). Not called `exp`, which
 ## would shadow the built-in exp() function.
 @export var experience := 0
 ## Enemy only: weights of the action it picks each round. Keys are "attack",
 ## "stagger" (loses the turn) or the id of one of its skills. Empty means always attack.
 @export var ai_weights := {}
-## Enemy only: chance of leaving a potion when defeated.
-@export var potion_drop_chance := 0.0
-## Enemy only: a boss gets its own look and intro line in battle.
+## Enemy only: elements ("fire", "ice", "thunder") that hurt it ×1.5 / ×0.5.
+@export var weak: Array[String] = []
+@export var resist: Array[String] = []
+## Enemy only: chance (0..1) of leaving each item (Inventory id) when defeated.
+@export var drops := {}
+## Enemy only: status its plain attack may cause on a hit ("poison", ...) and the chance.
+@export var attack_status := ""
+@export var attack_status_chance := 0.0
+## Enemy only: the fighter it calls, once per battle, below half HP (null: never).
+@export var help: Combatant
+## Enemy only: a boss gets its own look and intro line, and the hero can't flee.
 @export var is_boss := false
+
+## Status effects during a battle: status -> rounds left (-1: until cured or the battle
+## ends). Never saved; BattleEngine clears it when the battle ends.
+var status := {}
 
 
 func is_alive() -> bool:
 	return hp > 0
+
+
+func total_attack() -> int:
+	return attack + equip_attack
+
+
+func total_defense() -> int:
+	return defense + equip_defense
 
 
 func find_skill(skill_id: String) -> Skill:

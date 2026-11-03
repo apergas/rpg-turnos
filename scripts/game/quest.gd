@@ -14,7 +14,8 @@ var stage := Stage.OFFER
 var kills := 0
 
 
-## Counts a won battle against the enemy with this data id.
+## Counts one enemy with this data id defeated in a won battle (Game calls it for every
+## enemy of the battle).
 func on_victory(enemy_id: String) -> void:
 	if stage == Stage.HUNT and enemy_id == TARGET_ID:
 		kills += 1

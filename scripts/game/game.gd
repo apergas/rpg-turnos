@@ -1,9 +1,11 @@
 class_name Game extends Node
 ## One play session, created by TitleScreen (setup() before add_child). Owns the
 ## GameState and the world map, and puts a battle on top of the map when an encounter
-## starts. The map is never freed, so the hero's position, the camera and the encounter
-## grace survive the battle. A defeat heals the hero and sends them back to the spawn
-## point; EXP is kept. Talking to the old woman heals, moves the quest on and, once the
+## starts (the enemies come from EncounterTable, or the Rey Slime). The map is never
+## freed, so the hero's position, the camera and the encounter grace survive the battle.
+## A victory adds the gold and counts every enemy defeated for the quest; fleeing just
+## goes back to the map; a defeat heals the hero and sends them back to the spawn point,
+## EXP and gold kept. Talking to the old woman heals, moves the quest on and, once the
 ## slimes are reported, brings out the Rey Slime. Picks the music (map, village,
 ## battle, boss), autosaves after talking and after every won battle, and opens the
 ## pause menu. Emits quit_to_title when the player goes back to the title.
@@ -20,8 +22,9 @@ class_name Game extends Node
 signal quit_to_title
 
 const HERO_DATA := preload("res://data/hero.tres")
-const SLIME_DATA := preload("res://data/slime.tres")
 const BOSS_DATA := preload("res://data/rey_slime.tres")
+## The map is zone 1 of EncounterTable (the meadow).
+const ZONE := 1
 const BATTLE_SCENE := preload("res://scenes/battle/battle_scene.tscn")
 const WORLD_SCENE := preload("res://scenes/world/world.tscn")
 const FADE_TIME := 0.3
@@ -30,6 +33,9 @@ const SAFE_NOTICE := "¡Villaclaro está a salvo!"
 const SAVED_NOTICE := "Partida guardada."
 const LOAD_FAILED_NOTICE := "No se pudo cargar la partida. Empiezas de nuevo."
 const MENU_TOUR_DELAY := 1.0
+## On autoplay the Rey Slime only comes out from this level on, so the run first fights
+## around the meadow (at lower levels it would lose to the boss over and over).
+const AUTOPLAY_BOSS_LEVEL := 5
 
 var state: GameState
 ## Seconds played, saved with the game; stops while paused.
@@ -47,6 +53,7 @@ var _autoplay := false
 var _autoplay_save := false
 var _autoplay_menu := false
 var _last_quest_text := ""
+var _rng := RandomNumberGenerator.new()
 
 
 ## audio and options come from the title screen; save is the Dictionary read by
@@ -62,6 +69,7 @@ func _ready() -> void:
 	_autoplay = args.has("--autoplay")
 	_autoplay_save = _autoplay and args.has("--autoplay-save")
 	_autoplay_menu = _autoplay and args.has("--autoplay-menu")
+	_rng.randomize()
 	if _options == null:
 		_options = GameOptions.new()
 	if _audio == null:
@@ -86,7 +94,7 @@ func _ready() -> void:
 					info.play_time)))
 		else:
 			load_failed = true
-	_world.set_boss_present(state.quest.boss_available())
+	_update_boss()
 	_refresh_status()
 	_build_fade()
 	_build_pause()
@@ -110,31 +118,35 @@ func _on_encounter(boss: bool) -> void:
 	if _busy:
 		return
 	_set_busy(true)
-	var enemy_data: Combatant = BOSS_DATA if boss else SLIME_DATA
+	var enemies: Array[Combatant] = [BOSS_DATA]
+	if not boss:
+		enemies = EncounterTable.pick(ZONE, _world.player_position(), _rng)
 	await _fade_to(1.0)
 	_world.set_active(false)
 	_audio.play_music(MusicLibrary.BOSS if boss else MusicLibrary.BATTLE)
 	var battle: BattleScene = BATTLE_SCENE.instantiate()
-	battle.setup(state.hero, enemy_data, state.inventory)
+	battle.setup(state.hero, enemies, state.inventory)
 	battle.set_audio(_audio)
 	battle.char_time = _options.char_time()
 	add_child(battle)
 	await _fade_to(0.0)
-	var won: bool = await battle.finished
+	var outcome: int = await battle.finished
+	var won := outcome == BattleEngine.State.WON
 	await _fade_to(1.0)
-	battle.queue_free()
 	if won:
-		state.quest.on_victory(enemy_data.id)
-		if boss:
-			_world.set_boss_present(false)
-	else:
+		state.gold += battle.engine.gold_won
+		for enemy in battle.engine.enemies:
+			state.quest.on_victory(enemy.id)
+	elif outcome == BattleEngine.State.LOST:
 		state.heal_full()
 		_world.respawn()
+	battle.queue_free()
+	_update_boss()
 	_refresh_status()
 	_world.set_active(true)
 	_play_map_music()
 	await _fade_to(0.0)
-	if not won:
+	if outcome == BattleEngine.State.LOST:
 		_world.show_notice("Has vuelto al inicio.")
 	elif boss:
 		_world.show_notice(SAFE_NOTICE)
@@ -161,7 +173,7 @@ func _on_talk() -> void:
 		state.inventory.add(Inventory.POTION, result.potions)
 	_refresh_status()
 	await _world.show_dialogue(Quest.NPC_NAME, lines)
-	_world.set_boss_present(state.quest.boss_available())
+	_update_boss()
 	_autosave(true)
 	_set_busy(false)
 
@@ -193,6 +205,13 @@ func _on_title_requested() -> void:
 	_pause.hide()
 	_pause.set_process_unhandled_input(false)
 	quit_to_title.emit()
+
+
+## The Rey Slime is on the map while the quest asks for it (on autoplay, only from
+## AUTOPLAY_BOSS_LEVEL on).
+func _update_boss() -> void:
+	var strong_enough := not _autoplay or state.hero.level >= AUTOPLAY_BOSS_LEVEL
+	_world.set_boss_present(state.quest.boss_available() and strong_enough)
 
 
 ## Map music, or the village one inside the clearing.

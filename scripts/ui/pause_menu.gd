@@ -2,13 +2,13 @@ class_name PauseMenu extends Control
 ## Pause menu of the world map. Esc or P, or the ☰ button in the top right corner
 ## (mouse and touch), open it while `available`; it pauses the tree until it closes.
 ## Pages: main list (Estado, Objetos, Guardar, Opciones, Volver al título, Cerrar),
-## Estado (hero stats), Objetos (the potion can be drunk here), Opciones
+## Estado (hero stats, gold, spells), Objetos (items usable outside battle), Opciones
 ## (OptionsPanel) and a confirmation before going back to the title. Esc goes back one
 ## page. Keeps running while paused. Call setup() before adding it to the tree.
 
 signal save_requested
 signal title_requested
-## The hero or the inventory changed (a potion was drunk), so the map can refresh.
+## The hero or the inventory changed (an item was used), so the map can refresh.
 signal state_changed
 
 const FONT_SIZE := 24
@@ -177,7 +177,7 @@ func _status_text() -> String:
 		"%s  Nivel %d" % [hero.display_name, hero.level],
 		"PV %d / %d" % [hero.hp, hero.max_hp],
 		"PM %d / %d" % [hero.mp, hero.max_mp],
-		"ATK %d   DEF %d   VEL %d" % [hero.attack, hero.defense, hero.speed],
+		"ATK %d   DEF %d   VEL %d" % [hero.total_attack(), hero.total_defense(), hero.speed],
 		"EXP %d" % hero.experience,
 	])
 	var next := Leveling.exp_for_next(hero.level)
@@ -185,42 +185,53 @@ func _status_text() -> String:
 		lines.append("Nivel máximo")
 	else:
 		lines.append("Siguiente nivel: faltan %d EXP" % (next - hero.experience))
+	lines.append("Oro %d G" % _state.gold)
+	var spells := PackedStringArray()
+	for skill in hero.skills:
+		spells.append(skill.display_name)
+	lines.append("Hechizos: %s" % ", ".join(spells))
 	return "\n".join(lines)
 
 
-## One row per item carried: name, count and "Usar" (disabled at full HP).
+## One row per item carried: name, count and "Usar" (disabled, with the reason, when it
+## can't be used now).
 func _fill_items() -> void:
 	# Removed at once (the pressed "Usar" may be one of them) and freed at the end of the frame.
 	for child in _items_box.get_children():
 		_items_box.remove_child(child)
 		child.queue_free()
-	var items := _state.inventory.to_dict()
+	var inventory := _state.inventory
 	var any := false
-	for id: String in items:
-		if items[id] <= 0:
+	for id in Inventory.IDS:
+		if inventory.count(id) <= 0:
 			continue
 		any = true
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 16)
 		_items_box.add_child(row)
-		var label := _label("%s ×%d" % [Inventory.display_name(id), items[id]], Color.WHITE)
+		var label := _label("%s ×%d" % [Inventory.display_name(id), inventory.count(id)],
+			Color.WHITE)
 		label.custom_minimum_size = Vector2(220, 0)
 		row.add_child(label)
 		var use := _button("Usar")
-		use.disabled = _state.hero.hp >= _state.hero.max_hp
-		use.pressed.connect(_on_use_potion)
+		var why := inventory.problem(id, _state.hero, false)
+		use.disabled = why != ""
+		use.pressed.connect(_on_use_item.bind(id))
 		row.add_child(use)
+		if why != "":
+			row.add_child(_label(why, Color(0.6, 0.6, 0.65)))
 	if not any:
 		_items_box.add_child(_label("No llevas objetos.", Color.WHITE))
 
 
-func _on_use_potion() -> void:
-	var healed := _state.use_potion()
-	if healed <= 0:
+func _on_use_item(id: String) -> void:
+	var result := _state.use_item(id)
+	if not result.used:
 		return
 	_sfx(SfxLibrary.HEAL)
 	_fill_items()
-	_items_message.text = "Recuperas %d PV." % healed
+	_items_message.text = ("Recuperas %d PM." if result.effect == "mp" else "Recuperas %d PV.") \
+			% result.amount
 	state_changed.emit()
 	_quiet_focus = true
 	var first := _first_button(_pages["items"])

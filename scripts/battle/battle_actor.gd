@@ -1,13 +1,16 @@
 class_name BattleActor extends Node3D
 ## 3D figure of a fighter or a villager. The hero and the old woman are KayKit models
-## with their own animations; the slimes are faceted low-poly blobs built in code (see
-## LOOKS). Set look before add_child. The figure faces -Z, so look_at() the opponent.
-## Every play_* can be awaited: it returns when its animation and its tween are done.
+## with their own animations; the slimes, the bat and the mushroom are low-poly figures
+## built in code (see LOOKS). Set look before add_child. The figure faces -Z, so
+## look_at() the opponent. Every play_* can be awaited: it returns when its animation
+## and its tween are done.
 
-enum Look { HERO, SLIME, VILLAGER, KING_SLIME }
+enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
+## Color of the "¡Débil!" / "¡Resiste!" line under a damage number.
+const TAG_COLOR := Color(1.0, 0.6, 0.2)
 const GOLD := Color(1.0, 0.8, 0.2)
 const KNIGHT := preload("res://assets/characters/Knight.glb")
 const MAGE := preload("res://assets/characters/Mage.glb")
@@ -42,7 +45,8 @@ const SLIME_PROFILE: Array[Vector2] = [
 const SLIME_SEGMENTS := 9
 ## Everything that changes between looks. Characters: scene, scale, top (height of the
 ## damage numbers), hide (prop nodes of the model to hide) and anims. Slimes: color,
-## scale (the whole blob, eyes and crown included), top and crown.
+## scale (the whole blob, eyes and crown included), top and crown. Bat: color, wing
+## color, top and fly (height it hovers at). Mushroom: cap and stem colors, scale and top.
 const LOOKS := {
 	Look.HERO: {
 		"scene": KNIGHT,
@@ -80,6 +84,18 @@ const LOOKS := {
 		"top": 2.1,
 		"crown": true,
 	},
+	Look.BAT: {
+		"color": Color(0.32, 0.22, 0.42),
+		"wing_color": Color(0.2, 0.13, 0.28),
+		"top": 2.0,
+		"fly": 1.1,
+	},
+	Look.MUSHROOM: {
+		"cap_color": Color(0.85, 0.2, 0.15),
+		"stem_color": Color(0.95, 0.9, 0.78),
+		"scale": 1.4,
+		"top": 1.6,
+	},
 }
 
 @export var look := Look.HERO
@@ -97,6 +113,8 @@ var _flash: StandardMaterial3D
 var _anim: AnimationPlayer
 var _anims: Dictionary = {}
 var _idle_tween: Tween
+## Bat only: the two wing pivots, flapped by the idle loop.
+var _wings: Array[Node3D] = []
 
 
 func _ready() -> void:
@@ -106,6 +124,10 @@ func _ready() -> void:
 	_top = data.top
 	if data.has("scene"):
 		_build_character(data)
+	elif look == Look.BAT:
+		_build_bat(data)
+	elif look == Look.MUSHROOM:
+		_build_mushroom(data)
 	else:
 		_build_slime(data)
 	for node in _body.find_children("*", "MeshInstance3D", true, false):
@@ -130,7 +152,7 @@ func reset() -> void:
 	if _anim:
 		_anim.play(_anims.idle, 0.0)
 	else:
-		_start_bounce()
+		_start_idle()
 
 
 ## Map only: the walk (run) cycle while on is true, else the idle one. Slimes ignore it.
@@ -160,9 +182,15 @@ func play_attack(target_pos: Vector3) -> void:
 	await _end(timer)
 
 
-## Hit animation, white flash, small knockback and a floating damage number.
-func play_hit(amount: int, crit: bool) -> void:
-	_spawn_number(amount, crit)
+## Height of the top of the figure (where the damage numbers start).
+func top_height() -> float:
+	return _top
+
+
+## Hit animation, white flash, small knockback and a floating damage number; tag
+## ("¡Débil!", "¡Resiste!") floats under the number.
+func play_hit(amount: int, crit: bool, tag := "") -> void:
+	_spawn_number(amount, crit, Color.WHITE, tag)
 	var timer := _start("hit")
 	var base := global_position
 	var knockback := global_basis.z.normalized() * (0.5 if crit else 0.3)
@@ -221,7 +249,7 @@ func play_cast(color := FIRE_COLOR) -> void:
 
 
 ## A ball in the spell's color grows on the actor and fades while the hit plays.
-func play_burn(amount: int, color := FIRE_COLOR) -> void:
+func play_burn(amount: int, color := FIRE_COLOR, tag := "") -> void:
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -237,17 +265,39 @@ func play_burn(amount: int, color := FIRE_COLOR) -> void:
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	t.parallel().tween_property(mat, "albedo_color:a", 0.0, 0.3).set_delay(0.1)
 	t.tween_callback(ball.queue_free)
-	await play_hit(amount, false)
+	await play_hit(amount, false, tag)
 	if t.is_running():
 		await t.finished
 
 
-## Green glow and a green number going up.
-func play_heal(amount: int) -> void:
-	_spawn_number(amount, false, HEAL_COLOR)
-	_set_flash(true, HEAL_COLOR)
+## Glow and a number going up, green by default (HP); an MP heal passes its own color.
+func play_heal(amount: int, color := HEAL_COLOR) -> void:
+	_spawn_number(amount, false, color)
+	_set_flash(true, color)
 	await get_tree().create_timer(0.35).timeout
 	_set_flash(false)
+
+
+## Glow in a status color (poison, sleep, defend...); amount > 0 also floats a number of
+## that color (poison damage).
+func play_status(color: Color, amount := 0) -> void:
+	if amount > 0:
+		_spawn_number(amount, false, color)
+	_set_flash(true, color)
+	await get_tree().create_timer(0.35).timeout
+	_set_flash(false)
+
+
+## Grows from nothing where it stands (an enemy called for help).
+func play_appear() -> void:
+	if _idle_tween:
+		_idle_tween.kill()
+	_body.scale = Vector3.ONE * 0.05
+	var t := create_tween()
+	t.tween_property(_body, "scale", Vector3.ONE, 0.35) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	await t.finished
+	_start_idle()
 
 
 ## Wobbles side to side, for a fighter that loses its turn.
@@ -300,6 +350,75 @@ func _build_slime(data: Dictionary) -> void:
 				Vector3(cos(angle) * 0.19, 1.01, sin(angle) * 0.19), 0.4)  # spike
 
 
+## A bat: round body with ears and eyes, hovering at data.fly, with two wings on pivots
+## that the idle loop flaps.
+func _build_bat(data: Dictionary) -> void:
+	var color: Color = data.color
+	var root := Node3D.new()
+	root.position.y = data.fly
+	_body.add_child(root)
+	_add_mesh(root, _sphere(0.32), color, Vector3.ZERO, 0.7)
+	for x in [-0.14, 0.14]:
+		_add_mesh(root, _cone(0.08, 0.22), color, Vector3(x, 0.36, 0))  # ear
+		_add_mesh(root, _sphere(0.08), Color(1.0, 0.85, 0.3), Vector3(x * 0.9, 0.08, -0.27))  # eye
+		_add_mesh(root, _sphere(0.035), Color(0.05, 0.05, 0.05),
+			Vector3(x * 0.9, 0.08, -0.34))  # pupil
+	for side in [-1.0, 1.0]:
+		var pivot := Node3D.new()
+		pivot.position = Vector3(0.22 * side, 0.05, 0)
+		root.add_child(pivot)
+		var wing := BoxMesh.new()
+		wing.size = Vector3(0.75, 0.04, 0.42)
+		_add_mesh(pivot, wing, data.wing_color, Vector3(0.38 * side, 0, 0.05))
+		_wings.append(pivot)
+
+
+## A mushroom: pale stem with eyes and a red hemisphere cap with white spots.
+func _build_mushroom(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	var stem := _cylinder(0.2, 0.55)
+	stem.top_radius = 0.16
+	_add_mesh(root, stem, data.stem_color, Vector3(0, 0.275, 0))
+	for x in [-0.08, 0.08]:
+		_add_mesh(root, _sphere(0.05), Color(0.05, 0.05, 0.05), Vector3(x, 0.32, -0.18))  # eye
+	var cap := SphereMesh.new()
+	cap.radius = 0.5
+	cap.height = 0.42
+	cap.is_hemisphere = true
+	cap.radial_segments = 9
+	cap.rings = 3
+	_add_mesh(root, cap, data.cap_color, Vector3(0, 0.5, 0), 0.6)
+	for i in 5:
+		var angle := TAU * i / 5.0 + 0.3
+		_add_mesh(root, _sphere(0.07), Color.WHITE,
+			Vector3(cos(angle) * 0.32, 0.83, sin(angle) * 0.32))  # spot
+	_add_mesh(root, _sphere(0.08), Color.WHITE, Vector3(0, 0.92, 0))  # top spot
+
+
+## The waiting loop of the figures built in code: the bat flaps, the rest squash and
+## stretch.
+func _start_idle() -> void:
+	if _wings.is_empty():
+		_start_bounce()
+	else:
+		_start_flap()
+
+
+## Flapping wings, for the bat. Only the wing pivots are tweened, so hits, attacks and
+## dodges can move _body freely.
+func _start_flap() -> void:
+	if _idle_tween:
+		_idle_tween.kill()
+	_idle_tween = create_tween().set_loops()
+	for angle in [0.6, -0.4]:
+		_idle_tween.tween_property(_wings[0], "rotation:z", -angle, 0.18) \
+			.set_trans(Tween.TRANS_SINE)
+		_idle_tween.parallel().tween_property(_wings[1], "rotation:z", angle, 0.18) \
+			.set_trans(Tween.TRANS_SINE)
+
+
 ## Squash-and-stretch loop of the slimes while they wait.
 func _start_bounce() -> void:
 	if _idle_tween:
@@ -339,19 +458,27 @@ func _end(timer: SceneTreeTimer) -> void:
 	_anim.play(_anims.idle, BLEND_TIME)
 
 
-func _spawn_number(amount: int, crit: bool, color := Color.WHITE) -> void:
+func _spawn_number(amount: int, crit: bool, color := Color.WHITE, tag := "") -> void:
+	if tag != "":
+		_float_label(tag, 40, TAG_COLOR, _top - 0.3)
+	_float_label(str(amount), 96 if crit else 64, Color(1.0, 0.85, 0.2) if crit else color,
+		_top)
+
+
+## A billboard text drawn over everything that floats up from height y and fades out.
+func _float_label(text: String, font_size: int, color: Color, y: float) -> void:
 	var label := Label3D.new()
-	label.text = str(amount)
+	label.text = text
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.no_depth_test = true
 	label.pixel_size = 0.005
-	label.font_size = 96 if crit else 64
+	label.font_size = font_size
 	label.outline_size = 16
-	label.modulate = Color(1.0, 0.85, 0.2) if crit else color
-	label.position = Vector3(0, _top, 0)
+	label.modulate = color
+	label.position = Vector3(0, y, 0)
 	add_child(label)
 	var t := label.create_tween().set_parallel()
-	t.tween_property(label, "position:y", _top + 0.8, 0.9)
+	t.tween_property(label, "position:y", y + 0.8, 0.9)
 	t.tween_property(label, "modulate:a", 0.0, 0.6).set_delay(0.3)
 	t.chain().tween_callback(label.queue_free)
 
