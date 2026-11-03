@@ -58,7 +58,7 @@ El usuario pidió que no se le pregunte; todas son la opción recomendada.
 
 - `BattleScene` elige el aspecto del enemigo: `KING_SLIME` si `enemy.is_boss`, si no `SLIME`.
 - Mensaje de entrada del jefe: "¡El %s te cierra el paso!" (el resto, "¡Un %s salvaje aparece!" como ahora).
-- `BattleEngine` no cambia: la IA ponderada y las habilidades del enemigo ya existen (una habilidad sin PM se convierte en ataque).
+- `BattleEngine` casi no cambia: la IA ponderada y las habilidades del enemigo ya existen (una habilidad sin PM se convierte en ataque). Solo pasa `skill.color` al evento SKILL (`BattleEvent.skill(..., color)`), y `BattleScene` usa ese color en `play_cast` y en el `play_burn` del daño que sigue.
 - `BattleActor`: looks nuevos `VILLAGER` (como el héroe pero túnica morada, pelo blanco, bastón en lugar de espada; sin bote) y `KING_SLIME` (slime a escala 1,6 con corona dorada de cilindro y conos; bota como el slime). `play_burn(amount, color)` recibe el color.
 
 ## Mapa
