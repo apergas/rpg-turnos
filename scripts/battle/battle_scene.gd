@@ -200,6 +200,8 @@ func _on_command_chosen(cmd: Dictionary) -> void:
 			_result.show_defeat()
 	if _autoplay:
 		await get_tree().create_timer(2.0).timeout
+		if _done:  # "Continuar" was clicked during the wait
+			return
 		_result.hide()
 		_finish()
 

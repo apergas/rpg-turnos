@@ -246,7 +246,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			if click or e_key or event.is_action_pressed("ui_accept"):
 				_advance_requested = true
 		Page.SPELLS, Page.ITEMS:
-			if click:
+			# A click on a grey row (it lets clicks through) keeps the list open, so the
+			# reason can be read; a click anywhere else goes back.
+			if click and not _list.get_global_rect().has_point(mouse.position):
 				_back()
 		Page.TARGET:
 			if not click:

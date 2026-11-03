@@ -230,7 +230,8 @@ func _on_use_item(id: String) -> void:
 		return
 	_sfx(SfxLibrary.HEAL)
 	_fill_items()
-	_items_message.text = ("Recuperas %d PM." if result.effect == "mp" else "Recuperas %d PV.") 		% result.amount
+	_items_message.text = ("Recuperas %d PM." if result.effect == "mp" else "Recuperas %d PV.") \
+			% result.amount
 	state_changed.emit()
 	_quiet_focus = true
 	var first := _first_button(_pages["items"])

@@ -363,7 +363,9 @@ func _add_status(target: int, status: String, events: Array[Dictionary]) -> void
 	var fighter := _fighter(target)
 	if not fighter.is_alive() or fighter.status.has(status):
 		return
-	fighter.status[status] = SILENCE_ROUNDS if status == SILENCE else -1
+	# Silence counts down at the end of every round, the one it starts in too, so it
+	# gets one extra round to last SILENCE_ROUNDS whole rounds.
+	fighter.status[status] = SILENCE_ROUNDS + 1 if status == SILENCE else -1
 	events.append(BattleEvent.status_on(target, status))
 
 
@@ -380,6 +382,9 @@ func _end_of_round(events: Array[Dictionary]) -> void:
 			if fighter.hp == 0:
 				events.append(BattleEvent.defeated(who))
 				continue
+			if fighter.status.has(SLEEP):  # any damage wakes, poison too
+				fighter.status.erase(SLEEP)
+				events.append(BattleEvent.status_off(who, SLEEP))
 		if fighter.status.has(SLEEP) and _rng.randf() < WAKE_CHANCE:
 			fighter.status.erase(SLEEP)
 			events.append(BattleEvent.status_off(who, SLEEP))
