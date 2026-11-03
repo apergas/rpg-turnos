@@ -90,6 +90,9 @@ func _ready() -> void:
 	_refresh_status()
 	_build_fade()
 	_build_pause()
+	# Synthesize the tracks played later now, under black, so no first play stalls.
+	for id in [MusicLibrary.VILLAGE, MusicLibrary.VICTORY, MusicLibrary.DEFEAT]:
+		MusicLibrary.build(id)
 	_play_map_music()
 	if load_failed:
 		if _autoplay:

@@ -100,9 +100,13 @@ func _close_title() -> void:
 	remove_child(_ui)
 	_ui.queue_free()
 	_ui = null
+	_options_window = null
+	_options_panel = null
+	_menu_window = null
+	_continue_button = null
+	_options_button = null
 
 
-## Fades out, swaps the title for a Game (save empty = new game) and fades in.
 ## The saved game; if the file exists but can't be read, a marker Dictionary that Game
 ## rejects, so it starts a new game with the "could not load" notice.
 func _load_save() -> Dictionary:
@@ -112,6 +116,7 @@ func _load_save() -> Dictionary:
 	return save
 
 
+## Fades out, swaps the title for a Game (save empty = new game) and fades in.
 func _start_game(save: Dictionary) -> void:
 	if _starting:
 		return

@@ -15,7 +15,6 @@ var _music_slider: HSlider
 var _sfx_slider: HSlider
 var _music_value: Label
 var _sfx_value: Label
-var _speed_buttons: Array[Button] = []
 var _back_button: Button
 
 
@@ -47,7 +46,6 @@ func _ready() -> void:
 		button.button_pressed = i == _options.text_speed
 		button.pressed.connect(_on_speed_chosen.bind(i))
 		speed_row.add_child(button)
-		_speed_buttons.append(button)
 	_back_button = _button("Volver")
 	_back_button.pressed.connect(back)
 	add_child(_back_button)
