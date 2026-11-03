@@ -91,6 +91,8 @@ func _ready() -> void:
 	_build_pause()
 	_play_map_music()
 	if load_failed:
+		if _autoplay:
+			print(LOAD_FAILED_NOTICE)
 		_world.show_notice(LOAD_FAILED_NOTICE)
 	if _autoplay_menu:
 		get_tree().create_timer(MENU_TOUR_DELAY).timeout.connect(_pause.tour)

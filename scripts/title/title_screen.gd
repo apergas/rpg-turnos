@@ -52,7 +52,7 @@ func _ready() -> void:
 	_audio.set_volumes(_options.music_volume, _options.sfx_volume)
 	_build_fade()
 	new_game.connect(func() -> void: _start_game({}))
-	continue_game.connect(func() -> void: _start_game(SaveStore.load_game()))
+	continue_game.connect(func() -> void: _start_game(_load_save()))
 	if _autoplay:
 		_start_game({})
 	else:
@@ -103,6 +103,15 @@ func _close_title() -> void:
 
 
 ## Fades out, swaps the title for a Game (save empty = new game) and fades in.
+## The saved game; if the file exists but can't be read, a marker Dictionary that Game
+## rejects, so it starts a new game with the "could not load" notice.
+func _load_save() -> Dictionary:
+	var save := SaveStore.load_game()
+	if save.is_empty() and SaveStore.has_save():
+		return {"unreadable": true}
+	return save
+
+
 func _start_game(save: Dictionary) -> void:
 	if _starting:
 		return
@@ -121,12 +130,13 @@ func _start_game(save: Dictionary) -> void:
 func _on_quit_to_title() -> void:
 	get_tree().paused = false
 	await _fade_to(1.0)
+	remove_child(_game)
 	_game.queue_free()
 	_game = null
 	if _autoplay_save:
 		_autoplay_save = false
 		_starting = false
-		_start_game(SaveStore.load_game())
+		_start_game(_load_save())
 		return
 	if _autoplay:
 		get_tree().quit()

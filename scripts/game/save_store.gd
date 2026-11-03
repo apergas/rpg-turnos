@@ -51,5 +51,7 @@ static func _write(path: String, data: Dictionary) -> bool:
 static func _read(path: String) -> Dictionary:
 	if not FileAccess.file_exists(path):
 		return {}
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
-	return parsed if parsed is Dictionary else {}
+	var json := JSON.new()
+	if json.parse(FileAccess.get_file_as_string(path)) != OK:
+		return {}
+	return json.data if json.data is Dictionary else {}
