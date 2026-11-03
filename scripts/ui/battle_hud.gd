@@ -1,15 +1,17 @@
 class_name BattleHud extends Control
 ## Dragon Quest style battle UI: hero status (top left), command menu and message
 ## window (bottom). The menu lists "Atacar", the hero's first skill and the potion;
-## the last two are disabled without enough MP or potions. Up / down move between
-## commands, Enter / Space or a click choose one. show_message() can be awaited: it
-## types the text out and returns when the player advances (click, Enter, Space) or
-## after a short auto-advance.
+## the last two are disabled without enough MP, or without potions or at full HP. Up /
+## down move between commands, Enter / Space or a click choose one (ignored for
+## MENU_GUARD seconds after the menu opens, so a press meant to skip a message never
+## picks a command). show_message() can be awaited: it types the text out and returns
+## when the player advances (click, Enter, Space) or after a short auto-advance.
 
 signal command_chosen(cmd: Dictionary)
 
 const CHAR_TIME := 0.025
 const AUTO_ADVANCE := 0.6
+const MENU_GUARD := 0.3
 const FONT_SIZE := 24
 
 var _name_label: Label
@@ -25,6 +27,7 @@ var _hero: Combatant
 var _potions := 0
 var _hp_fill := StyleBoxFlat.new()
 var _menu_active := false
+var _menu_opened_ms := 0
 var _advance_requested := false
 
 
@@ -72,6 +75,7 @@ func set_potions(n: int) -> void:
 ## The menu keeps its layout slot (only fades out) so the message window never resizes.
 func show_menu() -> void:
 	_menu_active = true
+	_menu_opened_ms = Time.get_ticks_msec()
 	_menu.modulate.a = 1.0
 	_set_enabled(_attack_button, true)
 	var skill := _skill()
@@ -80,7 +84,7 @@ func show_menu() -> void:
 		_skill_button.text = "%s (%d PM)" % [skill.display_name, skill.mp_cost]
 		_set_enabled(_skill_button, _hero.mp >= skill.mp_cost)
 	_item_button.text = "%s ×%d" % [Inventory.display_name(Inventory.POTION), _potions]
-	_set_enabled(_item_button, _potions > 0)
+	_set_enabled(_item_button, _potions > 0 and _hero.hp < _hero.max_hp)
 	_message.text = "¿Qué hará %s?" % _hero.display_name
 	_message.visible_characters = -1
 	_attack_button.grab_focus()
@@ -226,7 +230,7 @@ func _label() -> Label:
 
 
 func _choose(cmd: Dictionary) -> void:
-	if not _menu_active:
+	if not _menu_active or Time.get_ticks_msec() - _menu_opened_ms < MENU_GUARD * 1000.0:
 		return
 	hide_menu()
 	command_chosen.emit(cmd)

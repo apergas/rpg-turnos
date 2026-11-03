@@ -108,6 +108,7 @@ func respawn() -> void:
 	_camera.yaw = 0.0
 	_camera.snap()
 	_meter.reset()
+	_was_near = false
 
 
 ## Shows or removes the Rey Slime north of the village; when absent it has no collision.
@@ -166,11 +167,13 @@ func _on_standalone_encounter(boss: bool) -> void:
 
 func _on_standalone_talk() -> void:
 	var lines: Array[String] = ["Hola, viajero."]
-	show_dialogue(Quest.NPC_NAME, lines)
+	await show_dialogue(Quest.NPC_NAME, lines)
 
 
-## A village figure: a BattleActor on a cylinder collider, facing south (toward the spawn).
-func _add_figure(look: BattleActor.Look, pos: Vector3, radius: float, height: float) -> StaticBody3D:
+## A village figure: a BattleActor on a cylinder collider, facing south (toward the
+## spawn).
+func _add_figure(look: BattleActor.Look, pos: Vector3, radius: float, \
+		height: float) -> StaticBody3D:
 	var body := StaticBody3D.new()
 	body.position = pos
 	body.rotation.y = PI
@@ -212,7 +215,8 @@ func _build_ui() -> void:
 	_prompt.add_theme_color_override("font_outline_color", Color.BLACK)
 	_prompt.add_theme_constant_override("outline_size", 8)
 	_ui.add_child(_prompt)
-	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 200)
+	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, \
+		Control.PRESET_MODE_MINSIZE, 200)
 	_prompt.hide()
 	_dialogue = DialogueBox.new()
 	_ui.add_child(_dialogue)

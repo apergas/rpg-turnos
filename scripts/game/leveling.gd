@@ -20,7 +20,7 @@ static func apply(hero: Combatant) -> Array[Dictionary]:
 		hero.attack += GAINS.attack
 		hero.defense += GAINS.defense
 		hero.speed += GAINS.speed
-		events.append(BattleEvent.level_up(hero.level, GAINS))
+		events.append(BattleEvent.level_up(hero.level, GAINS, hero))
 	return events
 
 
