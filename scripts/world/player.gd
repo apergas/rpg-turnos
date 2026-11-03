@@ -9,11 +9,16 @@ const SPEED := 5.0
 const TURN_SPEED := 10.0
 const BOB_HEIGHT := 0.08
 const BOB_TIME := 0.18
-## Points walked in a loop by --autoplay, mostly on grass and clear of rocks.
+## Points walked in a loop by --autoplay: mostly grass, clear of rocks, and through the
+## village, next to the old woman and to where the Rey Slime appears.
 const AUTOPLAY_ROUTE: Array[Vector3] = [
 	Vector3(8, 0, 18),
 	Vector3(16, 0, 6),
 	Vector3(10, 0, -6),
+	Vector3(1, 0, -14),
+	Vector3(-1.5, 0, -18),
+	Vector3(0, 0, -26.5),
+	Vector3(2, 0, -14),
 	Vector3(-6, 0, -4),
 	Vector3(-14, 0, 8),
 	Vector3(-6, 0, 18),
