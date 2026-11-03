@@ -1,8 +1,8 @@
 class_name WorldStage extends RefCounted
-## Builds the world map from primitives: a 60 x 60 m grass field with a dirt path
-## from the spawn point (south) to the village of Villaclaro in a clearing (north),
-## rocks and invisible walls with collision, and hills outside the field. Same sky and
-## sun as battles.
+## Builds the world map from primitives: a 60 x 60 m field of tall grass (Vegetation)
+## with a bare dirt path from the spawn point (south) to the village of Villaclaro in a
+## clearing (north), rocks and invisible walls with collision, and hills outside the
+## field. Same sky and sun as battles.
 
 const FIELD_HALF := 30.0
 const SPAWN_POS := Vector3(0, 0, 26)
@@ -10,6 +10,14 @@ const SPAWN_RADIUS := 4.0
 const CLEARING_POS := Vector3(0, 0, -22)
 const CLEARING_RADIUS := 8.0
 const PATH_HALF_WIDTH := 1.5
+## Tall grass covers this area (a bit past the invisible walls so the edge never looks
+## bare), except the path and clearing (plus GRASS_PATH_MARGIN) and the rocks.
+const GRASS_AREA := Rect2(-36, -36, 72, 72)
+const GRASS_SEED := 7
+const GRASS_PATH_MARGIN := 0.3
+const GRASS_ROCK_MARGIN := 0.2
+## Floor under the tall grass: darker than the battle field so gaps read as shade.
+const GRASS_FLOOR := Color(0.08, 0.22, 0.05)
 ## Where the old woman stands and where the Rey Slime waits once the quest unlocks it.
 const NPC_POS := Vector3(-2.5, 0, -20)
 const BOSS_POS := Vector3(0, 0, -27.5)
@@ -60,7 +68,8 @@ const HILLS := [
 ]
 
 
-static func build(root: Node3D) -> void:
+## Returns the tall grass material, so the world can bend it away from the player.
+static func build(root: Node3D) -> ShaderMaterial:
 	BattleStage.build_environment(root)
 	_add_ground(root)
 	_add_path(root)
@@ -70,21 +79,38 @@ static func build(root: Node3D) -> void:
 	for hill in HILLS:
 		BattleStage.add_mesh(root, BattleStage.unit_sphere(), BattleStage.HILL, hill[0], hill[1])
 	_add_walls(root)
+	return Vegetation.build(root, GRASS_AREA, is_grass_free, GRASS_SEED)
 
 
 ## True on the dirt path, the clearing and around the spawn point: no encounters there.
-static func is_on_path(pos: Vector3) -> bool:
+## margin widens every one of them (the grass keeps a little off the path's edge).
+static func is_on_path(pos: Vector3, margin := 0.0) -> bool:
 	var p := Vector2(pos.x, pos.z)
-	if p.distance_to(Vector2(SPAWN_POS.x, SPAWN_POS.z)) < SPAWN_RADIUS:
+	if p.distance_to(Vector2(SPAWN_POS.x, SPAWN_POS.z)) < SPAWN_RADIUS + margin:
 		return true
-	if p.distance_to(Vector2(CLEARING_POS.x, CLEARING_POS.z)) < CLEARING_RADIUS:
+	if p.distance_to(Vector2(CLEARING_POS.x, CLEARING_POS.z)) < CLEARING_RADIUS + margin:
 		return true
 	for i in PATH_POINTS.size() - 1:
 		var a := Vector2(PATH_POINTS[i].x, PATH_POINTS[i].z)
 		var b := Vector2(PATH_POINTS[i + 1].x, PATH_POINTS[i + 1].z)
-		if p.distance_to(Geometry2D.get_closest_point_to_segment(p, a, b)) < PATH_HALF_WIDTH:
+		var closest := Geometry2D.get_closest_point_to_segment(p, a, b)
+		if p.distance_to(closest) < PATH_HALF_WIDTH + margin:
 			return true
 	return false
+
+
+## Where tall grass may grow: off the path and clearing (the village is inside the
+## clearing) and off the rocks.
+static func is_grass_free(pos: Vector3) -> bool:
+	if is_on_path(pos, GRASS_PATH_MARGIN):
+		return false
+	var p := Vector2(pos.x, pos.z)
+	for rock in ROCKS:
+		var scl: Vector3 = rock[1]
+		var center := Vector2(rock[0].x, rock[0].z)
+		if p.distance_to(center) < maxf(scl.x, scl.z) + GRASS_ROCK_MARGIN:
+			return false
+	return true
 
 
 ## Upright cylinder collider standing on the ground, for village props and figures.
@@ -101,7 +127,7 @@ static func add_cylinder_shape(body: StaticBody3D, radius: float, height: float)
 static func _add_ground(root: Node3D) -> void:
 	var mesh := PlaneMesh.new()
 	mesh.size = Vector2(160, 160)
-	BattleStage.add_mesh(root, mesh, BattleStage.GRASS, Vector3.ZERO)
+	BattleStage.add_mesh(root, mesh, GRASS_FLOOR, Vector3.ZERO)
 	var body := StaticBody3D.new()
 	var shape := CollisionShape3D.new()
 	shape.shape = WorldBoundaryShape3D.new()

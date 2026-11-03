@@ -21,9 +21,9 @@
 - **Camera values:** `PITCH_DEG = 55`, `DISTANCE = 14`, zoom 9 to 20 m in steps of 1.5 m, `ZOOM_RATE = 8`, `FOV = 45`, `FOLLOW_RATE = 6`, looks 1 m above the hero. Camera south of the hero looking north; Q and E do nothing.
 - **Movement:** WASD / arrows in screen axes: up = −Z (north), right = +X.
 - **Grass values:**
-  - 5 blades per tuft, 0.06 m wide at the base, 0.5 m tall.
+  - 7 blades per tuft, 0.12 m wide at the base, 0.7 m tall.
   - Tuft scale 0.8 to 1.3.
-  - Grid spacing 0.65 m with ±0.3 m jitter.
+  - Grid spacing 0.45 m with ±0.2 m jitter.
   - Chunks of 12 × 12 m.
   - No shadows.
   - Wind amplitude 0.08 m at the tip.

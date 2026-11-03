@@ -1,6 +1,7 @@
 class_name Player extends CharacterBody3D
-## Hero on the world map. Moves with WASD / arrows relative to the camera, turns
-## smoothly toward where it walks and bobs while moving. Its model is a BattleActor.
+## Hero on the world map. Moves with WASD / arrows in screen axes (the top-down camera
+## never turns: up is north, -Z), turns smoothly toward where it walks and bobs while
+## moving. Its model is a BattleActor.
 ## With `-- --autoplay` it walks AUTOPLAY_ROUTE in a loop instead of reading keys.
 
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
@@ -25,7 +26,6 @@ const AUTOPLAY_ROUTE: Array[Vector3] = [
 ]
 const ROUTE_REACHED := 0.6
 
-var camera: FollowCamera
 var input_enabled := true
 ## Horizontal meters moved during the last physics frame.
 var last_step_m := 0.0
@@ -90,13 +90,11 @@ func _wanted_direction() -> Vector3:
 		keys.y -= 1.0
 	if Input.is_physical_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_DOWN):
 		keys.y += 1.0
-	if keys == Vector2.ZERO or camera == null:
+	if keys == Vector2.ZERO:
 		return Vector3.ZERO
 	keys = keys.normalized()
-	# Screen up is away from the camera; screen right is the camera's right.
-	var forward := Vector3(-sin(camera.yaw), 0.0, -cos(camera.yaw))
-	var right := Vector3(cos(camera.yaw), 0.0, -sin(camera.yaw))
-	return right * keys.x - forward * keys.y
+	# The camera sits south of the player looking north: screen up is -Z, right is +X.
+	return Vector3(keys.x, 0.0, keys.y)
 
 
 func _route_direction() -> Vector3:

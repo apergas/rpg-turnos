@@ -47,23 +47,23 @@ El usuario pidió que no se le pregunte, así que todas son la opción recomenda
   - `is_free(Vector3) -> bool` dice si en un punto puede haber hierba.
   - Devuelve el material compartido, para poder moverle el empuje.
 - **Matas:**
-  - Una sola malla de mata con 5 hojas: triángulos finos de 0,06 m de base y 0,5 m de alto, inclinados hacia fuera en direcciones repartidas.
+  - Una sola malla de mata con 7 hojas: triángulos de 0,12 m de base y 0,7 m de alto, inclinados hacia fuera en direcciones repartidas.
   - Se hace con `SurfaceTool`. `UV.y` va de 0 en la base a 1 en la punta.
-  - Cada mata lleva una escala de 0,8 a 1,3, así que miden de 40 a 65 cm. También llevan un giro aleatorio y un tono aleatorio entre dos verdes, guardado en `INSTANCE_CUSTOM`.
+  - Cada mata lleva una escala de 0,8 a 1,3, así que miden de 56 a 91 cm. También llevan un giro aleatorio y un tono aleatorio entre dos verdes, guardado en `INSTANCE_CUSTOM`.
 - **Reparto:**
-  - Rejilla de 0,65 m con un desplazamiento aleatorio de ±0,3 m. Solo se ponen matas donde `is_free` es cierto.
+  - Rejilla de 0,45 m con un desplazamiento aleatorio de ±0,2 m. Solo se ponen matas donde `is_free` es cierto.
   - El `RandomNumberGenerator` usa `seed`, así que el reparto es siempre el mismo.
 - **Trozos:**
   - Las matas se reparten en `MultiMeshInstance3D` de 12 × 12 m, para que la cámara descarte los trozos que no ve.
   - Sin sombras (`cast_shadow = OFF`).
 - **Shader (`shaders/grass.gdshader`):**
   - `cull_disabled`.
-  - Color de la base a la punta: el verde oscuro de la base va hacia el tono de la mata.
+  - Color de la base a la punta: el verde oscuro de la base va hacia el tono de la mata (verdes saturados; el tono por instancia se guarda ya en lineal, porque `INSTANCE_CUSTOM` no pasa por la conversión sRGB).
   - **Viento:** las hojas se balancean según `UV.y²`, con una onda que depende de la posición en el mundo y de `TIME`. La amplitud es de 0,08 m en la punta.
   - **Empuje:** el uniforme `pusher` (`vec3`) aparta las hojas a menos de `PUSH_RADIUS = 0,8 m`, hasta 0,25 m en la punta.
   - Rugosidad 1 y sin especular, como el resto del escenario.
 - **Flores:**
-  - Otro `MultiMeshInstance3D` con una malla de flor muy simple: una cabeza low-poly de 0,1 m (esfera de 6 lados y 3 anillos) a 0,3-0,45 m de altura, entre las hojas, que tapan el tallo. El color va por instancia.
+  - Otro `MultiMeshInstance3D` con una malla de flor muy simple: una cabeza low-poly de 0,13 m (esfera de 6 lados y 3 anillos) a 0,6-0,85 m de altura, justo por encima de las hojas, sin tallo. El color va por instancia.
   - Hay unas 300 por zona de 60 × 60 m, en blanco, amarillo y morado.
   - Siguen la misma regla `is_free` y la misma semilla.
 - **`static func set_pusher(material: ShaderMaterial, pos: Vector3)`** pone el uniforme.
@@ -80,7 +80,7 @@ El usuario pidió que no se le pregunte, así que todas son la opción recomenda
   - `is_grass_free(pos) -> bool`: la regla de arriba.
   - `build()` devuelve ahora el material de la hierba.
 - **Empuje:** `World` guarda el material y en cada `_physics_process` llama a `Vegetation.set_pusher(material, player.global_position)`.
-- **Suelo:** el verde de la base del suelo se oscurece un poco (`GRASS_FLOOR`). La hierba alta cubre casi todo y entre mata y mata no se ven huecos claros.
+- **Suelo:** el verde de la base del suelo se oscurece hasta casi el verde de la base de la hierba (`GRASS_FLOOR`). La hierba forma una alfombra densa que tapa casi todo el suelo y los huecos se leen como sombra.
 
 ## Combate
 
@@ -93,10 +93,10 @@ El usuario pidió que no se le pregunte, así que todas son la opción recomenda
 ## Rendimiento
 
 - El objetivo es que la versión web vaya fluida en un portátil normal.
-- **Mapa:** en un área de 72 × 72 m salen unas 11.000 matas de 5 hojas, unos 165.000 vértices. Con los trozos de 12 × 12 m y la cámara cenital solo se dibujan unos 6-9 trozos.
+- **Mapa:** en un área de 72 × 72 m salen unas 22.000 matas de 7 hojas, unos 460.000 vértices. Con los trozos de 12 × 12 m y la cámara cenital solo se dibujan unos 6-9 trozos.
 - **Si la web no va bien:**
-  1. subir la separación de la rejilla a 0,8 m;
-  2. reducir las hojas por mata a 4.
+  1. subir la separación de la rejilla a 0,6 m;
+  2. reducir las hojas por mata a 5.
 
 ## Autoplay
 
