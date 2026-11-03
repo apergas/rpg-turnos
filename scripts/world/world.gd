@@ -1,7 +1,9 @@
 class_name World extends Node3D
 ## World map: field, village, player, follow camera, status window and random
-## encounters. Next to the old woman Enter / Space asks to talk (talk_requested); with
-## the Rey Slime present, walking into it starts the boss battle. Encounters emit
+## encounters. A click or tap on the ground (held and dragged too) walks the player
+## there, with a marker on the spot. Next to the old woman Enter / Space asks to talk
+## (talk_requested); a click or tap on her walks there and talks on arrival. With the
+## Rey Slime present, walking into it starts the boss battle. Encounters emit
 ## encounter_triggered(boss) and freeze the player until set_active(true). Run on its
 ## own (res://scenes/world/world.tscn) it prints each encounter and goes on.
 
@@ -16,7 +18,10 @@ const FONT_SIZE := 24
 ## How close the player must be to talk to the old woman / to run into the boss.
 const TALK_RADIUS := 2.5
 const BOSS_RADIUS := 2.5
-const PROMPT_TEXT := "Enter: hablar"
+## A click or tap this close to the old woman means "go and talk to her".
+const NPC_TAP_RADIUS := 1.2
+const PROMPT_TEXT := "Enter o toca: hablar"
+const MARKER_COLOR := Color(1.0, 0.9, 0.4)
 
 var _rng := RandomNumberGenerator.new()
 var _meter: EncounterMeter
@@ -40,6 +45,9 @@ var _autoplay := false
 var _waiting := false
 var _talking := false
 var _was_near := false
+## Set by a click or tap on the old woman: talk as soon as she is in reach.
+var _talk_on_arrival := false
+var _marker: MeshInstance3D
 
 
 func _ready() -> void:
@@ -55,6 +63,7 @@ func _ready() -> void:
 	_camera = FollowCamera.new()
 	add_child(_camera)
 	_camera.target = _player
+	_marker = _build_marker()
 	_build_ui()
 	respawn()
 	_camera.current = true
@@ -66,6 +75,9 @@ func _ready() -> void:
 
 func _physics_process(_delta: float) -> void:
 	Vegetation.set_pusher(_grass, _player.global_position)
+	_marker.visible = _player.move_target != null
+	if _marker.visible:
+		_marker.position = _player.move_target
 	if _waiting or _talking:
 		return
 	var pos := _player.global_position
@@ -78,17 +90,46 @@ func _physics_process(_delta: float) -> void:
 		return
 	var near := _flat_distance(pos, WorldStage.NPC_POS) <= TALK_RADIUS
 	_prompt.visible = near
-	if near and not _was_near and _autoplay:
+	if near and _talk_on_arrival:
+		_talk_on_arrival = false
+		_player.move_target = null
+		talk_requested.emit()
+	elif near and not _was_near and _autoplay:
 		talk_requested.emit()
 	_was_near = near
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _waiting or _talking or not _prompt.visible:
+	if _waiting or _talking:
 		return
-	if event.is_action_pressed("ui_accept") and not event.is_echo():
+	if _prompt.visible and event.is_action_pressed("ui_accept") and not event.is_echo():
 		get_viewport().set_input_as_handled()
 		talk_requested.emit()
+		return
+	var point: Variant = _pointer_on_ground(event)
+	if point == null:
+		return
+	get_viewport().set_input_as_handled()
+	if event is InputEventMouseButton:
+		_talk_on_arrival = _flat_distance(point, WorldStage.NPC_POS) <= NPC_TAP_RADIUS
+	_player.move_to(point)
+
+
+## Where a left click, a drag with the left button held, or a tap (the engine turns
+## touches into mouse events) hits the ground plane; null for any other event.
+func _pointer_on_ground(event: InputEvent) -> Variant:
+	var screen: Vector2
+	var button := event as InputEventMouseButton
+	var motion := event as InputEventMouseMotion
+	if button != null and button.pressed and button.button_index == MOUSE_BUTTON_LEFT:
+		screen = button.position
+	elif motion != null and motion.button_mask & MOUSE_BUTTON_MASK_LEFT:
+		screen = motion.position
+	else:
+		return null
+	var ground := Plane(Vector3.UP, 0.0)
+	return ground.intersects_ray(_camera.project_ray_origin(screen),
+		_camera.project_ray_normal(screen))
 
 
 ## Hidden and frozen while a battle is on top; back on, the encounter grace restarts.
@@ -168,6 +209,27 @@ func _on_standalone_encounter(boss: bool) -> void:
 func _on_standalone_talk() -> void:
 	var lines: Array[String] = ["Hola, viajero."]
 	await show_dialogue(Quest.NPC_NAME, lines)
+
+
+## Flat ring on the spot the player walks to. Drawn on top of everything, so the tall
+## grass never hides it.
+func _build_marker() -> MeshInstance3D:
+	var ring := TorusMesh.new()
+	ring.inner_radius = 0.3
+	ring.outer_radius = 0.42
+	ring.rings = 16
+	ring.ring_segments = 4
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_color = MARKER_COLOR
+	material.no_depth_test = true
+	var marker := MeshInstance3D.new()
+	marker.mesh = ring
+	marker.material_override = material
+	marker.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	marker.visible = false
+	add_child(marker)
+	return marker
 
 
 ## A village figure: a BattleActor on a cylinder collider, facing south (toward the
