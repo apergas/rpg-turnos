@@ -17,3 +17,13 @@ func _init(hero_data: Combatant) -> void:
 func heal_full() -> void:
 	hero.hp = hero.max_hp
 	hero.mp = hero.max_mp
+
+
+## Drinks a potion outside battle. Returns the HP healed; 0 (and nothing used) without
+## potions or at full HP.
+func use_potion() -> int:
+	if hero.hp >= hero.max_hp or not inventory.take(Inventory.POTION):
+		return 0
+	var healed := mini(Inventory.POTION_HEAL, hero.max_hp - hero.hp)
+	hero.hp += healed
+	return healed

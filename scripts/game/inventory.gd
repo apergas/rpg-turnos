@@ -28,3 +28,13 @@ func take(id: String) -> bool:
 		return false
 	_items[id] = count(id) - 1
 	return true
+
+
+## Copy of the items as id -> count, for the save game.
+func to_dict() -> Dictionary:
+	return _items.duplicate()
+
+
+## Replaces every item with these (id -> count), when a game is loaded.
+func set_items(items: Dictionary) -> void:
+	_items = items.duplicate()
