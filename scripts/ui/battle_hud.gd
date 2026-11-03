@@ -4,8 +4,10 @@ class_name BattleHud extends Control
 ## the last two are disabled without enough MP, or without potions or at full HP. Up /
 ## down move between commands, Enter / Space or a click choose one (ignored for
 ## MENU_GUARD seconds after the menu opens, so a press meant to skip a message never
-## picks a command). show_message() can be awaited: it types the text out and returns
-## when the player advances (click, Enter, Space) or after a short auto-advance.
+## picks a command). show_message() can be awaited: it types the text out (char_time
+## seconds per character) and returns when the player advances (click, Enter, Space) or
+## after a short auto-advance. With set_audio() moving between commands and choosing
+## one make a sound.
 
 signal command_chosen(cmd: Dictionary)
 
@@ -29,6 +31,11 @@ var _hp_fill := StyleBoxFlat.new()
 var _menu_active := false
 var _menu_opened_ms := 0
 var _advance_requested := false
+## Seconds per typed character (the text speed option).
+var char_time := CHAR_TIME
+var _audio: AudioDirector
+## True while show_menu() moves the focus itself, so that move makes no sound.
+var _quiet_focus := false
 
 
 func _ready() -> void:
@@ -37,6 +44,10 @@ func _ready() -> void:
 	_build_status()
 	_build_bottom()
 	hide_menu()
+
+
+func set_audio(audio: AudioDirector) -> void:
+	_audio = audio
 
 
 func set_hero(c: Combatant, potions: int) -> void:
@@ -87,7 +98,9 @@ func show_menu() -> void:
 	_set_enabled(_item_button, _potions > 0 and _hero.hp < _hero.max_hp)
 	_message.text = "¿Qué hará %s?" % _hero.display_name
 	_message.visible_characters = -1
+	_quiet_focus = true
 	_attack_button.grab_focus()
+	_quiet_focus = false
 
 
 func hide_menu() -> void:
@@ -105,7 +118,7 @@ func show_message(text: String) -> void:
 	var shown := 0.0
 	while _message.visible_characters < total and not _advance_requested:
 		await get_tree().process_frame
-		shown += get_process_delta_time() / CHAR_TIME
+		shown += get_process_delta_time() / char_time
 		_message.visible_characters = mini(total, int(shown))
 	_message.visible_characters = -1
 	_advance_requested = false
@@ -203,7 +216,13 @@ func _command_button(text: String) -> Button:
 	button.flat = true
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.add_theme_font_size_override("font_size", FONT_SIZE)
+	button.focus_entered.connect(_on_focus_moved)
 	return button
+
+
+func _on_focus_moved() -> void:
+	if _audio and _menu_active and not _quiet_focus:
+		_audio.play_sfx(SfxLibrary.CURSOR)
 
 
 ## Disabled buttons also leave the focus chain (so up / down skip them) and let mouse
@@ -233,4 +252,6 @@ func _choose(cmd: Dictionary) -> void:
 	if not _menu_active or Time.get_ticks_msec() - _menu_opened_ms < MENU_GUARD * 1000.0:
 		return
 	hide_menu()
+	if _audio:
+		_audio.play_sfx(SfxLibrary.ACCEPT)
 	command_chosen.emit(cmd)

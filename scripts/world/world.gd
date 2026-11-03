@@ -9,6 +9,8 @@ class_name World extends Node3D
 
 signal encounter_triggered(boss: bool)
 signal talk_requested
+## The player walked into (true) or out of (false) the village clearing.
+signal village_changed(inside: bool)
 
 const PLAYER_SCENE := preload("res://scenes/world/player.tscn")
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
@@ -22,6 +24,8 @@ const BOSS_RADIUS := 2.5
 const NPC_TAP_RADIUS := 1.2
 const PROMPT_TEXT := "Enter o toca: hablar"
 const MARKER_COLOR := Color(1.0, 0.9, 0.4)
+## Meters walked between two footstep sounds.
+const STEP_DISTANCE := 1.6
 
 var _rng := RandomNumberGenerator.new()
 var _meter: EncounterMeter
@@ -48,6 +52,9 @@ var _was_near := false
 ## Set by a click or tap on the old woman: talk as soon as she is in reach.
 var _talk_on_arrival := false
 var _marker: MeshInstance3D
+var _audio: AudioDirector
+var _in_village := false
+var _step_m := 0.0
 
 
 func _ready() -> void:
@@ -81,6 +88,11 @@ func _physics_process(_delta: float) -> void:
 	if _waiting or _talking:
 		return
 	var pos := _player.global_position
+	var inside := _is_in_village(pos)
+	if inside != _in_village:
+		_in_village = inside
+		village_changed.emit(inside)
+	_play_steps()
 	if _boss_present and _flat_distance(pos, WorldStage.BOSS_POS) <= BOSS_RADIUS:
 		_trigger(true)
 		return
@@ -146,10 +158,32 @@ func set_active(active: bool) -> void:
 
 ## Back to the spawn point facing up the path, with the encounter grace restarted.
 func respawn() -> void:
-	_player.place(WorldStage.SPAWN_POS, 0.0)
+	place_player(WorldStage.SPAWN_POS)
+
+
+## Puts the player at pos facing north (a loaded game), with the encounter grace
+## restarted. in_village() is right at once; village_changed is not emitted.
+func place_player(pos: Vector3) -> void:
+	_player.place(pos, 0.0)
 	_camera.snap()
 	_meter.reset()
 	_was_near = false
+	_step_m = 0.0
+	_in_village = _is_in_village(pos)
+
+
+func player_position() -> Vector3:
+	return _player.global_position
+
+
+func in_village() -> bool:
+	return _in_village
+
+
+## Footsteps, encounter and dialogue sounds. Without it the map is silent.
+func set_audio(audio: AudioDirector) -> void:
+	_audio = audio
+	_dialogue.set_audio(audio)
 
 
 ## Shows or removes the Rey Slime north of the village; when absent it has no collision.
@@ -194,6 +228,8 @@ func show_notice(text: String) -> void:
 
 
 func _trigger(boss: bool) -> void:
+	if _audio:
+		_audio.play_sfx(SfxLibrary.ENCOUNTER)
 	_waiting = true
 	_player.input_enabled = false
 	_prompt.hide()
@@ -289,6 +325,20 @@ func _label() -> Label:
 	label.add_theme_font_size_override("font_size", FONT_SIZE)
 	label.add_theme_color_override("font_color", Color.WHITE)
 	return label
+
+
+## A soft footstep every STEP_DISTANCE meters walked.
+func _play_steps() -> void:
+	_step_m += _player.last_step_m
+	if _step_m < STEP_DISTANCE:
+		return
+	_step_m -= STEP_DISTANCE
+	if _audio:
+		_audio.play_sfx(SfxLibrary.STEP)
+
+
+static func _is_in_village(pos: Vector3) -> bool:
+	return _flat_distance(pos, WorldStage.CLEARING_POS) <= WorldStage.CLEARING_RADIUS
 
 
 static func _flat_distance(a: Vector3, b: Vector3) -> float:

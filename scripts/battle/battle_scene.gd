@@ -3,7 +3,8 @@ class_name BattleScene extends Node3D
 ## command, lets BattleEngine resolve the round and plays the events back. Call setup()
 ## before adding it to the tree; it emits finished(won) when the player continues.
 ## With `-- --autoplay` it picks commands by itself (_autoplay_command), prints every
-## battle message and continues on its own.
+## battle message and continues on its own. With set_audio() it plays the sound effects
+## and the victory or defeat music; without it the battle is silent.
 
 signal finished(won: bool)
 
@@ -26,6 +27,8 @@ var engine: BattleEngine
 var hero: Combatant
 var enemy: Combatant
 var inventory: Inventory
+## Seconds per typed character of the messages (the text speed option).
+var char_time := BattleHud.CHAR_TIME
 
 var _rng := RandomNumberGenerator.new()
 var _autoplay := false
@@ -42,6 +45,7 @@ var _cam_tween: Tween
 var _shake_tween: Tween
 var _hud: BattleHud
 var _result: BattleResult
+var _audio: AudioDirector
 
 
 ## The hero and the inventory are used as is, so HP, MP, EXP and potions stay with the
@@ -50,6 +54,11 @@ func setup(hero_ref: Combatant, enemy_data: Combatant, inv: Inventory) -> void:
 	hero = hero_ref
 	enemy = enemy_data.duplicate() as Combatant
 	inventory = inv
+
+
+## Call before adding it to the tree, like setup().
+func set_audio(audio: AudioDirector) -> void:
+	_audio = audio
 
 
 func _ready() -> void:
@@ -67,6 +76,8 @@ func _ready() -> void:
 	_hud = HUD_SCENE.instantiate() as BattleHud
 	ui.add_child(_hud)
 	_hud.command_chosen.connect(_on_command_chosen)
+	_hud.char_time = char_time
+	_hud.set_audio(_audio)
 	_result = RESULT_SCENE.instantiate() as BattleResult
 	ui.add_child(_result)
 	_result.continue_requested.connect(_finish)
@@ -120,6 +131,7 @@ func _finish() -> void:
 	if _done:
 		return
 	_done = true
+	_sfx(SfxLibrary.ACCEPT)
 	finished.emit(engine.state == BattleEngine.State.WON)
 
 
@@ -141,16 +153,19 @@ func _play_event(event: Dictionary) -> void:
 			if event.actor == BattleEvent.HERO:
 				_hud.update_mp(event.mp_left, hero.max_mp)
 			_spell_color = event.color
+			_sfx(SfxLibrary.FIRE)
 			await _say("¡%s lanza %s!" % [_fighter(event.actor).display_name, event.name])
 			_focus_camera(_actor(event.target))
 			await _actor(event.actor).play_cast(_spell_color)
 		BattleEvent.MISS:
+			_sfx(SfxLibrary.MISS)
 			await _actor(event.target).play_dodge()
 			_reset_camera()
 			await _say("¡Pero falla!")
 		BattleEvent.DAMAGE:
 			if event.crit:
 				_shake_camera()
+			_sfx(SfxLibrary.CRIT if event.crit else SfxLibrary.HIT)
 			if event.magic:
 				await _actor(event.target).play_burn(event.amount, _spell_color)
 				_spell_color = BattleActor.FIRE_COLOR
@@ -165,8 +180,10 @@ func _play_event(event: Dictionary) -> void:
 				_fighter(event.target).display_name, event.amount])
 		BattleEvent.ITEM:
 			_hud.set_potions(inventory.count(Inventory.POTION))
+			_sfx(SfxLibrary.POTION)
 			await _say("¡%s usa una %s!" % [_fighter(event.actor).display_name, event.name])
 		BattleEvent.HEAL:
+			_sfx(SfxLibrary.HEAL)
 			await _actor(event.target).play_heal(event.amount)
 			if event.target == BattleEvent.HERO:
 				_hud.update_hp(event.hp_left, hero.max_hp)
@@ -180,21 +197,34 @@ func _play_event(event: Dictionary) -> void:
 			if event.target == BattleEvent.ENEMY:
 				await _say("¡%s ha sido derrotado!" % enemy.display_name)
 			else:
+				_music(MusicLibrary.DEFEAT)
 				await _say("¡Has sido derrotado...!")
 		BattleEvent.VICTORY:
 			_hero_actor.play_cheer()
+			_music(MusicLibrary.VICTORY)
 			await _say("¡Has ganado! Obtienes %d EXP." % event.exp)
 		BattleEvent.LEVEL_UP:
 			_new_level = event.level
 			_hud.update_level(event.level)
 			_hud.update_hp(event.hp, event.max_hp)
 			_hud.update_mp(event.mp, event.max_mp)
+			_sfx(SfxLibrary.LEVEL_UP)
 			await _say("¡%s sube al nivel %d!" % [hero.display_name, event.level])
 			await _say(_gains_text(event.gains))
 		BattleEvent.DROP:
 			_got_potion = true
 			await _say("¡El %s ha dejado una %s!" % [
 				enemy.display_name, Inventory.display_name(event.item)])
+
+
+func _sfx(id: String) -> void:
+	if _audio:
+		_audio.play_sfx(id)
+
+
+func _music(id: String) -> void:
+	if _audio:
+		_audio.play_music(id)
 
 
 func _gains_text(gains: Dictionary) -> String:
