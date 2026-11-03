@@ -17,7 +17,7 @@ const GRASS_SEED := 7
 const GRASS_PATH_MARGIN := 0.3
 const GRASS_ROCK_MARGIN := 0.2
 ## Floor under the tall grass: darker than the battle field so gaps read as shade.
-const GRASS_FLOOR := Color(0.22, 0.4, 0.15)
+const GRASS_FLOOR := Color(0.08, 0.22, 0.05)
 ## Where the old woman stands and where the Rey Slime waits once the quest unlocks it.
 const NPC_POS := Vector3(-2.5, 0, -20)
 const BOSS_POS := Vector3(0, 0, -27.5)

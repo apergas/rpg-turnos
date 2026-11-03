@@ -4,7 +4,7 @@
 shader_type spatial;
 render_mode cull_disabled, specular_disabled;
 
-uniform vec3 base_color : source_color = vec3(0.16, 0.32, 0.1);
+uniform vec3 base_color : source_color = vec3(0.06, 0.2, 0.04);
 // Far below the ground by default, so nothing is pushed until set_pusher() is called.
 uniform vec3 pusher = vec3(0.0, -100.0, 0.0);
 uniform float push_radius = 0.8;

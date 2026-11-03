@@ -5,18 +5,18 @@ class_name Vegetation extends RefCounted
 ## The returned material sways with the wind; set_pusher() bends it away from a point.
 
 const GRASS_SHADER := preload("res://shaders/grass.gdshader")
-const BLADES := 5
-const BLADE_WIDTH := 0.06
-const BLADE_HEIGHT := 0.5
+const BLADES := 7
+const BLADE_WIDTH := 0.12
+const BLADE_HEIGHT := 0.7
 ## How far each blade's tip leans out from the tuft centre.
-const BLADE_LEAN := 0.15
-const SPACING := 0.65
-const JITTER := 0.3
+const BLADE_LEAN := 0.2
+const SPACING := 0.45
+const JITTER := 0.2
 const MIN_SCALE := 0.8
 const MAX_SCALE := 1.3
 const CHUNK := 12.0
-## Two tip greens; every tuft gets a mix of them.
-const TIP_COLORS := [Color(0.36, 0.62, 0.22), Color(0.52, 0.7, 0.26)]
+## Two tip greens (sRGB, saturated); every tuft gets a mix of them.
+const TIP_COLORS := [Color(0.22, 0.55, 0.12), Color(0.42, 0.72, 0.16)]
 const FLOWERS_PER_M2 := 300.0 / 3600.0
 const FLOWER_COLORS := [Color(0.95, 0.95, 0.9), Color(0.98, 0.85, 0.2), Color(0.62, 0.42, 0.88)]
 const FLOWER_HEIGHT := Vector2(0.3, 0.45)
@@ -39,7 +39,8 @@ static func build(root: Node3D, area: Rect2, is_free: Callable, seed: int) -> Sh
 				z + rng.randf_range(-JITTER, JITTER))
 			var yaw := rng.randf() * TAU
 			var scl := rng.randf_range(MIN_SCALE, MAX_SCALE)
-			var tint: Color = TIP_COLORS[0].lerp(TIP_COLORS[1], rng.randf())
+			# Custom data skips the sRGB conversion that base_color gets, so convert here.
+			var tint: Color = TIP_COLORS[0].lerp(TIP_COLORS[1], rng.randf()).srgb_to_linear()
 			if is_free.call(pos):
 				var key := Vector2i(floori(pos.x / CHUNK), floori(pos.z / CHUNK))
 				if not chunks.has(key):
