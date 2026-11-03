@@ -1,7 +1,7 @@
 class_name BattleStage extends RefCounted
-## Builds the battle backdrop from primitives: sky, warm sun, fog, grass field,
-## dirt path, rocks and distant hills. The environment and mesh helpers are shared
-## with WorldStage.
+## Builds the battle backdrop from primitives: sky, warm sun, fog, grass field with
+## tall grass (Vegetation) around the fighters, dirt path, rocks and distant hills. The
+## environment and mesh helpers are shared with WorldStage.
 
 const GRASS := Color(0.32, 0.55, 0.22)
 const DIRT := Color(0.62, 0.5, 0.34)
@@ -24,6 +24,17 @@ const HILLS := [
 	[Vector3(48, -6, -25), Vector3(20, 8, 20)],
 	[Vector3(-50, -5, -15), Vector3(20, 8, 24)],
 ]
+## Tall grass around the fighters; none in the ellipse where they stand and the camera
+## looks, on the path strip or in the rocks. Nobody walks here, so it is never pushed.
+const GRASS_AREA := Rect2(-20, -24, 40, 34)
+const GRASS_SEED := 11
+const CLEAR_CENTER := Vector2(0.0, -0.3)
+const CLEAR_RADII := Vector2(4.0, 5.5)
+## The path plane: centre, size and yaw as built in build(), plus the grass margin.
+const PATH_CENTER := Vector3(-0.2, 0.0, -0.3)
+const PATH_SIZE := Vector2(2.6, 30.0)
+const PATH_YAW_DEG := -21.0
+const GRASS_MARGIN := 0.3
 
 
 static func build(root: Node3D) -> void:
@@ -32,12 +43,14 @@ static func build(root: Node3D) -> void:
 	ground.size = Vector2(160, 160)
 	add_mesh(root, ground, GRASS, Vector3.ZERO)
 	var path := PlaneMesh.new()
-	path.size = Vector2(2.6, 30)
-	add_mesh(root, path, DIRT, Vector3(-0.2, 0.01, -0.3), Vector3.ONE, Vector3(0, -21, 0))
+	path.size = PATH_SIZE
+	add_mesh(root, path, DIRT, PATH_CENTER + Vector3(0, 0.01, 0), Vector3.ONE,
+		Vector3(0, PATH_YAW_DEG, 0))
 	for rock in ROCKS:
 		add_mesh(root, unit_sphere(), ROCK, rock[0], rock[1])
 	for hill in HILLS:
 		add_mesh(root, unit_sphere(), HILL, hill[0], hill[1])
+	Vegetation.build(root, GRASS_AREA, _is_grass_free, GRASS_SEED)
 
 
 ## Sky, tonemap, fog and the warm sun shared by every outdoor scene.
@@ -66,6 +79,22 @@ static func unit_sphere() -> SphereMesh:
 	mesh.radius = 1.0
 	mesh.height = 2.0
 	return mesh
+
+
+static func _is_grass_free(pos: Vector3) -> bool:
+	var p := Vector2(pos.x, pos.z)
+	if ((p - CLEAR_CENTER) / CLEAR_RADII).length_squared() < 1.0:
+		return false
+	# Into the path plane's own axes (it is turned PATH_YAW_DEG around Y).
+	var local := (pos - PATH_CENTER).rotated(Vector3.UP, -deg_to_rad(PATH_YAW_DEG))
+	if absf(local.x) < PATH_SIZE.x / 2.0 + GRASS_MARGIN \
+			and absf(local.z) < PATH_SIZE.y / 2.0 + GRASS_MARGIN:
+		return false
+	for rock in ROCKS:
+		var scl: Vector3 = rock[1]
+		if p.distance_to(Vector2(rock[0].x, rock[0].z)) < maxf(scl.x, scl.z) + GRASS_MARGIN:
+			return false
+	return true
 
 
 static func _add_environment(root: Node3D) -> void:

@@ -20,6 +20,7 @@ const PROMPT_TEXT := "Enter: hablar"
 
 var _rng := RandomNumberGenerator.new()
 var _meter: EncounterMeter
+var _grass: ShaderMaterial
 var _player: Player
 var _camera: FollowCamera
 var _npc: StaticBody3D
@@ -45,7 +46,7 @@ func _ready() -> void:
 	_rng.randomize()
 	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
 	_meter = EncounterMeter.new(_rng)
-	WorldStage.build(self)
+	_grass = WorldStage.build(self)
 	_npc = _add_figure(BattleActor.Look.VILLAGER, WorldStage.NPC_POS, 0.4, 1.8)
 	_boss = _add_figure(BattleActor.Look.KING_SLIME, WorldStage.BOSS_POS, 1.0, 2.0)
 	set_boss_present(false)
@@ -54,7 +55,6 @@ func _ready() -> void:
 	_camera = FollowCamera.new()
 	add_child(_camera)
 	_camera.target = _player
-	_player.camera = _camera
 	_build_ui()
 	respawn()
 	_camera.current = true
@@ -65,6 +65,7 @@ func _ready() -> void:
 
 
 func _physics_process(_delta: float) -> void:
+	Vegetation.set_pusher(_grass, _player.global_position)
 	if _waiting or _talking:
 		return
 	var pos := _player.global_position
@@ -105,7 +106,6 @@ func set_active(active: bool) -> void:
 ## Back to the spawn point facing up the path, with the encounter grace restarted.
 func respawn() -> void:
 	_player.place(WorldStage.SPAWN_POS, 0.0)
-	_camera.yaw = 0.0
 	_camera.snap()
 	_meter.reset()
 	_was_near = false

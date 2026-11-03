@@ -1,45 +1,66 @@
 class_name FollowCamera extends Camera3D
-## Third-person camera behind and above a target. Follows it smoothly; Q / E turn it
-## around the target. It never turns by itself when the target turns.
+## Top-down camera for the world map: high above the target and south of it, looking
+## north at a fixed angle, following it smoothly. The mouse wheel zooms between
+## MIN_DISTANCE and MAX_DISTANCE. It never turns.
 
-const DISTANCE := 6.0
-const HEIGHT := 3.5
-const LOOK_HEIGHT := 1.0
+## Degrees below the horizon the camera looks down.
+const PITCH_DEG := 55.0
+## Distance from the point it looks at, in meters.
+const DISTANCE := 14.0
+const MIN_DISTANCE := 9.0
+const MAX_DISTANCE := 20.0
+const ZOOM_STEP := 1.5
+## Fraction of the remaining zoom covered per second (exponential smoothing).
+const ZOOM_RATE := 8.0
 ## Fraction of the remaining distance covered per second (exponential smoothing).
 const FOLLOW_RATE := 6.0
-## Radians per second while Q or E is held (about 120 degrees).
-const TURN_RATE := 2.1
-const FOV := 60.0
+const LOOK_HEIGHT := 1.0
+const FOV := 45.0
 
 var target: Node3D
-## Angle around the target; 0 puts the camera on the +Z side, looking toward -Z.
-var yaw := 0.0
+## Current distance; moves toward the zoom goal.
+var distance := DISTANCE
+
+var _zoom_goal := DISTANCE
 
 
 func _ready() -> void:
 	fov = FOV
 
 
+func _unhandled_input(event: InputEvent) -> void:
+	var wheel := event as InputEventMouseButton
+	if wheel == null or not wheel.pressed:
+		return
+	if wheel.button_index == MOUSE_BUTTON_WHEEL_UP:
+		_zoom_goal -= ZOOM_STEP
+	elif wheel.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+		_zoom_goal += ZOOM_STEP
+	else:
+		return
+	_zoom_goal = clampf(_zoom_goal, MIN_DISTANCE, MAX_DISTANCE)
+
+
 # Same tick as the player's movement, so the follow does not stutter.
 func _physics_process(delta: float) -> void:
 	if target == null:
 		return
-	var turn := 0.0
-	if Input.is_physical_key_pressed(KEY_Q):
-		turn -= 1.0
-	if Input.is_physical_key_pressed(KEY_E):
-		turn += 1.0
-	yaw += turn * TURN_RATE * delta
+	distance = lerpf(distance, _zoom_goal, minf(1.0, ZOOM_RATE * delta))
 	global_position = global_position.lerp(_goal_position(), minf(1.0, FOLLOW_RATE * delta))
-	look_at(target.global_position + Vector3.UP * LOOK_HEIGHT, Vector3.UP)
+	look_at(_focus(), Vector3.UP)
 
 
-## Jumps to the follow position without smoothing (start and respawn).
+## Jumps to the follow position and zoom without smoothing (start and respawn).
 func snap() -> void:
+	distance = _zoom_goal
 	global_position = _goal_position()
-	look_at(target.global_position + Vector3.UP * LOOK_HEIGHT, Vector3.UP)
+	look_at(_focus(), Vector3.UP)
+
+
+func _focus() -> Vector3:
+	return target.global_position + Vector3.UP * LOOK_HEIGHT
 
 
 func _goal_position() -> Vector3:
-	var offset := Vector3(sin(yaw), 0.0, cos(yaw)) * DISTANCE
-	return target.global_position + offset + Vector3.UP * HEIGHT
+	var pitch := deg_to_rad(PITCH_DEG)
+	return _focus() + Vector3(0.0, sin(pitch), cos(pitch)) * distance
