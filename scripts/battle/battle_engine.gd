@@ -149,7 +149,7 @@ func _attack(side: String, target_side: String, events: Array[Dictionary]) -> vo
 func _cast(side: String, target_side: String, skill: Skill, events: Array[Dictionary]) -> void:
 	var caster := _fighter(side)
 	caster.mp -= skill.mp_cost
-	events.append(BattleEvent.skill(side, target_side, skill.display_name, caster.mp))
+	events.append(BattleEvent.skill(side, target_side, skill.display_name, caster.mp, skill.color))
 	var amount := maxi(1, roundi(skill.power * _rng.randf_range(DAMAGE_SPREAD.x, DAMAGE_SPREAD.y)))
 	_hurt(target_side, amount, false, true, events)
 

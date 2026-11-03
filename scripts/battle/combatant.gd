@@ -2,6 +2,8 @@ class_name Combatant extends Resource
 ## Stats of one fighter. Battles work on duplicates, so the .tres files never change.
 
 @export var display_name := ""
+## Data id, used by the quest to count kills ("hero", "slime", "rey_slime").
+@export var id := ""
 @export var level := 1
 @export var max_hp := 1
 @export var hp := 1
@@ -21,6 +23,8 @@ class_name Combatant extends Resource
 @export var ai_weights := {}
 ## Enemy only: chance of leaving a potion when defeated.
 @export var potion_drop_chance := 0.0
+## Enemy only: a boss gets its own look and intro line in battle.
+@export var is_boss := false
 
 
 func is_alive() -> bool:
