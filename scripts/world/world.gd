@@ -54,7 +54,6 @@ func _ready() -> void:
 	_camera = FollowCamera.new()
 	add_child(_camera)
 	_camera.target = _player
-	_player.camera = _camera
 	_build_ui()
 	respawn()
 	_camera.current = true
@@ -105,7 +104,6 @@ func set_active(active: bool) -> void:
 ## Back to the spawn point facing up the path, with the encounter grace restarted.
 func respawn() -> void:
 	_player.place(WorldStage.SPAWN_POS, 0.0)
-	_camera.yaw = 0.0
 	_camera.snap()
 	_meter.reset()
 	_was_near = false
