@@ -10,7 +10,7 @@ Estado: listado de ideas con el alcance ya decidido. Todavía no es un plan.
 | Duración | Unas **2 horas** para terminar la historia |
 | Encuentros | **Aleatorios**, solo fuera del camino, como ahora |
 | Personajes | **Héroe solo**: no hay grupo, la variedad viene de los hechizos y del equipo |
-| Modelos | **Low-poly** recomendado (ver abajo); pendiente de que lo confirme el usuario |
+| Modelos | **Low-poly** con paquetes CC0 (Quaternius, Kenney, KayKit) y animaciones; confirmado |
 | Orden | Lo elijo yo: ver "Fases" al final |
 | Vegetación | La hierba fuera del camino se ve como vegetación alta, más alta que el camino |
 | Cámara | **Cenital**, alta e inclinada, como en los ARPG isométricos de hoy (por ejemplo Diablo 4) |
@@ -357,7 +357,7 @@ Cada idea lleva una talla aproximada:
 - **Pitido de texto con un tono por personaje (S).**
 
 ### 11. Visuales
-- **Modelos low-poly con animaciones (L):** pendiente de que lo confirmes.
+- **Modelos low-poly con animaciones (L):** confirmado; sustituyen a las primitivas del héroe, los enemigos, los PNJ y el escenario.
 - **Árboles, arbustos, flores, vallas, puentes y agua (M).**
 - **Partículas (M):** polvo al caminar, hojas, chispas de los hechizos.
 - **Interfaz animada (S):** ventanas que se abren con rebote.
@@ -406,7 +406,7 @@ Las he ordenado yo, como pediste.
 
 | Fase | Contenido | Por qué en este orden |
 |---|---|---|
-| 1. Base visual y de control | Cámara cenital, hierba alta y vegetación, modelos low-poly (si los confirmas) | Todo el contenido que venga después (mapas, mazmorras, pueblos) se diseña para esta cámara y este estilo. Si se cambia más tarde, hay que rehacerlo |
+| 1. Base visual y de control | Cámara cenital, hierba alta y vegetación, modelos low-poly | Todo el contenido que venga después (mapas, mazmorras, pueblos) se diseña para esta cámara y este estilo. Si se cambia más tarde, hay que rehacerlo |
 | 2. Sensación de juego | Música y efectos, pantalla de título, guardar partida, menú de pausa | Es lo que más mejora la experiencia de juego; el resto se apoya en el guardado y en el menú |
 | 3. Combate completo | Defender, Huir, 1-2 enemigos con elección de objetivo, menús de hechizos y objetos, Curar, elementos y estados, nueva tabla de EXP | Es el núcleo del juego; las cifras de equilibrio se aplican aquí |
 | 4. Economía y equipo | Oro, tiendas, posada, ranuras de equipo, cofres | Da sentido a luchar y explorar |
