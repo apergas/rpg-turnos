@@ -393,7 +393,7 @@ func _build_mushroom(data: Dictionary) -> void:
 	for i in 5:
 		var angle := TAU * i / 5.0 + 0.3
 		_add_mesh(root, _sphere(0.07), Color.WHITE,
-			Vector3(cos(angle) * 0.3, 0.75, sin(angle) * 0.3))  # spot
+			Vector3(cos(angle) * 0.32, 0.83, sin(angle) * 0.32))  # spot
 	_add_mesh(root, _sphere(0.08), Color.WHITE, Vector3(0, 0.92, 0))  # top spot
 
 
@@ -406,7 +406,8 @@ func _start_idle() -> void:
 		_start_flap()
 
 
-## Flapping wings and a slow bob up and down, for the bat.
+## Flapping wings, for the bat. Only the wing pivots are tweened, so hits, attacks and
+## dodges can move _body freely.
 func _start_flap() -> void:
 	if _idle_tween:
 		_idle_tween.kill()
@@ -416,8 +417,6 @@ func _start_flap() -> void:
 			.set_trans(Tween.TRANS_SINE)
 		_idle_tween.parallel().tween_property(_wings[1], "rotation:z", angle, 0.18) \
 			.set_trans(Tween.TRANS_SINE)
-		_idle_tween.parallel().tween_property(_body, "position:y",
-			0.08 if angle > 0.0 else 0.0, 0.18).set_trans(Tween.TRANS_SINE)
 
 
 ## Squash-and-stretch loop of the slimes while they wait.
