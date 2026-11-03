@@ -31,8 +31,8 @@ func is_alive() -> bool:
 	return hp > 0
 
 
-func find_skill(id: String) -> Skill:
+func find_skill(skill_id: String) -> Skill:
 	for skill in skills:
-		if skill.id == id:
+		if skill.id == skill_id:
 			return skill
 	return null
