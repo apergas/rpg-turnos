@@ -1,5 +1,5 @@
 class_name Vegetation extends RefCounted
-## Builds tall grass and flowers from code. Grass tufts (BLADES thin blades each) go on
+## Builds tall grass and flowers from code. Grass tufts (BLADES blades each) go on
 ## a jittered grid wherever is_free says so, split into CHUNK-sized MultiMeshes so the
 ## camera skips the ones it does not see. The same seed always gives the same layout.
 ## The returned material sways with the wind; set_pusher() bends it away from a point.
@@ -19,7 +19,7 @@ const CHUNK := 12.0
 const TIP_COLORS := [Color(0.22, 0.55, 0.12), Color(0.42, 0.72, 0.16)]
 const FLOWERS_PER_M2 := 300.0 / 3600.0
 const FLOWER_COLORS := [Color(0.95, 0.95, 0.9), Color(0.98, 0.85, 0.2), Color(0.62, 0.42, 0.88)]
-const FLOWER_HEIGHT := Vector2(0.3, 0.45)
+const FLOWER_HEIGHT := Vector2(0.6, 0.85)
 
 
 ## Fills area (metres on XZ: position.x = min X, position.y = min Z) with grass and
@@ -82,7 +82,7 @@ static func _tuft_mesh() -> ArrayMesh:
 	return st.commit()
 
 
-## Small low-poly flower heads among the blades (the blades hide the stems).
+## Small low-poly flower heads just above the blades (no stems).
 static func _add_flowers(root: Node3D, area: Rect2, is_free: Callable, \
 		rng: RandomNumberGenerator) -> void:
 	var items := []
@@ -94,8 +94,8 @@ static func _add_flowers(root: Node3D, area: Rect2, is_free: Callable, \
 		if is_free.call(pos):
 			items.append([Transform3D(Basis(), pos), color])
 	var head := SphereMesh.new()
-	head.radius = 0.05
-	head.height = 0.1
+	head.radius = 0.065
+	head.height = 0.13
 	head.radial_segments = 6
 	head.rings = 3
 	var material := StandardMaterial3D.new()
@@ -121,6 +121,8 @@ static func _add_multimesh(root: Node3D, mesh: Mesh, material: Material, items: 
 		else:
 			mm.set_instance_color(i, items[i][1])
 	var mmi := MultiMeshInstance3D.new()
+	# The shader moves blade tips up to ~0.33 m outside the chunk AABB.
+	mmi.extra_cull_margin = 0.5
 	mmi.multimesh = mm
 	mmi.material_override = material
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

@@ -63,7 +63,7 @@ El usuario pidió que no se le pregunte, así que todas son la opción recomenda
   - **Empuje:** el uniforme `pusher` (`vec3`) aparta las hojas a menos de `PUSH_RADIUS = 0,8 m`, hasta 0,25 m en la punta.
   - Rugosidad 1 y sin especular, como el resto del escenario.
 - **Flores:**
-  - Otro `MultiMeshInstance3D` con una malla de flor muy simple: una cabeza low-poly de 0,1 m (esfera de 6 lados y 3 anillos) a 0,3-0,45 m de altura, entre las hojas, que tapan el tallo. El color va por instancia.
+  - Otro `MultiMeshInstance3D` con una malla de flor muy simple: una cabeza low-poly de 0,13 m (esfera de 6 lados y 3 anillos) a 0,6-0,85 m de altura, justo por encima de las hojas, sin tallo. El color va por instancia.
   - Hay unas 300 por zona de 60 × 60 m, en blanco, amarillo y morado.
   - Siguen la misma regla `is_free` y la misma semilla.
 - **`static func set_pusher(material: ShaderMaterial, pos: Vector3)`** pone el uniforme.

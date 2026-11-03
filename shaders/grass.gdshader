@@ -27,13 +27,15 @@ void vertex() {
 		offset.y -= k * 0.5;
 	}
 	// The offset is in world space; the vertex is in the instance's (scaled, turned) space.
-	VERTEX += (inverse(MODEL_MATRIX) * vec4(offset, 0.0)).xyz;
+	// Instances are only turned and uniformly scaled, so the inverse of the basis is its
+	// transpose divided by the squared scale (cheaper than inverse() per vertex).
+	VERTEX += transpose(mat3(MODEL_MATRIX)) * offset / dot(MODEL_MATRIX[0].xyz, MODEL_MATRIX[0].xyz);
 	tip_color = INSTANCE_CUSTOM.rgb;
 }
 
 void fragment() {
 	ALBEDO = mix(base_color, tip_color, UV.y);
 	ROUGHNESS = 1.0;
-	// Lit like the ground under it, so thin blades never flash dark or bright.
+	// Lit like the ground under it, so blades never flash dark or bright.
 	NORMAL = (VIEW_MATRIX * vec4(0.0, 1.0, 0.0, 0.0)).xyz;
 }
