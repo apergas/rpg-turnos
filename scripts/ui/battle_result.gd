@@ -1,6 +1,7 @@
 class_name BattleResult extends Control
-## End-of-battle overlay: victory or defeat text and a "Continuar" button.
-## Starts hidden; the button hides it and emits continue_requested.
+## End-of-battle overlay: victory (EXP, new level, gold, items left by the enemies) or
+## defeat text and a "Continuar" button. Starts hidden; the button hides it and emits
+## continue_requested.
 
 signal continue_requested
 
@@ -37,14 +38,16 @@ func _ready() -> void:
 	hide()
 
 
-## new_level is 0 when the hero did not level up.
-func show_victory(exp_gained: int, total_exp: int, new_level := 0, got_potion := false) -> void:
+## new_level is 0 when the hero did not level up; drops holds one item id per item won.
+func show_victory(exp_gained: int, total_exp: int, new_level: int, gold: int, 		drops: Array[String]) -> void:
 	_title.text = "¡Victoria!"
 	var lines := PackedStringArray(["+%d EXP  (total: %d)" % [exp_gained, total_exp]])
 	if new_level > 0:
 		lines.append("¡Nivel %d!" % new_level)
-	if got_potion:
-		lines.append("+1 %s" % Inventory.display_name(Inventory.POTION))
+	if gold > 0:
+		lines.append("+%d G" % gold)
+	for id in drops:
+		lines.append("+1 %s" % Inventory.display_name(id))
 	_detail.text = "\n".join(lines)
 	_open()
 
