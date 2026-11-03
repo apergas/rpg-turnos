@@ -46,9 +46,10 @@ static func defeat() -> Dictionary:
 	return {"type": DEFEAT}
 
 
-static func skill(actor: String, target: String, skill_name: String, mp_left: int) -> Dictionary:
+static func skill(actor: String, target: String, skill_name: String, mp_left: int, \
+		color := Color(1.0, 0.45, 0.1)) -> Dictionary:
 	return {"type": SKILL, "actor": actor, "target": target, "name": skill_name,
-		"mp_left": mp_left}
+		"mp_left": mp_left, "color": color}
 
 
 static func item(actor: String, item_name: String) -> Dictionary:

@@ -2,10 +2,11 @@ class_name BattleActor extends Node3D
 ## 3D stand-in for a combatant built from primitive meshes. The model faces -Z, so
 ## look_at() the opponent. Animations are tweens on the inner body and can be awaited.
 
-enum Look { HERO, SLIME }
+enum Look { HERO, SLIME, VILLAGER, KING_SLIME }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
+const GOLD := Color(1.0, 0.8, 0.2)
 
 @export var look := Look.HERO
 
@@ -25,6 +26,10 @@ func _ready() -> void:
 			_build_hero()
 		Look.SLIME:
 			_build_slime()
+		Look.VILLAGER:
+			_build_villager()
+		Look.KING_SLIME:
+			_build_king_slime()
 	reset()
 
 
@@ -37,7 +42,7 @@ func reset() -> void:
 	for mat in _materials:
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
 		mat.albedo_color.a = 1.0
-	if look == Look.SLIME:
+	if look == Look.SLIME or look == Look.KING_SLIME:
 		_start_bounce()
 
 
@@ -93,9 +98,9 @@ func play_defeat() -> void:
 	hide()
 
 
-## Small hop with an orange glow, before a spell.
-func play_cast() -> void:
-	_set_flash(true, FIRE_COLOR)
+## Small hop with a glow in the spell's color, before a spell.
+func play_cast(color := FIRE_COLOR) -> void:
+	_set_flash(true, color)
 	var t := create_tween()
 	t.tween_property(_body, "position:y", 0.35, 0.15) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
@@ -105,12 +110,12 @@ func play_cast() -> void:
 	_set_flash(false)
 
 
-## A ball of fire grows on the actor and fades while the hit plays.
-func play_burn(amount: int) -> void:
+## A ball in the spell's color grows on the actor and fades while the hit plays.
+func play_burn(amount: int, color := FIRE_COLOR) -> void:
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.albedo_color = FIRE_COLOR
+	mat.albedo_color = color
 	var ball := MeshInstance3D.new()
 	ball.mesh = _sphere(0.5)
 	ball.material_override = mat
@@ -160,6 +165,32 @@ func _build_slime() -> void:
 	for x in [-0.2, 0.2]:
 		_add_mesh(_sphere(0.13), Color.WHITE, Vector3(x, 0.6, -0.48))  # eye
 		_add_mesh(_sphere(0.06), Color(0.05, 0.05, 0.05), Vector3(x, 0.6, -0.6))  # pupil
+
+
+func _build_villager() -> void:
+	_top = 2.0
+	_add_mesh(_capsule(0.34, 1.2), Color(0.45, 0.25, 0.6), Vector3(0, 0.6, 0))  # robe
+	_add_mesh(_sphere(0.26), Color(0.94, 0.78, 0.66), Vector3(0, 1.42, 0))  # head
+	_add_mesh(_sphere(0.28), Color(0.92, 0.92, 0.95), Vector3(0, 1.5, 0.06), \
+		Vector3.ZERO, Vector3(1.0, 0.85, 1.0))  # white hair
+	_add_mesh(_cylinder(0.04, 1.6), Color(0.45, 0.3, 0.15), Vector3(0.42, 0.8, -0.1))  # staff
+
+
+func _build_king_slime() -> void:
+	_top = 2.4
+	_add_mesh(_sphere(0.6), Color(0.3, 0.45, 0.9), Vector3(0, 0.72, 0), \
+		Vector3.ZERO, Vector3(1.6, 1.2, 1.6))  # body
+	for x in [-0.32, 0.32]:
+		_add_mesh(_sphere(0.2), Color.WHITE, Vector3(x, 0.96, -0.82))  # eye
+		_add_mesh(_sphere(0.09), Color(0.05, 0.05, 0.05), Vector3(x, 0.96, -1.0))  # pupil
+	_add_mesh(_cylinder(0.38, 0.22), GOLD, Vector3(0, 1.5, 0))  # crown band
+	for i in 5:
+		var angle := TAU * i / 5.0
+		var spike := CylinderMesh.new()
+		spike.top_radius = 0.0
+		spike.bottom_radius = 0.1
+		spike.height = 0.3
+		_add_mesh(spike, GOLD, Vector3(cos(angle) * 0.3, 1.76, sin(angle) * 0.3))  # crown spike
 
 
 func _start_bounce() -> void:
@@ -233,4 +264,12 @@ static func _capsule(radius: float, height: float) -> CapsuleMesh:
 static func _box(size: Vector3) -> BoxMesh:
 	var mesh := BoxMesh.new()
 	mesh.size = size
+	return mesh
+
+
+static func _cylinder(radius: float, height: float) -> CylinderMesh:
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = radius
+	mesh.bottom_radius = radius
+	mesh.height = height
 	return mesh
