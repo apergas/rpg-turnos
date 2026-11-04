@@ -7,11 +7,12 @@ class_name Game extends Node
 ## goes back to the map; a defeat takes half the gold (GameState.defeat_gold_loss()),
 ## heals the hero and sends them back to the spawn point, EXP kept. Talking to the old
 ## woman heals, moves the quest on and, once the slimes are reported, brings out the Rey
-## Slime. A chest gives what it holds (Chests.open()) and stays open. The hero's figure
-## on the map and in battle shows the weapon and shield worn. Picks the music (map,
-## village, battle, boss), autosaves after talking, after every won battle and
-## (silently) after opening a chest, and opens the pause menu. Emits quit_to_title when
-## the player goes back to the title.
+## Slime. The merchant opens the ShopWindow; the innkeeper offers a night (Inn.stay():
+## fade to black, full HP and MP, autosave); a chest gives what it holds (Chests.open())
+## and stays open. The hero's figure on the map and in battle shows the weapon and
+## shield worn. Picks the music (map, village, battle, boss), autosaves after talking,
+## after every won battle, after shopping and (silently) after opening a chest, and
+## opens the pause menu. Emits quit_to_title when the player goes back to the title.
 ## On autoplay it prints the gold and the equipment each time they change.
 ## Run on its own (res://scenes/game/game.tscn) it starts a new game with its own
 ## AudioDirector and default options.
@@ -37,6 +38,8 @@ const SAFE_NOTICE := "¡Villaclaro está a salvo!"
 const SAVED_NOTICE := "Partida guardada."
 const LOAD_FAILED_NOTICE := "No se pudo cargar la partida. Empiezas de nuevo."
 const MENU_TOUR_DELAY := 1.0
+## Seconds of black while the hero sleeps at the inn.
+const INN_NIGHT_TIME := 0.8
 ## On autoplay the Rey Slime only comes out from this level on, so the run first fights
 ## around the meadow (at lower levels it would lose to the boss over and over).
 const AUTOPLAY_BOSS_LEVEL := 5
@@ -58,6 +61,9 @@ var _autoplay_save := false
 var _autoplay_menu := false
 var _last_quest_text := ""
 var _last_gear_text := ""
+var _shop: ShopWindow
+## Something was bought, sold or equipped since the shop opened.
+var _shop_changed := false
 var _rng := RandomNumberGenerator.new()
 
 
@@ -87,6 +93,8 @@ func _ready() -> void:
 	_world.set_audio(_audio)
 	_world.encounter_triggered.connect(_on_encounter)
 	_world.talk_requested.connect(_on_talk)
+	_world.shop_requested.connect(_on_shop)
+	_world.inn_requested.connect(_on_inn)
 	_world.chest_opened.connect(_on_chest)
 	_world.village_changed.connect(func(_inside: bool) -> void: _play_map_music())
 	var load_failed := false
@@ -104,6 +112,7 @@ func _ready() -> void:
 		_world.set_chest_open(id, true, true)
 	_update_boss()
 	_refresh_status()
+	_build_shop()
 	_build_fade()
 	_build_pause()
 	# Synthesize the tracks played later now, under black, so no first play stalls.
@@ -187,6 +196,53 @@ func _on_talk() -> void:
 	await _world.show_dialogue(Quest.NPC_NAME, lines)
 	_update_boss()
 	_autosave(true)
+	_set_busy(false)
+
+
+## The merchant: the ShopWindow until the player leaves; autosaves if anything changed.
+## On autoplay it only opens when there is something to buy.
+func _on_shop(shop_id: String) -> void:
+	if _busy or (_autoplay and Shop.autoplay_picks(state, shop_id).is_empty()):
+		return
+	_set_busy(true)
+	_shop_changed = false
+	_world.freeze(true)
+	await _shop.run(shop_id)
+	await _world.freeze(false)
+	_refresh_status()
+	if _shop_changed:
+		_autosave(true)
+	_set_busy(false)
+
+
+## The innkeeper: Sí pays the night, fades to black and back with HP and MP full and
+## saves; without gold, or with No, nothing happens. On autoplay it only stops there
+## hurt and with the price (the route passes the inn right after the boss spot).
+func _on_inn(inn_id: String) -> void:
+	var hurt := state.hero.hp < state.hero.max_hp
+	if _busy or (_autoplay and (not hurt or state.gold < Inn.price(inn_id))):
+		return
+	_set_busy(true)
+	_world.freeze(true)
+	var lines: Array[String] = []
+	var slept := false
+	if await _shop.ask(Inn.keeper(inn_id), Inn.offer(inn_id)):
+		var result := Inn.stay(state, inn_id)
+		slept = result.ok
+		if slept:
+			await _fade_to(1.0)
+			_refresh_status()
+			_audio.play_sfx(SfxLibrary.HEAL)
+			await get_tree().create_timer(INN_NIGHT_TIME).timeout
+			await _fade_to(0.0)
+		lines.append(result.text)
+	else:
+		lines.append("Vuelve cuando quieras.")
+	await _world.freeze(false)
+	await _world.show_dialogue(Inn.keeper(inn_id), lines)
+	_refresh_status()
+	if slept:
+		_autosave(true)
 	_set_busy(false)
 
 
@@ -279,6 +335,18 @@ func _refresh_status() -> void:
 ## One line with every saved value, keys sorted, for --autoplay-save.
 static func _summary(data: Dictionary) -> String:
 	return JSON.stringify(data, "", true)
+
+
+func _build_shop() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 4
+	add_child(layer)
+	_shop = ShopWindow.new()
+	_shop.setup(state, _audio)
+	layer.add_child(_shop)
+	_shop.changed.connect(func() -> void:
+		_shop_changed = true
+		_refresh_status())
 
 
 func _build_fade() -> void:
