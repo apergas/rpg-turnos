@@ -36,6 +36,7 @@ bush_seed = 43
 bush_tries = 300
 entries = {
 "aldea": [Vector3(-10.4, 0, 10.5), 0.0],
+"norte": [Vector3(0, 0, -35.5), 180.0],
 "sur": [Vector3(0, 0, 35.5), 0.0]
 }
 start_entry = "sur"
@@ -49,6 +50,15 @@ exits = [{
 "pos": Vector3(0, 0, 38.6),
 "to": "pradera",
 "yaw": 180.0
+}, {
+"entry": "sur",
+"id": "norte",
+"label": "A la mina",
+"lock": "bruja",
+"lock_text": "Una niebla espesa cierra el camino del norte.",
+"pos": Vector3(0, 0, -38.6),
+"to": "mina_1",
+"yaw": 0.0
 }]
 npcs = [{
 "id": "bosque",
@@ -90,5 +100,5 @@ fog_density = 0.01
 sun_color = Color(0.95, 0.92, 0.78, 1)
 sun_energy = 0.5
 backdrop = "bosque"
-autoplay_route = Array[Vector3]([Vector3(6, 0, 30), Vector3(15.8, 0, 19.8), Vector3(8, 0, 8), Vector3(-3, 0, 10.5), Vector3(-8.9, 0, 3.9), Vector3(-13.4, 0, 4), Vector3(-11.6, 0, -1.8), Vector3(-18.8, 0, -22.2), Vector3(-6, 0, -26), Vector3(0, 0, -32.6), Vector3(8, 0, -24), Vector3(17, 0, -14), Vector3(14, 0, 0), Vector3(12, 0, 14), Vector3(2, 0, 26)])
+autoplay_route = Array[Vector3]([Vector3(6, 0, 30), Vector3(15.8, 0, 19.8), Vector3(8, 0, 8), Vector3(-3, 0, 10.5), Vector3(-8.9, 0, 3.9), Vector3(-13.4, 0, 4), Vector3(-11.6, 0, -1.8), Vector3(-18.8, 0, -22.2), Vector3(-6, 0, -26), Vector3(0, 0, -32.6), Vector3(0, 0, -38.6), Vector3(8, 0, -24), Vector3(17, 0, -14), Vector3(14, 0, 0), Vector3(12, 0, 14), Vector3(2, 0, 26)])
 autoplay_boss_level = 9
