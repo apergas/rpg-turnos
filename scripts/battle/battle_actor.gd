@@ -573,7 +573,8 @@ func play_phase() -> void:
 			if ghost[0] == mat:
 				ghost[1] = FOG_AURA_PHASE_ALPHA
 		var t := create_tween().set_parallel()
-		t.tween_property(_aura, "scale", _aura.scale * 1.3, 0.6) 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		t.tween_property(_aura, "scale", _aura.scale * 1.3, 0.6) \
+				.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		t.tween_property(mat, "albedo_color:a", FOG_AURA_PHASE_ALPHA, 0.6)
 	await get_tree().create_timer(0.8).timeout
 	_set_flash(false)

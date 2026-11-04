@@ -75,6 +75,7 @@ var _lever_tween: Tween
 var _key: Node3D
 ## The drifting mist banks (castle).
 var _mists: Array[MeshInstance3D] = []
+var _mist_material: StandardMaterial3D
 
 
 func _ready() -> void:
@@ -315,9 +316,12 @@ func _wall_kind(cell: Vector2i) -> String:
 	var s := zone.cell_char(cell + Vector2i(0, 1)) == ZoneData.ROCK
 	var w := zone.cell_char(cell + Vector2i(-1, 0)) == ZoneData.ROCK
 	var e := zone.cell_char(cell + Vector2i(1, 0)) == ZoneData.ROCK
-	if w and e and not (n and s):
+	# A rock neighbour that is itself a drawn wall (it touches floor) is a real branch.
+	var branch_ns := (n and _touches_floor(cell + Vector2i(0, -1))) or (s and _touches_floor(cell + Vector2i(0, 1)))
+	var branch_we := (w and _touches_floor(cell + Vector2i(-1, 0))) or (e and _touches_floor(cell + Vector2i(1, 0)))
+	if w and e and not branch_ns:
 		return "ew"
-	if n and s and not (w and e):
+	if n and s and not branch_we:
 		return "ns"
 	if not (n or s or w or e):
 		return "pillar"
@@ -372,13 +376,14 @@ func _add_mist(index: int) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = MIST_SEED + index * 7919
 	var cell := floors[rng.randi_range(0, floors.size() - 1)]
-	var mat := StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.albedo_color = MIST_COLOR
+	if _mist_material == null:
+		_mist_material = StandardMaterial3D.new()
+		_mist_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_mist_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_mist_material.albedo_color = MIST_COLOR
 	var mist := MeshInstance3D.new()
 	mist.mesh = BattleStage.unit_sphere()
-	mist.material_override = mat
+	mist.material_override = _mist_material
 	mist.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	mist.position = zone.cell_center(cell) + Vector3(rng.randf_range(-1, 1), 0.25,
 		rng.randf_range(-1, 1))
