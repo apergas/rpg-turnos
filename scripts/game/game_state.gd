@@ -7,6 +7,8 @@ class_name GameState extends RefCounted
 const START_GOLD := 50
 ## The last boss: its world flag marks the game as finished.
 const FINAL_BOSS := "senor_niebla"
+## The autoplay retreat: below this share of max HP the hero needs rest.
+const REST_HP_RATIO := 0.3
 
 var hero: Combatant
 var inventory := Inventory.new()
@@ -90,6 +92,19 @@ func on_boss_defeated(boss: Combatant) -> String:
 
 func has_flag(flag: String) -> bool:
 	return flag == "" or world_flags.get(flag, false)
+
+
+## For the autoplay retreat: true when the hero is in no shape for another battle far
+## from an inn: below REST_HP_RATIO of max HP, or out of potions with MP for less than
+## two of his best heal spell.
+func needs_rest() -> bool:
+	if hero.hp < hero.max_hp * REST_HP_RATIO:
+		return true
+	var heal_cost := 0
+	for skill in hero.skills:
+		if skill.kind == Skill.HEAL:
+			heal_cost = maxi(heal_cost, skill.mp_cost)
+	return inventory.count(Inventory.POTION) == 0 and hero.mp < heal_cost * 2
 
 
 ## True once the Señor de la Niebla is beaten: the adventure is over (the ending itself

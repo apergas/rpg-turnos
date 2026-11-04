@@ -26,7 +26,9 @@ class_name Game extends Node
 ## (GameState.is_finished()) with a notice; the ending itself comes with the story.
 ## On autoplay it prints the gold and the equipment each time they change, the level and
 ## the play time on every change of zone and, once the Señor de la Niebla falls, the play
-## time of the whole run; then it quits.
+## time of the whole run; then it quits. After a won battle, when the hero needs rest
+## (GameState.needs_rest()) away from a village, it flies back with an Ala de viaje; there
+## (and after a defeat) it sleeps at the inn and restocks at the shop.
 ## Run on its own (res://scenes/game/game.tscn) it starts a new game with its own
 ## AudioDirector and default options.
 ##
@@ -60,9 +62,12 @@ const DOOR_NOTICE := "Abres la puerta con la %s."
 const MENU_TOUR_DELAY := 1.0
 ## Seconds of black while the hero sleeps at the inn.
 const INN_NIGHT_TIME := 0.8
-## On autoplay the hero only sleeps at an inn below this share of max HP, so the nights
-## don't eat the gold for the shop's gear.
+## On autoplay the hero only sleeps at an inn below this share of max HP or MP, so the
+## nights don't eat the gold for the shop's gear.
 const AUTOPLAY_INN_RATIO := 0.5
+## On autoplay the boss only comes out while the hero has these shares of max HP and MP.
+const AUTOPLAY_BOSS_HP := 0.7
+const AUTOPLAY_BOSS_MP := 0.4
 ## --autoplay-zone=<id>: what a new game starting in each zone gets, as planned when
 ## arriving there (zone 1 done: Lv 5, its shop's gear, the Rey Slime beaten).
 const AUTOPLAY_ZONES := {
@@ -330,6 +335,39 @@ func _on_encounter(boss: bool) -> void:
 		print("Juego completado: Nv %d, tiempo de juego %s" % [state.hero.level,
 			_clock(play_time)])
 		get_tree().quit()
+	elif _autoplay and won and _wants_retreat():
+		state.inventory.take(Inventory.WING)
+		print("Retirada al pueblo (PV %d/%d, PM %d, pociones %d)" % [state.hero.hp,
+			state.hero.max_hp, state.hero.mp, state.inventory.count(Inventory.POTION)])
+		await _on_travel_requested()
+		await _autoplay_restock()
+	elif _autoplay and outcome == BattleEngine.State.LOST:
+		await _autoplay_restock()
+
+
+## Autoplay: needs rest (GameState.needs_rest()) away from a village, with an Ala de
+## viaje and the gold for a night at the last village's inn.
+func _wants_retreat() -> bool:
+	if not state.needs_rest() or _world.in_village():
+		return false
+	if state.inventory.count(Inventory.WING) == 0:
+		return false
+	var town := ZoneData.by_id(state.town_zone)
+	for npc: Dictionary in town.npcs:
+		if npc.kind == "inn":
+			return state.gold >= Inn.price(npc.id)
+	return false
+
+
+## Autoplay, in the village: a night at its inn and the shop's picks, as if the hero had
+## walked up to the innkeeper and the merchant.
+func _autoplay_restock() -> void:
+	for npc: Dictionary in _zone.npcs:
+		if npc.kind == "inn":
+			await _on_inn(npc.id)
+	for npc: Dictionary in _zone.npcs:
+		if npc.kind == "shop":
+			await _on_shop(npc.id)
 
 
 ## Sets the boss's world flag, gives its key item and says so.
@@ -439,9 +477,10 @@ func _on_shop(shop_id: String) -> void:
 
 ## The innkeeper: Sí pays the night, fades to black and back with HP and MP full and
 ## saves; without gold, or with No, nothing happens. On autoplay it only stops there
-## below AUTOPLAY_INN_RATIO of max HP and with the price.
+## below AUTOPLAY_INN_RATIO of max HP or MP and with the price.
 func _on_inn(inn_id: String) -> void:
-	var hurt := state.hero.hp < state.hero.max_hp * AUTOPLAY_INN_RATIO
+	var hurt := state.hero.hp < state.hero.max_hp * AUTOPLAY_INN_RATIO \
+		or state.hero.mp < state.hero.max_mp * AUTOPLAY_INN_RATIO
 	if _busy or (_autoplay and (not hurt or state.gold < Inn.price(inn_id))):
 		return
 	_set_busy(true)
@@ -553,11 +592,16 @@ func _on_title_requested() -> void:
 
 
 ## The zone's boss is on the map until beaten: the Rey Slime only while the quest asks
-## for it; on autoplay only from the zone's autoplay_boss_level on.
+## for it; on autoplay only from the zone's autoplay_boss_level on, and only while the
+## hero has AUTOPLAY_BOSS_HP of his max HP and AUTOPLAY_BOSS_MP of his max MP (a worn-out
+## hero fights on, or rests, first).
 func _update_boss() -> void:
 	if _zone.boss_id == "":
 		return
-	var strong_enough := not _autoplay or state.hero.level >= _zone.autoplay_boss_level
+	var hero := state.hero
+	var strong_enough := not _autoplay or (hero.level >= _zone.autoplay_boss_level \
+		and hero.hp >= hero.max_hp * AUTOPLAY_BOSS_HP \
+		and hero.mp >= hero.max_mp * AUTOPLAY_BOSS_MP)
 	var wanted := state.quest.boss_available() if _zone.boss_id == Quest.BOSS_ID \
 		else not state.has_flag(_zone.boss_id)
 	_world.set_boss_present(wanted and strong_enough)

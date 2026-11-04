@@ -151,13 +151,18 @@ static func compare(state: GameState, id: String) -> Dictionary:
 		"diff": Equipment.bonus(id) - Equipment.bonus(worn)}
 
 
-## For --autoplay: the equipment of the shop that beats what is worn and is not in the
-## bag yet, in slot order, as long as the gold lasts. Once there is no such piece left
-## (bought or not), potions up to AUTOPLAY_POTIONS.
+## For --autoplay: one Ala de viaje where it is sold if none is carried (the autoplay
+## retreat flies back with it), then the equipment of the shop that beats what is worn
+## and is not in the bag yet, in slot order, as long as the gold lasts. Once there is no
+## such piece left (bought or not), potions up to AUTOPLAY_POTIONS.
 static func autoplay_picks(state: GameState, shop_id: String) -> Array[String]:
 	var picks: Array[String] = []
 	var gold := state.gold
 	var upgrades := 0
+	if Inventory.WING in SHOPS[shop_id].items and state.inventory.count(Inventory.WING) == 0 \
+			and gold >= price(Inventory.WING):
+		picks.append(Inventory.WING)
+		gold -= price(Inventory.WING)
 	for id: String in SHOPS[shop_id].equipment:
 		if compare(state, id).diff <= 0 or id in state.bag_equipment:
 			continue
