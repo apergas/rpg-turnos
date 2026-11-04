@@ -120,6 +120,14 @@ const AURA_ALPHA := 0.22
 ## Angle (radians about X) of the plant's upper jaw: resting, and wide open to bite.
 const JAW_REST := 0.3
 const JAW_OPEN := 0.95
+## The hero as a person, not a suit of steel: the KayKit Knight's helmet is hidden and its
+## armor meshes (one grey palette cell) are tinted bare arms, a blue tunic and leather
+## legs. Multiplied over a grey that peaks near 0.42 linear, hence the values above 1.
+const HERO_SKIN := Color(1.75, 1.28, 1.02)
+## The Knight's atlas with the hair cell brown: the head's hair and skin share one mesh.
+const HERO_HEAD_TEXTURE := preload("res://assets/characters/hero_head_texture.png")
+const HERO_TUNIC := Color(0.75, 1.0, 1.7)
+const HERO_LEGS := Color(0.95, 0.75, 0.6)
 ## Hand slots of the KayKit characters (BoneAttachment3D nodes).
 const HAND_R := "Rig/Skeleton3D/handslot_r"
 const HAND_L := "Rig/Skeleton3D/handslot_l"
@@ -132,7 +140,7 @@ const STICK_CENTER := 0.45
 ## Everything that changes between looks. Characters: scene, scale, top (height of the
 ## damage numbers), hide (prop nodes of the model to hide), anims and, optional, tint
 ## (multiplies every imported material: the merchant is a green Mage, the innkeeper an
-## orange one), and optional props (hand bone -> weapon model, for the skeletons) and
+## orange one), mesh_tints (mesh under the skeleton -> tint, the hero), and optional props (hand bone -> weapon model, for the skeletons) and
 ## aura (the Señor de la Niebla); the hero hides
 ## every hand mesh and shows only those of its equipment (set_equipment()). Slimes: color,
 ## scale (the whole blob, eyes and crown included), top and crown. Bat: color, wing
@@ -147,6 +155,7 @@ const LOOKS := {
 		"scale": CHARACTER_SCALE,
 		"top": 1.9,
 		"hide": [
+			"Rig/Skeleton3D/head/Knight_Helmet",
 			"Rig/Skeleton3D/handslot_l/1H_Sword_Offhand",
 			"Rig/Skeleton3D/handslot_l/Badge_Shield",
 			"Rig/Skeleton3D/handslot_l/Rectangle_Shield",
@@ -155,6 +164,13 @@ const LOOKS := {
 			"Rig/Skeleton3D/handslot_r/1H_Sword",
 			"Rig/Skeleton3D/handslot_r/2H_Sword",
 		],
+		"mesh_tints": {
+			"Knight_ArmLeft": HERO_SKIN,
+			"Knight_ArmRight": HERO_SKIN,
+			"Knight_Body": HERO_TUNIC,
+			"Knight_LegLeft": HERO_LEGS,
+			"Knight_LegRight": HERO_LEGS,
+		},
 		"anims": CHARACTER_ANIMS,
 	},
 	Look.VILLAGER: {
@@ -614,6 +630,14 @@ func _build_character(data: Dictionary) -> void:
 		slot.add_child((data.props[bone] as PackedScene).instantiate())
 	if data.has("tint"):
 		_tint(model, data.tint)
+	var mesh_tints: Dictionary = data.get("mesh_tints", {})
+	for mesh_name: String in mesh_tints:
+		_tint_mesh(bones.get_node(mesh_name) as MeshInstance3D, mesh_tints[mesh_name])
+	if look == Look.HERO:
+		var head := bones.get_node("Knight_Head") as MeshInstance3D
+		var head_material := head.get_active_material(0).duplicate() as BaseMaterial3D
+		head_material.albedo_texture = HERO_HEAD_TEXTURE
+		head.set_surface_override_material(0, head_material)
 	if data.has("aura"):
 		_add_ghost(_body, _sphere(0.5), data.aura, FOG_AURA_ALPHA, Vector3(0, _top * 0.45, 0),
 			Vector3(2.2, 3.2, 2.2))
@@ -958,14 +982,17 @@ func _float_label(text: String, font_size: int, color: Color, y: float) -> void:
 ## multiplied by color (the texture is multiplied too).
 static func _tint(model: Node3D, color: Color) -> void:
 	for node in model.find_children("*", "MeshInstance3D", true, false):
-		var mi := node as MeshInstance3D
-		for i in mi.mesh.get_surface_count():
-			var source := mi.get_active_material(i) as BaseMaterial3D
-			if source == null:
-				continue
-			var tinted := source.duplicate() as BaseMaterial3D
-			tinted.albedo_color = source.albedo_color * color
-			mi.set_surface_override_material(i, tinted)
+		_tint_mesh(node as MeshInstance3D, color)
+
+
+static func _tint_mesh(mi: MeshInstance3D, color: Color) -> void:
+	for i in mi.mesh.get_surface_count():
+		var source := mi.get_active_material(i) as BaseMaterial3D
+		if source == null:
+			continue
+		var tinted := source.duplicate() as BaseMaterial3D
+		tinted.albedo_color = source.albedo_color * color
+		mi.set_surface_override_material(i, tinted)
 
 
 ## Additive overlay on every mesh, so it works on the imported materials too.
