@@ -9,7 +9,8 @@ class_name BattleEngine extends RefCounted
 ## picks its own command when its turn comes, from its ai_weights. Fighters are ints:
 ## BattleEvent.HERO or an index into `enemies`. An enemy that picks "charge" spends its
 ## turn gathering strength and its next turn is a blow of CHARGE_MULT times the damage
-## that never misses or crits (Defender still halves it).
+## that never misses or crits (Defender still halves it). A boss with a next_phase that
+## reaches 0 HP rises once with that phase's stats (a PHASE event) instead of falling.
 
 enum State { ONGOING, WON, LOST, FLED }
 
@@ -386,10 +387,33 @@ func _hurt(target: int, amount: int, crit: bool, magic: bool, affinity: String, 
 	fighter.hp = maxi(fighter.hp - amount, 0)
 	events.append(BattleEvent.damage(target, amount, crit, fighter.hp, magic, affinity))
 	if fighter.hp == 0:
-		events.append(BattleEvent.defeated(target))
+		_fall(target, events)
 	elif fighter.status.has(SLEEP):
 		fighter.status.erase(SLEEP)
 		events.append(BattleEvent.status_off(target, SLEEP))
+
+
+## A fighter at 0 HP is defeated, unless it is an enemy with a next phase still to come:
+## then it rises at once with that phase's stats (cured, its charge forgotten).
+func _fall(who: int, events: Array[Dictionary]) -> void:
+	var fighter := _fighter(who)
+	if who == BattleEvent.HERO or fighter.next_phase == null:
+		events.append(BattleEvent.defeated(who))
+		return
+	var next := fighter.next_phase
+	fighter.next_phase = null
+	fighter.max_hp = next.max_hp
+	fighter.hp = next.hp
+	fighter.max_mp = next.max_mp
+	fighter.mp = next.mp
+	fighter.attack = next.attack
+	fighter.defense = next.defense
+	fighter.speed = next.speed
+	fighter.skills = next.skills.duplicate()
+	fighter.ai_weights = next.ai_weights.duplicate()
+	fighter.status.clear()
+	_charged.erase(who)
+	events.append(BattleEvent.phase(who, fighter.hp))
 
 
 func _add_status(target: int, status: String, events: Array[Dictionary]) -> void:
@@ -413,7 +437,7 @@ func _end_of_round(events: Array[Dictionary]) -> void:
 			fighter.hp = maxi(fighter.hp - amount, 0)
 			events.append(BattleEvent.status_tick(who, POISON, amount, fighter.hp))
 			if fighter.hp == 0:
-				events.append(BattleEvent.defeated(who))
+				_fall(who, events)
 				continue
 			if fighter.status.has(SLEEP):  # any damage wakes, poison too
 				fighter.status.erase(SLEEP)

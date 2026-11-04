@@ -28,6 +28,7 @@ const STATUS_OFF := "status_off"
 const ASLEEP := "asleep"
 const CALL_HELP := "call_help"
 const CHARGE := "charge"
+const PHASE := "phase"
 
 const HERO := -1
 ## Values of DAMAGE "affinity": the target is weak to / resists the spell's element.
@@ -152,3 +153,8 @@ static func call_help(actor: int, helper: int) -> Dictionary:
 ## The enemy gathers strength: its next turn is a charged blow.
 static func charge(actor: int) -> Dictionary:
 	return {"type": CHARGE, "actor": actor}
+
+
+## A boss reached 0 HP and rises in its next phase with hp_left HP.
+static func phase(target: int, hp_left: int) -> Dictionary:
+	return {"type": PHASE, "target": target, "hp_left": hp_left}

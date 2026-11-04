@@ -1,13 +1,16 @@
 class_name BattleActor extends Node3D
-## 3D figure of a fighter or a villager. The hero, the villagers and the witch are
-## KayKit models with their own animations; the slimes, the bat, the mushroom, the wolf,
+## 3D figure of a fighter or a villager. The hero, the villagers, the witch and the
+## skeletons are KayKit models with their own animations (the skeletons get their
+## weapons from KayKit too, and the Señor de la Niebla a purple aura); the slimes, the
+## bat, the mushroom, the wolf,
 ## the goblin, the carnivorous plant, the golems, the spider and the specter are
 ## low-poly figures built in code (see LOOKS).
 ## Set look before add_child. The figure faces -Z, so look_at() the opponent. Every
 ## play_* can be awaited: it returns when its animation and its tween are done.
 
 enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPER, WOLF,
-	GOBLIN, PLANT, WITCH, MUD_GOLEM, STONE_GOLEM, SPIDER, SPECTER }
+	GOBLIN, PLANT, WITCH, MUD_GOLEM, STONE_GOLEM, SPIDER, SPECTER, SKELETON_WARRIOR,
+	SKELETON_ROGUE, SKELETON_MAGE, FOG_LORD }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -16,6 +19,22 @@ const TAG_COLOR := Color(1.0, 0.6, 0.2)
 const GOLD := Color(1.0, 0.8, 0.2)
 const KNIGHT := preload("res://assets/characters/Knight.glb")
 const MAGE := preload("res://assets/characters/Mage.glb")
+const SKELETON_WARRIOR := preload("res://assets/characters/Skeleton_Warrior.glb")
+const SKELETON_ROGUE := preload("res://assets/characters/Skeleton_Rogue.glb")
+const SKELETON_MAGE := preload("res://assets/characters/Skeleton_Mage.glb")
+## The skeletons' weapons (separate KayKit models, held on the hand bones).
+const SKELETON_BLADE := preload("res://assets/characters/Skeleton_Blade.gltf")
+const SKELETON_STAFF := preload("res://assets/characters/Skeleton_Staff.gltf")
+const SKELETON_SHIELD := preload("res://assets/characters/Skeleton_Shield_Small_A.gltf")
+## Bones the weapons hang from, under the model's Rig/Skeleton3D.
+const SKELETON_PATH := "Rig/Skeleton3D"
+const RIGHT_HAND_BONE := "handslot.r"
+const LEFT_HAND_BONE := "handslot.l"
+## The Señor de la Niebla's aura: a see-through purple ball around him; in his second
+## phase (play_phase()) it grows and thickens.
+const FOG_AURA_COLOR := Color(0.55, 0.25, 0.85)
+const FOG_AURA_ALPHA := 0.2
+const FOG_AURA_PHASE_ALPHA := 0.38
 ## KayKit characters are 2.47 units tall (helmet included); 0.65 makes the hero 1.6 m.
 const CHARACTER_SCALE := 0.65
 ## The AnimationPlayer inside a KayKit character scene.
@@ -38,6 +57,28 @@ const CHARACTER_ANIMS := {
 	"dodge": "Dodge_Backward",
 	"death": "Death_A",
 	"cheer": "Cheer",
+}
+## The skeletons' animations: the same roles with their own walk, hit and fall.
+const SKELETON_ANIMS := {
+	"idle": "Idle",
+	"walk": "Walking_D_Skeletons",
+	"attack": "1H_Melee_Attack_Slice_Diagonal",
+	"cast": "Spellcast_Shoot",
+	"hit": "Hit_B",
+	"dodge": "Dodge_Backward",
+	"death": "Death_C_Skeletons",
+	"cheer": "Taunt",
+}
+## The rogue strikes with a blade in each hand.
+const ROGUE_ANIMS := {
+	"idle": "Idle",
+	"walk": "Walking_D_Skeletons",
+	"attack": "Dualwield_Melee_Attack_Stab",
+	"cast": "Spellcast_Shoot",
+	"hit": "Hit_B",
+	"dodge": "Dodge_Backward",
+	"death": "Death_C_Skeletons",
+	"cheer": "Taunt",
 }
 ## Side profile of a slime (x = radius, y = height), bottom to top: a drop with a tip.
 const SLIME_PROFILE: Array[Vector2] = [
@@ -91,7 +132,8 @@ const STICK_CENTER := 0.45
 ## Everything that changes between looks. Characters: scene, scale, top (height of the
 ## damage numbers), hide (prop nodes of the model to hide), anims and, optional, tint
 ## (multiplies every imported material: the merchant is a green Mage, the innkeeper an
-## orange one); the hero hides
+## orange one), and optional props (hand bone -> weapon model, for the skeletons) and
+## aura (the Señor de la Niebla); the hero hides
 ## every hand mesh and shows only those of its equipment (set_equipment()). Slimes: color,
 ## scale (the whole blob, eyes and crown included), top and crown. Bat: color, wing
 ## color, top and fly (height it hovers at). Mushroom: cap and stem colors, scale and top.
@@ -236,6 +278,42 @@ const LOOKS := {
 		"top": 2.3,
 		"fly": 0.5,
 	},
+	Look.SKELETON_WARRIOR: {
+		"scene": SKELETON_WARRIOR,
+		"scale": CHARACTER_SCALE,
+		"top": 1.9,
+		"hide": [],
+		"anims": SKELETON_ANIMS,
+		"props": {RIGHT_HAND_BONE: SKELETON_BLADE, LEFT_HAND_BONE: SKELETON_SHIELD},
+	},
+	Look.SKELETON_ROGUE: {
+		"scene": SKELETON_ROGUE,
+		"scale": CHARACTER_SCALE,
+		"top": 1.9,
+		"hide": [],
+		"anims": ROGUE_ANIMS,
+		"props": {RIGHT_HAND_BONE: SKELETON_BLADE, LEFT_HAND_BONE: SKELETON_BLADE},
+	},
+	Look.SKELETON_MAGE: {
+		"scene": SKELETON_MAGE,
+		"scale": CHARACTER_SCALE,
+		"top": 2.0,
+		"hide": [],
+		"anims": SKELETON_ANIMS,
+		"props": {RIGHT_HAND_BONE: SKELETON_STAFF},
+	},
+	# The final boss: the skeleton mage at 1.6 times the size, tinted dusky violet, in
+	# a purple aura.
+	Look.FOG_LORD: {
+		"scene": SKELETON_MAGE,
+		"scale": CHARACTER_SCALE * 1.6,
+		"top": 3.2,
+		"hide": [],
+		"anims": SKELETON_ANIMS,
+		"props": {RIGHT_HAND_BONE: SKELETON_STAFF},
+		"tint": Color(0.78, 0.7, 0.95),
+		"aura": FOG_AURA_COLOR,
+	},
 }
 
 @export var look := Look.HERO
@@ -264,6 +342,8 @@ var _sway: Node3D
 ## materials with their resting opacity ([material, alpha]).
 var _hover: Node3D
 var _ghosts: Array = []
+## Señor de la Niebla only: his aura ball (null for the rest).
+var _aura: MeshInstance3D
 
 
 func _ready() -> void:
@@ -401,6 +481,8 @@ func play_dodge() -> void:
 func play_defeat() -> void:
 	if _anim:
 		var timer := _start("death")
+		if _aura:
+			create_tween().tween_method(_set_alpha, 1.0, 0.0, timer.time_left)
 		await timer.timeout
 		return
 	if _idle_tween:
@@ -480,6 +562,24 @@ func play_appear() -> void:
 	_start_idle()
 
 
+## The fog envelops the Señor de la Niebla: a long purple glow with the spell
+## animation while his aura swells and thickens (his second phase).
+func play_phase() -> void:
+	_set_flash(true, FOG_AURA_COLOR)
+	var timer := _start("cast")
+	if _aura:
+		var mat := _aura.material_override as StandardMaterial3D
+		for ghost in _ghosts:
+			if ghost[0] == mat:
+				ghost[1] = FOG_AURA_PHASE_ALPHA
+		var t := create_tween().set_parallel()
+		t.tween_property(_aura, "scale", _aura.scale * 1.3, 0.6) 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		t.tween_property(mat, "albedo_color:a", FOG_AURA_PHASE_ALPHA, 0.6)
+	await get_tree().create_timer(0.8).timeout
+	_set_flash(false)
+	await _end(timer)
+
+
 ## Wobbles side to side, for a fighter that loses its turn.
 func play_stagger() -> void:
 	var t := create_tween()
@@ -505,8 +605,18 @@ func _build_character(data: Dictionary) -> void:
 	_model = model
 	for path in data.hide:
 		(model.get_node(path) as Node3D).hide()
+	var bones := model.get_node_or_null(SKELETON_PATH) as Skeleton3D
+	for bone: String in data.get("props", {}):
+		var slot := BoneAttachment3D.new()
+		slot.bone_name = bone
+		bones.add_child(slot)
+		slot.add_child((data.props[bone] as PackedScene).instantiate())
 	if data.has("tint"):
 		_tint(model, data.tint)
+	if data.has("aura"):
+		_add_ghost(_body, _sphere(0.5), data.aura, FOG_AURA_ALPHA, Vector3(0, _top * 0.45, 0),
+			Vector3(2.2, 3.2, 2.2))
+		_aura = _body.get_child(-1) as MeshInstance3D
 	if look == Look.HERO:
 		var stick := _cylinder(STICK_RADIUS, STICK_LENGTH)
 		stick.top_radius = STICK_RADIUS * 0.7

@@ -52,6 +52,10 @@ class_name Combatant extends Resource
 @export var rescue_heal_ratio := 0.4
 ## Boss only: the key item (Inventory.KEY_ITEMS id) the hero gets for defeating it.
 @export var key_item := ""
+## Boss only: the stats it rises with the first time its HP reaches 0 (the Señor de la
+## Niebla's second phase; null: none). BattleEngine copies its HP, MP, attack, defense,
+## speed, skills and ai_weights into the fighter, which stays the same enemy.
+@export var next_phase: Combatant
 ## Enemy only: a boss gets its own look and intro line, and the hero can't flee.
 @export var is_boss := false
 

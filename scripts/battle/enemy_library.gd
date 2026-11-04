@@ -15,6 +15,10 @@ const ENEMIES := {
 	"arana": preload("res://data/enemies/arana.tres"),
 	"espectro": preload("res://data/enemies/espectro.tres"),
 	"golem_piedra": preload("res://data/enemies/golem_piedra.tres"),
+	"esqueleto_guerrero": preload("res://data/enemies/esqueleto_guerrero.tres"),
+	"esqueleto_picaro": preload("res://data/enemies/esqueleto_picaro.tres"),
+	"esqueleto_mago": preload("res://data/enemies/esqueleto_mago.tres"),
+	"senor_niebla": preload("res://data/enemies/senor_niebla.tres"),
 }
 ## Figure of each enemy id; any other id is a slime.
 const LOOKS := {
@@ -30,6 +34,10 @@ const LOOKS := {
 	"arana": BattleActor.Look.SPIDER,
 	"espectro": BattleActor.Look.SPECTER,
 	"golem_piedra": BattleActor.Look.STONE_GOLEM,
+	"esqueleto_guerrero": BattleActor.Look.SKELETON_WARRIOR,
+	"esqueleto_picaro": BattleActor.Look.SKELETON_ROGUE,
+	"esqueleto_mago": BattleActor.Look.SKELETON_MAGE,
+	"senor_niebla": BattleActor.Look.FOG_LORD,
 }
 
 
