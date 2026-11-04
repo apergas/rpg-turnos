@@ -5,6 +5,7 @@ class_name Shop extends RefCounted
 
 const VILLACLARO := "villaclaro"
 const BOSQUE := "bosque"
+const MINA := "mina"
 ## shop id -> keeper's name, equipment and items (Inventory ids) on sale, in list order.
 ## Zone 1 sells no Éter (it comes with the zone 2 shop, with the Ala de viaje).
 const SHOPS := {
@@ -16,6 +17,11 @@ const SHOPS := {
 	BOSQUE: {
 		"keeper": "Mercader",
 		"equipment": ["espada_hierro", "cota_malla", "escudo_hierro"],
+		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.WING],
+	},
+	MINA: {
+		"keeper": "Herrero",
+		"equipment": ["espada_acero", "armadura_acero", "escudo_acero"],
 		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.WING],
 	},
 }

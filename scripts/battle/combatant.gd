@@ -32,7 +32,9 @@ class_name Combatant extends Resource
 ## would shadow the built-in exp() function.
 @export var experience := 0
 ## Enemy only: weights of the action it picks each round. Keys are "attack",
-## "stagger" (loses the turn) or the id of one of its skills. Empty means always attack.
+## "stagger" (loses the turn), "charge" (gathers strength: its next turn is a blow of
+## BattleEngine.CHARGE_MULT damage) or the id of one of its skills. Empty means always
+## attack.
 @export var ai_weights := {}
 ## Enemy only: elements ("fire", "ice", "thunder") that hurt it ×1.5 / ×0.5.
 @export var weak: Array[String] = []

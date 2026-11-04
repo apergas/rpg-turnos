@@ -1,7 +1,8 @@
 class_name BattleAutoplay extends RefCounted
 ## Picks the hero's commands for `--autoplay` (and for balance checks) with common
 ## sense: below HEAL_RATIO of max HP it heals (Curar if it can, else a potion) and, with
-## no way to heal, defends below DEFEND_RATIO (never twice in a row); it cures poison
+## no way to heal, defends below DEFEND_RATIO (never twice in a row); it defends while an
+## enemy has charged (its blow comes next and Defender halves it); it cures poison
 ## with an antidote and refills MP with an ether when it can't heal anymore. Otherwise it
 ## aims at the enemy with the least HP and casts the spell that hurts most (weaknesses
 ## count) only when it beats an attack by SPELL_MARGIN, keeping MP for two heals.
@@ -32,6 +33,9 @@ func _pick(engine: BattleEngine) -> Dictionary:
 		if engine.can_use(potion):
 			return potion
 		if hero.hp < hero.max_hp * DEFEND_RATIO and _last_type != BattleEngine.CMD_DEFEND:
+			return BattleEngine.cmd_defend()
+	for i in engine.alive_enemies():
+		if engine.is_charged(i):
 			return BattleEngine.cmd_defend()
 	var antidote := BattleEngine.cmd_item(Inventory.ANTIDOTE)
 	if engine.can_use(antidote):

@@ -3,7 +3,8 @@ class_name WorldStage extends RefCounted
 ## ground, a field of tall grass (Vegetation) with a bare dirt path and safe discs,
 ## low-poly buildings and rocks with hand-made colliders, trees (denser toward the walls,
 ## with trunk colliders) and bushes scattered with fixed seeds, invisible walls and hills
-## outside. Exits, figures and chests are World's. Every query takes the zone.
+## outside. Exits, figures and chests are World's. A dungeon floor only gets its sky and
+## light here: its cells are a DungeonMap, which World adds. Every query takes the zone.
 
 ## The Medieval Hexagon buildings are miniatures (a house is 0.8 m wide, 0.9 m tall).
 const BUILDING_SCALE := 3.5
@@ -50,11 +51,17 @@ const TRUNK_RADIUS := 0.35
 const CLUMP_RADIUS := 2.0
 const TREE_COLLIDER_HEIGHT := 3.0
 
+## _near_chest()'s cache: the zone id and its chests' spots on the ground.
+static var _chest_zone := ""
+static var _chest_spots: Array[Vector2] = []
+
 
 ## Builds zone under root. Returns the tall grass material (null if the zone has no
 ## grass), so the world can bend it away from the player.
 static func build(root: Node3D, zone: ZoneData) -> ShaderMaterial:
 	BattleStage.build_environment(root, zone)
+	if zone.is_dungeon():
+		return null
 	_add_ground(root, zone)
 	_add_path(root, zone)
 	for rock in zone.rocks:
@@ -72,9 +79,12 @@ static func build(root: Node3D, zone: ZoneData) -> ShaderMaterial:
 		zone.grass_tips)
 
 
-## True on the dirt path and the safe discs: no encounters there. margin widens every
-## one of them (the grass keeps a little off the path's edge).
+## True on the dirt path and the safe discs (and in the stair rooms of a dungeon floor):
+## no encounters there. margin widens every one of them (the grass keeps a little off the
+## path's edge).
 static func is_on_path(zone: ZoneData, pos: Vector3, margin := 0.0) -> bool:
+	if zone.is_dungeon() and zone.near_stairs(pos):
+		return true
 	var p := Vector2(pos.x, pos.z)
 	for disc in zone.safe_discs:
 		if p.distance_to(Vector2(disc[0].x, disc[0].z)) < disc[1] + margin:
@@ -263,12 +273,19 @@ static func _near_building(zone: ZoneData, pos: Vector3, margin: float) -> bool:
 	return false
 
 
-## True within margin of one of the zone's chests (Chests.CHESTS of this zone).
+## True within margin of one of the zone's chests (Chests.CHESTS of this zone). The
+## chest spots of the last zone asked about are kept, so the thousands of grass, tree and
+## bush candidates of a build don't look them up each time.
 static func _near_chest(zone: ZoneData, pos: Vector3, margin: float) -> bool:
+	if _chest_zone != zone.id:
+		_chest_zone = zone.id
+		_chest_spots.clear()
+		for chest_id in Chests.of_zone(zone.id):
+			var chest_pos: Vector3 = Chests.CHESTS[chest_id].pos
+			_chest_spots.append(Vector2(chest_pos.x, chest_pos.z))
 	var p := Vector2(pos.x, pos.z)
-	for chest_id in Chests.of_zone(zone.id):
-		var chest_pos: Vector3 = Chests.CHESTS[chest_id].pos
-		if p.distance_to(Vector2(chest_pos.x, chest_pos.z)) < margin:
+	for spot in _chest_spots:
+		if p.distance_to(spot) < margin:
 			return true
 	return false
 

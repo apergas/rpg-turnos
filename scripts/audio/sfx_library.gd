@@ -21,8 +21,9 @@ const POTION := "potion"
 const STEP := "step"
 const DIALOGUE := "dialogue"
 const SAVE := "save"
+const DOOR := "door"
 const IDS: Array[String] = [CURSOR, ACCEPT, CANCEL, HIT, CRIT, MISS, FIRE, HEAL, LEVEL_UP,
-	ENCOUNTER, POTION, STEP, DIALOGUE, SAVE]
+	ENCOUNTER, POTION, STEP, DIALOGUE, SAVE, DOOR]
 
 const NOISE_SEED := 4321
 ## Samples of fade-in at the start of every sound (no click).
@@ -56,6 +57,9 @@ const SOUNDS := {
 		"decay": 1.0},
 	SAVE: {"wave": "triangle", "notes": [783.99, 987.77, 1174.66, 1567.98], "time": 0.08,
 		"volume": 0.5, "decay": 0.5},
+	# A rumble of stone: a lever pulled, a gate or a door opening.
+	DOOR: {"wave": "noise", "from": 700.0, "to": 120.0, "time": 0.6, "volume": 0.6,
+		"decay": 1.0},
 }
 
 static var _cache := {}

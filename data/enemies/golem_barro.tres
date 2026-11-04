@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "golem_barro"
+display_name = "Golem de barro"
+max_hp = 69
+hp = 69
+attack = 27
+defense = 26
+speed = 4
+exp_reward = 26
+gold_reward = 24
+ai_weights = {
+"attack": 85,
+"stagger": 15
+}
+resist = Array[String](["thunder"])
+drops = {
+"potion": 0.15
+}

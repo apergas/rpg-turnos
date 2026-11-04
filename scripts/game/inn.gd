@@ -6,10 +6,12 @@ class_name Inn extends RefCounted
 
 const VILLACLARO := "villaclaro"
 const BOSQUE := "bosque"
+const MINA := "mina"
 ## inn id -> keeper's name and price of a night in gold.
 const INNS := {
 	VILLACLARO: {"keeper": "Posadero", "price": 5},
 	BOSQUE: {"keeper": "Posadera", "price": 15},
+	MINA: {"keeper": "Posadero", "price": 30},
 }
 
 

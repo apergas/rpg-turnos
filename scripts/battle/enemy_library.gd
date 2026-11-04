@@ -11,6 +11,10 @@ const ENEMIES := {
 	"duende": preload("res://data/enemies/duende.tres"),
 	"planta": preload("res://data/enemies/planta.tres"),
 	"bruja": preload("res://data/enemies/bruja.tres"),
+	"golem_barro": preload("res://data/enemies/golem_barro.tres"),
+	"arana": preload("res://data/enemies/arana.tres"),
+	"espectro": preload("res://data/enemies/espectro.tres"),
+	"golem_piedra": preload("res://data/enemies/golem_piedra.tres"),
 }
 ## Figure of each enemy id; any other id is a slime.
 const LOOKS := {
@@ -22,6 +26,10 @@ const LOOKS := {
 	"duende": BattleActor.Look.GOBLIN,
 	"planta": BattleActor.Look.PLANT,
 	"bruja": BattleActor.Look.WITCH,
+	"golem_barro": BattleActor.Look.MUD_GOLEM,
+	"arana": BattleActor.Look.SPIDER,
+	"espectro": BattleActor.Look.SPECTER,
+	"golem_piedra": BattleActor.Look.STONE_GOLEM,
 }
 
 

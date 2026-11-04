@@ -7,8 +7,12 @@ class_name World extends Node3D
 ## (talk_requested) or to a villager (npc_requested), opens the shop (shop_requested),
 ## asks for a room (inn_requested) or opens the chest (chest_opened); a click or tap on
 ## one of them walks there and does it on arrival. With the boss present, walking into
-## it starts the boss battle. Walking into an open exit emits exit_requested; a closed
-## one (its world flag not set: set_world_flags()) shows its fog and its notice.
+## it starts the boss battle. Walking into an open exit (or onto the stairs of a dungeon
+## floor) emits exit_requested; a closed one (its world flag not set: set_world_flags())
+## shows its fog and its notice. A dungeon floor (ZoneData.layout) is a DungeonMap: its
+## rock blocks turn see-through between the camera and the hero, the hero carries a
+## lantern underground, and next to the lever, the key or a locked gate Enter / Space
+## pulls it (lever_pulled), takes it (key_taken) or tries the gate (door_used).
 ## Encounters and exits freeze the player until set_active(true) (or until Game frees
 ## the map). Run on its own (res://scenes/world/world.tscn) it prints each encounter,
 ## talk, shop, inn, chest and exit and goes on.
@@ -28,6 +32,10 @@ signal chest_opened(chest_id: String)
 signal village_changed(inside: bool)
 ## The player walked into an open exit: Game loads zone_id at its entry entry_id.
 signal exit_requested(zone_id: String, entry_id: String)
+## Dungeon floors: the player pulled the lever, took the key or tried a locked gate.
+signal lever_pulled
+signal key_taken
+signal door_used
 
 const PLAYER_SCENE := preload("res://scenes/world/player.tscn")
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
@@ -43,6 +51,8 @@ const EXIT_RADIUS := 1.2
 ## After arriving (or after a closed exit's notice) exits wait until the player is this
 ## much farther than EXIT_RADIUS from all of them.
 const EXIT_REARM := 0.8
+## How close the player must be to a lever, a key or a gate (its centre) to use it.
+const MECHANISM_RADIUS := 2.2
 ## A click or tap this close to a figure or a chest means "go there and use it".
 const NPC_TAP_RADIUS := 1.2
 ## Kinds of the things the player can use on the map, and their prompts.
@@ -51,12 +61,18 @@ const NPC := "npc"
 const SHOP := "shop"
 const INN := "inn"
 const CHEST := "chest"
+const LEVER := "lever"
+const KEY := "key"
+const DOOR := "door"
 const PROMPTS := {
 	TALK: "Enter o toca: hablar",
 	NPC: "Enter o toca: hablar",
 	SHOP: "Enter o toca: comprar",
 	INN: "Enter o toca: hablar",
 	CHEST: "Enter o toca: abrir",
+	LEVER: "Enter o toca: tirar",
+	KEY: "Enter o toca: coger",
+	DOOR: "Enter o toca: abrir",
 }
 ## ZoneData.npcs kinds -> use kinds.
 const NPC_KINDS := {"quest": TALK, "npc": NPC, "shop": SHOP, "inn": INN}
@@ -77,6 +93,11 @@ const FOG_COLOR := Color(0.92, 0.93, 0.97, 0.6)
 const MARKER_COLOR := Color(1.0, 0.9, 0.4)
 ## Meters walked between two footstep sounds.
 const STEP_DISTANCE := 1.6
+## Underground the hero carries a lantern: a warm light over the head.
+const LANTERN_COLOR := Color(1.0, 0.85, 0.65)
+const LANTERN_ENERGY := 2.0
+const LANTERN_RANGE := 10.0
+const LANTERN_HEIGHT := 2.4
 
 ## The map to build; set before add_child.
 var zone: ZoneData
@@ -92,6 +113,10 @@ var _chest_lids := {}
 var _open_chests: Array[String] = []
 ## exit id -> fog bank shown while the exit is closed.
 var _fogs := {}
+## ZoneData.all_exits(): the arches and, on a dungeon floor, the stairs.
+var _exits: Array = []
+## The cells of a dungeon floor (null on an open map).
+var _dungeon: DungeonMap
 var _flags := {}
 var _exits_armed := false
 var _boss_present := false
@@ -129,19 +154,32 @@ func _ready() -> void:
 	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
 	_meter = EncounterMeter.new(_rng, zone.encounter_grace, zone.encounter_chance)
 	_grass = WorldStage.build(self, zone)
+	if zone.is_dungeon():
+		_dungeon = DungeonMap.new()
+		_dungeon.zone = zone
+		add_child(_dungeon)
 	for npc: Dictionary in zone.npcs:
 		_add_figure(BattleActor.Look[npc.look], npc.pos, npc.yaw, 0.4, 1.8)
 	if zone.boss_id != "":
 		_boss = _add_figure(EnemyLibrary.look(zone.boss_id), zone.boss_pos, 180.0, 1.0, 2.0)
 	for id in Chests.of_zone(zone.id):
 		_chest_lids[id] = build_chest(self, Chests.CHESTS[id])
-	for exit: Dictionary in zone.exits:
-		_fogs[exit.id] = _build_exit(exit)
+	_exits = zone.all_exits()
+	for exit: Dictionary in _exits:
+		if not exit.get("stairs", false):
+			_fogs[exit.id] = _build_exit(exit)
 	set_boss_present(false)
 	set_world_flags({})
 	_player = PLAYER_SCENE.instantiate()
 	_player.route = zone.autoplay_route
 	add_child(_player)
+	if zone.underground:
+		var lantern := OmniLight3D.new()
+		lantern.light_color = LANTERN_COLOR
+		lantern.light_energy = LANTERN_ENERGY
+		lantern.omni_range = LANTERN_RANGE
+		lantern.position.y = LANTERN_HEIGHT
+		_player.add_child(lantern)
 	_camera = FollowCamera.new()
 	add_child(_camera)
 	_camera.target = _player
@@ -159,6 +197,8 @@ func _physics_process(_delta: float) -> void:
 	_marker.visible = _player.move_target != null
 	if _marker.visible:
 		_marker.position = _player.move_target
+	if _dungeon:
+		_dungeon.see_through(_camera.global_position, _player.global_position)
 	if _waiting or _talking:
 		return
 	var pos := _player.global_position
@@ -280,12 +320,20 @@ func set_boss_present(present: bool) -> void:
 	_boss.process_mode = Node.PROCESS_MODE_INHERIT if present else Node.PROCESS_MODE_DISABLED
 
 
-## The world progress (GameState.world_flags): which exits are open (their fog hides)
-## and what the villagers say.
+## The world progress (GameState.world_flags): which exits are open (their fog hides),
+## what the villagers say and, on a dungeon floor, the gates, the lever and the key.
 func set_world_flags(flags: Dictionary) -> void:
 	_flags = flags
 	for exit: Dictionary in zone.exits:
 		(_fogs[exit.id] as Node3D).visible = not _is_open(exit)
+	if _dungeon:
+		_dungeon.set_flags(flags)
+
+
+## Swings the lever down (Game sets its flag and calls set_world_flags()).
+func pull_lever() -> void:
+	if _dungeon:
+		_dungeon.pull_lever()
 
 
 ## The lines villager zone.npcs[index] says now (lines_after once its after_flag is set).
@@ -390,7 +438,7 @@ func _is_open(exit: Dictionary) -> bool:
 func _check_exits(pos: Vector3) -> bool:
 	var nearest := {}
 	var nearest_d := INF
-	for exit: Dictionary in zone.exits:
+	for exit: Dictionary in _exits:
 		var d := _flat_distance(pos, exit.pos)
 		if d < nearest_d:
 			nearest = exit
@@ -414,7 +462,8 @@ func _check_exits(pos: Vector3) -> bool:
 
 
 ## The nearest thing in reach of pos that can be used: {"kind": TALK / NPC / SHOP / INN
-## / CHEST, "id": shop, inn or chest id ("" otherwise), "index": the npc's index}, or {}.
+## / CHEST / LEVER / KEY / DOOR, "id": shop, inn or chest id ("" otherwise), "index":
+## the npc's index}, or {}.
 func _nearest_use(pos: Vector3) -> Dictionary:
 	var best := {}
 	var best_d := INF
@@ -434,7 +483,8 @@ func _tapped_use(point: Vector3) -> Dictionary:
 	return {}
 
 
-## Everything usable now: the zone's figures and its closed chests.
+## Everything usable now: the zone's figures, its closed chests and, on a dungeon floor,
+## the lever until pulled, the key until taken and the gates while closed.
 func _uses() -> Array[Dictionary]:
 	var uses: Array[Dictionary] = []
 	for i in zone.npcs.size():
@@ -445,6 +495,16 @@ func _uses() -> Array[Dictionary]:
 		if not _open_chests.has(id):
 			uses.append({"kind": CHEST, "id": id, "index": -1, "pos": Chests.CHESTS[id].pos,
 				"radius": CHEST_RADIUS})
+	if _dungeon == null:
+		return uses
+	var mechanisms := [[ZoneData.LEVER, LEVER, zone.lever_flag],
+		[ZoneData.KEY, KEY, zone.floor_key], [ZoneData.DOOR, DOOR, zone.door_flag]]
+	for mechanism in mechanisms:
+		if mechanism[2] == "" or _flags.get(mechanism[2], false):
+			continue
+		for cell in zone.find_cells(mechanism[0]):
+			uses.append({"kind": mechanism[1], "id": "", "index": -1,
+				"pos": zone.cell_center(cell), "radius": MECHANISM_RADIUS})
 	return uses
 
 
@@ -460,6 +520,12 @@ func _use(use: Dictionary) -> void:
 			inn_requested.emit(use.id)
 		CHEST:
 			chest_opened.emit(use.id)
+		LEVER:
+			lever_pulled.emit()
+		KEY:
+			key_taken.emit()
+		DOOR:
+			door_used.emit()
 
 
 func _connect_standalone() -> void:
@@ -481,6 +547,17 @@ func _connect_standalone() -> void:
 	exit_requested.connect(func(zone_id: String, entry_id: String) -> void:
 		print("Salida: %s (%s)" % [zone_id, entry_id])
 		set_active(true))
+	lever_pulled.connect(func() -> void:
+		print("Palanca")
+		pull_lever()
+		_flags[zone.lever_flag] = true
+		_flags[zone.door_flag] = true
+		set_world_flags(_flags))
+	key_taken.connect(func() -> void:
+		print("Llave")
+		_flags[zone.floor_key] = true
+		set_world_flags(_flags))
+	door_used.connect(func() -> void: print("Puerta"))
 
 
 ## Flat ring on the spot the player walks to. Drawn on top of everything, so the tall

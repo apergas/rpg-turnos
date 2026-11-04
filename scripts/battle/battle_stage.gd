@@ -2,7 +2,9 @@ class_name BattleStage extends RefCounted
 ## Builds the battle backdrop of a zone (ZoneData.backdrop): sky, sun and fog of the
 ## zone, grass field with tall grass (Vegetation) around the fighters, dirt path,
 ## low-poly rocks, trees and bushes, and distant hills. "pradera" is the open meadow;
-## "bosque" closes a ring of trees around the fighters on darker ground. The environment,
+## "bosque" closes a ring of trees around the fighters on darker ground; "mina" is a
+## cave: rock floor, a wall of rock blocks and boulders behind and beside the fighters,
+## stalagmites and two torches, in the dark of an underground zone. The environment,
 ## the mesh and model helpers and the rock and tree models are shared with WorldStage.
 
 const GRASS := Color(0.32, 0.55, 0.22)
@@ -91,9 +93,38 @@ const FOREST_TREES := [
 ]
 
 
+## The mine backdrop: rock floor, the blocks of the cave wall ([position, size]), the
+## boulders (same entries as ROCKS), the stalagmites ([position, radius, height]) and
+## the two torches ([position of the flame]).
+const CAVE_FLOOR := Color(0.27, 0.24, 0.22)
+const CAVE_ROCK := Color(0.33, 0.29, 0.26)
+const CAVE_BLOCKS := [
+	[Vector3(-8, 2, -10), Vector3(6, 4, 4)], [Vector3(-2, 2.5, -12), Vector3(6, 5, 4)],
+	[Vector3(4, 2, -11), Vector3(6, 4, 4)], [Vector3(10, 2.5, -9), Vector3(6, 5, 4)],
+	[Vector3(-10, 2, -4), Vector3(4, 4, 6)], [Vector3(11, 2, -3), Vector3(4, 4, 6)],
+	[Vector3(-11, 2, 3), Vector3(4, 4, 6)], [Vector3(12, 2, 4), Vector3(4, 4, 6)],
+	[Vector3(0, 4.5, -16), Vector3(30, 9, 4)],
+]
+const CAVE_ROCKS := [
+	[Vector3(-6.0, 0, -7.0), 2, 9.0, 30.0],
+	[Vector3(6.5, 0, -6.5), 4, 8.0, 110.0],
+	[Vector3(-7.5, 0, 0.5), 1, 7.0, 200.0],
+	[Vector3(8.0, 0, 1.0), 0, 8.0, 80.0],
+]
+const STALAGMITES := [
+	[Vector3(-4.5, 0, -5.5), 0.35, 1.6], [Vector3(4.0, 0, -7.5), 0.45, 2.2],
+	[Vector3(-3.0, 0, -8.5), 0.3, 1.2], [Vector3(5.5, 0, -2.5), 0.3, 1.1],
+	[Vector3(-5.5, 0, 2.5), 0.25, 0.9],
+]
+const CAVE_TORCHES := [Vector3(-3.5, 2.4, -9.8), Vector3(5.0, 2.4, -8.8)]
+
+
 ## zone: whose sky, light and backdrop to use (null: the meadow's).
 static func build(root: Node3D, zone: ZoneData = null) -> void:
 	build_environment(root, zone)
+	if zone != null and zone.backdrop == "mina":
+		_build_cave(root)
+		return
 	var forest := zone != null and zone.backdrop == "bosque"
 	var ground := PlaneMesh.new()
 	ground.size = Vector2(160, 160)
@@ -178,6 +209,51 @@ static func unit_sphere() -> SphereMesh:
 	return mesh
 
 
+static func _build_cave(root: Node3D) -> void:
+	var ground := PlaneMesh.new()
+	ground.size = Vector2(60, 60)
+	add_mesh(root, ground, CAVE_FLOOR, Vector3.ZERO)
+	for block in CAVE_BLOCKS:
+		var box := BoxMesh.new()
+		box.size = block[1]
+		add_mesh(root, box, CAVE_ROCK, block[0])
+	for rock in CAVE_ROCKS:
+		add_model(root, ROCK_SCENES[rock[1]], rock[0], rock[2], rock[3])
+	for spike in STALAGMITES:
+		var cone := CylinderMesh.new()
+		cone.top_radius = 0.0
+		cone.bottom_radius = spike[1]
+		cone.height = spike[2]
+		cone.radial_segments = 6
+		add_mesh(root, cone, CAVE_ROCK.lightened(0.1), spike[0] + Vector3(0, spike[2] / 2.0, 0))
+	for flame_pos in CAVE_TORCHES:
+		var stick := BoxMesh.new()
+		stick.size = Vector3(0.1, 0.5, 0.1)
+		add_mesh(root, stick, DungeonMap.WOOD, flame_pos - Vector3(0, 0.3, 0))
+		var flame := MeshInstance3D.new()
+		flame.mesh = unit_sphere()
+		flame.scale = Vector3(0.13, 0.2, 0.13)
+		flame.position = flame_pos
+		var mat := StandardMaterial3D.new()
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.albedo_color = DungeonMap.FLAME_COLOR
+		flame.material_override = mat
+		root.add_child(flame)
+		var light := OmniLight3D.new()
+		light.light_color = DungeonMap.TORCH_COLOR
+		light.light_energy = DungeonMap.TORCH_ENERGY
+		light.omni_range = 10.0
+		light.position = flame_pos + Vector3(0, 0.2, 1.0)
+		root.add_child(light)
+	# The fighters' own light, from the camera's side (the hero's lantern).
+	var lantern := OmniLight3D.new()
+	lantern.light_color = Color(1.0, 0.85, 0.65)
+	lantern.light_energy = 1.2
+	lantern.omni_range = 12.0
+	lantern.position = Vector3(0.5, 3.0, 3.5)
+	root.add_child(lantern)
+
+
 static func _is_grass_free(pos: Vector3) -> bool:
 	var p := Vector2(pos.x, pos.z)
 	if ((p - CLEAR_CENTER) / CLEAR_RADII).length_squared() < 1.0:
@@ -194,6 +270,9 @@ static func _is_grass_free(pos: Vector3) -> bool:
 
 
 static func _add_environment(root: Node3D, zone: ZoneData) -> void:
+	if zone.underground:
+		_add_dark_environment(root, zone)
+		return
 	var sky_material := ProceduralSkyMaterial.new()
 	sky_material.sky_top_color = zone.sky_top
 	sky_material.sky_horizon_color = zone.haze
@@ -217,7 +296,28 @@ static func _add_environment(root: Node3D, zone: ZoneData) -> void:
 	root.add_child(world_env)
 
 
+## Underground: a black background, a flat dim ambient light and dark fog; no sky.
+static func _add_dark_environment(root: Node3D, zone: ZoneData) -> void:
+	var env := Environment.new()
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color.BLACK
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = zone.ambient_color
+	env.ambient_light_energy = zone.ambient_energy
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES
+	env.glow_enabled = true
+	env.glow_intensity = 0.8
+	env.fog_enabled = true
+	env.fog_light_color = zone.haze
+	env.fog_density = zone.fog_density
+	var world_env := WorldEnvironment.new()
+	world_env.environment = env
+	root.add_child(world_env)
+
+
 static func _add_sun(root: Node3D, zone: ZoneData) -> void:
+	if zone.underground:
+		return
 	var sun := DirectionalLight3D.new()
 	sun.light_color = zone.sun_color
 	# Tuned for the Compatibility renderer (needed for the web build); 1.3 looked
