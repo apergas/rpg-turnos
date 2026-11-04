@@ -341,8 +341,8 @@ func _open(page: Page, cursor: int) -> void:
 		Page.ITEMS:
 			for id in _item_ids():
 				var why := _engine.problem(BattleEngine.cmd_item(id))
-				_add_row(_with_reason("%s ×%d" % [Inventory.display_name(id),
-					_engine.inventory.count(id)], why), why == "")
+				_add_row(_with_reason("%s ×%d  %s" % [Inventory.display_name(id),
+					_engine.inventory.count(id), Inventory.description(id)], why), why == "")
 			if _rows.is_empty():
 				_list.add_child(_label("No llevas objetos."))
 			_set_message("¿Qué objeto?")

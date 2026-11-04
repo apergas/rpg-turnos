@@ -137,7 +137,7 @@ var _leaving := false
 var _autoplay := false
 var _autoplay_save := false
 var _autoplay_menu := false
-var _last_quest_text := ""
+var _last_missions: Array[String] = []
 var _last_gear_text := ""
 var _shop: ShopWindow
 ## Something was bought, sold or equipped since the shop opened.
@@ -298,12 +298,15 @@ func _on_encounter(boss: bool) -> void:
 	var won := outcome == BattleEngine.State.WON
 	await _fade_to(1.0)
 	var notice := ""
+	var mission_done := false
 	if won:
 		state.gold += battle.engine.gold_won
+		var quest_was_on := state.quest.stage != Quest.Stage.DONE
 		for enemy in battle.engine.enemies:
 			state.quest.on_victory(enemy.id)
 			if enemy.is_boss:
 				notice = _boss_notice(enemy)
+		mission_done = quest_was_on and state.quest.stage == Quest.Stage.DONE
 	elif outcome == BattleEngine.State.LOST:
 		state.gold -= battle.gold_lost
 		state.heal_full()
@@ -322,6 +325,8 @@ func _on_encounter(boss: bool) -> void:
 	await _world.freeze(false)
 	if notice != "":
 		_world.show_notice(notice)
+	if mission_done:
+		_world.show_mission_done(Quest.DONE_TEXT)
 	if outcome == BattleEngine.State.LOST:
 		_autosave(false)  # the gold lost sticks: going back to the title can't undo it
 	if won:
@@ -621,14 +626,14 @@ func _set_busy(busy: bool) -> void:
 ## Updates the map's status window and the hero's weapon and shield; on autoplay also
 ## prints each new quest line and each change of gold or equipment.
 func _refresh_status() -> void:
-	var quest_text := state.quest.status_text()
+	var missions := state.current_missions()
 	_world.refresh_status(state.hero, state.inventory.count(Inventory.POTION), state.gold,
-		quest_text)
+		missions)
 	var loadout := state.loadout
 	_world.set_hero_equipment(loadout.worn(Equipment.WEAPON), loadout.worn(Equipment.SHIELD))
-	if _autoplay and quest_text != _last_quest_text:
-		print(quest_text)
-	_last_quest_text = quest_text
+	if _autoplay and missions != _last_missions:
+		print(" · ".join(missions))
+	_last_missions = missions
 	var worn := PackedStringArray()
 	for slot in Equipment.SLOTS:
 		if loadout.worn(slot) != "":

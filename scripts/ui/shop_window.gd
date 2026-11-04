@@ -16,6 +16,7 @@ signal _left
 signal _answered(yes: bool)
 
 const FONT_SIZE := 24
+const TEXT_SIZE := 18
 const TITLE_COLOR := Color(1.0, 0.85, 0.3)
 const GREY := Color(0.6, 0.6, 0.65)
 const BETTER := Color(0.35, 1.0, 0.4)
@@ -223,6 +224,8 @@ func _add_buy_row(id: String) -> void:
 	if not info.is_empty():
 		row.add_child(_label("%s +%d" % [info.stat, info.bonus], Color.WHITE))
 		row.add_child(comparison(info.diff))
+	else:
+		row.add_child(_description(id))
 	if why != "":
 		row.add_child(_label(why, GREY))
 
@@ -242,6 +245,8 @@ func _add_sell_row(id: String) -> void:
 	var price := _label("%d G" % Shop.sell_price(id), GREY if why != "" else StatBar.GOLD)
 	price.custom_minimum_size.x = PRICE_WIDTH
 	row.add_child(price)
+	if not Shop.is_equipment(id):
+		row.add_child(_description(id))
 	if why != "":
 		row.add_child(_label(why, GREY))
 
@@ -391,6 +396,13 @@ func _button(text: String) -> Button:
 
 func _label(text: String, color: Color) -> Label:
 	return _make_label(text, color)
+
+
+## What an item does, small, after its price.
+func _description(id: String) -> Label:
+	var label := _label(Inventory.description(id), GREY)
+	label.add_theme_font_size_override("font_size", TEXT_SIZE)
+	return label
 
 
 static func _make_label(text: String, color: Color) -> Label:

@@ -41,6 +41,8 @@ const PLAYER_SCENE := preload("res://scenes/world/player.tscn")
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
 const HERO_DATA := preload("res://data/hero.tres")
 const NOTICE_TIME := 2.0
+## Seconds "Misión cumplida" stays in the status window.
+const MISSION_DONE_TIME := 4.0
 ## The notice window, top centre (clear of the status window and the ☰ button).
 const NOTICE_MAX_WIDTH := 640.0
 const UI_EDGE := 24.0
@@ -130,7 +132,11 @@ var _mp_bar: StatBar
 var _exp_bar: StatBar
 var _potion_label: Label
 var _gold_label: Label
-var _quest_label: Label
+var _mission_box: VBoxContainer
+## The lines of the status window, and the serial that lets "Misión cumplida" put them back.
+var _missions: Array[String] = []
+var _mission_done_serial := 0
+var _mission_done := false
 var _notice: Label
 var _notice_window: PanelContainer
 var _notice_serial := 0
@@ -395,15 +401,43 @@ func set_chest_open(chest_id: String, open: bool, instant := false) -> void:
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
-func refresh_status(hero: Combatant, potions: int, gold: int, quest_text := "") -> void:
+func refresh_status(hero: Combatant, potions: int, gold: int, missions: Array[String] = []) -> void:
 	_name_label.text = StatBar.hero_title(hero)
 	_hp_bar.show_hp(hero.hp, hero.max_hp)
 	_mp_bar.show_mp(hero.mp, hero.max_mp)
 	_exp_bar.show_exp(hero)
 	_potion_label.text = "%s ×%d" % [Inventory.display_name(Inventory.POTION), potions]
 	_gold_label.text = "Oro %d G" % gold
-	_quest_label.text = quest_text
-	_quest_label.visible = quest_text != ""
+	_missions = missions
+	if not _mission_done:
+		_show_missions(missions, Color.WHITE)
+
+
+## Puts "Misión cumplida" (or text) in the mission list for a few seconds, then the
+## missions under way come back.
+func show_mission_done(text: String) -> void:
+	_mission_done_serial += 1
+	var serial := _mission_done_serial
+	_mission_done = true
+	var lines: Array[String] = [text]
+	_show_missions(lines, StatBar.GOLD)
+	if _autoplay:
+		print(text)
+	await get_tree().create_timer(MISSION_DONE_TIME).timeout
+	if serial == _mission_done_serial:
+		_mission_done = false
+		_show_missions(_missions, Color.WHITE)
+
+
+func _show_missions(lines: Array[String], color: Color) -> void:
+	for child in _mission_box.get_children():
+		_mission_box.remove_child(child)
+		child.queue_free()
+	for line in lines:
+		var label := _label()
+		label.text = line
+		label.add_theme_color_override("font_color", color)
+		_mission_box.add_child(label)
 
 
 ## Shows a short line in its own window for NOTICE_TIME seconds (a newer one replaces it).
@@ -700,9 +734,9 @@ func _build_ui() -> void:
 	_gold_label = _label()
 	_gold_label.add_theme_color_override("font_color", StatBar.GOLD)
 	box.add_child(_gold_label)
-	_quest_label = _label()
-	_quest_label.hide()
-	box.add_child(_quest_label)
+	_mission_box = VBoxContainer.new()
+	_mission_box.add_theme_constant_override("separation", 0)
+	box.add_child(_mission_box)
 	_notice_window = BattleHud.make_window()
 	_notice_window.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	_notice_window.offset_left = 0

@@ -9,6 +9,9 @@ const START_GOLD := 50
 const FINAL_BOSS := "senor_niebla"
 ## The autoplay retreat: below this share of max HP the hero needs rest.
 const REST_HP_RATIO := 0.3
+## Mission lines when none is assigned, on an open map and on a dungeon floor.
+const NO_MISSION_FIELD := "Sigue el sendero"
+const NO_MISSION_DUNGEON := "Explora el mapa"
 
 var hero: Combatant
 var inventory := Inventory.new()
@@ -45,6 +48,19 @@ func _init(hero_data: Combatant) -> void:
 func heal_full() -> void:
 	hero.hp = hero.max_hp
 	hero.mp = hero.max_mp
+
+
+## The missions under way, for the map's status window and the pause menu; never empty.
+## The one place that reads them: the story's quest log only has to change this.
+func current_missions() -> Array[String]:
+	var missions: Array[String] = []
+	var line := quest.status_text()
+	if line != "":
+		missions.append(line)
+	if missions.is_empty():
+		var dungeon := ZoneData.by_id(zone_id).is_dungeon()
+		missions.append(NO_MISSION_DUNGEON if dungeon else NO_MISSION_FIELD)
+	return missions
 
 
 ## Uses an item outside battle, from the pause menu; see Inventory.use().
