@@ -1,12 +1,13 @@
 class_name BattleActor extends Node3D
 ## 3D figure of a fighter or a villager. The hero, the villagers and the witch are
 ## KayKit models with their own animations; the slimes, the bat, the mushroom, the wolf,
-## the goblin and the carnivorous plant are low-poly figures built in code (see LOOKS).
+## the goblin, the carnivorous plant, the golems, the spider and the specter are
+## low-poly figures built in code (see LOOKS).
 ## Set look before add_child. The figure faces -Z, so look_at() the opponent. Every
 ## play_* can be awaited: it returns when its animation and its tween are done.
 
 enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPER, WOLF,
-	GOBLIN, PLANT, WITCH }
+	GOBLIN, PLANT, WITCH, MUD_GOLEM, STONE_GOLEM, SPIDER, SPECTER }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -58,6 +59,23 @@ const LEG_PROFILE: Array[Vector2] = [
 	Vector2(0.0, 0.0), Vector2(0.07, 0.0), Vector2(0.08, 0.3), Vector2(0.06, 0.55),
 	Vector2(0.0, 0.56),
 ]
+## Side profiles (lathed around +Y) of a golem's chunk (4 sides: a faceted block), of the
+## spider's abdomen and of the specter (a drop with its tip down).
+const BLOCK_PROFILE: Array[Vector2] = [
+	Vector2(0.0, 0.0), Vector2(0.42, 0.0), Vector2(0.5, 0.15), Vector2(0.5, 0.75),
+	Vector2(0.4, 0.95), Vector2(0.0, 1.0),
+]
+const ABDOMEN_PROFILE: Array[Vector2] = [
+	Vector2(0.0, 0.0), Vector2(0.22, 0.04), Vector2(0.36, 0.25), Vector2(0.34, 0.5),
+	Vector2(0.2, 0.68), Vector2(0.0, 0.72),
+]
+const SPECTER_PROFILE: Array[Vector2] = [
+	Vector2(0.0, 0.0), Vector2(0.14, 0.18), Vector2(0.34, 0.42), Vector2(0.42, 0.68),
+	Vector2(0.36, 0.92), Vector2(0.18, 1.06), Vector2(0.0, 1.1),
+]
+## Opacity of the specter's body and of its aura.
+const SPECTER_ALPHA := 0.6
+const AURA_ALPHA := 0.22
 ## Angle (radians about X) of the plant's upper jaw: resting, and wide open to bite.
 const JAW_REST := 0.3
 const JAW_OPEN := 0.95
@@ -78,7 +96,9 @@ const STICK_CENTER := 0.45
 ## scale (the whole blob, eyes and crown included), top and crown. Bat: color, wing
 ## color, top and fly (height it hovers at). Mushroom: cap and stem colors, scale and top.
 ## Wolf: fur, dark and eye colors, scale and top. Goblin: color, hat color, scale and top.
-## Plant: stem, leaf, head and inner (mouth) colors, scale and top.
+## Plant: stem, leaf, head and inner (mouth) colors, scale and top. Golems: color, dark
+## color (legs and arms), eye color, scale and top. Spider: color, leg color, eye color,
+## scale and top. Specter: color, aura color, scale, top and fly (height it floats at).
 const LOOKS := {
 	Look.HERO: {
 		"scene": KNIGHT,
@@ -187,6 +207,35 @@ const LOOKS := {
 		"anims": CHARACTER_ANIMS,
 		"tint": Color(0.55, 0.32, 0.75),
 	},
+	Look.MUD_GOLEM: {
+		"color": Color(0.5, 0.34, 0.2),
+		"dark_color": Color(0.36, 0.24, 0.14),
+		"eye_color": Color(1.0, 0.85, 0.3),
+		"scale": 1.0,
+		"top": 2.0,
+	},
+	# The boss: bigger, grey stone with glowing blue eyes.
+	Look.STONE_GOLEM: {
+		"color": Color(0.55, 0.55, 0.58),
+		"dark_color": Color(0.38, 0.38, 0.42),
+		"eye_color": Color(0.4, 0.85, 1.0),
+		"scale": 1.55,
+		"top": 3.1,
+	},
+	Look.SPIDER: {
+		"color": Color(0.22, 0.18, 0.24),
+		"leg_color": Color(0.14, 0.11, 0.15),
+		"eye_color": Color(1.0, 0.2, 0.15),
+		"scale": 1.1,
+		"top": 1.2,
+	},
+	Look.SPECTER: {
+		"color": Color(0.75, 0.85, 1.0),
+		"aura_color": Color(0.3, 0.55, 1.0),
+		"scale": 1.0,
+		"top": 2.3,
+		"fly": 0.5,
+	},
 }
 
 @export var look := Look.HERO
@@ -211,6 +260,10 @@ var _model: Node3D
 ## Plant only: the upper jaw's pivot (opens to bite) and the node its idle sway turns.
 var _jaw: Node3D
 var _sway: Node3D
+## Specter only: the node its idle loop floats up and down, and its see-through
+## materials with their resting opacity ([material, alpha]).
+var _hover: Node3D
+var _ghosts: Array = []
 
 
 func _ready() -> void:
@@ -230,6 +283,12 @@ func _ready() -> void:
 		_build_goblin(data)
 	elif look == Look.PLANT:
 		_build_plant(data)
+	elif look == Look.MUD_GOLEM or look == Look.STONE_GOLEM:
+		_build_golem(data)
+	elif look == Look.SPIDER:
+		_build_spider(data)
+	elif look == Look.SPECTER:
+		_build_specter(data)
 	else:
 		_build_slime(data)
 	for node in _body.find_children("*", "MeshInstance3D", true, false):
@@ -251,6 +310,7 @@ func reset() -> void:
 	for mat in _materials:
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
 		mat.albedo_color.a = 1.0
+	_set_alpha(1.0)
 	if _anim:
 		_anim.play(_anims.idle, 0.0)
 	else:
@@ -604,15 +664,93 @@ func _build_plant(data: Dictionary) -> void:
 	_jaw.rotation.x = JAW_REST
 
 
+## A golem: faceted blocks for the legs, the body, the head and two long arms, with
+## glowing eyes and two loose stones on the shoulders.
+func _build_golem(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	for x in [-0.22, 0.22]:
+		_add_blob(root, BLOCK_PROFILE, 4, data.dark_color, Vector3(x, 0, 0), Vector3(0, 45, 0),
+			Vector3(0.36, 0.42, 0.36))  # leg
+	_add_blob(root, BLOCK_PROFILE, 4, data.color, Vector3(0, 0.38, 0), Vector3(0, 45, 0),
+		Vector3(1.05, 0.72, 0.8))  # body
+	_add_blob(root, BLOCK_PROFILE, 4, data.color, Vector3(0, 1.08, -0.06), Vector3(0, 45, 0),
+		Vector3(0.5, 0.36, 0.46))  # head
+	for x in [-0.12, 0.12]:
+		_add_mesh(root, _sphere(0.055), data.eye_color, Vector3(x, 1.24, -0.29), 0.2)  # eye
+	for side in [-1.0, 1.0]:
+		_add_blob(root, BLOCK_PROFILE, 4, data.dark_color, Vector3(side * 0.62, 0.12, -0.05),
+			Vector3(0, 45, side * 8.0), Vector3(0.34, 0.86, 0.34))  # arm
+		_add_blob(root, BLOCK_PROFILE, 4, data.color, Vector3(side * 0.42, 1.0, 0.05),
+			Vector3(0, 20, 0), Vector3(0.22, 0.16, 0.22))  # loose stone
+
+
+## A spider: a round abdomen behind a small head with red eyes, on eight bent legs
+## (four a side, each a thigh going up and out and a shin going down to the ground).
+func _build_spider(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	_add_blob(root, ABDOMEN_PROFILE, 7, data.color, Vector3(0, 0.42, 0.32), Vector3(-75, 0, 0),
+		Vector3(1.1, 1.0, 1.0))  # abdomen
+	_add_mesh(root, _sphere(0.2), data.color, Vector3(0, 0.42, -0.12))  # head
+	for x in [-0.07, 0.07]:
+		_add_mesh(root, _sphere(0.045), data.eye_color, Vector3(x, 0.5, -0.3), 0.2)  # eye
+		_add_mesh(root, _sphere(0.03), data.eye_color, Vector3(x * 2.0, 0.45, -0.28), 0.2)
+	for side in [-1.0, 1.0]:
+		for i in 4:
+			var leg := Node3D.new()
+			leg.position = Vector3(side * 0.14, 0.42, -0.2 + i * 0.13)
+			# Each leg reaches out to +X of its pivot: the left ones are turned around.
+			leg.rotation.y = deg_to_rad(40.0 - i * 27.0) * side + (PI if side < 0.0 else 0.0)
+			root.add_child(leg)
+			_add_mesh(leg, _cylinder(0.03, 0.42), data.leg_color, Vector3(0.18, 0.13, 0))
+			(leg.get_child(-1) as Node3D).rotation_degrees.z = -60.0  # thigh, up and out
+			_add_mesh(leg, _cylinder(0.025, 0.62), data.leg_color, Vector3(0.44, -0.12, 0))
+			(leg.get_child(-1) as Node3D).rotation_degrees.z = 22.0  # shin, down to the ground
+
+
+## A specter: a see-through pale drop with its tip down, floating at data.fly, with dark
+## eyes and a wide blue aura around it.
+func _build_specter(data: Dictionary) -> void:
+	_hover = Node3D.new()
+	_hover.position.y = data.fly
+	_hover.scale = Vector3.ONE * data.scale
+	_body.add_child(_hover)
+	_add_ghost(_hover, LowPoly.blob(SPECTER_PROFILE, 8), data.color, SPECTER_ALPHA,
+		Vector3.ZERO, Vector3.ONE)
+	_add_ghost(_hover, _sphere(0.5), data.aura_color, AURA_ALPHA, Vector3(0, 0.62, 0),
+		Vector3(1.5, 1.7, 1.5))
+	for x in [-0.12, 0.12]:
+		_add_mesh(_hover, _sphere(0.07), Color(0.05, 0.05, 0.12), Vector3(x, 0.8, -0.34))  # eye
+	_add_mesh(_hover, _sphere(0.06), Color(0.05, 0.05, 0.12), Vector3(0, 0.6, -0.36))  # mouth
+
+
 ## The waiting loop of the figures built in code: the bat flaps, the plant sways, the
-## rest squash and stretch (the wolf only breathes).
+## specter floats, the rest squash and stretch (the wolf, the golems and the spider only
+## breathe).
 func _start_idle() -> void:
 	if not _wings.is_empty():
 		_start_flap()
 	elif _sway:
 		_start_sway()
+	elif _hover:
+		_start_float()
 	else:
-		_start_bounce(0.4 if look == Look.WOLF else 1.0)
+		var gentle := look in [Look.WOLF, Look.MUD_GOLEM, Look.STONE_GOLEM, Look.SPIDER]
+		_start_bounce(0.4 if gentle else 1.0)
+
+
+## Floating loop of the specter. Only _hover moves, so hits and dodges can move _body.
+func _start_float() -> void:
+	if _idle_tween:
+		_idle_tween.kill()
+	var fly: float = LOOKS[look].fly
+	_idle_tween = create_tween().set_loops()
+	for y in [fly + 0.18, fly]:
+		_idle_tween.tween_property(_hover, "position:y", y, 0.8) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
 ## Flapping wings, for the bat. Only the wing pivots are tweened, so hits, attacks and
@@ -729,6 +867,8 @@ func _set_flash(on: bool, color := Color.WHITE) -> void:
 func _set_alpha(alpha: float) -> void:
 	for mat in _materials:
 		mat.albedo_color.a = alpha
+	for ghost in _ghosts:
+		(ghost[0] as StandardMaterial3D).albedo_color.a = ghost[1] * alpha
 
 
 func _add_mesh(parent: Node3D, mesh: Mesh, color: Color, pos: Vector3, \
@@ -741,6 +881,26 @@ func _add_mesh(parent: Node3D, mesh: Mesh, color: Color, pos: Vector3, \
 	mi.mesh = mesh
 	mi.material_override = mat
 	mi.position = pos
+	parent.add_child(mi)
+
+
+## A see-through glowing mesh (the specter): its opacity rests at alpha and fades with
+## the rest of the figure on defeat. It casts no shadow.
+func _add_ghost(parent: Node3D, mesh: Mesh, color: Color, alpha: float, pos: Vector3, \
+		scl: Vector3) -> void:
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(color, alpha)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.emission_enabled = true
+	mat.emission = color * 0.35
+	mat.roughness = 0.6
+	_ghosts.append([mat, alpha])
+	var mi := MeshInstance3D.new()
+	mi.mesh = mesh
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.position = pos
+	mi.scale = scl
 	parent.add_child(mi)
 
 

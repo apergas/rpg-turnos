@@ -7,7 +7,9 @@ class_name BattleEngine extends RefCounted
 ## Commands are dictionaries built with cmd_attack(target), cmd_skill(skill, target),
 ## cmd_item(id), cmd_defend(), cmd_flee() and cmd_none() (the hero is asleep). Each enemy
 ## picks its own command when its turn comes, from its ai_weights. Fighters are ints:
-## BattleEvent.HERO or an index into `enemies`.
+## BattleEvent.HERO or an index into `enemies`. An enemy that picks "charge" spends its
+## turn gathering strength and its next turn is a blow of CHARGE_MULT times the damage
+## that never misses or crits (Defender still halves it).
 
 enum State { ONGOING, WON, LOST, FLED }
 
@@ -19,6 +21,7 @@ const CMD_FLEE := "flee"
 const CMD_NONE := "none"
 const CMD_STAGGER := "stagger"
 const CMD_CALL := "call"
+const CMD_CHARGE := "charge"
 
 const POISON := "poison"
 const SLEEP := "sleep"
@@ -45,6 +48,8 @@ const FLEE_MAX := 0.95
 const HELP_HP_RATIO := 0.5
 ## Most enemies standing at once (a call for help needs a free place).
 const MAX_ENEMIES := 2
+## Damage of the blow that follows a charge.
+const CHARGE_MULT := 2.0
 
 var hero: Combatant
 var enemies: Array[Combatant] = []
@@ -61,6 +66,8 @@ var _defending := false
 ## Enemy indexes that already called for help / already cast their rescue heal.
 var _called := {}
 var _rescued := {}
+## Enemy indexes that charged: their next turn is the charged blow.
+var _charged := {}
 
 
 func _init(p_hero: Combatant, p_enemies: Array[Combatant], rng: RandomNumberGenerator, \
@@ -104,6 +111,11 @@ func alive_enemies() -> Array[int]:
 		if enemies[i].is_alive():
 			alive.append(i)
 	return alive
+
+
+## True while enemy who has charged and its blow is still to come.
+func is_charged(who: int) -> bool:
+	return _charged.has(who)
 
 
 func has_boss() -> bool:
@@ -182,11 +194,13 @@ func resolve_round(hero_cmd: Dictionary) -> Array[Dictionary]:
 	return events
 
 
-## Casts its rescue heal (once, below rescue_heal_ratio, not silenced) or calls for help
-## when it can; otherwise a weighted pick from its ai_weights. A skill it can't afford
+## Strikes the charged blow if it charged last turn; casts its rescue heal (once, below
+## rescue_heal_ratio, not silenced) or calls for help when it can; otherwise a weighted pick from its ai_weights. A skill it can't afford
 ## (or can't cast, silenced) becomes an attack.
 func _enemy_command(who: int) -> Dictionary:
 	var enemy := enemies[who]
+	if _charged.has(who):
+		return {"type": CMD_ATTACK, "target": BattleEvent.HERO, "charged": true}
 	if enemy.rescue_heal != null and not _rescued.has(who) \
 			and enemy.hp < enemy.max_hp * enemy.rescue_heal_ratio \
 			and not enemy.status.has(SILENCE):
@@ -214,6 +228,8 @@ func _enemy_command(who: int) -> Dictionary:
 			return cmd_attack(BattleEvent.HERO)
 		CMD_STAGGER:
 			return {"type": CMD_STAGGER}
+		CMD_CHARGE:
+			return {"type": CMD_CHARGE}
 	var skill := enemy.find_skill(choice)
 	if skill != null and enemy.mp >= skill.mp_cost and not enemy.status.has(SILENCE):
 		return cmd_skill(skill, BattleEvent.HERO)
@@ -245,7 +261,7 @@ func _initiative(c: Combatant) -> float:
 func _act(who: int, cmd: Dictionary, events: Array[Dictionary]) -> void:
 	match cmd.type:
 		CMD_ATTACK:
-			_attack(who, _living_target(cmd.target), events)
+			_attack(who, _living_target(cmd.target), events, cmd.get("charged", false))
 		CMD_SKILL:
 			_cast(who, cmd, events)
 		CMD_ITEM:
@@ -260,6 +276,9 @@ func _act(who: int, cmd: Dictionary, events: Array[Dictionary]) -> void:
 				events.append(BattleEvent.flee_fail())
 		CMD_STAGGER:
 			events.append(BattleEvent.stagger(who))
+		CMD_CHARGE:
+			_charged[who] = true
+			events.append(BattleEvent.charge(who))
 		CMD_CALL:
 			_called[who] = true
 			enemies.append(enemies[who].help.duplicate() as Combatant)
@@ -273,12 +292,18 @@ func _living_target(target: int) -> int:
 	return alive_enemies()[0]
 
 
-func _attack(who: int, target: int, events: Array[Dictionary]) -> void:
-	events.append(BattleEvent.attack(who, target))
+## A charged blow (after a charge) never misses or crits and does CHARGE_MULT damage.
+func _attack(who: int, target: int, events: Array[Dictionary], charged := false) -> void:
+	events.append(BattleEvent.attack(who, target, charged))
+	var attacker := _fighter(who)
+	if charged:
+		_charged.erase(who)
+		var amount := roundi(_roll_damage(attacker, _fighter(target), false) * CHARGE_MULT)
+		_hurt(target, amount, false, false, "", events)
+		return
 	if _rng.randf() < MISS_CHANCE:
 		events.append(BattleEvent.miss(who, target))
 		return
-	var attacker := _fighter(who)
 	var crit := _rng.randf() < CRIT_CHANCE
 	_hurt(target, _roll_damage(attacker, _fighter(target), crit), crit, false, "", events)
 	if attacker.attack_status != "" and _rng.randf() < attacker.attack_status_chance:

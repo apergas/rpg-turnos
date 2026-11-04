@@ -27,6 +27,7 @@ const STATUS_TICK := "status_tick"
 const STATUS_OFF := "status_off"
 const ASLEEP := "asleep"
 const CALL_HELP := "call_help"
+const CHARGE := "charge"
 
 const HERO := -1
 ## Values of DAMAGE "affinity": the target is weak to / resists the spell's element.
@@ -34,8 +35,9 @@ const WEAK := "weak"
 const RESIST := "resist"
 
 
-static func attack(actor: int, target: int) -> Dictionary:
-	return {"type": ATTACK, "actor": actor, "target": target}
+## charged: the blow after a charge (CHARGE_MULT damage, never misses).
+static func attack(actor: int, target: int, charged := false) -> Dictionary:
+	return {"type": ATTACK, "actor": actor, "target": target, "charged": charged}
 
 
 static func miss(actor: int, target: int) -> Dictionary:
@@ -145,3 +147,8 @@ static func asleep(actor: int) -> Dictionary:
 ## helper: index of the new enemy in BattleEngine.enemies.
 static func call_help(actor: int, helper: int) -> Dictionary:
 	return {"type": CALL_HELP, "actor": actor, "helper": helper}
+
+
+## The enemy gathers strength: its next turn is a charged blow.
+static func charge(actor: int) -> Dictionary:
+	return {"type": CHARGE, "actor": actor}

@@ -31,6 +31,8 @@ const ARROW_COLOR := Color(1.0, 0.9, 0.3)
 const PICK_RADIUS := 120.0
 const MP_COLOR := Color(0.4, 0.6, 1.0)
 const DEFEND_COLOR := Color(0.6, 0.8, 1.0)
+## Glow of an enemy gathering strength for a charged blow.
+const CHARGE_COLOR := Color(1.0, 0.55, 0.15)
 const STATUS_COLORS := {
 	BattleEngine.POISON: Color(0.6, 0.2, 0.8),
 	BattleEngine.SLEEP: Color(0.35, 0.45, 1.0),
@@ -237,9 +239,17 @@ func _play_event(event: Dictionary) -> void:
 	match event.type:
 		BattleEvent.ATTACK:
 			var target := _actor(event.target)
-			await _say("¡%s ataca!" % _fighter(event.actor).display_name)
+			if event.charged:
+				await _say("¡%s descarga un golpe tremendo!" % _cap(_the(_fighter(event.actor))))
+				_shake_camera()
+			else:
+				await _say("¡%s ataca!" % _fighter(event.actor).display_name)
 			_focus_camera(target)
 			await _actor(event.actor).play_attack(target.global_position)
+		BattleEvent.CHARGE:
+			_sfx(SfxLibrary.FIRE)
+			await _actor(event.actor).play_cast(CHARGE_COLOR)
+			await _say("%s acumula fuerza..." % _cap(_the(_fighter(event.actor))))
 		BattleEvent.SKILL:
 			if event.actor == BattleEvent.HERO:
 				_hud.update_mp(event.mp_left, hero.max_mp)
