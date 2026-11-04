@@ -1,14 +1,24 @@
 class_name World extends Node3D
-## World map: field, village, player, follow camera, status window and random
+## World map: field, village, player, follow camera, status window, chests and random
 ## encounters. A click or tap on the ground (held and dragged too) walks the player
-## there, with a marker on the spot. Next to the old woman Enter / Space asks to talk
-## (talk_requested); a click or tap on her walks there and talks on arrival. With the
-## Rey Slime present, walking into it starts the boss battle. Encounters emit
-## encounter_triggered(boss) and freeze the player until set_active(true). Run on its
-## own (res://scenes/world/world.tscn) it prints each encounter and goes on.
+## there, with a marker on the spot. Next to the old woman, the merchant, the innkeeper
+## or a closed chest (the nearest one in reach) Enter / Space talks (talk_requested),
+## opens the shop (shop_requested), asks for a room (inn_requested) or opens the chest
+## (chest_opened); a click or tap on one of them
+## walks there and does it on arrival. With the Rey Slime present, walking into it
+## starts the boss battle. Encounters emit encounter_triggered(boss) and freeze the
+## player until set_active(true). Run on its own (res://scenes/world/world.tscn) it
+## prints each encounter, shop and chest and goes on.
 
 signal encounter_triggered(boss: bool)
 signal talk_requested
+## The player asked the merchant of shop_id (a Shop.SHOPS key) to trade.
+signal shop_requested(shop_id: String)
+## The player talked to the innkeeper of inn_id (an Inn.INNS key).
+signal inn_requested(inn_id: String)
+## The player asked to open a closed chest (a Chests.CHESTS key); Game opens it in the
+## GameState and calls set_chest_open().
+signal chest_opened(chest_id: String)
 ## The player walked into (true) or out of (false) the village clearing.
 signal village_changed(inside: bool)
 
@@ -17,12 +27,31 @@ const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
 const HERO_DATA := preload("res://data/hero.tres")
 const NOTICE_TIME := 2.0
 const FONT_SIZE := 24
-## How close the player must be to talk to the old woman / to run into the boss.
+## How close the player must be to talk to the old woman or the merchant / to open a
+## chest / to run into the boss.
 const TALK_RADIUS := 2.5
+const CHEST_RADIUS := 1.8
 const BOSS_RADIUS := 2.5
-## A click or tap this close to the old woman means "go and talk to her".
+## A click or tap this close to a figure or a chest means "go there and use it".
 const NPC_TAP_RADIUS := 1.2
-const PROMPT_TEXT := "Enter o toca: hablar"
+## Kinds of the things the player can use on the map, and their prompts.
+const TALK := "talk"
+const SHOP := "shop"
+const INN := "inn"
+const CHEST := "chest"
+const PROMPTS := {
+	TALK: "Enter o toca: hablar",
+	SHOP: "Enter o toca: comprar",
+	INN: "Enter o toca: hablar",
+	CHEST: "Enter o toca: abrir",
+}
+## Chest model: wooden box with a gold band and a lid hinged at the back.
+const CHEST_SIZE := Vector3(0.9, 0.45, 0.6)
+const CHEST_LID_HEIGHT := 0.2
+const CHEST_WOOD := Color(0.5, 0.3, 0.14)
+const CHEST_BAND := Color(1.0, 0.78, 0.2)
+## Angle of an open lid (degrees about X: the front edge swings up and back).
+const CHEST_OPEN_ANGLE := 110.0
 const MARKER_COLOR := Color(1.0, 0.9, 0.4)
 ## Meters walked between two footstep sounds.
 const STEP_DISTANCE := 1.6
@@ -33,7 +62,12 @@ var _grass: ShaderMaterial
 var _player: Player
 var _camera: FollowCamera
 var _npc: StaticBody3D
+var _merchant: StaticBody3D
+var _innkeeper: StaticBody3D
 var _boss: StaticBody3D
+## chest id -> lid pivot (rotation.x opens it); a chest in _open_chests is open.
+var _chest_lids := {}
+var _open_chests: Array[String] = []
 var _boss_present := false
 var _ui: CanvasLayer
 var _name_label: Label
@@ -41,6 +75,7 @@ var _hp_label: Label
 var _mp_label: Label
 var _exp_label: Label
 var _potion_label: Label
+var _gold_label: Label
 var _quest_label: Label
 var _notice: Label
 var _prompt: Label
@@ -48,9 +83,10 @@ var _dialogue: DialogueBox
 var _autoplay := false
 var _waiting := false
 var _talking := false
-var _was_near := false
-## Set by a click or tap on the old woman: talk as soon as she is in reach.
-var _talk_on_arrival := false
+## What was in reach last frame ({} for nothing), so autoplay acts once per approach.
+var _was_near := {}
+## Set by a click or tap on a figure or chest: use it as soon as it is in reach.
+var _use_on_arrival := {}
 var _marker: MeshInstance3D
 var _audio: AudioDirector
 var _in_village := false
@@ -63,7 +99,11 @@ func _ready() -> void:
 	_meter = EncounterMeter.new(_rng)
 	_grass = WorldStage.build(self)
 	_npc = _add_figure(BattleActor.Look.VILLAGER, WorldStage.NPC_POS, 0.4, 1.8)
+	_merchant = _add_figure(BattleActor.Look.MERCHANT, WorldStage.MERCHANT_POS, 0.4, 1.8)
+	_innkeeper = _add_figure(BattleActor.Look.INNKEEPER, WorldStage.INNKEEPER_POS, 0.4, 1.8)
 	_boss = _add_figure(BattleActor.Look.KING_SLIME, WorldStage.BOSS_POS, 1.0, 2.0)
+	for id: String in Chests.CHESTS:
+		_chest_lids[id] = build_chest(self, Chests.CHESTS[id])
 	set_boss_present(false)
 	_player = PLAYER_SCENE.instantiate()
 	add_child(_player)
@@ -75,9 +115,14 @@ func _ready() -> void:
 	respawn()
 	_camera.current = true
 	if get_parent() == get_tree().root:
-		refresh_status(HERO_DATA, Inventory.START_POTIONS)
+		refresh_status(HERO_DATA, Inventory.START_POTIONS, GameState.START_GOLD)
 		encounter_triggered.connect(_on_standalone_encounter)
 		talk_requested.connect(_on_standalone_talk)
+		shop_requested.connect(func(shop_id: String) -> void: print("Tienda: %s" % shop_id))
+		inn_requested.connect(func(inn_id: String) -> void: print("Posada: %s" % inn_id))
+		chest_opened.connect(func(chest_id: String) -> void:
+			print("Cofre: %s" % chest_id)
+			set_chest_open(chest_id, true))
 
 
 func _physics_process(_delta: float) -> void:
@@ -100,14 +145,16 @@ func _physics_process(_delta: float) -> void:
 	if _meter.advance(_player.last_step_m, in_grass):
 		_trigger(false)
 		return
-	var near := _flat_distance(pos, WorldStage.NPC_POS) <= TALK_RADIUS
-	_prompt.visible = near
-	if near and _talk_on_arrival:
-		_talk_on_arrival = false
+	var near := _nearest_use(pos)
+	_prompt.visible = not near.is_empty()
+	if _prompt.visible:
+		_prompt.text = PROMPTS[near.kind]
+	if not near.is_empty() and near == _use_on_arrival:
+		_use_on_arrival = {}
 		_player.move_target = null
-		talk_requested.emit()
-	elif near and not _was_near and _autoplay:
-		talk_requested.emit()
+		_use(near)
+	elif not near.is_empty() and near != _was_near and _autoplay:
+		_use(near)
 	_was_near = near
 
 
@@ -116,14 +163,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if _prompt.visible and event.is_action_pressed("ui_accept") and not event.is_echo():
 		get_viewport().set_input_as_handled()
-		talk_requested.emit()
+		_use(_nearest_use(_player.global_position))
 		return
 	var point: Variant = _pointer_on_ground(event)
 	if point == null:
 		return
 	get_viewport().set_input_as_handled()
 	if event is InputEventMouseButton:
-		_talk_on_arrival = _flat_distance(point, WorldStage.NPC_POS) <= NPC_TAP_RADIUS
+		_use_on_arrival = _tapped_use(point)
 	_player.move_to(point)
 
 
@@ -167,7 +214,8 @@ func place_player(pos: Vector3) -> void:
 	_player.place(pos, 0.0)
 	_camera.snap()
 	_meter.reset()
-	_was_near = false
+	_was_near = {}
+	_use_on_arrival = {}
 	_step_m = 0.0
 	_in_village = _is_in_village(pos)
 
@@ -195,17 +243,47 @@ func set_boss_present(present: bool) -> void:
 
 ## Freezes the player and shows the lines one by one; returns when they are all read.
 func show_dialogue(speaker: String, lines: Array[String]) -> void:
-	_talking = true
-	_player.input_enabled = false
-	_prompt.hide()
+	freeze(true)
 	await _dialogue.say(speaker, lines)
-	# One frame of margin so the key that closed the dialogue does not open it again.
+	await freeze(false)
+
+
+## Freezes the player (no walking, prompts, encounters or uses) while a dialogue or the
+## shop is open. Unfreezing waits one frame, so the key that closed the window does not
+## open it again; await it.
+func freeze(on: bool) -> void:
+	if on:
+		_talking = true
+		_player.input_enabled = false
+		_prompt.hide()
+		return
 	await get_tree().process_frame
 	_player.input_enabled = true
 	_talking = false
 
 
-func refresh_status(hero: Combatant, potions: int, quest_text := "") -> void:
+## Shows the weapon and shield worn on the hero (Equipment ids, "" for none).
+func set_hero_equipment(weapon_id: String, shield_id: String) -> void:
+	_player.set_equipment(weapon_id, shield_id)
+
+
+## Opens (lid tipped back, tweened unless instant) or closes a chest. An open chest
+## can't be used any more.
+func set_chest_open(chest_id: String, open: bool, instant := false) -> void:
+	var lid: Node3D = _chest_lids[chest_id]
+	var angle := deg_to_rad(CHEST_OPEN_ANGLE) if open else 0.0
+	if open and not _open_chests.has(chest_id):
+		_open_chests.append(chest_id)
+	elif not open:
+		_open_chests.erase(chest_id)
+	if instant:
+		lid.rotation.x = angle
+	else:
+		lid.create_tween().tween_property(lid, "rotation:x", angle, 0.35) \
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+func refresh_status(hero: Combatant, potions: int, gold: int, quest_text := "") -> void:
 	_name_label.text = "%s  Nv %d" % [hero.display_name, hero.level]
 	_hp_label.text = "PV %d / %d" % [hero.hp, hero.max_hp]
 	_mp_label.text = "PM %d / %d" % [hero.mp, hero.max_mp]
@@ -215,6 +293,7 @@ func refresh_status(hero: Combatant, potions: int, quest_text := "") -> void:
 	else:
 		_exp_label.text = "EXP %d / %d" % [hero.experience, next]
 	_potion_label.text = "%s ×%d" % [Inventory.display_name(Inventory.POTION), potions]
+	_gold_label.text = "Oro %d G" % gold
 	_quest_label.text = quest_text
 	_quest_label.visible = quest_text != ""
 
@@ -234,6 +313,56 @@ func _trigger(boss: bool) -> void:
 	_player.input_enabled = false
 	_prompt.hide()
 	encounter_triggered.emit(boss)
+
+
+## The nearest thing in reach of pos that can be used: {"kind": TALK / SHOP / CHEST,
+## "id": shop or chest id ("" to talk)}, or {} if none.
+func _nearest_use(pos: Vector3) -> Dictionary:
+	var best := {}
+	var best_d := INF
+	for use in _uses():
+		var d := _flat_distance(pos, use.pos)
+		if d <= use.radius and d < best_d:
+			best = {"kind": use.kind, "id": use.id}
+			best_d = d
+	return best
+
+
+## The thing a click or tap at point means ({} if none): within NPC_TAP_RADIUS of it.
+func _tapped_use(point: Vector3) -> Dictionary:
+	for use in _uses():
+		if _flat_distance(point, use.pos) <= NPC_TAP_RADIUS:
+			return {"kind": use.kind, "id": use.id}
+	return {}
+
+
+## Everything usable now: the old woman, the merchant, the innkeeper and the closed
+## chests.
+func _uses() -> Array[Dictionary]:
+	var uses: Array[Dictionary] = [
+		{"kind": TALK, "id": "", "pos": WorldStage.NPC_POS, "radius": TALK_RADIUS},
+		{"kind": SHOP, "id": Shop.VILLACLARO, "pos": WorldStage.MERCHANT_POS,
+			"radius": TALK_RADIUS},
+		{"kind": INN, "id": Inn.VILLACLARO, "pos": WorldStage.INNKEEPER_POS,
+			"radius": TALK_RADIUS},
+	]
+	for id: String in Chests.CHESTS:
+		if not _open_chests.has(id):
+			uses.append({"kind": CHEST, "id": id, "pos": Chests.CHESTS[id].pos,
+				"radius": CHEST_RADIUS})
+	return uses
+
+
+func _use(use: Dictionary) -> void:
+	match use.get("kind", ""):
+		TALK:
+			talk_requested.emit()
+		SHOP:
+			shop_requested.emit(use.id)
+		INN:
+			inn_requested.emit(use.id)
+		CHEST:
+			chest_opened.emit(use.id)
 
 
 func _on_standalone_encounter(boss: bool) -> void:
@@ -266,6 +395,43 @@ func _build_marker() -> MeshInstance3D:
 	marker.visible = false
 	add_child(marker)
 	return marker
+
+
+## A closed chest on a box collider under root: wooden box with a gold band around it and a lid on
+## a pivot at its back edge. Returns the lid pivot.
+static func build_chest(root: Node3D, chest: Dictionary) -> Node3D:
+	var body := StaticBody3D.new()
+	body.position = chest.pos
+	body.rotation_degrees.y = chest.yaw
+	root.add_child(body)
+	var box := BoxShape3D.new()
+	box.size = CHEST_SIZE + Vector3(0, CHEST_LID_HEIGHT, 0)
+	var shape := CollisionShape3D.new()
+	shape.shape = box
+	shape.position.y = box.size.y / 2.0
+	body.add_child(shape)
+	var base := BoxMesh.new()
+	base.size = CHEST_SIZE
+	BattleStage.add_mesh(body, base, CHEST_WOOD, Vector3(0, CHEST_SIZE.y / 2.0, 0))
+	var band := BoxMesh.new()
+	band.size = Vector3(CHEST_SIZE.x + 0.04, 0.08, CHEST_SIZE.z + 0.04)
+	BattleStage.add_mesh(body, band, CHEST_BAND, Vector3(0, CHEST_SIZE.y * 0.7, 0))
+	var lid := Node3D.new()
+	lid.position = Vector3(0, CHEST_SIZE.y, CHEST_SIZE.z / 2.0)
+	body.add_child(lid)
+	var top := BoxMesh.new()
+	top.size = Vector3(CHEST_SIZE.x, CHEST_LID_HEIGHT, CHEST_SIZE.z)
+	BattleStage.add_mesh(lid, top, CHEST_WOOD,
+		Vector3(0, CHEST_LID_HEIGHT / 2.0, -CHEST_SIZE.z / 2.0))
+	var lock := BoxMesh.new()
+	lock.size = Vector3(0.14, 0.16, 0.05)
+	BattleStage.add_mesh(lid, lock, CHEST_BAND, Vector3(0, 0.0, -CHEST_SIZE.z - 0.02))
+	var lid_band := BoxMesh.new()
+	lid_band.size = Vector3(0.1, CHEST_LID_HEIGHT + 0.02, CHEST_SIZE.z + 0.02)
+	for x in [-0.3, 0.3]:
+		BattleStage.add_mesh(lid, lid_band, CHEST_BAND,
+			Vector3(x, CHEST_LID_HEIGHT / 2.0, -CHEST_SIZE.z / 2.0))
+	return lid
 
 
 ## A village figure: a BattleActor on a cylinder collider, facing south (toward the
@@ -302,6 +468,8 @@ func _build_ui() -> void:
 	box.add_child(_exp_label)
 	_potion_label = _label()
 	box.add_child(_potion_label)
+	_gold_label = _label()
+	box.add_child(_gold_label)
 	_quest_label = _label()
 	_quest_label.hide()
 	box.add_child(_quest_label)
@@ -309,7 +477,7 @@ func _build_ui() -> void:
 	_notice.hide()
 	box.add_child(_notice)
 	_prompt = _label()
-	_prompt.text = PROMPT_TEXT
+	_prompt.text = PROMPTS[TALK]
 	_prompt.add_theme_color_override("font_outline_color", Color.BLACK)
 	_prompt.add_theme_constant_override("outline_size", 8)
 	_ui.add_child(_prompt)
