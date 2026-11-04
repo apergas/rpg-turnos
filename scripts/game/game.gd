@@ -301,11 +301,15 @@ func _on_travel_requested() -> void:
 	if _busy:
 		return
 	_set_busy(true)
+	# The pause menu has already unpaused the tree: without this the hero could still walk
+	# into an encounter or an exit during the fade and leave the map stuck waiting.
+	_world.freeze(true)
 	await _fade_to(1.0)
 	_go_to_town()
 	_refresh_status()
 	_play_map_music()
 	await _fade_to(0.0)
+	await _world.freeze(false)
 	_world.show_notice("Vuelas a %s." % _zone.village_name)
 	_autosave(false)
 	_set_busy(false)
