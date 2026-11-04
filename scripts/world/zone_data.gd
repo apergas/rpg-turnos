@@ -136,6 +136,7 @@ func entry(entry_id: String) -> Array:
 	return entries.get(entry_id, entries[start_entry])
 
 
+## The exit with that id, or an empty Dictionary.
 func exit_by_id(exit_id: String) -> Dictionary:
 	for exit: Dictionary in exits:
 		if exit.id == exit_id:

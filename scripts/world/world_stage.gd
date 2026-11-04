@@ -263,8 +263,6 @@ static func _near_building(zone: ZoneData, pos: Vector3, margin: float) -> bool:
 	return false
 
 
-
-
 ## True within margin of one of the zone's chests (Chests.CHESTS of this zone).
 static func _near_chest(zone: ZoneData, pos: Vector3, margin: float) -> bool:
 	var p := Vector2(pos.x, pos.z)

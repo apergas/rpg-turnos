@@ -19,13 +19,8 @@ const ROCK_SCENES: Array[PackedScene] = [
 ]
 ## Half the widest side of each rock model at scale 1 (measured AABBs), in metres.
 const ROCK_RADII: Array[float] = [0.15, 0.145, 0.175, 0.145, 0.245]
-## Single tree A, single tree B and a clump of trees (index used by the TREES tables).
-const TREE_SCENES: Array[PackedScene] = [
-	preload("res://assets/medieval/tree_single_A.gltf"),
-	preload("res://assets/medieval/tree_single_B.gltf"),
-	preload("res://assets/medieval/trees_A_medium.gltf"),
-]
-## TREE_SCENES plus the forest's clump of trees B (index 3, FOREST_TREES only).
+## Single tree A, single tree B, clump of trees A and clump of trees B (index used by the
+## TREES tables; the clump B, index 3, only by FOREST_TREES).
 const FOREST_TREE_SCENES: Array[PackedScene] = [
 	preload("res://assets/medieval/tree_single_A.gltf"),
 	preload("res://assets/medieval/tree_single_B.gltf"),
