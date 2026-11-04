@@ -27,7 +27,7 @@ class_name Game extends Node
 signal quit_to_title
 
 const HERO_DATA := preload("res://data/hero.tres")
-const BOSS_DATA := preload("res://data/rey_slime.tres")
+const BOSS_DATA := preload("res://data/enemies/rey_slime.tres")
 ## The map is zone 1 of EncounterTable (the meadow).
 const ZONE := 1
 const BATTLE_SCENE := preload("res://scenes/battle/battle_scene.tscn")

@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+[ext_resource type="Script" path="res://scripts/battle/skill.gd" id="2_skill"]
+[ext_resource type="Resource" path="res://data/skills/llamarada_bruja.tres" id="3_llamarada"]
+[ext_resource type="Resource" path="res://data/skills/curar_bruja.tres" id="4_curar"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "bruja"
+display_name = "Bruja del bosque"
+female = true
+max_hp = 170
+hp = 170
+max_mp = 40
+mp = 40
+attack = 23
+defense = 14
+speed = 12
+skills = Array[ExtResource("2_skill")]([ExtResource("3_llamarada")])
+exp_reward = 120
+gold_reward = 200
+ai_weights = {
+"attack": 55,
+"llamarada_bruja": 35,
+"stagger": 10
+}
+resist = Array[String](["fire"])
+rescue_heal = ExtResource("4_curar")
+rescue_heal_ratio = 0.4
+key_item = "fragmento_bosque"
+is_boss = true

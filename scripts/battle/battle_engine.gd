@@ -58,8 +58,9 @@ var drops_won: Array[String] = []
 
 var _rng: RandomNumberGenerator
 var _defending := false
-## Enemy indexes that already called for help.
+## Enemy indexes that already called for help / already cast their rescue heal.
 var _called := {}
+var _rescued := {}
 
 
 func _init(p_hero: Combatant, p_enemies: Array[Combatant], rng: RandomNumberGenerator, \
@@ -181,10 +182,16 @@ func resolve_round(hero_cmd: Dictionary) -> Array[Dictionary]:
 	return events
 
 
-## Calls for help when it can; otherwise a weighted pick from its ai_weights. A skill it
-## can't afford (or can't cast, silenced) becomes an attack.
+## Casts its rescue heal (once, below rescue_heal_ratio, not silenced) or calls for help
+## when it can; otherwise a weighted pick from its ai_weights. A skill it can't afford
+## (or can't cast, silenced) becomes an attack.
 func _enemy_command(who: int) -> Dictionary:
 	var enemy := enemies[who]
+	if enemy.rescue_heal != null and not _rescued.has(who) \
+			and enemy.hp < enemy.max_hp * enemy.rescue_heal_ratio \
+			and not enemy.status.has(SILENCE):
+		_rescued[who] = true
+		return cmd_skill(enemy.rescue_heal, who)
 	if enemy.help != null and not _called.has(who) \
 			and enemy.hp < enemy.max_hp * HELP_HP_RATIO \
 			and alive_enemies().size() < MAX_ENEMIES:

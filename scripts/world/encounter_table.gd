@@ -3,9 +3,9 @@ class_name EncounterTable extends RefCounted
 ## Within START_RADIUS of WorldStage.SPAWN_POS only slimes come, alone or in pairs;
 ## elsewhere every formation of the zone has the same weight. Pure: no nodes.
 
-const SLIME := preload("res://data/slime.tres")
-const BAT := preload("res://data/bat.tres")
-const MUSHROOM := preload("res://data/mushroom.tres")
+const SLIME := preload("res://data/enemies/slime.tres")
+const BAT := preload("res://data/enemies/bat.tres")
+const MUSHROOM := preload("res://data/enemies/mushroom.tres")
 const START_RADIUS := 20.0
 const START_FORMATIONS := [[SLIME], [SLIME, SLIME]]
 ## zone -> formations (each a list of enemy data, left to right).

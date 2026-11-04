@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "lobo"
+display_name = "Lobo"
+max_hp = 52
+hp = 52
+attack = 16
+defense = 10
+speed = 14
+exp_reward = 12
+gold_reward = 10
+ai_weights = {
+"attack": 90,
+"stagger": 10
+}
+weak = Array[String](["fire"])
+drops = {
+"potion": 0.15
+}

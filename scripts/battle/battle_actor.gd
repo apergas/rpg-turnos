@@ -1,11 +1,12 @@
 class_name BattleActor extends Node3D
-## 3D figure of a fighter or a villager. The hero and the old woman are KayKit models
-## with their own animations; the slimes, the bat and the mushroom are low-poly figures
-## built in code (see LOOKS). Set look before add_child. The figure faces -Z, so
-## look_at() the opponent. Every play_* can be awaited: it returns when its animation
-## and its tween are done.
+## 3D figure of a fighter or a villager. The hero, the villagers and the witch are
+## KayKit models with their own animations; the slimes, the bat, the mushroom, the wolf,
+## the goblin and the carnivorous plant are low-poly figures built in code (see LOOKS).
+## Set look before add_child. The figure faces -Z, so look_at() the opponent. Every
+## play_* can be awaited: it returns when its animation and its tween are done.
 
-enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPER }
+enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPER, WOLF,
+	GOBLIN, PLANT, WITCH }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -43,6 +44,23 @@ const SLIME_PROFILE: Array[Vector2] = [
 	Vector2(0.44, 0.64), Vector2(0.24, 0.8), Vector2(0.08, 0.9), Vector2(0.0, 0.98),
 ]
 const SLIME_SEGMENTS := 9
+## Side profiles of the wolf's body (tail to chest) and head (neck to snout), lathed
+## around +Y and laid along -Z, and of a leg.
+const WOLF_BODY_PROFILE: Array[Vector2] = [
+	Vector2(0.0, 0.0), Vector2(0.18, 0.05), Vector2(0.27, 0.3), Vector2(0.3, 0.7),
+	Vector2(0.26, 1.0), Vector2(0.0, 1.1),
+]
+const WOLF_HEAD_PROFILE: Array[Vector2] = [
+	Vector2(0.0, 0.0), Vector2(0.2, 0.02), Vector2(0.22, 0.18), Vector2(0.14, 0.4),
+	Vector2(0.05, 0.55), Vector2(0.0, 0.56),
+]
+const LEG_PROFILE: Array[Vector2] = [
+	Vector2(0.0, 0.0), Vector2(0.07, 0.0), Vector2(0.08, 0.3), Vector2(0.06, 0.55),
+	Vector2(0.0, 0.56),
+]
+## Angle (radians about X) of the plant's upper jaw: resting, and wide open to bite.
+const JAW_REST := 0.3
+const JAW_OPEN := 0.95
 ## Hand slots of the KayKit characters (BoneAttachment3D nodes).
 const HAND_R := "Rig/Skeleton3D/handslot_r"
 const HAND_L := "Rig/Skeleton3D/handslot_l"
@@ -59,6 +77,8 @@ const STICK_CENTER := 0.45
 ## every hand mesh and shows only those of its equipment (set_equipment()). Slimes: color,
 ## scale (the whole blob, eyes and crown included), top and crown. Bat: color, wing
 ## color, top and fly (height it hovers at). Mushroom: cap and stem colors, scale and top.
+## Wolf: fur, dark and eye colors, scale and top. Goblin: color, hat color, scale and top.
+## Plant: stem, leaf, head and inner (mouth) colors, scale and top.
 const LOOKS := {
 	Look.HERO: {
 		"scene": KNIGHT,
@@ -134,6 +154,39 @@ const LOOKS := {
 		"scale": 1.4,
 		"top": 1.6,
 	},
+	Look.WOLF: {
+		"color": Color(0.45, 0.45, 0.52),
+		"dark_color": Color(0.26, 0.26, 0.32),
+		"eye_color": Color(1.0, 0.8, 0.2),
+		"scale": 1.15,
+		"top": 1.5,
+	},
+	Look.GOBLIN: {
+		"color": Color(0.4, 0.68, 0.25),
+		"hat_color": Color(0.62, 0.16, 0.12),
+		"scale": 0.8,
+		"top": 1.5,
+	},
+	Look.PLANT: {
+		"stem_color": Color(0.25, 0.55, 0.2),
+		"leaf_color": Color(0.16, 0.42, 0.14),
+		"head_color": Color(0.72, 0.18, 0.32),
+		"inner_color": Color(0.35, 0.05, 0.1),
+		"scale": 1.25,
+		"top": 1.9,
+	},
+	# The witch: the Mage in dark purple, a little taller than the villagers.
+	Look.WITCH: {
+		"scene": MAGE,
+		"scale": 0.75,
+		"top": 2.4,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/Spellbook",
+			"Rig/Skeleton3D/handslot_l/Spellbook_open",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(0.55, 0.32, 0.75),
+	},
 }
 
 @export var look := Look.HERO
@@ -155,6 +208,9 @@ var _idle_tween: Tween
 var _wings: Array[Node3D] = []
 ## Characters only: the imported model (its hand slots hold the equipment meshes).
 var _model: Node3D
+## Plant only: the upper jaw's pivot (opens to bite) and the node its idle sway turns.
+var _jaw: Node3D
+var _sway: Node3D
 
 
 func _ready() -> void:
@@ -168,6 +224,12 @@ func _ready() -> void:
 		_build_bat(data)
 	elif look == Look.MUSHROOM:
 		_build_mushroom(data)
+	elif look == Look.WOLF:
+		_build_wolf(data)
+	elif look == Look.GOBLIN:
+		_build_goblin(data)
+	elif look == Look.PLANT:
+		_build_plant(data)
 	else:
 		_build_slime(data)
 	for node in _body.find_children("*", "MeshInstance3D", true, false):
@@ -215,13 +277,20 @@ func set_equipment(weapon_id: String, shield_id: String) -> void:
 			(child as Node3D).visible = child.name == shown[hand] and shown[hand] != ""
 
 
-## Swings (characters) and lunges toward the target and steps back.
+## Swings (characters) and lunges toward the target and steps back; the plant opens
+## its jaws wide on the way and snaps them shut.
 func play_attack(target_pos: Vector3) -> void:
 	var timer := _start("attack")
 	var base := global_position
 	var dir := target_pos - base
 	dir.y = 0.0
 	var lunge := dir.normalized() * minf(1.2, dir.length() * 0.4)
+	if _jaw:
+		var bite := create_tween()
+		bite.tween_property(_jaw, "rotation:x", JAW_OPEN, 0.15)
+		bite.tween_property(_jaw, "rotation:x", 0.0, 0.08)
+		bite.tween_interval(0.12)
+		bite.tween_property(_jaw, "rotation:x", JAW_REST, 0.15)
 	var t := create_tween()
 	if timer:
 		t.tween_interval(0.15)  # the swing winds up before the step
@@ -459,13 +528,91 @@ func _build_mushroom(data: Dictionary) -> void:
 	_add_mesh(root, _sphere(0.08), Color.WHITE, Vector3(0, 0.92, 0))  # top spot
 
 
-## The waiting loop of the figures built in code: the bat flaps, the rest squash and
-## stretch.
+## A wolf: a faceted body and a wedge head along -Z on four legs, with ears, yellow
+## eyes and a tail.
+func _build_wolf(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	_add_blob(root, WOLF_BODY_PROFILE, 6, data.color, Vector3(0, 0.62, 0.55),
+		Vector3(-90, 0, 0))
+	_add_blob(root, WOLF_HEAD_PROFILE, 5, data.color, Vector3(0, 0.82, -0.48),
+		Vector3(-100, 0, 0))
+	for x in [-0.1, 0.1]:
+		_add_mesh(root, _cone(0.06, 0.18), data.dark_color, Vector3(x, 1.06, -0.6))  # ear
+		_add_mesh(root, _sphere(0.045), data.eye_color, Vector3(x * 1.1, 0.92, -0.72))  # eye
+		_add_mesh(root, _sphere(0.022), Color(0.05, 0.05, 0.05),
+			Vector3(x * 1.1, 0.92, -0.765))  # pupil
+	_add_mesh(root, _sphere(0.04), Color(0.05, 0.05, 0.05), Vector3(0, 0.74, -1.03))  # nose
+	for x in [-0.17, 0.17]:
+		for z in [-0.32, 0.34]:
+			_add_blob(root, LEG_PROFILE, 4, data.dark_color, Vector3(x, 0.0, z))
+	_add_mesh(root, _cone(0.07, 0.45), data.color, Vector3(0, 0.8, 0.72))  # tail
+	(root.get_child(-1) as Node3D).rotation_degrees.x = 55.0
+
+
+## A goblin: a small green slime with pointed ears and a red pointed hat.
+func _build_goblin(data: Dictionary) -> void:
+	var blob := Node3D.new()
+	blob.scale = Vector3.ONE * data.scale
+	_body.add_child(blob)
+	_add_mesh(blob, LowPoly.blob(SLIME_PROFILE, SLIME_SEGMENTS), data.color, Vector3.ZERO, 0.7)
+	for side in [-1.0, 1.0]:
+		_add_mesh(blob, _sphere(0.11), Color.WHITE, Vector3(side * 0.19, 0.52, -0.45))  # eye
+		_add_mesh(blob, _sphere(0.05), Color(0.05, 0.05, 0.05),
+			Vector3(side * 0.19, 0.52, -0.55))  # pupil
+		_add_mesh(blob, _cone(0.12, 0.5), data.color, Vector3(side * 0.66, 0.62, 0))  # ear
+		(blob.get_child(-1) as Node3D).rotation_degrees.z = -70.0 * side
+	var hat := _cone(0.34, 0.6)
+	hat.radial_segments = 7
+	_add_mesh(blob, hat, data.hat_color, Vector3(0, 1.08, 0.04))
+	(blob.get_child(-1) as Node3D).rotation_degrees.x = 12.0
+
+
+## A carnivorous plant: leaves at the foot of a stem with a round head of two jaws
+## (the upper one on a pivot at the back, slightly open, with white teeth and spots).
+func _build_plant(data: Dictionary) -> void:
+	_sway = Node3D.new()
+	_sway.scale = Vector3.ONE * data.scale
+	_body.add_child(_sway)
+	for i in 3:
+		var leaf := Node3D.new()
+		leaf.rotation.y = TAU * i / 3.0
+		_sway.add_child(leaf)
+		_add_blob(leaf, LowPoly.BUSH_PROFILE, 5, data.leaf_color, Vector3(0, 0, 0.32),
+			Vector3.ZERO, Vector3(0.45, 0.22, 0.6))
+	_add_mesh(_sway, _cylinder(0.08, 0.95), data.stem_color, Vector3(0, 0.47, 0))
+	var head := Node3D.new()
+	head.position = Vector3(0, 0.98, 0)
+	_sway.add_child(head)
+	_add_mesh(head, _hemisphere(0.36, 0.24), data.head_color, Vector3.ZERO)
+	(head.get_child(-1) as Node3D).rotation_degrees.x = 180.0
+	_add_mesh(head, _disc(0.33), data.inner_color, Vector3(0, 0.01, 0))
+	_jaw = Node3D.new()
+	_jaw.position = Vector3(0, 0, 0.3)
+	head.add_child(_jaw)
+	_add_mesh(_jaw, _hemisphere(0.36, 0.3), data.head_color, Vector3(0, 0, -0.3))
+	_add_mesh(_jaw, _disc(0.33), data.inner_color, Vector3(0, -0.01, -0.3))
+	for i in 6:
+		var angle := PI * (0.15 + 0.7 * i / 5.0)
+		var rim := Vector3(cos(angle) * 0.3, 0, -sin(angle) * 0.3)
+		_add_mesh(head, _cone(0.035, 0.09), Color.WHITE, rim + Vector3(0, 0.04, 0))  # tooth
+		_add_mesh(_jaw, _cone(0.035, 0.09), Color.WHITE, rim + Vector3(0, -0.04, -0.3))
+		(_jaw.get_child(-1) as Node3D).rotation_degrees.x = 180.0
+	for spot in [Vector3(-0.15, 0.2, -0.45), Vector3(0.17, 0.22, -0.4), Vector3(0, 0.27, -0.2)]:
+		_add_mesh(_jaw, _sphere(0.05), Color(1.0, 0.95, 0.8), spot)
+	_jaw.rotation.x = JAW_REST
+
+
+## The waiting loop of the figures built in code: the bat flaps, the plant sways, the
+## rest squash and stretch (the wolf only breathes).
 func _start_idle() -> void:
-	if _wings.is_empty():
-		_start_bounce()
-	else:
+	if not _wings.is_empty():
 		_start_flap()
+	elif _sway:
+		_start_sway()
+	else:
+		_start_bounce(0.4 if look == Look.WOLF else 1.0)
 
 
 ## Flapping wings, for the bat. Only the wing pivots are tweened, so hits, attacks and
@@ -481,12 +628,25 @@ func _start_flap() -> void:
 			.set_trans(Tween.TRANS_SINE)
 
 
-## Squash-and-stretch loop of the slimes while they wait.
-func _start_bounce() -> void:
+## Swaying loop of the plant. Only _sway turns, so hits and the stagger can move and
+## turn _body freely.
+func _start_sway() -> void:
 	if _idle_tween:
 		_idle_tween.kill()
 	_idle_tween = create_tween().set_loops()
-	_idle_tween.tween_property(_body, "scale", Vector3(1.08, 0.9, 1.08), 0.35) \
+	for angle in [0.09, -0.09]:
+		_idle_tween.tween_property(_sway, "rotation:z", angle, 0.6) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+## Squash-and-stretch loop of the slimes while they wait (amount 1: full; less for a
+## gentler breath).
+func _start_bounce(amount := 1.0) -> void:
+	if _idle_tween:
+		_idle_tween.kill()
+	_idle_tween = create_tween().set_loops()
+	_idle_tween.tween_property(_body, "scale",
+		Vector3(1.0 + 0.08 * amount, 1.0 - 0.1 * amount, 1.0 + 0.08 * amount), 0.35) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_idle_tween.tween_property(_body, "scale", Vector3.ONE, 0.35) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
@@ -582,6 +742,32 @@ func _add_mesh(parent: Node3D, mesh: Mesh, color: Color, pos: Vector3, \
 	mi.material_override = mat
 	mi.position = pos
 	parent.add_child(mi)
+
+
+## A faceted lathe (LowPoly.blob) of profile at pos, turned rot_deg and scaled scl.
+func _add_blob(parent: Node3D, profile: Array[Vector2], segments: int, color: Color, \
+		pos: Vector3, rot_deg := Vector3.ZERO, scl := Vector3.ONE) -> void:
+	_add_mesh(parent, LowPoly.blob(profile, segments), color, pos, 0.8)
+	var mi := parent.get_child(-1) as MeshInstance3D
+	mi.rotation_degrees = rot_deg
+	mi.scale = scl
+
+
+static func _hemisphere(radius: float, height: float) -> SphereMesh:
+	var mesh := SphereMesh.new()
+	mesh.radius = radius
+	mesh.height = height
+	mesh.is_hemisphere = true
+	mesh.radial_segments = 9
+	mesh.rings = 3
+	return mesh
+
+
+## A flat round lid (the inside of the plant's mouth).
+static func _disc(radius: float) -> CylinderMesh:
+	var mesh := _cylinder(radius, 0.02)
+	mesh.radial_segments = 9
+	return mesh
 
 
 static func _sphere(radius: float) -> SphereMesh:
