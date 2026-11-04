@@ -17,8 +17,8 @@ class_name Combatant extends Resource
 ## total_attack() / total_defense(), which add the equipment bonuses.
 @export var attack := 1
 @export var defense := 0
-## Hero only: fixed bonuses of the starting equipment (Palo +2 ATK, Ropa +2 DEF) until
-## equipment becomes a system of its own.
+## Hero only: bonuses of the equipment worn, copied from the Loadout by
+## GameState.refresh_equipment() (never saved: the loadout is).
 @export var equip_attack := 0
 @export var equip_defense := 0
 @export var speed := 1

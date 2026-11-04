@@ -11,13 +11,15 @@ const SPEED := 5.0
 ## How fast the model turns toward the walking direction (radians per second, roughly).
 const TURN_SPEED := 10.0
 ## Points walked in a loop by --autoplay: mostly grass, clear of rocks, and through the
-## village, next to the old woman and to where the Rey Slime appears.
+## village, next to the old woman, the merchant, where the Rey Slime appears and the
+## innkeeper, and past two of the chests (Chests.CHESTS).
 const AUTOPLAY_ROUTE: Array[Vector3] = [
 	Vector3(8, 0, 18),
 	Vector3(16, 0, 6),
 	Vector3(10, 0, -6),
 	Vector3(1, 0, -14),
 	Vector3(-1.5, 0, -18),
+	Vector3(-1.2, 0, -23),
 	Vector3(0, 0, -26.5),
 	Vector3(2, 0, -14),
 	Vector3(-6, 0, -4),
@@ -56,6 +58,11 @@ func _ready() -> void:
 	_model = ACTOR_SCENE.instantiate()
 	_model.look = BattleActor.Look.HERO
 	add_child(_model)
+
+
+## Shows the weapon and shield worn on the model (Equipment ids, "" for none).
+func set_equipment(weapon_id: String, shield_id: String) -> void:
+	_model.set_equipment(weapon_id, shield_id)
 
 
 ## Puts the player at pos with the model turned to facing_yaw (0 faces -Z).

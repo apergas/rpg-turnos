@@ -22,6 +22,15 @@ const GRASS_FLOOR := Color(0.08, 0.22, 0.05)
 ## Where the old woman stands and where the Rey Slime waits once the quest unlocks it.
 const NPC_POS := Vector3(-2.5, 0, -20)
 const BOSS_POS := Vector3(0, 0, -27.5)
+## The merchant of the Villaclaro shop, in front of the left house, and the innkeeper, in
+## front of the right one.
+const MERCHANT_POS := Vector3(-3.0, 0, -23.6)
+const INNKEEPER_POS := Vector3(2.8, 0, -22.0)
+## Grass, trees and bushes keep this far from the chests (Chests.CHESTS), so every chest
+## stands in the open.
+const CHEST_GRASS_MARGIN := 1.0
+const CHEST_TREE_MARGIN := 2.2
+const CHEST_BUSH_MARGIN := 1.2
 const HOUSE_A := preload("res://assets/medieval/building_home_A_red.gltf")
 const HOUSE_B := preload("res://assets/medieval/building_home_B_red.gltf")
 const WELL := preload("res://assets/medieval/building_well_red.gltf")
@@ -132,7 +141,7 @@ static func is_on_path(pos: Vector3, margin := 0.0) -> bool:
 ## Where tall grass may grow: off the path and clearing (the village is inside the
 ## clearing) and off the rocks.
 static func is_grass_free(pos: Vector3) -> bool:
-	if is_on_path(pos, GRASS_PATH_MARGIN):
+	if is_on_path(pos, GRASS_PATH_MARGIN) or _near_chest(pos, CHEST_GRASS_MARGIN):
 		return false
 	return not _near_rock(pos, GRASS_ROCK_MARGIN)
 
@@ -250,7 +259,7 @@ static func _add_trees(root: Node3D) -> void:
 static func _tree_fits(pos: Vector3, placed: Array[Vector2]) -> bool:
 	if is_on_path(pos, TREE_PATH_MARGIN) or _near_route(pos, TREE_ROUTE_MARGIN):
 		return false
-	if _near_rock(pos, TREE_ROCK_MARGIN):
+	if _near_rock(pos, TREE_ROCK_MARGIN) or _near_chest(pos, CHEST_TREE_MARGIN):
 		return false
 	var p := Vector2(pos.x, pos.z)
 	for other in placed:
@@ -268,7 +277,8 @@ static func _add_bushes(root: Node3D) -> void:
 			rng.randf_range(-FIELD_HALF, FIELD_HALF))
 		var yaw := rng.randf() * TAU
 		var scl := rng.randf_range(BUSH_SCALE.x, BUSH_SCALE.y)
-		if is_on_path(pos, BUSH_PATH_MARGIN) or _near_rock(pos, BUSH_ROCK_MARGIN):
+		if is_on_path(pos, BUSH_PATH_MARGIN) or _near_rock(pos, BUSH_ROCK_MARGIN) \
+				or _near_chest(pos, CHEST_BUSH_MARGIN):
 			continue
 		bushes.append(Transform3D(Basis(Vector3.UP, yaw).scaled(Vector3.ONE * scl), pos))
 	LowPoly.add_multimesh(root, LowPoly.bush_mesh(), bushes)
@@ -280,6 +290,16 @@ static func _near_rock(pos: Vector3, margin: float) -> bool:
 	for rock in ROCKS:
 		var center := Vector2(rock[0].x, rock[0].z)
 		if p.distance_to(center) < BattleStage.rock_radius(rock) + margin:
+			return true
+	return false
+
+
+## True within margin of a chest.
+static func _near_chest(pos: Vector3, margin: float) -> bool:
+	var p := Vector2(pos.x, pos.z)
+	for id: String in Chests.CHESTS:
+		var chest_pos: Vector3 = Chests.CHESTS[id].pos
+		if p.distance_to(Vector2(chest_pos.x, chest_pos.z)) < margin:
 			return true
 	return false
 

@@ -8,8 +8,8 @@ const ETHER := "ether"
 const ANTIDOTE := "antidote"
 const START_POTIONS := 3
 ## name and article (for "una Poción"); effect "hp" (heals value HP), "mp" (restores
-## value MP) or "cure" (removes the status named by value); price in gold (shops come
-## later); battle / field: usable in battle / from the pause menu.
+## value MP) or "cure" (removes the status named by value); price in gold (Shop sells
+## at it and buys back at half); battle / field: usable in battle / from the pause menu.
 const ITEMS := {
 	POTION: {"name": "Poción", "article": "una", "effect": "hp", "value": 30, "price": 8,
 		"battle": true, "field": true},

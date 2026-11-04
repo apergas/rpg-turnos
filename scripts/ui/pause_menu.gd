@@ -1,14 +1,16 @@
 class_name PauseMenu extends Control
 ## Pause menu of the world map. Esc or P, or the ☰ button in the top right corner
 ## (mouse and touch), open it while `available`; it pauses the tree until it closes.
-## Pages: main list (Estado, Objetos, Guardar, Opciones, Volver al título, Cerrar),
-## Estado (hero stats, gold, spells), Objetos (items usable outside battle), Opciones
-## (OptionsPanel) and a confirmation before going back to the title. Esc goes back one
-## page. Keeps running while paused. Call setup() before adding it to the tree.
+## Pages: main list (Estado, Objetos, Equipo, Guardar, Opciones, Volver al título,
+## Cerrar), Estado (hero stats, gold, spells), Objetos (items usable outside battle),
+## Equipo (the three slots; choosing one lists the pieces of that slot in the bag, with
+## the comparison, and Quitar), Opciones (OptionsPanel) and a confirmation before going
+## back to the title. Esc goes back one page. Keeps running while paused. Call setup()
+## before adding it to the tree.
 
 signal save_requested
 signal title_requested
-## The hero or the inventory changed (an item was used), so the map can refresh.
+## The hero, the inventory or the equipment changed, so the map can refresh.
 signal state_changed
 
 const FONT_SIZE := 24
@@ -36,6 +38,10 @@ var _main_message: Label
 var _status_label: Label
 var _items_box: VBoxContainer
 var _items_message: Label
+var _equip_box: VBoxContainer
+var _equip_message: Label
+## Slot whose pieces the Equipo page lists ("" for the list of the three slots).
+var _equip_slot := ""
 var _options_panel: OptionsPanel
 var _page := ""
 ## True while the code moves the focus itself, so that move makes no sound.
@@ -71,6 +77,7 @@ func _ready() -> void:
 	_build_main(stack)
 	_build_status(stack)
 	_build_items(stack)
+	_build_equipment(stack)
 	_build_options(stack)
 	_build_confirm(stack)
 	available = available
@@ -117,7 +124,7 @@ func tour() -> void:
 	available = true
 	await get_tree().create_timer(TOUR_STEP, true).timeout
 	open()
-	for page in ["main", "status", "items", "options"]:
+	for page in ["main", "status", "items", "equipment", "options"]:
 		_show_page(page)
 		print("Menú: %s" % page)
 		await get_tree().create_timer(TOUR_STEP, true).timeout
@@ -142,6 +149,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			close()
 		"options":
 			_options_panel.back()
+		"equipment":
+			if _equip_slot != "":
+				_sfx(SfxLibrary.CANCEL)
+				_choose_slot("")
+			else:
+				_back_to_main()
 		_:
 			_back_to_main()
 
@@ -156,6 +169,10 @@ func _show_page(page: String) -> void:
 		"items":
 			_items_message.text = ""
 			_fill_items()
+		"equipment":
+			_equip_slot = ""
+			_equip_message.text = ""
+			_fill_equipment()
 	_quiet_focus = true
 	if page == "options":
 		_options_panel.focus_first()
@@ -240,6 +257,96 @@ func _on_use_item(id: String) -> void:
 	_quiet_focus = false
 
 
+## The three slots with what is worn ("Arma: Palo  ATK +2") and the totals; with a slot
+## chosen, the pieces of that slot in the bag (bonus and comparison), Quitar and Volver.
+func _fill_equipment() -> void:
+	for child in _equip_box.get_children():
+		_equip_box.remove_child(child)
+		child.queue_free()
+	var hero := _state.hero
+	var loadout := _state.loadout
+	if _equip_slot == "":
+		for slot in Equipment.SLOTS:
+			var worn := loadout.worn(slot)
+			var text := "%s: %s" % [Equipment.SLOT_NAMES[slot], "nada" if worn == "" \
+				else "%s  %s +%d" % [Equipment.display_name(worn), Equipment.stat_name(worn),
+				Equipment.bonus(worn)]]
+			var button := _button(text)
+			button.pressed.connect(_choose_slot.bind(slot))
+			_equip_box.add_child(button)
+		_equip_box.add_child(_label("ATK %d   DEF %d" % [hero.total_attack(),
+			hero.total_defense()], Color.WHITE))
+		_focus_first_in(_equip_box)
+		return
+	_equip_box.add_child(_label("%s:" % Equipment.SLOT_NAMES[_equip_slot], TITLE_COLOR))
+	var listed: Array[String] = []
+	for id in _state.bag_equipment:
+		if Equipment.slot(id) != _equip_slot or listed.has(id):
+			continue
+		listed.append(id)
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 12)
+		_equip_box.add_child(row)
+		var button := _button(Equipment.display_name(id))
+		button.custom_minimum_size = Vector2(260, 0)
+		button.pressed.connect(_on_equip.bind(id))
+		row.add_child(button)
+		row.add_child(_label("%s +%d" % [Equipment.stat_name(id), Equipment.bonus(id)],
+			Color.WHITE))
+		row.add_child(ShopWindow.comparison(
+			Equipment.bonus(id) - Equipment.bonus(loadout.worn(_equip_slot))))
+	if listed.is_empty():
+		_equip_box.add_child(_label("No llevas otra pieza.", Color.WHITE))
+	if loadout.worn(_equip_slot) != "":
+		var remove := _button("Quitar")
+		remove.pressed.connect(_on_unequip)
+		_equip_box.add_child(remove)
+	var back := _button("Volver")
+	back.pressed.connect(func() -> void:
+		_sfx(SfxLibrary.CANCEL)
+		_choose_slot(""))
+	_equip_box.add_child(back)
+	_focus_first_in(_equip_box)
+
+
+func _choose_slot(slot: String) -> void:
+	if slot != "":
+		_sfx(SfxLibrary.ACCEPT)
+	_equip_slot = slot
+	_equip_message.text = ""
+	_fill_equipment()
+
+
+func _on_equip(id: String) -> void:
+	if not _state.equip(id):
+		return
+	_sfx(SfxLibrary.ACCEPT)
+	_equip_slot = ""
+	_fill_equipment()
+	_equip_message.text = "Te equipas %s %s." % [Equipment.article(id),
+		Equipment.display_name(id)]
+	state_changed.emit()
+
+
+func _on_unequip() -> void:
+	var worn := _state.loadout.worn(_equip_slot)
+	_state.unequip(_equip_slot)
+	_sfx(SfxLibrary.CANCEL)
+	_equip_slot = ""
+	_fill_equipment()
+	_equip_message.text = "Te quitas %s %s." % [Equipment.article(worn),
+		Equipment.display_name(worn)]
+	state_changed.emit()
+
+
+func _focus_first_in(node: Node) -> void:
+	_quiet_focus = true
+	var first := _first_button(node)
+	if first:
+		first.grab_focus()
+	_quiet_focus = false
+
+
 func _build_menu_button() -> void:
 	_menu_button = Button.new()
 	_menu_button.custom_minimum_size = MENU_BUTTON_SIZE
@@ -279,6 +386,7 @@ func _build_main(stack: VBoxContainer) -> void:
 	var entries := [
 		["Estado", func() -> void: _open_page("status")],
 		["Objetos", func() -> void: _open_page("items")],
+		["Equipo", func() -> void: _open_page("equipment")],
 		["Guardar", func() -> void: save_requested.emit()],
 		["Opciones", func() -> void: _open_page("options")],
 		["Volver al título", func() -> void: _open_page("confirm")],
@@ -305,6 +413,15 @@ func _build_items(stack: VBoxContainer) -> void:
 	page.add_child(_items_box)
 	_items_message = _label("", Color.WHITE)
 	page.add_child(_items_message)
+	page.add_child(_back_button())
+
+
+func _build_equipment(stack: VBoxContainer) -> void:
+	var page := _page_box(stack, "equipment", "Equipo")
+	_equip_box = VBoxContainer.new()
+	page.add_child(_equip_box)
+	_equip_message = _label("", Color.WHITE)
+	page.add_child(_equip_message)
 	page.add_child(_back_button())
 
 

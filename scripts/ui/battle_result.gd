@@ -1,7 +1,7 @@
 class_name BattleResult extends Control
 ## End-of-battle overlay: victory (EXP, new level, gold, items left by the enemies) or
-## defeat text and a "Continuar" button. Starts hidden; the button hides it and emits
-## continue_requested.
+## defeat (the gold lost) and a "Continuar" button. Starts hidden; the button hides it
+## and emits continue_requested.
 
 signal continue_requested
 
@@ -53,9 +53,13 @@ func show_victory(exp_gained: int, total_exp: int, new_level: int, gold: int,
 	_open()
 
 
-func show_defeat() -> void:
+## gold_lost: the gold taken from the hero (0 shows no gold line).
+func show_defeat(gold_lost := 0) -> void:
 	_title.text = "Has sido derrotado"
 	_detail.text = "Volverás al inicio."
+	if gold_lost > 0:
+		_detail.text = "Pierdes %d G.
+Volverás al inicio." % gold_lost
 	_open()
 
 
