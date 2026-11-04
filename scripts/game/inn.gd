@@ -5,9 +5,11 @@ class_name Inn extends RefCounted
 ## on a GameState, never touches nodes.
 
 const VILLACLARO := "villaclaro"
+const BOSQUE := "bosque"
 ## inn id -> keeper's name and price of a night in gold.
 const INNS := {
 	VILLACLARO: {"keeper": "Posadero", "price": 5},
+	BOSQUE: {"keeper": "Posadera", "price": 15},
 }
 
 

@@ -1,8 +1,9 @@
 class_name Chests extends RefCounted
 ## The treasure chests of every zone: where each one stands (zone and position) and what
 ## it holds (gold, an item or a piece of equipment). In the meadow two lie next to its
-## autoplay route and two off it, all away from the path. Pure: open() changes a
-## GameState and returns the message.
+## autoplay route and two off it; the three of the forest stand in its glades, next to
+## its route. All away from the paths. Pure: open() changes a GameState and returns the
+## message.
 
 ## id -> {"zone": ZoneData id, "pos": Vector3, "yaw": degrees (the lid opens toward -Z
 ## turned by yaw), and one of "gold": int, "item": Inventory id, "equipment": Equipment
@@ -14,6 +15,11 @@ const CHESTS := {
 	"rocas_oeste": {"zone": "pradera", "pos": Vector3(-25, 0, -9), "yaw": -90.0, "gold": 40},
 	"rocas_este": {"zone": "pradera", "pos": Vector3(21.5, 0, -8.5), "yaw": 120.0,
 		"item": Inventory.ETHER},
+	"bosque_claro_sur": {"zone": "bosque", "pos": Vector3(17, 0, 21), "yaw": 40.0, "gold": 50},
+	"bosque_claro_este": {"zone": "bosque", "pos": Vector3(18, 0, -15), "yaw": 130.0,
+		"gold": 50},
+	"bosque_claro_oeste": {"zone": "bosque", "pos": Vector3(-20, 0, -23), "yaw": -60.0,
+		"item": Inventory.WING},
 }
 
 

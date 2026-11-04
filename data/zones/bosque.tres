@@ -1,0 +1,94 @@
+[gd_resource type="Resource" script_class="ZoneData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/zone_data.gd" id="1_zone"]
+
+[resource]
+script = ExtResource("1_zone")
+id = "bosque"
+display_name = "el bosque"
+number = 2
+half_size = Vector2(30, 40)
+outer_margin = 6.0
+ground_color = Color(0.06, 0.17, 0.04, 1)
+has_grass = true
+grass_tips = PackedColorArray(0.16, 0.42, 0.1, 1, 0.3, 0.55, 0.14, 1)
+grass_seed = 17
+hills = [[Vector3(-42, -5, -50), Vector3(22, 12, 22)], [Vector3(0, -6, -64), Vector3(30, 12, 20)], [Vector3(42, -5, -50), Vector3(22, 11, 22)], [Vector3(54, -6, 0), Vector3(20, 11, 34)], [Vector3(42, -5, 50), Vector3(22, 10, 22)], [Vector3(0, -6, 64), Vector3(30, 10, 20)], [Vector3(-42, -5, 50), Vector3(22, 11, 22)], [Vector3(-54, -6, 0), Vector3(20, 10, 34)]]
+path_points = Array[Vector3]([Vector3(0, 0, 35), Vector3(-3, 0, 24), Vector3(-10, 0, 12), Vector3(-12, 0, 2), Vector3(-8, 0, -8), Vector3(2, 0, -18), Vector3(0, 0, -32)])
+path_half_width = 1.5
+safe_discs = [[Vector3(0, 0, 35), 4.0], [Vector3(-12, 0, 2), 10.0], [Vector3(0, 0, -32), 6.0]]
+village_name = "la aldea del bosque"
+village_pos = Vector3(-12, 0, 2)
+village_radius = 10.0
+buildings = [[Vector3(-4.5, 0, 2), -90.0, "market_green"], [Vector3(-17.73, 0, 6.02), 125.0, "tavern_green"], [Vector3(-18.76, 0, 0.19), 75.0, "house_A_green"], [Vector3(-15.5, 0, -4.06), 30.0, "house_B_green"], [Vector3(-5.68, 0, -3.69), -48.0, "house_A_green"], [Vector3(-14.25, 0, -0.68), 0.0, "well_green"]]
+rocks = [[Vector3(-22, 0, 28), 4, 9.0, 30.0], [Vector3(22, 0, 32), 2, 9.0, 100.0], [Vector3(24, 0, -30), 3, 10.0, 200.0], [Vector3(-24, 0, 10), 1, 8.0, 50.0], [Vector3(8, 0, -6), 0, 7.0, 140.0]]
+tree_seed = 41
+tree_tries = 1800
+tree_center_chance = 0.45
+tree_rise_inset = 15.0
+tree_clump_inset = 3.0
+tree_spacing = 3.0
+tree_scale = Vector2(3.6, 4.6)
+tree_models = Array[String](["tree_A", "tree_B"])
+clump_model = "trees_B"
+glades = [[Vector3(16, 0, 20), 6.0], [Vector3(17, 0, -14), 6.0], [Vector3(-19, 0, -22), 6.0]]
+bush_seed = 43
+bush_tries = 300
+entries = {
+"aldea": [Vector3(-10.4, 0, 10.5), 0.0],
+"sur": [Vector3(0, 0, 35.5), 0.0]
+}
+start_entry = "sur"
+town_entry = "aldea"
+exits = [{
+"entry": "norte",
+"id": "sur",
+"label": "A la pradera",
+"lock": "",
+"lock_text": "",
+"pos": Vector3(0, 0, 38.6),
+"to": "pradera",
+"yaw": 180.0
+}]
+npcs = [{
+"id": "bosque",
+"kind": "shop",
+"look": "MERCHANT",
+"name": "Mercader",
+"pos": Vector3(-8.2, 0, 2),
+"yaw": 180.0
+}, {
+"id": "bosque",
+"kind": "inn",
+"look": "INNKEEPER",
+"name": "Posadera",
+"pos": Vector3(-14.95, 0, 4.06),
+"yaw": 180.0
+}, {
+"after_flag": "bruja",
+"kind": "npc",
+"lines": ["Una bruja vive en el claro del norte del bosque.", "Desde que llegó, los lobos y las plantas atacan a cualquiera.", "Si vas a por ella, prepárate bien en la tienda."],
+"lines_after": ["¡Has vencido a la bruja! El bosque vuelve a estar en calma.", "Dicen que la niebla sale de una vieja mina, más al norte."],
+"look": "VILLAGER",
+"name": "Leñadora",
+"pos": Vector3(-10.46, 0, -2.23),
+"yaw": 180.0
+}]
+boss_id = "bruja"
+boss_pos = Vector3(0, 0, -34)
+formations = [["lobo"], ["duende"], ["planta"], ["lobo"], ["lobo", "duende"], ["duende", "planta"]]
+start_formations = [["lobo"], ["duende"], ["planta"]]
+start_pos = Vector3(0, 0, 35)
+start_radius = 18.0
+encounter_grace = 9.0
+encounter_chance = 0.01
+music = "forest"
+village_music = "village"
+sky_top = Color(0.28, 0.45, 0.75, 1)
+haze = Color(0.66, 0.76, 0.66, 1)
+fog_density = 0.01
+sun_color = Color(0.95, 0.92, 0.78, 1)
+sun_energy = 0.5
+backdrop = "bosque"
+autoplay_route = Array[Vector3]([Vector3(6, 0, 30), Vector3(15.8, 0, 19.8), Vector3(8, 0, 8), Vector3(-3, 0, 10.5), Vector3(-8.9, 0, 3.9), Vector3(-13.4, 0, 4), Vector3(-11.6, 0, -1.8), Vector3(-18.8, 0, -22.2), Vector3(-6, 0, -26), Vector3(0, 0, -32.6), Vector3(8, 0, -24), Vector3(17, 0, -14), Vector3(14, 0, 0), Vector3(12, 0, 14), Vector3(2, 0, 26)])
+autoplay_boss_level = 9
