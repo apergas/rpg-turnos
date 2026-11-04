@@ -157,7 +157,9 @@ func _back() -> void:
 			_show_page("menu")
 
 
-func _show_page(page: String) -> void:
+## focus_id puts the cursor back on that item's row when it is still there and usable,
+## so buying or selling several in a row needs no walking down the list again.
+func _show_page(page: String, focus_id := "") -> void:
 	_page = page
 	_gold.text = "Oro %d G" % _state.gold
 	for child in _rows.get_children():
@@ -193,7 +195,8 @@ func _show_page(page: String) -> void:
 			_add_button("No", func() -> void:
 				_sfx(SfxLibrary.CANCEL)
 				_answered.emit(false))
-	_focus_first()
+	if focus_id == "" or not _focus_id(focus_id):
+		_focus_first()
 
 
 func _open(page: String) -> void:
@@ -210,6 +213,7 @@ func _add_buy_row(id: String) -> void:
 	button.custom_minimum_size.x = NAME_WIDTH
 	button.disabled = why != ""
 	button.pressed.connect(_buy.bind(id))
+	button.set_meta("id", id)
 	row.add_child(button)
 	var price := _label("%d G" % Shop.price(id), GREY if why != "" else Color.WHITE)
 	price.custom_minimum_size.x = PRICE_WIDTH
@@ -232,6 +236,7 @@ func _add_sell_row(id: String) -> void:
 	button.custom_minimum_size.x = NAME_WIDTH
 	button.disabled = why != ""
 	button.pressed.connect(_sell.bind(id))
+	button.set_meta("id", id)
 	row.add_child(button)
 	var price := _label("%d G" % Shop.sell_price(id), GREY if why != "" else Color.WHITE)
 	price.custom_minimum_size.x = PRICE_WIDTH
@@ -268,7 +273,7 @@ func _buy(id: String) -> void:
 		_asking = id
 		_show_page("ask")
 	else:
-		_show_page("buy")
+		_show_page("buy", id)
 
 
 func _answer(equip: bool) -> void:
@@ -276,8 +281,9 @@ func _answer(equip: bool) -> void:
 		_sfx(SfxLibrary.ACCEPT)
 		_say("Te equipas %s %s." % [Equipment.article(_asking), Equipment.display_name(_asking)])
 		changed.emit()
+	var bought := _asking
 	_asking = ""
-	_show_page("buy")
+	_show_page("buy", bought)
 
 
 func _sell(id: String) -> void:
@@ -288,7 +294,7 @@ func _sell(id: String) -> void:
 		return
 	_sfx(SfxLibrary.ACCEPT)
 	changed.emit()
-	_show_page("sell")
+	_show_page("sell", id)
 
 
 ## Autoplay: shows the first page, buys and equips each pick on the buy page, and shows
@@ -349,7 +355,19 @@ func _focus_row(text: String) -> void:
 	for button in _rows.find_children("*", "Button", true, false):
 		if (button as Button).text == text:
 			(button as Button).grab_focus()
+			break
 	_quiet_focus = false
+
+
+## Focuses the enabled row of that item; false when there is none.
+func _focus_id(id: String) -> bool:
+	for button in _rows.find_children("*", "Button", true, false):
+		if button.get_meta("id", "") == id and not (button as Button).disabled:
+			_quiet_focus = true
+			(button as Button).grab_focus()
+			_quiet_focus = false
+			return true
+	return false
 
 
 func _button(text: String) -> Button:

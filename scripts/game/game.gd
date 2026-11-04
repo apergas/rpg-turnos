@@ -171,6 +171,8 @@ func _on_encounter(boss: bool) -> void:
 		_world.show_notice("Has vuelto al inicio.")
 	elif boss:
 		_world.show_notice(SAFE_NOTICE)
+	if outcome == BattleEngine.State.LOST:
+		_autosave(false)  # the gold lost sticks: going back to the title can't undo it
 	if won:
 		var data := _autosave(not boss)
 		if _autoplay_save and _save.is_empty() and not data.is_empty():
