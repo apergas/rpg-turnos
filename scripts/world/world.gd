@@ -41,6 +41,9 @@ const PLAYER_SCENE := preload("res://scenes/world/player.tscn")
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
 const HERO_DATA := preload("res://data/hero.tres")
 const NOTICE_TIME := 2.0
+## The notice window, top centre (clear of the status window and the ☰ button).
+const NOTICE_MAX_WIDTH := 640.0
+const UI_EDGE := 24.0
 const FONT_SIZE := 24
 ## How close the player must be to talk to a figure / to open a chest / to run into the
 ## boss / to take an exit.
@@ -122,13 +125,14 @@ var _exits_armed := false
 var _boss_present := false
 var _ui: CanvasLayer
 var _name_label: Label
-var _hp_label: Label
-var _mp_label: Label
-var _exp_label: Label
+var _hp_bar: StatBar
+var _mp_bar: StatBar
+var _exp_bar: StatBar
 var _potion_label: Label
 var _gold_label: Label
 var _quest_label: Label
 var _notice: Label
+var _notice_window: PanelContainer
 var _notice_serial := 0
 var _prompt: Label
 var _dialogue: DialogueBox
@@ -392,31 +396,27 @@ func set_chest_open(chest_id: String, open: bool, instant := false) -> void:
 
 
 func refresh_status(hero: Combatant, potions: int, gold: int, quest_text := "") -> void:
-	_name_label.text = "%s  Nv %d" % [hero.display_name, hero.level]
-	_hp_label.text = "PV %d / %d" % [hero.hp, hero.max_hp]
-	_mp_label.text = "PM %d / %d" % [hero.mp, hero.max_mp]
-	var next := Leveling.exp_for_next(hero.level)
-	if next < 0:
-		_exp_label.text = "EXP %d" % hero.experience
-	else:
-		_exp_label.text = "EXP %d / %d" % [hero.experience, next]
+	_name_label.text = StatBar.hero_title(hero)
+	_hp_bar.show_hp(hero.hp, hero.max_hp)
+	_mp_bar.show_mp(hero.mp, hero.max_mp)
+	_exp_bar.show_exp(hero)
 	_potion_label.text = "%s ×%d" % [Inventory.display_name(Inventory.POTION), potions]
 	_gold_label.text = "Oro %d G" % gold
 	_quest_label.text = quest_text
 	_quest_label.visible = quest_text != ""
 
 
-## Shows a short line under the status for NOTICE_TIME seconds (a newer one replaces it).
+## Shows a short line in its own window for NOTICE_TIME seconds (a newer one replaces it).
 func show_notice(text: String) -> void:
 	_notice_serial += 1
 	var serial := _notice_serial
-	_notice.text = text
-	_notice.show()
+	BattleHud.fit_label(_notice, text, NOTICE_MAX_WIDTH)
+	_notice_window.show()
 	if _autoplay:
 		print(text)
 	await get_tree().create_timer(NOTICE_TIME).timeout
 	if serial == _notice_serial:
-		_notice.hide()
+		_notice_window.hide()
 
 
 func _trigger(boss: bool) -> void:
@@ -682,29 +682,38 @@ func _build_ui() -> void:
 	_ui = CanvasLayer.new()
 	add_child(_ui)
 	var panel := BattleHud.make_window()
-	panel.position = Vector2(24, 24)
-	panel.custom_minimum_size = Vector2(240, 0)
+	panel.position = Vector2(UI_EDGE, UI_EDGE)
 	_ui.add_child(panel)
 	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 4)
 	panel.add_child(box)
 	_name_label = _label()
 	box.add_child(_name_label)
-	_hp_label = _label()
-	box.add_child(_hp_label)
-	_mp_label = _label()
-	box.add_child(_mp_label)
-	_exp_label = _label()
-	box.add_child(_exp_label)
+	_hp_bar = StatBar.new(StatBar.HP)
+	box.add_child(_hp_bar)
+	_mp_bar = StatBar.new(StatBar.MP)
+	box.add_child(_mp_bar)
+	_exp_bar = StatBar.new(StatBar.EXP)
+	box.add_child(_exp_bar)
 	_potion_label = _label()
 	box.add_child(_potion_label)
 	_gold_label = _label()
+	_gold_label.add_theme_color_override("font_color", StatBar.GOLD)
 	box.add_child(_gold_label)
 	_quest_label = _label()
 	_quest_label.hide()
 	box.add_child(_quest_label)
+	_notice_window = BattleHud.make_window()
+	_notice_window.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_notice_window.offset_left = 0
+	_notice_window.offset_right = 0
+	_notice_window.offset_top = UI_EDGE
+	_notice_window.offset_bottom = UI_EDGE
+	_notice_window.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_notice_window.hide()
+	_ui.add_child(_notice_window)
 	_notice = _label()
-	_notice.hide()
-	box.add_child(_notice)
+	_notice_window.add_child(_notice)
 	_prompt = _label()
 	_prompt.text = PROMPTS[TALK]
 	_prompt.add_theme_color_override("font_outline_color", Color.BLACK)

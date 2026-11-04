@@ -29,7 +29,7 @@ const CAMERA_FOCUS := 0.18
 const ARROW_COLOR := Color(1.0, 0.9, 0.3)
 ## A click this close (pixels) to an enemy aims at it.
 const PICK_RADIUS := 120.0
-const MP_COLOR := Color(0.4, 0.6, 1.0)
+const MP_COLOR := StatBar.MP
 const DEFEND_COLOR := Color(0.6, 0.8, 1.0)
 ## Glow of an enemy gathering strength for a charged blow.
 const CHARGE_COLOR := Color(1.0, 0.55, 0.15)
@@ -205,7 +205,7 @@ func _on_command_chosen(cmd: Dictionary) -> void:
 			_finish()
 			return
 		BattleEngine.State.WON:
-			_result.show_victory(engine.exp_won, hero.experience, _new_level, engine.gold_won,
+			_result.show_victory(engine.exp_won, hero, _new_level, engine.gold_won,
 				engine.drops_won)
 		BattleEngine.State.LOST:
 			if gold_lost > 0:

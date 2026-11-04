@@ -22,7 +22,8 @@ const BETTER := Color(0.35, 1.0, 0.4)
 const WORSE := Color(1.0, 0.35, 0.3)
 const NAME_WIDTH := 300.0
 const PRICE_WIDTH := 90.0
-const WINDOW_WIDTH := 640.0
+## Messages under the list wrap past this width.
+const MESSAGE_WIDTH := 640.0
 ## Seconds each step stays on screen on autoplay.
 const AUTOPLAY_STEP := 0.7
 
@@ -76,17 +77,17 @@ func _ready() -> void:
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(center)
 	var window := BattleHud.make_window()
-	window.custom_minimum_size = Vector2(WINDOW_WIDTH, 0)
 	center.add_child(window)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 10)
+	box.add_theme_constant_override("separation", 8)
 	window.add_child(box)
 	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation", 24)
 	box.add_child(header)
 	_keeper = _label("", TITLE_COLOR)
 	_keeper.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(_keeper)
-	_gold = _label("", Color.WHITE)
+	_gold = _label("", StatBar.GOLD)
 	header.add_child(_gold)
 	_title = _label("", Color.WHITE)
 	box.add_child(_title)
@@ -94,7 +95,7 @@ func _ready() -> void:
 	_rows.add_theme_constant_override("separation", 6)
 	box.add_child(_rows)
 	_message = _label("", Color.WHITE)
-	_message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_message.hide()
 	box.add_child(_message)
 	hide()
 
@@ -103,7 +104,7 @@ func _ready() -> void:
 func run(shop_id: String) -> void:
 	_shop_id = shop_id
 	_keeper.text = Shop.keeper(shop_id)
-	_message.text = ""
+	_set_message("")
 	show()
 	_sfx(SfxLibrary.DIALOGUE)
 	_show_page("menu")
@@ -118,7 +119,7 @@ func run(shop_id: String) -> void:
 ## Shows speaker and question with Sí / No and returns true for Sí (Esc is No).
 func ask(speaker: String, question: String) -> bool:
 	_keeper.text = speaker
-	_message.text = ""
+	_set_message("")
 	show()
 	_sfx(SfxLibrary.DIALOGUE)
 	_show_page("question")
@@ -153,7 +154,7 @@ func _back() -> void:
 		"question":
 			_answered.emit(false)
 		_:
-			_message.text = ""
+			_set_message("")
 			_show_page("menu")
 
 
@@ -201,7 +202,7 @@ func _show_page(page: String, focus_id := "") -> void:
 
 func _open(page: String) -> void:
 	_sfx(SfxLibrary.ACCEPT)
-	_message.text = ""
+	_set_message("")
 	_show_page(page)
 
 
@@ -215,7 +216,7 @@ func _add_buy_row(id: String) -> void:
 	button.pressed.connect(_buy.bind(id))
 	button.set_meta("id", id)
 	row.add_child(button)
-	var price := _label("%d G" % Shop.price(id), GREY if why != "" else Color.WHITE)
+	var price := _label("%d G" % Shop.price(id), GREY if why != "" else StatBar.GOLD)
 	price.custom_minimum_size.x = PRICE_WIDTH
 	row.add_child(price)
 	var info := Shop.compare(_state, id)
@@ -238,7 +239,7 @@ func _add_sell_row(id: String) -> void:
 	button.pressed.connect(_sell.bind(id))
 	button.set_meta("id", id)
 	row.add_child(button)
-	var price := _label("%d G" % Shop.sell_price(id), GREY if why != "" else Color.WHITE)
+	var price := _label("%d G" % Shop.sell_price(id), GREY if why != "" else StatBar.GOLD)
 	price.custom_minimum_size.x = PRICE_WIDTH
 	row.add_child(price)
 	if why != "":
@@ -323,9 +324,15 @@ func _wait() -> void:
 
 ## Shows text under the list; on autoplay also prints it.
 func _say(text: String) -> void:
-	_message.text = text
+	_set_message(text)
 	if _autoplay:
 		print(text)
+
+
+## The line under the list; an empty one takes no room, so the window hugs the rows.
+func _set_message(text: String) -> void:
+	BattleHud.fit_label(_message, text, MESSAGE_WIDTH)
+	_message.visible = text != ""
 
 
 func _row() -> HBoxContainer:
