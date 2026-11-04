@@ -59,6 +59,8 @@ var enemies: Array[Combatant] = []
 var inventory: Inventory
 ## Seconds per typed character of the messages (the text speed option).
 var char_time := BattleHud.CHAR_TIME
+## Gold the hero loses if defeated (Game takes it away; the battle only says so).
+var gold_lost := 0
 
 var _rng := RandomNumberGenerator.new()
 var _autoplay := false
@@ -80,6 +82,9 @@ var _shake_tween: Tween
 var _hud: BattleHud
 var _result: BattleResult
 var _audio: AudioDirector
+## Equipment ids the hero's figure shows (set_equipment()).
+var _weapon_id := Equipment.STICK
+var _shield_id := ""
 
 
 ## The hero and the inventory are used as is, so HP, MP, EXP and items stay with the
@@ -101,6 +106,13 @@ func set_audio(audio: AudioDirector) -> void:
 	_audio = audio
 
 
+## The weapon and shield the hero's figure holds (Equipment ids, "" for none). Call
+## before adding it to the tree; without it the hero holds the starting Palo.
+func set_equipment(weapon_id: String, shield_id: String) -> void:
+	_weapon_id = weapon_id
+	_shield_id = shield_id
+
+
 func _ready() -> void:
 	if hero == null and get_parent() == get_tree().root:
 		_setup_standalone()
@@ -110,6 +122,7 @@ func _ready() -> void:
 	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
 	BattleStage.build(self)
 	_hero_actor = _spawn_actor(BattleActor.Look.HERO, HERO_POS, ENEMY_POS)
+	_hero_actor.set_equipment(_weapon_id, _shield_id)
 	for i in enemies.size():
 		_enemy_actors.append(_spawn_actor(LOOKS.get(enemies[i].id, BattleActor.Look.SLIME),
 			_slot(i, enemies.size()), HERO_POS))
@@ -197,7 +210,9 @@ func _on_command_chosen(cmd: Dictionary) -> void:
 			_result.show_victory(engine.exp_won, hero.experience, _new_level, engine.gold_won,
 				engine.drops_won)
 		BattleEngine.State.LOST:
-			_result.show_defeat()
+			if gold_lost > 0:
+				await _say("Pierdes %d monedas de oro." % gold_lost)
+			_result.show_defeat(gold_lost)
 	if _autoplay:
 		await get_tree().create_timer(2.0).timeout
 		if _done:  # "Continuar" was clicked during the wait

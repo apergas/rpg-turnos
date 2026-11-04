@@ -5,7 +5,7 @@ class_name BattleActor extends Node3D
 ## look_at() the opponent. Every play_* can be awaited: it returns when its animation
 ## and its tween are done.
 
-enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM }
+enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPER }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -43,8 +43,20 @@ const SLIME_PROFILE: Array[Vector2] = [
 	Vector2(0.44, 0.64), Vector2(0.24, 0.8), Vector2(0.08, 0.9), Vector2(0.0, 0.98),
 ]
 const SLIME_SEGMENTS := 9
+## Hand slots of the KayKit characters (BoneAttachment3D nodes).
+const HAND_R := "Rig/Skeleton3D/handslot_r"
+const HAND_L := "Rig/Skeleton3D/handslot_l"
+## The wooden stick built in code for Equipment.STICK_MESH: along the hand's +Y like the
+## Knight's swords, grip at the hand.
+const STICK_COLOR := Color(0.45, 0.3, 0.16)
+const STICK_RADIUS := 0.07
+const STICK_LENGTH := 1.3
+const STICK_CENTER := 0.45
 ## Everything that changes between looks. Characters: scene, scale, top (height of the
-## damage numbers), hide (prop nodes of the model to hide) and anims. Slimes: color,
+## damage numbers), hide (prop nodes of the model to hide), anims and, optional, tint
+## (multiplies every imported material: the merchant is a green Mage, the innkeeper an
+## orange one); the hero hides
+## every hand mesh and shows only those of its equipment (set_equipment()). Slimes: color,
 ## scale (the whole blob, eyes and crown included), top and crown. Bat: color, wing
 ## color, top and fly (height it hovers at). Mushroom: cap and stem colors, scale and top.
 const LOOKS := {
@@ -56,7 +68,9 @@ const LOOKS := {
 			"Rig/Skeleton3D/handslot_l/1H_Sword_Offhand",
 			"Rig/Skeleton3D/handslot_l/Badge_Shield",
 			"Rig/Skeleton3D/handslot_l/Rectangle_Shield",
+			"Rig/Skeleton3D/handslot_l/Round_Shield",
 			"Rig/Skeleton3D/handslot_l/Spike_Shield",
+			"Rig/Skeleton3D/handslot_r/1H_Sword",
 			"Rig/Skeleton3D/handslot_r/2H_Sword",
 		],
 		"anims": CHARACTER_ANIMS,
@@ -71,6 +85,30 @@ const LOOKS := {
 			"Rig/Skeleton3D/handslot_r/1H_Wand",
 		],
 		"anims": CHARACTER_ANIMS,
+	},
+	Look.MERCHANT: {
+		"scene": MAGE,
+		"scale": CHARACTER_SCALE,
+		"top": 2.2,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/Spellbook",
+			"Rig/Skeleton3D/handslot_l/Spellbook_open",
+			"Rig/Skeleton3D/handslot_r/1H_Wand",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(0.75, 1.0, 0.65),
+	},
+	Look.INNKEEPER: {
+		"scene": MAGE,
+		"scale": CHARACTER_SCALE,
+		"top": 2.2,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/Spellbook",
+			"Rig/Skeleton3D/handslot_l/Spellbook_open",
+			"Rig/Skeleton3D/handslot_r/1H_Wand",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(1.0, 0.75, 0.5),
 	},
 	Look.SLIME: {
 		"color": Color(0.55, 0.3, 0.85),
@@ -115,6 +153,8 @@ var _anims: Dictionary = {}
 var _idle_tween: Tween
 ## Bat only: the two wing pivots, flapped by the idle loop.
 var _wings: Array[Node3D] = []
+## Characters only: the imported model (its hand slots hold the equipment meshes).
+var _model: Node3D
 
 
 func _ready() -> void:
@@ -162,6 +202,17 @@ func set_walking(on: bool) -> void:
 	var anim_name: String = _anims.walk if on else _anims.idle
 	if _anim.current_animation != anim_name:
 		_anim.play(anim_name, BLEND_TIME, WALK_SPEED if on else 1.0)
+
+
+## Hero only: shows the hand meshes of the weapon and shield worn (Equipment ids, ""
+## for none) and hides the rest. Armor does not change the model. Others ignore it.
+func set_equipment(weapon_id: String, shield_id: String) -> void:
+	if look != Look.HERO or _model == null:
+		return
+	var shown := {HAND_R: Equipment.mesh(weapon_id), HAND_L: Equipment.mesh(shield_id)}
+	for hand: String in shown:
+		for child in _model.get_node(hand).get_children():
+			(child as Node3D).visible = child.name == shown[hand] and shown[hand] != ""
 
 
 ## Swings (characters) and lunges toward the target and steps back.
@@ -322,8 +373,19 @@ func _build_character(data: Dictionary) -> void:
 	# KayKit characters face +Z; turned around they face -Z like every BattleActor.
 	model.rotation.y = PI
 	_body.add_child(model)
+	_model = model
 	for path in data.hide:
 		(model.get_node(path) as Node3D).hide()
+	if data.has("tint"):
+		_tint(model, data.tint)
+	if look == Look.HERO:
+		var stick := _cylinder(STICK_RADIUS, STICK_LENGTH)
+		stick.top_radius = STICK_RADIUS * 0.7
+		_add_mesh(model.get_node(HAND_R), stick, STICK_COLOR, Vector3(0, STICK_CENTER, 0))
+		var mi := model.get_node(HAND_R).get_child(-1) as MeshInstance3D
+		mi.name = Equipment.STICK_MESH
+		# The starting gear until set_equipment() says otherwise.
+		set_equipment(Equipment.STICK, "")
 	_anims = data.anims
 	_anim = model.get_node(ANIM_PLAYER_PATH) as AnimationPlayer
 	# The imported animations do not loop; idle and walk must.
@@ -481,6 +543,20 @@ func _float_label(text: String, font_size: int, color: Color, y: float) -> void:
 	t.tween_property(label, "position:y", y + 0.8, 0.9)
 	t.tween_property(label, "modulate:a", 0.0, 0.6).set_delay(0.3)
 	t.chain().tween_callback(label.queue_free)
+
+
+## Gives every mesh of an imported model copies of its materials with albedo_color
+## multiplied by color (the texture is multiplied too).
+static func _tint(model: Node3D, color: Color) -> void:
+	for node in model.find_children("*", "MeshInstance3D", true, false):
+		var mi := node as MeshInstance3D
+		for i in mi.mesh.get_surface_count():
+			var source := mi.get_active_material(i) as BaseMaterial3D
+			if source == null:
+				continue
+			var tinted := source.duplicate() as BaseMaterial3D
+			tinted.albedo_color = source.albedo_color * color
+			mi.set_surface_override_material(i, tinted)
 
 
 ## Additive overlay on every mesh, so it works on the imported materials too.

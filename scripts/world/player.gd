@@ -58,6 +58,11 @@ func _ready() -> void:
 	add_child(_model)
 
 
+## Shows the weapon and shield worn on the model (Equipment ids, "" for none).
+func set_equipment(weapon_id: String, shield_id: String) -> void:
+	_model.set_equipment(weapon_id, shield_id)
+
+
 ## Puts the player at pos with the model turned to facing_yaw (0 faces -Z).
 func place(pos: Vector3, facing_yaw: float) -> void:
 	global_position = pos
