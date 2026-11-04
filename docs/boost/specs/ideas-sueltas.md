@@ -24,4 +24,4 @@ Formato: una sección por idea, con la fecha, la idea en palabras del usuario y 
   - Ahora (`EncounterMeter`): 15 m de gracia tras cada combate y luego un 0,6 % por metro andado sobre la hierba. De media sale un combate cada ~180 m, unos 35 s andando a 5 m/s.
   - Opción: bajar la gracia a 8-10 m y subir a ~1 % por metro, que da un combate cada ~110 m (~22 s). Hay que repasar el equilibrio, porque más combates dan más EXP y oro por hora.
   - Se puede hacer que cada zona tenga su propio ritmo en `ZoneData` (fase de mundo).
-- **Estado:** pendiente.
+- **Estado:** hecha en la fase 5a: 9 m de gracia y 1 % por metro en la pradera y el bosque, cada zona con su ritmo en `ZoneData` ([plan](../plans/2026-11-04-mundo-bosque.md)).
