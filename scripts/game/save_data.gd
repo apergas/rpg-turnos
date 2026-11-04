@@ -4,8 +4,13 @@ class_name SaveData extends RefCounted
 ## VERSION goes in every save so a later format can migrate older files. Version 2 (full
 ## combat) adds the gold and changes how the hero grows, so version 1 saves are refused.
 ## The spells are not saved: Leveling.sync_skills() gives them back from the level.
+## Version 3 (economy and equipment) adds the loadout, the equipment in the bag and the
+## opened chests; a version 2 save still loads, with the starting gear, an empty bag and
+## every chest closed.
 
-const VERSION := 2
+const VERSION := 3
+## Oldest version apply() still reads.
+const OLDEST_VERSION := 2
 ## Combatant fields of the hero that change while playing (the rest come from hero.tres).
 const HERO_FIELDS: Array[String] = ["level", "experience", "hp", "max_hp", "mp", "max_mp",
 	"attack", "defense", "speed"]
@@ -21,6 +26,9 @@ static func from_state(state: GameState, player_pos: Vector3, play_time: float) 
 		"inventory": state.inventory.to_dict(),
 		"quest": {"stage": state.quest.stage, "kills": state.quest.kills},
 		"gold": state.gold,
+		"loadout": state.loadout.to_dict(),
+		"bag": state.bag_equipment.duplicate(),
+		"chests": state.opened_chests.duplicate(),
 		"position": [player_pos.x, player_pos.z],
 		"play_time": play_time,
 	}
@@ -35,6 +43,11 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 		state.hero.set(field, int(data.hero[field]))
 	Leveling.sync_skills(state.hero)
 	state.gold = int(data.gold)
+	state.loadout = Loadout.new()
+	state.loadout.set_slots(data.get("loadout", state.loadout.to_dict()))
+	state.bag_equipment.assign(data.get("bag", []))
+	state.opened_chests.assign(data.get("chests", []))
+	state.refresh_equipment()
 	var items := {}
 	for id: String in data.inventory:
 		items[id] = int(data.inventory[id])
@@ -47,9 +60,12 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 		"play_time": float(data.play_time)}
 
 
-## True if data has this version and every field with the right type.
+## True if data has a version apply() reads and every field with the right type.
 static func is_valid(data: Dictionary) -> bool:
-	if not (data.get("version") is float and int(data.version) == VERSION):
+	if not (data.get("version") is float and int(data.version) >= OLDEST_VERSION \
+			and int(data.version) <= VERSION):
+		return false
+	if int(data.version) >= 3 and not _valid_equipment(data):
 		return false
 	var hero: Variant = data.get("hero")
 	if not hero is Dictionary:
@@ -72,3 +88,28 @@ static func is_valid(data: Dictionary) -> bool:
 	if not (pos is Array and pos.size() == 2 and pos[0] is float and pos[1] is float):
 		return false
 	return data.get("play_time") is float
+
+
+## Version 3 fields: every worn id fits its slot, every bag id is equipment and every
+## chest id exists.
+static func _valid_equipment(data: Dictionary) -> bool:
+	var loadout: Variant = data.get("loadout")
+	if not loadout is Dictionary:
+		return false
+	for slot in Equipment.SLOTS:
+		var id: Variant = (loadout as Dictionary).get(slot)
+		if not id is String or (id != "" and Equipment.slot(id) != slot):
+			return false
+	var bag: Variant = data.get("bag")
+	if not bag is Array:
+		return false
+	for id: Variant in bag:
+		if not (id is String and Equipment.exists(id)):
+			return false
+	var chests: Variant = data.get("chests")
+	if not chests is Array:
+		return false
+	for id: Variant in chests:
+		if not (id is String and Chests.CHESTS.has(id)):
+			return false
+	return true

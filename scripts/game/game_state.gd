@@ -1,13 +1,20 @@
 class_name GameState extends RefCounted
 ## State of the play session, kept in memory while the game is open. The hero, the
-## inventory, the gold and the village quest live here for the whole session; battles
-## and dialogue change them in place.
+## inventory, the gold, the equipment and the village quest live here for the whole
+## session; battles, shops, chests and dialogue change them in place.
+
+const START_GOLD := 50
 
 var hero: Combatant
 var inventory := Inventory.new()
 var quest := Quest.new()
-## Gold won in battle (shops come in a later phase).
-var gold := 0
+var gold := START_GOLD
+## What the hero wears; its bonuses are copied into the hero by refresh_equipment().
+var loadout := Loadout.new()
+## Equipment carried but not worn (Equipment ids; the same id may appear more than once).
+var bag_equipment: Array[String] = []
+## Ids of the chests already opened (Chests.CHESTS keys).
+var opened_chests: Array[String] = []
 
 
 func _init(hero_data: Combatant) -> void:
@@ -15,6 +22,7 @@ func _init(hero_data: Combatant) -> void:
 	# Its own list: learning a spell must never change the one in hero.tres.
 	hero.skills = hero_data.skills.duplicate()
 	inventory.add(Inventory.POTION, Inventory.START_POTIONS)
+	refresh_equipment()
 
 
 ## Back to full HP and MP, used after a defeat and when talking to the old woman.
@@ -26,3 +34,36 @@ func heal_full() -> void:
 ## Uses an item outside battle, from the pause menu; see Inventory.use().
 func use_item(id: String) -> Dictionary:
 	return inventory.use(id, hero, false)
+
+
+## Copies the loadout's bonuses into the hero (battles read total_attack/defense()).
+func refresh_equipment() -> void:
+	hero.equip_attack = loadout.attack_bonus()
+	hero.equip_defense = loadout.defense_bonus()
+
+
+## Puts on a piece from the bag; what it replaces goes to the bag. False if id is not
+## in the bag.
+func equip(id: String) -> bool:
+	var index := bag_equipment.find(id)
+	if index < 0:
+		return false
+	bag_equipment.remove_at(index)
+	var removed := loadout.equip(id)
+	if removed != "":
+		bag_equipment.append(removed)
+	refresh_equipment()
+	return true
+
+
+## Takes off what is worn in slot and puts it in the bag.
+func unequip(slot: String) -> void:
+	var removed := loadout.unequip(slot)
+	if removed != "":
+		bag_equipment.append(removed)
+	refresh_equipment()
+
+
+## Gold lost on a defeat: half of what is carried, rounded down (gold - lost remains).
+func defeat_gold_loss() -> int:
+	return floori(gold / 2.0)
