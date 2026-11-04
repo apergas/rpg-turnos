@@ -15,11 +15,12 @@ const MAP := "map"
 const VILLAGE := "village"
 const FOREST := "forest"
 const MINE := "mine"
+const CASTLE := "castle"
 const BATTLE := "battle"
 const BOSS := "boss"
 const VICTORY := "victory"
 const DEFEAT := "defeat"
-const IDS: Array[String] = [TITLE, MAP, VILLAGE, FOREST, MINE, BATTLE, BOSS, VICTORY,
+const IDS: Array[String] = [TITLE, MAP, VILLAGE, FOREST, MINE, CASTLE, BATTLE, BOSS, VICTORY,
 	DEFEAT]
 
 const LEAD_VOLUME := 0.2
@@ -117,6 +118,20 @@ const TRACKS := {
 			"A1/4 E2/4 A1/4 C#2/4", "D2/8 A1/8",
 		],
 		"drums": ["k/4 r/4 h/4 r/2 h/2"],
+	},
+	# The castle: a slow march in E minor.
+	CASTLE: {
+		"bpm": 76, "loop": true, "duty": 0.5,
+		"lead": [
+			"E5/6 G5/2 B5/8", "A5/4 G5/4 F#5/8", "E5/4 F#5/4 G5/4 A5/4", "B5/12 r/4",
+			"C6/6 B5/2 A5/8", "G5/4 F#5/4 E5/8", "F#5/4 G5/4 A5/4 D#5/4", "E5/12 r/4",
+		],
+		"bass": [
+			"E2/4 B2/4 E2/4 B2/4", "D2/4 A2/4 D2/4 A2/4", "C2/4 G2/4 C2/4 G2/4",
+			"B1/4 F#2/4 B1/4 F#2/4", "A1/4 E2/4 A1/4 E2/4", "E2/4 B2/4 E2/4 B2/4",
+			"B1/4 F#2/4 B1/4 D#2/4", "E2/8 B1/8",
+		],
+		"drums": ["k/4 s/4 k/4 s/2 h/2"],
 	},
 	BATTLE: {
 		"bpm": 150, "loop": true, "duty": 0.5,

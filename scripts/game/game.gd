@@ -22,7 +22,11 @@ class_name Game extends Node
 ## boss), autosaves after talking, after every won battle, after shopping, (silently)
 ## after opening a chest, after a defeat and after every change of zone, and opens the
 ## pause menu. Emits quit_to_title when the player goes back to the title.
-## On autoplay it prints the gold and the equipment each time they change.
+## Beating the Señor de la Niebla (GameState.FINAL_BOSS) marks the game as finished
+## (GameState.is_finished()) with a notice; the ending itself comes with the story.
+## On autoplay it prints the gold and the equipment each time they change, the level and
+## the play time on every change of zone and, once the Señor de la Niebla falls, the play
+## time of the whole run; then it quits.
 ## Run on its own (res://scenes/game/game.tscn) it starts a new game with its own
 ## AudioDirector and default options.
 ##
@@ -47,6 +51,7 @@ const LOAD_FAILED_NOTICE := "No se pudo cargar la partida. Empiezas de nuevo."
 ## Notice after beating a boss (by id); other bosses announce their key item.
 const BOSS_NOTICES := {
 	"rey_slime": "¡Villaclaro está a salvo! La niebla del norte se disipa...",
+	"senor_niebla": "¡Consigues el último Fragmento del amuleto! La niebla se levanta.",
 }
 const KEY_ITEM_NOTICE := "¡Consigues un %s!"
 const LEVER_NOTICE := "¡Tiras de la palanca! Se oye cómo se abre una reja."
@@ -86,6 +91,28 @@ const AUTOPLAY_ZONES := {
 		"key_items": ["fragmento_bosque"],
 		"quest_done": true,
 		"town": "mina_1",
+	},
+	# Zone 3 done: Lv 13 with the Golem's EXP and gold, the mine's gear and two fragments.
+	"castillo_patio": {
+		"experience": 1373,
+		"gold": 600,
+		"gear": ["espada_acero", "armadura_acero", "escudo_acero"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra"],
+		"key_items": ["fragmento_bosque", "fragmento_mina"],
+		"quest_done": true,
+		"town": "mina_1",
+	},
+	# Ready for the Señor de la Niebla: Lv 17 with the castle's gear.
+	"castillo_trono": {
+		"experience": 2244,
+		"gold": 300,
+		"gear": ["espada_platino", "armadura_platino", "escudo_platino"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra"],
+		"key_items": ["fragmento_bosque", "fragmento_mina"],
+		"quest_done": true,
+		"town": "castillo_patio",
 	},
 }
 
@@ -237,7 +264,7 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 	if _world.in_village():
 		_on_village_changed(true)
 	if _autoplay:
-		print("Zona: %s" % zone_id)
+		print("Zona: %s (Nv %d, %s)" % [zone_id, state.hero.level, _clock(play_time)])
 
 
 func _on_encounter(boss: bool) -> void:
@@ -299,6 +326,10 @@ func _on_encounter(boss: bool) -> void:
 			quit_to_title.emit()
 			return
 	_set_busy(false)
+	if _autoplay and won and state.is_finished():
+		print("Juego completado: Nv %d, tiempo de juego %s" % [state.hero.level,
+			_clock(play_time)])
+		get_tree().quit()
 
 
 ## Sets the boss's world flag, gives its key item and says so.
@@ -568,6 +599,12 @@ func _refresh_status() -> void:
 ## "a Villaclaro", "a la aldea del bosque", "al refugio de la mina".
 static func _to_place(place: String) -> String:
 	return "al " + place.substr(3) if place.begins_with("el ") else "a " + place
+
+
+## Seconds as "h:mm:ss".
+static func _clock(seconds: float) -> String:
+	return "%d:%02d:%02d" % [floori(seconds / 3600.0), floori(seconds / 60.0) % 60,
+		floori(seconds) % 60]
 
 
 ## One line with every saved value, keys sorted, for --autoplay-save.

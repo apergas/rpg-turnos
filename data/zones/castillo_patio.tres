@@ -1,0 +1,79 @@
+[gd_resource type="Resource" script_class="ZoneData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/zone_data.gd" id="1_zone"]
+
+[resource]
+script = ExtResource("1_zone")
+id = "castillo_patio"
+display_name = "el castillo"
+number = 4
+half_size = Vector2(34, 30)
+ground_color = Color(0.3, 0.29, 0.32, 1)
+has_grass = false
+safe_discs = [[Vector3(0, 0, 20), 13.0]]
+village_name = "el campamento"
+village_pos = Vector3(0, 0, 20)
+village_radius = 13.0
+buildings = [[Vector3(-9.5, 0, 22.5), 30.0, "tent"], [Vector3(9.5, 0, 22.5), -30.0, "tent"]]
+entries = {
+"campamento": [Vector3(0, 0, 18), 0.0],
+"sur": [Vector3(0, 0, 21), 0.0]
+}
+start_entry = "sur"
+town_entry = "campamento"
+exits = [{
+"entry": "castillo",
+"id": "sur",
+"label": "A la mina",
+"lock": "",
+"lock_text": "",
+"pos": Vector3(0, 0, 25),
+"to": "mina_3",
+"yaw": 0.0
+}]
+npcs = [{
+"id": "castillo",
+"kind": "shop",
+"look": "MERCHANT",
+"name": "Mercader",
+"pos": Vector3(-6, 0, 15),
+"yaw": 180.0
+}, {
+"id": "castillo",
+"kind": "inn",
+"look": "INNKEEPER",
+"name": "Posadera",
+"pos": Vector3(6, 0, 15),
+"yaw": 180.0
+}, {
+"after_flag": "senor_niebla",
+"kind": "npc",
+"lines": ["Este campamento es lo último antes del castillo.", "La niebla sale de la sala del trono, arriba del todo.", "Los esqueletos del patio no duermen nunca. Ve con cuidado."],
+"lines_after": ["¡La niebla se ha ido! Se ve el cielo por primera vez en años.", "Lleva los fragmentos del amuleto de vuelta a Villaclaro."],
+"look": "VILLAGER",
+"name": "Soldado",
+"pos": Vector3(-5, 0, 23),
+"yaw": 180.0
+}]
+formations = [["esqueleto_guerrero"], ["esqueleto_picaro"], ["esqueleto_mago"], ["esqueleto_picaro"], ["esqueleto_guerrero", "esqueleto_mago"], ["esqueleto_picaro", "esqueleto_mago"]]
+start_formations = [["esqueleto_guerrero"], ["esqueleto_picaro"], ["esqueleto_mago"]]
+start_pos = Vector3(0, 0, 20)
+start_radius = 26.0
+encounter_grace = 6.0
+encounter_chance = 0.025
+music = "castle"
+village_music = "village"
+sky_top = Color(0.26, 0.24, 0.36, 1)
+haze = Color(0.42, 0.4, 0.5, 1)
+fog_density = 0.022
+sun_color = Color(0.78, 0.75, 0.92, 1)
+sun_energy = 0.4
+backdrop = "castillo"
+layout = PackedStringArray("#################", "#T..#...S...#..C#", "#...#.......#...#", "#...###.#.###...#", "#.......#.......#", "###.#########.###", "#...#...T...#...#", "#.C.#.......#...#", "#.....##.##.....#", "#T....#...#....T#", "########.########", "#####.......#####", "#####.......#####", "#####.......#####", "#################")
+rock_color = Color(0.44, 0.43, 0.48, 1)
+floor_color = Color(0.34, 0.33, 0.36, 1)
+castle = true
+mist_banks = 10
+stairs_up = "castillo_trono"
+autoplay_route = Array[Vector3]([Vector3(0, 0, 20), Vector3(-6, 0, 16.8), Vector3(6, 0, 16.8), Vector3(0, 0, 16), Vector3(0, 0, 12), Vector3(0, 0, 0), Vector3(12, 0, 0), Vector3(12, 0, 4), Vector3(20, 0, 4), Vector3(20, 0, -12), Vector3(24, 0, -16), Vector3(24, 0, -20), Vector3(27, 0, -24), Vector3(24, 0, -20), Vector3(20, 0, -12), Vector3(4, 0, -12), Vector3(4, 0, -20), Vector3(-4, 0, -20), Vector3(-4, 0, -12), Vector3(-20, 0, -12), Vector3(-20, 0, -4), Vector3(-23, 0, 0), Vector3(-20, 0, -4), Vector3(-20, 0, -12), Vector3(-4, 0, -12), Vector3(-4, 0, -20), Vector3(0, 0, -20), Vector3(0, 0, -24)])
+autoplay_boss_level = 17

@@ -5,6 +5,8 @@ class_name GameState extends RefCounted
 ## change them in place.
 
 const START_GOLD := 50
+## The last boss: its world flag marks the game as finished.
+const FINAL_BOSS := "senor_niebla"
 
 var hero: Combatant
 var inventory := Inventory.new()
@@ -88,6 +90,12 @@ func on_boss_defeated(boss: Combatant) -> String:
 
 func has_flag(flag: String) -> bool:
 	return flag == "" or world_flags.get(flag, false)
+
+
+## True once the Señor de la Niebla is beaten: the adventure is over (the ending itself
+## comes with the story).
+func is_finished() -> bool:
+	return has_flag(FINAL_BOSS)
 
 
 ## Gold lost on a defeat: half of what is carried, rounded down (gold - lost remains).
