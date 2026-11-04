@@ -26,6 +26,9 @@ const CAMERA_POS := Vector3(0.8, 2.6, 6.0)
 const CAMERA_FOV := 50.0
 ## How far the camera moves toward the target during an attack (0..1).
 const CAMERA_FOCUS := 0.18
+## How far over a figure's top its life bar floats; the target arrow goes above the bar.
+const BAR_GAP := 0.15
+const ARROW_GAP := 0.5
 const ARROW_COLOR := Color(1.0, 0.9, 0.3)
 ## A click this close (pixels) to an enemy aims at it.
 const PICK_RADIUS := 120.0
@@ -140,12 +143,22 @@ func _ready() -> void:
 	_result.continue_requested.connect(_finish)
 	engine = BattleEngine.new(hero, enemies, _rng, inventory)
 	_hud.set_engine(engine)
+	for i in _enemy_actors.size():
+		_hud.add_enemy_bar()
 	if _autoplay and not engine.has_boss():
 		_autoplay_battles += 1
 		_autoplay_flee = _autoplay_battles % AUTOPLAY_EVERY == 0
 		_autoplay_defend = _autoplay_battles % AUTOPLAY_EVERY == AUTOPLAY_DEFEND_AT
 	await _say(_intro_text())
 	_ask_command()
+
+
+## The life bars follow their figures on screen (camera moves and shakes included).
+func _process(_delta: float) -> void:
+	for i in _enemy_actors.size():
+		var actor := _enemy_actors[i]
+		var over := actor.global_position + Vector3.UP * (actor.top_height() + BAR_GAP)
+		_hud.place_enemy_bar(i, _camera.unproject_position(over))
 
 
 func _setup_standalone() -> void:
@@ -275,8 +288,7 @@ func _play_event(event: Dictionary) -> void:
 			_sfx(SfxLibrary.HEAL)
 			_reset_camera()
 			await _actor(event.target).play_heal(event.amount)
-			if event.target == BattleEvent.HERO:
-				_hud.update_hp(event.hp_left, hero.max_hp)
+			_show_life(event.target, event.hp_left)
 			await _say("¡%s recupera %d PV!" % [
 				_fighter(event.target).display_name, event.amount])
 		BattleEvent.MP_HEAL:
@@ -305,8 +317,7 @@ func _play_event(event: Dictionary) -> void:
 		BattleEvent.STATUS_TICK:
 			_sfx(SfxLibrary.HIT)
 			await _actor(event.target).play_status(STATUS_COLORS[event.status], event.amount)
-			if event.target == BattleEvent.HERO:
-				_hud.update_hp(event.hp_left, hero.max_hp)
+			_show_life(event.target, event.hp_left)
 			await _say("¡El veneno quita %d PV a %s!" % [event.amount,
 				_fighter(event.target).display_name])
 		BattleEvent.STATUS_OFF:
@@ -322,10 +333,13 @@ func _play_event(event: Dictionary) -> void:
 			_sfx(SfxLibrary.ENCOUNTER)
 			_shake_camera()
 			await _actor(event.target).play_phase()
+			_show_life(event.target, event.hp_left)
 			await _say("¡La niebla envuelve %s!" % _to(boss))
 			await _say("¡%s se levanta con %d PV!" % [_cap(_the(boss)), event.hp_left])
 		BattleEvent.DEFEATED:
 			_show_arrow(-1)
+			if event.target != BattleEvent.HERO:
+				_hud.hide_enemy_bar(event.target)
 			await _actor(event.target).play_defeat()
 			if event.target == BattleEvent.HERO:
 				_music(MusicLibrary.DEFEAT)
@@ -370,8 +384,7 @@ func _play_damage(event: Dictionary) -> void:
 	else:
 		await _actor(event.target).play_hit(event.amount, event.crit, tag)
 	_reset_camera()
-	if event.target == BattleEvent.HERO:
-		_hud.update_hp(event.hp_left, hero.max_hp)
+	_show_life(event.target, event.hp_left)
 	if event.crit:
 		await _say("¡Golpe crítico!")
 	var target := _fighter(event.target)
@@ -381,6 +394,16 @@ func _play_damage(event: Dictionary) -> void:
 		BattleEvent.RESIST:
 			await _say("¡%s lo resiste!" % _cap(_the(target)))
 	await _say("¡%s recibe %d de daño!" % [target.display_name, event.amount])
+
+
+## The life left of a fighter as the events play it back: the hero's PV bar or the
+## enemy's thin bar (the engine has already resolved the whole round, so its HP can't be
+## read directly).
+func _show_life(who: int, hp_left: int) -> void:
+	if who == BattleEvent.HERO:
+		_hud.update_hp(hp_left, hero.max_hp)
+	else:
+		_hud.set_enemy_life(who, float(hp_left) / maxf(1.0, engine.enemies[who].max_hp))
 
 
 func _play_status_on(event: Dictionary) -> void:
@@ -425,6 +448,7 @@ func _play_call_help(event: Dictionary) -> void:
 	var helper := engine.enemies[event.helper]
 	var actor := _spawn_actor(EnemyLibrary.look(helper.id), _slot(1, 2), HERO_POS)
 	_enemy_actors.append(actor)
+	_hud.add_enemy_bar()
 	await actor.play_appear()
 	await _say("¡Aparece %s %s!" % ["una" if helper.female else "un", helper.display_name])
 
@@ -508,7 +532,7 @@ func _show_arrow(index: int) -> void:
 		_arrow.hide()
 		return
 	var actor := _enemy_actors[index]
-	_arrow.position = actor.position + Vector3(0, actor.top_height() + 0.1, 0)
+	_arrow.position = actor.position + Vector3(0, actor.top_height() + ARROW_GAP, 0)
 	_arrow.show()
 	_arrow_tween = create_tween().set_loops()
 	_arrow_tween.tween_interval(0.25)

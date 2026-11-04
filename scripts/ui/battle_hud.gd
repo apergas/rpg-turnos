@@ -30,6 +30,9 @@ const MENU_WIDTH := 240.0
 ## Margin of the windows to the screen edges and gap between them.
 const EDGE := 24.0
 const GAP := 16.0
+## The thin bar over an enemy: its life left, no number.
+const ENEMY_BAR_SIZE := Vector2(96, 8)
+const ENEMY_BAR_BACK := Color(0.0, 0.0, 0.0, 0.7)
 ## Inner margins of every window: modest, the window hugs what it holds.
 const WINDOW_MARGIN := Vector2(14, 10)
 ## Seconds each step of demo() stays on screen.
@@ -64,6 +67,8 @@ var _menu: PanelContainer
 var _list: VBoxContainer
 var _message: Label
 var _audio: AudioDirector
+## The enemies' bars, by enemy index: [background ColorRect, its red fill ColorRect].
+var _enemy_bars: Array = []
 var _page := Page.NONE
 ## Buttons of the open list and the one under the cursor.
 var _rows: Array[Button] = []
@@ -115,6 +120,41 @@ func update_hp(hp: int, max_hp: int) -> void:
 
 func update_mp(mp: int, max_mp: int) -> void:
 	_mp_bar.show_mp(mp, max_mp)
+
+
+## Adds the bar of the next enemy, full. BattleScene places it every frame (it follows the
+## figure on screen) and sets its life as the events play back.
+func add_enemy_bar() -> void:
+	var back := ColorRect.new()
+	back.color = ENEMY_BAR_BACK
+	back.size = ENEMY_BAR_SIZE
+	back.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(back)
+	move_child(back, 0)  # under every window
+	var fill := ColorRect.new()
+	fill.color = StatBar.HP
+	fill.position = Vector2.ONE
+	fill.size = ENEMY_BAR_SIZE - Vector2(2, 2)
+	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	back.add_child(fill)
+	_enemy_bars.append([back, fill])
+
+
+## Centers enemy i's bar on a screen point.
+func place_enemy_bar(i: int, screen: Vector2) -> void:
+	var back: ColorRect = _enemy_bars[i][0]
+	back.position = (screen - ENEMY_BAR_SIZE / 2.0).round()
+
+
+## Shows how much life enemy i has left, 0..1.
+func set_enemy_life(i: int, ratio: float) -> void:
+	var fill: ColorRect = _enemy_bars[i][1]
+	fill.size.x = (ENEMY_BAR_SIZE.x - 2.0) * clampf(ratio, 0.0, 1.0)
+
+
+## A fallen enemy's bar goes away.
+func hide_enemy_bar(i: int) -> void:
+	(_enemy_bars[i][0] as ColorRect).hide()
 
 
 ## One colored badge per status the hero has.
@@ -510,6 +550,8 @@ func _build_bottom() -> void:
 	message_window.size_flags_vertical = Control.SIZE_SHRINK_END
 	row.add_child(message_window)
 	_message = _label()
+	# Laid out with the whole text while it types, so the window doesn't grow letter by letter.
+	_message.visible_characters_behavior = TextServer.VC_CHARS_AFTER_SHAPING
 	message_window.add_child(_message)
 
 
