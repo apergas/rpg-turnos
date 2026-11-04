@@ -1,13 +1,13 @@
 class_name BattleStage extends RefCounted
-## Builds the battle backdrop: sky, warm sun, fog, grass field with tall grass
-## (Vegetation) around the fighters, dirt path, low-poly rocks, trees and bushes, and
-## distant hills. The environment, the mesh and model helpers and the rock and tree
-## models are shared with WorldStage.
+## Builds the battle backdrop of a zone (ZoneData.backdrop): sky, sun and fog of the
+## zone, grass field with tall grass (Vegetation) around the fighters, dirt path,
+## low-poly rocks, trees and bushes, and distant hills. "pradera" is the open meadow;
+## "bosque" closes a ring of trees around the fighters on darker ground. The environment,
+## the mesh and model helpers and the rock and tree models are shared with WorldStage.
 
 const GRASS := Color(0.32, 0.55, 0.22)
 const DIRT := Color(0.62, 0.5, 0.34)
 const HILL := Color(0.27, 0.47, 0.22)
-const HAZE := Color(0.78, 0.84, 0.92)
 
 ## KayKit Medieval Hexagon rocks A to E (index used by the ROCKS tables).
 const ROCK_SCENES: Array[PackedScene] = [
@@ -24,6 +24,13 @@ const TREE_SCENES: Array[PackedScene] = [
 	preload("res://assets/medieval/tree_single_A.gltf"),
 	preload("res://assets/medieval/tree_single_B.gltf"),
 	preload("res://assets/medieval/trees_A_medium.gltf"),
+]
+## TREE_SCENES plus the forest's clump of trees B (index 3, FOREST_TREES only).
+const FOREST_TREE_SCENES: Array[PackedScene] = [
+	preload("res://assets/medieval/tree_single_A.gltf"),
+	preload("res://assets/medieval/tree_single_B.gltf"),
+	preload("res://assets/medieval/trees_A_medium.gltf"),
+	preload("res://assets/medieval/trees_B_medium.gltf"),
 ]
 ## [position, rock model, scale, yaw in degrees] of each rock.
 const ROCKS := [
@@ -70,21 +77,40 @@ const PATH_CENTER := Vector3(-0.2, 0.0, -0.3)
 const PATH_SIZE := Vector2(2.6, 30.0)
 const PATH_YAW_DEG := -21.0
 const GRASS_MARGIN := 0.3
+## The forest backdrop: ground, grass tips and the ring of trees (same entries as TREES)
+## that stands close behind and beside the fighters, out of the camera's way.
+const FOREST_GROUND := Color(0.2, 0.38, 0.14)
+const FOREST_TIPS := [Color(0.16, 0.42, 0.1), Color(0.3, 0.55, 0.14)]
+const FOREST_TREES := [
+	[Vector3(-7.5, 0, -6), 0, 4.2, 20.0],
+	[Vector3(-9, 0, -1), 1, 4.0, 70.0],
+	[Vector3(7.5, 0, -7), 1, 4.4, 160.0],
+	[Vector3(9.5, 0, -1.5), 0, 3.9, 240.0],
+	[Vector3(-4, 0, -11), 2, 4.6, 200.0],
+	[Vector3(3.5, 0, -12), 3, 4.4, 300.0],
+	[Vector3(-11, 0, -10), 3, 4.2, 90.0],
+	[Vector3(11, 0, -11), 2, 4.0, 10.0],
+	[Vector3(-1, 0, -17), 3, 4.8, 130.0],
+	[Vector3(-13, 0, 3), 2, 4.0, 45.0],
+	[Vector3(13, 0, 3.5), 3, 4.0, 280.0],
+]
 
 
-static func build(root: Node3D) -> void:
-	build_environment(root)
+## zone: whose sky, light and backdrop to use (null: the meadow's).
+static func build(root: Node3D, zone: ZoneData = null) -> void:
+	build_environment(root, zone)
+	var forest := zone != null and zone.backdrop == "bosque"
 	var ground := PlaneMesh.new()
 	ground.size = Vector2(160, 160)
-	add_mesh(root, ground, GRASS, Vector3.ZERO)
+	add_mesh(root, ground, FOREST_GROUND if forest else GRASS, Vector3.ZERO)
 	var path := PlaneMesh.new()
 	path.size = PATH_SIZE
 	add_mesh(root, path, DIRT, PATH_CENTER + Vector3(0, 0.01, 0), Vector3.ONE,
 		Vector3(0, PATH_YAW_DEG, 0))
 	for rock in ROCKS:
 		add_model(root, ROCK_SCENES[rock[1]], rock[0], rock[2], rock[3])
-	for tree in TREES:
-		add_model(root, TREE_SCENES[tree[1]], tree[0], tree[2], tree[3])
+	for tree in FOREST_TREES if forest else TREES:
+		add_model(root, FOREST_TREE_SCENES[tree[1]], tree[0], tree[2], tree[3])
 	var bushes: Array[Transform3D] = []
 	for i in BUSHES.size():
 		bushes.append(Transform3D(Basis(Vector3.UP, i * 0.8).scaled(Vector3.ONE * BUSHES[i][1]),
@@ -92,13 +118,17 @@ static func build(root: Node3D) -> void:
 	LowPoly.add_multimesh(root, LowPoly.bush_mesh(), bushes)
 	for hill in HILLS:
 		add_mesh(root, unit_sphere(), HILL, hill[0], hill[1])
-	Vegetation.build(root, GRASS_AREA, _is_grass_free, GRASS_SEED)
+	Vegetation.build(root, GRASS_AREA, _is_grass_free, GRASS_SEED,
+		PackedColorArray(FOREST_TIPS) if forest else PackedColorArray())
 
 
-## Sky, tonemap, fog and the warm sun shared by every outdoor scene.
-static func build_environment(root: Node3D) -> void:
-	_add_environment(root)
-	_add_sun(root)
+## Sky, tonemap, fog and sun of zone (null: the meadow's warm daylight), shared by the
+## map and its battles.
+static func build_environment(root: Node3D, zone: ZoneData = null) -> void:
+	if zone == null:
+		zone = ZoneData.new()
+	_add_environment(root, zone)
+	_add_sun(root, zone)
 
 
 static func add_mesh(root: Node3D, mesh: Mesh, color: Color, pos: Vector3, \
@@ -168,11 +198,11 @@ static func _is_grass_free(pos: Vector3) -> bool:
 	return true
 
 
-static func _add_environment(root: Node3D) -> void:
+static func _add_environment(root: Node3D, zone: ZoneData) -> void:
 	var sky_material := ProceduralSkyMaterial.new()
-	sky_material.sky_top_color = Color(0.32, 0.52, 0.88)
-	sky_material.sky_horizon_color = HAZE
-	sky_material.ground_horizon_color = HAZE
+	sky_material.sky_top_color = zone.sky_top
+	sky_material.sky_horizon_color = zone.haze
+	sky_material.ground_horizon_color = zone.haze
 	sky_material.ground_bottom_color = Color(0.3, 0.4, 0.3)
 	var sky := Sky.new()
 	sky.sky_material = sky_material
@@ -185,19 +215,19 @@ static func _add_environment(root: Node3D) -> void:
 	env.glow_enabled = true
 	env.glow_intensity = 0.6
 	env.fog_enabled = true
-	env.fog_light_color = HAZE
-	env.fog_density = 0.008
+	env.fog_light_color = zone.haze
+	env.fog_density = zone.fog_density
 	var world_env := WorldEnvironment.new()
 	world_env.environment = env
 	root.add_child(world_env)
 
 
-static func _add_sun(root: Node3D) -> void:
+static func _add_sun(root: Node3D, zone: ZoneData) -> void:
 	var sun := DirectionalLight3D.new()
-	sun.light_color = Color(1.0, 0.9, 0.75)
+	sun.light_color = zone.sun_color
 	# Tuned for the Compatibility renderer (needed for the web build); 1.3 looked
-	# right under Forward+ but washes everything out here.
-	sun.light_energy = 0.6
+	# right under Forward+ but washes everything out here. The meadow uses 0.6.
+	sun.light_energy = zone.sun_energy
 	sun.shadow_enabled = true
 	sun.rotation_degrees = Vector3(-40, 35, 0)
 	root.add_child(sun)

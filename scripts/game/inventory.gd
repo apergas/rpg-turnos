@@ -6,10 +6,12 @@ class_name Inventory extends RefCounted
 const POTION := "potion"
 const ETHER := "ether"
 const ANTIDOTE := "antidote"
+const WING := "wing"
 const START_POTIONS := 3
 ## name and article (for "una Poción"); effect "hp" (heals value HP), "mp" (restores
-## value MP) or "cure" (removes the status named by value); price in gold (Shop sells
-## at it and buys back at half); battle / field: usable in battle / from the pause menu.
+## value MP), "cure" (removes the status named by value) or "travel" (the Ala de viaje:
+## Game takes the hero to the last village visited); price in gold (Shop sells at it and
+## buys back at half); battle / field: usable in battle / from the pause menu.
 const ITEMS := {
 	POTION: {"name": "Poción", "article": "una", "effect": "hp", "value": 30, "price": 8,
 		"battle": true, "field": true},
@@ -17,9 +19,15 @@ const ITEMS := {
 		"battle": true, "field": true},
 	ANTIDOTE: {"name": "Antídoto", "article": "un", "effect": "cure", "value": "poison",
 		"price": 10, "battle": true, "field": false},
+	WING: {"name": "Ala de viaje", "article": "un", "effect": "travel", "value": 0,
+		"price": 25, "battle": false, "field": true},
 }
 ## Order of the item lists.
-const IDS: Array[String] = [POTION, ETHER, ANTIDOTE]
+const IDS: Array[String] = [POTION, ETHER, ANTIDOTE, WING]
+## Key items (GameState.key_items): never used up, sold or dropped; id -> name.
+const KEY_ITEMS := {
+	"fragmento_bosque": "Fragmento del amuleto",
+}
 
 var _items := {}
 
@@ -71,7 +79,8 @@ func problem(id: String, c: Combatant, in_battle: bool) -> String:
 
 
 ## Takes one and applies it to c. Returns {"used": bool, "effect": String, "amount":
-## int (HP or MP recovered), "status": String (cured), "reason": String (why not)}.
+## int (HP or MP recovered), "status": String (cured), "reason": String (why not)}. A
+## "travel" item only gets used up: the caller does the trip.
 func use(id: String, c: Combatant, in_battle: bool) -> Dictionary:
 	var reason := problem(id, c, in_battle)
 	if reason != "":

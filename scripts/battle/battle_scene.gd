@@ -54,6 +54,9 @@ var inventory: Inventory
 var char_time := BattleHud.CHAR_TIME
 ## Gold the hero loses if defeated (Game takes it away; the battle only says so).
 var gold_lost := 0
+## Zone the battle is fought in: its sky, light and backdrop (null: the meadow's). Set
+## before adding it to the tree.
+var zone: ZoneData
 
 var _rng := RandomNumberGenerator.new()
 var _autoplay := false
@@ -113,7 +116,7 @@ func _ready() -> void:
 		"Call setup() before adding BattleScene to the tree")
 	_rng.randomize()
 	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
-	BattleStage.build(self)
+	BattleStage.build(self, zone)
 	_hero_actor = _spawn_actor(BattleActor.Look.HERO, HERO_POS, ENEMY_POS)
 	_hero_actor.set_equipment(_weapon_id, _shield_id)
 	for i in enemies.size():

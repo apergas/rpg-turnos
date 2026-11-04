@@ -23,8 +23,12 @@ const FLOWER_HEIGHT := Vector2(0.6, 0.85)
 
 
 ## Fills area (metres on XZ: position.x = min X, position.y = min Z) with grass and
-## flowers where is_free.call(Vector3) is true. Returns the shared grass material.
-static func build(root: Node3D, area: Rect2, is_free: Callable, seed: int) -> ShaderMaterial:
+## flowers where is_free.call(Vector3) is true. tips: the two tip greens (sRGB) mixed in
+## every tuft (empty: TIP_COLORS). Returns the shared grass material.
+static func build(root: Node3D, area: Rect2, is_free: Callable, seed: int, \
+		tips := PackedColorArray()) -> ShaderMaterial:
+	if tips.size() < 2:
+		tips = PackedColorArray(TIP_COLORS)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed
 	var material := ShaderMaterial.new()
@@ -40,7 +44,7 @@ static func build(root: Node3D, area: Rect2, is_free: Callable, seed: int) -> Sh
 			var yaw := rng.randf() * TAU
 			var scl := rng.randf_range(MIN_SCALE, MAX_SCALE)
 			# Custom data skips the sRGB conversion that base_color gets, so convert here.
-			var tint: Color = TIP_COLORS[0].lerp(TIP_COLORS[1], rng.randf()).srgb_to_linear()
+			var tint: Color = tips[0].lerp(tips[1], rng.randf()).srgb_to_linear()
 			if is_free.call(pos):
 				var key := Vector2i(floori(pos.x / CHUNK), floori(pos.z / CHUNK))
 				if not chunks.has(key):

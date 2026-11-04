@@ -56,10 +56,10 @@ func show_victory(exp_gained: int, total_exp: int, new_level: int, gold: int,
 ## gold_lost: the gold taken from the hero (0 shows no gold line).
 func show_defeat(gold_lost := 0) -> void:
 	_title.text = "Has sido derrotado"
-	_detail.text = "Volverás al inicio."
+	_detail.text = "Volverás al pueblo."
 	if gold_lost > 0:
 		_detail.text = "Pierdes %d G.
-Volverás al inicio." % gold_lost
+Volverás al pueblo." % gold_lost
 	_open()
 
 

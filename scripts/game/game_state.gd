@@ -1,7 +1,8 @@
 class_name GameState extends RefCounted
 ## State of the play session, kept in memory while the game is open. The hero, the
-## inventory, the gold, the equipment and the village quest live here for the whole
-## session; battles, shops, chests and dialogue change them in place.
+## inventory, the gold, the equipment, the village quest and the progress through the
+## world live here for the whole session; battles, shops, chests, exits and dialogue
+## change them in place.
 
 const START_GOLD := 50
 
@@ -15,6 +16,17 @@ var loadout := Loadout.new()
 var bag_equipment: Array[String] = []
 ## Ids of the chests already opened (Chests.CHESTS keys).
 var opened_chests: Array[String] = []
+## Progress through the world: flag -> true. A boss sets its enemy id when defeated
+## ("rey_slime" lifts the fog of the meadow's north exit); ZoneData exits name the flag
+## that opens them.
+var world_flags := {}
+## Key items carried (Inventory.KEY_ITEMS ids), in the order they were found.
+var key_items: Array[String] = []
+## ZoneData id of the map the hero is on.
+var zone_id := "pradera"
+## ZoneData id of the last village visited: the Ala de viaje and a defeat lead to its
+## town entry.
+var town_zone := "pradera"
 
 
 func _init(hero_data: Combatant) -> void:
@@ -62,6 +74,20 @@ func unequip(slot: String) -> void:
 	if removed != "":
 		bag_equipment.append(removed)
 	refresh_equipment()
+
+
+## Records a defeated boss: its world flag and its key item (once). Returns the key
+## item id it gave ("" if none or already carried).
+func on_boss_defeated(boss: Combatant) -> String:
+	world_flags[boss.id] = true
+	if boss.key_item == "" or boss.key_item in key_items:
+		return ""
+	key_items.append(boss.key_item)
+	return boss.key_item
+
+
+func has_flag(flag: String) -> bool:
+	return flag == "" or world_flags.get(flag, false)
 
 
 ## Gold lost on a defeat: half of what is carried, rounded down (gold - lost remains).

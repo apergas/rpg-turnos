@@ -81,7 +81,7 @@ func _open_title() -> void:
 	_starting = false
 	_backdrop = Node3D.new()
 	add_child(_backdrop)
-	WorldStage.build(_backdrop)
+	WorldStage.build(_backdrop, ZoneData.by_id("pradera"))
 	_camera = Camera3D.new()
 	_camera.fov = 45.0
 	_backdrop.add_child(_camera)

@@ -1,0 +1,92 @@
+[gd_resource type="Resource" script_class="ZoneData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/zone_data.gd" id="1_zone"]
+
+[resource]
+script = ExtResource("1_zone")
+id = "pradera"
+display_name = "la pradera"
+number = 1
+half_size = Vector2(30, 30)
+outer_margin = 6.0
+ground_color = Color(0.08, 0.22, 0.05, 1)
+has_grass = true
+grass_tips = PackedColorArray(0.22, 0.55, 0.12, 1, 0.42, 0.72, 0.16, 1)
+grass_seed = 7
+hills = [[Vector3(-40, -5, -42), Vector3(22, 10, 22)], [Vector3(0, -6, -54), Vector3(28, 11, 20)], [Vector3(40, -5, -40), Vector3(22, 9, 22)], [Vector3(54, -6, 0), Vector3(20, 10, 28)], [Vector3(42, -5, 42), Vector3(22, 9, 22)], [Vector3(0, -6, 56), Vector3(28, 10, 20)], [Vector3(-42, -5, 42), Vector3(22, 10, 22)], [Vector3(-54, -6, 0), Vector3(20, 9, 28)]]
+path_points = Array[Vector3]([Vector3(0, 0, 26), Vector3(3, 0, 12), Vector3(-2, 0, 0), Vector3(2, 0, -12), Vector3(0, 0, -22)])
+path_half_width = 1.5
+safe_discs = [[Vector3(0, 0, 26), 4.0], [Vector3(0, 0, -22), 8.0]]
+village_name = "Villaclaro"
+village_pos = Vector3(0, 0, -22)
+village_radius = 8.0
+buildings = [[Vector3(-5.5, 0, -25), 60.0, "house_A_red"], [Vector3(5.5, 0, -25), -60.0, "house_B_red"], [Vector3(4.5, 0, -19), 0.0, "well_red"]]
+rocks = [[Vector3(-20, 0, -16), 2, 8.0, 15.0], [Vector3(-22, 0, 14), 4, 9.0, 60.0], [Vector3(18, 0, -18), 3, 9.0, 130.0], [Vector3(22, 0, 16), 4, 10.0, 200.0], [Vector3(-10, 0, -18), 1, 8.0, 290.0], [Vector3(12, 0, -20), 2, 9.0, 80.0], [Vector3(-12, 0, 23), 0, 10.0, 170.0], [Vector3(24, 0, 0), 3, 10.0, 240.0], [Vector3(-24, 0, -2), 2, 10.0, 320.0], [Vector3(7, 0, -15), 1, 7.0, 45.0]]
+tree_seed = 23
+tree_tries = 600
+tree_center_chance = 0.05
+tree_rise_inset = 22.0
+tree_clump_inset = 3.0
+tree_spacing = 3.2
+tree_scale = Vector2(3.6, 4.4)
+tree_models = Array[String](["tree_A", "tree_B"])
+clump_model = "trees_A"
+glades = []
+bush_seed = 31
+bush_tries = 220
+entries = {
+"inicio": [Vector3(0, 0, 26), 0.0],
+"norte": [Vector3(0, 0, -25.5), 180.0],
+"pueblo": [Vector3(0.8, 0, -14.5), 0.0]
+}
+start_entry = "inicio"
+town_entry = "pueblo"
+exits = [{
+"entry": "sur",
+"id": "norte",
+"label": "Al bosque",
+"lock": "rey_slime",
+"lock_text": "Una niebla espesa cierra el camino del norte.",
+"pos": Vector3(0, 0, -28.6),
+"to": "bosque",
+"yaw": 0.0
+}]
+npcs = [{
+"kind": "quest",
+"look": "VILLAGER",
+"name": "Anciana",
+"pos": Vector3(-2.5, 0, -20),
+"yaw": 180.0
+}, {
+"id": "villaclaro",
+"kind": "shop",
+"look": "MERCHANT",
+"name": "Mercader",
+"pos": Vector3(-3, 0, -23.6),
+"yaw": 180.0
+}, {
+"id": "villaclaro",
+"kind": "inn",
+"look": "INNKEEPER",
+"name": "Posadero",
+"pos": Vector3(2.8, 0, -22),
+"yaw": 180.0
+}]
+boss_id = "rey_slime"
+boss_pos = Vector3(0, 0, -27.5)
+formations = [["slime"], ["slime"], ["bat"], ["mushroom"], ["slime", "slime"], ["slime", "bat"]]
+start_formations = [["slime"], ["slime", "slime"]]
+start_pos = Vector3(0, 0, 26)
+start_radius = 20.0
+encounter_grace = 9.0
+encounter_chance = 0.01
+music = "map"
+village_music = "village"
+sky_top = Color(0.32, 0.52, 0.88, 1)
+haze = Color(0.78, 0.84, 0.92, 1)
+fog_density = 0.008
+sun_color = Color(1, 0.9, 0.75, 1)
+sun_energy = 0.6
+backdrop = "pradera"
+autoplay_route = Array[Vector3]([Vector3(8, 0, 18), Vector3(16, 0, 6), Vector3(10, 0, -6), Vector3(1, 0, -14), Vector3(-1.5, 0, -18), Vector3(-1.2, 0, -23), Vector3(0, 0, -26.5), Vector3(0, 0, -28.6), Vector3(2, 0, -14), Vector3(-6, 0, -4), Vector3(-14, 0, 8), Vector3(-6, 0, 18)])
+autoplay_boss_level = 5

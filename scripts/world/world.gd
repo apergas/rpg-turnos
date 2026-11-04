@@ -1,17 +1,22 @@
 class_name World extends Node3D
-## World map: field, village, player, follow camera, status window, chests and random
-## encounters. A click or tap on the ground (held and dragged too) walks the player
-## there, with a marker on the spot. Next to the old woman, the merchant, the innkeeper
-## or a closed chest (the nearest one in reach) Enter / Space talks (talk_requested),
-## opens the shop (shop_requested), asks for a room (inn_requested) or opens the chest
-## (chest_opened); a click or tap on one of them
-## walks there and does it on arrival. With the Rey Slime present, walking into it
-## starts the boss battle. Encounters emit encounter_triggered(boss) and freeze the
-## player until set_active(true). Run on its own (res://scenes/world/world.tscn) it
-## prints each encounter, shop and chest and goes on.
+## One map of the world, built from `zone` (a ZoneData, set before add_child; the
+## meadow if none): field, village, figures, boss, chests, exits, player, follow camera,
+## status window and random encounters. A click or tap on the ground (held and dragged
+## too) walks the player there, with a marker on the spot. Next to a figure or a closed
+## chest (the nearest one in reach) Enter / Space talks to the old woman
+## (talk_requested) or to a villager (npc_requested), opens the shop (shop_requested),
+## asks for a room (inn_requested) or opens the chest (chest_opened); a click or tap on
+## one of them walks there and does it on arrival. With the boss present, walking into
+## it starts the boss battle. Walking into an open exit emits exit_requested; a closed
+## one (its world flag not set: set_world_flags()) shows its fog and its notice.
+## Encounters and exits freeze the player until set_active(true) (or until Game frees
+## the map). Run on its own (res://scenes/world/world.tscn) it prints each encounter,
+## talk, shop, inn, chest and exit and goes on.
 
 signal encounter_triggered(boss: bool)
 signal talk_requested
+## The player talked to the villager zone.npcs[index] (kind "npc").
+signal npc_requested(index: int)
 ## The player asked the merchant of shop_id (a Shop.SHOPS key) to trade.
 signal shop_requested(shop_id: String)
 ## The player talked to the innkeeper of inn_id (an Inn.INNS key).
@@ -21,30 +26,40 @@ signal inn_requested(inn_id: String)
 signal chest_opened(chest_id: String)
 ## The player walked into (true) or out of (false) the village clearing.
 signal village_changed(inside: bool)
+## The player walked into an open exit: Game loads zone_id at its entry entry_id.
+signal exit_requested(zone_id: String, entry_id: String)
 
 const PLAYER_SCENE := preload("res://scenes/world/player.tscn")
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
 const HERO_DATA := preload("res://data/hero.tres")
 const NOTICE_TIME := 2.0
 const FONT_SIZE := 24
-## How close the player must be to talk to the old woman or the merchant / to open a
-## chest / to run into the boss.
+## How close the player must be to talk to a figure / to open a chest / to run into the
+## boss / to take an exit.
 const TALK_RADIUS := 2.5
 const CHEST_RADIUS := 1.8
 const BOSS_RADIUS := 2.5
+const EXIT_RADIUS := 1.2
+## After arriving (or after a closed exit's notice) exits wait until the player is this
+## much farther than EXIT_RADIUS from all of them.
+const EXIT_REARM := 0.8
 ## A click or tap this close to a figure or a chest means "go there and use it".
 const NPC_TAP_RADIUS := 1.2
 ## Kinds of the things the player can use on the map, and their prompts.
 const TALK := "talk"
+const NPC := "npc"
 const SHOP := "shop"
 const INN := "inn"
 const CHEST := "chest"
 const PROMPTS := {
 	TALK: "Enter o toca: hablar",
+	NPC: "Enter o toca: hablar",
 	SHOP: "Enter o toca: comprar",
 	INN: "Enter o toca: hablar",
 	CHEST: "Enter o toca: abrir",
 }
+## ZoneData.npcs kinds -> use kinds.
+const NPC_KINDS := {"quest": TALK, "npc": NPC, "shop": SHOP, "inn": INN}
 ## Chest model: wooden box with a gold band and a lid hinged at the back.
 const CHEST_SIZE := Vector3(0.9, 0.45, 0.6)
 const CHEST_LID_HEIGHT := 0.2
@@ -52,22 +67,33 @@ const CHEST_WOOD := Color(0.5, 0.3, 0.14)
 const CHEST_BAND := Color(1.0, 0.78, 0.2)
 ## Angle of an open lid (degrees about X: the front edge swings up and back).
 const CHEST_OPEN_ANGLE := 110.0
+## Exit arch: two posts and a beam of dark wood, a sign board with the exit's label
+## (always facing the camera, south) and, while closed, a bank of fog.
+const ARCH_WOOD := Color(0.36, 0.22, 0.1)
+const ARCH_WIDTH := 3.6
+const ARCH_HEIGHT := 3.0
+const SIGN_COLOR := Color(0.62, 0.45, 0.25)
+const FOG_COLOR := Color(0.92, 0.93, 0.97, 0.6)
 const MARKER_COLOR := Color(1.0, 0.9, 0.4)
 ## Meters walked between two footstep sounds.
 const STEP_DISTANCE := 1.6
+
+## The map to build; set before add_child.
+var zone: ZoneData
 
 var _rng := RandomNumberGenerator.new()
 var _meter: EncounterMeter
 var _grass: ShaderMaterial
 var _player: Player
 var _camera: FollowCamera
-var _npc: StaticBody3D
-var _merchant: StaticBody3D
-var _innkeeper: StaticBody3D
 var _boss: StaticBody3D
 ## chest id -> lid pivot (rotation.x opens it); a chest in _open_chests is open.
 var _chest_lids := {}
 var _open_chests: Array[String] = []
+## exit id -> fog bank shown while the exit is closed.
+var _fogs := {}
+var _flags := {}
+var _exits_armed := false
 var _boss_present := false
 var _ui: CanvasLayer
 var _name_label: Label
@@ -78,6 +104,7 @@ var _potion_label: Label
 var _gold_label: Label
 var _quest_label: Label
 var _notice: Label
+var _notice_serial := 0
 var _prompt: Label
 var _dialogue: DialogueBox
 var _autoplay := false
@@ -87,6 +114,8 @@ var _talking := false
 var _was_near := {}
 ## Set by a click or tap on a figure or chest: use it as soon as it is in reach.
 var _use_on_arrival := {}
+## Autoplay only: npc indexes already talked to on this map.
+var _autoplay_talked := {}
 var _marker: MeshInstance3D
 var _audio: AudioDirector
 var _in_village := false
@@ -94,39 +123,39 @@ var _step_m := 0.0
 
 
 func _ready() -> void:
+	if zone == null:
+		zone = ZoneData.by_id("pradera")
 	_rng.randomize()
 	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
-	_meter = EncounterMeter.new(_rng)
-	_grass = WorldStage.build(self)
-	_npc = _add_figure(BattleActor.Look.VILLAGER, WorldStage.NPC_POS, 0.4, 1.8)
-	_merchant = _add_figure(BattleActor.Look.MERCHANT, WorldStage.MERCHANT_POS, 0.4, 1.8)
-	_innkeeper = _add_figure(BattleActor.Look.INNKEEPER, WorldStage.INNKEEPER_POS, 0.4, 1.8)
-	_boss = _add_figure(BattleActor.Look.KING_SLIME, WorldStage.BOSS_POS, 1.0, 2.0)
-	for id: String in Chests.CHESTS:
+	_meter = EncounterMeter.new(_rng, zone.encounter_grace, zone.encounter_chance)
+	_grass = WorldStage.build(self, zone)
+	for npc: Dictionary in zone.npcs:
+		_add_figure(BattleActor.Look[npc.look], npc.pos, npc.yaw, 0.4, 1.8)
+	if zone.boss_id != "":
+		_boss = _add_figure(EnemyLibrary.look(zone.boss_id), zone.boss_pos, 180.0, 1.0, 2.0)
+	for id in Chests.of_zone(zone.id):
 		_chest_lids[id] = build_chest(self, Chests.CHESTS[id])
+	for exit: Dictionary in zone.exits:
+		_fogs[exit.id] = _build_exit(exit)
 	set_boss_present(false)
+	set_world_flags({})
 	_player = PLAYER_SCENE.instantiate()
+	_player.route = zone.autoplay_route
 	add_child(_player)
 	_camera = FollowCamera.new()
 	add_child(_camera)
 	_camera.target = _player
 	_marker = _build_marker()
 	_build_ui()
-	respawn()
+	place_at_entry(zone.start_entry)
 	_camera.current = true
 	if get_parent() == get_tree().root:
-		refresh_status(HERO_DATA, Inventory.START_POTIONS, GameState.START_GOLD)
-		encounter_triggered.connect(_on_standalone_encounter)
-		talk_requested.connect(_on_standalone_talk)
-		shop_requested.connect(func(shop_id: String) -> void: print("Tienda: %s" % shop_id))
-		inn_requested.connect(func(inn_id: String) -> void: print("Posada: %s" % inn_id))
-		chest_opened.connect(func(chest_id: String) -> void:
-			print("Cofre: %s" % chest_id)
-			set_chest_open(chest_id, true))
+		_connect_standalone()
 
 
 func _physics_process(_delta: float) -> void:
-	Vegetation.set_pusher(_grass, _player.global_position)
+	if _grass:
+		Vegetation.set_pusher(_grass, _player.global_position)
 	_marker.visible = _player.move_target != null
 	if _marker.visible:
 		_marker.position = _player.move_target
@@ -138,10 +167,12 @@ func _physics_process(_delta: float) -> void:
 		_in_village = inside
 		village_changed.emit(inside)
 	_play_steps()
-	if _boss_present and _flat_distance(pos, WorldStage.BOSS_POS) <= BOSS_RADIUS:
+	if _check_exits(pos):
+		return
+	if _boss_present and _flat_distance(pos, zone.boss_pos) <= BOSS_RADIUS:
 		_trigger(true)
 		return
-	var in_grass := not WorldStage.is_on_path(pos)
+	var in_grass := not WorldStage.is_on_path(zone, pos)
 	if _meter.advance(_player.last_step_m, in_grass):
 		_trigger(false)
 		return
@@ -154,7 +185,10 @@ func _physics_process(_delta: float) -> void:
 		_player.move_target = null
 		_use(near)
 	elif not near.is_empty() and near != _was_near and _autoplay:
-		_use(near)
+		# Autoplay talks to each villager once per visit to the zone.
+		if near.kind != NPC or not _autoplay_talked.has(near.index):
+			_autoplay_talked[near.index] = true
+			_use(near)
 	_was_near = near
 
 
@@ -203,20 +237,23 @@ func set_active(active: bool) -> void:
 		_player.input_enabled = true
 
 
-## Back to the spawn point facing up the path, with the encounter grace restarted.
-func respawn() -> void:
-	place_player(WorldStage.SPAWN_POS)
+## Puts the player at one of the zone's entries (ZoneData.entry()).
+func place_at_entry(entry_id: String) -> void:
+	var entry := zone.entry(entry_id)
+	place_player(entry[0], entry[1])
 
 
-## Puts the player at pos facing north (a loaded game), with the encounter grace
-## restarted. in_village() is right at once; village_changed is not emitted.
-func place_player(pos: Vector3) -> void:
-	_player.place(pos, 0.0)
+## Puts the player at pos facing yaw_deg (0 faces north; a loaded game faces north),
+## with the encounter grace restarted and the exits waiting until the player steps
+## away from them. in_village() is right at once; village_changed is not emitted.
+func place_player(pos: Vector3, yaw_deg := 0.0) -> void:
+	_player.place(pos, deg_to_rad(yaw_deg))
 	_camera.snap()
 	_meter.reset()
 	_was_near = {}
 	_use_on_arrival = {}
 	_step_m = 0.0
+	_exits_armed = false
 	_in_village = _is_in_village(pos)
 
 
@@ -234,11 +271,32 @@ func set_audio(audio: AudioDirector) -> void:
 	_dialogue.set_audio(audio)
 
 
-## Shows or removes the Rey Slime north of the village; when absent it has no collision.
+## Shows or removes the zone's boss; when absent it has no collision.
 func set_boss_present(present: bool) -> void:
+	if _boss == null:
+		return
 	_boss_present = present
 	_boss.visible = present
 	_boss.process_mode = Node.PROCESS_MODE_INHERIT if present else Node.PROCESS_MODE_DISABLED
+
+
+## The world progress (GameState.world_flags): which exits are open (their fog hides)
+## and what the villagers say.
+func set_world_flags(flags: Dictionary) -> void:
+	_flags = flags
+	for exit: Dictionary in zone.exits:
+		(_fogs[exit.id] as Node3D).visible = not _is_open(exit)
+
+
+## The lines villager zone.npcs[index] says now (lines_after once its after_flag is set).
+func npc_lines(index: int) -> Array[String]:
+	var npc: Dictionary = zone.npcs[index]
+	var lines: Array[String] = []
+	if npc.has("after_flag") and _flags.get(npc.after_flag, false):
+		lines.assign(npc.lines_after)
+	else:
+		lines.assign(npc.lines)
+	return lines
 
 
 ## Freezes the player and shows the lines one by one; returns when they are all read.
@@ -248,9 +306,9 @@ func show_dialogue(speaker: String, lines: Array[String]) -> void:
 	await freeze(false)
 
 
-## Freezes the player (no walking, prompts, encounters or uses) while a dialogue or the
-## shop is open. Unfreezing waits one frame, so the key that closed the window does not
-## open it again; await it.
+## Freezes the player (no walking, prompts, encounters, exits or uses) while a dialogue
+## or the shop is open. Unfreezing waits one frame, so the key that closed the window
+## does not open it again; await it.
 func freeze(on: bool) -> void:
 	if on:
 		_talking = true
@@ -267,9 +325,11 @@ func set_hero_equipment(weapon_id: String, shield_id: String) -> void:
 	_player.set_equipment(weapon_id, shield_id)
 
 
-## Opens (lid tipped back, tweened unless instant) or closes a chest. An open chest
-## can't be used any more.
+## Opens (lid tipped back, tweened unless instant) or closes a chest of this zone. An
+## open chest can't be used any more; ids of other zones are ignored.
 func set_chest_open(chest_id: String, open: bool, instant := false) -> void:
+	if not _chest_lids.has(chest_id):
+		return
 	var lid: Node3D = _chest_lids[chest_id]
 	var angle := deg_to_rad(CHEST_OPEN_ANGLE) if open else 0.0
 	if open and not _open_chests.has(chest_id):
@@ -298,12 +358,17 @@ func refresh_status(hero: Combatant, potions: int, gold: int, quest_text := "") 
 	_quest_label.visible = quest_text != ""
 
 
-## Shows a short line under the status for NOTICE_TIME seconds.
+## Shows a short line under the status for NOTICE_TIME seconds (a newer one replaces it).
 func show_notice(text: String) -> void:
+	_notice_serial += 1
+	var serial := _notice_serial
 	_notice.text = text
 	_notice.show()
+	if _autoplay:
+		print(text)
 	await get_tree().create_timer(NOTICE_TIME).timeout
-	_notice.hide()
+	if serial == _notice_serial:
+		_notice.hide()
 
 
 func _trigger(boss: bool) -> void:
@@ -315,15 +380,48 @@ func _trigger(boss: bool) -> void:
 	encounter_triggered.emit(boss)
 
 
-## The nearest thing in reach of pos that can be used: {"kind": TALK / SHOP / CHEST,
-## "id": shop or chest id ("" to talk)}, or {} if none.
+func _is_open(exit: Dictionary) -> bool:
+	return exit.lock == "" or _flags.get(exit.lock, false)
+
+
+## Takes an open exit the player walked into (true: the map waits for Game), or shows a
+## closed one's notice once per approach. Exits only count once the player has stepped
+## away from all of them since arriving.
+func _check_exits(pos: Vector3) -> bool:
+	var nearest := {}
+	var nearest_d := INF
+	for exit: Dictionary in zone.exits:
+		var d := _flat_distance(pos, exit.pos)
+		if d < nearest_d:
+			nearest = exit
+			nearest_d = d
+	if nearest.is_empty():
+		return false
+	if not _exits_armed:
+		_exits_armed = nearest_d > EXIT_RADIUS + EXIT_REARM
+		return false
+	if nearest_d > EXIT_RADIUS:
+		return false
+	_exits_armed = false
+	if not _is_open(nearest):
+		show_notice(nearest.lock_text)
+		return false
+	_waiting = true
+	_player.input_enabled = false
+	_prompt.hide()
+	exit_requested.emit(nearest.to, nearest.entry)
+	return true
+
+
+## The nearest thing in reach of pos that can be used: {"kind": TALK / NPC / SHOP / INN
+## / CHEST, "id": shop, inn or chest id ("" otherwise), "index": the npc's index}, or {}.
 func _nearest_use(pos: Vector3) -> Dictionary:
 	var best := {}
 	var best_d := INF
 	for use in _uses():
 		var d := _flat_distance(pos, use.pos)
 		if d <= use.radius and d < best_d:
-			best = {"kind": use.kind, "id": use.id}
+			best = {"kind": use.kind, "id": use.id, "index": use.index}
 			best_d = d
 	return best
 
@@ -332,23 +430,20 @@ func _nearest_use(pos: Vector3) -> Dictionary:
 func _tapped_use(point: Vector3) -> Dictionary:
 	for use in _uses():
 		if _flat_distance(point, use.pos) <= NPC_TAP_RADIUS:
-			return {"kind": use.kind, "id": use.id}
+			return {"kind": use.kind, "id": use.id, "index": use.index}
 	return {}
 
 
-## Everything usable now: the old woman, the merchant, the innkeeper and the closed
-## chests.
+## Everything usable now: the zone's figures and its closed chests.
 func _uses() -> Array[Dictionary]:
-	var uses: Array[Dictionary] = [
-		{"kind": TALK, "id": "", "pos": WorldStage.NPC_POS, "radius": TALK_RADIUS},
-		{"kind": SHOP, "id": Shop.VILLACLARO, "pos": WorldStage.MERCHANT_POS,
-			"radius": TALK_RADIUS},
-		{"kind": INN, "id": Inn.VILLACLARO, "pos": WorldStage.INNKEEPER_POS,
-			"radius": TALK_RADIUS},
-	]
-	for id: String in Chests.CHESTS:
+	var uses: Array[Dictionary] = []
+	for i in zone.npcs.size():
+		var npc: Dictionary = zone.npcs[i]
+		uses.append({"kind": NPC_KINDS[npc.kind], "id": npc.get("id", ""), "index": i,
+			"pos": npc.pos, "radius": TALK_RADIUS})
+	for id in _chest_lids:
 		if not _open_chests.has(id):
-			uses.append({"kind": CHEST, "id": id, "pos": Chests.CHESTS[id].pos,
+			uses.append({"kind": CHEST, "id": id, "index": -1, "pos": Chests.CHESTS[id].pos,
 				"radius": CHEST_RADIUS})
 	return uses
 
@@ -357,6 +452,8 @@ func _use(use: Dictionary) -> void:
 	match use.get("kind", ""):
 		TALK:
 			talk_requested.emit()
+		NPC:
+			npc_requested.emit(use.index)
 		SHOP:
 			shop_requested.emit(use.id)
 		INN:
@@ -365,15 +462,25 @@ func _use(use: Dictionary) -> void:
 			chest_opened.emit(use.id)
 
 
-func _on_standalone_encounter(boss: bool) -> void:
-	print("Encuentro en %s (jefe: %s, en el camino: %s)" % [
-		_player.global_position, boss, WorldStage.is_on_path(_player.global_position)])
-	set_active(true)
-
-
-func _on_standalone_talk() -> void:
-	var lines: Array[String] = ["Hola, viajero."]
-	await show_dialogue(Quest.NPC_NAME, lines)
+func _connect_standalone() -> void:
+	refresh_status(HERO_DATA, Inventory.START_POTIONS, GameState.START_GOLD)
+	encounter_triggered.connect(func(boss: bool) -> void:
+		print("Encuentro en %s (jefe: %s, en el camino: %s)" % [_player.global_position, boss,
+			WorldStage.is_on_path(zone, _player.global_position)])
+		set_active(true))
+	talk_requested.connect(func() -> void:
+		var lines: Array[String] = ["Hola, viajero."]
+		await show_dialogue(Quest.NPC_NAME, lines))
+	npc_requested.connect(func(index: int) -> void:
+		await show_dialogue(zone.npcs[index].name, npc_lines(index)))
+	shop_requested.connect(func(shop_id: String) -> void: print("Tienda: %s" % shop_id))
+	inn_requested.connect(func(inn_id: String) -> void: print("Posada: %s" % inn_id))
+	chest_opened.connect(func(chest_id: String) -> void:
+		print("Cofre: %s" % chest_id)
+		set_chest_open(chest_id, true))
+	exit_requested.connect(func(zone_id: String, entry_id: String) -> void:
+		print("Salida: %s (%s)" % [zone_id, entry_id])
+		set_active(true))
 
 
 ## Flat ring on the spot the player walks to. Drawn on top of everything, so the tall
@@ -395,6 +502,51 @@ func _build_marker() -> MeshInstance3D:
 	marker.visible = false
 	add_child(marker)
 	return marker
+
+
+## The arch of an exit (turned by its yaw) with its sign, which always faces the camera,
+## and the fog bank that closes it. Returns the fog bank.
+func _build_exit(exit: Dictionary) -> Node3D:
+	var root := Node3D.new()
+	root.position = exit.pos
+	add_child(root)
+	var arch := Node3D.new()
+	arch.rotation_degrees.y = exit.yaw
+	root.add_child(arch)
+	var post := BoxMesh.new()
+	post.size = Vector3(0.3, ARCH_HEIGHT, 0.3)
+	for x in [-ARCH_WIDTH / 2.0, ARCH_WIDTH / 2.0]:
+		BattleStage.add_mesh(arch, post, ARCH_WOOD, Vector3(x, ARCH_HEIGHT / 2.0, 0))
+	var beam := BoxMesh.new()
+	beam.size = Vector3(ARCH_WIDTH + 0.6, 0.35, 0.4)
+	BattleStage.add_mesh(arch, beam, ARCH_WOOD, Vector3(0, ARCH_HEIGHT, 0))
+	var board := BoxMesh.new()
+	board.size = Vector3(2.4, 0.55, 0.08)
+	BattleStage.add_mesh(root, board, SIGN_COLOR, Vector3(0, ARCH_HEIGHT + 0.5, 0.1))
+	var label := Label3D.new()
+	label.text = exit.label
+	label.font_size = 48
+	label.pixel_size = 0.008
+	label.outline_size = 10
+	label.modulate = Color(1.0, 0.95, 0.8)
+	label.position = Vector3(0, ARCH_HEIGHT + 0.5, 0.15)
+	root.add_child(label)
+	var fog := Node3D.new()
+	root.add_child(fog)
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.albedo_color = FOG_COLOR
+	for puff in [Vector3(-1.2, 0.8, 0), Vector3(0, 1.1, 0.1), Vector3(1.2, 0.8, 0),
+			Vector3(-0.6, 1.9, -0.1), Vector3(0.7, 2.0, 0)]:
+		var mi := MeshInstance3D.new()
+		mi.mesh = BattleStage.unit_sphere()
+		mi.material_override = material
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.position = puff
+		mi.scale = Vector3(1.1, 0.9, 0.7)
+		fog.add_child(mi)
+	return fog
 
 
 ## A closed chest on a box collider under root: wooden box with a gold band around it and a lid on
@@ -434,13 +586,13 @@ static func build_chest(root: Node3D, chest: Dictionary) -> Node3D:
 	return lid
 
 
-## A village figure: a BattleActor on a cylinder collider, facing south (toward the
-## spawn).
-func _add_figure(look: BattleActor.Look, pos: Vector3, radius: float, \
+## A figure: a BattleActor on a cylinder collider, turned yaw_deg (180 faces south,
+## toward the camera).
+func _add_figure(look: BattleActor.Look, pos: Vector3, yaw_deg: float, radius: float, \
 		height: float) -> StaticBody3D:
 	var body := StaticBody3D.new()
 	body.position = pos
-	body.rotation.y = PI
+	body.rotation_degrees.y = yaw_deg
 	add_child(body)
 	WorldStage.add_cylinder_shape(body, radius, height)
 	var actor: BattleActor = ACTOR_SCENE.instantiate()
@@ -505,8 +657,9 @@ func _play_steps() -> void:
 		_audio.play_sfx(SfxLibrary.STEP)
 
 
-static func _is_in_village(pos: Vector3) -> bool:
-	return _flat_distance(pos, WorldStage.CLEARING_POS) <= WorldStage.CLEARING_RADIUS
+func _is_in_village(pos: Vector3) -> bool:
+	return zone.village_radius > 0.0 \
+		and _flat_distance(pos, zone.village_pos) <= zone.village_radius
 
 
 static func _flat_distance(a: Vector3, b: Vector3) -> float:
