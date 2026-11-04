@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+[ext_resource type="Script" path="res://scripts/battle/skill.gd" id="2_skill"]
+[ext_resource type="Resource" path="res://data/skills/rayo_esqueleto.tres" id="3_rayo"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "esqueleto_mago"
+display_name = "Esqueleto mago"
+max_hp = 55
+hp = 55
+max_mp = 24
+mp = 24
+attack = 27
+defense = 30
+speed = 14
+skills = Array[ExtResource("2_skill")]([ExtResource("3_rayo")])
+exp_reward = 48
+gold_reward = 50
+ai_weights = {
+"attack": 55,
+"rayo_esqueleto": 45
+}
+weak = Array[String](["fire"])
+resist = Array[String](["thunder"])
+drops = {
+"ether": 0.1
+}

@@ -26,8 +26,9 @@ const ITEMS := {
 const IDS: Array[String] = [POTION, ETHER, ANTIDOTE, WING]
 ## Key items (GameState.key_items): never used up, sold or dropped; id -> name.
 const KEY_ITEMS := {
-	"fragmento_bosque": "Fragmento del amuleto",
-	"fragmento_mina": "Fragmento del amuleto",
+	"fragmento_bosque": "Fragmento del amuleto (1/3)",
+	"fragmento_mina": "Fragmento del amuleto (2/3)",
+	"fragmento_castillo": "Fragmento del amuleto (3/3)",
 	"llave_mina": "Llave de la mina",
 }
 

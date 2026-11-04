@@ -4,7 +4,8 @@ class_name WorldStage extends RefCounted
 ## low-poly buildings and rocks with hand-made colliders, trees (denser toward the walls,
 ## with trunk colliders) and bushes scattered with fixed seeds, invisible walls and hills
 ## outside. Exits, figures and chests are World's. A dungeon floor only gets its sky and
-## light here: its cells are a DungeonMap, which World adds. Every query takes the zone.
+## light and its buildings (the castle camp's tents) here: its cells are a DungeonMap,
+## which World adds. Every query takes the zone.
 
 ## The Medieval Hexagon buildings are miniatures (a house is 0.8 m wide, 0.9 m tall).
 const BUILDING_SCALE := 3.5
@@ -22,12 +23,15 @@ const MODELS := {
 	"tree_B": preload("res://assets/medieval/tree_single_B.gltf"),
 	"trees_A": preload("res://assets/medieval/trees_A_medium.gltf"),
 	"trees_B": preload("res://assets/medieval/trees_B_medium.gltf"),
+	"tent": preload("res://assets/medieval/tent.gltf"),
 }
+## Buildings drawn at another scale than BUILDING_SCALE (the tent is a tiny prop).
+const MODEL_SCALES := {"tent": 6.0}
 ## Half the widest side of each building at BUILDING_SCALE (measured AABBs), in metres.
 const BUILDING_RADIUS := {
 	"house_A_red": 1.5, "house_B_red": 1.9, "well_red": 1.3,
 	"house_A_green": 1.5, "house_B_green": 1.9, "well_green": 1.3,
-	"market_green": 3.2, "tavern_green": 2.4,
+	"market_green": 3.2, "tavern_green": 2.4, "tent": 1.6,
 }
 ## Tall grass keeps this far from the path and the safe discs, the rocks and the chests.
 const GRASS_PATH_MARGIN := 0.3
@@ -61,13 +65,17 @@ static var _chest_spots: Array[Vector2] = []
 static func build(root: Node3D, zone: ZoneData) -> ShaderMaterial:
 	BattleStage.build_environment(root, zone)
 	if zone.is_dungeon():
+		for building in zone.buildings:
+			_add_solid_model(root, MODELS[building[2]], building[0],
+				MODEL_SCALES.get(building[2], BUILDING_SCALE), building[1])
 		return null
 	_add_ground(root, zone)
 	_add_path(root, zone)
 	for rock in zone.rocks:
 		_add_solid_model(root, BattleStage.ROCK_SCENES[rock[1]], rock[0], rock[2], rock[3])
 	for building in zone.buildings:
-		_add_solid_model(root, MODELS[building[2]], building[0], BUILDING_SCALE, building[1])
+		_add_solid_model(root, MODELS[building[2]], building[0],
+			MODEL_SCALES.get(building[2], BUILDING_SCALE), building[1])
 	_add_trees(root, zone)
 	_add_bushes(root, zone)
 	for hill in zone.hills:

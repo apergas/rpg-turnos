@@ -3,8 +3,9 @@ class_name Chests extends RefCounted
 ## it holds (gold, an item or a piece of equipment). In the meadow two lie next to its
 ## autoplay route and two off it; the three of the forest stand in its glades, next to
 ## its route. All away from the paths. In the mine each stands on the C cell of its floor
-## (ZoneData.cell_center()), next to the floor's route. Pure: open() changes a GameState
-## and returns the message.
+## (ZoneData.cell_center()), next to the floor's route; so do the castle's (two in the
+## courtyard, one in the throne room). Pure: open() changes a GameState and returns the
+## message.
 
 ## id -> {"zone": ZoneData id, "pos": Vector3, "yaw": degrees (the lid opens toward -Z
 ## turned by yaw), and one of "gold": int, "item": Inventory id, "equipment": Equipment
@@ -25,6 +26,12 @@ const CHESTS := {
 	"mina_2_cofre": {"zone": "mina_2", "pos": Vector3(16, 0, 0), "yaw": 180.0, "gold": 120},
 	"mina_3_cofre": {"zone": "mina_3", "pos": Vector3(-24, 0, 12), "yaw": -90.0,
 		"item": Inventory.ETHER},
+	"castillo_patio_oeste": {"zone": "castillo_patio", "pos": Vector3(-24, 0, 0),
+		"yaw": 180.0, "gold": 200},
+	"castillo_patio_este": {"zone": "castillo_patio", "pos": Vector3(28, 0, -24),
+		"yaw": 90.0, "gold": 200},
+	"castillo_trono_cofre": {"zone": "castillo_trono", "pos": Vector3(-20, 0, 8),
+		"yaw": -90.0, "item": Inventory.ETHER},
 }
 
 

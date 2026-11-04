@@ -317,6 +317,13 @@ func _play_event(event: Dictionary) -> void:
 			await _say("%s está dormid%s." % [sleeper.display_name, _ending(sleeper)])
 		BattleEvent.CALL_HELP:
 			await _play_call_help(event)
+		BattleEvent.PHASE:
+			var boss := _fighter(event.target)
+			_sfx(SfxLibrary.ENCOUNTER)
+			_shake_camera()
+			await _actor(event.target).play_phase()
+			await _say("¡La niebla envuelve %s!" % _to(boss))
+			await _say("¡%s se levanta con %d PV!" % [_cap(_the(boss)), event.hp_left])
 		BattleEvent.DEFEATED:
 			_show_arrow(-1)
 			await _actor(event.target).play_defeat()
@@ -442,6 +449,11 @@ func _the(c: Combatant) -> String:
 	if c == hero:
 		return c.display_name
 	return ("la %s" if c.female else "el %s") % c.display_name
+
+
+## "al Señor de la Niebla" / "a la Bruja del bosque".
+func _to(c: Combatant) -> String:
+	return ("a la %s" if c.female else "al %s") % c.display_name
 
 
 ## Ending of the adjectives for c: "a" (envenenada) or "o" (envenenado).

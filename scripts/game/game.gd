@@ -22,7 +22,13 @@ class_name Game extends Node
 ## boss), autosaves after talking, after every won battle, after shopping, (silently)
 ## after opening a chest, after a defeat and after every change of zone, and opens the
 ## pause menu. Emits quit_to_title when the player goes back to the title.
-## On autoplay it prints the gold and the equipment each time they change.
+## Beating the Señor de la Niebla (GameState.FINAL_BOSS) marks the game as finished
+## (GameState.is_finished()) with a notice; the ending itself comes with the story.
+## On autoplay it prints the gold and the equipment each time they change, the level and
+## the play time on every change of zone and, once the Señor de la Niebla falls, the play
+## time of the whole run; then it quits. After a won battle, when the hero needs rest
+## (GameState.needs_rest()) away from a village, it flies back with an Ala de viaje; there
+## (and after a defeat) it sleeps at the inn and restocks at the shop.
 ## Run on its own (res://scenes/game/game.tscn) it starts a new game with its own
 ## AudioDirector and default options.
 ##
@@ -47,6 +53,7 @@ const LOAD_FAILED_NOTICE := "No se pudo cargar la partida. Empiezas de nuevo."
 ## Notice after beating a boss (by id); other bosses announce their key item.
 const BOSS_NOTICES := {
 	"rey_slime": "¡Villaclaro está a salvo! La niebla del norte se disipa...",
+	"senor_niebla": "¡Consigues el último Fragmento del amuleto! La niebla se levanta.",
 }
 const KEY_ITEM_NOTICE := "¡Consigues un %s!"
 const LEVER_NOTICE := "¡Tiras de la palanca! Se oye cómo se abre una reja."
@@ -55,9 +62,12 @@ const DOOR_NOTICE := "Abres la puerta con la %s."
 const MENU_TOUR_DELAY := 1.0
 ## Seconds of black while the hero sleeps at the inn.
 const INN_NIGHT_TIME := 0.8
-## On autoplay the hero only sleeps at an inn below this share of max HP, so the nights
-## don't eat the gold for the shop's gear.
+## On autoplay the hero only sleeps at an inn below this share of max HP or MP, so the
+## nights don't eat the gold for the shop's gear.
 const AUTOPLAY_INN_RATIO := 0.5
+## On autoplay the boss only comes out while the hero has these shares of max HP and MP.
+const AUTOPLAY_BOSS_HP := 0.7
+const AUTOPLAY_BOSS_MP := 0.4
 ## --autoplay-zone=<id>: what a new game starting in each zone gets, as planned when
 ## arriving there (zone 1 done: Lv 5, its shop's gear, the Rey Slime beaten).
 const AUTOPLAY_ZONES := {
@@ -86,6 +96,28 @@ const AUTOPLAY_ZONES := {
 		"key_items": ["fragmento_bosque"],
 		"quest_done": true,
 		"town": "mina_1",
+	},
+	# Zone 3 done: Lv 13 with the Golem's EXP and gold, the mine's gear and two fragments.
+	"castillo_patio": {
+		"experience": 1373,
+		"gold": 600,
+		"gear": ["espada_acero", "armadura_acero", "escudo_acero"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra"],
+		"key_items": ["fragmento_bosque", "fragmento_mina"],
+		"quest_done": true,
+		"town": "mina_1",
+	},
+	# Ready for the Señor de la Niebla: Lv 17 with the castle's gear.
+	"castillo_trono": {
+		"experience": 2244,
+		"gold": 300,
+		"gear": ["espada_platino", "armadura_platino", "escudo_platino"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra"],
+		"key_items": ["fragmento_bosque", "fragmento_mina"],
+		"quest_done": true,
+		"town": "castillo_patio",
 	},
 }
 
@@ -237,7 +269,7 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 	if _world.in_village():
 		_on_village_changed(true)
 	if _autoplay:
-		print("Zona: %s" % zone_id)
+		print("Zona: %s (Nv %d, %s)" % [zone_id, state.hero.level, _clock(play_time)])
 
 
 func _on_encounter(boss: bool) -> void:
@@ -299,6 +331,43 @@ func _on_encounter(boss: bool) -> void:
 			quit_to_title.emit()
 			return
 	_set_busy(false)
+	if _autoplay and won and state.is_finished():
+		print("Juego completado: Nv %d, tiempo de juego %s" % [state.hero.level,
+			_clock(play_time)])
+		get_tree().quit()
+	elif _autoplay and won and _wants_retreat():
+		state.inventory.take(Inventory.WING)
+		print("Retirada al pueblo (PV %d/%d, PM %d, pociones %d)" % [state.hero.hp,
+			state.hero.max_hp, state.hero.mp, state.inventory.count(Inventory.POTION)])
+		await _on_travel_requested()
+		await _autoplay_restock()
+	elif _autoplay and outcome == BattleEngine.State.LOST:
+		await _autoplay_restock()
+
+
+## Autoplay: needs rest (GameState.needs_rest()) away from a village, with an Ala de
+## viaje and the gold for a night at the last village's inn.
+func _wants_retreat() -> bool:
+	if not state.needs_rest() or _world.in_village():
+		return false
+	if state.inventory.count(Inventory.WING) == 0:
+		return false
+	var town := ZoneData.by_id(state.town_zone)
+	for npc: Dictionary in town.npcs:
+		if npc.kind == "inn":
+			return state.gold >= Inn.price(npc.id)
+	return false
+
+
+## Autoplay, in the village: a night at its inn and the shop's picks, as if the hero had
+## walked up to the innkeeper and the merchant.
+func _autoplay_restock() -> void:
+	for npc: Dictionary in _zone.npcs:
+		if npc.kind == "inn":
+			await _on_inn(npc.id)
+	for npc: Dictionary in _zone.npcs:
+		if npc.kind == "shop":
+			await _on_shop(npc.id)
 
 
 ## Sets the boss's world flag, gives its key item and says so.
@@ -408,9 +477,10 @@ func _on_shop(shop_id: String) -> void:
 
 ## The innkeeper: Sí pays the night, fades to black and back with HP and MP full and
 ## saves; without gold, or with No, nothing happens. On autoplay it only stops there
-## below AUTOPLAY_INN_RATIO of max HP and with the price.
+## below AUTOPLAY_INN_RATIO of max HP or MP and with the price.
 func _on_inn(inn_id: String) -> void:
-	var hurt := state.hero.hp < state.hero.max_hp * AUTOPLAY_INN_RATIO
+	var hurt := state.hero.hp < state.hero.max_hp * AUTOPLAY_INN_RATIO \
+		or state.hero.mp < state.hero.max_mp * AUTOPLAY_INN_RATIO
 	if _busy or (_autoplay and (not hurt or state.gold < Inn.price(inn_id))):
 		return
 	_set_busy(true)
@@ -522,11 +592,16 @@ func _on_title_requested() -> void:
 
 
 ## The zone's boss is on the map until beaten: the Rey Slime only while the quest asks
-## for it; on autoplay only from the zone's autoplay_boss_level on.
+## for it; on autoplay only from the zone's autoplay_boss_level on, and only while the
+## hero has AUTOPLAY_BOSS_HP of his max HP and AUTOPLAY_BOSS_MP of his max MP (a worn-out
+## hero fights on, or rests, first).
 func _update_boss() -> void:
 	if _zone.boss_id == "":
 		return
-	var strong_enough := not _autoplay or state.hero.level >= _zone.autoplay_boss_level
+	var hero := state.hero
+	var strong_enough := not _autoplay or (hero.level >= _zone.autoplay_boss_level \
+		and hero.hp >= hero.max_hp * AUTOPLAY_BOSS_HP \
+		and hero.mp >= hero.max_mp * AUTOPLAY_BOSS_MP)
 	var wanted := state.quest.boss_available() if _zone.boss_id == Quest.BOSS_ID \
 		else not state.has_flag(_zone.boss_id)
 	_world.set_boss_present(wanted and strong_enough)
@@ -568,6 +643,12 @@ func _refresh_status() -> void:
 ## "a Villaclaro", "a la aldea del bosque", "al refugio de la mina".
 static func _to_place(place: String) -> String:
 	return "al " + place.substr(3) if place.begins_with("el ") else "a " + place
+
+
+## Seconds as "h:mm:ss".
+static func _clock(seconds: float) -> String:
+	return "%d:%02d:%02d" % [floori(seconds / 3600.0), floori(seconds / 60.0) % 60,
+		floori(seconds) % 60]
 
 
 ## One line with every saved value, keys sorted, for --autoplay-save.

@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+[ext_resource type="Script" path="res://scripts/battle/skill.gd" id="2_skill"]
+[ext_resource type="Resource" path="res://data/skills/niebla.tres" id="3_niebla"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "senor_niebla"
+display_name = "Señor de la Niebla"
+max_hp = 180
+hp = 180
+max_mp = 48
+mp = 48
+attack = 46
+defense = 40
+speed = 14
+skills = Array[ExtResource("2_skill")]([ExtResource("3_niebla")])
+ai_weights = {
+"attack": 55,
+"niebla": 45
+}
+is_boss = true
