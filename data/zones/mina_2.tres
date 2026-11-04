@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="ZoneData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/zone_data.gd" id="1_zone"]
+
+[resource]
+script = ExtResource("1_zone")
+id = "mina_2"
+display_name = "la mina"
+number = 3
+half_size = Vector2(30, 26)
+ground_color = Color(0.24, 0.21, 0.19, 1)
+has_grass = false
+formations = [["golem_barro"], ["arana"], ["espectro"], ["arana"], ["arana", "espectro"], ["golem_barro", "arana"]]
+encounter_grace = 6.0
+encounter_chance = 0.025
+music = "mine"
+village_music = "village"
+haze = Color(0.03, 0.03, 0.05, 1)
+fog_density = 0.012
+backdrop = "mina"
+layout = PackedStringArray("###############", "#T...#......TS#", "#.L..#.####...#", "#....#.#..##.##", "##.###.#T.....#", "#......#..#.#.#", "#.####.##.#C#.#", "#T#..T........#", "#.#.######.##D#", "#...#....#..#.#", "###.#.T..#..#.#", "#......#....#B#", "###############")
+underground = true
+ambient_color = Color(0.5, 0.48, 0.6, 1)
+ambient_energy = 1.0
+rock_color = Color(0.48, 0.42, 0.37, 1)
+start_entry = "S"
+stairs_up = "mina_1"
+stairs_down = "mina_3"
+lever_flag = "mina_palanca"
+door_flag = "mina_palanca"
+door_text = "La reja no se mueve. Quizá haya un mecanismo cerca."
+autoplay_route = Array[Vector3]([Vector3(24, 0, -16), Vector3(20, 0, -16), Vector3(20, 0, -20), Vector3(-4, 0, -20), Vector3(-4, 0, -4), Vector3(-20, 0, -4), Vector3(-20, 0, -8), Vector3(-20, 0, -15), Vector3(-20, 0, -8), Vector3(-20, 0, -4), Vector3(-4, 0, -4), Vector3(-4, 0, 4), Vector3(16, 0, 4), Vector3(16, 0, 1), Vector3(16, 0, 4), Vector3(24, 0, 4), Vector3(24, 0, 10.2), Vector3(24, 0, 20)])
+autoplay_boss_level = 13

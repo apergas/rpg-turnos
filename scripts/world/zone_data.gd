@@ -3,14 +3,30 @@ class_name ZoneData extends Resource
 ## its walls, ground and grass, the dirt path and the safe discs, the village, buildings,
 ## rocks, trees and bushes, the entries and exits, the figures, the boss, the encounter
 ## formations and pace, the music, the light and the battle backdrop. WorldStage builds
-## the map from it, World runs it and Game switches between zones. Pure data plus a few
-## lookups: never touches nodes.
+## the map from it, World runs it and Game switches between zones. A dungeon floor (the
+## mine) is drawn instead as a grid of CELL metres (layout, see "Dungeon"): DungeonMap
+## builds it and the lookups below answer about its cells. Pure data plus a few lookups:
+## never touches nodes.
 ##
 ## Positions are Vector3 on the ground (y = 0). Yaws are degrees about Y, 0 = facing -Z
 ## for figures and entries, +Z for building doors (as the models come).
 
 ## Every zone, in world order (save validation and --autoplay-zone check against it).
-const IDS: Array[String] = ["pradera", "bosque"]
+const IDS: Array[String] = ["pradera", "bosque", "mina_1", "mina_2", "mina_3"]
+## Side of a dungeon cell, in metres.
+const CELL := 4.0
+## Dungeon cells: rock, floor, stairs up and down, chest, lever, locked door, key and
+## floor with a torch on its wall. Anything else is floor.
+const ROCK := "#"
+const STAIRS_UP := "S"
+const STAIRS_DOWN := "B"
+const CHEST_CELL := "C"
+const LEVER := "L"
+const DOOR := "D"
+const KEY := "K"
+const TORCH := "T"
+## Within this distance of a stair cell's centre the stair room is safe (no encounters).
+const STAIRS_SAFE_RADIUS := 6.0
 
 @export var id := ""
 ## Name shown on the exit signs that lead here and in notices ("la pradera").
@@ -116,6 +132,31 @@ const IDS: Array[String] = ["pradera", "bosque"]
 ## BattleStage backdrop of the battles fought here ("pradera", "bosque").
 @export var backdrop := "pradera"
 
+@export_group("Dungeon")
+## Rows of a dungeon floor, north (−Z) first, one character per CELL × CELL cell (see
+## ROCK...TORCH; every edge cell must be rock). Empty for an open map. The grid is centred
+## on the origin.
+@export var layout: PackedStringArray = PackedStringArray()
+## Underground: a black background, a dim ambient light instead of the sky and no sun;
+## the torches and the hero's lantern light the floor.
+@export var underground := false
+@export var ambient_color := Color(0.3, 0.32, 0.45)
+@export var ambient_energy := 0.5
+@export var rock_color := Color(0.33, 0.29, 0.26)
+## Zone ids the S and B stairs lead to (to their B and S entries).
+@export var stairs_up := ""
+@export var stairs_down := ""
+## World flag set by pulling the L lever ("" for none).
+@export var lever_flag := ""
+## World flag that opens every D door; door_key (Inventory.KEY_ITEMS id, "" for none)
+## opens them when the hero carries it, and is used up; door_text is said while they are
+## closed.
+@export var door_flag := ""
+@export var door_key := ""
+@export var door_text := ""
+## Key item lying on the K cell (picked once: its id is also set as a world flag).
+@export var floor_key := ""
+
 @export_group("Autoplay")
 ## Points walked in a loop by --autoplay (clear of trees, rocks and buildings).
 @export var autoplay_route: Array[Vector3] = []
@@ -130,10 +171,93 @@ static func by_id(zone_id: String) -> ZoneData:
 	return load("res://data/zones/%s.tres" % zone_id) as ZoneData
 
 
-## Where entry_id puts the player: [position, yaw in degrees]. Unknown ids give the
-## start entry.
+## Where entry_id puts the player: [position, yaw in degrees]. On a dungeon floor "S"
+## and "B" are the floor cell next to those stairs, facing away from them. Unknown ids
+## give the start entry.
 func entry(entry_id: String) -> Array:
-	return entries.get(entry_id, entries[start_entry])
+	if entries.has(entry_id):
+		return entries[entry_id]
+	if is_dungeon() and entry_id in [STAIRS_UP, STAIRS_DOWN]:
+		var stairs := find_cells(entry_id)
+		if not stairs.is_empty():
+			return _beside(stairs[0])
+	return entries[start_entry]
+
+
+## The exits of ZoneData.exits plus, on a dungeon floor, one per stair cell: S leads to
+## stairs_up (at its "B" entry) and B to stairs_down (at its "S" entry). Stair exits have
+## "stairs": true.
+func all_exits() -> Array:
+	var all := exits.duplicate()
+	if not is_dungeon():
+		return all
+	for kind in [STAIRS_UP, STAIRS_DOWN]:
+		var to := stairs_up if kind == STAIRS_UP else stairs_down
+		for cell in find_cells(kind):
+			all.append({"id": kind, "pos": cell_center(cell), "yaw": 0.0, "to": to,
+				"entry": STAIRS_DOWN if kind == STAIRS_UP else STAIRS_UP,
+				"label": "Subir" if kind == STAIRS_UP else "Bajar", "lock": "",
+				"lock_text": "", "stairs": true})
+	return all
+
+
+func is_dungeon() -> bool:
+	return not layout.is_empty()
+
+
+## Columns and rows of the layout.
+func grid_size() -> Vector2i:
+	return Vector2i(layout[0].length(), layout.size()) if is_dungeon() else Vector2i.ZERO
+
+
+## Centre of a cell on the ground.
+func cell_center(cell: Vector2i) -> Vector3:
+	var size := grid_size()
+	return Vector3((cell.x + 0.5 - size.x / 2.0) * CELL, 0.0, (cell.y + 0.5 - size.y / 2.0) * CELL)
+
+
+## The cell under pos (it may be outside the grid).
+func cell_at(pos: Vector3) -> Vector2i:
+	var size := grid_size()
+	return Vector2i(floori(pos.x / CELL + size.x / 2.0), floori(pos.z / CELL + size.y / 2.0))
+
+
+## The character of a cell; ROCK outside the grid.
+func cell_char(cell: Vector2i) -> String:
+	var size := grid_size()
+	if cell.x < 0 or cell.y < 0 or cell.x >= size.x or cell.y >= size.y:
+		return ROCK
+	return layout[cell.y][cell.x]
+
+
+## Every cell holding character ch, row by row.
+func find_cells(ch: String) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	for y in layout.size():
+		for x in layout[y].length():
+			if layout[y][x] == ch:
+				cells.append(Vector2i(x, y))
+	return cells
+
+
+## True within STAIRS_SAFE_RADIUS of a stair cell (the stair rooms have no encounters).
+func near_stairs(pos: Vector3) -> bool:
+	for kind in [STAIRS_UP, STAIRS_DOWN]:
+		for cell in find_cells(kind):
+			var center := cell_center(cell)
+			if Vector2(pos.x, pos.z).distance_to(Vector2(center.x, center.z)) < STAIRS_SAFE_RADIUS:
+				return true
+	return false
+
+
+## [position, yaw] of the first walkable cell next to cell (south, north, east, west),
+## facing away from it.
+func _beside(cell: Vector2i) -> Array:
+	for step in [Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 0), Vector2i(-1, 0)]:
+		var ch := cell_char(cell + step)
+		if ch != ROCK and ch != DOOR:
+			return [cell_center(cell + step), rad_to_deg(atan2(-step.x, -step.y))]
+	return [cell_center(cell), 0.0]
 
 
 ## The exit with that id, or an empty Dictionary.

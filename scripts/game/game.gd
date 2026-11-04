@@ -15,7 +15,10 @@ class_name Game extends Node
 ## villagers say their ZoneData lines. The merchant opens the ShopWindow; the innkeeper
 ## offers a night (Inn.stay(): fade to black, full HP and MP, autosave); a chest gives
 ## what it holds (Chests.open()) and stays open. The hero's figure on the map and in
-## battle shows the weapon and shield worn. Picks the zone's music (map, village, battle,
+## battle shows the weapon and shield worn. On a dungeon floor the lever sets its world
+## flag (and opens the gates it works), the key goes to the key items (and its flag is
+## set, so it stays taken) and a locked gate opens with the key, which is used up; all
+## three autosave silently. Picks the zone's music (map, village, battle,
 ## boss), autosaves after talking, after every won battle, after shopping, (silently)
 ## after opening a chest, after a defeat and after every change of zone, and opens the
 ## pause menu. Emits quit_to_title when the player goes back to the title.
@@ -46,6 +49,9 @@ const BOSS_NOTICES := {
 	"rey_slime": "¡Villaclaro está a salvo! La niebla del norte se disipa...",
 }
 const KEY_ITEM_NOTICE := "¡Consigues un %s!"
+const LEVER_NOTICE := "¡Tiras de la palanca! Se oye cómo se abre una reja."
+const KEY_NOTICE := "¡Encuentras la %s!"
+const DOOR_NOTICE := "Abres la puerta con la %s."
 const MENU_TOUR_DELAY := 1.0
 ## Seconds of black while the hero sleeps at the inn.
 const INN_NIGHT_TIME := 0.8
@@ -61,6 +67,25 @@ const AUTOPLAY_ZONES := {
 		"gear": [Equipment.COPPER_SWORD, Equipment.LEATHER_MAIL, Equipment.WOODEN_SHIELD],
 		"flags": ["rey_slime"],
 		"quest_done": true,
+	},
+	# Zone 2 done: Lv 9 with the Bruja's EXP, the forest gear and the first fragment.
+	"mina_1": {
+		"experience": 541,
+		"gold": 250,
+		"gear": ["espada_hierro", "cota_malla", "escudo_hierro"],
+		"flags": ["rey_slime", "bruja"],
+		"key_items": ["fragmento_bosque"],
+		"quest_done": true,
+	},
+	# Ready for the Golem: Lv 13, the mine's gear, the gates of floors 2 and 3 open.
+	"mina_3": {
+		"experience": 1073,
+		"gold": 100,
+		"gear": ["espada_acero", "armadura_acero", "escudo_acero"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta"],
+		"key_items": ["fragmento_bosque"],
+		"quest_done": true,
+		"town": "mina_1",
 	},
 }
 
@@ -129,6 +154,7 @@ func _ready() -> void:
 	_switch_zone(state.zone_id, "")
 	if start_pos != null:
 		_world.place_player(start_pos)
+	_world.freeze(false)
 	# Synthesize the tracks played later now, under black, so no first play stalls.
 	for id in [MusicLibrary.VILLAGE, MusicLibrary.VICTORY, MusicLibrary.DEFEAT]:
 		MusicLibrary.build(id)
@@ -165,13 +191,18 @@ func _apply_autoplay_zone(args: PackedStringArray) -> void:
 			state.equip(id)
 		for flag: String in start.flags:
 			state.world_flags[flag] = true
+		for id: String in start.get("key_items", []):
+			state.key_items.append(id)
+		state.town_zone = start.get("town", state.town_zone)
 		if start.quest_done:
 			state.quest.stage = Quest.Stage.DONE
 		print("Zona de inicio: %s (Nv %d)" % [zone_id, state.hero.level])
 
 
 ## Frees the current map and builds zone_id with the player at entry_id ("" for the
-## zone's start entry). No fade: callers fade around it.
+## zone's start entry). No fade: callers fade around it. The new map starts frozen
+## (World.freeze()), so nothing on it can fire while Game is still busy fading in;
+## every caller unfreezes it once the fade is over.
 func _switch_zone(zone_id: String, entry_id: String) -> void:
 	if _world:
 		remove_child(_world)
@@ -182,6 +213,7 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 	_world.zone = _zone
 	add_child(_world)
 	move_child(_world, 0)
+	_world.freeze(true)
 	_world.set_audio(_audio)
 	_world.encounter_triggered.connect(_on_encounter)
 	_world.talk_requested.connect(_on_talk)
@@ -190,6 +222,9 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 	_world.inn_requested.connect(_on_inn)
 	_world.chest_opened.connect(_on_chest)
 	_world.exit_requested.connect(_on_exit)
+	_world.lever_pulled.connect(_on_lever)
+	_world.key_taken.connect(_on_key)
+	_world.door_used.connect(_on_door)
 	_world.village_changed.connect(_on_village_changed)
 	if entry_id != "":
 		_world.place_at_entry(entry_id)
@@ -241,14 +276,18 @@ func _on_encounter(boss: bool) -> void:
 		state.gold -= battle.gold_lost
 		state.heal_full()
 		_go_to_town()
-		notice = "Has vuelto a %s." % _zone.village_name
+		notice = "Has vuelto %s." % _to_place(_zone.village_name)
 	battle.queue_free()
 	_world.set_world_flags(state.world_flags)
 	_update_boss()
 	_refresh_status()
 	_world.set_active(true)
+	# Frozen until the fade is over: an exit or an encounter while Game is busy would be
+	# ignored and leave the map waiting forever.
+	_world.freeze(true)
 	_play_map_music()
 	await _fade_to(0.0)
+	await _world.freeze(false)
 	if notice != "":
 		_world.show_notice(notice)
 	if outcome == BattleEngine.State.LOST:
@@ -292,6 +331,7 @@ func _on_exit(zone_id: String, entry_id: String) -> void:
 	_switch_zone(zone_id, entry_id)
 	_play_map_music()
 	await _fade_to(0.0)
+	await _world.freeze(false)
 	_autosave(false)
 	_set_busy(false)
 
@@ -310,7 +350,7 @@ func _on_travel_requested() -> void:
 	_play_map_music()
 	await _fade_to(0.0)
 	await _world.freeze(false)
-	_world.show_notice("Vuelas a %s." % _zone.village_name)
+	_world.show_notice("Vuelas %s." % _to_place(_zone.village_name))
 	_autosave(false)
 	_set_busy(false)
 
@@ -412,6 +452,46 @@ func _on_chest(chest_id: String) -> void:
 	_autosave(false)
 
 
+## The dungeon floor's lever: sets its flag, which opens the gates it works.
+func _on_lever() -> void:
+	if _busy or _zone.lever_flag == "":
+		return
+	state.world_flags[_zone.lever_flag] = true
+	_world.pull_lever()
+	_audio.play_sfx(SfxLibrary.DOOR)
+	_world.set_world_flags(state.world_flags)
+	_world.show_notice(LEVER_NOTICE)
+	_autosave(false)
+
+
+## The key lying on the floor: into the key items; its flag keeps it taken.
+func _on_key() -> void:
+	if _busy or _zone.floor_key == "":
+		return
+	state.world_flags[_zone.floor_key] = true
+	state.key_items.append(_zone.floor_key)
+	_audio.play_sfx(SfxLibrary.LEVEL_UP)
+	_world.set_world_flags(state.world_flags)
+	_world.show_notice(KEY_NOTICE % Inventory.KEY_ITEMS[_zone.floor_key])
+	_autosave(false)
+
+
+## A closed gate: the key of the floor opens it (and is used up); otherwise its text.
+func _on_door() -> void:
+	if _busy:
+		return
+	var key := _zone.door_key
+	if key == "" or not key in state.key_items:
+		_world.show_notice(_zone.door_text)
+		return
+	state.key_items.erase(key)
+	state.world_flags[_zone.door_flag] = true
+	_audio.play_sfx(SfxLibrary.DOOR)
+	_world.set_world_flags(state.world_flags)
+	_world.show_notice(DOOR_NOTICE % Inventory.KEY_ITEMS[key])
+	_autosave(false)
+
+
 ## Writes the save file; shows SAVED_NOTICE if notice. Returns the saved data, or an
 ## empty Dictionary if the file could not be written.
 func _autosave(notice: bool) -> Dictionary:
@@ -483,6 +563,11 @@ func _refresh_status() -> void:
 	if _autoplay and gear_text != _last_gear_text:
 		print(gear_text)
 	_last_gear_text = gear_text
+
+
+## "a Villaclaro", "a la aldea del bosque", "al refugio de la mina".
+static func _to_place(place: String) -> String:
+	return "al " + place.substr(3) if place.begins_with("el ") else "a " + place
 
 
 ## One line with every saved value, keys sorted, for --autoplay-save.

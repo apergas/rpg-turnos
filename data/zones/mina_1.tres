@@ -1,0 +1,75 @@
+[gd_resource type="Resource" script_class="ZoneData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/zone_data.gd" id="1_zone"]
+
+[resource]
+script = ExtResource("1_zone")
+id = "mina_1"
+display_name = "la mina"
+number = 3
+half_size = Vector2(30, 26)
+ground_color = Color(0.24, 0.21, 0.19, 1)
+has_grass = false
+safe_discs = [[Vector3(0, 0, 16), 13.0]]
+village_name = "el refugio de la mina"
+village_pos = Vector3(0, 0, 16)
+village_radius = 13.0
+entries = {
+"refugio": [Vector3(0, 0, 13), 0.0],
+"sur": [Vector3(0, 0, 17), 0.0]
+}
+start_entry = "sur"
+town_entry = "refugio"
+exits = [{
+"entry": "norte",
+"id": "sur",
+"label": "Al bosque",
+"lock": "",
+"lock_text": "",
+"pos": Vector3(0, 0, 21),
+"to": "bosque",
+"yaw": 0.0
+}]
+npcs = [{
+"id": "mina",
+"kind": "shop",
+"look": "MERCHANT",
+"name": "Herrero",
+"pos": Vector3(-8, 0, 12),
+"yaw": 180.0
+}, {
+"id": "mina",
+"kind": "inn",
+"look": "INNKEEPER",
+"name": "Posadero",
+"pos": Vector3(8, 0, 12),
+"yaw": 180.0
+}, {
+"after_flag": "golem_piedra",
+"kind": "npc",
+"lines": ["Este refugio es lo único que queda de la vieja mina.", "Abajo, en la tercera planta, despertó un golem de piedra.", "Dicen que una palanca abre las rejas de la segunda planta."],
+"lines_after": ["¿Has vencido al golem? ¡Por fin podremos volver a picar!", "La niebla viene del castillo, al otro lado de las montañas."],
+"look": "VILLAGER",
+"name": "Minera",
+"pos": Vector3(-10, 0, 19),
+"yaw": 180.0
+}]
+formations = [["golem_barro"], ["arana"], ["espectro"], ["arana"], ["arana", "espectro"], ["golem_barro", "arana"]]
+start_formations = [["golem_barro"], ["arana"], ["espectro"]]
+start_pos = Vector3(0, 0, 17)
+start_radius = 24.0
+encounter_grace = 6.0
+encounter_chance = 0.025
+music = "mine"
+village_music = "village"
+haze = Color(0.03, 0.03, 0.05, 1)
+fog_density = 0.012
+backdrop = "mina"
+layout = PackedStringArray("###############", "#T..B#.....C..#", "#....#.#####..#", "#....#.#T..#..#", "###.##.#...#.##", "#.....T#...#..#", "#.###.##.###..#", "#..T......T...#", "####.##.#######", "####T.....T####", "####.......####", "####.T...T.####", "###############")
+underground = true
+ambient_color = Color(0.5, 0.48, 0.6, 1)
+ambient_energy = 1.0
+rock_color = Color(0.48, 0.42, 0.37, 1)
+stairs_down = "mina_2"
+autoplay_route = Array[Vector3]([Vector3(0, 0, 17), Vector3(-6.5, 0, 12.5), Vector3(6.5, 0, 12.5), Vector3(0, 0, 12), Vector3(0, 0, 4), Vector3(20, 0, 4), Vector3(20, 0, -20), Vector3(16, 0, -18.5), Vector3(-4, 0, -20), Vector3(-4, 0, -4), Vector3(-16, 0, -4), Vector3(-16, 0, -12), Vector3(-12, 0, -20)])
+autoplay_boss_level = 13
