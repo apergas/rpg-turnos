@@ -159,7 +159,8 @@ func see_through(camera_pos: Vector3, target: Vector3) -> void:
 		if not block in hidden:
 			_fade(block, false)
 	for block in hidden:
-		_fade(block, true)
+		if not block in _faded:  # already see-through: no need to walk its meshes again
+			_fade(block, true)
 	_faded = hidden
 
 
