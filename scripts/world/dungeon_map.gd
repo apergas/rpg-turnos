@@ -6,13 +6,16 @@ class_name DungeonMap extends Node3D
 ## down, with a sign), iron gates on the door cells, the lever and the key. World tells
 ## it the world flags (set_flags(): gates open, lever pulled, key taken) and, every
 ## frame, where the camera and the hero are (see_through()): the rock blocks between them
-## turn see-through. Set zone before add_child.
+## turn see-through. In a castle (zone.castle) the rock cells are stone walls instead:
+## a KayKit wall piece on each straight run, a square tower at corners and ends, a round
+## pillar where one stands alone; the ground goes on past the grid, banks of mist drift
+## over the floor (zone.mist_banks) and the throne cell gets a throne on a dais. Set zone
+## before add_child.
 
 ## Height of the rock blocks.
 const WALL_HEIGHT := 3.0
 ## The floor is drawn in squares of this many cells, so each torch only lights a few.
 const FLOOR_CHUNK := 3
-const FLOOR_COLOR := Color(0.36, 0.32, 0.28)
 ## Rock blocks get one of these shades (picked by cell, so the walls are not flat).
 const ROCK_SHADES := [1.0, 0.88, 1.1]
 ## Opacity of a block between the camera and the hero.
@@ -37,6 +40,23 @@ const KEY_GOLD := Color(1.0, 0.8, 0.25)
 ## Angle (degrees about X) of the lever's handle: up (waiting) and pulled down.
 const LEVER_UP := -40.0
 const LEVER_DOWN := 40.0
+## Castle walls: the KayKit wall piece (2 m long, 1.1 m tall, 0.8 m thick) at WALL_SCALE
+## fills one cell along its run; towers fill the cell and stand TOWER_HEIGHT tall with
+## four merlons; pillars are round.
+const WALL_SCENE := preload("res://assets/medieval/wall_straight.gltf")
+const WALL_SCALE := 2.0
+const WALL_THICKNESS := 1.6
+const WALL_PIECE_HEIGHT := 2.2
+const TOWER_HEIGHT := 2.6
+const PILLAR_RADIUS := 0.8
+const THRONE_GOLD := Color(0.85, 0.65, 0.2)
+const THRONE_RED := Color(0.45, 0.08, 0.12)
+## Mist: flat see-through banks drifting back and forth over floor cells picked with a
+## fixed seed.
+const MIST_COLOR := Color(0.8, 0.78, 0.9, 0.22)
+const MIST_SEED := 5
+## Ground around a castle's grid: a plane this much wider on every side.
+const OUTER_GROUND := 60.0
 
 var zone: ZoneData
 
@@ -53,6 +73,9 @@ var _gates: Array[StaticBody3D] = []
 var _lever: Node3D
 var _lever_tween: Tween
 var _key: Node3D
+## The drifting mist banks (castle).
+var _mists: Array[MeshInstance3D] = []
+var _mist_material: StandardMaterial3D
 
 
 func _ready() -> void:
@@ -66,7 +89,14 @@ func _ready() -> void:
 	_clear_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	_clear_material.roughness = 1.0
 	_add_floor()
-	_add_rock()
+	if zone.castle:
+		_add_castle()
+	else:
+		_add_rock()
+	for cell in zone.find_cells(ZoneData.THRONE):
+		_add_throne(cell)
+	for i in zone.mist_banks:
+		_add_mist(i)
 	for cell in zone.find_cells(ZoneData.TORCH):
 		_add_torch(cell)
 	for cell in zone.find_cells(ZoneData.STAIRS_UP):
@@ -88,6 +118,8 @@ func _process(delta: float) -> void:
 		_lights[i].light_energy = TORCH_ENERGY * (1.0 + FLICKER * wave)
 	if _key and _key.visible:
 		_key.rotation.y += delta * 1.5
+	for i in _mists.size():
+		_mists[i].position.x += sin(_time * 0.3 + i * 2.1) * delta * 0.6
 
 
 ## Opens the gates once zone.door_flag is set, pulls the lever once zone.lever_flag is
@@ -126,10 +158,21 @@ func see_through(camera_pos: Vector3, target: Vector3) -> void:
 				hidden.append(block)
 	for block in _faded:
 		if not block in hidden:
-			block.material_override = _rock_materials[_shade(zone.cell_at(block.position))]
+			_fade(block, false)
 	for block in hidden:
-		block.material_override = _clear_material
+		if not block in _faded:  # already see-through: no need to walk its meshes again
+			_fade(block, true)
 	_faded = hidden
+
+
+## A rock block, a castle tower or a pillar swaps to the see-through material; the
+## meshes under it (a castle wall piece, a tower's merlons) fade by their transparency.
+func _fade(block: MeshInstance3D, on: bool) -> void:
+	if block.mesh != null:
+		block.material_override = _clear_material if on \
+			else _rock_materials[_shade(zone.cell_at(block.position))]
+	for node in block.find_children("*", "GeometryInstance3D", true, false):
+		(node as GeometryInstance3D).transparency = 1.0 - SEE_THROUGH_ALPHA if on else 0.0
 
 
 func _blocks_view(block: MeshInstance3D, camera_pos: Vector3, target: Vector3) -> bool:
@@ -155,7 +198,12 @@ func _add_floor() -> void:
 	for y in range(0, size.y, FLOOR_CHUNK):
 		for x in range(0, size.x, FLOOR_CHUNK):
 			var corner := zone.cell_center(Vector2i(x, y)) - Vector3(ZoneData.CELL, 0, ZoneData.CELL) / 2.0
-			BattleStage.add_mesh(self, mesh, FLOOR_COLOR, corner + Vector3(chunk, 0, chunk) / 2.0)
+			BattleStage.add_mesh(self, mesh, zone.floor_color,
+				corner + Vector3(chunk, 0, chunk) / 2.0)
+	if zone.castle:
+		var outer := PlaneMesh.new()
+		outer.size = Vector2(size) * ZoneData.CELL + Vector2.ONE * OUTER_GROUND * 2.0
+		BattleStage.add_mesh(self, outer, zone.floor_color.darkened(0.25), Vector3(0, -0.02, 0))
 	var body := StaticBody3D.new()
 	var shape := CollisionShape3D.new()
 	shape.shape = WorldBoundaryShape3D.new()
@@ -205,6 +253,145 @@ func _touches_floor(cell: Vector2i) -> bool:
 	return false
 
 
+## Castle walls on every rock cell next to the floor (the ones inside thick masses are
+## never seen and get nothing): a wall piece where the cell runs straight, a tower at
+## corners, ends and junctions, a round pillar where it stands alone. Each has its
+## collider and is a see-through block (a MeshInstance3D at the cell; the wall piece's
+## model hangs under it).
+func _add_castle() -> void:
+	var size := zone.grid_size()
+	var body := StaticBody3D.new()
+	add_child(body)
+	for y in size.y:
+		for x in size.x:
+			var cell := Vector2i(x, y)
+			if zone.cell_char(cell) != ZoneData.ROCK or not _touches_floor(cell):
+				continue
+			var block := MeshInstance3D.new()
+			block.position = zone.cell_center(cell)
+			add_child(block)
+			_blocks[cell] = block
+			var box := BoxShape3D.new()
+			var shape := CollisionShape3D.new()
+			shape.shape = box
+			var kind := _wall_kind(cell)
+			if kind == "ew" or kind == "ns":
+				var yaw := 0.0 if kind == "ew" else 90.0
+				BattleStage.add_model(block, WALL_SCENE, Vector3.ZERO, WALL_SCALE, yaw)
+				box.size = Vector3(ZoneData.CELL, WALL_PIECE_HEIGHT, WALL_THICKNESS)
+				shape.rotation_degrees.y = yaw
+				shape.position = block.position + Vector3(0, WALL_PIECE_HEIGHT / 2.0, 0)
+			elif kind == "pillar":
+				var column := CylinderMesh.new()
+				column.top_radius = PILLAR_RADIUS * 0.85
+				column.bottom_radius = PILLAR_RADIUS
+				column.height = TOWER_HEIGHT
+				column.radial_segments = 8
+				block.mesh = column
+				block.material_override = _rock_materials[_shade(cell)]
+				block.position.y = TOWER_HEIGHT / 2.0
+				box.size = Vector3(PILLAR_RADIUS * 2.0, TOWER_HEIGHT, PILLAR_RADIUS * 2.0)
+				shape.position = block.position
+			else:
+				var tower := BoxMesh.new()
+				tower.size = Vector3(ZoneData.CELL, TOWER_HEIGHT, ZoneData.CELL)
+				block.mesh = tower
+				block.material_override = _rock_materials[_shade(cell)]
+				block.position.y = TOWER_HEIGHT / 2.0
+				var merlon := BoxMesh.new()
+				merlon.size = Vector3(0.9, 0.6, 0.9)
+				for corner in [Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1), Vector2(1, 1)]:
+					BattleStage.add_mesh(block, merlon, zone.rock_color * ROCK_SHADES[1],
+						Vector3(corner.x * 1.55, TOWER_HEIGHT / 2.0 + 0.3, corner.y * 1.55))
+				box.size = tower.size
+				shape.position = block.position
+			body.add_child(shape)
+
+
+## How a castle rock cell is drawn: "ew" / "ns" (a straight wall running east-west /
+## north-south: rock at both ends and floor on at least one side), "pillar" (no rock on
+## any side) or "tower" (corners, ends, junctions).
+func _wall_kind(cell: Vector2i) -> String:
+	var n := zone.cell_char(cell + Vector2i(0, -1)) == ZoneData.ROCK
+	var s := zone.cell_char(cell + Vector2i(0, 1)) == ZoneData.ROCK
+	var w := zone.cell_char(cell + Vector2i(-1, 0)) == ZoneData.ROCK
+	var e := zone.cell_char(cell + Vector2i(1, 0)) == ZoneData.ROCK
+	# A rock neighbour that is itself a drawn wall (it touches floor) is a real branch.
+	var branch_ns := (n and _touches_floor(cell + Vector2i(0, -1))) or (s and _touches_floor(cell + Vector2i(0, 1)))
+	var branch_we := (w and _touches_floor(cell + Vector2i(-1, 0))) or (e and _touches_floor(cell + Vector2i(1, 0)))
+	if w and e and not branch_ns:
+		return "ew"
+	if n and s and not branch_we:
+		return "ns"
+	if not (n or s or w or e):
+		return "pillar"
+	return "tower"
+
+
+## How far in from its cell's edge the face of the castle wall on rock_cell stands, seen
+## from the side step (a thin wall piece leaves a gap; towers and rock fill the cell).
+func _face_inset(rock_cell: Vector2i, side: Vector2i) -> float:
+	if not zone.castle:
+		return 0.0
+	var kind := _wall_kind(rock_cell)
+	if (kind == "ew" and side.y != 0) or (kind == "ns" and side.x != 0):
+		return (ZoneData.CELL - WALL_THICKNESS) / 2.0
+	return 0.0
+
+
+## A throne on a dais: a red seat with a tall gold-trimmed back, its back to the north.
+func _add_throne(cell: Vector2i) -> void:
+	var body := StaticBody3D.new()
+	body.position = zone.cell_center(cell)
+	add_child(body)
+	var dais := BoxMesh.new()
+	dais.size = Vector3(3.6, 0.3, 3.0)
+	BattleStage.add_mesh(body, dais, zone.rock_color * ROCK_SHADES[2], Vector3(0, 0.15, 0))
+	var seat := BoxMesh.new()
+	seat.size = Vector3(1.6, 0.9, 1.2)
+	BattleStage.add_mesh(body, seat, THRONE_RED, Vector3(0, 0.75, 0))
+	var back := BoxMesh.new()
+	back.size = Vector3(1.8, 2.8, 0.3)
+	BattleStage.add_mesh(body, back, THRONE_RED, Vector3(0, 1.7, -0.6))
+	var trim := BoxMesh.new()
+	trim.size = Vector3(2.0, 0.2, 0.4)
+	BattleStage.add_mesh(body, trim, THRONE_GOLD, Vector3(0, 3.1, -0.6))
+	var post := BoxMesh.new()
+	post.size = Vector3(0.2, 3.0, 0.4)
+	for x in [-0.85, 0.85]:
+		BattleStage.add_mesh(body, post, THRONE_GOLD, Vector3(x, 1.6, -0.6))
+	var shape := CollisionShape3D.new()
+	shape.shape = BoxShape3D.new()
+	(shape.shape as BoxShape3D).size = Vector3(2.0, 3.0, 1.6)
+	shape.position = Vector3(0, 1.5, -0.2)
+	body.add_child(shape)
+
+
+## Bank of mist number index: flat and see-through, over a floor cell picked with
+## MIST_SEED.
+func _add_mist(index: int) -> void:
+	var floors := zone.find_cells(".")
+	if floors.is_empty():
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = MIST_SEED + index * 7919
+	var cell := floors[rng.randi_range(0, floors.size() - 1)]
+	if _mist_material == null:
+		_mist_material = StandardMaterial3D.new()
+		_mist_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_mist_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_mist_material.albedo_color = MIST_COLOR
+	var mist := MeshInstance3D.new()
+	mist.mesh = BattleStage.unit_sphere()
+	mist.material_override = _mist_material
+	mist.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mist.position = zone.cell_center(cell) + Vector3(rng.randf_range(-1, 1), 0.25,
+		rng.randf_range(-1, 1))
+	mist.scale = Vector3(rng.randf_range(4.0, 6.0), 0.5, rng.randf_range(3.0, 5.0))
+	add_child(mist)
+	_mists.append(mist)
+
+
 ## The first rock neighbour of cell (north, west, east, south), as a unit step.
 func _wall_side(cell: Vector2i) -> Vector2i:
 	for step in [Vector2i(0, -1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, 1)]:
@@ -217,7 +404,8 @@ func _wall_side(cell: Vector2i) -> Vector2i:
 func _add_torch(cell: Vector2i) -> void:
 	var side := _wall_side(cell)
 	var out := -Vector3(side.x, 0, side.y)
-	var at_wall := zone.cell_center(cell) - out * (ZoneData.CELL / 2.0 - 0.12)
+	var inset := _face_inset(cell + side, side)
+	var at_wall := zone.cell_center(cell) - out * (ZoneData.CELL / 2.0 + inset - 0.12)
 	var stick := BoxMesh.new()
 	stick.size = Vector3(0.1, 0.5, 0.1)
 	BattleStage.add_mesh(self, stick, WOOD, at_wall + out * 0.1 + Vector3(0, TORCH_HEIGHT - 0.2, 0))

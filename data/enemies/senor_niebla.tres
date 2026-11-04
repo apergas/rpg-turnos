@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+[ext_resource type="Script" path="res://scripts/battle/skill.gd" id="2_skill"]
+[ext_resource type="Resource" path="res://data/skills/rayo_senor.tres" id="3_rayo"]
+[ext_resource type="Resource" path="res://data/enemies/senor_niebla_2.tres" id="4_fase2"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "senor_niebla"
+display_name = "Señor de la Niebla"
+max_hp = 200
+hp = 200
+max_mp = 40
+mp = 40
+attack = 42
+defense = 40
+speed = 14
+skills = Array[ExtResource("2_skill")]([ExtResource("3_rayo")])
+exp_reward = 500
+gold_reward = 0
+ai_weights = {
+"attack": 50,
+"rayo_senor": 35,
+"stagger": 15
+}
+next_phase = ExtResource("4_fase2")
+key_item = "fragmento_castillo"
+is_boss = true

@@ -4,19 +4,21 @@ class_name ZoneData extends Resource
 ## rocks, trees and bushes, the entries and exits, the figures, the boss, the encounter
 ## formations and pace, the music, the light and the battle backdrop. WorldStage builds
 ## the map from it, World runs it and Game switches between zones. A dungeon floor (the
-## mine) is drawn instead as a grid of CELL metres (layout, see "Dungeon"): DungeonMap
-## builds it and the lookups below answer about its cells. Pure data plus a few lookups:
+## mine, the castle) is drawn instead as a grid of CELL metres (layout, see "Dungeon"):
+## DungeonMap builds it and the lookups below answer about its cells. Pure data plus a few lookups:
 ## never touches nodes.
 ##
 ## Positions are Vector3 on the ground (y = 0). Yaws are degrees about Y, 0 = facing -Z
 ## for figures and entries, +Z for building doors (as the models come).
 
 ## Every zone, in world order (save validation and --autoplay-zone check against it).
-const IDS: Array[String] = ["pradera", "bosque", "mina_1", "mina_2", "mina_3"]
+const IDS: Array[String] = ["pradera", "bosque", "mina_1", "mina_2", "mina_3",
+	"castillo_patio", "castillo_trono"]
 ## Side of a dungeon cell, in metres.
 const CELL := 4.0
-## Dungeon cells: rock, floor, stairs up and down, chest, lever, locked door, key and
-## floor with a torch on its wall. Anything else is floor.
+## Dungeon cells: rock (a wall in a castle), floor, stairs up and down, chest, lever,
+## locked door, key, floor with a torch on its wall and the throne. Anything else is
+## floor.
 const ROCK := "#"
 const STAIRS_UP := "S"
 const STAIRS_DOWN := "B"
@@ -25,6 +27,7 @@ const LEVER := "L"
 const DOOR := "D"
 const KEY := "K"
 const TORCH := "T"
+const THRONE := "R"
 ## Within this distance of a stair cell's centre the stair room is safe (no encounters).
 const STAIRS_SAFE_RADIUS := 6.0
 
@@ -143,6 +146,13 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var ambient_color := Color(0.3, 0.32, 0.45)
 @export var ambient_energy := 0.5
 @export var rock_color := Color(0.33, 0.29, 0.26)
+@export var floor_color := Color(0.36, 0.32, 0.28)
+## Castle: the rock cells are stone walls (KayKit wall pieces on the straight runs,
+## square towers at corners and ends, round pillars when they stand alone) instead of
+## rock blocks, and the open ground goes on past the grid.
+@export var castle := false
+## Banks of mist drifting low over the floor (0 for none).
+@export var mist_banks := 0
 ## Zone ids the S and B stairs lead to (to their B and S entries).
 @export var stairs_up := ""
 @export var stairs_down := ""

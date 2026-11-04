@@ -4,8 +4,11 @@ class_name BattleStage extends RefCounted
 ## low-poly rocks, trees and bushes, and distant hills. "pradera" is the open meadow;
 ## "bosque" closes a ring of trees around the fighters on darker ground; "mina" is a
 ## cave: rock floor, a wall of rock blocks and boulders behind and beside the fighters,
-## stalagmites and two torches, in the dark of an underground zone. The environment,
-## the mesh and model helpers and the rock and tree models are shared with WorldStage.
+## stalagmites and two torches, in the dark of an underground zone. "castillo" is a
+## castle yard: flagstones, KayKit wall pieces with towers behind and beside the
+## fighters, banks of mist and two torches (and the hero's lantern indoors). The
+## environment, the mesh and model helpers and the rock and tree models are shared with
+## WorldStage.
 
 const GRASS := Color(0.32, 0.55, 0.22)
 const DIRT := Color(0.62, 0.5, 0.34)
@@ -117,6 +120,25 @@ const STALAGMITES := [
 	[Vector3(-5.5, 0, 2.5), 0.25, 0.9],
 ]
 const CAVE_TORCHES := [Vector3(-3.5, 2.4, -9.8), Vector3(5.0, 2.4, -8.8)]
+## The castle backdrop: flagstones, the wall pieces ([position, yaw]) at
+## DungeonMap.WALL_SCALE, the towers ([position, height]), the mist banks ([position,
+## scale]) and the two torches on the back wall.
+const CASTLE_FLOOR := Color(0.42, 0.41, 0.44)
+const CASTLE_STONE := Color(0.5, 0.49, 0.53)
+const CASTLE_WALLS := [
+	[Vector3(-10, 0, -11), 0.0], [Vector3(-6, 0, -11), 0.0], [Vector3(-2, 0, -11), 0.0],
+	[Vector3(2, 0, -11), 0.0], [Vector3(6, 0, -11), 0.0], [Vector3(10, 0, -11), 0.0],
+	[Vector3(-12, 0, -7), 90.0], [Vector3(-12, 0, -3), 90.0], [Vector3(-12, 0, 1), 90.0],
+	[Vector3(13, 0, -7), 90.0], [Vector3(13, 0, -3), 90.0], [Vector3(13, 0, 1), 90.0],
+]
+const CASTLE_TOWERS := [
+	[Vector3(-14, 0, -11), 5.0], [Vector3(14, 0, -11), 5.0], [Vector3(0, 0, -16), 9.0],
+]
+const CASTLE_MIST := [
+	[Vector3(-6, 0.3, -6), Vector3(5, 0.5, 3)], [Vector3(6, 0.3, -7), Vector3(6, 0.5, 3)],
+	[Vector3(-8, 0.3, 1), Vector3(4, 0.5, 4)], [Vector3(9, 0.3, 0), Vector3(4, 0.5, 4)],
+]
+const CASTLE_TORCHES := [Vector3(-4.0, 2.0, -10.0), Vector3(4.0, 2.0, -10.0)]
 
 
 ## zone: whose sky, light and backdrop to use (null: the meadow's).
@@ -124,6 +146,9 @@ static func build(root: Node3D, zone: ZoneData = null) -> void:
 	build_environment(root, zone)
 	if zone != null and zone.backdrop == "mina":
 		_build_cave(root)
+		return
+	if zone != null and zone.backdrop == "castillo":
+		_build_castle(root, zone)
 		return
 	var forest := zone != null and zone.backdrop == "bosque"
 	var ground := PlaneMesh.new()
@@ -227,25 +252,62 @@ static func _build_cave(root: Node3D) -> void:
 		cone.radial_segments = 6
 		add_mesh(root, cone, CAVE_ROCK.lightened(0.1), spike[0] + Vector3(0, spike[2] / 2.0, 0))
 	for flame_pos in CAVE_TORCHES:
-		var stick := BoxMesh.new()
-		stick.size = Vector3(0.1, 0.5, 0.1)
-		add_mesh(root, stick, DungeonMap.WOOD, flame_pos - Vector3(0, 0.3, 0))
-		var flame := MeshInstance3D.new()
-		flame.mesh = unit_sphere()
-		flame.scale = Vector3(0.13, 0.2, 0.13)
-		flame.position = flame_pos
-		var mat := StandardMaterial3D.new()
-		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		mat.albedo_color = DungeonMap.FLAME_COLOR
-		flame.material_override = mat
-		root.add_child(flame)
-		var light := OmniLight3D.new()
-		light.light_color = DungeonMap.TORCH_COLOR
-		light.light_energy = DungeonMap.TORCH_ENERGY
-		light.omni_range = 10.0
-		light.position = flame_pos + Vector3(0, 0.2, 1.0)
-		root.add_child(light)
-	# The fighters' own light, from the camera's side (the hero's lantern).
+		_add_torch(root, flame_pos)
+	_add_lantern(root)
+
+
+static func _build_castle(root: Node3D, zone: ZoneData) -> void:
+	var ground := PlaneMesh.new()
+	ground.size = Vector2(80, 80)
+	add_mesh(root, ground, CASTLE_FLOOR, Vector3.ZERO)
+	for wall in CASTLE_WALLS:
+		add_model(root, DungeonMap.WALL_SCENE, wall[0], DungeonMap.WALL_SCALE, wall[1])
+	for tower in CASTLE_TOWERS:
+		var box := BoxMesh.new()
+		box.size = Vector3(4, tower[1], 4)
+		add_mesh(root, box, CASTLE_STONE, tower[0] + Vector3(0, tower[1] / 2.0, 0))
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.albedo_color = DungeonMap.MIST_COLOR
+	for bank in CASTLE_MIST:
+		var mist := MeshInstance3D.new()
+		mist.mesh = unit_sphere()
+		mist.material_override = mat
+		mist.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mist.position = bank[0]
+		mist.scale = bank[1]
+		root.add_child(mist)
+	for flame_pos in CASTLE_TORCHES:
+		_add_torch(root, flame_pos)
+	if zone.underground:
+		_add_lantern(root)
+
+
+## A torch: a stick, an unshaded flame at flame_pos and its warm light a metre out.
+static func _add_torch(root: Node3D, flame_pos: Vector3) -> void:
+	var stick := BoxMesh.new()
+	stick.size = Vector3(0.1, 0.5, 0.1)
+	add_mesh(root, stick, DungeonMap.WOOD, flame_pos - Vector3(0, 0.3, 0))
+	var flame := MeshInstance3D.new()
+	flame.mesh = unit_sphere()
+	flame.scale = Vector3(0.13, 0.2, 0.13)
+	flame.position = flame_pos
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = DungeonMap.FLAME_COLOR
+	flame.material_override = mat
+	root.add_child(flame)
+	var light := OmniLight3D.new()
+	light.light_color = DungeonMap.TORCH_COLOR
+	light.light_energy = DungeonMap.TORCH_ENERGY
+	light.omni_range = 10.0
+	light.position = flame_pos + Vector3(0, 0.2, 1.0)
+	root.add_child(light)
+
+
+## The fighters' own light, from the camera's side (the hero's lantern).
+static func _add_lantern(root: Node3D) -> void:
 	var lantern := OmniLight3D.new()
 	lantern.light_color = Color(1.0, 0.85, 0.65)
 	lantern.light_energy = 1.2
