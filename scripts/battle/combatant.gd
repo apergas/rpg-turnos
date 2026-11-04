@@ -4,7 +4,7 @@ class_name Combatant extends Resource
 
 @export var display_name := ""
 ## Data id: the quest counts kills by it and the battle picks the enemy's figure by it
-## ("hero", "slime", "bat", "mushroom", "rey_slime").
+## ("hero" or an EnemyLibrary.ENEMIES key).
 @export var id := ""
 ## Feminine name ("la Seta saltarina"): the battle messages use la / una / -a.
 @export var female := false
@@ -44,6 +44,12 @@ class_name Combatant extends Resource
 @export var attack_status_chance := 0.0
 ## Enemy only: the fighter it calls, once per battle, below half HP (null: never).
 @export var help: Combatant
+## Enemy only: a heal it casts once per battle, as soon as its HP falls below
+## rescue_heal_ratio of the maximum on one of its turns (null: never).
+@export var rescue_heal: Skill
+@export var rescue_heal_ratio := 0.4
+## Boss only: the key item (Inventory.KEY_ITEMS id) the hero gets for defeating it.
+@export var key_item := ""
 ## Enemy only: a boss gets its own look and intro line, and the hero can't flee.
 @export var is_boss := false
 

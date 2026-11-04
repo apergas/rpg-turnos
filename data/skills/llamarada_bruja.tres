@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Skill" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/skill.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+id = "llamarada_bruja"
+display_name = "Llamarada"
+mp_cost = 6
+power = 23
+color = Color(0.75, 0.2, 1, 1)
+element = "fire"
+kind = "damage"
+targets = "one"
+status = ""
+status_chance = 0.0

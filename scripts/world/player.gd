@@ -4,28 +4,13 @@ class_name Player extends CharacterBody3D
 ## tap on the ground; keys cancel it). Turns smoothly toward where it walks and plays
 ## the walk animation while moving, the idle one when stopped. Its model is a
 ## BattleActor.
-## With `-- --autoplay` it walks AUTOPLAY_ROUTE in a loop instead of reading keys.
+## With `-- --autoplay` it walks `route` (the zone's autoplay route) in a loop instead
+## of reading keys.
 
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
 const SPEED := 5.0
 ## How fast the model turns toward the walking direction (radians per second, roughly).
 const TURN_SPEED := 10.0
-## Points walked in a loop by --autoplay: mostly grass, clear of rocks, and through the
-## village, next to the old woman, the merchant, where the Rey Slime appears and the
-## innkeeper, and past two of the chests (Chests.CHESTS).
-const AUTOPLAY_ROUTE: Array[Vector3] = [
-	Vector3(8, 0, 18),
-	Vector3(16, 0, 6),
-	Vector3(10, 0, -6),
-	Vector3(1, 0, -14),
-	Vector3(-1.5, 0, -18),
-	Vector3(-1.2, 0, -23),
-	Vector3(0, 0, -26.5),
-	Vector3(2, 0, -14),
-	Vector3(-6, 0, -4),
-	Vector3(-14, 0, 8),
-	Vector3(-6, 0, 18),
-]
 const ROUTE_REACHED := 0.6
 ## How close to a move_to() point counts as arrived.
 const TARGET_REACHED := 0.3
@@ -34,6 +19,8 @@ const TARGET_REACHED := 0.3
 const STUCK_FRAMES := 12
 
 var input_enabled := true
+## Points walked in a loop on --autoplay (ZoneData.autoplay_route); set by World.
+var route: Array[Vector3] = []
 ## Horizontal meters moved during the last physics frame.
 var last_step_m := 0.0
 ## Point being walked to after a click or tap (y = 0); null when there is none.
@@ -72,6 +59,7 @@ func place(pos: Vector3, facing_yaw: float) -> void:
 	_model.rotation.y = facing_yaw
 	last_step_m = 0.0
 	move_target = null
+	_route_index = _nearest_route_point(pos)
 
 
 ## Walks to point (only its X and Z count) until it arrives, gets stuck or a key is
@@ -138,9 +126,20 @@ func _target_direction() -> Vector3:
 
 
 func _route_direction() -> Vector3:
-	var to_goal := AUTOPLAY_ROUTE[_route_index] - global_position
+	if route.is_empty():
+		return Vector3.ZERO
+	var to_goal := route[_route_index] - global_position
 	to_goal.y = 0.0
 	if to_goal.length() < ROUTE_REACHED:
-		_route_index = (_route_index + 1) % AUTOPLAY_ROUTE.size()
+		_route_index = (_route_index + 1) % route.size()
 		return Vector3.ZERO
 	return to_goal.normalized()
+
+
+## The route point to walk to first after being placed at pos: the nearest one.
+func _nearest_route_point(pos: Vector3) -> int:
+	var best := 0
+	for i in route.size():
+		if pos.distance_to(route[i]) < pos.distance_to(route[best]):
+			best = i
+	return best

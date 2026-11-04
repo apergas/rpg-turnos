@@ -4,13 +4,19 @@ class_name Shop extends RefCounted
 ## nodes. buy() and sell() return {"ok": bool, "text": String} with the message to show.
 
 const VILLACLARO := "villaclaro"
+const BOSQUE := "bosque"
 ## shop id -> keeper's name, equipment and items (Inventory ids) on sale, in list order.
-## Zone 1 sells no Éter (it comes with the zone 2 shop).
+## Zone 1 sells no Éter (it comes with the zone 2 shop, with the Ala de viaje).
 const SHOPS := {
 	VILLACLARO: {
 		"keeper": "Mercader",
 		"equipment": [Equipment.COPPER_SWORD, Equipment.LEATHER_MAIL, Equipment.WOODEN_SHIELD],
 		"items": [Inventory.POTION, Inventory.ANTIDOTE],
+	},
+	BOSQUE: {
+		"keeper": "Mercader",
+		"equipment": ["espada_hierro", "cota_malla", "escudo_hierro"],
+		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.WING],
 	},
 }
 const NO_GOLD := "Falta oro"

@@ -6,9 +6,12 @@ class_name SaveData extends RefCounted
 ## The spells are not saved: Leveling.sync_skills() gives them back from the level.
 ## Version 3 (economy and equipment) adds the loadout, the equipment in the bag and the
 ## opened chests; a version 2 save still loads, with the starting gear, an empty bag and
-## every chest closed.
+## every chest closed. Version 4 (the world of zones) adds the zone the hero is on, the
+## world flags, the key items and the last village visited; a version 2 or 3 save still
+## loads on the meadow (its position is a meadow one), with the "rey_slime" flag set if
+## its quest was already done, no key items and Villaclaro as the last village.
 
-const VERSION := 3
+const VERSION := 4
 ## Oldest version apply() still reads.
 const OLDEST_VERSION := 2
 ## Combatant fields of the hero that change while playing (the rest come from hero.tres).
@@ -20,6 +23,11 @@ static func from_state(state: GameState, player_pos: Vector3, play_time: float) 
 	var hero := {}
 	for field in HERO_FIELDS:
 		hero[field] = state.hero.get(field)
+	var flags: Array[String] = []
+	for flag: String in state.world_flags:
+		if state.world_flags[flag]:
+			flags.append(flag)
+	flags.sort()
 	return {
 		"version": VERSION,
 		"hero": hero,
@@ -29,13 +37,18 @@ static func from_state(state: GameState, player_pos: Vector3, play_time: float) 
 		"loadout": state.loadout.to_dict(),
 		"bag": state.bag_equipment.duplicate(),
 		"chests": state.opened_chests.duplicate(),
+		"zone": state.zone_id,
+		"town": state.town_zone,
+		"flags": flags,
+		"key_items": state.key_items.duplicate(),
 		"position": [player_pos.x, player_pos.z],
 		"play_time": play_time,
 	}
 
 
 ## Loads data into state. Returns {"valid": bool, "position": Vector3, "play_time":
-## float}; when valid is false, state is left untouched.
+## float}; when valid is false, state is left untouched. The zone to load is then
+## state.zone_id.
 static func apply(state: GameState, data: Dictionary) -> Dictionary:
 	if not is_valid(data):
 		return {"valid": false, "position": Vector3.ZERO, "play_time": 0.0}
@@ -55,6 +68,20 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 	state.quest.stage = clampi(int(data.quest.stage), Quest.Stage.OFFER, Quest.Stage.DONE) \
 		as Quest.Stage
 	state.quest.kills = int(data.quest.kills)
+	state.world_flags = {}
+	if int(data.version) >= 4:
+		for flag: String in data.flags:
+			state.world_flags[flag] = true
+		state.key_items.assign(data.key_items)
+		state.zone_id = data.zone
+		state.town_zone = data.town
+	else:
+		# Older saves: always on the meadow; a finished quest means the Rey Slime is beaten.
+		if state.quest.stage == Quest.Stage.DONE:
+			state.world_flags[Quest.BOSS_ID] = true
+		state.key_items.clear()
+		state.zone_id = "pradera"
+		state.town_zone = "pradera"
 	var pos: Array = data.position
 	return {"valid": true, "position": Vector3(pos[0], 0.0, pos[1]),
 		"play_time": float(data.play_time)}
@@ -66,6 +93,8 @@ static func is_valid(data: Dictionary) -> bool:
 			and int(data.version) <= VERSION):
 		return false
 	if int(data.version) >= 3 and not _valid_equipment(data):
+		return false
+	if int(data.version) >= 4 and not _valid_world(data):
 		return false
 	var hero: Variant = data.get("hero")
 	if not hero is Dictionary:
@@ -111,5 +140,27 @@ static func _valid_equipment(data: Dictionary) -> bool:
 		return false
 	for id: Variant in chests:
 		if not (id is String and Chests.CHESTS.has(id)):
+			return false
+	return true
+
+
+## Version 4 fields: the zone and the last village are ZoneData ids, the flags are
+## strings and every key item exists.
+static func _valid_world(data: Dictionary) -> bool:
+	for key in ["zone", "town"]:
+		var zone_id: Variant = data.get(key)
+		if not (zone_id is String and zone_id in ZoneData.IDS):
+			return false
+	var flags: Variant = data.get("flags")
+	if not flags is Array:
+		return false
+	for flag: Variant in flags:
+		if not flag is String:
+			return false
+	var key_items: Variant = data.get("key_items")
+	if not key_items is Array:
+		return false
+	for id: Variant in key_items:
+		if not (id is String and Inventory.KEY_ITEMS.has(id)):
 			return false
 	return true

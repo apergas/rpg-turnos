@@ -26,13 +26,6 @@ const CAMERA_POS := Vector3(0.8, 2.6, 6.0)
 const CAMERA_FOV := 50.0
 ## How far the camera moves toward the target during an attack (0..1).
 const CAMERA_FOCUS := 0.18
-## Figure of each enemy data id; any other id is a slime.
-const LOOKS := {
-	"slime": BattleActor.Look.SLIME,
-	"bat": BattleActor.Look.BAT,
-	"mushroom": BattleActor.Look.MUSHROOM,
-	"rey_slime": BattleActor.Look.KING_SLIME,
-}
 const ARROW_COLOR := Color(1.0, 0.9, 0.3)
 ## A click this close (pixels) to an enemy aims at it.
 const PICK_RADIUS := 120.0
@@ -61,6 +54,9 @@ var inventory: Inventory
 var char_time := BattleHud.CHAR_TIME
 ## Gold the hero loses if defeated (Game takes it away; the battle only says so).
 var gold_lost := 0
+## Zone the battle is fought in: its sky, light and backdrop (null: the meadow's). Set
+## before adding it to the tree.
+var zone: ZoneData
 
 var _rng := RandomNumberGenerator.new()
 var _autoplay := false
@@ -120,11 +116,11 @@ func _ready() -> void:
 		"Call setup() before adding BattleScene to the tree")
 	_rng.randomize()
 	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
-	BattleStage.build(self)
+	BattleStage.build(self, zone)
 	_hero_actor = _spawn_actor(BattleActor.Look.HERO, HERO_POS, ENEMY_POS)
 	_hero_actor.set_equipment(_weapon_id, _shield_id)
 	for i in enemies.size():
-		_enemy_actors.append(_spawn_actor(LOOKS.get(enemies[i].id, BattleActor.Look.SLIME),
+		_enemy_actors.append(_spawn_actor(EnemyLibrary.look(enemies[i].id),
 			_slot(i, enemies.size()), HERO_POS))
 	_build_camera()
 	_build_arrow()
@@ -157,7 +153,7 @@ func _setup_standalone() -> void:
 	state.heal_full()
 	state.hero.status[BattleEngine.POISON] = -1
 	state.inventory.add(Inventory.ANTIDOTE)
-	var foes: Array[Combatant] = [EncounterTable.SLIME, EncounterTable.BAT]
+	var foes: Array[Combatant] = [EnemyLibrary.data("slime"), EnemyLibrary.data("bat")]
 	setup(state.hero, foes, state.inventory)
 	finished.connect(func(outcome: int) -> void:
 		print("Fin del combate (estado %d)" % outcome)
@@ -410,8 +406,7 @@ func _play_call_help(event: Dictionary) -> void:
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await t.finished
 	var helper := engine.enemies[event.helper]
-	var actor := _spawn_actor(LOOKS.get(helper.id, BattleActor.Look.SLIME), _slot(1, 2),
-		HERO_POS)
+	var actor := _spawn_actor(EnemyLibrary.look(helper.id), _slot(1, 2), HERO_POS)
 	_enemy_actors.append(actor)
 	await actor.play_appear()
 	await _say("¡Aparece %s %s!" % ["una" if helper.female else "un", helper.display_name])

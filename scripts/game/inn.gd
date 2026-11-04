@@ -1,13 +1,15 @@
 class_name Inn extends RefCounted
 ## Inn rules: a night costs the inn's price and restores all HP and MP (Game adds the
-## fade to black and the autosave). Villaclaro has one as the model for the inns of the
-## later zones (15, 30 and 50 G); there the old woman already heals for free. Pure: works
+## fade to black and the autosave). Villaclaro's costs 5 G (the old woman also heals
+## there for free) and the forest's 15 G; the later zones' will cost 30 and 50 G. Pure: works
 ## on a GameState, never touches nodes.
 
 const VILLACLARO := "villaclaro"
+const BOSQUE := "bosque"
 ## inn id -> keeper's name and price of a night in gold.
 const INNS := {
 	VILLACLARO: {"keeper": "Posadero", "price": 5},
+	BOSQUE: {"keeper": "Posadera", "price": 15},
 }
 
 

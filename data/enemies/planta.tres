@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "planta"
+display_name = "Planta carnívora"
+female = true
+max_hp = 70
+hp = 70
+attack = 18
+defense = 13
+speed = 5
+exp_reward = 15
+gold_reward = 12
+ai_weights = {
+"attack": 85,
+"stagger": 15
+}
+weak = Array[String](["fire"])
+drops = {
+"antidote": 0.15
+}
+attack_status = "poison"
+attack_status_chance = 0.15

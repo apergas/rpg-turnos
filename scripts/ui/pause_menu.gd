@@ -2,7 +2,8 @@ class_name PauseMenu extends Control
 ## Pause menu of the world map. Esc or P, or the ☰ button in the top right corner
 ## (mouse and touch), open it while `available`; it pauses the tree until it closes.
 ## Pages: main list (Estado, Objetos, Equipo, Guardar, Opciones, Volver al título,
-## Cerrar), Estado (hero stats, gold, spells), Objetos (items usable outside battle),
+## Cerrar), Estado (hero stats, gold, spells), Objetos (items usable outside battle,
+## the Ala de viaje too, and the key items),
 ## Equipo (the three slots; choosing one lists the pieces of that slot in the bag, with
 ## the comparison, and Quitar), Opciones (OptionsPanel) and a confirmation before going
 ## back to the title. Esc goes back one page. Keeps running while paused. Call setup()
@@ -12,6 +13,8 @@ signal save_requested
 signal title_requested
 ## The hero, the inventory or the equipment changed, so the map can refresh.
 signal state_changed
+## An Ala de viaje was used (the menu closes): Game takes the hero to the last village.
+signal travel_requested
 
 const FONT_SIZE := 24
 const TITLE_COLOR := Color(1.0, 0.85, 0.3)
@@ -237,6 +240,15 @@ func _fill_items() -> void:
 		row.add_child(use)
 		if why != "":
 			row.add_child(_label(why, Color(0.6, 0.6, 0.65)))
+	for id in _state.key_items:
+		any = true
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 16)
+		_items_box.add_child(row)
+		var label := _label(Inventory.KEY_ITEMS[id], TITLE_COLOR)
+		label.custom_minimum_size = Vector2(220, 0)
+		row.add_child(label)
+		row.add_child(_label("Objeto clave", Color(0.6, 0.6, 0.65)))
 	if not any:
 		_items_box.add_child(_label("No llevas objetos.", Color.WHITE))
 
@@ -244,6 +256,10 @@ func _fill_items() -> void:
 func _on_use_item(id: String) -> void:
 	var result := _state.use_item(id)
 	if not result.used:
+		return
+	if result.effect == "travel":
+		close()
+		travel_requested.emit()
 		return
 	_sfx(SfxLibrary.HEAL)
 	_fill_items()
