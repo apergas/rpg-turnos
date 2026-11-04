@@ -1,35 +1,302 @@
 class_name BattleActor extends Node3D
-## 3D stand-in for a combatant built from primitive meshes. The model faces -Z, so
-## look_at() the opponent. Animations are tweens on the inner body and can be awaited.
+## 3D figure of a fighter or a villager. The hero, the villagers and the witch are
+## KayKit models with their own animations; the slimes, the bat, the mushroom, the wolf,
+## the goblin, the carnivorous plant, the golems, the spider and the specter are
+## low-poly figures built in code (see LOOKS).
+## Set look before add_child. The figure faces -Z, so look_at() the opponent. Every
+## play_* can be awaited: it returns when its animation and its tween are done.
 
-enum Look { HERO, SLIME, VILLAGER, KING_SLIME }
+enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPER, WOLF,
+	GOBLIN, PLANT, WITCH, MUD_GOLEM, STONE_GOLEM, SPIDER, SPECTER }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
+## Color of the "¡Débil!" / "¡Resiste!" line under a damage number.
+const TAG_COLOR := Color(1.0, 0.6, 0.2)
 const GOLD := Color(1.0, 0.8, 0.2)
+const KNIGHT := preload("res://assets/characters/Knight.glb")
+const MAGE := preload("res://assets/characters/Mage.glb")
+## KayKit characters are 2.47 units tall (helmet included); 0.65 makes the hero 1.6 m.
+const CHARACTER_SCALE := 0.65
+## The AnimationPlayer inside a KayKit character scene.
+const ANIM_PLAYER_PATH := "AnimationPlayer"
+const BLEND_TIME := 0.15
+## One-shot animations (attack, spell, hit, dodge, death, cheer) play this much faster.
+const ACTION_SPEED := 1.3
+## The run cycle covers ~1 m/s at this scale; sped up so the feet keep closer pace with
+## the 5 m/s of the map.
+const WALK_SPEED := 1.8
+## Strength of the additive flash on hits, spells and heals.
+const FLASH_ALPHA := 0.6
+## Animation played for each role, the same for both KayKit characters.
+const CHARACTER_ANIMS := {
+	"idle": "Idle",
+	"walk": "Running_A",
+	"attack": "1H_Melee_Attack_Slice_Diagonal",
+	"cast": "Spellcast_Shoot",
+	"hit": "Hit_A",
+	"dodge": "Dodge_Backward",
+	"death": "Death_A",
+	"cheer": "Cheer",
+}
+## Side profile of a slime (x = radius, y = height), bottom to top: a drop with a tip.
+const SLIME_PROFILE: Array[Vector2] = [
+	Vector2(0.0, 0.0), Vector2(0.48, 0.0), Vector2(0.62, 0.18), Vector2(0.58, 0.42),
+	Vector2(0.44, 0.64), Vector2(0.24, 0.8), Vector2(0.08, 0.9), Vector2(0.0, 0.98),
+]
+const SLIME_SEGMENTS := 9
+## Side profiles of the wolf's body (tail to chest) and head (neck to snout), lathed
+## around +Y and laid along -Z, and of a leg.
+const WOLF_BODY_PROFILE: Array[Vector2] = [
+	Vector2(0.0, 0.0), Vector2(0.18, 0.05), Vector2(0.27, 0.3), Vector2(0.3, 0.7),
+	Vector2(0.26, 1.0), Vector2(0.0, 1.1),
+]
+const WOLF_HEAD_PROFILE: Array[Vector2] = [
+	Vector2(0.0, 0.0), Vector2(0.2, 0.02), Vector2(0.22, 0.18), Vector2(0.14, 0.4),
+	Vector2(0.05, 0.55), Vector2(0.0, 0.56),
+]
+const LEG_PROFILE: Array[Vector2] = [
+	Vector2(0.0, 0.0), Vector2(0.07, 0.0), Vector2(0.08, 0.3), Vector2(0.06, 0.55),
+	Vector2(0.0, 0.56),
+]
+## Side profiles (lathed around +Y) of a golem's chunk (4 sides: a faceted block), of the
+## spider's abdomen and of the specter (a drop with its tip down).
+const BLOCK_PROFILE: Array[Vector2] = [
+	Vector2(0.0, 0.0), Vector2(0.42, 0.0), Vector2(0.5, 0.15), Vector2(0.5, 0.75),
+	Vector2(0.4, 0.95), Vector2(0.0, 1.0),
+]
+const ABDOMEN_PROFILE: Array[Vector2] = [
+	Vector2(0.0, 0.0), Vector2(0.22, 0.04), Vector2(0.36, 0.25), Vector2(0.34, 0.5),
+	Vector2(0.2, 0.68), Vector2(0.0, 0.72),
+]
+const SPECTER_PROFILE: Array[Vector2] = [
+	Vector2(0.0, 0.0), Vector2(0.14, 0.18), Vector2(0.34, 0.42), Vector2(0.42, 0.68),
+	Vector2(0.36, 0.92), Vector2(0.18, 1.06), Vector2(0.0, 1.1),
+]
+## Opacity of the specter's body and of its aura.
+const SPECTER_ALPHA := 0.6
+const AURA_ALPHA := 0.22
+## Angle (radians about X) of the plant's upper jaw: resting, and wide open to bite.
+const JAW_REST := 0.3
+const JAW_OPEN := 0.95
+## Hand slots of the KayKit characters (BoneAttachment3D nodes).
+const HAND_R := "Rig/Skeleton3D/handslot_r"
+const HAND_L := "Rig/Skeleton3D/handslot_l"
+## The wooden stick built in code for Equipment.STICK_MESH: along the hand's +Y like the
+## Knight's swords, grip at the hand.
+const STICK_COLOR := Color(0.45, 0.3, 0.16)
+const STICK_RADIUS := 0.07
+const STICK_LENGTH := 1.3
+const STICK_CENTER := 0.45
+## Everything that changes between looks. Characters: scene, scale, top (height of the
+## damage numbers), hide (prop nodes of the model to hide), anims and, optional, tint
+## (multiplies every imported material: the merchant is a green Mage, the innkeeper an
+## orange one); the hero hides
+## every hand mesh and shows only those of its equipment (set_equipment()). Slimes: color,
+## scale (the whole blob, eyes and crown included), top and crown. Bat: color, wing
+## color, top and fly (height it hovers at). Mushroom: cap and stem colors, scale and top.
+## Wolf: fur, dark and eye colors, scale and top. Goblin: color, hat color, scale and top.
+## Plant: stem, leaf, head and inner (mouth) colors, scale and top. Golems: color, dark
+## color (legs and arms), eye color, scale and top. Spider: color, leg color, eye color,
+## scale and top. Specter: color, aura color, scale, top and fly (height it floats at).
+const LOOKS := {
+	Look.HERO: {
+		"scene": KNIGHT,
+		"scale": CHARACTER_SCALE,
+		"top": 1.9,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/1H_Sword_Offhand",
+			"Rig/Skeleton3D/handslot_l/Badge_Shield",
+			"Rig/Skeleton3D/handslot_l/Rectangle_Shield",
+			"Rig/Skeleton3D/handslot_l/Round_Shield",
+			"Rig/Skeleton3D/handslot_l/Spike_Shield",
+			"Rig/Skeleton3D/handslot_r/1H_Sword",
+			"Rig/Skeleton3D/handslot_r/2H_Sword",
+		],
+		"anims": CHARACTER_ANIMS,
+	},
+	Look.VILLAGER: {
+		"scene": MAGE,
+		"scale": CHARACTER_SCALE,
+		"top": 2.2,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/Spellbook",
+			"Rig/Skeleton3D/handslot_l/Spellbook_open",
+			"Rig/Skeleton3D/handslot_r/1H_Wand",
+		],
+		"anims": CHARACTER_ANIMS,
+	},
+	Look.MERCHANT: {
+		"scene": MAGE,
+		"scale": CHARACTER_SCALE,
+		"top": 2.2,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/Spellbook",
+			"Rig/Skeleton3D/handslot_l/Spellbook_open",
+			"Rig/Skeleton3D/handslot_r/1H_Wand",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(0.75, 1.0, 0.65),
+	},
+	Look.INNKEEPER: {
+		"scene": MAGE,
+		"scale": CHARACTER_SCALE,
+		"top": 2.2,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/Spellbook",
+			"Rig/Skeleton3D/handslot_l/Spellbook_open",
+			"Rig/Skeleton3D/handslot_r/1H_Wand",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(1.0, 0.75, 0.5),
+	},
+	Look.SLIME: {
+		"color": Color(0.55, 0.3, 0.85),
+		"scale": 1.0,
+		"top": 1.3,
+		"crown": false,
+	},
+	Look.KING_SLIME: {
+		"color": Color(0.3, 0.45, 0.9),
+		"scale": 1.6,
+		"top": 2.1,
+		"crown": true,
+	},
+	Look.BAT: {
+		"color": Color(0.32, 0.22, 0.42),
+		"wing_color": Color(0.2, 0.13, 0.28),
+		"top": 2.0,
+		"fly": 1.1,
+	},
+	Look.MUSHROOM: {
+		"cap_color": Color(0.85, 0.2, 0.15),
+		"stem_color": Color(0.95, 0.9, 0.78),
+		"scale": 1.4,
+		"top": 1.6,
+	},
+	Look.WOLF: {
+		"color": Color(0.45, 0.45, 0.52),
+		"dark_color": Color(0.26, 0.26, 0.32),
+		"eye_color": Color(1.0, 0.8, 0.2),
+		"scale": 1.15,
+		"top": 1.5,
+	},
+	Look.GOBLIN: {
+		"color": Color(0.4, 0.68, 0.25),
+		"hat_color": Color(0.62, 0.16, 0.12),
+		"scale": 0.8,
+		"top": 1.5,
+	},
+	Look.PLANT: {
+		"stem_color": Color(0.25, 0.55, 0.2),
+		"leaf_color": Color(0.16, 0.42, 0.14),
+		"head_color": Color(0.72, 0.18, 0.32),
+		"inner_color": Color(0.35, 0.05, 0.1),
+		"scale": 1.25,
+		"top": 1.9,
+	},
+	# The witch: the Mage in dark purple, a little taller than the villagers.
+	Look.WITCH: {
+		"scene": MAGE,
+		"scale": 0.75,
+		"top": 2.4,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/Spellbook",
+			"Rig/Skeleton3D/handslot_l/Spellbook_open",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(0.55, 0.32, 0.75),
+	},
+	Look.MUD_GOLEM: {
+		"color": Color(0.5, 0.34, 0.2),
+		"dark_color": Color(0.36, 0.24, 0.14),
+		"eye_color": Color(1.0, 0.85, 0.3),
+		"scale": 1.0,
+		"top": 2.0,
+	},
+	# The boss: bigger, grey stone with glowing blue eyes.
+	Look.STONE_GOLEM: {
+		"color": Color(0.55, 0.55, 0.58),
+		"dark_color": Color(0.38, 0.38, 0.42),
+		"eye_color": Color(0.4, 0.85, 1.0),
+		"scale": 1.55,
+		"top": 3.1,
+	},
+	Look.SPIDER: {
+		"color": Color(0.22, 0.18, 0.24),
+		"leg_color": Color(0.14, 0.11, 0.15),
+		"eye_color": Color(1.0, 0.2, 0.15),
+		"scale": 1.1,
+		"top": 1.2,
+	},
+	Look.SPECTER: {
+		"color": Color(0.75, 0.85, 1.0),
+		"aura_color": Color(0.3, 0.55, 1.0),
+		"scale": 1.0,
+		"top": 2.3,
+		"fly": 0.5,
+	},
+}
 
 @export var look := Look.HERO
 
 ## Height of the floating damage numbers.
 var _top := 2.0
-## Visual root moved and scaled by the animations; the actor node itself stays put.
+## Visual root moved and scaled by the tweens; the actor node itself stays put.
 var _body: Node3D
+## Every mesh of the figure, for the flash overlay.
+var _meshes: Array[MeshInstance3D] = []
+## Slime materials only (faded on defeat); the KayKit materials are left as imported.
 var _materials: Array[StandardMaterial3D] = []
+var _flash: StandardMaterial3D
+## Characters only; null for slimes.
+var _anim: AnimationPlayer
+var _anims: Dictionary = {}
 var _idle_tween: Tween
+## Bat only: the two wing pivots, flapped by the idle loop.
+var _wings: Array[Node3D] = []
+## Characters only: the imported model (its hand slots hold the equipment meshes).
+var _model: Node3D
+## Plant only: the upper jaw's pivot (opens to bite) and the node its idle sway turns.
+var _jaw: Node3D
+var _sway: Node3D
+## Specter only: the node its idle loop floats up and down, and its see-through
+## materials with their resting opacity ([material, alpha]).
+var _hover: Node3D
+var _ghosts: Array = []
 
 
 func _ready() -> void:
 	_body = Node3D.new()
 	add_child(_body)
-	match look:
-		Look.HERO:
-			_build_hero()
-		Look.SLIME:
-			_build_slime()
-		Look.VILLAGER:
-			_build_villager()
-		Look.KING_SLIME:
-			_build_king_slime()
+	var data: Dictionary = LOOKS[look]
+	_top = data.top
+	if data.has("scene"):
+		_build_character(data)
+	elif look == Look.BAT:
+		_build_bat(data)
+	elif look == Look.MUSHROOM:
+		_build_mushroom(data)
+	elif look == Look.WOLF:
+		_build_wolf(data)
+	elif look == Look.GOBLIN:
+		_build_goblin(data)
+	elif look == Look.PLANT:
+		_build_plant(data)
+	elif look == Look.MUD_GOLEM or look == Look.STONE_GOLEM:
+		_build_golem(data)
+	elif look == Look.SPIDER:
+		_build_spider(data)
+	elif look == Look.SPECTER:
+		_build_specter(data)
+	else:
+		_build_slime(data)
+	for node in _body.find_children("*", "MeshInstance3D", true, false):
+		_meshes.append(node as MeshInstance3D)
+	_flash = StandardMaterial3D.new()
+	_flash.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_flash.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_flash.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 	reset()
 
 
@@ -37,32 +304,74 @@ func _ready() -> void:
 func reset() -> void:
 	show()
 	_body.position = Vector3.ZERO
+	_body.rotation = Vector3.ZERO
 	_body.scale = Vector3.ONE
 	_set_flash(false)
 	for mat in _materials:
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
 		mat.albedo_color.a = 1.0
-	if look == Look.SLIME or look == Look.KING_SLIME:
-		_start_bounce()
+	_set_alpha(1.0)
+	if _anim:
+		_anim.play(_anims.idle, 0.0)
+	else:
+		_start_idle()
 
 
-## Lunges toward the target and steps back.
+## Map only: the walk (run) cycle while on is true, else the idle one. Slimes ignore it.
+func set_walking(on: bool) -> void:
+	if _anim == null:
+		return
+	var anim_name: String = _anims.walk if on else _anims.idle
+	if _anim.current_animation != anim_name:
+		_anim.play(anim_name, BLEND_TIME, WALK_SPEED if on else 1.0)
+
+
+## Hero only: shows the hand meshes of the weapon and shield worn (Equipment ids, ""
+## for none) and hides the rest. Armor does not change the model. Others ignore it.
+func set_equipment(weapon_id: String, shield_id: String) -> void:
+	if look != Look.HERO or _model == null:
+		return
+	var shown := {HAND_R: Equipment.mesh(weapon_id), HAND_L: Equipment.mesh(shield_id)}
+	for hand: String in shown:
+		for child in _model.get_node(hand).get_children():
+			(child as Node3D).visible = child.name == shown[hand] and shown[hand] != ""
+
+
+## Swings (characters) and lunges toward the target and steps back; the plant opens
+## its jaws wide on the way and snaps them shut.
 func play_attack(target_pos: Vector3) -> void:
+	var timer := _start("attack")
 	var base := global_position
 	var dir := target_pos - base
 	dir.y = 0.0
 	var lunge := dir.normalized() * minf(1.2, dir.length() * 0.4)
+	if _jaw:
+		var bite := create_tween()
+		bite.tween_property(_jaw, "rotation:x", JAW_OPEN, 0.15)
+		bite.tween_property(_jaw, "rotation:x", 0.0, 0.08)
+		bite.tween_interval(0.12)
+		bite.tween_property(_jaw, "rotation:x", JAW_REST, 0.15)
 	var t := create_tween()
+	if timer:
+		t.tween_interval(0.15)  # the swing winds up before the step
 	t.tween_property(_body, "global_position", base + lunge, 0.15) \
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	t.tween_property(_body, "global_position", base, 0.2) \
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
 	await t.finished
+	await _end(timer)
 
 
-## White flash, small knockback and a floating damage number.
-func play_hit(amount: int, crit: bool) -> void:
-	_spawn_number(amount, crit)
+## Height of the top of the figure (where the damage numbers start).
+func top_height() -> float:
+	return _top
+
+
+## Hit animation, white flash, small knockback and a floating damage number; tag
+## ("¡Débil!", "¡Resiste!") floats under the number.
+func play_hit(amount: int, crit: bool, tag := "") -> void:
+	_spawn_number(amount, crit, Color.WHITE, tag)
+	var timer := _start("hit")
 	var base := global_position
 	var knockback := global_basis.z.normalized() * (0.5 if crit else 0.3)
 	_set_flash(true)
@@ -71,21 +380,29 @@ func play_hit(amount: int, crit: bool) -> void:
 	t.tween_callback(_set_flash.bind(false))
 	t.tween_property(_body, "global_position", base, 0.15)
 	await t.finished
+	await _end(timer)
 
 
-## Side step used when an attack misses.
+## Jumps back when an attack misses.
 func play_dodge() -> void:
+	var timer := _start("dodge")
 	var base := global_position
-	var side := global_basis.x.normalized() * 0.6
+	var back := global_basis.z.normalized() * 0.6
 	var t := create_tween()
-	t.tween_property(_body, "global_position", base + side, 0.1) \
+	t.tween_property(_body, "global_position", base + back, 0.1) \
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	t.tween_property(_body, "global_position", base, 0.15)
 	await t.finished
+	await _end(timer)
 
 
-## Squashes, shrinks and fades out, then hides.
+## Characters fall with the death animation and stay down. Slimes squash, shrink and
+## fade out, then hide.
 func play_defeat() -> void:
+	if _anim:
+		var timer := _start("death")
+		await timer.timeout
+		return
 	if _idle_tween:
 		_idle_tween.kill()
 	for mat in _materials:
@@ -98,20 +415,21 @@ func play_defeat() -> void:
 	hide()
 
 
-## Small hop with a glow in the spell's color, before a spell.
+## Glow in the spell's color with the cast animation (characters) or a small hop
+## (slimes), before a spell.
 func play_cast(color := FIRE_COLOR) -> void:
 	_set_flash(true, color)
-	var t := create_tween()
-	t.tween_property(_body, "position:y", 0.35, 0.15) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	t.tween_property(_body, "position:y", 0.0, 0.15) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	await t.finished
+	var timer := _start("cast")
+	if timer:
+		await timer.timeout
+	else:
+		await _hop()
 	_set_flash(false)
+	await _end(timer)
 
 
 ## A ball in the spell's color grows on the actor and fades while the hit plays.
-func play_burn(amount: int, color := FIRE_COLOR) -> void:
+func play_burn(amount: int, color := FIRE_COLOR, tag := "") -> void:
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -127,17 +445,39 @@ func play_burn(amount: int, color := FIRE_COLOR) -> void:
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	t.parallel().tween_property(mat, "albedo_color:a", 0.0, 0.3).set_delay(0.1)
 	t.tween_callback(ball.queue_free)
-	await play_hit(amount, false)
+	await play_hit(amount, false, tag)
 	if t.is_running():
 		await t.finished
 
 
-## Green glow and a green number going up.
-func play_heal(amount: int) -> void:
-	_spawn_number(amount, false, HEAL_COLOR)
-	_set_flash(true, HEAL_COLOR)
+## Glow and a number going up, green by default (HP); an MP heal passes its own color.
+func play_heal(amount: int, color := HEAL_COLOR) -> void:
+	_spawn_number(amount, false, color)
+	_set_flash(true, color)
 	await get_tree().create_timer(0.35).timeout
 	_set_flash(false)
+
+
+## Glow in a status color (poison, sleep, defend...); amount > 0 also floats a number of
+## that color (poison damage).
+func play_status(color: Color, amount := 0) -> void:
+	if amount > 0:
+		_spawn_number(amount, false, color)
+	_set_flash(true, color)
+	await get_tree().create_timer(0.35).timeout
+	_set_flash(false)
+
+
+## Grows from nothing where it stands (an enemy called for help).
+func play_appear() -> void:
+	if _idle_tween:
+		_idle_tween.kill()
+	_body.scale = Vector3.ONE * 0.05
+	var t := create_tween()
+	t.tween_property(_body, "scale", Vector3.ONE, 0.35) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	await t.finished
+	_start_idle()
 
 
 ## Wobbles side to side, for a fighter that loses its turn.
@@ -148,118 +488,454 @@ func play_stagger() -> void:
 	await t.finished
 
 
-func _build_hero() -> void:
-	_top = 2.1
-	_add_mesh(_capsule(0.32, 1.2), Color(0.75, 0.12, 0.12), Vector3(0, 0.6, 0))  # body / tunic
-	_add_mesh(_sphere(0.27), Color(0.96, 0.78, 0.62), Vector3(0, 1.45, 0))  # head
-	_add_mesh(_sphere(0.29), Color(0.92, 0.62, 0.2), Vector3(0, 1.52, 0.06), \
-		Vector3.ZERO, Vector3(1.0, 0.85, 1.0))  # hair, seen from behind
-	_add_mesh(_box(Vector3(0.08, 0.9, 0.04)), Color(0.75, 0.75, 0.8), \
-		Vector3(0.42, 0.85, -0.2), Vector3(-30, 0, 0))  # sword
+## Celebrates a victory: the cheer animation (characters) or a hop (slimes).
+func play_cheer() -> void:
+	var timer := _start("cheer")
+	if timer == null:
+		await _hop()
+	await _end(timer)
 
 
-func _build_slime() -> void:
-	_top = 1.4
-	_add_mesh(_sphere(0.6), Color(0.55, 0.3, 0.85), Vector3(0, 0.45, 0), \
-		Vector3.ZERO, Vector3(1.0, 0.75, 1.0))  # body
+func _build_character(data: Dictionary) -> void:
+	var model: Node3D = (data.scene as PackedScene).instantiate()
+	model.scale = Vector3.ONE * data.scale
+	# KayKit characters face +Z; turned around they face -Z like every BattleActor.
+	model.rotation.y = PI
+	_body.add_child(model)
+	_model = model
+	for path in data.hide:
+		(model.get_node(path) as Node3D).hide()
+	if data.has("tint"):
+		_tint(model, data.tint)
+	if look == Look.HERO:
+		var stick := _cylinder(STICK_RADIUS, STICK_LENGTH)
+		stick.top_radius = STICK_RADIUS * 0.7
+		_add_mesh(model.get_node(HAND_R), stick, STICK_COLOR, Vector3(0, STICK_CENTER, 0))
+		var mi := model.get_node(HAND_R).get_child(-1) as MeshInstance3D
+		mi.name = Equipment.STICK_MESH
+		# The starting gear until set_equipment() says otherwise.
+		set_equipment(Equipment.STICK, "")
+	_anims = data.anims
+	_anim = model.get_node(ANIM_PLAYER_PATH) as AnimationPlayer
+	# The imported animations do not loop; idle and walk must.
+	for role in ["idle", "walk"]:
+		_anim.get_animation(_anims[role]).loop_mode = Animation.LOOP_LINEAR
+
+
+func _build_slime(data: Dictionary) -> void:
+	var color: Color = data.color
+	var blob := Node3D.new()
+	blob.scale = Vector3.ONE * data.scale
+	_body.add_child(blob)
+	_add_mesh(blob, LowPoly.blob(SLIME_PROFILE, SLIME_SEGMENTS), color, Vector3.ZERO, 0.6)
 	for x in [-0.2, 0.2]:
-		_add_mesh(_sphere(0.13), Color.WHITE, Vector3(x, 0.6, -0.48))  # eye
-		_add_mesh(_sphere(0.06), Color(0.05, 0.05, 0.05), Vector3(x, 0.6, -0.6))  # pupil
+		_add_mesh(blob, _sphere(0.12), Color.WHITE, Vector3(x, 0.5, -0.44))  # eye
+		_add_mesh(blob, _sphere(0.055), Color(0.05, 0.05, 0.05), Vector3(x, 0.5, -0.55))  # pupil
+	if data.crown:
+		var band := _cylinder(0.27, 0.14)
+		band.top_radius = 0.22
+		_add_mesh(blob, band, GOLD, Vector3(0, 0.86, 0), 0.4)
+		for i in 5:
+			var angle := TAU * i / 5.0
+			_add_mesh(blob, _cone(0.06, 0.16), GOLD,
+				Vector3(cos(angle) * 0.19, 1.01, sin(angle) * 0.19), 0.4)  # spike
 
 
-func _build_villager() -> void:
-	_top = 2.0
-	_add_mesh(_capsule(0.34, 1.2), Color(0.45, 0.25, 0.6), Vector3(0, 0.6, 0))  # robe
-	_add_mesh(_sphere(0.26), Color(0.94, 0.78, 0.66), Vector3(0, 1.42, 0))  # head
-	_add_mesh(_sphere(0.28), Color(0.92, 0.92, 0.95), Vector3(0, 1.5, 0.06), \
-		Vector3.ZERO, Vector3(1.0, 0.85, 1.0))  # white hair
-	_add_mesh(_cylinder(0.04, 1.6), Color(0.45, 0.3, 0.15), Vector3(0.42, 0.8, -0.1))  # staff
+## A bat: round body with ears and eyes, hovering at data.fly, with two wings on pivots
+## that the idle loop flaps.
+func _build_bat(data: Dictionary) -> void:
+	var color: Color = data.color
+	var root := Node3D.new()
+	root.position.y = data.fly
+	_body.add_child(root)
+	_add_mesh(root, _sphere(0.32), color, Vector3.ZERO, 0.7)
+	for x in [-0.14, 0.14]:
+		_add_mesh(root, _cone(0.08, 0.22), color, Vector3(x, 0.36, 0))  # ear
+		_add_mesh(root, _sphere(0.08), Color(1.0, 0.85, 0.3), Vector3(x * 0.9, 0.08, -0.27))  # eye
+		_add_mesh(root, _sphere(0.035), Color(0.05, 0.05, 0.05),
+			Vector3(x * 0.9, 0.08, -0.34))  # pupil
+	for side in [-1.0, 1.0]:
+		var pivot := Node3D.new()
+		pivot.position = Vector3(0.22 * side, 0.05, 0)
+		root.add_child(pivot)
+		var wing := BoxMesh.new()
+		wing.size = Vector3(0.75, 0.04, 0.42)
+		_add_mesh(pivot, wing, data.wing_color, Vector3(0.38 * side, 0, 0.05))
+		_wings.append(pivot)
 
 
-func _build_king_slime() -> void:
-	_top = 2.4
-	_add_mesh(_sphere(0.6), Color(0.3, 0.45, 0.9), Vector3(0, 0.72, 0), \
-		Vector3.ZERO, Vector3(1.6, 1.2, 1.6))  # body
-	for x in [-0.32, 0.32]:
-		_add_mesh(_sphere(0.2), Color.WHITE, Vector3(x, 0.96, -0.82))  # eye
-		_add_mesh(_sphere(0.09), Color(0.05, 0.05, 0.05), Vector3(x, 0.96, -1.0))  # pupil
-	_add_mesh(_cylinder(0.38, 0.22), GOLD, Vector3(0, 1.5, 0))  # crown band
+## A mushroom: pale stem with eyes and a red hemisphere cap with white spots.
+func _build_mushroom(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	var stem := _cylinder(0.2, 0.55)
+	stem.top_radius = 0.16
+	_add_mesh(root, stem, data.stem_color, Vector3(0, 0.275, 0))
+	for x in [-0.08, 0.08]:
+		_add_mesh(root, _sphere(0.05), Color(0.05, 0.05, 0.05), Vector3(x, 0.32, -0.18))  # eye
+	var cap := SphereMesh.new()
+	cap.radius = 0.5
+	cap.height = 0.42
+	cap.is_hemisphere = true
+	cap.radial_segments = 9
+	cap.rings = 3
+	_add_mesh(root, cap, data.cap_color, Vector3(0, 0.5, 0), 0.6)
 	for i in 5:
-		var angle := TAU * i / 5.0
-		_add_mesh(_cone(0.1, 0.3), GOLD, Vector3(cos(angle) * 0.3, 1.76, sin(angle) * 0.3))  # spike
+		var angle := TAU * i / 5.0 + 0.3
+		_add_mesh(root, _sphere(0.07), Color.WHITE,
+			Vector3(cos(angle) * 0.32, 0.83, sin(angle) * 0.32))  # spot
+	_add_mesh(root, _sphere(0.08), Color.WHITE, Vector3(0, 0.92, 0))  # top spot
 
 
-func _start_bounce() -> void:
+## A wolf: a faceted body and a wedge head along -Z on four legs, with ears, yellow
+## eyes and a tail.
+func _build_wolf(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	_add_blob(root, WOLF_BODY_PROFILE, 6, data.color, Vector3(0, 0.62, 0.55),
+		Vector3(-90, 0, 0))
+	_add_blob(root, WOLF_HEAD_PROFILE, 5, data.color, Vector3(0, 0.82, -0.48),
+		Vector3(-100, 0, 0))
+	for x in [-0.1, 0.1]:
+		_add_mesh(root, _cone(0.06, 0.18), data.dark_color, Vector3(x, 1.06, -0.6))  # ear
+		_add_mesh(root, _sphere(0.045), data.eye_color, Vector3(x * 1.1, 0.92, -0.72))  # eye
+		_add_mesh(root, _sphere(0.022), Color(0.05, 0.05, 0.05),
+			Vector3(x * 1.1, 0.92, -0.765))  # pupil
+	_add_mesh(root, _sphere(0.04), Color(0.05, 0.05, 0.05), Vector3(0, 0.74, -1.03))  # nose
+	for x in [-0.17, 0.17]:
+		for z in [-0.32, 0.34]:
+			_add_blob(root, LEG_PROFILE, 4, data.dark_color, Vector3(x, 0.0, z))
+	_add_mesh(root, _cone(0.07, 0.45), data.color, Vector3(0, 0.8, 0.72))  # tail
+	(root.get_child(-1) as Node3D).rotation_degrees.x = 55.0
+
+
+## A goblin: a small green slime with pointed ears and a red pointed hat.
+func _build_goblin(data: Dictionary) -> void:
+	var blob := Node3D.new()
+	blob.scale = Vector3.ONE * data.scale
+	_body.add_child(blob)
+	_add_mesh(blob, LowPoly.blob(SLIME_PROFILE, SLIME_SEGMENTS), data.color, Vector3.ZERO, 0.7)
+	for side in [-1.0, 1.0]:
+		_add_mesh(blob, _sphere(0.11), Color.WHITE, Vector3(side * 0.19, 0.52, -0.45))  # eye
+		_add_mesh(blob, _sphere(0.05), Color(0.05, 0.05, 0.05),
+			Vector3(side * 0.19, 0.52, -0.55))  # pupil
+		_add_mesh(blob, _cone(0.12, 0.5), data.color, Vector3(side * 0.66, 0.62, 0))  # ear
+		(blob.get_child(-1) as Node3D).rotation_degrees.z = -70.0 * side
+	var hat := _cone(0.34, 0.6)
+	hat.radial_segments = 7
+	_add_mesh(blob, hat, data.hat_color, Vector3(0, 1.08, 0.04))
+	(blob.get_child(-1) as Node3D).rotation_degrees.x = 12.0
+
+
+## A carnivorous plant: leaves at the foot of a stem with a round head of two jaws
+## (the upper one on a pivot at the back, slightly open, with white teeth and spots).
+func _build_plant(data: Dictionary) -> void:
+	_sway = Node3D.new()
+	_sway.scale = Vector3.ONE * data.scale
+	_body.add_child(_sway)
+	for i in 3:
+		var leaf := Node3D.new()
+		leaf.rotation.y = TAU * i / 3.0
+		_sway.add_child(leaf)
+		_add_blob(leaf, LowPoly.BUSH_PROFILE, 5, data.leaf_color, Vector3(0, 0, 0.32),
+			Vector3.ZERO, Vector3(0.45, 0.22, 0.6))
+	_add_mesh(_sway, _cylinder(0.08, 0.95), data.stem_color, Vector3(0, 0.47, 0))
+	var head := Node3D.new()
+	head.position = Vector3(0, 0.98, 0)
+	_sway.add_child(head)
+	_add_mesh(head, _hemisphere(0.36, 0.24), data.head_color, Vector3.ZERO)
+	(head.get_child(-1) as Node3D).rotation_degrees.x = 180.0
+	_add_mesh(head, _disc(0.33), data.inner_color, Vector3(0, 0.01, 0))
+	_jaw = Node3D.new()
+	_jaw.position = Vector3(0, 0, 0.3)
+	head.add_child(_jaw)
+	_add_mesh(_jaw, _hemisphere(0.36, 0.3), data.head_color, Vector3(0, 0, -0.3))
+	_add_mesh(_jaw, _disc(0.33), data.inner_color, Vector3(0, -0.01, -0.3))
+	for i in 6:
+		var angle := PI * (0.15 + 0.7 * i / 5.0)
+		var rim := Vector3(cos(angle) * 0.3, 0, -sin(angle) * 0.3)
+		_add_mesh(head, _cone(0.035, 0.09), Color.WHITE, rim + Vector3(0, 0.04, 0))  # tooth
+		_add_mesh(_jaw, _cone(0.035, 0.09), Color.WHITE, rim + Vector3(0, -0.04, -0.3))
+		(_jaw.get_child(-1) as Node3D).rotation_degrees.x = 180.0
+	for spot in [Vector3(-0.15, 0.2, -0.45), Vector3(0.17, 0.22, -0.4), Vector3(0, 0.27, -0.2)]:
+		_add_mesh(_jaw, _sphere(0.05), Color(1.0, 0.95, 0.8), spot)
+	_jaw.rotation.x = JAW_REST
+
+
+## A golem: faceted blocks for the legs, the body, the head and two long arms, with
+## glowing eyes and two loose stones on the shoulders.
+func _build_golem(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	for x in [-0.22, 0.22]:
+		_add_blob(root, BLOCK_PROFILE, 4, data.dark_color, Vector3(x, 0, 0), Vector3(0, 45, 0),
+			Vector3(0.36, 0.42, 0.36))  # leg
+	_add_blob(root, BLOCK_PROFILE, 4, data.color, Vector3(0, 0.38, 0), Vector3(0, 45, 0),
+		Vector3(1.05, 0.72, 0.8))  # body
+	_add_blob(root, BLOCK_PROFILE, 4, data.color, Vector3(0, 1.08, -0.06), Vector3(0, 45, 0),
+		Vector3(0.5, 0.36, 0.46))  # head
+	for x in [-0.12, 0.12]:
+		_add_mesh(root, _sphere(0.055), data.eye_color, Vector3(x, 1.24, -0.29), 0.2)  # eye
+	for side in [-1.0, 1.0]:
+		_add_blob(root, BLOCK_PROFILE, 4, data.dark_color, Vector3(side * 0.62, 0.12, -0.05),
+			Vector3(0, 45, side * 8.0), Vector3(0.34, 0.86, 0.34))  # arm
+		_add_blob(root, BLOCK_PROFILE, 4, data.color, Vector3(side * 0.42, 1.0, 0.05),
+			Vector3(0, 20, 0), Vector3(0.22, 0.16, 0.22))  # loose stone
+
+
+## A spider: a round abdomen behind a small head with red eyes, on eight bent legs
+## (four a side, each a thigh going up and out and a shin going down to the ground).
+func _build_spider(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	_add_blob(root, ABDOMEN_PROFILE, 7, data.color, Vector3(0, 0.42, 0.32), Vector3(-75, 0, 0),
+		Vector3(1.1, 1.0, 1.0))  # abdomen
+	_add_mesh(root, _sphere(0.2), data.color, Vector3(0, 0.42, -0.12))  # head
+	for x in [-0.07, 0.07]:
+		_add_mesh(root, _sphere(0.045), data.eye_color, Vector3(x, 0.5, -0.3), 0.2)  # eye
+		_add_mesh(root, _sphere(0.03), data.eye_color, Vector3(x * 2.0, 0.45, -0.28), 0.2)
+	for side in [-1.0, 1.0]:
+		for i in 4:
+			var leg := Node3D.new()
+			leg.position = Vector3(side * 0.14, 0.42, -0.2 + i * 0.13)
+			# Each leg reaches out to +X of its pivot: the left ones are turned around.
+			leg.rotation.y = deg_to_rad(40.0 - i * 27.0) * side + (PI if side < 0.0 else 0.0)
+			root.add_child(leg)
+			_add_mesh(leg, _cylinder(0.03, 0.42), data.leg_color, Vector3(0.18, 0.13, 0))
+			(leg.get_child(-1) as Node3D).rotation_degrees.z = -60.0  # thigh, up and out
+			_add_mesh(leg, _cylinder(0.025, 0.62), data.leg_color, Vector3(0.44, -0.12, 0))
+			(leg.get_child(-1) as Node3D).rotation_degrees.z = 22.0  # shin, down to the ground
+
+
+## A specter: a see-through pale drop with its tip down, floating at data.fly, with dark
+## eyes and a wide blue aura around it.
+func _build_specter(data: Dictionary) -> void:
+	_hover = Node3D.new()
+	_hover.position.y = data.fly
+	_hover.scale = Vector3.ONE * data.scale
+	_body.add_child(_hover)
+	_add_ghost(_hover, LowPoly.blob(SPECTER_PROFILE, 8), data.color, SPECTER_ALPHA,
+		Vector3.ZERO, Vector3.ONE)
+	_add_ghost(_hover, _sphere(0.5), data.aura_color, AURA_ALPHA, Vector3(0, 0.62, 0),
+		Vector3(1.5, 1.7, 1.5))
+	for x in [-0.12, 0.12]:
+		_add_mesh(_hover, _sphere(0.07), Color(0.05, 0.05, 0.12), Vector3(x, 0.8, -0.34))  # eye
+	_add_mesh(_hover, _sphere(0.06), Color(0.05, 0.05, 0.12), Vector3(0, 0.6, -0.36))  # mouth
+
+
+## The waiting loop of the figures built in code: the bat flaps, the plant sways, the
+## specter floats, the rest squash and stretch (the wolf, the golems and the spider only
+## breathe).
+func _start_idle() -> void:
+	if not _wings.is_empty():
+		_start_flap()
+	elif _sway:
+		_start_sway()
+	elif _hover:
+		_start_float()
+	else:
+		var gentle := look in [Look.WOLF, Look.MUD_GOLEM, Look.STONE_GOLEM, Look.SPIDER]
+		_start_bounce(0.4 if gentle else 1.0)
+
+
+## Floating loop of the specter. Only _hover moves, so hits and dodges can move _body.
+func _start_float() -> void:
+	if _idle_tween:
+		_idle_tween.kill()
+	var fly: float = LOOKS[look].fly
+	_idle_tween = create_tween().set_loops()
+	for y in [fly + 0.18, fly]:
+		_idle_tween.tween_property(_hover, "position:y", y, 0.8) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+## Flapping wings, for the bat. Only the wing pivots are tweened, so hits, attacks and
+## dodges can move _body freely.
+func _start_flap() -> void:
 	if _idle_tween:
 		_idle_tween.kill()
 	_idle_tween = create_tween().set_loops()
-	_idle_tween.tween_property(_body, "scale", Vector3(1.08, 0.9, 1.08), 0.35) \
+	for angle in [0.6, -0.4]:
+		_idle_tween.tween_property(_wings[0], "rotation:z", -angle, 0.18) \
+			.set_trans(Tween.TRANS_SINE)
+		_idle_tween.parallel().tween_property(_wings[1], "rotation:z", angle, 0.18) \
+			.set_trans(Tween.TRANS_SINE)
+
+
+## Swaying loop of the plant. Only _sway turns, so hits and the stagger can move and
+## turn _body freely.
+func _start_sway() -> void:
+	if _idle_tween:
+		_idle_tween.kill()
+	_idle_tween = create_tween().set_loops()
+	for angle in [0.09, -0.09]:
+		_idle_tween.tween_property(_sway, "rotation:z", angle, 0.6) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+## Squash-and-stretch loop of the slimes while they wait (amount 1: full; less for a
+## gentler breath).
+func _start_bounce(amount := 1.0) -> void:
+	if _idle_tween:
+		_idle_tween.kill()
+	_idle_tween = create_tween().set_loops()
+	_idle_tween.tween_property(_body, "scale",
+		Vector3(1.0 + 0.08 * amount, 1.0 - 0.1 * amount, 1.0 + 0.08 * amount), 0.35) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_idle_tween.tween_property(_body, "scale", Vector3.ONE, 0.35) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
-func _spawn_number(amount: int, crit: bool, color := Color.WHITE) -> void:
+func _hop() -> void:
+	var t := create_tween()
+	t.tween_property(_body, "position:y", 0.35, 0.15) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	t.tween_property(_body, "position:y", 0.0, 0.15) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	await t.finished
+
+
+## Plays the role's animation once at ACTION_SPEED and returns a timer that runs out
+## when it ends; null for slimes, which have no animations.
+func _start(role: String) -> SceneTreeTimer:
+	if _anim == null:
+		return null
+	var anim_name: String = _anims[role]
+	_anim.play(anim_name, BLEND_TIME, ACTION_SPEED)
+	return get_tree().create_timer(_anim.get_animation(anim_name).length / ACTION_SPEED)
+
+
+## Waits for a timer from _start() (if any) and goes back to the idle loop.
+func _end(timer: SceneTreeTimer) -> void:
+	if timer == null:
+		return
+	if timer.time_left > 0.0:
+		await timer.timeout
+	_anim.play(_anims.idle, BLEND_TIME)
+
+
+func _spawn_number(amount: int, crit: bool, color := Color.WHITE, tag := "") -> void:
+	if tag != "":
+		_float_label(tag, 40, TAG_COLOR, _top - 0.3)
+	_float_label(str(amount), 96 if crit else 64, Color(1.0, 0.85, 0.2) if crit else color,
+		_top)
+
+
+## A billboard text drawn over everything that floats up from height y and fades out.
+func _float_label(text: String, font_size: int, color: Color, y: float) -> void:
 	var label := Label3D.new()
-	label.text = str(amount)
+	label.text = text
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.no_depth_test = true
 	label.pixel_size = 0.005
-	label.font_size = 96 if crit else 64
+	label.font_size = font_size
 	label.outline_size = 16
-	label.modulate = Color(1.0, 0.85, 0.2) if crit else color
-	label.position = Vector3(0, _top, 0)
+	label.modulate = color
+	label.position = Vector3(0, y, 0)
 	add_child(label)
 	var t := label.create_tween().set_parallel()
-	t.tween_property(label, "position:y", _top + 0.8, 0.9)
+	t.tween_property(label, "position:y", y + 0.8, 0.9)
 	t.tween_property(label, "modulate:a", 0.0, 0.6).set_delay(0.3)
 	t.chain().tween_callback(label.queue_free)
 
 
+## Gives every mesh of an imported model copies of its materials with albedo_color
+## multiplied by color (the texture is multiplied too).
+static func _tint(model: Node3D, color: Color) -> void:
+	for node in model.find_children("*", "MeshInstance3D", true, false):
+		var mi := node as MeshInstance3D
+		for i in mi.mesh.get_surface_count():
+			var source := mi.get_active_material(i) as BaseMaterial3D
+			if source == null:
+				continue
+			var tinted := source.duplicate() as BaseMaterial3D
+			tinted.albedo_color = source.albedo_color * color
+			mi.set_surface_override_material(i, tinted)
+
+
+## Additive overlay on every mesh, so it works on the imported materials too.
 func _set_flash(on: bool, color := Color.WHITE) -> void:
-	for mat in _materials:
-		mat.emission_enabled = on
-		mat.emission = color
-		mat.emission_energy_multiplier = 1.5
+	_flash.albedo_color = Color(color, FLASH_ALPHA)
+	for mi in _meshes:
+		mi.material_overlay = _flash if on else null
 
 
 func _set_alpha(alpha: float) -> void:
 	for mat in _materials:
 		mat.albedo_color.a = alpha
+	for ghost in _ghosts:
+		(ghost[0] as StandardMaterial3D).albedo_color.a = ghost[1] * alpha
 
 
-func _add_mesh(mesh: Mesh, color: Color, pos: Vector3, rot_deg := Vector3.ZERO, \
-		scl := Vector3.ONE) -> void:
+func _add_mesh(parent: Node3D, mesh: Mesh, color: Color, pos: Vector3, \
+		roughness := 0.8) -> void:
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = color
-	mat.roughness = 0.8
+	mat.roughness = roughness
 	_materials.append(mat)
 	var mi := MeshInstance3D.new()
 	mi.mesh = mesh
 	mi.material_override = mat
 	mi.position = pos
+	parent.add_child(mi)
+
+
+## A see-through glowing mesh (the specter): its opacity rests at alpha and fades with
+## the rest of the figure on defeat. It casts no shadow.
+func _add_ghost(parent: Node3D, mesh: Mesh, color: Color, alpha: float, pos: Vector3, \
+		scl: Vector3) -> void:
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(color, alpha)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.emission_enabled = true
+	mat.emission = color * 0.35
+	mat.roughness = 0.6
+	_ghosts.append([mat, alpha])
+	var mi := MeshInstance3D.new()
+	mi.mesh = mesh
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.position = pos
+	mi.scale = scl
+	parent.add_child(mi)
+
+
+## A faceted lathe (LowPoly.blob) of profile at pos, turned rot_deg and scaled scl.
+func _add_blob(parent: Node3D, profile: Array[Vector2], segments: int, color: Color, \
+		pos: Vector3, rot_deg := Vector3.ZERO, scl := Vector3.ONE) -> void:
+	_add_mesh(parent, LowPoly.blob(profile, segments), color, pos, 0.8)
+	var mi := parent.get_child(-1) as MeshInstance3D
 	mi.rotation_degrees = rot_deg
 	mi.scale = scl
-	_body.add_child(mi)
+
+
+static func _hemisphere(radius: float, height: float) -> SphereMesh:
+	var mesh := SphereMesh.new()
+	mesh.radius = radius
+	mesh.height = height
+	mesh.is_hemisphere = true
+	mesh.radial_segments = 9
+	mesh.rings = 3
+	return mesh
+
+
+## A flat round lid (the inside of the plant's mouth).
+static func _disc(radius: float) -> CylinderMesh:
+	var mesh := _cylinder(radius, 0.02)
+	mesh.radial_segments = 9
+	return mesh
 
 
 static func _sphere(radius: float) -> SphereMesh:
 	var mesh := SphereMesh.new()
 	mesh.radius = radius
 	mesh.height = radius * 2.0
-	return mesh
-
-
-static func _capsule(radius: float, height: float) -> CapsuleMesh:
-	var mesh := CapsuleMesh.new()
-	mesh.radius = radius
-	mesh.height = height
-	return mesh
-
-
-static func _box(size: Vector3) -> BoxMesh:
-	var mesh := BoxMesh.new()
-	mesh.size = size
+	mesh.radial_segments = 10
+	mesh.rings = 5
 	return mesh
 
 
@@ -268,6 +944,7 @@ static func _cylinder(radius: float, height: float) -> CylinderMesh:
 	mesh.top_radius = radius
 	mesh.bottom_radius = radius
 	mesh.height = height
+	mesh.radial_segments = 8
 	return mesh
 
 

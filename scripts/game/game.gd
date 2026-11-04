@@ -1,75 +1,372 @@
-extends Node
-## Root scene. Owns the GameState and the world map, and puts a battle on top of the
-## map when an encounter starts. The map is never freed, so the hero's position, the
-## camera and the encounter grace survive the battle. A defeat heals the hero and
-## sends them back to the spawn point; EXP is kept. Talking to the old woman heals,
-## moves the quest on and, once the slimes are reported, brings out the Rey Slime.
+class_name Game extends Node
+## One play session, created by TitleScreen (setup() before add_child). Owns the
+## GameState and the map of the current zone (a World built from its ZoneData), and puts
+## a battle on top of the map when an encounter starts (the enemies come from
+## EncounterTable with the zone's formations, or the zone's boss). The map stays while
+## battles come and go, so the hero's position, the camera and the encounter grace
+## survive them; walking into an open exit fades to black, frees the map and builds the
+## next zone at the exit's entry (GameState.zone_id). A victory adds the gold and counts
+## every enemy defeated for the quest; a boss also sets its world flag (the Rey Slime
+## lifts the fog of the meadow's north exit) and gives its key item. Fleeing just goes
+## back to the map; a defeat takes half the gold (GameState.defeat_gold_loss()), heals the
+## hero and sends them to the last village visited (GameState.town_zone), EXP kept, like
+## the Ala de viaje used from the pause menu. Talking to the old woman heals, moves the
+## quest on and, once the slimes are reported, brings out the Rey Slime; the other
+## villagers say their ZoneData lines. The merchant opens the ShopWindow; the innkeeper
+## offers a night (Inn.stay(): fade to black, full HP and MP, autosave); a chest gives
+## what it holds (Chests.open()) and stays open. The hero's figure on the map and in
+## battle shows the weapon and shield worn. On a dungeon floor the lever sets its world
+## flag (and opens the gates it works), the key goes to the key items (and its flag is
+## set, so it stays taken) and a locked gate opens with the key, which is used up; all
+## three autosave silently. Picks the zone's music (map, village, battle,
+## boss), autosaves after talking, after every won battle, after shopping, (silently)
+## after opening a chest, after a defeat and after every change of zone, and opens the
+## pause menu. Emits quit_to_title when the player goes back to the title.
+## On autoplay it prints the gold and the equipment each time they change.
+## Run on its own (res://scenes/game/game.tscn) it starts a new game with its own
+## AudioDirector and default options.
+##
+## `-- --autoplay --autoplay-save`: after the first autosave that follows a won battle
+## it prints the saved values ("Guardado: ...") and goes back to the title, which loads
+## the save at once; the loaded game prints the same values ("Cargado: ...").
+## `-- --autoplay --autoplay-menu`: MENU_TOUR_DELAY seconds into the map (still inside
+## the encounter grace) it shows every page of the pause menu (PauseMenu.tour()), to
+## record frames of it.
+## `-- --autoplay --autoplay-zone=<id>`: a new game that starts in that zone with the
+## level, gold, gear and progress AUTOPLAY_ZONES gives it.
+
+signal quit_to_title
 
 const HERO_DATA := preload("res://data/hero.tres")
-const SLIME_DATA := preload("res://data/slime.tres")
-const BOSS_DATA := preload("res://data/rey_slime.tres")
 const BATTLE_SCENE := preload("res://scenes/battle/battle_scene.tscn")
 const WORLD_SCENE := preload("res://scenes/world/world.tscn")
 const FADE_TIME := 0.3
 const HEAL_LINE := "Descansas un momento. PV y PM recuperados."
-const SAFE_NOTICE := "¡Villaclaro está a salvo!"
+const SAVED_NOTICE := "Partida guardada."
+const LOAD_FAILED_NOTICE := "No se pudo cargar la partida. Empiezas de nuevo."
+## Notice after beating a boss (by id); other bosses announce their key item.
+const BOSS_NOTICES := {
+	"rey_slime": "¡Villaclaro está a salvo! La niebla del norte se disipa...",
+}
+const KEY_ITEM_NOTICE := "¡Consigues un %s!"
+const LEVER_NOTICE := "¡Tiras de la palanca! Se oye cómo se abre una reja."
+const KEY_NOTICE := "¡Encuentras la %s!"
+const DOOR_NOTICE := "Abres la puerta con la %s."
+const MENU_TOUR_DELAY := 1.0
+## Seconds of black while the hero sleeps at the inn.
+const INN_NIGHT_TIME := 0.8
+## On autoplay the hero only sleeps at an inn below this share of max HP, so the nights
+## don't eat the gold for the shop's gear.
+const AUTOPLAY_INN_RATIO := 0.5
+## --autoplay-zone=<id>: what a new game starting in each zone gets, as planned when
+## arriving there (zone 1 done: Lv 5, its shop's gear, the Rey Slime beaten).
+const AUTOPLAY_ZONES := {
+	"bosque": {
+		"experience": 136,
+		"gold": 150,
+		"gear": [Equipment.COPPER_SWORD, Equipment.LEATHER_MAIL, Equipment.WOODEN_SHIELD],
+		"flags": ["rey_slime"],
+		"quest_done": true,
+	},
+	# Zone 2 done: Lv 9 with the Bruja's EXP, the forest gear and the first fragment.
+	"mina_1": {
+		"experience": 541,
+		"gold": 250,
+		"gear": ["espada_hierro", "cota_malla", "escudo_hierro"],
+		"flags": ["rey_slime", "bruja"],
+		"key_items": ["fragmento_bosque"],
+		"quest_done": true,
+	},
+	# Ready for the Golem: Lv 13, the mine's gear, the gates of floors 2 and 3 open.
+	"mina_3": {
+		"experience": 1073,
+		"gold": 100,
+		"gear": ["espada_acero", "armadura_acero", "escudo_acero"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta"],
+		"key_items": ["fragmento_bosque"],
+		"quest_done": true,
+		"town": "mina_1",
+	},
+}
 
 var state: GameState
+## Seconds played, saved with the game; stops while paused.
+var play_time := 0.0
 
 var _world: World
+var _zone: ZoneData
 var _fade: ColorRect
+var _pause: PauseMenu
+var _audio: AudioDirector
+var _options: GameOptions
+var _save := {}
 var _busy := false
+var _leaving := false
 var _autoplay := false
+var _autoplay_save := false
+var _autoplay_menu := false
 var _last_quest_text := ""
+var _last_gear_text := ""
+var _shop: ShopWindow
+## Something was bought, sold or equipped since the shop opened.
+var _shop_changed := false
+var _rng := RandomNumberGenerator.new()
+
+
+## audio and options come from the title screen; save is the Dictionary read by
+## SaveStore.load_game(), empty for a new game.
+func setup(audio: AudioDirector, options: GameOptions, save: Dictionary) -> void:
+	_audio = audio
+	_options = options
+	_save = save
 
 
 func _ready() -> void:
-	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
+	var args := OS.get_cmdline_user_args()
+	_autoplay = args.has("--autoplay")
+	_autoplay_save = _autoplay and args.has("--autoplay-save")
+	_autoplay_menu = _autoplay and args.has("--autoplay-menu")
+	_rng.randomize()
+	if _options == null:
+		_options = GameOptions.new()
+	if _audio == null:
+		_audio = AudioDirector.new()
+		add_child(_audio)
+		_audio.set_volumes(_options.music_volume, _options.sfx_volume)
 	state = GameState.new(HERO_DATA)
+	var load_failed := false
+	var start_pos: Variant = null
+	if not _save.is_empty():
+		var info := SaveData.apply(state, _save)
+		if info.valid:
+			start_pos = info.position
+			play_time = info.play_time
+			if _autoplay_save:
+				print("Cargado: %s" % _summary(SaveData.from_state(state, info.position,
+					info.play_time)))
+		else:
+			load_failed = true
+	elif _autoplay:
+		_apply_autoplay_zone(args)
+	_build_shop()
+	_build_fade()
+	_build_pause()
+	_switch_zone(state.zone_id, "")
+	if start_pos != null:
+		_world.place_player(start_pos)
+	_world.freeze(false)
+	# Synthesize the tracks played later now, under black, so no first play stalls.
+	for id in [MusicLibrary.VILLAGE, MusicLibrary.VICTORY, MusicLibrary.DEFEAT]:
+		MusicLibrary.build(id)
+	_play_map_music()
+	if load_failed:
+		_world.show_notice(LOAD_FAILED_NOTICE)
+	if _autoplay_menu:
+		get_tree().create_timer(MENU_TOUR_DELAY).timeout.connect(_pause.tour)
+
+
+func _process(delta: float) -> void:
+	play_time += delta
+
+
+## --autoplay-zone=<id>: starts the new game in that zone with AUTOPLAY_ZONES' state.
+func _apply_autoplay_zone(args: PackedStringArray) -> void:
+	for arg in args:
+		if not arg.begins_with("--autoplay-zone="):
+			continue
+		var zone_id := arg.trim_prefix("--autoplay-zone=")
+		if not zone_id in ZoneData.IDS:
+			push_error("Unknown zone for --autoplay-zone: %s" % zone_id)
+			return
+		state.zone_id = zone_id
+		var start: Dictionary = AUTOPLAY_ZONES.get(zone_id, {})
+		if start.is_empty():
+			return
+		state.hero.experience = start.experience
+		Leveling.apply(state.hero)
+		state.heal_full()
+		state.gold = start.gold
+		for id: String in start.gear:
+			state.bag_equipment.append(id)
+			state.equip(id)
+		for flag: String in start.flags:
+			state.world_flags[flag] = true
+		for id: String in start.get("key_items", []):
+			state.key_items.append(id)
+		state.town_zone = start.get("town", state.town_zone)
+		if start.quest_done:
+			state.quest.stage = Quest.Stage.DONE
+		print("Zona de inicio: %s (Nv %d)" % [zone_id, state.hero.level])
+
+
+## Frees the current map and builds zone_id with the player at entry_id ("" for the
+## zone's start entry). No fade: callers fade around it. The new map starts frozen
+## (World.freeze()), so nothing on it can fire while Game is still busy fading in;
+## every caller unfreezes it once the fade is over.
+func _switch_zone(zone_id: String, entry_id: String) -> void:
+	if _world:
+		remove_child(_world)
+		_world.queue_free()
+	_zone = ZoneData.by_id(zone_id)
+	state.zone_id = zone_id
 	_world = WORLD_SCENE.instantiate()
+	_world.zone = _zone
 	add_child(_world)
-	_refresh_status()
+	move_child(_world, 0)
+	_world.freeze(true)
+	_world.set_audio(_audio)
 	_world.encounter_triggered.connect(_on_encounter)
 	_world.talk_requested.connect(_on_talk)
-	_build_fade()
+	_world.npc_requested.connect(_on_npc)
+	_world.shop_requested.connect(_on_shop)
+	_world.inn_requested.connect(_on_inn)
+	_world.chest_opened.connect(_on_chest)
+	_world.exit_requested.connect(_on_exit)
+	_world.lever_pulled.connect(_on_lever)
+	_world.key_taken.connect(_on_key)
+	_world.door_used.connect(_on_door)
+	_world.village_changed.connect(_on_village_changed)
+	if entry_id != "":
+		_world.place_at_entry(entry_id)
+	for id in state.opened_chests:
+		_world.set_chest_open(id, true, true)
+	_world.set_world_flags(state.world_flags)
+	_update_boss()
+	_refresh_status()
+	MusicLibrary.build(_zone.music)
+	if _world.in_village():
+		_on_village_changed(true)
+	if _autoplay:
+		print("Zona: %s" % zone_id)
 
 
 func _on_encounter(boss: bool) -> void:
 	if _busy:
 		return
-	_busy = true
-	var enemy_data: Combatant = BOSS_DATA if boss else SLIME_DATA
+	_set_busy(true)
+	var enemies: Array[Combatant] = []
+	if boss:
+		enemies.append(EnemyLibrary.data(_zone.boss_id))
+	else:
+		enemies = EncounterTable.pick(_zone, _world.player_position(), _rng)
 	await _fade_to(1.0)
 	_world.set_active(false)
+	_audio.play_music(MusicLibrary.BOSS if boss else MusicLibrary.BATTLE)
 	var battle: BattleScene = BATTLE_SCENE.instantiate()
-	battle.setup(state.hero, enemy_data, state.inventory)
+	battle.setup(state.hero, enemies, state.inventory)
+	battle.set_audio(_audio)
+	battle.set_equipment(state.loadout.worn(Equipment.WEAPON),
+		state.loadout.worn(Equipment.SHIELD))
+	battle.gold_lost = state.defeat_gold_loss()
+	battle.char_time = _options.char_time()
+	battle.zone = _zone
 	add_child(battle)
 	await _fade_to(0.0)
-	var won: bool = await battle.finished
+	var outcome: int = await battle.finished
+	var won := outcome == BattleEngine.State.WON
 	await _fade_to(1.0)
-	battle.queue_free()
+	var notice := ""
 	if won:
-		state.quest.on_victory(enemy_data.id)
-		if boss:
-			_world.set_boss_present(false)
-	else:
+		state.gold += battle.engine.gold_won
+		for enemy in battle.engine.enemies:
+			state.quest.on_victory(enemy.id)
+			if enemy.is_boss:
+				notice = _boss_notice(enemy)
+	elif outcome == BattleEngine.State.LOST:
+		state.gold -= battle.gold_lost
 		state.heal_full()
-		_world.respawn()
+		_go_to_town()
+		notice = "Has vuelto %s." % _to_place(_zone.village_name)
+	battle.queue_free()
+	_world.set_world_flags(state.world_flags)
+	_update_boss()
 	_refresh_status()
 	_world.set_active(true)
+	# Frozen until the fade is over: an exit or an encounter while Game is busy would be
+	# ignored and leave the map waiting forever.
+	_world.freeze(true)
+	_play_map_music()
 	await _fade_to(0.0)
-	if not won:
-		_world.show_notice("Has vuelto al inicio.")
-	elif boss:
-		_world.show_notice(SAFE_NOTICE)
-	_busy = false
+	await _world.freeze(false)
+	if notice != "":
+		_world.show_notice(notice)
+	if outcome == BattleEngine.State.LOST:
+		_autosave(false)  # the gold lost sticks: going back to the title can't undo it
+	if won:
+		var data := _autosave(not boss)
+		if _autoplay_save and _save.is_empty() and not data.is_empty():
+			print("Guardado: %s" % _summary(data))
+			quit_to_title.emit()
+			return
+	_set_busy(false)
+
+
+## Sets the boss's world flag, gives its key item and says so.
+func _boss_notice(boss: Combatant) -> String:
+	var key_item := state.on_boss_defeated(boss)
+	if BOSS_NOTICES.has(boss.id):
+		return BOSS_NOTICES[boss.id]
+	if key_item != "":
+		return KEY_ITEM_NOTICE % Inventory.KEY_ITEMS[key_item]
+	return ""
+
+
+## Puts the player at the town entry of the last village visited, switching zones if
+## needed (no fade: the caller is already under black).
+func _go_to_town() -> void:
+	var town := ZoneData.by_id(state.town_zone)
+	if state.town_zone != state.zone_id:
+		_switch_zone(state.town_zone, town.town_entry)
+	else:
+		_world.place_at_entry(town.town_entry)
+		_on_village_changed(_world.in_village())
+
+
+## An open exit: fades to black, builds the next zone at the exit's entry, autosaves.
+func _on_exit(zone_id: String, entry_id: String) -> void:
+	if _busy:
+		return
+	_set_busy(true)
+	await _fade_to(1.0)
+	_switch_zone(zone_id, entry_id)
+	_play_map_music()
+	await _fade_to(0.0)
+	await _world.freeze(false)
+	_autosave(false)
+	_set_busy(false)
+
+
+## The Ala de viaje, used from the pause menu: to the last village visited.
+func _on_travel_requested() -> void:
+	if _busy:
+		return
+	_set_busy(true)
+	# The pause menu has already unpaused the tree: without this the hero could still walk
+	# into an encounter or an exit during the fade and leave the map stuck waiting.
+	_world.freeze(true)
+	await _fade_to(1.0)
+	_go_to_town()
+	_refresh_status()
+	_play_map_music()
+	await _fade_to(0.0)
+	await _world.freeze(false)
+	_world.show_notice("Vuelas %s." % _to_place(_zone.village_name))
+	_autosave(false)
+	_set_busy(false)
+
+
+## Inside a village it becomes the last one visited; the music follows.
+func _on_village_changed(inside: bool) -> void:
+	if inside and _zone.town_entry != "":
+		state.town_zone = _zone.id
+	_play_map_music()
 
 
 ## The old woman always heals; what she says and gives comes from the quest.
 func _on_talk() -> void:
 	if _busy:
 		return
-	_busy = true
+	_set_busy(true)
 	var result := state.quest.talk()
 	var lines: Array[String] = []
 	lines.append_array(result.lines)
@@ -79,17 +376,215 @@ func _on_talk() -> void:
 		state.inventory.add(Inventory.POTION, result.potions)
 	_refresh_status()
 	await _world.show_dialogue(Quest.NPC_NAME, lines)
-	_world.set_boss_present(state.quest.boss_available())
-	_busy = false
+	_update_boss()
+	_autosave(true)
+	_set_busy(false)
 
 
-## Updates the map's status window; on autoplay also prints each new quest line.
+## A villager: says its lines (World.npc_lines(): they change with the world flags).
+func _on_npc(index: int) -> void:
+	if _busy:
+		return
+	_set_busy(true)
+	await _world.show_dialogue(_zone.npcs[index].name, _world.npc_lines(index))
+	_set_busy(false)
+
+
+## The merchant: the ShopWindow until the player leaves; autosaves if anything changed.
+## On autoplay it only opens when there is something to buy.
+func _on_shop(shop_id: String) -> void:
+	if _busy or (_autoplay and Shop.autoplay_picks(state, shop_id).is_empty()):
+		return
+	_set_busy(true)
+	_shop_changed = false
+	_world.freeze(true)
+	await _shop.run(shop_id)
+	await _world.freeze(false)
+	_refresh_status()
+	if _shop_changed:
+		_autosave(true)
+	_set_busy(false)
+
+
+## The innkeeper: Sí pays the night, fades to black and back with HP and MP full and
+## saves; without gold, or with No, nothing happens. On autoplay it only stops there
+## below AUTOPLAY_INN_RATIO of max HP and with the price.
+func _on_inn(inn_id: String) -> void:
+	var hurt := state.hero.hp < state.hero.max_hp * AUTOPLAY_INN_RATIO
+	if _busy or (_autoplay and (not hurt or state.gold < Inn.price(inn_id))):
+		return
+	_set_busy(true)
+	_world.freeze(true)
+	var lines: Array[String] = []
+	var slept := false
+	if await _shop.ask(Inn.keeper(inn_id), Inn.offer(inn_id)):
+		var result := Inn.stay(state, inn_id)
+		slept = result.ok
+		if slept:
+			await _fade_to(1.0)
+			_refresh_status()
+			_audio.play_sfx(SfxLibrary.HEAL)
+			await get_tree().create_timer(INN_NIGHT_TIME).timeout
+			await _fade_to(0.0)
+		lines.append(result.text)
+	else:
+		lines.append("Vuelve cuando quieras.")
+	await _world.freeze(false)
+	await _world.show_dialogue(Inn.keeper(inn_id), lines)
+	_refresh_status()
+	if slept:
+		_autosave(true)
+	_set_busy(false)
+
+
+## A closed chest: gives what it holds, opens the lid and saves without a notice (the
+## notice shows what was found).
+func _on_chest(chest_id: String) -> void:
+	if _busy:
+		return
+	var result := Chests.open(state, chest_id)
+	if not result.opened:
+		return
+	_world.set_chest_open(chest_id, true)
+	_audio.play_sfx(SfxLibrary.LEVEL_UP)
+	_refresh_status()
+	_world.show_notice(result.text)
+	_autosave(false)
+
+
+## The dungeon floor's lever: sets its flag, which opens the gates it works.
+func _on_lever() -> void:
+	if _busy or _zone.lever_flag == "":
+		return
+	state.world_flags[_zone.lever_flag] = true
+	_world.pull_lever()
+	_audio.play_sfx(SfxLibrary.DOOR)
+	_world.set_world_flags(state.world_flags)
+	_world.show_notice(LEVER_NOTICE)
+	_autosave(false)
+
+
+## The key lying on the floor: into the key items; its flag keeps it taken.
+func _on_key() -> void:
+	if _busy or _zone.floor_key == "":
+		return
+	state.world_flags[_zone.floor_key] = true
+	state.key_items.append(_zone.floor_key)
+	_audio.play_sfx(SfxLibrary.LEVEL_UP)
+	_world.set_world_flags(state.world_flags)
+	_world.show_notice(KEY_NOTICE % Inventory.KEY_ITEMS[_zone.floor_key])
+	_autosave(false)
+
+
+## A closed gate: the key of the floor opens it (and is used up); otherwise its text.
+func _on_door() -> void:
+	if _busy:
+		return
+	var key := _zone.door_key
+	if key == "" or not key in state.key_items:
+		_world.show_notice(_zone.door_text)
+		return
+	state.key_items.erase(key)
+	state.world_flags[_zone.door_flag] = true
+	_audio.play_sfx(SfxLibrary.DOOR)
+	_world.set_world_flags(state.world_flags)
+	_world.show_notice(DOOR_NOTICE % Inventory.KEY_ITEMS[key])
+	_autosave(false)
+
+
+## Writes the save file; shows SAVED_NOTICE if notice. Returns the saved data, or an
+## empty Dictionary if the file could not be written.
+func _autosave(notice: bool) -> Dictionary:
+	var data := SaveData.from_state(state, _world.player_position(), play_time)
+	if not SaveStore.save_game(data):
+		return {}
+	if notice:
+		_audio.play_sfx(SfxLibrary.SAVE)
+		_world.show_notice(SAVED_NOTICE)
+	return data
+
+
+func _on_save_requested() -> void:
+	var data := SaveData.from_state(state, _world.player_position(), play_time)
+	_pause.show_save_result(SaveStore.save_game(data))
+
+
+## The tree stays paused (TitleScreen unpauses when it frees this game), so the map can't
+## walk or roll an encounter during the fade; the menu is shut and deaf meanwhile.
+func _on_title_requested() -> void:
+	if _leaving:
+		return
+	_leaving = true
+	_set_busy(true)
+	_pause.hide()
+	_pause.set_process_unhandled_input(false)
+	quit_to_title.emit()
+
+
+## The zone's boss is on the map until beaten: the Rey Slime only while the quest asks
+## for it; on autoplay only from the zone's autoplay_boss_level on.
+func _update_boss() -> void:
+	if _zone.boss_id == "":
+		return
+	var strong_enough := not _autoplay or state.hero.level >= _zone.autoplay_boss_level
+	var wanted := state.quest.boss_available() if _zone.boss_id == Quest.BOSS_ID \
+		else not state.has_flag(_zone.boss_id)
+	_world.set_boss_present(wanted and strong_enough)
+
+
+## The zone's map music, or its village one inside the village.
+func _play_map_music() -> void:
+	_audio.play_music(_zone.village_music if _world.in_village() else _zone.music)
+
+
+## The pause menu only opens on the map with nothing else going on.
+func _set_busy(busy: bool) -> void:
+	_busy = busy
+	_pause.available = not busy and not _autoplay
+
+
+## Updates the map's status window and the hero's weapon and shield; on autoplay also
+## prints each new quest line and each change of gold or equipment.
 func _refresh_status() -> void:
 	var quest_text := state.quest.status_text()
-	_world.refresh_status(state.hero, state.inventory.count(Inventory.POTION), quest_text)
+	_world.refresh_status(state.hero, state.inventory.count(Inventory.POTION), state.gold,
+		quest_text)
+	var loadout := state.loadout
+	_world.set_hero_equipment(loadout.worn(Equipment.WEAPON), loadout.worn(Equipment.SHIELD))
 	if _autoplay and quest_text != _last_quest_text:
 		print(quest_text)
 	_last_quest_text = quest_text
+	var worn := PackedStringArray()
+	for slot in Equipment.SLOTS:
+		if loadout.worn(slot) != "":
+			worn.append(Equipment.display_name(loadout.worn(slot)))
+	var gear_text := "Oro %d G · Equipo: %s · ATK %d DEF %d" % [state.gold, ", ".join(worn),
+		state.hero.total_attack(), state.hero.total_defense()]
+	if _autoplay and gear_text != _last_gear_text:
+		print(gear_text)
+	_last_gear_text = gear_text
+
+
+## "a Villaclaro", "a la aldea del bosque", "al refugio de la mina".
+static func _to_place(place: String) -> String:
+	return "al " + place.substr(3) if place.begins_with("el ") else "a " + place
+
+
+## One line with every saved value, keys sorted, for --autoplay-save.
+static func _summary(data: Dictionary) -> String:
+	return JSON.stringify(data, "", true)
+
+
+func _build_shop() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 4
+	add_child(layer)
+	_shop = ShopWindow.new()
+	_shop.setup(state, _audio)
+	layer.add_child(_shop)
+	_shop.changed.connect(func() -> void:
+		_shop_changed = true
+		_refresh_status())
 
 
 func _build_fade() -> void:
@@ -101,6 +596,20 @@ func _build_fade() -> void:
 	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_fade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	layer.add_child(_fade)
+
+
+func _build_pause() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 5
+	add_child(layer)
+	_pause = PauseMenu.new()
+	_pause.setup(state, _options, _audio)
+	layer.add_child(_pause)
+	_pause.save_requested.connect(_on_save_requested)
+	_pause.title_requested.connect(_on_title_requested)
+	_pause.travel_requested.connect(_on_travel_requested)
+	_pause.state_changed.connect(_refresh_status)
+	_pause.available = not _autoplay
 
 
 func _fade_to(alpha: float) -> void:

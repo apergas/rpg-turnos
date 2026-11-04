@@ -1,0 +1,169 @@
+class_name Shop extends RefCounted
+## Shop rules: what each shop sells, buying, selling at half price and comparing a piece
+## of equipment with what the hero wears. Pure: works on a GameState, never touches
+## nodes. buy() and sell() return {"ok": bool, "text": String} with the message to show.
+
+const VILLACLARO := "villaclaro"
+const BOSQUE := "bosque"
+const MINA := "mina"
+## shop id -> keeper's name, equipment and items (Inventory ids) on sale, in list order.
+## Zone 1 sells no Éter (it comes with the zone 2 shop, with the Ala de viaje).
+const SHOPS := {
+	VILLACLARO: {
+		"keeper": "Mercader",
+		"equipment": [Equipment.COPPER_SWORD, Equipment.LEATHER_MAIL, Equipment.WOODEN_SHIELD],
+		"items": [Inventory.POTION, Inventory.ANTIDOTE],
+	},
+	BOSQUE: {
+		"keeper": "Mercader",
+		"equipment": ["espada_hierro", "cota_malla", "escudo_hierro"],
+		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.WING],
+	},
+	MINA: {
+		"keeper": "Herrero",
+		"equipment": ["espada_acero", "armadura_acero", "escudo_acero"],
+		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.WING],
+	},
+}
+const NO_GOLD := "Falta oro"
+const WORN := "Lo llevas puesto"
+const WORTHLESS := "No vale nada"
+const NOT_CARRIED := "No lo llevas"
+## Potions --autoplay keeps in stock once it has the shop's equipment.
+const AUTOPLAY_POTIONS := 3
+
+
+static func keeper(shop_id: String) -> String:
+	return SHOPS[shop_id].keeper
+
+
+## Every id on sale: equipment first, then items.
+static func stock(shop_id: String) -> Array[String]:
+	var ids: Array[String] = []
+	ids.assign(SHOPS[shop_id].equipment + SHOPS[shop_id].items)
+	return ids
+
+
+static func is_equipment(id: String) -> bool:
+	return Equipment.exists(id)
+
+
+static func display_name(id: String) -> String:
+	return Equipment.display_name(id) if is_equipment(id) else Inventory.display_name(id)
+
+
+static func article(id: String) -> String:
+	return Equipment.article(id) if is_equipment(id) else Inventory.article(id)
+
+
+static func price(id: String) -> int:
+	return Equipment.price(id) if is_equipment(id) else int(Inventory.ITEMS[id].price)
+
+
+## What the shop pays for id: half its price, rounded down.
+static func sell_price(id: String) -> int:
+	return floori(price(id) / 2.0)
+
+
+## Why state can't buy id now ("" if it can).
+static func buy_problem(state: GameState, id: String) -> String:
+	return NO_GOLD if state.gold < price(id) else ""
+
+
+static func can_buy(state: GameState, id: String) -> bool:
+	return buy_problem(state, id) == ""
+
+
+## Pays and puts the piece in the bag (equipment) or the inventory (items).
+static func buy(state: GameState, id: String) -> Dictionary:
+	var why := buy_problem(state, id)
+	if why != "":
+		return {"ok": false, "text": "%s." % why}
+	state.gold -= price(id)
+	if is_equipment(id):
+		state.bag_equipment.append(id)
+	else:
+		state.inventory.add(id)
+	return {"ok": true, "text": "Compras %s %s por %d G." % [article(id), display_name(id),
+		price(id)]}
+
+
+## What can be offered for sale, in list order: the equipment worn (it can't be sold, but
+## is listed), the equipment in the bag (one row per id) and the items carried.
+static func sell_list(state: GameState) -> Array[String]:
+	var ids: Array[String] = []
+	for slot in Equipment.SLOTS:
+		var worn := state.loadout.worn(slot)
+		if worn != "":
+			ids.append(worn)
+	for id: String in Equipment.EQUIPMENT:
+		if id in state.bag_equipment and not ids.has(id):
+			ids.append(id)
+	for id in Inventory.IDS:
+		if state.inventory.count(id) > 0:
+			ids.append(id)
+	return ids
+
+
+## How many of id the hero carries that could be sold (the worn one does not count).
+static func sell_count(state: GameState, id: String) -> int:
+	if is_equipment(id):
+		return state.bag_equipment.count(id)
+	return state.inventory.count(id)
+
+
+## Why id can't be sold ("" if it can): worn and none in the bag, or worth nothing.
+static func sell_problem(state: GameState, id: String) -> String:
+	if sell_count(state, id) <= 0:
+		return WORN if state.loadout.is_worn(id) else NOT_CARRIED
+	if sell_price(id) <= 0:
+		return WORTHLESS
+	return ""
+
+
+static func sell(state: GameState, id: String) -> Dictionary:
+	var why := sell_problem(state, id)
+	if why != "":
+		return {"ok": false, "text": "%s." % why}
+	if is_equipment(id):
+		state.bag_equipment.erase(id)
+	else:
+		state.inventory.take(id)
+	state.gold += sell_price(id)
+	return {"ok": true, "text": "Vendes %s %s por %d G." % [article(id), display_name(id),
+		sell_price(id)]}
+
+
+## Compares a piece with what is worn in its slot: {"stat": "ATK" / "DEF", "worn": id
+## worn ("" if none), "bonus": the piece's bonus, "diff": bonus minus the worn one's}.
+## Empty for items.
+static func compare(state: GameState, id: String) -> Dictionary:
+	if not is_equipment(id):
+		return {}
+	var worn := state.loadout.worn(Equipment.slot(id))
+	return {"stat": Equipment.stat_name(id), "worn": worn, "bonus": Equipment.bonus(id),
+		"diff": Equipment.bonus(id) - Equipment.bonus(worn)}
+
+
+## For --autoplay: the equipment of the shop that beats what is worn and is not in the
+## bag yet, in slot order, as long as the gold lasts. Once there is no such piece left
+## (bought or not), potions up to AUTOPLAY_POTIONS.
+static func autoplay_picks(state: GameState, shop_id: String) -> Array[String]:
+	var picks: Array[String] = []
+	var gold := state.gold
+	var upgrades := 0
+	for id: String in SHOPS[shop_id].equipment:
+		if compare(state, id).diff <= 0 or id in state.bag_equipment:
+			continue
+		upgrades += 1
+		if gold >= price(id):
+			picks.append(id)
+			gold -= price(id)
+	if upgrades > 0:
+		return picks
+	var potions := state.inventory.count(Inventory.POTION)
+	while potions < AUTOPLAY_POTIONS and gold >= price(Inventory.POTION):
+		picks.append(Inventory.POTION)
+		gold -= price(Inventory.POTION)
+		potions += 1
+	return picks

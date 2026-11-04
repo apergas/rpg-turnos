@@ -1,0 +1,50 @@
+class_name EnemyLibrary extends RefCounted
+## Every enemy of the game by data id (data/enemies/<id>.tres) and the figure it is drawn
+## with. ZoneData formations and bosses name enemies by these ids. Pure: no nodes.
+
+const ENEMIES := {
+	"slime": preload("res://data/enemies/slime.tres"),
+	"bat": preload("res://data/enemies/bat.tres"),
+	"mushroom": preload("res://data/enemies/mushroom.tres"),
+	"rey_slime": preload("res://data/enemies/rey_slime.tres"),
+	"lobo": preload("res://data/enemies/lobo.tres"),
+	"duende": preload("res://data/enemies/duende.tres"),
+	"planta": preload("res://data/enemies/planta.tres"),
+	"bruja": preload("res://data/enemies/bruja.tres"),
+	"golem_barro": preload("res://data/enemies/golem_barro.tres"),
+	"arana": preload("res://data/enemies/arana.tres"),
+	"espectro": preload("res://data/enemies/espectro.tres"),
+	"golem_piedra": preload("res://data/enemies/golem_piedra.tres"),
+}
+## Figure of each enemy id; any other id is a slime.
+const LOOKS := {
+	"slime": BattleActor.Look.SLIME,
+	"bat": BattleActor.Look.BAT,
+	"mushroom": BattleActor.Look.MUSHROOM,
+	"rey_slime": BattleActor.Look.KING_SLIME,
+	"lobo": BattleActor.Look.WOLF,
+	"duende": BattleActor.Look.GOBLIN,
+	"planta": BattleActor.Look.PLANT,
+	"bruja": BattleActor.Look.WITCH,
+	"golem_barro": BattleActor.Look.MUD_GOLEM,
+	"arana": BattleActor.Look.SPIDER,
+	"espectro": BattleActor.Look.SPECTER,
+	"golem_piedra": BattleActor.Look.STONE_GOLEM,
+}
+
+
+## The data of enemy id (not duplicated: BattleScene does it), or null.
+static func data(enemy_id: String) -> Combatant:
+	return ENEMIES.get(enemy_id) as Combatant
+
+
+static func look(enemy_id: String) -> BattleActor.Look:
+	return LOOKS.get(enemy_id, BattleActor.Look.SLIME)
+
+
+## Turns lists of ids into lists of enemy data (a formation, as EncounterTable picks it).
+static func formation(ids: Array) -> Array[Combatant]:
+	var picked: Array[Combatant] = []
+	for enemy_id: String in ids:
+		picked.append(data(enemy_id))
+	return picked

@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "golem_piedra"
+display_name = "Golem de piedra"
+max_hp = 300
+hp = 300
+attack = 48
+defense = 32
+speed = 6
+exp_reward = 300
+gold_reward = 500
+ai_weights = {
+"attack": 55,
+"charge": 35,
+"stagger": 10
+}
+resist = Array[String]([])
+key_item = "fragmento_mina"
+is_boss = true

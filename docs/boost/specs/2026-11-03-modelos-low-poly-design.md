@@ -13,15 +13,16 @@ El usuario pidió que no se le pregunte, así que todas son la opción recomenda
 
 | Tema | Decisión |
 |---|---|
-| Héroe | Caballero de **KayKit – Adventurers** (CC0, glTF, rig humanoide) |
-| Anciana | Maga de **KayKit – Adventurers**, con otros colores de túnica si hace falta |
-| Animaciones de personajes | **KayKit – Character Animations** (CC0), compartidas por el héroe y la anciana |
-| Slime y Rey Slime | Slime de **Quaternius – LowPoly Animated Monsters** (CC0; FBX, que Godot 4.7 importa directamente). Si al abrirlo no convence, se usa un monstruo del **Ultimate Monsters** de Quaternius (CC0, glTF). El Rey Slime es el mismo slime a escala 1,6 con la corona dorada de ahora |
-| Naturaleza | **KayKit – Forest Nature Pack** (CC0, nivel gratuito): árboles, arbustos y rocas |
-| Pueblo | **Quaternius – Medieval Village MegaKit** (CC0, glTF, versión Standard): piezas para montar las dos casas y el pozo |
+| Paquetes | Descargados de GitHub con permiso del usuario: **KayKit – Adventurers 1.0**, **KayKit – Medieval Hexagon 1.0** y **KayKit – Skeletons 1.0** (para enemigos de fases posteriores). Los tres son CC0. Forest y los de Quaternius solo se bajan desde itch.io, así que se cambian por estos, que cubren lo mismo |
+| Dónde están | Paquetes enteros en `assets_src/`, ignorado por git y por Godot (`.gdignore`). A `assets/` solo se copia lo que se usa |
+| Héroe | `Knight.glb`: 76 animaciones dentro del propio modelo (`Idle`, `Walking_A`, `Running_A`, `1H_Melee_Attack_Slice_Diagonal`, `Spellcast_Shoot`, `Hit_A`, `Dodge_Backward`, `Death_A`, `Cheer`…). Muestra solo `1H_Sword` y `Round_Shield`; oculta el resto de armas y escudos |
+| Anciana | `Mage.glb` con el bastón (`2H_Staff`); oculta el libro y la varita |
+| Slime y Rey Slime | Ningún paquete descargable tiene slime, así que se hace en código con **estilo low-poly**: una malla facetada (pocas caras, sombreado plano) con ojos. El Rey Slime es el mismo slime a escala 1,6 con la corona dorada |
+| Pueblo | Del Medieval Hexagon, versión roja: `building_home_A_red` y `building_home_B_red` (las dos casas) y `building_well_red` (el pozo). Escala ~3,5, porque el paquete es en miniatura (una casa mide 0,8 m) |
+| Naturaleza | Del Medieval Hexagon: `tree_single_A/B` y `trees_A_medium` (árboles, escala ~4), y `rock_single_A–E` (rocas, escala ~8-10). Todos comparten la textura `hexagons_medieval.png` |
+| Escala de los personajes | Los modelos de KayKit miden unas 2,4 unidades; se escalan para que el héroe mida ~1,6 m, como ahora. El valor exacto se mide en Godot |
 | Qué entra en el repositorio | Solo los modelos que se usan, copiados a `assets/` con su licencia; nunca los paquetes enteros |
 | Créditos | `assets/CREDITS.md` con cada paquete, su autor, el enlace y la licencia |
-| Descarga | La hace el usuario o la hago yo con su permiso explícito: es descargar archivos de internet |
 
 ## Arquitectura
 

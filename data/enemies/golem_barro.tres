@@ -4,16 +4,20 @@
 
 [resource]
 script = ExtResource("1_combatant")
-id = "slime"
-display_name = "Slime"
-max_hp = 24
-hp = 24
-attack = 7
-defense = 3
-speed = 5
-exp_reward = 4
+id = "golem_barro"
+display_name = "Golem de barro"
+max_hp = 69
+hp = 69
+attack = 27
+defense = 26
+speed = 4
+exp_reward = 26
+gold_reward = 24
 ai_weights = {
-"attack": 80,
-"stagger": 20
+"attack": 85,
+"stagger": 15
 }
-potion_drop_chance = 0.25
+resist = Array[String](["thunder"])
+drops = {
+"potion": 0.15
+}

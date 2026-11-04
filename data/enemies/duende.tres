@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+[ext_resource type="Script" path="res://scripts/battle/skill.gd" id="2_skill"]
+[ext_resource type="Resource" path="res://data/skills/llama_duende.tres" id="3_llama"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "duende"
+display_name = "Duende"
+max_hp = 45
+hp = 45
+max_mp = 9
+mp = 9
+attack = 13
+defense = 9
+speed = 10
+skills = Array[ExtResource("2_skill")]([ExtResource("3_llama")])
+exp_reward = 13
+gold_reward = 14
+ai_weights = {
+"attack": 65,
+"llama_duende": 35
+}
+weak = Array[String](["thunder"])
+resist = Array[String](["fire"])
+drops = {
+"ether": 0.1
+}

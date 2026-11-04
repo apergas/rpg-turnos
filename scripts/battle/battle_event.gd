@@ -1,40 +1,58 @@
 class_name BattleEvent extends RefCounted
 ## Event dictionaries produced by BattleEngine (and Leveling) and played back by the
-## battle scene. Every event has a "type"; sides are HERO or ENEMY.
+## battle scene. Every event has a "type". Fighters are ints: HERO (-1) or the index of
+## an enemy in BattleEngine.enemies (0, 1, ...).
 
 const ATTACK := "attack"
 const MISS := "miss"
 const DAMAGE := "damage"
 const DEFEATED := "defeated"
 const VICTORY := "victory"
+const GOLD := "gold"
 const DEFEAT := "defeat"
 const SKILL := "skill"
 const ITEM := "item"
 const HEAL := "heal"
+const MP_HEAL := "mp_heal"
 const STAGGER := "stagger"
 const LEVEL_UP := "level_up"
+const LEARN := "learn"
 const DROP := "drop"
+const DEFEND := "defend"
+const FLEE_OK := "flee_ok"
+const FLEE_FAIL := "flee_fail"
+const NO_ESCAPE := "no_escape"
+const STATUS_ON := "status_on"
+const STATUS_TICK := "status_tick"
+const STATUS_OFF := "status_off"
+const ASLEEP := "asleep"
+const CALL_HELP := "call_help"
+const CHARGE := "charge"
 
-const HERO := "hero"
-const ENEMY := "enemy"
+const HERO := -1
+## Values of DAMAGE "affinity": the target is weak to / resists the spell's element.
+const WEAK := "weak"
+const RESIST := "resist"
 
 
-static func attack(actor: String, target: String) -> Dictionary:
-	return {"type": ATTACK, "actor": actor, "target": target}
+## charged: the blow after a charge (CHARGE_MULT damage, never misses).
+static func attack(actor: int, target: int, charged := false) -> Dictionary:
+	return {"type": ATTACK, "actor": actor, "target": target, "charged": charged}
 
 
-static func miss(actor: String, target: String) -> Dictionary:
+static func miss(actor: int, target: int) -> Dictionary:
 	return {"type": MISS, "actor": actor, "target": target}
 
 
-## magic is true for spell damage (played back with the fire animation).
-static func damage(target: String, amount: int, crit: bool, hp_left: int, \
-		magic := false) -> Dictionary:
+## magic is true for spell damage (played back with the spell's ball); affinity is "",
+## WEAK or RESIST.
+static func damage(target: int, amount: int, crit: bool, hp_left: int, magic := false, \
+		affinity := "") -> Dictionary:
 	return {"type": DAMAGE, "target": target, "amount": amount, "crit": crit,
-		"hp_left": hp_left, "magic": magic}
+		"hp_left": hp_left, "magic": magic, "affinity": affinity}
 
 
-static func defeated(target: String) -> Dictionary:
+static func defeated(target: int) -> Dictionary:
 	return {"type": DEFEATED, "target": target}
 
 
@@ -42,25 +60,34 @@ static func victory(amount: int) -> Dictionary:
 	return {"type": VICTORY, "exp": amount}
 
 
+static func gold(amount: int) -> Dictionary:
+	return {"type": GOLD, "amount": amount}
+
+
 static func defeat() -> Dictionary:
 	return {"type": DEFEAT}
 
 
-static func skill(actor: String, target: String, skill_name: String, mp_left: int, \
+## targets: every fighter the spell aims at (the caster itself for a heal).
+static func skill(actor: int, targets: Array[int], skill_name: String, mp_left: int, \
 		color := Color(1.0, 0.45, 0.1)) -> Dictionary:
-	return {"type": SKILL, "actor": actor, "target": target, "name": skill_name,
+	return {"type": SKILL, "actor": actor, "targets": targets, "name": skill_name,
 		"mp_left": mp_left, "color": color}
 
 
-static func item(actor: String, item_name: String) -> Dictionary:
-	return {"type": ITEM, "actor": actor, "name": item_name}
+static func item(actor: int, item_id: String) -> Dictionary:
+	return {"type": ITEM, "actor": actor, "item": item_id}
 
 
-static func heal(target: String, amount: int, hp_left: int) -> Dictionary:
+static func heal(target: int, amount: int, hp_left: int) -> Dictionary:
 	return {"type": HEAL, "target": target, "amount": amount, "hp_left": hp_left}
 
 
-static func stagger(actor: String) -> Dictionary:
+static func mp_heal(target: int, amount: int, mp_left: int) -> Dictionary:
+	return {"type": MP_HEAL, "target": target, "amount": amount, "mp_left": mp_left}
+
+
+static func stagger(actor: int) -> Dictionary:
 	return {"type": STAGGER, "actor": actor}
 
 
@@ -72,5 +99,56 @@ static func level_up(level: int, gains: Dictionary, hero: Combatant) -> Dictiona
 		"max_hp": hero.max_hp, "mp": hero.mp, "max_mp": hero.max_mp}
 
 
-static func drop(item_id: String) -> Dictionary:
-	return {"type": DROP, "item": item_id}
+static func learn(skill_name: String) -> Dictionary:
+	return {"type": LEARN, "name": skill_name}
+
+
+## owner: the enemy that left it.
+static func drop(item_id: String, owner: int) -> Dictionary:
+	return {"type": DROP, "item": item_id, "owner": owner}
+
+
+static func defend(actor: int) -> Dictionary:
+	return {"type": DEFEND, "actor": actor}
+
+
+static func flee_ok() -> Dictionary:
+	return {"type": FLEE_OK}
+
+
+static func flee_fail() -> Dictionary:
+	return {"type": FLEE_FAIL}
+
+
+## Fleeing from a boss: nothing else happens and the hero picks again.
+static func no_escape() -> Dictionary:
+	return {"type": NO_ESCAPE}
+
+
+static func status_on(target: int, status: String) -> Dictionary:
+	return {"type": STATUS_ON, "target": target, "status": status}
+
+
+## Damage of a status at the end of the round (poison).
+static func status_tick(target: int, status: String, amount: int, hp_left: int) -> Dictionary:
+	return {"type": STATUS_TICK, "target": target, "status": status, "amount": amount,
+		"hp_left": hp_left}
+
+
+static func status_off(target: int, status: String) -> Dictionary:
+	return {"type": STATUS_OFF, "target": target, "status": status}
+
+
+## The fighter is asleep and loses its turn.
+static func asleep(actor: int) -> Dictionary:
+	return {"type": ASLEEP, "actor": actor}
+
+
+## helper: index of the new enemy in BattleEngine.enemies.
+static func call_help(actor: int, helper: int) -> Dictionary:
+	return {"type": CALL_HELP, "actor": actor, "helper": helper}
+
+
+## The enemy gathers strength: its next turn is a charged blow.
+static func charge(actor: int) -> Dictionary:
+	return {"type": CHARGE, "actor": actor}
