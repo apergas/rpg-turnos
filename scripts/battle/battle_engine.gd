@@ -195,8 +195,9 @@ func resolve_round(hero_cmd: Dictionary) -> Array[Dictionary]:
 
 
 ## Strikes the charged blow if it charged last turn; casts its rescue heal (once, below
-## rescue_heal_ratio, not silenced) or calls for help when it can; otherwise a weighted pick from its ai_weights. A skill it can't afford
-## (or can't cast, silenced) becomes an attack.
+## rescue_heal_ratio, not silenced) or calls for help when it can; otherwise a weighted
+## pick from its ai_weights. A skill it can't afford (or can't cast, silenced) becomes an
+## attack.
 func _enemy_command(who: int) -> Dictionary:
 	var enemy := enemies[who]
 	if _charged.has(who):

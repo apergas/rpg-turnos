@@ -3,8 +3,8 @@ class_name Chests extends RefCounted
 ## it holds (gold, an item or a piece of equipment). In the meadow two lie next to its
 ## autoplay route and two off it; the three of the forest stand in its glades, next to
 ## its route. All away from the paths. In the mine each stands on the C cell of its floor
-## (ZoneData.cell_center()), next to the floor's route. Pure: open() changes a GameState and returns the
-## message.
+## (ZoneData.cell_center()), next to the floor's route. Pure: open() changes a GameState
+## and returns the message.
 
 ## id -> {"zone": ZoneData id, "pos": Vector3, "yaw": degrees (the lid opens toward -Z
 ## turned by yaw), and one of "gold": int, "item": Inventory id, "equipment": Equipment

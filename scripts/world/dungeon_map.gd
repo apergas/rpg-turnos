@@ -51,6 +51,7 @@ var _time := 0.0
 ## and the key's root.
 var _gates: Array[StaticBody3D] = []
 var _lever: Node3D
+var _lever_tween: Tween
 var _key: Node3D
 
 
@@ -98,7 +99,8 @@ func set_flags(flags: Dictionary) -> void:
 		gate.process_mode = Node.PROCESS_MODE_DISABLED if open else Node.PROCESS_MODE_INHERIT
 	if _lever:
 		var pulled: bool = zone.lever_flag != "" and flags.get(zone.lever_flag, false)
-		_lever.rotation_degrees.x = LEVER_DOWN if pulled else LEVER_UP
+		if not (_lever_tween and _lever_tween.is_running()):  # let the swing finish
+			_lever.rotation_degrees.x = LEVER_DOWN if pulled else LEVER_UP
 	if _key:
 		_key.visible = not (zone.floor_key != "" and flags.get(zone.floor_key, false))
 
@@ -106,7 +108,8 @@ func set_flags(flags: Dictionary) -> void:
 ## Pulls the lever down with a short swing (the flag change follows in set_flags()).
 func pull_lever() -> void:
 	if _lever:
-		_lever.create_tween().tween_property(_lever, "rotation_degrees:x", LEVER_DOWN, 0.3) \
+		_lever_tween = _lever.create_tween()
+		_lever_tween.tween_property(_lever, "rotation_degrees:x", LEVER_DOWN, 0.3) \
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 

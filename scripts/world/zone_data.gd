@@ -163,6 +163,9 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## On autoplay the boss only comes out from this level on.
 @export var autoplay_boss_level := 1
 
+## find_cells() results by character.
+var _cells := {}
+
 
 ## The zone with this id (data/zones/<id>.tres), or null if there is none.
 static func by_id(zone_id: String) -> ZoneData:
@@ -181,7 +184,9 @@ func entry(entry_id: String) -> Array:
 		var stairs := find_cells(entry_id)
 		if not stairs.is_empty():
 			return _beside(stairs[0])
-	return entries[start_entry]
+	if entry_id != start_entry:
+		return entry(start_entry)
+	return [Vector3.ZERO, 0.0]
 
 
 ## The exits of ZoneData.exits plus, on a dungeon floor, one per stair cell: S leads to
@@ -230,13 +235,17 @@ func cell_char(cell: Vector2i) -> String:
 	return layout[cell.y][cell.x]
 
 
-## Every cell holding character ch, row by row.
+## Every cell holding character ch, row by row. Cached per character, since the layout
+## never changes and World asks every frame; callers only read the array.
 func find_cells(ch: String) -> Array[Vector2i]:
+	if _cells.has(ch):
+		return _cells[ch]
 	var cells: Array[Vector2i] = []
 	for y in layout.size():
 		for x in layout[y].length():
 			if layout[y][x] == ch:
 				cells.append(Vector2i(x, y))
+	_cells[ch] = cells
 	return cells
 
 
