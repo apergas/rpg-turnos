@@ -390,7 +390,7 @@ func _on_encounter(boss: bool) -> void:
 	if outcome == BattleEngine.State.LOST:
 		_autosave(false)  # the gold lost sticks: going back to the title can't undo it
 	if won:
-		var data := _autosave(not boss)
+		var data := _autosave(not boss and finished_quests.is_empty())  # keep its reward readable
 		if _autoplay_save and _save.is_empty() and not data.is_empty():
 			print("Guardado: %s" % _summary(data))
 			quit_to_title.emit()
