@@ -24,11 +24,17 @@ class_name Game extends Node
 ## boss), autosaves after talking, after every won battle, after shopping, (silently)
 ## after opening a chest, after a defeat and after every change of zone, and opens the
 ## pause menu. Emits quit_to_title when the player goes back to the title.
-## Beating the Señor de la Niebla (GameState.FINAL_BOSS) marks the game as finished
-## (GameState.is_finished()) with a notice; the ending itself comes with the story.
+## The story (GameState.story): a new game opens with the prologue in the hero's house
+## (data/cutscenes/prologo.tres, which starts the slimes quest); each boss beaten plays
+## its cutscene (StoryState.AFTER_BOSS) and the first visit to each village its own
+## (StoryState.ON_VILLAGE), through the CutscenePlayer; the villagers' lines follow the
+## chapter. Beating the Señor de la Niebla (GameState.FINAL_BOSS) plays the ending (back
+## to Villaclaro), marks the save as finished (story.finished) and rolls the credits with
+## the numbers of the game (CreditsScreen); then it goes back to the title. A finished
+## save loads in Villaclaro and the world can still be walked.
 ## On autoplay it prints the gold and the equipment each time they change, the level and
-## the play time on every change of zone and, once the Señor de la Niebla falls, the play
-## time of the whole run; then it quits. After a won battle, when the hero needs rest
+## the play time on every change of zone and, after the credits, the play time of the
+## whole run; then it quits. After a won battle, when the hero needs rest
 ## (GameState.needs_rest()) away from a village, it flies back with an Ala de viaje, sleeps
 ## at the inn, restocks at the shop and goes back through the portal; after a defeat it
 ## sleeps and restocks too.
@@ -50,6 +56,8 @@ const HERO_DATA := preload("res://data/hero.tres")
 const BATTLE_SCENE := preload("res://scenes/battle/battle_scene.tscn")
 const WORLD_SCENE := preload("res://scenes/world/world.tscn")
 const CUTSCENE_PATH := "res://data/cutscenes/%s.tres"
+## The author shown in the credits.
+const AUTHOR := "apergas"
 const FADE_TIME := 0.3
 const HEAL_LINE := "Descansas un momento. PV y PM recuperados."
 const SAVED_NOTICE := "Partida guardada."
@@ -286,6 +294,7 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 	_world.key_taken.connect(_on_key)
 	_world.door_used.connect(_on_door)
 	_world.village_changed.connect(_on_village_changed)
+	_world.stepped.connect(func() -> void: state.steps += 2)
 	if entry_id != "":
 		_world.place_at_entry(entry_id)
 	for id in state.opened_chests:
@@ -306,6 +315,7 @@ func _on_encounter(boss: bool) -> void:
 	if _busy:
 		return
 	_set_busy(true)
+	state.battles += 1
 	var enemies: Array[Combatant] = []
 	if boss:
 		enemies.append(EnemyLibrary.data(_zone.boss_id))
@@ -332,6 +342,7 @@ func _on_encounter(boss: bool) -> void:
 	var mission_done := false
 	if won:
 		state.gold += battle.engine.gold_won
+		state.gold_earned += battle.engine.gold_won
 		var quest_was_on := state.quest.stage != Quest.Stage.DONE
 		for enemy in battle.engine.enemies:
 			state.quest.on_victory(enemy.id)
@@ -366,6 +377,9 @@ func _on_encounter(boss: bool) -> void:
 			_world.show_notice(notice)
 	if mission_done:
 		_world.show_mission_done(Quest.DONE_TEXT)
+	if won and state.is_finished() and not state.story.finished:
+		await _finish_game()
+		return
 	if outcome == BattleEngine.State.LOST:
 		_autosave(false)  # the gold lost sticks: going back to the title can't undo it
 	if won:
@@ -375,11 +389,7 @@ func _on_encounter(boss: bool) -> void:
 			quit_to_title.emit()
 			return
 	_set_busy(false)
-	if _autoplay and won and state.is_finished():
-		print("Juego completado: Nv %d, tiempo de juego %s" % [state.hero.level,
-			_clock(play_time)])
-		get_tree().quit()
-	elif _autoplay and won and _wants_retreat():
+	if _autoplay and won and _wants_retreat():
 		state.inventory.take(Inventory.WING)
 		print("Retirada al pueblo (PV %d/%d, PM %d, pociones %d)" % [state.hero.hp,
 			state.hero.max_hp, state.hero.mp, state.inventory.count(Inventory.POTION)])
@@ -571,6 +581,47 @@ func _play_prologue() -> void:
 		_world.show_notice(LOAD_FAILED_NOTICE)
 
 
+## After the ending: the save is marked finished (the hero is back in Villaclaro), the
+## credits roll with the numbers of the game and Game goes back to the title. They cover
+## everything, and Game stays busy, so no status window, map square, ☰ or prompt shows.
+func _finish_game() -> void:
+	state.story.finished = true
+	_world.freeze(true)
+	_autosave(false)
+	var time_text := _clock(play_time)
+	_audio.play_music(MusicLibrary.TITLE)
+	var layer := CanvasLayer.new()
+	layer.layer = 11
+	add_child(layer)
+	var credits := CreditsScreen.new()
+	layer.add_child(credits)
+	await _fade_to(0.0)
+	await credits.run(_credits_sections(time_text))
+	if _autoplay:
+		print("Juego completado: Nv %d, tiempo de juego %s" % [state.hero.level, time_text])
+	quit_to_title.emit()
+
+
+## The credits: who made the game, with what, and the numbers of this game.
+func _credits_sections(time_text: String) -> Array:
+	return [
+		["Villaclaro", ["La historia de %s" % state.hero.display_name]],
+		["Creado por", [AUTHOR]],
+		["Motor", ["Godot Engine 4.7"]],
+		["Modelos 3D", ["KayKit, de Kay Lousberg (CC0)"]],
+		["Música y sonido", ["Música y efectos generados por el juego"]],
+		["Tu partida", [
+			"Tiempo de juego: %s" % time_text,
+			"Combates: %d" % state.battles,
+			"Pasos: %d" % state.steps,
+			"Oro ganado: %d G" % state.gold_earned,
+			"Misiones cumplidas: %d" % state.quests_done(),
+			"Nivel: %d" % state.hero.level,
+		]],
+		["Gracias por jugar", []],
+	]
+
+
 ## What CutscenePlayer's "travel" step does: builds zone_id at entry_id under black and
 ## hands the new map over.
 func _scene_travel(zone_id: String, entry_id: String) -> World:
@@ -688,6 +739,7 @@ func _on_chest(chest_id: String) -> void:
 	var result := Chests.open(state, chest_id)
 	if not result.opened:
 		return
+	state.gold_earned += Chests.CHESTS[chest_id].get("gold", 0)
 	_world.set_chest_open(chest_id, true)
 	_audio.play_sfx(SfxLibrary.LEVEL_UP)
 	_refresh_status()

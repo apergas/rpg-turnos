@@ -42,6 +42,8 @@ signal portal_used
 signal lever_pulled
 signal key_taken
 signal door_used
+## Every STEP_DISTANCE metres walked (two steps of the hero; the game's step count).
+signal stepped
 
 const PLAYER_SCENE := preload("res://scenes/world/player.tscn")
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
@@ -977,6 +979,7 @@ func _play_steps() -> void:
 	if _step_m < STEP_DISTANCE:
 		return
 	_step_m -= STEP_DISTANCE
+	stepped.emit()
 	if _audio:
 		_audio.play_sfx(SfxLibrary.STEP)
 

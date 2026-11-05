@@ -162,8 +162,8 @@ func needs_rest() -> bool:
 	return inventory.count(Inventory.POTION) == 0 and hero.mp < heal_cost * 2
 
 
-## True once the Señor de la Niebla is beaten: the adventure is over (the ending itself
-## comes with the story).
+## True once the Señor de la Niebla is beaten: the adventure is over (the ending
+## cutscene and the credits follow; story.finished is set after them).
 func is_finished() -> bool:
 	return has_flag(FINAL_BOSS)
 
@@ -171,6 +171,11 @@ func is_finished() -> bool:
 ## The story chapter now (StoryState.Chapter).
 func chapter() -> StoryState.Chapter:
 	return story.chapter(world_flags)
+
+
+## Quests completed, for the credits: the village quest.
+func quests_done() -> int:
+	return 1 if quest.stage == Quest.Stage.DONE else 0
 
 
 ## Gold lost on a defeat: half of what is carried, rounded down (gold - lost remains).
