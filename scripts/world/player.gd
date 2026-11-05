@@ -29,6 +29,9 @@ var move_target: Variant = null
 var _model: BattleActor
 var _autoplay := false
 var _route_index := 0
+## Set after a return through the portal: until the first route point is reached, a hero
+## stuck on the way to it (a wall in between) skips to the next one.
+var _skip_blocked_point := false
 var _stuck_frames := 0
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 
@@ -59,6 +62,7 @@ func place(pos: Vector3, facing_yaw: float) -> void:
 	_model.rotation.y = facing_yaw
 	last_step_m = 0.0
 	move_target = null
+	_skip_blocked_point = false
 	_route_index = _nearest_route_point(pos)
 
 
@@ -88,8 +92,8 @@ func _physics_process(delta: float) -> void:
 		_stuck_frames = _stuck_frames + 1 if last_step_m < SPEED * delta * 0.25 else 0
 		if _stuck_frames > STUCK_FRAMES:
 			move_target = null
-	elif _autoplay and dir != Vector3.ZERO:
-		# Placed back on a dungeon floor, the nearest route point can be behind a wall.
+	elif _autoplay and _skip_blocked_point and dir != Vector3.ZERO:
+		# Placed back by the portal, the nearest route point can be behind a wall.
 		_stuck_frames = _stuck_frames + 1 if last_step_m < SPEED * delta * 0.25 else 0
 		if _stuck_frames > STUCK_FRAMES:
 			_stuck_frames = 0
@@ -138,8 +142,14 @@ func _route_direction() -> Vector3:
 	to_goal.y = 0.0
 	if to_goal.length() < ROUTE_REACHED:
 		_route_index = (_route_index + 1) % route.size()
+		_skip_blocked_point = false
 		return Vector3.ZERO
 	return to_goal.normalized()
+
+
+## Arms the skip of a route point the hero can't reach (see _skip_blocked_point).
+func arm_blocked_point_skip() -> void:
+	_skip_blocked_point = true
 
 
 ## The route point to walk to first after being placed at pos: the nearest one.

@@ -423,7 +423,6 @@ func _on_travel_requested() -> void:
 	# into an encounter or an exit during the fade and leave the map stuck waiting.
 	_world.freeze(true)
 	var replaced := state.open_portal(_world.player_position())
-	_show_portal()
 	await _fade_to(1.0)
 	_go_to_town()
 	_show_portal()
@@ -453,6 +452,7 @@ func _on_portal() -> void:
 	else:
 		_show_portal()
 	_world.place_player(pos)
+	_world.arm_blocked_point_skip()
 	_on_village_changed(_world.in_village())
 	_refresh_status()
 	await _fade_to(0.0)
@@ -526,7 +526,7 @@ func _on_shop(shop_id: String) -> void:
 ## AUTOPLAY_INN_RATIO of max HP or MP.
 func _on_inn(inn_id: String) -> void:
 	var hurt := state.hero.hp < state.hero.max_hp * AUTOPLAY_INN_RATIO \
-		or state.hero.mp < state.hero.max_mp * AUTOPLAY_INN_RATIO
+		or state.hero.mp < state.hero.max_mp * AUTOPLAY_INN_RATIO or state.needs_rest()
 	if _busy or (_autoplay and not hurt):
 		return
 	_set_busy(true)
