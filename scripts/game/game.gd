@@ -268,6 +268,7 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 		_world.place_at_entry(entry_id)
 	for id in state.opened_chests:
 		_world.set_chest_open(id, true, true)
+	_world.set_explored(state.explored_map(zone_id))
 	_world.set_world_flags(state.world_flags)
 	_show_portal()
 	_update_boss()

@@ -11,7 +11,8 @@ class_name World extends Node3D
 ## floor) emits exit_requested; a closed one (its world flag not set: set_world_flags())
 ## shows its fog and its notice. With set_portal(true) the zone's portal_pos holds the
 ## return portal of an Ala de viaje, used like a figure (portal_used); set_return_mark()
-## shows on the ground the spot it leads back to. A dungeon floor (ZoneData.layout) is a
+## shows on the ground the spot it leads back to. Under the status window a MapSquare shows
+## what has been seen of the zone (set_explored()). A dungeon floor (ZoneData.layout) is a
 ## DungeonMap: its
 ## rock blocks turn see-through between the camera and the hero, the hero carries a
 ## lantern underground, and next to the lever, the key or a locked gate Enter / Space
@@ -152,6 +153,7 @@ var _mission_box: VBoxContainer
 var _missions: Array[String] = []
 var _mission_done_serial := 0
 var _mission_done := false
+var _map_square: MapSquare
 var _notice: Label
 var _notice_window: PanelContainer
 var _notice_serial := 0
@@ -210,6 +212,7 @@ func _ready() -> void:
 	_camera.target = _player
 	_marker = _build_marker()
 	_build_ui()
+	set_explored(ExploredMap.new(zone))
 	place_at_entry(zone.start_entry)
 	_camera.current = true
 	if get_parent() == get_tree().root:
@@ -219,6 +222,7 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	if _grass:
 		Vegetation.set_pusher(_grass, _player.global_position)
+	_map_square.follow(_player.global_position)
 	_marker.visible = _player.move_target != null
 	if _marker.visible:
 		_marker.position = _player.move_target
@@ -358,6 +362,12 @@ func set_world_flags(flags: Dictionary) -> void:
 		(_fogs[exit.id] as Node3D).visible = not _is_open(exit)
 	if _dungeon:
 		_dungeon.set_flags(flags)
+
+
+## What has been seen of this zone, for the map square (Game passes GameState's; run on
+## its own the map keeps its own).
+func set_explored(map: ExploredMap) -> void:
+	_map_square.set_map(map)
 
 
 ## Shows or removes the return portal at the zone's portal_pos.
@@ -803,9 +813,20 @@ func _add_figure(look: BattleActor.Look, pos: Vector3, yaw_deg: float, radius: f
 func _build_ui() -> void:
 	_ui = CanvasLayer.new()
 	add_child(_ui)
+	# No size of its own: the column follows the status window as it grows and shrinks.
+	var column := VBoxContainer.new()
+	column.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	column.offset_left = UI_EDGE
+	column.offset_top = UI_EDGE
+	column.offset_right = UI_EDGE
+	column.offset_bottom = UI_EDGE
+	column.add_theme_constant_override("separation", 8)
+	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui.add_child(column)
 	var panel := BattleHud.make_window()
-	panel.position = Vector2(UI_EDGE, UI_EDGE)
-	_ui.add_child(panel)
+	column.add_child(panel)
+	_map_square = MapSquare.new()
+	column.add_child(_map_square)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
 	panel.add_child(box)

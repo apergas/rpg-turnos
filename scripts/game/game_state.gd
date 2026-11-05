@@ -39,6 +39,8 @@ var town_zone := "pradera"
 var portal_town := ""
 var portal_zone := ""
 var portal_pos := Vector3.ZERO
+## What the hero has seen of each zone: zone id -> ExploredMap (explored_map()).
+var explored := {}
 
 
 func _init(hero_data: Combatant) -> void:
@@ -109,6 +111,13 @@ func on_boss_defeated(boss: Combatant) -> String:
 		return ""
 	key_items.append(boss.key_item)
 	return boss.key_item
+
+
+## What has been seen of a zone (nothing yet, the first time).
+func explored_map(id: String) -> ExploredMap:
+	if not explored.has(id):
+		explored[id] = ExploredMap.new(ZoneData.by_id(id))
+	return explored[id]
 
 
 func has_portal() -> bool:
