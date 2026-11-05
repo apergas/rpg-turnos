@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="QuestData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/quest_data.gd" id="1_quest"]
+
+[resource]
+script = ExtResource("1_quest")
+id = "explorador"
+title = "El explorador perdido"
+kind = 3
+zone = "castillo_patio"
+giver = "Tablón"
+turn_in_zone = "castillo_patio"
+turn_in = "Soldado"
+target = "Explorador"
+target_zone = "castillo_patio"
+objective = "Busca al explorador que no volvió del patio del castillo y avisa al Soldado."
+status = "busca al explorador"
+report = "vuelve con el Soldado"
+offer_lines = Array[String](["Un explorador entró en el patio del castillo y no ha vuelto. Quien lo encuentre, que avise al Soldado.", "También se agradecen noticias de la niebla, pero esas ya las conocemos."])
+found_lines = Array[String](["¡Por fin alguien que no traquetea! Llevo dos días escondido de los esqueletos.", "Ahora que miran para otro lado, corro al campamento. ¡Gracias, {nombre}!"])
+wait_lines = Array[String](["¿Alguna noticia del explorador? Entró en el patio y hacia el oeste, y hasta ahí sé."])
+done_lines = Array[String](["¡Ha llegado entero! Hambriento y hablando solo, pero entero.", "Esto es del fondo de los exploradores. Tú no se lo digas al capitán."])
+reward_gold = 250
+reward_items = {
+"ether": 2,
+"semilla_defensa": 1
+}

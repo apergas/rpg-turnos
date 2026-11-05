@@ -320,7 +320,8 @@ func _on_encounter(boss: bool) -> void:
 	if boss:
 		enemies.append(EnemyLibrary.data(_zone.boss_id))
 	else:
-		enemies = EncounterTable.pick(_zone, _world.player_position(), _rng)
+		enemies = EncounterTable.pick(_zone, _world.player_position(), _rng,
+			state.quests.wanted_enemies())
 	await _fade_to(1.0)
 	_world.set_active(false)
 	_audio.play_music(MusicLibrary.BOSS if boss else MusicLibrary.BATTLE)
@@ -340,6 +341,7 @@ func _on_encounter(boss: bool) -> void:
 	var notice := ""
 	var scene := ""
 	var mission_done := false
+	var finished_quests: Array[Dictionary] = []
 	if won:
 		state.gold += battle.engine.gold_won
 		state.gold_earned += battle.engine.gold_won
@@ -350,6 +352,8 @@ func _on_encounter(boss: bool) -> void:
 				notice = _boss_notice(enemy)
 				scene = state.story.scene_after_boss(enemy.id)
 		mission_done = quest_was_on and state.quest.stage == Quest.Stage.DONE
+		for enemy in battle.engine.enemies:
+			finished_quests.append_array(state.quests.on_victory(state, enemy.id))
 	elif outcome == BattleEngine.State.LOST:
 		state.gold -= battle.gold_lost
 		state.heal_full()
@@ -376,7 +380,10 @@ func _on_encounter(boss: bool) -> void:
 		if notice != "":
 			_world.show_notice(notice)
 	if mission_done:
-		_world.show_mission_done(Quest.DONE_TEXT)
+		_world.show_mission_done(QuestLog.done_text(Quest.TITLE))
+	for finished: Dictionary in finished_quests:
+		_world.show_mission_done(QuestLog.done_text(finished.title))
+		_world.show_notice(" ".join(finished.lines))
 	if won and state.is_finished() and not state.story.finished:
 		await _finish_game()
 		return

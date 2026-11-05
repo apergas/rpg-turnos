@@ -16,12 +16,13 @@ class_name SaveData extends RefCounted
 ## story (cutscenes seen, the ending reached) and the numbers for the credits; an older save
 ## gets the default name, the cutscenes its world flags have left behind marked seen
 ## (StoryState.mark_seen_for_flags()) and the numbers at 0. QUESTS_VERSION (the side quests)
-## adds the accessory slot to the loadout; an older save gets it empty.
+## adds the accessory slot to the loadout and the side quests' progress; an older save gets
+## the slot empty and no side quest taken.
 
 const VERSION := 7
 ## First version with the story's fields.
 const STORY_VERSION := 6
-## First version with the accessory slot.
+## First version with the accessory slot and the side quests.
 const QUESTS_VERSION := 7
 ## Oldest version apply() still reads.
 const OLDEST_VERSION := 2
@@ -63,6 +64,7 @@ static func from_state(state: GameState, player_pos: Vector3, play_time: float) 
 		"name": state.hero.display_name,
 		"story": state.story.to_dict(),
 		"stats": {"battles": state.battles, "steps": state.steps, "gold": state.gold_earned},
+		"quests": state.quests.to_dict(),
 		"position": [player_pos.x, player_pos.z],
 		"play_time": play_time,
 	}
@@ -129,6 +131,7 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 		state.battles = 0
 		state.steps = 0
 		state.gold_earned = 0
+	state.quests.set_from(data.get("quests", {}))
 	var pos: Array = data.position
 	return {"valid": true, "position": Vector3(pos[0], 0.0, pos[1]),
 		"play_time": float(data.play_time)}
@@ -146,6 +149,8 @@ static func is_valid(data: Dictionary) -> bool:
 	if int(data.version) >= 5 and not (_valid_portal(data) and _valid_explored(data)):
 		return false
 	if int(data.version) >= STORY_VERSION and not _valid_story(data):
+		return false
+	if int(data.version) >= QUESTS_VERSION and not _valid_quests(data):
 		return false
 	var hero: Variant = data.get("hero")
 	if not hero is Dictionary:
@@ -220,6 +225,21 @@ static func _valid_equipment(data: Dictionary) -> bool:
 		return false
 	for id: Variant in chests:
 		if not (id is String and Chests.CHESTS.has(id)):
+			return false
+	return true
+
+
+## QUESTS_VERSION field: quest id -> its stage and count.
+static func _valid_quests(data: Dictionary) -> bool:
+	var quests: Variant = data.get("quests")
+	if not quests is Dictionary:
+		return false
+	for id: Variant in quests:
+		if not (id is String and QuestLog.QUESTS.has(id)):
+			return false
+		var entry: Variant = quests[id]
+		if not (entry is Dictionary and entry.get("stage") is float \
+				and entry.get("count") is float):
 			return false
 	return true
 

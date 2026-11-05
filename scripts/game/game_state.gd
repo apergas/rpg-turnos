@@ -13,6 +13,8 @@ const REST_HP_RATIO := 0.3
 var hero: Combatant
 var inventory := Inventory.new()
 var quest := Quest.new()
+## Every mission: the village quest above and the side quests.
+var quests := QuestLog.new(quest)
 var gold := START_GOLD
 ## What the hero wears; its bonuses are copied into the hero by refresh_equipment().
 var loadout := Loadout.new()
@@ -63,13 +65,9 @@ func heal_full() -> void:
 
 
 ## The missions under way, for the map's status window and the pause menu; never empty:
-## with none in progress, the story's next step. The one place that reads them: the story's
-## quest log only has to change this.
+## with none in progress, the story's next step. The one place that reads them.
 func current_missions() -> Array[String]:
-	var missions: Array[String] = []
-	var line := quest.status_text()
-	if line != "":
-		missions.append(line)
+	var missions := quests.status_lines(inventory)
 	if missions.is_empty():
 		missions.append(story.goal_text(world_flags))
 	return missions
@@ -175,9 +173,9 @@ func chapter() -> StoryState.Chapter:
 	return story.chapter(world_flags)
 
 
-## Quests completed, for the credits: the village quest.
+## Quests completed, for the credits.
 func quests_done() -> int:
-	return 1 if quest.stage == Quest.Stage.DONE else 0
+	return quests.done_count()
 
 
 ## Gold lost on a defeat: half of what is carried, rounded down (gold - lost remains).

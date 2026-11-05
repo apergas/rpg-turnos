@@ -123,6 +123,10 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var start_formations: Array = []
 @export var start_pos := Vector3.ZERO
 @export var start_radius := 0.0
+## An enemy that only comes while a quest hunts it, alone, with this chance per encounter
+## (EnemyLibrary id, "" for none).
+@export var rare_enemy := ""
+@export var rare_chance := 0.0
 ## EncounterMeter: free meters after each battle, then this chance per meter on grass.
 @export var encounter_grace := 9.0
 @export var encounter_chance := 0.01

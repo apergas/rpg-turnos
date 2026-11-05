@@ -60,6 +60,7 @@ const KEY_ITEMS := {
 	"fragmento_mina": "Fragmento del amuleto (2/3)",
 	"fragmento_castillo": "Fragmento del amuleto (3/3)",
 	"llave_mina": "Llave de la mina",
+	"carta_granjero": "Carta del Granjero",
 }
 ## What each key item is, for Objetos.
 const KEY_TEXTS := {
@@ -67,6 +68,7 @@ const KEY_TEXTS := {
 	"fragmento_mina": "Un trozo del Amuleto del Alba. Lo guardaba el Golem de piedra.",
 	"fragmento_castillo": "El último trozo del Amuleto del Alba. Lo guardaba el Señor de la Niebla.",
 	"llave_mina": "Abre la reja de la tercera planta de la mina.",
+	"carta_granjero": "Para la Leñadora, en la aldea del bosque. Huele un poco a gallina.",
 }
 
 var _items := {}

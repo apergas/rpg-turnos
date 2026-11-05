@@ -11,7 +11,10 @@ const REWARD_POTIONS := 2
 const TARGET_ID := "slime"
 const BOSS_ID := "rey_slime"
 const NPC_NAME := "Abuela Rosa"
-## Shown for a few seconds when the quest ends; a finished quest is not listed any more.
+## Its name in the Diario and in "Misión cumplida: ...".
+const TITLE := "Los slimes de Villaclaro"
+## Shown for a few seconds when a quest ends (QuestLog.done_text()); a finished quest is not
+## listed any more.
 const DONE_TEXT := "Misión cumplida"
 
 var stage := Stage.OFFER
