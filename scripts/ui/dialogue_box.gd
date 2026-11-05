@@ -46,8 +46,10 @@ func set_audio(audio: AudioDirector) -> void:
 	_audio = audio
 
 
+## An empty speaker is the narrator: no name over the lines.
 func say(speaker: String, lines: Array[String]) -> void:
 	_speaker.text = speaker
+	_speaker.visible = speaker != ""
 	_fit_to(lines)
 	show()
 	if _audio:
@@ -55,7 +57,7 @@ func say(speaker: String, lines: Array[String]) -> void:
 	for text in lines:
 		_line.text = text
 		if _autoplay:
-			print("%s: %s" % [speaker, text])
+			print("%s: %s" % [speaker if speaker != "" else "Narración", text])
 			await get_tree().create_timer(AUTOPLAY_DELAY).timeout
 		else:
 			# Skip a frame so the key press that opened or advanced the dialogue is not reused.

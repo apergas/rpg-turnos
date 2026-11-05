@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="Cutscene" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/cutscene.gd" id="1_cutscene"]
+
+[resource]
+script = ExtResource("1_cutscene")
+id = "prologo"
+steps = [
+["music", "village"],
+["wait", 0.8],
+["fade_in"],
+["say", "", ["Otra mañana gris en Villaclaro. La niebla del norte ha vuelto a tapar el cielo."]],
+["move", "hero", Vector3(-2.6, 0, -16.9)],
+["move", "Abuela Rosa", Vector3(-1.6, 0, -18.4)],
+["face", "hero", "Abuela Rosa"],
+["say", "Abuela Rosa", ["¡{nombre}! Por fin te despiertas. ¿Has visto el cielo?"]],
+["camera_to", Vector3(0, 0, -28.6), 15.0],
+["say", "Abuela Rosa", ["Esa niebla baja del viejo Castillo de la Niebla, y despierta a los monstruos.", "Yo guardaba el Amuleto del Alba, que la mantenía a raya... pero se partió en tres.", "Cada fragmento acabó en manos de un guardián: uno en el bosque, otro en la mina y otro en el castillo.", "Alguien tiene que recuperarlos. Y en este pueblo, {nombre}, las rodillas más jóvenes son las tuyas."]],
+["camera_to", Vector3(0, 0, -4), 18.0],
+["say", "Abuela Rosa", ["Pero no corras. Primero demuestra que puedes con los slimes.", "Derrota a 3 en la pradera, al sur del pueblo, y vuelve a contármelo."]],
+["camera_back"],
+["say", "Abuela Rosa", ["Ah, y si te hacen daño, ven a verme. Para eso están las abuelas."]],
+["move", "Abuela Rosa", Vector3(-2.5, 0, -20)]
+]

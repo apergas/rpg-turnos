@@ -22,6 +22,8 @@ var target: Node3D
 var distance := DISTANCE
 
 var _zoom_goal := DISTANCE
+## The zoom chosen by the player while a cutscene shows a point (-1: none).
+var _saved_zoom := -1.0
 
 
 func _ready() -> void:
@@ -48,6 +50,23 @@ func _physics_process(delta: float) -> void:
 	distance = lerpf(distance, _zoom_goal, minf(1.0, ZOOM_RATE * delta))
 	global_position = global_position.lerp(_goal_position(), minf(1.0, FOLLOW_RATE * delta))
 	look_at(_focus(), Vector3.UP)
+
+
+## Cutscenes: glides to look at spot from at_distance metres (any distance), keeping the
+## player's zoom for follow().
+func show_point(spot: Node3D, at_distance: float) -> void:
+	if _saved_zoom < 0.0:
+		_saved_zoom = _zoom_goal
+	target = spot
+	_zoom_goal = at_distance
+
+
+## Follows new_target again with the player's zoom.
+func follow(new_target: Node3D) -> void:
+	target = new_target
+	if _saved_zoom >= 0.0:
+		_zoom_goal = _saved_zoom
+		_saved_zoom = -1.0
 
 
 ## Jumps to the follow position and zoom without smoothing (start and respawn).

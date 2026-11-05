@@ -1,6 +1,8 @@
 class_name Quest extends RefCounted
-## The village quest: defeat GOAL slimes for the old woman, report back, then defeat
-## the Rey Slime. Pure rules: Game feeds it battle results and shows what it says.
+## The village quest, chapter 1 of the story: defeat GOAL slimes for the Abuela Rosa,
+## report back, then defeat the Rey Slime. The prologue starts it (start()). Pure rules:
+## Game feeds it battle results and shows what it says (its lines hold
+## StoryState.NAME_TAG for the hero's name).
 
 enum Stage { OFFER, HUNT, REPORT, BOSS, DONE }
 
@@ -8,12 +10,18 @@ const GOAL := 3
 const REWARD_POTIONS := 2
 const TARGET_ID := "slime"
 const BOSS_ID := "rey_slime"
-const NPC_NAME := "Anciana"
+const NPC_NAME := "Abuela Rosa"
 ## Shown for a few seconds when the quest ends; a finished quest is not listed any more.
 const DONE_TEXT := "Misión cumplida"
 
 var stage := Stage.OFFER
 var kills := 0
+
+
+## The prologue's request: the hunt begins without a first talk.
+func start() -> void:
+	if stage == Stage.OFFER:
+		stage = Stage.HUNT
 
 
 ## Counts one enemy with this data id defeated in a won battle (Game calls it for every
@@ -33,22 +41,21 @@ func talk() -> Dictionary:
 	var potions := 0
 	match stage:
 		Stage.OFFER:
-			lines.append("¡Bienvenido a Villaclaro, viajero!")
-			lines.append("Los slimes no dejan salir a nadie del pueblo.")
-			lines.append("¿Podrías derrotar a %d de ellos?" % GOAL)
+			lines.append("¡{nombre}! Los slimes no dejan salir a nadie del pueblo.")
+			lines.append("Primero demuestra que puedes con ellos: derrota a %d." % GOAL)
 			stage = Stage.HUNT
 		Stage.HUNT:
-			lines.append("Llevas %d de %d slimes. ¡Ánimo!" % [kills, GOAL])
+			lines.append("Llevas %d de %d slimes. ¡Ánimo, {nombre}!" % [kills, GOAL])
 		Stage.REPORT:
 			lines.append("¡Lo has conseguido! Toma, %d pociones." % REWARD_POTIONS)
-			lines.append("Pero el Rey Slime ha llegado al norte del pueblo...")
-			lines.append("¡Derrótalo, por favor!")
+			lines.append("Pero mira al norte del pueblo... ¡ha llegado el Rey Slime!")
+			lines.append("Es grande y pesado, pero estoy segura de que puedes con él.")
 			potions = REWARD_POTIONS
 			stage = Stage.BOSS
 		Stage.BOSS:
-			lines.append("El Rey Slime espera al norte del pueblo.")
+			lines.append("El Rey Slime espera al norte del pueblo. ¡Ten cuidado!")
 		Stage.DONE:
-			lines.append("¡Gracias, héroe! Villaclaro está a salvo.")
+			lines.append("¡Gracias, {nombre}! Villaclaro está a salvo.")
 	return {"lines": lines, "potions": potions}
 
 
@@ -60,11 +67,11 @@ func boss_available() -> bool:
 func status_text() -> String:
 	match stage:
 		Stage.OFFER:
-			return "Misión: habla con la anciana"
+			return "Misión: habla con la Abuela Rosa"
 		Stage.HUNT:
 			return "Misión: slimes %d / %d" % [kills, GOAL]
 		Stage.REPORT:
-			return "Misión: vuelve con la anciana"
+			return "Misión: vuelve con la Abuela Rosa"
 		Stage.BOSS:
 			return "Misión: derrota al Rey Slime"
 	return ""

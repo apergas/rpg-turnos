@@ -126,6 +126,12 @@ var _grass: ShaderMaterial
 var _player: Player
 var _camera: FollowCamera
 var _boss: StaticBody3D
+## ZoneData.npcs "name" -> its figure (a StaticBody3D with the BattleActor under it).
+var _figures := {}
+## What a cutscene's camera looks at (camera_to); null until the first one.
+var _camera_spot: Node3D
+## The status window and the map square under it: a cutscene hides them together.
+var _status_column: VBoxContainer
 ## chest id -> lid pivot (rotation.x opens it); a chest in _open_chests is open.
 var _chest_lids := {}
 var _open_chests: Array[String] = []
@@ -186,7 +192,8 @@ func _ready() -> void:
 		_dungeon.zone = zone
 		add_child(_dungeon)
 	for npc: Dictionary in zone.npcs:
-		_add_figure(BattleActor.Look[npc.look], npc.pos, npc.yaw, 0.4, 1.8)
+		_figures[npc.name] = _add_figure(BattleActor.Look[npc.look], npc.pos, npc.yaw, 0.4,
+			1.8)
 	if zone.boss_id != "":
 		_boss = _add_figure(EnemyLibrary.look(zone.boss_id), zone.boss_pos, 180.0, 1.0, 2.0)
 	for id in Chests.of_zone(zone.id):
@@ -410,6 +417,88 @@ func show_dialogue(speaker: String, lines: Array[String]) -> void:
 	freeze(true)
 	await _dialogue.say(speaker, lines)
 	await freeze(false)
+
+
+## Cutscenes: the map stops answering the player (frozen, which also hides the prompts,
+## the portal's too), the status window, the map square and the notice go, and the hero
+## stops where he is, not walking on his own, until end_cutscene().
+func begin_cutscene() -> void:
+	freeze(true)
+	_player.scripted = true
+	_player.move_target = null
+	_player.model().set_walking(false)
+	_use_on_arrival = {}
+	_status_column.hide()
+	_notice_window.hide()
+
+
+## Puts every figure back on its spot, gives the camera back to the hero and the
+## controls back to the player (with the encounter grace restarted).
+func end_cutscene() -> void:
+	reset_figures()
+	_camera.follow(_player)
+	_player.scripted = false
+	_status_column.show()
+	_meter.reset()
+	_was_near = {}
+	await freeze(false)
+
+
+## A dialogue inside a cutscene: like show_dialogue() but the map stays frozen.
+func say_lines(speaker: String, lines: Array[String]) -> void:
+	await _dialogue.say(speaker, lines)
+
+
+## The node a cutscene moves for who ("hero" or a figure's name; null if none here).
+func figure_node(who: String) -> Node3D:
+	if who == Cutscene.HERO:
+		return _player
+	return _figures.get(who)
+
+
+## The node a cutscene turns for who: the hero's model, or the figure itself.
+func figure_turn(who: String) -> Node3D:
+	if who == Cutscene.HERO:
+		return _player.model()
+	return _figures.get(who)
+
+
+## The BattleActor of who (walking and cheering), null if none here.
+func figure_actor(who: String) -> BattleActor:
+	if who == Cutscene.HERO:
+		return _player.model()
+	var body: Node3D = _figures.get(who)
+	if body == null:
+		return null
+	for child in body.get_children():
+		if child is BattleActor:
+			return child
+	return null
+
+
+## Every figure back on its ZoneData spot and yaw, standing still.
+func reset_figures() -> void:
+	for npc: Dictionary in zone.npcs:
+		var body: Node3D = _figures[npc.name]
+		body.position = npc.pos
+		body.rotation_degrees.y = npc.yaw
+		var actor := figure_actor(npc.name)
+		if actor:
+			actor.set_walking(false)
+
+
+## The camera glides to look at point from at_distance metres (cutscenes).
+func focus_camera(point: Vector3, at_distance: float) -> void:
+	if _camera_spot == null:
+		_camera_spot = Node3D.new()
+		add_child(_camera_spot)
+	_camera_spot.position = point
+	_camera.show_point(_camera_spot, at_distance)
+
+
+## The camera follows the hero again.
+func follow_camera() -> void:
+	_camera.follow(_player)
 
 
 ## Freezes the player (no walking, prompts, encounters, exits or uses) while a dialogue
@@ -823,6 +912,7 @@ func _build_ui() -> void:
 	column.add_theme_constant_override("separation", 8)
 	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ui.add_child(column)
+	_status_column = column
 	var panel := BattleHud.make_window()
 	column.add_child(panel)
 	_map_square = MapSquare.new()

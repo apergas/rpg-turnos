@@ -49,6 +49,7 @@ signal quit_to_title
 const HERO_DATA := preload("res://data/hero.tres")
 const BATTLE_SCENE := preload("res://scenes/battle/battle_scene.tscn")
 const WORLD_SCENE := preload("res://scenes/world/world.tscn")
+const CUTSCENE_PATH := "res://data/cutscenes/%s.tres"
 const FADE_TIME := 0.3
 const HEAL_LINE := "Descansas un momento. PV y PM recuperados."
 const SAVED_NOTICE := "Partida guardada."
@@ -139,6 +140,7 @@ var _options: GameOptions
 var _save := {}
 ## The name typed on the NameEntry for a new game ("" for the default).
 var _hero_name := ""
+var _cutscenes: CutscenePlayer
 var _busy := false
 var _leaving := false
 var _autoplay := false
@@ -194,18 +196,30 @@ func _ready() -> void:
 	_build_shop()
 	_build_fade()
 	_build_pause()
+	_build_cutscenes()
+	if _autoplay_menu:
+		# The tour of the pause menu needs the map, not a scene.
+		state.story.mark_seen("prologo")
+	# Busy until the map is ready (no ☰ either): arriving inside a village must not start its
+	# cutscene yet.
+	_set_busy(true)
 	_switch_zone(state.zone_id, "")
 	if start_pos != null:
 		_world.place_player(start_pos)
-	_world.freeze(false)
+	var prologue := state.chapter() == StoryState.Chapter.PROLOGUE
+	if prologue:
+		# Under black: the prologue fades in by itself.
+		_fade.color.a = 1.0
+		_play_prologue.call_deferred()
 	# Synthesize the tracks played later now, under black, so no first play stalls.
 	for id in [MusicLibrary.VILLAGE, MusicLibrary.VICTORY, MusicLibrary.DEFEAT]:
 		MusicLibrary.build(id)
 	_play_map_music()
-	if load_failed:
-		_world.show_notice(LOAD_FAILED_NOTICE)
 	if _autoplay_menu:
 		get_tree().create_timer(MENU_TOUR_DELAY).timeout.connect(_pause.tour)
+	if not prologue:
+		await _world.freeze(false)
+		_set_busy(false)
 
 
 func _process(delta: float) -> void:
@@ -506,14 +520,52 @@ func _on_village_changed(inside: bool) -> void:
 	_play_map_music()
 
 
+## Plays data/cutscenes/<scene_id>.tres on the current map and marks it seen. The
+## caller is busy; the map is the player's again when it returns.
+func _play_scene(scene_id: String) -> void:
+	var scene := load(CUTSCENE_PATH % scene_id) as Cutscene
+	state.story.mark_seen(scene_id)
+	_cutscenes.world = _world
+	_cutscenes.hero_name = state.hero.display_name
+	await _cutscenes.play(scene)
+	_refresh_status()
+
+
+## A new game: the prologue (it fades in from black), then the slimes quest is on. A
+## save that could not be read also lands here, and says so now the map is visible.
+func _play_prologue() -> void:
+	await _play_scene("prologo")
+	state.quest.start()
+	_refresh_status()
+	_autosave(false)
+	_set_busy(false)
+	if not _save.is_empty():
+		_world.show_notice(LOAD_FAILED_NOTICE)
+
+
+## What CutscenePlayer's "travel" step does: builds zone_id at entry_id under black and
+## hands the new map over.
+func _scene_travel(zone_id: String, entry_id: String) -> World:
+	_switch_zone(zone_id, entry_id)
+	return _world
+
+
+## What CutscenePlayer's "flag" step does.
+func _scene_flag(flag: String) -> void:
+	state.world_flags[flag] = true
+	_world.set_world_flags(state.world_flags)
+
+
 ## The old woman always heals; what she says and gives comes from the quest.
 func _on_talk() -> void:
 	if _busy:
 		return
 	_set_busy(true)
 	var result := state.quest.talk()
+	var said: Array = result.lines
 	var lines: Array[String] = []
-	lines.append_array(result.lines)
+	for line: String in said:
+		lines.append(StoryState.fill(line, state.hero.display_name))
 	lines.append(HEAL_LINE)
 	state.heal_full()
 	if result.potions > 0:
@@ -738,6 +790,15 @@ func _build_shop() -> void:
 	_shop.changed.connect(func() -> void:
 		_shop_changed = true
 		_refresh_status())
+
+
+func _build_cutscenes() -> void:
+	_cutscenes = CutscenePlayer.new()
+	_cutscenes.audio = _audio
+	_cutscenes.fade = _fade_to
+	_cutscenes.set_flag = _scene_flag
+	_cutscenes.travel = _scene_travel
+	add_child(_cutscenes)
 
 
 func _build_fade() -> void:
