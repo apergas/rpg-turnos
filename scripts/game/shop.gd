@@ -155,7 +155,7 @@ static func compare(state: GameState, id: String) -> Dictionary:
 ## For --autoplay: one Ala de viaje if none is carried (the autoplay retreat flies back
 ## with it), then the equipment of the shop that beats what is worn and is not in the bag
 ## yet, in slot order, as long as the gold lasts. Once there is no such piece left (bought
-## or not), potions up to AUTOPLAY_POTIONS. In Villaclaro the first 50 G must go on the
+## or not), or with no potions at all, potions up to AUTOPLAY_POTIONS. In Villaclaro the first 50 G must go on the
 ## gear and the village is close by, so there the Ala waits until the gear is bought.
 static func autoplay_picks(state: GameState, shop_id: String) -> Array[String]:
 	var picks: Array[String] = []
@@ -173,12 +173,12 @@ static func autoplay_picks(state: GameState, shop_id: String) -> Array[String]:
 		if gold >= price(id):
 			picks.append(id)
 			gold -= price(id)
-	if upgrades > 0:
+	var potions := state.inventory.count(Inventory.POTION)
+	if upgrades > 0 and potions > 0:
 		return picks
-	if wants_wing and gold >= price(Inventory.WING):
+	if upgrades == 0 and wants_wing and gold >= price(Inventory.WING):
 		picks.append(Inventory.WING)
 		gold -= price(Inventory.WING)
-	var potions := state.inventory.count(Inventory.POTION)
 	while potions < AUTOPLAY_POTIONS and gold >= price(Inventory.POTION):
 		picks.append(Inventory.POTION)
 		gold -= price(Inventory.POTION)

@@ -358,11 +358,31 @@ func _on_encounter(boss: bool) -> void:
 		await _autoplay_restock()
 
 
-## Autoplay: needs rest (GameState.needs_rest()) away from a village, with an Ala de viaje
-## (the night at the inn is free).
+## Autoplay: needs rest (GameState.needs_rest()), or is only kept from the zone's boss by
+## its HP or MP, away from a village, with an Ala de viaje (the night at the inn is free).
 func _wants_retreat() -> bool:
-	return state.needs_rest() and not _world.in_village() \
+	return (state.needs_rest() or _boss_needs_rest()) and not _world.in_village() \
 		and state.inventory.count(Inventory.WING) > 0
+
+
+## Autoplay: the zone's boss is due at this level but the hero is too worn for it. MP
+## doesn't come back by walking, so without a rest the boss would never show up.
+func _boss_needs_rest() -> bool:
+	return _boss_wanted() and state.hero.level >= _zone.autoplay_boss_level \
+		and not _rested_for_boss()
+
+
+func _rested_for_boss() -> bool:
+	var hero := state.hero
+	return hero.hp >= hero.max_hp * AUTOPLAY_BOSS_HP \
+		and hero.mp >= hero.max_mp * AUTOPLAY_BOSS_MP
+
+
+func _boss_wanted() -> bool:
+	if _zone.boss_id == "":
+		return false
+	return state.quest.boss_available() if _zone.boss_id == Quest.BOSS_ID \
+		else not state.has_flag(_zone.boss_id)
 
 
 ## Autoplay, in the village: a night at its inn and the shop's picks, as if the hero had
@@ -642,13 +662,9 @@ func _on_title_requested() -> void:
 func _update_boss() -> void:
 	if _zone.boss_id == "":
 		return
-	var hero := state.hero
-	var strong_enough := not _autoplay or (hero.level >= _zone.autoplay_boss_level \
-		and hero.hp >= hero.max_hp * AUTOPLAY_BOSS_HP \
-		and hero.mp >= hero.max_mp * AUTOPLAY_BOSS_MP)
-	var wanted := state.quest.boss_available() if _zone.boss_id == Quest.BOSS_ID \
-		else not state.has_flag(_zone.boss_id)
-	_world.set_boss_present(wanted and strong_enough)
+	var strong_enough := not _autoplay or (state.hero.level >= _zone.autoplay_boss_level \
+		and _rested_for_boss())
+	_world.set_boss_present(_boss_wanted() and strong_enough)
 
 
 ## The zone's map music, or its village one inside the village.
