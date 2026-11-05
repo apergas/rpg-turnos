@@ -6,7 +6,8 @@ class_name PauseMenu extends Control
 ## título, Cerrar). Other pages: Estado (hero stats, gold, spells), Objetos (items usable
 ## outside battle, the Ala de viaje too, and the key items, each with what it does),
 ## Equipo (the four slots; choosing one lists the pieces of that slot in the bag, with
-## the comparison, and Quitar), Opciones (OptionsPanel) and a confirmation before going
+## the comparison, and Quitar), Diario (JournalPage: what to do now, the missions in progress
+## and the finished ones), Opciones (OptionsPanel) and a confirmation before going
 ## back to the title. Esc goes back one page. Keeps running while paused. Call setup()
 ## before adding it to the tree.
 
@@ -23,7 +24,8 @@ const TEXT_SIZE := 18
 const TITLE_COLOR := Color(1.0, 0.85, 0.3)
 const GREY := Color(0.6, 0.6, 0.65)
 ## Rows of the hero's window: text and page. A new page only needs its row here.
-const HERO_PAGES := [["Estado", "status"], ["Objetos", "items"], ["Equipo", "equipment"]]
+const HERO_PAGES := [["Estado", "status"], ["Objetos", "items"], ["Equipo", "equipment"],
+	["Diario", "journal"]]
 ## Long texts wrap past this width.
 const TEXT_WIDTH := 480.0
 const STATUS_BAR_WIDTH := 300.0
@@ -66,6 +68,7 @@ var _equip_box: VBoxContainer
 var _equip_message: Label
 ## Slot whose pieces the Equipo page lists ("" for the list of the three slots).
 var _equip_slot := ""
+var _journal: JournalPage
 var _options_panel: OptionsPanel
 var _page := ""
 ## True while the code moves the focus itself, so that move makes no sound.
@@ -101,6 +104,7 @@ func _ready() -> void:
 	_build_status(stack)
 	_build_items(stack)
 	_build_equipment(stack)
+	_build_journal(stack)
 	_build_options(stack)
 	_build_confirm(stack)
 	available = available
@@ -147,7 +151,7 @@ func tour() -> void:
 	available = true
 	await get_tree().create_timer(TOUR_STEP, true).timeout
 	open()
-	for page in ["main", "status", "items", "equipment", "options"]:
+	for page in ["main", "status", "items", "equipment", "journal", "options"]:
 		_show_page(page)
 		print("Menú: %s" % page)
 		await get_tree().create_timer(TOUR_STEP, true).timeout
@@ -199,6 +203,8 @@ func _show_page(page: String) -> void:
 			_equip_slot = ""
 			_set_line(_equip_message, "")
 			_fill_equipment()
+		"journal":
+			_journal.fill(_state)
 	_quiet_focus = true
 	if page == "options":
 		_options_panel.focus_first()
@@ -522,6 +528,13 @@ func _build_equipment(stack: VBoxContainer) -> void:
 	page.add_child(_equip_box)
 	_equip_message = _label("", Color.WHITE)
 	page.add_child(_equip_message)
+	page.add_child(_back_button())
+
+
+func _build_journal(stack: VBoxContainer) -> void:
+	var page := _page_box(stack, "journal", "Diario")
+	_journal = JournalPage.new()
+	page.add_child(_journal)
 	page.add_child(_back_button())
 
 
