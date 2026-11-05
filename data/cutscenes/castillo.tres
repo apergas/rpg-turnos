@@ -11,7 +11,7 @@ steps = [
 ["face", "hero", "Soldado"],
 ["say", "Soldado", ["¡Por fin refuerzos! ...¿Solo tú? Bueno, algo es algo."]],
 ["camera_to", Vector3(0, 0, 2), 20.0],
-["say", "Soldado", ["Ahí delante está el Castillo de la Niebla, {nombre}. Nadie ha cruzado el patio y ha vuelto para contarlo.", "Arriba, en la sala del trono, el Señor de la Niebla guarda el último fragmento.", "Descansa y compra lo que puedas. Dicen que ni con la primera derrota se da por vencido."]],
+["say", "Soldado", ["Ahí delante está el Castillo de la Niebla, {nombre}. Nadie ha cruzado el patio y ha vuelto para contarlo.", "Arriba, en la sala del trono, el Señor de la Niebla guarda el último fragmento.", "Descansa y compra lo que puedas. Dicen que no se rinde a la primera."]],
 ["camera_back"],
 ["move", "Soldado", Vector3(-5, 0, 23)]
 ]

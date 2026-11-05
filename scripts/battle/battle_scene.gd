@@ -325,7 +325,8 @@ func _play_event(event: Dictionary) -> void:
 		BattleEvent.ASLEEP:
 			await _actor(event.actor).play_status(STATUS_COLORS[BattleEngine.SLEEP])
 			var sleeper := _fighter(event.actor)
-			await _say("%s está dormid%s." % [sleeper.display_name, _ending(sleeper)])
+			await _say("%s duerme profundamente." % sleeper.display_name if sleeper == hero
+				else "%s está dormid%s." % [sleeper.display_name, _ending(sleeper)])
 		BattleEvent.CALL_HELP:
 			await _play_call_help(event)
 		BattleEvent.PHASE:
@@ -343,7 +344,7 @@ func _play_event(event: Dictionary) -> void:
 			await _actor(event.target).play_defeat()
 			if event.target == BattleEvent.HERO:
 				_music(MusicLibrary.DEFEAT)
-				await _say("¡Has sido derrotado...!")
+				await _say("¡Has caído...!")
 			else:
 				var foe := _fighter(event.target)
 				await _say("¡%s ha sido derrotad%s!" % [foe.display_name, _ending(foe)])
@@ -414,7 +415,8 @@ func _play_status_on(event: Dictionary) -> void:
 		_hud.update_status(hero.status)
 	match event.status:
 		BattleEngine.POISON:
-			await _say("¡%s está envenenad%s!" % [target.display_name, _ending(target)])
+			await _say("¡%s sufre el veneno!" % target.display_name if target == hero
+				else "¡%s está envenenad%s!" % [target.display_name, _ending(target)])
 		BattleEngine.SLEEP:
 			await _say("¡%s se ha dormido!" % target.display_name)
 		BattleEngine.SILENCE:
@@ -428,7 +430,8 @@ func _play_status_off(event: Dictionary) -> void:
 	match event.status:
 		BattleEngine.POISON:
 			_sfx(SfxLibrary.HEAL)
-			await _say("¡%s ya no está envenenad%s!" % [target.display_name, _ending(target)])
+			await _say("¡El veneno ya no afecta a %s!" % target.display_name if target == hero
+				else "¡%s ya no está envenenad%s!" % [target.display_name, _ending(target)])
 		BattleEngine.SLEEP:
 			await _say("¡%s se despierta!" % target.display_name)
 		BattleEngine.SILENCE:
@@ -480,7 +483,8 @@ func _to(c: Combatant) -> String:
 	return ("a la %s" if c.female else "al %s") % c.display_name
 
 
-## Ending of the adjectives for c: "a" (envenenada) or "o" (envenenado).
+## Ending of the adjectives for an enemy c: "a" (envenenada) or "o" (envenenado). The
+## hero's lines avoid them: the player picks the name and the hero has no set gender.
 func _ending(c: Combatant) -> String:
 	return "a" if c.female else "o"
 

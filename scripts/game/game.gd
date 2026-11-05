@@ -34,7 +34,7 @@ class_name Game extends Node
 ## save loads in Villaclaro and the world can still be walked.
 ## On autoplay it prints the gold and the equipment each time they change, the level and
 ## the play time on every change of zone and, after the credits, the play time of the
-## whole run; then it quits. After a won battle, when the hero needs rest
+## whole run (TitleScreen then quits). After a won battle, when the hero needs rest
 ## (GameState.needs_rest()) away from a village, it flies back with an Ala de viaje, sleeps
 ## at the inn, restocks at the shop and goes back through the portal; after a defeat it
 ## sleeps and restocks too.
