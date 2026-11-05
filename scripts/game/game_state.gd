@@ -34,6 +34,11 @@ var zone_id := "pradera"
 ## ZoneData id of the last village visited: the Ala de viaje and a defeat lead to its
 ## town entry.
 var town_zone := "pradera"
+## The open return portal of an Ala de viaje: the village it stands in ("" while none is
+## open) and the zone and spot it leads back to, once.
+var portal_town := ""
+var portal_zone := ""
+var portal_pos := Vector3.ZERO
 
 
 func _init(hero_data: Combatant) -> void:
@@ -104,6 +109,26 @@ func on_boss_defeated(boss: Combatant) -> String:
 		return ""
 	key_items.append(boss.key_item)
 	return boss.key_item
+
+
+func has_portal() -> bool:
+	return portal_town != ""
+
+
+## An Ala de viaje used at pos on the current zone: the portal stands in the last village
+## and leads back here. Returns true if it replaced one still open (that one closes).
+func open_portal(pos: Vector3) -> bool:
+	var replaced := has_portal()
+	portal_town = town_zone
+	portal_zone = zone_id
+	portal_pos = pos
+	return replaced
+
+
+func close_portal() -> void:
+	portal_town = ""
+	portal_zone = ""
+	portal_pos = Vector3.ZERO
 
 
 func has_flag(flag: String) -> bool:

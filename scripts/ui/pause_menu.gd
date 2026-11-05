@@ -14,7 +14,8 @@ signal save_requested
 signal title_requested
 ## The hero, the inventory or the equipment changed, so the map can refresh.
 signal state_changed
-## An Ala de viaje was used (the menu closes): Game takes the hero to the last village.
+## An Ala de viaje was used (the menu closes): Game takes the hero to the last village and
+## leaves the portal back.
 signal travel_requested
 
 const FONT_SIZE := 24
@@ -30,6 +31,10 @@ const MENU_BUTTON_SIZE := Vector2(64, 64)
 const MENU_BUTTON_MARGIN := 24.0
 ## Seconds each page stays open in tour().
 const TOUR_STEP := 1.5
+
+## Says whether the hero is inside a village now (an Ala can't be used there). Set by
+## Game.
+var in_village: Callable
 
 ## False while a battle, a dialogue or a fade is on: the menu can't open.
 var available := false:
@@ -260,7 +265,7 @@ func _fill_items() -> void:
 		label.custom_minimum_size = Vector2(220, 0)
 		row.add_child(label)
 		var use := _button("Usar")
-		var why := inventory.problem(id, _state.hero, false)
+		var why := _use_problem(id)
 		use.disabled = why != ""
 		use.pressed.connect(_on_use_item.bind(id))
 		row.add_child(use)
@@ -279,6 +284,13 @@ func _fill_items() -> void:
 		_items_box.add_child(_description(id))
 	if not any:
 		_items_box.add_child(_label("No llevas objetos.", Color.WHITE))
+
+
+## Why an item can't be used from the menu now ("" if it can).
+func _use_problem(id: String) -> String:
+	if id == Inventory.WING and in_village.is_valid() and in_village.call():
+		return Inventory.IN_TOWN
+	return _state.inventory.problem(id, _state.hero, false)
 
 
 func _on_use_item(id: String) -> void:

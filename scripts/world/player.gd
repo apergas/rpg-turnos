@@ -88,6 +88,12 @@ func _physics_process(delta: float) -> void:
 		_stuck_frames = _stuck_frames + 1 if last_step_m < SPEED * delta * 0.25 else 0
 		if _stuck_frames > STUCK_FRAMES:
 			move_target = null
+	elif _autoplay and dir != Vector3.ZERO:
+		# Placed back on a dungeon floor, the nearest route point can be behind a wall.
+		_stuck_frames = _stuck_frames + 1 if last_step_m < SPEED * delta * 0.25 else 0
+		if _stuck_frames > STUCK_FRAMES:
+			_stuck_frames = 0
+			_route_index = (_route_index + 1) % route.size()
 	if dir != Vector3.ZERO:
 		var target_yaw := atan2(-dir.x, -dir.z)  # the model faces -Z
 		_model.rotation.y = lerp_angle(_model.rotation.y, target_yaw, minf(1.0, TURN_SPEED * delta))

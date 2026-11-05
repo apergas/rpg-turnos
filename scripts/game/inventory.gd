@@ -10,7 +10,8 @@ const WING := "wing"
 const START_POTIONS := 3
 ## name and article (for "una Poción"); effect "hp" (heals value HP), "mp" (restores
 ## value MP), "cure" (removes the status named by value) or "travel" (the Ala de viaje:
-## Game takes the hero to the last village visited); price in gold (Shop sells at it and
+## Game takes the hero to the last village visited and leaves a portal there that leads
+## back once); price in gold (Shop sells at it and
 ## buys back at half); battle / field: usable in battle / from the pause menu; text: what
 ## it does, shown in the shop, in Objetos and in battle.
 const ITEMS := {
@@ -22,10 +23,12 @@ const ITEMS := {
 		"price": 10, "battle": true, "field": false, "text": "Cura el veneno."},
 	WING: {"name": "Ala de viaje", "article": "un", "effect": "travel", "value": 0,
 		"price": 25, "battle": false, "field": true,
-		"text": "Te lleva al último pueblo visitado."},
+		"text": "Te lleva al último pueblo y deja un portal para volver una vez."},
 }
 ## Order of the item lists.
 const IDS: Array[String] = [POTION, ETHER, ANTIDOTE, WING]
+## Why an Ala de viaje can't be used in a village.
+const IN_TOWN := "Ya estás en un pueblo"
 ## Key items (GameState.key_items): never used up, sold or dropped; id -> name.
 const KEY_ITEMS := {
 	"fragmento_bosque": "Fragmento del amuleto (1/3)",
