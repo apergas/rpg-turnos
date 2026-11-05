@@ -68,7 +68,7 @@ Formato: una sección por idea, con la fecha, la idea en palabras del usuario y 
   - "Misión cumplida" aparece unos segundos y luego se quita.
   - Nunca está vacío: si no hay ninguna asignada (siempre debería haber alguna), pone "Sigue el sendero" o "Explora el mapa".
 - **Notas:** la fase 6 cambia `Quest` por un `QuestLog`, así que conviene que esto use ese registro.
-- **Estado:** hecha: [plan](../plans/2026-11-04-interfaz.md), tarea 4; la fase 6 añade su registro en `GameState.current_missions()`. Nota: ahora esa línea muestra `StoryState.goal_text()` (la historia) en lugar de "Sigue el sendero" / "Explora el mapa".
+- **Estado:** hecha: [plan](../plans/2026-11-04-interfaz.md), tarea 4; la fase 6 añade su registro en `GameState.current_missions()` ([plan](../plans/2026-11-04-historia-misiones.md)). Nota: sin misiones en curso, esa línea muestra `StoryState.goal_text()` (la historia) en lugar de "Sigue el sendero" / "Explora el mapa".
 
 ## Curarse nunca cuesta oro
 
