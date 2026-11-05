@@ -41,6 +41,7 @@ entries = {
 }
 start_entry = "sur"
 town_entry = "aldea"
+portal_pos = Vector3(-7, 0, 9.5)
 exits = [{
 "entry": "norte",
 "id": "sur",

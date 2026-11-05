@@ -10,10 +10,12 @@ class_name Game extends Node
 ## lifts the fog of the meadow's north exit) and gives its key item. Fleeing just goes
 ## back to the map; a defeat takes half the gold (GameState.defeat_gold_loss()), heals the
 ## hero and sends them to the last village visited (GameState.town_zone), EXP kept, like
-## the Ala de viaje used from the pause menu. Talking to the old woman heals, moves the
+## the Ala de viaje used from the pause menu, which also leaves a portal in that village
+## that leads back once (GameState.open_portal(); a second Ala replaces it, a defeat leaves
+## it open). Talking to the old woman heals, moves the
 ## quest on and, once the slimes are reported, brings out the Rey Slime; the other
 ## villagers say their ZoneData lines. The merchant opens the ShopWindow; the innkeeper
-## offers a night (Inn.stay(): fade to black, full HP and MP, autosave); a chest gives
+## offers a free night (Inn.stay(): fade to black, full HP and MP, autosave); a chest gives
 ## what it holds (Chests.open()) and stays open. The hero's figure on the map and in
 ## battle shows the weapon and shield worn. On a dungeon floor the lever sets its world
 ## flag (and opens the gates it works), the key goes to the key items (and its flag is
@@ -27,8 +29,9 @@ class_name Game extends Node
 ## On autoplay it prints the gold and the equipment each time they change, the level and
 ## the play time on every change of zone and, once the Señor de la Niebla falls, the play
 ## time of the whole run; then it quits. After a won battle, when the hero needs rest
-## (GameState.needs_rest()) away from a village, it flies back with an Ala de viaje; there
-## (and after a defeat) it sleeps at the inn and restocks at the shop.
+## (GameState.needs_rest()) away from a village, it flies back with an Ala de viaje, sleeps
+## at the inn, restocks at the shop and goes back through the portal; after a defeat it
+## sleeps and restocks too.
 ## Run on its own (res://scenes/game/game.tscn) it starts a new game with its own
 ## AudioDirector and default options.
 ##
@@ -59,11 +62,13 @@ const KEY_ITEM_NOTICE := "¡Consigues un %s!"
 const LEVER_NOTICE := "¡Tiras de la palanca! Se oye cómo se abre una reja."
 const KEY_NOTICE := "¡Encuentras la %s!"
 const DOOR_NOTICE := "Abres la puerta con la %s."
+const PORTAL_OPEN_NOTICE := "Vuelas %s. El portal te espera para volver."
+const PORTAL_REPLACED_NOTICE := "Vuelas %s. El portal anterior se ha cerrado."
+const PORTAL_BACK_NOTICE := "El portal te devuelve y se cierra tras de ti."
 const MENU_TOUR_DELAY := 1.0
 ## Seconds of black while the hero sleeps at the inn.
 const INN_NIGHT_TIME := 0.8
-## On autoplay the hero only sleeps at an inn below this share of max HP or MP, so the
-## nights don't eat the gold for the shop's gear.
+## On autoplay the hero only stops at an inn below this share of max HP or MP.
 const AUTOPLAY_INN_RATIO := 0.5
 ## On autoplay the boss only comes out while the hero has these shares of max HP and MP.
 const AUTOPLAY_BOSS_HP := 0.7
@@ -137,7 +142,7 @@ var _leaving := false
 var _autoplay := false
 var _autoplay_save := false
 var _autoplay_menu := false
-var _last_quest_text := ""
+var _last_missions: Array[String] = []
 var _last_gear_text := ""
 var _shop: ShopWindow
 ## Something was bought, sold or equipped since the shop opened.
@@ -254,6 +259,7 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 	_world.inn_requested.connect(_on_inn)
 	_world.chest_opened.connect(_on_chest)
 	_world.exit_requested.connect(_on_exit)
+	_world.portal_used.connect(_on_portal)
 	_world.lever_pulled.connect(_on_lever)
 	_world.key_taken.connect(_on_key)
 	_world.door_used.connect(_on_door)
@@ -262,7 +268,9 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 		_world.place_at_entry(entry_id)
 	for id in state.opened_chests:
 		_world.set_chest_open(id, true, true)
+	_world.set_explored(state.explored_map(zone_id))
 	_world.set_world_flags(state.world_flags)
+	_show_portal()
 	_update_boss()
 	_refresh_status()
 	MusicLibrary.build(_zone.music)
@@ -298,12 +306,15 @@ func _on_encounter(boss: bool) -> void:
 	var won := outcome == BattleEngine.State.WON
 	await _fade_to(1.0)
 	var notice := ""
+	var mission_done := false
 	if won:
 		state.gold += battle.engine.gold_won
+		var quest_was_on := state.quest.stage != Quest.Stage.DONE
 		for enemy in battle.engine.enemies:
 			state.quest.on_victory(enemy.id)
 			if enemy.is_boss:
 				notice = _boss_notice(enemy)
+		mission_done = quest_was_on and state.quest.stage == Quest.Stage.DONE
 	elif outcome == BattleEngine.State.LOST:
 		state.gold -= battle.gold_lost
 		state.heal_full()
@@ -322,6 +333,8 @@ func _on_encounter(boss: bool) -> void:
 	await _world.freeze(false)
 	if notice != "":
 		_world.show_notice(notice)
+	if mission_done:
+		_world.show_mission_done(Quest.DONE_TEXT)
 	if outcome == BattleEngine.State.LOST:
 		_autosave(false)  # the gold lost sticks: going back to the title can't undo it
 	if won:
@@ -341,22 +354,36 @@ func _on_encounter(boss: bool) -> void:
 			state.hero.max_hp, state.hero.mp, state.inventory.count(Inventory.POTION)])
 		await _on_travel_requested()
 		await _autoplay_restock()
+		await _on_portal()
 	elif _autoplay and outcome == BattleEngine.State.LOST:
 		await _autoplay_restock()
 
 
-## Autoplay: needs rest (GameState.needs_rest()) away from a village, with an Ala de
-## viaje and the gold for a night at the last village's inn.
+## Autoplay: needs rest (GameState.needs_rest()), or is only kept from the zone's boss by
+## its HP or MP, away from a village, with an Ala de viaje (the night at the inn is free).
 func _wants_retreat() -> bool:
-	if not state.needs_rest() or _world.in_village():
+	return (state.needs_rest() or _boss_needs_rest()) and not _world.in_village() \
+		and state.inventory.count(Inventory.WING) > 0
+
+
+## Autoplay: the zone's boss is due at this level but the hero is too worn for it. MP
+## doesn't come back by walking, so without a rest the boss would never show up.
+func _boss_needs_rest() -> bool:
+	return _boss_wanted() and state.hero.level >= _zone.autoplay_boss_level \
+		and not _rested_for_boss()
+
+
+func _rested_for_boss() -> bool:
+	var hero := state.hero
+	return hero.hp >= hero.max_hp * AUTOPLAY_BOSS_HP \
+		and hero.mp >= hero.max_mp * AUTOPLAY_BOSS_MP
+
+
+func _boss_wanted() -> bool:
+	if _zone.boss_id == "":
 		return false
-	if state.inventory.count(Inventory.WING) == 0:
-		return false
-	var town := ZoneData.by_id(state.town_zone)
-	for npc: Dictionary in town.npcs:
-		if npc.kind == "inn":
-			return state.gold >= Inn.price(npc.id)
-	return false
+	return state.quest.boss_available() if _zone.boss_id == Quest.BOSS_ID \
+		else not state.has_flag(_zone.boss_id)
 
 
 ## Autoplay, in the village: a night at its inn and the shop's picks, as if the hero had
@@ -405,23 +432,64 @@ func _on_exit(zone_id: String, entry_id: String) -> void:
 	_set_busy(false)
 
 
-## The Ala de viaje, used from the pause menu: to the last village visited.
+## The Ala de viaje, used from the pause menu (it has already taken it): to the last
+## village visited, with the portal back to this spot open there. The menu only opens when
+## nothing is going on, so the spot is always a settled one.
 func _on_travel_requested() -> void:
 	if _busy:
+		state.inventory.add(Inventory.WING)
 		return
 	_set_busy(true)
 	# The pause menu has already unpaused the tree: without this the hero could still walk
 	# into an encounter or an exit during the fade and leave the map stuck waiting.
 	_world.freeze(true)
+	var replaced := state.open_portal(_world.player_position())
 	await _fade_to(1.0)
 	_go_to_town()
+	_show_portal()
 	_refresh_status()
 	_play_map_music()
 	await _fade_to(0.0)
 	await _world.freeze(false)
-	_world.show_notice("Vuelas %s." % _to_place(_zone.village_name))
+	var place := _to_place(_zone.village_name)
+	_world.show_notice((PORTAL_REPLACED_NOTICE if replaced else PORTAL_OPEN_NOTICE) % place)
 	_autosave(false)
 	_set_busy(false)
+
+
+## The hero used the return portal (or autoplay, once restocked): back to the spot the Ala
+## was used at. It works once. The map stays frozen through the fade, like every other trip.
+func _on_portal() -> void:
+	if _busy or not state.has_portal():
+		return
+	_set_busy(true)
+	_world.freeze(true)
+	await _fade_to(1.0)
+	var zone_id := state.portal_zone
+	var pos := state.portal_pos
+	state.close_portal()
+	if zone_id != _zone.id:
+		_switch_zone(zone_id, "")
+	else:
+		_show_portal()
+	_world.place_player(pos)
+	_world.arm_blocked_point_skip()
+	_on_village_changed(_world.in_village())
+	_refresh_status()
+	_update_boss()
+	await _fade_to(0.0)
+	await _world.freeze(false)
+	_world.show_notice(PORTAL_BACK_NOTICE)
+	_autosave(false)
+	_set_busy(false)
+
+
+## The portal stands in the village it was opened in and the mark on the spot it leads
+## back to, whatever map is on now.
+func _show_portal() -> void:
+	_world.set_portal(state.portal_town == _zone.id)
+	_world.set_return_mark(state.has_portal() and state.portal_zone == _zone.id,
+		state.portal_pos)
 
 
 ## Inside a village it becomes the last one visited; the music follows.
@@ -475,34 +543,35 @@ func _on_shop(shop_id: String) -> void:
 	_set_busy(false)
 
 
-## The innkeeper: Sí pays the night, fades to black and back with HP and MP full and
-## saves; without gold, or with No, nothing happens. On autoplay it only stops there
-## below AUTOPLAY_INN_RATIO of max HP or MP and with the price.
+## The innkeeper: Sí fades to black and back with HP and MP full and saves (it costs
+## nothing); with No, nothing happens. On autoplay it only stops there below
+## AUTOPLAY_INN_RATIO of max HP or MP, on GameState.needs_rest() or below the boss's
+## thresholds (or a retreat for the boss would come back unhealed).
 func _on_inn(inn_id: String) -> void:
 	var hurt := state.hero.hp < state.hero.max_hp * AUTOPLAY_INN_RATIO \
-		or state.hero.mp < state.hero.max_mp * AUTOPLAY_INN_RATIO
-	if _busy or (_autoplay and (not hurt or state.gold < Inn.price(inn_id))):
+		or state.hero.mp < state.hero.max_mp * AUTOPLAY_INN_RATIO or state.needs_rest() \
+		or not _rested_for_boss()
+	if _busy or (_autoplay and not hurt):
 		return
 	_set_busy(true)
 	_world.freeze(true)
 	var lines: Array[String] = []
 	var slept := false
-	if await _shop.ask(Inn.keeper(inn_id), Inn.offer(inn_id)):
-		var result := Inn.stay(state, inn_id)
-		slept = result.ok
-		if slept:
-			await _fade_to(1.0)
-			_refresh_status()
-			_audio.play_sfx(SfxLibrary.HEAL)
-			await get_tree().create_timer(INN_NIGHT_TIME).timeout
-			await _fade_to(0.0)
-		lines.append(result.text)
+	if await _shop.ask(Inn.keeper(inn_id), Inn.OFFER):
+		slept = true
+		lines.append(Inn.stay(state))
+		await _fade_to(1.0)
+		_refresh_status()
+		_audio.play_sfx(SfxLibrary.HEAL)
+		await get_tree().create_timer(INN_NIGHT_TIME).timeout
+		await _fade_to(0.0)
 	else:
 		lines.append("Vuelve cuando quieras.")
 	await _world.freeze(false)
 	await _world.show_dialogue(Inn.keeper(inn_id), lines)
 	_refresh_status()
 	if slept:
+		_update_boss()
 		_autosave(true)
 	_set_busy(false)
 
@@ -598,13 +667,9 @@ func _on_title_requested() -> void:
 func _update_boss() -> void:
 	if _zone.boss_id == "":
 		return
-	var hero := state.hero
-	var strong_enough := not _autoplay or (hero.level >= _zone.autoplay_boss_level \
-		and hero.hp >= hero.max_hp * AUTOPLAY_BOSS_HP \
-		and hero.mp >= hero.max_mp * AUTOPLAY_BOSS_MP)
-	var wanted := state.quest.boss_available() if _zone.boss_id == Quest.BOSS_ID \
-		else not state.has_flag(_zone.boss_id)
-	_world.set_boss_present(wanted and strong_enough)
+	var strong_enough := not _autoplay or (state.hero.level >= _zone.autoplay_boss_level \
+		and _rested_for_boss())
+	_world.set_boss_present(_boss_wanted() and strong_enough)
 
 
 ## The zone's map music, or its village one inside the village.
@@ -621,14 +686,14 @@ func _set_busy(busy: bool) -> void:
 ## Updates the map's status window and the hero's weapon and shield; on autoplay also
 ## prints each new quest line and each change of gold or equipment.
 func _refresh_status() -> void:
-	var quest_text := state.quest.status_text()
+	var missions := state.current_missions()
 	_world.refresh_status(state.hero, state.inventory.count(Inventory.POTION), state.gold,
-		quest_text)
+		missions)
 	var loadout := state.loadout
 	_world.set_hero_equipment(loadout.worn(Equipment.WEAPON), loadout.worn(Equipment.SHIELD))
-	if _autoplay and quest_text != _last_quest_text:
-		print(quest_text)
-	_last_quest_text = quest_text
+	if _autoplay and missions != _last_missions:
+		print(" · ".join(missions))
+	_last_missions = missions
 	var worn := PackedStringArray()
 	for slot in Equipment.SLOTS:
 		if loadout.worn(slot) != "":
@@ -689,6 +754,7 @@ func _build_pause() -> void:
 	_pause.save_requested.connect(_on_save_requested)
 	_pause.title_requested.connect(_on_title_requested)
 	_pause.travel_requested.connect(_on_travel_requested)
+	_pause.in_village = func() -> bool: return _world.in_village()
 	_pause.state_changed.connect(_refresh_status)
 	_pause.available = not _autoplay
 

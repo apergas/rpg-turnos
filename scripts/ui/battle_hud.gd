@@ -1,6 +1,7 @@
 class_name BattleHud extends Control
-## Dragon Quest style battle UI: hero status (top left: name and level, PV and status
-## badges, PV bar, PM), command window and message window (bottom). Main menu: Atacar,
+## Dragon Quest style battle UI: hero status (top left: name, level and status badges,
+## PV and PM bars), command window and message window (bottom; the message window fits
+## its text, BattleHud.fit_label()). Main menu: Atacar,
 ## Hechizos, Objetos, Defender, Huir; Hechizos and Objetos open a list where a row that
 ## can't be used is grey and says why. With two enemies standing, Atacar and one-target
 ## spells ask for the target: target_changed tells the scene where to put the arrow.
@@ -24,9 +25,16 @@ const AUTO_ADVANCE := 0.6
 const MENU_GUARD := 0.3
 const FONT_SIZE := 24
 const BADGE_FONT_SIZE := 16
-## Width of the command window, wide enough for every row, so the message window next
-## to it keeps its size whichever list is open.
-const MENU_WIDTH := 340.0
+## Least width of the command window (a longer row widens it).
+const MENU_WIDTH := 240.0
+## Margin of the windows to the screen edges and gap between them.
+const EDGE := 24.0
+const GAP := 16.0
+## The thin bar over an enemy: its life left, no number.
+const ENEMY_BAR_SIZE := Vector2(96, 8)
+const ENEMY_BAR_BACK := Color(0.0, 0.0, 0.0, 0.7)
+## Inner margins of every window: modest, the window hugs what it holds.
+const WINDOW_MARGIN := Vector2(14, 10)
 ## Seconds each step of demo() stays on screen.
 const DEMO_STEP := 0.35
 const MAIN_ROWS: Array[String] = ["Atacar", "Hechizos", "Objetos", "Defender", "Huir"]
@@ -52,15 +60,15 @@ var char_time := CHAR_TIME
 
 var _engine: BattleEngine
 var _name_label: Label
-var _hp_label: Label
 var _badges: HBoxContainer
-var _hp_bar: ProgressBar
-var _mp_label: Label
+var _hp_bar: StatBar
+var _mp_bar: StatBar
 var _menu: PanelContainer
 var _list: VBoxContainer
 var _message: Label
-var _hp_fill := StyleBoxFlat.new()
 var _audio: AudioDirector
+## The enemies' bars, by enemy index: [background ColorRect, its red fill ColorRect].
+var _enemy_bars: Array = []
 var _page := Page.NONE
 ## Buttons of the open list and the one under the cursor.
 var _rows: Array[Button] = []
@@ -103,24 +111,50 @@ func set_engine(engine: BattleEngine) -> void:
 
 
 func update_level(level: int) -> void:
-	_name_label.text = "%s  Nv %d" % [_engine.hero.display_name, level]
+	_name_label.text = "%s lvl %d" % [_engine.hero.display_name, level]
 
 
 func update_hp(hp: int, max_hp: int) -> void:
-	_hp_label.text = "PV %d / %d" % [hp, max_hp]
-	_hp_bar.max_value = max_hp
-	_hp_bar.value = hp
-	var ratio := float(hp) / maxf(1.0, max_hp)
-	if ratio <= 0.25:
-		_hp_fill.bg_color = Color(0.85, 0.15, 0.15)
-	elif ratio <= 0.5:
-		_hp_fill.bg_color = Color(0.9, 0.8, 0.15)
-	else:
-		_hp_fill.bg_color = Color(0.2, 0.75, 0.25)
+	_hp_bar.show_hp(hp, max_hp)
 
 
 func update_mp(mp: int, max_mp: int) -> void:
-	_mp_label.text = "PM %d / %d" % [mp, max_mp]
+	_mp_bar.show_mp(mp, max_mp)
+
+
+## Adds the bar of the next enemy, full. BattleScene places it every frame (it follows the
+## figure on screen) and sets its life as the events play back.
+func add_enemy_bar() -> void:
+	var back := ColorRect.new()
+	back.color = ENEMY_BAR_BACK
+	back.size = ENEMY_BAR_SIZE
+	back.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(back)
+	move_child(back, 0)  # under every window
+	var fill := ColorRect.new()
+	fill.color = StatBar.HP
+	fill.position = Vector2.ONE
+	fill.size = ENEMY_BAR_SIZE - Vector2(2, 2)
+	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	back.add_child(fill)
+	_enemy_bars.append([back, fill])
+
+
+## Centers enemy i's bar on a screen point.
+func place_enemy_bar(i: int, screen: Vector2) -> void:
+	var back: ColorRect = _enemy_bars[i][0]
+	back.position = (screen - ENEMY_BAR_SIZE / 2.0).round()
+
+
+## Shows how much life enemy i has left, 0..1.
+func set_enemy_life(i: int, ratio: float) -> void:
+	var fill: ColorRect = _enemy_bars[i][1]
+	fill.size.x = (ENEMY_BAR_SIZE.x - 2.0) * clampf(ratio, 0.0, 1.0)
+
+
+## A fallen enemy's bar goes away.
+func hide_enemy_bar(i: int) -> void:
+	(_enemy_bars[i][0] as ColorRect).hide()
 
 
 ## One colored badge per status the hero has.
@@ -176,7 +210,7 @@ func demo(cmd: Dictionary) -> void:
 
 
 func show_message(text: String) -> void:
-	_message.text = text
+	_set_message(text)
 	_message.visible_characters = 0
 	_advance_requested = false
 	var total := _message.get_total_character_count()
@@ -201,11 +235,34 @@ static func make_window() -> PanelContainer:
 	style.border_color = Color.WHITE
 	style.set_border_width_all(3)
 	style.set_corner_radius_all(8)
-	style.set_content_margin_all(16)
+	style.content_margin_left = WINDOW_MARGIN.x
+	style.content_margin_right = WINDOW_MARGIN.x
+	style.content_margin_top = WINDOW_MARGIN.y
+	style.content_margin_bottom = WINDOW_MARGIN.y
 	var panel := PanelContainer.new()
 	panel.add_theme_stylebox_override("panel", style)
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return panel
+
+
+## Width of text on one line in label's font.
+static func text_width(label: Label, text: String) -> float:
+	return label.get_theme_font("font").get_multiline_string_size(text,
+		HORIZONTAL_ALIGNMENT_LEFT, -1, label.get_theme_font_size("font_size")).x
+
+
+## Sets the text so the window around label fits it: on one line up to max_width, wrapped
+## at max_width past that. A window only follows if it has no size of its own: anchored
+## with equal offsets, inside a CenterContainer or shrunk in a box.
+static func fit_label(label: Label, text: String, max_width: float) -> void:
+	label.text = text
+	if text_width(label, text) > max_width:
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		label.custom_minimum_size.x = max_width
+	else:
+		# The whole width at once, so a window that types its text doesn't grow with it.
+		label.autowrap_mode = TextServer.AUTOWRAP_OFF
+		label.custom_minimum_size.x = text_width(label, text)
 
 
 ## Every key of the menus is read here, before the buttons see it, so WASD and the
@@ -274,21 +331,21 @@ func _open(page: Page, cursor: int) -> void:
 		Page.MAIN:
 			for text in MAIN_ROWS:
 				_add_row(text, true)
-			_message.text = "¿Qué hará %s?" % _engine.hero.display_name
+			_set_message("¿Qué hará %s?" % _engine.hero.display_name)
 		Page.SPELLS:
 			for skill in _engine.hero.skills:
 				var why := _engine.problem(BattleEngine.cmd_skill(skill))
 				_add_row(_with_reason("%s  %d PM" % [skill.display_name, skill.mp_cost], why),
 					why == "")
-			_message.text = "¿Qué hechizo?"
+			_set_message("¿Qué hechizo?")
 		Page.ITEMS:
 			for id in _item_ids():
 				var why := _engine.problem(BattleEngine.cmd_item(id))
-				_add_row(_with_reason("%s ×%d" % [Inventory.display_name(id),
-					_engine.inventory.count(id)], why), why == "")
+				_add_row(_with_reason("%s ×%d  %s" % [Inventory.display_name(id),
+					_engine.inventory.count(id), Inventory.description(id)], why), why == "")
 			if _rows.is_empty():
 				_list.add_child(_label("No llevas objetos."))
-			_message.text = "¿Qué objeto?"
+			_set_message("¿Qué objeto?")
 	_message.visible_characters = -1
 	_set_cursor(cursor)
 
@@ -410,7 +467,7 @@ func _ask_target(cmd: Dictionary, back: Page) -> void:
 	_target_back_cursor = _cursor
 	_targets = _engine.alive_enemies()
 	_page = Page.TARGET
-	_message.text = "¿A quién?"
+	_set_message("¿A quién?")
 	_message.visible_characters = -1
 	_aim_at(0)
 
@@ -448,44 +505,41 @@ func _choose(cmd: Dictionary) -> void:
 
 func _build_status() -> void:
 	var panel := make_window()
-	panel.position = Vector2(24, 24)
-	panel.custom_minimum_size = Vector2(240, 0)
+	panel.position = Vector2(EDGE, EDGE)
 	add_child(panel)
 	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 4)
 	panel.add_child(box)
+	var title_row := HBoxContainer.new()
+	title_row.add_theme_constant_override("separation", 10)
+	box.add_child(title_row)
 	_name_label = _label()
-	box.add_child(_name_label)
-	var hp_row := HBoxContainer.new()
-	hp_row.add_theme_constant_override("separation", 10)
-	box.add_child(hp_row)
-	_hp_label = _label()
-	hp_row.add_child(_hp_label)
+	title_row.add_child(_name_label)
 	_badges = HBoxContainer.new()
 	_badges.add_theme_constant_override("separation", 4)
-	hp_row.add_child(_badges)
-	_hp_bar = ProgressBar.new()
-	_hp_bar.show_percentage = false
-	_hp_bar.custom_minimum_size = Vector2(0, 10)
-	_hp_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_hp_bar.add_theme_stylebox_override("fill", _hp_fill)
+	title_row.add_child(_badges)
+	_hp_bar = StatBar.new(StatBar.HP)
 	box.add_child(_hp_bar)
-	_mp_label = _label()
-	box.add_child(_mp_label)
+	_mp_bar = StatBar.new(StatBar.MP)
+	box.add_child(_mp_bar)
 
 
 func _build_bottom() -> void:
 	var row := HBoxContainer.new()
-	row.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	row.offset_left = 24
-	row.offset_right = -24
-	row.offset_top = -272
-	row.offset_bottom = -24
-	row.add_theme_constant_override("separation", 16)
+	# No size of its own: it grows up from the bottom edge as its windows need.
+	row.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	row.offset_left = EDGE
+	row.offset_right = EDGE
+	row.offset_top = -EDGE
+	row.offset_bottom = -EDGE
+	row.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	row.add_theme_constant_override("separation", int(GAP))
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(row)
 
 	_menu = make_window()
 	_menu.custom_minimum_size = Vector2(MENU_WIDTH, 0)
+	_menu.size_flags_vertical = Control.SIZE_SHRINK_END
 	row.add_child(_menu)
 	_list = VBoxContainer.new()
 	_list.add_theme_constant_override("separation", 0)
@@ -493,12 +547,18 @@ func _build_bottom() -> void:
 	_menu.add_child(_list)
 
 	var message_window := make_window()
-	message_window.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	message_window.size_flags_vertical = Control.SIZE_SHRINK_END
 	row.add_child(message_window)
 	_message = _label()
-	_message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_message.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	# Laid out with the whole text while it types, so the window doesn't grow letter by letter.
+	_message.visible_characters_behavior = TextServer.VC_CHARS_AFTER_SHAPING
 	message_window.add_child(_message)
+
+
+## Sets the message and fits its window to it, in the room the command window leaves.
+func _set_message(text: String) -> void:
+	var room := get_viewport_rect().size.x - EDGE * 2.0 - GAP - maxf(_menu.size.x, MENU_WIDTH)
+	fit_label(_message, text, room - WINDOW_MARGIN.x * 2.0)
 
 
 ## A small colored tag with the status name.

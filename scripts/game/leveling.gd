@@ -44,3 +44,18 @@ static func sync_skills(hero: Combatant) -> void:
 ## Total EXP needed for the next level, or -1 at MAX_LEVEL.
 static func exp_for_next(level: int) -> int:
 	return EXP_TABLE[level] if level < MAX_LEVEL else -1
+
+
+## "EXP 44/62" ("EXP 3600" at MAX_LEVEL).
+static func exp_text(hero: Combatant) -> String:
+	var next := exp_for_next(hero.level)
+	return "EXP %d" % hero.experience if next < 0 else "EXP %d/%d" % [hero.experience, next]
+
+
+## How far along the current level the hero is, 0..1 (full at MAX_LEVEL).
+static func exp_ratio(hero: Combatant) -> float:
+	var next := exp_for_next(hero.level)
+	if next < 0:
+		return 1.0
+	var start: int = EXP_TABLE[hero.level - 1]
+	return clampf(float(hero.experience - start) / (next - start), 0.0, 1.0)

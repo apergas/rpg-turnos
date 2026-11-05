@@ -9,9 +9,12 @@ class_name SaveData extends RefCounted
 ## every chest closed. Version 4 (the world of zones) adds the zone the hero is on, the
 ## world flags, the key items and the last village visited; a version 2 or 3 save still
 ## loads on the meadow (its position is a meadow one), with the "rey_slime" flag set if
-## its quest was already done, no key items and Villaclaro as the last village.
+## its quest was already done, no key items and Villaclaro as the last village. Version 5
+## (the interface pass) adds the open return portal of the Ala de viaje and what has been
+## explored of each zone (its ExploredMap cells in base64); an older save loads with no
+## portal open and nothing explored.
 
-const VERSION := 4
+const VERSION := 5
 ## Oldest version apply() still reads.
 const OLDEST_VERSION := 2
 ## Combatant fields of the hero that change while playing (the rest come from hero.tres).
@@ -28,6 +31,11 @@ static func from_state(state: GameState, player_pos: Vector3, play_time: float) 
 		if state.world_flags[flag]:
 			flags.append(flag)
 	flags.sort()
+	var explored := {}
+	for id: String in state.explored:
+		var map: ExploredMap = state.explored[id]
+		if map.any_seen():
+			explored[id] = Marshalls.raw_to_base64(map.cells)
 	return {
 		"version": VERSION,
 		"hero": hero,
@@ -41,6 +49,9 @@ static func from_state(state: GameState, player_pos: Vector3, play_time: float) 
 		"town": state.town_zone,
 		"flags": flags,
 		"key_items": state.key_items.duplicate(),
+		"portal": {} if not state.has_portal() else {"town": state.portal_town,
+			"zone": state.portal_zone, "pos": [state.portal_pos.x, state.portal_pos.z]},
+		"explored": explored,
 		"position": [player_pos.x, player_pos.z],
 		"play_time": play_time,
 	}
@@ -82,6 +93,17 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 		state.key_items.clear()
 		state.zone_id = "pradera"
 		state.town_zone = "pradera"
+	state.close_portal()
+	var portal: Dictionary = data.get("portal", {})
+	if not portal.is_empty():
+		state.portal_town = portal.town
+		state.portal_zone = portal.zone
+		state.portal_pos = Vector3(portal.pos[0], 0.0, portal.pos[1])
+	state.explored = {}
+	var explored: Dictionary = data.get("explored", {})
+	for id: String in explored:
+		state.explored[id] = ExploredMap.new(ZoneData.by_id(id),
+			Marshalls.base64_to_raw(explored[id]))
 	var pos: Array = data.position
 	return {"valid": true, "position": Vector3(pos[0], 0.0, pos[1]),
 		"play_time": float(data.play_time)}
@@ -95,6 +117,8 @@ static func is_valid(data: Dictionary) -> bool:
 	if int(data.version) >= 3 and not _valid_equipment(data):
 		return false
 	if int(data.version) >= 4 and not _valid_world(data):
+		return false
+	if int(data.version) >= 5 and not (_valid_portal(data) and _valid_explored(data)):
 		return false
 	var hero: Variant = data.get("hero")
 	if not hero is Dictionary:
@@ -117,6 +141,33 @@ static func is_valid(data: Dictionary) -> bool:
 	if not (pos is Array and pos.size() == 2 and pos[0] is float and pos[1] is float):
 		return false
 	return data.get("play_time") is float
+
+
+## Version 5 field: no portal ({}), or its village and zone are ZoneData ids and its spot
+## two numbers.
+static func _valid_portal(data: Dictionary) -> bool:
+	var portal: Variant = data.get("portal")
+	if not portal is Dictionary:
+		return false
+	if (portal as Dictionary).is_empty():
+		return true
+	for key in ["town", "zone"]:
+		var zone_id: Variant = portal.get(key)
+		if not (zone_id is String and zone_id in ZoneData.IDS):
+			return false
+	var pos: Variant = portal.get("pos")
+	return pos is Array and pos.size() == 2 and pos[0] is float and pos[1] is float
+
+
+## Version 5 field: zone id -> a string (cells that don't fit the zone are ignored).
+static func _valid_explored(data: Dictionary) -> bool:
+	var explored: Variant = data.get("explored")
+	if not explored is Dictionary:
+		return false
+	for id: Variant in explored:
+		if not (id is String and id in ZoneData.IDS and explored[id] is String):
+			return false
+	return true
 
 
 ## Version 3 fields: every worn id fits its slot, every bag id is equipment and every

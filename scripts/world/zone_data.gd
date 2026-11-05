@@ -99,6 +99,8 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## Entry the Ala de viaje and a defeat lead to once this zone's village was visited
 ## ("" for a zone with no village).
 @export var town_entry := ""
+## Where the return portal of an Ala de viaje stands in the village.
+@export var portal_pos := Vector3.ZERO
 ## Each exit: {"id", "pos" (trigger, inside the walls), "yaw" (the arch's facing), "to"
 ## (zone id), "entry" (entry id there), "label" (sign text), "lock" (GameState.world_flags
 ## key that opens it, "" for always open), "lock_text" (notice while it is closed)}.

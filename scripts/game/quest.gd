@@ -9,6 +9,8 @@ const REWARD_POTIONS := 2
 const TARGET_ID := "slime"
 const BOSS_ID := "rey_slime"
 const NPC_NAME := "Anciana"
+## Shown for a few seconds when the quest ends; a finished quest is not listed any more.
+const DONE_TEXT := "Misión cumplida"
 
 var stage := Stage.OFFER
 var kills := 0
@@ -54,7 +56,7 @@ func boss_available() -> bool:
 	return stage == Stage.BOSS
 
 
-## One line for the map's status window.
+## One line for the mission lists ("" once it is done).
 func status_text() -> String:
 	match stage:
 		Stage.OFFER:
@@ -65,4 +67,4 @@ func status_text() -> String:
 			return "Misión: vuelve con la anciana"
 		Stage.BOSS:
 			return "Misión: derrota al Rey Slime"
-	return "Misión cumplida"
+	return ""

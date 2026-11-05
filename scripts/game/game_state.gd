@@ -9,6 +9,9 @@ const START_GOLD := 50
 const FINAL_BOSS := "senor_niebla"
 ## The autoplay retreat: below this share of max HP the hero needs rest.
 const REST_HP_RATIO := 0.3
+## Mission lines when none is assigned, on an open map and on a dungeon floor.
+const NO_MISSION_FIELD := "Sigue el sendero"
+const NO_MISSION_DUNGEON := "Explora el mapa"
 
 var hero: Combatant
 var inventory := Inventory.new()
@@ -31,6 +34,13 @@ var zone_id := "pradera"
 ## ZoneData id of the last village visited: the Ala de viaje and a defeat lead to its
 ## town entry.
 var town_zone := "pradera"
+## The open return portal of an Ala de viaje: the village it stands in ("" while none is
+## open) and the zone and spot it leads back to, once.
+var portal_town := ""
+var portal_zone := ""
+var portal_pos := Vector3.ZERO
+## What the hero has seen of each zone: zone id -> ExploredMap (explored_map()).
+var explored := {}
 
 
 func _init(hero_data: Combatant) -> void:
@@ -45,6 +55,19 @@ func _init(hero_data: Combatant) -> void:
 func heal_full() -> void:
 	hero.hp = hero.max_hp
 	hero.mp = hero.max_mp
+
+
+## The missions under way, for the map's status window and the pause menu; never empty.
+## The one place that reads them: the story's quest log only has to change this.
+func current_missions() -> Array[String]:
+	var missions: Array[String] = []
+	var line := quest.status_text()
+	if line != "":
+		missions.append(line)
+	if missions.is_empty():
+		var dungeon := ZoneData.by_id(zone_id).is_dungeon()
+		missions.append(NO_MISSION_DUNGEON if dungeon else NO_MISSION_FIELD)
+	return missions
 
 
 ## Uses an item outside battle, from the pause menu; see Inventory.use().
@@ -88,6 +111,33 @@ func on_boss_defeated(boss: Combatant) -> String:
 		return ""
 	key_items.append(boss.key_item)
 	return boss.key_item
+
+
+## What has been seen of a zone (nothing yet, the first time).
+func explored_map(id: String) -> ExploredMap:
+	if not explored.has(id):
+		explored[id] = ExploredMap.new(ZoneData.by_id(id))
+	return explored[id]
+
+
+func has_portal() -> bool:
+	return portal_town != ""
+
+
+## An Ala de viaje used at pos on the current zone: the portal stands in the last village
+## and leads back here. Returns true if it replaced one still open (that one closes).
+func open_portal(pos: Vector3) -> bool:
+	var replaced := has_portal()
+	portal_town = town_zone
+	portal_zone = zone_id
+	portal_pos = pos
+	return replaced
+
+
+func close_portal() -> void:
+	portal_town = ""
+	portal_zone = ""
+	portal_pos = Vector3.ZERO
 
 
 func has_flag(flag: String) -> bool:

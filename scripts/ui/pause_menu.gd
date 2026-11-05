@@ -1,9 +1,10 @@
 class_name PauseMenu extends Control
 ## Pause menu of the world map. Esc or P, or the ☰ button in the top right corner
 ## (mouse and touch), open it while `available`; it pauses the tree until it closes.
-## Pages: main list (Estado, Objetos, Equipo, Guardar, Opciones, Volver al título,
-## Cerrar), Estado (hero stats, gold, spells), Objetos (items usable outside battle,
-## the Ala de viaje too, and the key items),
+## Main page: two windows side by side. The hero's ("Héroe lvl X", the pages of
+## HERO_PAGES and the missions under way) and the system's (Guardar, Opciones, Volver al
+## título, Cerrar). Other pages: Estado (hero stats, gold, spells), Objetos (items usable
+## outside battle, the Ala de viaje too, and the key items, each with what it does),
 ## Equipo (the three slots; choosing one lists the pieces of that slot in the bag, with
 ## the comparison, and Quitar), Opciones (OptionsPanel) and a confirmation before going
 ## back to the title. Esc goes back one page. Keeps running while paused. Call setup()
@@ -13,15 +14,27 @@ signal save_requested
 signal title_requested
 ## The hero, the inventory or the equipment changed, so the map can refresh.
 signal state_changed
-## An Ala de viaje was used (the menu closes): Game takes the hero to the last village.
+## An Ala de viaje was used (the menu closes): Game takes the hero to the last village and
+## leaves the portal back.
 signal travel_requested
 
 const FONT_SIZE := 24
+const TEXT_SIZE := 18
 const TITLE_COLOR := Color(1.0, 0.85, 0.3)
+const GREY := Color(0.6, 0.6, 0.65)
+## Rows of the hero's window: text and page. A new page only needs its row here.
+const HERO_PAGES := [["Estado", "status"], ["Objetos", "items"], ["Equipo", "equipment"]]
+## Long texts wrap past this width.
+const TEXT_WIDTH := 480.0
+const STATUS_BAR_WIDTH := 300.0
 const MENU_BUTTON_SIZE := Vector2(64, 64)
 const MENU_BUTTON_MARGIN := 24.0
 ## Seconds each page stays open in tour().
 const TOUR_STEP := 1.5
+
+## Says whether the hero is inside a village now (an Ala can't be used there). Set by
+## Game.
+var in_village: Callable
 
 ## False while a battle, a dialogue or a fade is on: the menu can't open.
 var available := false:
@@ -37,8 +50,16 @@ var _menu_button: Button
 var _shade: ColorRect
 var _window: PanelContainer
 var _pages: Dictionary = {}
+var _main_row: HBoxContainer
+var _hero_label: Label
+var _mission_box: VBoxContainer
 var _main_message: Label
-var _status_label: Label
+var _hp_bar: StatBar
+var _mp_bar: StatBar
+var _exp_bar: StatBar
+var _stats_label: Label
+var _gold_label: Label
+var _spells_label: Label
 var _items_box: VBoxContainer
 var _items_message: Label
 var _equip_box: VBoxContainer
@@ -72,12 +93,11 @@ func _ready() -> void:
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(center)
 	_window = BattleHud.make_window()
-	_window.custom_minimum_size = Vector2(520, 0)
 	_window.hide()
 	center.add_child(_window)
 	var stack := VBoxContainer.new()
 	_window.add_child(stack)
-	_build_main(stack)
+	_build_main(center)
 	_build_status(stack)
 	_build_items(stack)
 	_build_equipment(stack)
@@ -95,9 +115,8 @@ func open() -> void:
 		return
 	get_tree().paused = true
 	_shade.show()
-	_window.show()
 	_menu_button.hide()
-	_main_message.text = ""
+	_set_line(_main_message, "")
 	_sfx(SfxLibrary.ACCEPT)
 	_show_page("main")
 
@@ -108,6 +127,7 @@ func close() -> void:
 	_page = ""
 	_shade.hide()
 	_window.hide()
+	_main_row.hide()
 	_sfx(SfxLibrary.CANCEL)
 	get_tree().paused = false
 	available = available
@@ -115,7 +135,7 @@ func close() -> void:
 
 ## Game calls it after save_requested with whether the file was written.
 func show_save_result(ok: bool) -> void:
-	_main_message.text = "Partida guardada." if ok else "No se pudo guardar."
+	_set_line(_main_message, "Partida guardada." if ok else "No se pudo guardar.")
 	_sfx(SfxLibrary.SAVE if ok else SfxLibrary.CANCEL)
 
 
@@ -166,15 +186,18 @@ func _show_page(page: String) -> void:
 	_page = page
 	for name: String in _pages:
 		(_pages[name] as Control).visible = name == page
+	_window.visible = page != "main"
 	match page:
+		"main":
+			_fill_main()
 		"status":
-			_status_label.text = _status_text()
+			_fill_status()
 		"items":
-			_items_message.text = ""
+			_set_line(_items_message, "")
 			_fill_items()
 		"equipment":
 			_equip_slot = ""
-			_equip_message.text = ""
+			_set_line(_equip_message, "")
 			_fill_equipment()
 	_quiet_focus = true
 	if page == "options":
@@ -191,26 +214,34 @@ func _back_to_main() -> void:
 	_show_page("main")
 
 
-func _status_text() -> String:
+## The hero's name and level and the missions under way (they can change between visits).
+func _fill_main() -> void:
+	_hero_label.text = StatBar.hero_title(_state.hero)
+	for child in _mission_box.get_children():
+		_mission_box.remove_child(child)
+		child.queue_free()
+	for line in _state.current_missions():
+		_mission_box.add_child(_label(line, Color.WHITE))
+
+
+func _fill_status() -> void:
 	var hero := _state.hero
-	var lines := PackedStringArray([
-		"%s  Nivel %d" % [hero.display_name, hero.level],
-		"PV %d / %d" % [hero.hp, hero.max_hp],
-		"PM %d / %d" % [hero.mp, hero.max_mp],
-		"ATK %d   DEF %d   VEL %d" % [hero.total_attack(), hero.total_defense(), hero.speed],
-		"EXP %d" % hero.experience,
-	])
-	var next := Leveling.exp_for_next(hero.level)
-	if next < 0:
-		lines.append("Nivel máximo")
-	else:
-		lines.append("Siguiente nivel: faltan %d EXP" % (next - hero.experience))
-	lines.append("Oro %d G" % _state.gold)
+	_hp_bar.show_hp(hero.hp, hero.max_hp)
+	_mp_bar.show_mp(hero.mp, hero.max_mp)
+	_exp_bar.show_exp(hero)
+	_stats_label.text = "ATK %d   DEF %d   VEL %d" % [hero.total_attack(),
+		hero.total_defense(), hero.speed]
+	_gold_label.text = "Oro %d G" % _state.gold
 	var spells := PackedStringArray()
 	for skill in hero.skills:
 		spells.append(skill.display_name)
-	lines.append("Hechizos: %s" % ", ".join(spells))
-	return "\n".join(lines)
+	BattleHud.fit_label(_spells_label, "Hechizos: %s" % ", ".join(spells), TEXT_WIDTH)
+
+
+## A line under a page's rows; an empty one takes no room, so the window hugs the rows.
+func _set_line(label: Label, text: String) -> void:
+	label.text = text
+	label.visible = text != ""
 
 
 ## One row per item carried: name, count and "Usar" (disabled, with the reason, when it
@@ -234,12 +265,13 @@ func _fill_items() -> void:
 		label.custom_minimum_size = Vector2(220, 0)
 		row.add_child(label)
 		var use := _button("Usar")
-		var why := inventory.problem(id, _state.hero, false)
+		var why := _use_problem(id)
 		use.disabled = why != ""
 		use.pressed.connect(_on_use_item.bind(id))
 		row.add_child(use)
 		if why != "":
-			row.add_child(_label(why, Color(0.6, 0.6, 0.65)))
+			row.add_child(_label(why, GREY))
+		_items_box.add_child(_description(id))
 	for id in _state.key_items:
 		any = true
 		var row := HBoxContainer.new()
@@ -248,9 +280,17 @@ func _fill_items() -> void:
 		var label := _label(Inventory.KEY_ITEMS[id], TITLE_COLOR)
 		label.custom_minimum_size = Vector2(220, 0)
 		row.add_child(label)
-		row.add_child(_label("Objeto clave", Color(0.6, 0.6, 0.65)))
+		row.add_child(_label("Objeto clave", GREY))
+		_items_box.add_child(_description(id))
 	if not any:
 		_items_box.add_child(_label("No llevas objetos.", Color.WHITE))
+
+
+## Why an item can't be used from the menu now ("" if it can).
+func _use_problem(id: String) -> String:
+	if id == Inventory.WING and in_village.is_valid() and in_village.call():
+		return Inventory.IN_TOWN
+	return _state.inventory.problem(id, _state.hero, false)
 
 
 func _on_use_item(id: String) -> void:
@@ -263,8 +303,8 @@ func _on_use_item(id: String) -> void:
 		return
 	_sfx(SfxLibrary.HEAL)
 	_fill_items()
-	_items_message.text = ("Recuperas %d PM." if result.effect == "mp" else "Recuperas %d PV.") \
-			% result.amount
+	_set_line(_items_message, ("Recuperas %d PM." if result.effect == "mp" \
+		else "Recuperas %d PV.") % result.amount)
 	state_changed.emit()
 	_quiet_focus = true
 	var first := _first_button(_pages["items"])
@@ -329,7 +369,7 @@ func _choose_slot(slot: String) -> void:
 	if slot != "":
 		_sfx(SfxLibrary.ACCEPT)
 	_equip_slot = slot
-	_equip_message.text = ""
+	_set_line(_equip_message, "")
 	_fill_equipment()
 
 
@@ -339,8 +379,8 @@ func _on_equip(id: String) -> void:
 	_sfx(SfxLibrary.ACCEPT)
 	_equip_slot = ""
 	_fill_equipment()
-	_equip_message.text = "Te equipas %s %s." % [Equipment.article(id),
-		Equipment.display_name(id)]
+	_set_line(_equip_message, "Te equipas %s %s." % [Equipment.article(id),
+		Equipment.display_name(id)])
 	state_changed.emit()
 
 
@@ -350,8 +390,8 @@ func _on_unequip() -> void:
 	_sfx(SfxLibrary.CANCEL)
 	_equip_slot = ""
 	_fill_equipment()
-	_equip_message.text = "Te quitas %s %s." % [Equipment.article(worn),
-		Equipment.display_name(worn)]
+	_set_line(_equip_message, "Te quitas %s %s." % [Equipment.article(worn),
+		Equipment.display_name(worn)])
 	state_changed.emit()
 
 
@@ -397,12 +437,26 @@ func _menu_button_style(alpha: float) -> StyleBoxFlat:
 	return style
 
 
-func _build_main(stack: VBoxContainer) -> void:
-	var page := _page_box(stack, "main", "Menú")
+## The main page: the hero's window on the left, the system's on the right.
+func _build_main(center: CenterContainer) -> void:
+	_main_row = HBoxContainer.new()
+	_main_row.add_theme_constant_override("separation", 16)
+	_main_row.hide()
+	center.add_child(_main_row)
+	_pages["main"] = _main_row
+	var hero_box := _main_window()
+	_hero_label = _label("", TITLE_COLOR)
+	hero_box.add_child(_hero_label)
+	for entry: Array in HERO_PAGES:
+		var button := _button(entry[0])
+		button.pressed.connect(_open_page.bind(entry[1]))
+		hero_box.add_child(button)
+	hero_box.add_child(_label("Misiones", TITLE_COLOR))
+	_mission_box = VBoxContainer.new()
+	_mission_box.add_theme_constant_override("separation", 0)
+	hero_box.add_child(_mission_box)
+	var system_box := _main_window()
 	var entries := [
-		["Estado", func() -> void: _open_page("status")],
-		["Objetos", func() -> void: _open_page("items")],
-		["Equipo", func() -> void: _open_page("equipment")],
 		["Guardar", func() -> void: save_requested.emit()],
 		["Opciones", func() -> void: _open_page("options")],
 		["Volver al título", func() -> void: _open_page("confirm")],
@@ -411,15 +465,37 @@ func _build_main(stack: VBoxContainer) -> void:
 	for entry: Array in entries:
 		var button := _button(entry[0])
 		button.pressed.connect(entry[1])
-		page.add_child(button)
+		system_box.add_child(button)
 	_main_message = _label("", Color.WHITE)
-	page.add_child(_main_message)
+	_main_message.hide()
+	system_box.add_child(_main_message)
+
+
+## One of the main page's two windows, top aligned; returns the box to fill.
+func _main_window() -> VBoxContainer:
+	var window := BattleHud.make_window()
+	window.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	_main_row.add_child(window)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 6)
+	window.add_child(box)
+	return box
 
 
 func _build_status(stack: VBoxContainer) -> void:
 	var page := _page_box(stack, "status", "Estado")
-	_status_label = _label("", Color.WHITE)
-	page.add_child(_status_label)
+	_hp_bar = StatBar.new(StatBar.HP, STATUS_BAR_WIDTH)
+	page.add_child(_hp_bar)
+	_mp_bar = StatBar.new(StatBar.MP, STATUS_BAR_WIDTH)
+	page.add_child(_mp_bar)
+	_exp_bar = StatBar.new(StatBar.EXP, STATUS_BAR_WIDTH)
+	page.add_child(_exp_bar)
+	_stats_label = _label("", Color.WHITE)
+	page.add_child(_stats_label)
+	_gold_label = _label("", StatBar.GOLD)
+	page.add_child(_gold_label)
+	_spells_label = _label("", Color.WHITE)
+	page.add_child(_spells_label)
 	page.add_child(_back_button())
 
 
@@ -502,6 +578,13 @@ func _button(text: String) -> Button:
 		if not _quiet_focus:
 			_sfx(SfxLibrary.CURSOR))
 	return button
+
+
+## What an item or a key item does, small, under its row.
+func _description(id: String) -> Label:
+	var label := _label(Inventory.description(id), GREY)
+	label.add_theme_font_size_override("font_size", TEXT_SIZE)
+	return label
 
 
 func _label(text: String, color: Color) -> Label:

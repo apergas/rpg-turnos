@@ -9,7 +9,11 @@ class_name World extends Node3D
 ## one of them walks there and does it on arrival. With the boss present, walking into
 ## it starts the boss battle. Walking into an open exit (or onto the stairs of a dungeon
 ## floor) emits exit_requested; a closed one (its world flag not set: set_world_flags())
-## shows its fog and its notice. A dungeon floor (ZoneData.layout) is a DungeonMap: its
+## shows its fog and its notice. With set_portal(true) the zone's portal_pos holds the
+## return portal of an Ala de viaje, used like a figure (portal_used); set_return_mark()
+## shows on the ground the spot it leads back to. Under the status window a MapSquare shows
+## what has been seen of the zone (set_explored()). A dungeon floor (ZoneData.layout) is a
+## DungeonMap: its
 ## rock blocks turn see-through between the camera and the hero, the hero carries a
 ## lantern underground, and next to the lever, the key or a locked gate Enter / Space
 ## pulls it (lever_pulled), takes it (key_taken) or tries the gate (door_used).
@@ -32,6 +36,8 @@ signal chest_opened(chest_id: String)
 signal village_changed(inside: bool)
 ## The player walked into an open exit: Game loads zone_id at its entry entry_id.
 signal exit_requested(zone_id: String, entry_id: String)
+## The player used the return portal: Game takes them back.
+signal portal_used
 ## Dungeon floors: the player pulled the lever, took the key or tried a locked gate.
 signal lever_pulled
 signal key_taken
@@ -41,6 +47,11 @@ const PLAYER_SCENE := preload("res://scenes/world/player.tscn")
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
 const HERO_DATA := preload("res://data/hero.tres")
 const NOTICE_TIME := 2.0
+## Seconds "Misión cumplida" stays in the status window.
+const MISSION_DONE_TIME := 4.0
+## The notice window, top centre (clear of the status window and the ☰ button).
+const NOTICE_MAX_WIDTH := 640.0
+const UI_EDGE := 24.0
 const FONT_SIZE := 24
 ## How close the player must be to talk to a figure / to open a chest / to run into the
 ## boss / to take an exit.
@@ -51,6 +62,11 @@ const EXIT_RADIUS := 1.2
 ## After arriving (or after a closed exit's notice) exits wait until the player is this
 ## much farther than EXIT_RADIUS from all of them.
 const EXIT_REARM := 0.8
+## The return portal: an upright glowing oval on a ring, pulsing, with its sign. The spot
+## it leads back to is the same ring alone, flat on the ground.
+const PORTAL_COLOR := Color(0.2, 0.45, 1.0, 0.7)
+const PORTAL_SIZE := Vector3(0.95, 1.35, 0.7)
+const PORTAL_PULSE := 1.08
 ## How close the player must be to a lever, a key or a gate (its centre) to use it.
 const MECHANISM_RADIUS := 2.2
 ## A click or tap this close to a figure or a chest means "go there and use it".
@@ -64,6 +80,7 @@ const CHEST := "chest"
 const LEVER := "lever"
 const KEY := "key"
 const DOOR := "door"
+const PORTAL := "portal"
 const PROMPTS := {
 	TALK: "Enter o toca: hablar",
 	NPC: "Enter o toca: hablar",
@@ -73,6 +90,7 @@ const PROMPTS := {
 	LEVER: "Enter o toca: tirar",
 	KEY: "Enter o toca: coger",
 	DOOR: "Enter o toca: abrir",
+	PORTAL: "Enter o toca: volver",
 }
 ## ZoneData.npcs kinds -> use kinds.
 const NPC_KINDS := {"quest": TALK, "npc": NPC, "shop": SHOP, "inn": INN}
@@ -119,16 +137,25 @@ var _exits: Array = []
 var _dungeon: DungeonMap
 var _flags := {}
 var _exits_armed := false
+## The return portal and the mark of the spot it leads back to (null while not on this map).
+var _portal: Node3D
+var _return_mark: Node3D
 var _boss_present := false
 var _ui: CanvasLayer
 var _name_label: Label
-var _hp_label: Label
-var _mp_label: Label
-var _exp_label: Label
+var _hp_bar: StatBar
+var _mp_bar: StatBar
+var _exp_bar: StatBar
 var _potion_label: Label
 var _gold_label: Label
-var _quest_label: Label
+var _mission_box: VBoxContainer
+## The lines of the status window, and the serial that lets "Misión cumplida" put them back.
+var _missions: Array[String] = []
+var _mission_done_serial := 0
+var _mission_done := false
+var _map_square: MapSquare
 var _notice: Label
+var _notice_window: PanelContainer
 var _notice_serial := 0
 var _prompt: Label
 var _dialogue: DialogueBox
@@ -185,6 +212,7 @@ func _ready() -> void:
 	_camera.target = _player
 	_marker = _build_marker()
 	_build_ui()
+	set_explored(ExploredMap.new(zone))
 	place_at_entry(zone.start_entry)
 	_camera.current = true
 	if get_parent() == get_tree().root:
@@ -194,6 +222,7 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	if _grass:
 		Vegetation.set_pusher(_grass, _player.global_position)
+	_map_square.follow(_player.global_position)
 	_marker.visible = _player.move_target != null
 	if _marker.visible:
 		_marker.position = _player.move_target
@@ -224,7 +253,7 @@ func _physics_process(_delta: float) -> void:
 		_use_on_arrival = {}
 		_player.move_target = null
 		_use(near)
-	elif not near.is_empty() and near != _was_near and _autoplay:
+	elif not near.is_empty() and near != _was_near and _autoplay and near.kind != PORTAL:
 		# Autoplay talks to each villager once per visit to the zone.
 		if near.kind != NPC or not _autoplay_talked.has(near.index):
 			_autoplay_talked[near.index] = true
@@ -286,6 +315,11 @@ func place_at_entry(entry_id: String) -> void:
 ## Puts the player at pos facing yaw_deg (0 faces north; a loaded game faces north),
 ## with the encounter grace restarted and the exits waiting until the player steps
 ## away from them. in_village() is right at once; village_changed is not emitted.
+## After a return through the portal on autoplay: lets the player skip a blocked route point.
+func arm_blocked_point_skip() -> void:
+	_player.arm_blocked_point_skip()
+
+
 func place_player(pos: Vector3, yaw_deg := 0.0) -> void:
 	_player.place(pos, deg_to_rad(yaw_deg))
 	_camera.snap()
@@ -328,6 +362,30 @@ func set_world_flags(flags: Dictionary) -> void:
 		(_fogs[exit.id] as Node3D).visible = not _is_open(exit)
 	if _dungeon:
 		_dungeon.set_flags(flags)
+
+
+## What has been seen of this zone, for the map square (Game passes GameState's; run on
+## its own the map keeps its own).
+func set_explored(map: ExploredMap) -> void:
+	_map_square.set_map(map)
+
+
+## Shows or removes the return portal at the zone's portal_pos.
+func set_portal(on: bool) -> void:
+	if _portal != null:
+		_portal.queue_free()
+		_portal = null
+	if on:
+		_portal = _build_portal(zone.portal_pos, true)
+
+
+## Shows or removes the mark on the ground of the spot the portal leads back to.
+func set_return_mark(on: bool, pos: Vector3) -> void:
+	if _return_mark != null:
+		_return_mark.queue_free()
+		_return_mark = null
+	if on:
+		_return_mark = _build_portal(pos, false)
 
 
 ## Swings the lever down (Game sets its flag and calls set_world_flags()).
@@ -391,32 +449,56 @@ func set_chest_open(chest_id: String, open: bool, instant := false) -> void:
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
-func refresh_status(hero: Combatant, potions: int, gold: int, quest_text := "") -> void:
-	_name_label.text = "%s  Nv %d" % [hero.display_name, hero.level]
-	_hp_label.text = "PV %d / %d" % [hero.hp, hero.max_hp]
-	_mp_label.text = "PM %d / %d" % [hero.mp, hero.max_mp]
-	var next := Leveling.exp_for_next(hero.level)
-	if next < 0:
-		_exp_label.text = "EXP %d" % hero.experience
-	else:
-		_exp_label.text = "EXP %d / %d" % [hero.experience, next]
+func refresh_status(hero: Combatant, potions: int, gold: int, missions: Array[String] = []) -> void:
+	_name_label.text = StatBar.hero_title(hero)
+	_hp_bar.show_hp(hero.hp, hero.max_hp)
+	_mp_bar.show_mp(hero.mp, hero.max_mp)
+	_exp_bar.show_exp(hero)
 	_potion_label.text = "%s ×%d" % [Inventory.display_name(Inventory.POTION), potions]
 	_gold_label.text = "Oro %d G" % gold
-	_quest_label.text = quest_text
-	_quest_label.visible = quest_text != ""
+	_missions = missions
+	if not _mission_done:
+		_show_missions(missions, Color.WHITE)
 
 
-## Shows a short line under the status for NOTICE_TIME seconds (a newer one replaces it).
+## Puts "Misión cumplida" (or text) in the mission list for a few seconds, then the
+## missions under way come back.
+func show_mission_done(text: String) -> void:
+	_mission_done_serial += 1
+	var serial := _mission_done_serial
+	_mission_done = true
+	var lines: Array[String] = [text]
+	_show_missions(lines, StatBar.GOLD)
+	if _autoplay:
+		print(text)
+	await get_tree().create_timer(MISSION_DONE_TIME).timeout
+	if serial == _mission_done_serial:
+		_mission_done = false
+		_show_missions(_missions, Color.WHITE)
+
+
+func _show_missions(lines: Array[String], color: Color) -> void:
+	for child in _mission_box.get_children():
+		_mission_box.remove_child(child)
+		child.queue_free()
+	for line in lines:
+		var label := _label()
+		label.text = line
+		label.add_theme_color_override("font_color", color)
+		_mission_box.add_child(label)
+
+
+## Shows a short line in its own window for NOTICE_TIME seconds (a newer one replaces it).
 func show_notice(text: String) -> void:
 	_notice_serial += 1
 	var serial := _notice_serial
-	_notice.text = text
-	_notice.show()
+	BattleHud.fit_label(_notice, text, NOTICE_MAX_WIDTH)
+	_notice_window.show()
 	if _autoplay:
 		print(text)
 	await get_tree().create_timer(NOTICE_TIME).timeout
 	if serial == _notice_serial:
-		_notice.hide()
+		_notice_window.hide()
 
 
 func _trigger(boss: bool) -> void:
@@ -495,6 +577,9 @@ func _uses() -> Array[Dictionary]:
 		if not _open_chests.has(id):
 			uses.append({"kind": CHEST, "id": id, "index": -1, "pos": Chests.CHESTS[id].pos,
 				"radius": CHEST_RADIUS})
+	if _portal != null:
+		uses.append({"kind": PORTAL, "id": "", "index": -1, "pos": zone.portal_pos,
+			"radius": MECHANISM_RADIUS})
 	if _dungeon == null:
 		return uses
 	var mechanisms := [[ZoneData.LEVER, LEVER, zone.lever_flag],
@@ -526,6 +611,8 @@ func _use(use: Dictionary) -> void:
 			key_taken.emit()
 		DOOR:
 			door_used.emit()
+		PORTAL:
+			portal_used.emit()
 
 
 func _connect_standalone() -> void:
@@ -626,6 +713,51 @@ func _build_exit(exit: Dictionary) -> Node3D:
 	return fog
 
 
+## A ring on the ground at pos and, for the portal itself, a pulsing see-through oval over
+## it with its sign. Nothing to bump into.
+func _build_portal(pos: Vector3, full: bool) -> Node3D:
+	var root := Node3D.new()
+	root.position = pos
+	add_child(root)
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.albedo_color = PORTAL_COLOR
+	var ring := TorusMesh.new()
+	ring.inner_radius = 0.9
+	ring.outer_radius = 1.05
+	ring.rings = 24
+	ring.ring_segments = 6
+	var base := MeshInstance3D.new()
+	base.mesh = ring
+	base.material_override = material
+	base.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	base.position.y = 0.05
+	root.add_child(base)
+	if not full:
+		return root
+	var oval := MeshInstance3D.new()
+	oval.mesh = BattleStage.unit_sphere()
+	oval.material_override = material
+	oval.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	oval.position.y = PORTAL_SIZE.y
+	oval.scale = PORTAL_SIZE
+	root.add_child(oval)
+	var label := Label3D.new()
+	label.text = "Portal"
+	label.font_size = 48
+	label.pixel_size = 0.008
+	label.outline_size = 10
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.position.y = PORTAL_SIZE.y * 2.0 + 0.4
+	root.add_child(label)
+	var pulse := root.create_tween().set_loops()
+	pulse.tween_property(oval, "scale", PORTAL_SIZE * PORTAL_PULSE, 0.6) \
+		.set_trans(Tween.TRANS_SINE)
+	pulse.tween_property(oval, "scale", PORTAL_SIZE, 0.6).set_trans(Tween.TRANS_SINE)
+	return root
+
+
 ## A closed chest on a box collider under root: wooden box with a gold band around it and a lid on
 ## a pivot at its back edge. Returns the lid pivot.
 static func build_chest(root: Node3D, chest: Dictionary) -> Node3D:
@@ -681,30 +813,50 @@ func _add_figure(look: BattleActor.Look, pos: Vector3, yaw_deg: float, radius: f
 func _build_ui() -> void:
 	_ui = CanvasLayer.new()
 	add_child(_ui)
+	# No size of its own: the column follows the status window as it grows and shrinks.
+	var column := VBoxContainer.new()
+	column.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	column.offset_left = UI_EDGE
+	column.offset_top = UI_EDGE
+	column.offset_right = UI_EDGE
+	column.offset_bottom = UI_EDGE
+	column.add_theme_constant_override("separation", 8)
+	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui.add_child(column)
 	var panel := BattleHud.make_window()
-	panel.position = Vector2(24, 24)
-	panel.custom_minimum_size = Vector2(240, 0)
-	_ui.add_child(panel)
+	column.add_child(panel)
+	_map_square = MapSquare.new()
+	column.add_child(_map_square)
 	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 4)
 	panel.add_child(box)
 	_name_label = _label()
 	box.add_child(_name_label)
-	_hp_label = _label()
-	box.add_child(_hp_label)
-	_mp_label = _label()
-	box.add_child(_mp_label)
-	_exp_label = _label()
-	box.add_child(_exp_label)
+	_hp_bar = StatBar.new(StatBar.HP)
+	box.add_child(_hp_bar)
+	_mp_bar = StatBar.new(StatBar.MP)
+	box.add_child(_mp_bar)
+	_exp_bar = StatBar.new(StatBar.EXP)
+	box.add_child(_exp_bar)
 	_potion_label = _label()
 	box.add_child(_potion_label)
 	_gold_label = _label()
+	_gold_label.add_theme_color_override("font_color", StatBar.GOLD)
 	box.add_child(_gold_label)
-	_quest_label = _label()
-	_quest_label.hide()
-	box.add_child(_quest_label)
+	_mission_box = VBoxContainer.new()
+	_mission_box.add_theme_constant_override("separation", 0)
+	box.add_child(_mission_box)
+	_notice_window = BattleHud.make_window()
+	_notice_window.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_notice_window.offset_left = 0
+	_notice_window.offset_right = 0
+	_notice_window.offset_top = UI_EDGE
+	_notice_window.offset_bottom = UI_EDGE
+	_notice_window.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_notice_window.hide()
+	_ui.add_child(_notice_window)
 	_notice = _label()
-	_notice.hide()
-	box.add_child(_notice)
+	_notice_window.add_child(_notice)
 	_prompt = _label()
 	_prompt.text = PROMPTS[TALK]
 	_prompt.add_theme_color_override("font_outline_color", Color.BLACK)

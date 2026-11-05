@@ -346,7 +346,9 @@ static func _add_environment(root: Node3D, zone: ZoneData) -> void:
 	env.background_mode = Environment.BG_SKY
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.tonemap_mode = Environment.TONE_MAPPER_ACES
+	# Linear, not ACES: under the Compatibility renderer ACES lifts the midtones and clips
+	# anything bright in the sun, so skin, hair and steel all turned white and trees mint.
+	env.tonemap_mode = Environment.TONE_MAPPER_LINEAR
 	env.ssao_enabled = true
 	env.glow_enabled = true
 	env.glow_intensity = 0.6
