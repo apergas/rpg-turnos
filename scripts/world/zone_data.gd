@@ -105,7 +105,8 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## (zone id), "entry" (entry id there), "label" (sign text), "lock" (GameState.world_flags
 ## key that opens it, "" for always open), "lock_text" (notice while it is closed)}.
 @export var exits: Array = []
-## Each figure: {"kind": "quest" (the old woman), "shop", "inn" or "npc", "id" (Shop /
+## Each figure: {"kind": "quest" (the old woman), "shop", "inn", "npc" or "board" (a notice
+## board: read, not talked to), "id" (Shop /
 ## Inn id), "look" (BattleActor.Look name), "pos", "yaw" (0 faces -Z; 180 faces the
 ## camera), "name" (unique on the map: cutscenes call the figure by it), and what it says:
 ## "lines" and / or "lines_by_chapter" (StoryState.Chapter -> lines, from that chapter on;

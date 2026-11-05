@@ -38,6 +38,7 @@ const GRASS_PATH_MARGIN := 0.3
 const GRASS_ROCK_MARGIN := 0.2
 const GRASS_BUILDING_MARGIN := 0.4
 const CHEST_GRASS_MARGIN := 1.0
+const FIGURE_GRASS_MARGIN := 1.0
 ## Trees keep this far from the path, the autoplay route, the rocks, the buildings, the
 ## chests and the exits; bushes from the path, the rocks and the chests.
 const TREE_PATH_MARGIN := 3.0
@@ -108,9 +109,10 @@ static func is_on_path(zone: ZoneData, pos: Vector3, margin := 0.0) -> bool:
 
 
 ## Where tall grass may grow: off the path and the safe discs (the village is inside one),
-## the rocks, the buildings and the chests.
+## the rocks, the buildings, the chests and the figures.
 static func is_grass_free(pos: Vector3, zone: ZoneData) -> bool:
-	if is_on_path(zone, pos, GRASS_PATH_MARGIN) or _near_chest(zone, pos, CHEST_GRASS_MARGIN):
+	if is_on_path(zone, pos, GRASS_PATH_MARGIN) or _near_chest(zone, pos, CHEST_GRASS_MARGIN) \
+			or _near_figure(zone, pos):
 		return false
 	return not _near_rock(zone, pos, GRASS_ROCK_MARGIN) \
 		and not _near_building(zone, pos, GRASS_BUILDING_MARGIN)
@@ -277,6 +279,16 @@ static func _near_building(zone: ZoneData, pos: Vector3, margin: float) -> bool:
 	for building in zone.buildings:
 		var radius := BUILDING_RADIUS.get(building[2], 1.6) as float
 		if p.distance_to(Vector2(building[0].x, building[0].z)) < radius + margin:
+			return true
+	return false
+
+
+## True within FIGURE_GRASS_MARGIN of one of the zone's figures (a cat would be lost in the
+## grass).
+static func _near_figure(zone: ZoneData, pos: Vector3) -> bool:
+	var p := Vector2(pos.x, pos.z)
+	for npc: Dictionary in zone.npcs:
+		if p.distance_to(Vector2(npc.pos.x, npc.pos.z)) < FIGURE_GRASS_MARGIN:
 			return true
 	return false
 
