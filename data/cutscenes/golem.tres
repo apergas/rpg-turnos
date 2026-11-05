@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="Cutscene" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/cutscene.gd" id="1_cutscene"]
+
+[resource]
+script = ExtResource("1_cutscene")
+id = "golem"
+steps = [
+["wait", 0.4],
+["sfx", "level_up"],
+["say", "", ["El Golem de piedra se desmorona, y de entre las piedras sale rodando algo que brilla.", "¡Consigues un Fragmento del amuleto (2/3)! Los dos fragmentos tiemblan, como si se buscaran."]],
+["camera_to", Vector3(24, 0, 18), 11.0],
+["sfx", "door"],
+["wait", 0.8],
+["say", "", ["La niebla del túnel del este se retira. Por ahí se llega al Castillo de la Niebla."]],
+["camera_back"]
+]

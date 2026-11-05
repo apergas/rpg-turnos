@@ -401,14 +401,18 @@ func pull_lever() -> void:
 		_dungeon.pull_lever()
 
 
-## The lines villager zone.npcs[index] says now (lines_after once its after_flag is set).
-func npc_lines(index: int) -> Array[String]:
+## The lines figure zone.npcs[index] says in chapter (StoryState.Chapter): its
+## lines_by_chapter entry with the highest chapter not past it, else its lines.
+func npc_lines(index: int, chapter: int) -> Array[String]:
 	var npc: Dictionary = zone.npcs[index]
 	var lines: Array[String] = []
-	if npc.has("after_flag") and _flags.get(npc.after_flag, false):
-		lines.assign(npc.lines_after)
-	else:
-		lines.assign(npc.lines)
+	lines.assign(npc.get("lines", []))
+	var by_chapter: Dictionary = npc.get("lines_by_chapter", {})
+	var best := -1
+	for key: int in by_chapter:
+		if key <= chapter and key > best:
+			best = key
+			lines.assign(by_chapter[key])
 	return lines
 
 
@@ -714,7 +718,8 @@ func _connect_standalone() -> void:
 		var lines: Array[String] = ["Hola, viajero."]
 		await show_dialogue(Quest.NPC_NAME, lines))
 	npc_requested.connect(func(index: int) -> void:
-		await show_dialogue(zone.npcs[index].name, npc_lines(index)))
+		await show_dialogue(zone.npcs[index].name,
+			npc_lines(index, StoryState.Chapter.END)))
 	shop_requested.connect(func(shop_id: String) -> void: print("Tienda: %s" % shop_id))
 	inn_requested.connect(func(inn_id: String) -> void: print("Posada: %s" % inn_id))
 	chest_opened.connect(func(chest_id: String) -> void:

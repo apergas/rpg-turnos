@@ -107,8 +107,9 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var exits: Array = []
 ## Each figure: {"kind": "quest" (the old woman), "shop", "inn" or "npc", "id" (Shop /
 ## Inn id), "look" (BattleActor.Look name), "pos", "yaw" (0 faces -Z; 180 faces the
-## camera), "name", and for "npc" "lines" and, optional, "after_flag" + "lines_after"
-## (said once that world flag is set)}.
+## camera), "name" (unique on the map: cutscenes call the figure by it), and what it says:
+## "lines" and / or "lines_by_chapter" (StoryState.Chapter -> lines, from that chapter on;
+## they may hold StoryState.NAME_TAG). The "quest" figure uses them once its quest is done}.
 @export var npcs: Array = []
 ## The zone's boss (EnemyLibrary id, "" for none) and where it waits.
 @export var boss_id := ""

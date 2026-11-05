@@ -55,6 +55,12 @@ exits = [{
 }]
 npcs = [{
 "kind": "quest",
+"lines_by_chapter": {
+2: ["El bosque está al norte, {nombre}. Busca a la Bruja y su fragmento.", "Y come algo antes de salir, que luego todo son prisas."],
+3: ["¡Un fragmento! Lo noto desde aquí: me hace cosquillas en los huesos.", "El segundo lo guarda un golem, en el fondo de la vieja mina."],
+4: ["Con dos fragmentos ya se puede entrar en el Castillo de la Niebla.", "El tercero lo guarda su señor. Ve con cuidado, y abrígate."],
+5: ["El Amuleto del Alba está en su sitio y el cielo, por fin, también.", "Pasea cuanto quieras, {nombre}. Ahora da gusto."]
+},
 "look": "VILLAGER",
 "name": "Abuela Rosa",
 "pos": Vector3(-2.5, 0, -20),
@@ -72,6 +78,19 @@ npcs = [{
 "look": "INNKEEPER",
 "name": "Posadero",
 "pos": Vector3(2.8, 0, -22),
+"yaw": 180.0
+}, {
+"kind": "npc",
+"lines_by_chapter": {
+0: ["Desde que baja la niebla, mis gallinas ponen los huevos de lado.", "No sé cómo lo hacen. Tampoco quiero saberlo."],
+2: ["¡Has echado al Rey Slime! Me aplastó las lechugas, ¿sabes?", "Aquí se respira mejor, pero al norte la niebla sigue igual."],
+3: ["Un viajero dice que la vieja mina está llena de arañas.", "Yo me quedo con mis gallinas."],
+4: ["Dicen que en el castillo los esqueletos no duermen nunca.", "Con razón tienen tan mala cara."],
+5: ["¡Mira qué cielo! Las gallinas ya ponen los huevos derechos."]
+},
+"look": "FARMER",
+"name": "Granjero",
+"pos": Vector3(3.5, 0, -15.5),
 "yaw": 180.0
 }]
 boss_id = "rey_slime"

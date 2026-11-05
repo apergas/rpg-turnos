@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="Cutscene" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/cutscene.gd" id="1_cutscene"]
+
+[resource]
+script = ExtResource("1_cutscene")
+id = "bruja"
+steps = [
+["wait", 0.4],
+["sfx", "level_up"],
+["say", "", ["La Bruja del bosque se esfuma en una nube de humo morado, refunfuñando.", "¡Consigues un Fragmento del amuleto (1/3)! Brilla con una luz cálida, como un amanecer pequeñito."]],
+["camera_to", Vector3(0, 0, -38.6), 12.0],
+["sfx", "door"],
+["wait", 0.8],
+["say", "", ["La niebla que cerraba el camino del norte se disipa. Más allá está la vieja mina."]],
+["camera_back"]
+]
