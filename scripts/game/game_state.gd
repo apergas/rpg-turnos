@@ -1,8 +1,8 @@
 class_name GameState extends RefCounted
 ## State of the play session, kept in memory while the game is open. The hero, the
-## inventory, the gold, the equipment, the village quest and the progress through the
-## world live here for the whole session; battles, shops, chests, exits and dialogue
-## change them in place.
+## inventory, the gold, the equipment, the village quest, the progress through the
+## world and the story live here for the whole session; battles, shops, chests, exits,
+## dialogue and cutscenes change them in place. The hero's name is hero.display_name.
 
 const START_GOLD := 50
 ## The last boss: its world flag marks the game as finished.
@@ -34,6 +34,14 @@ var zone_id := "pradera"
 ## ZoneData id of the last village visited: the Ala de viaje and a defeat lead to its
 ## town entry.
 var town_zone := "pradera"
+## The story: cutscenes seen, the ending reached; the chapter follows from it and the
+## world flags (chapter()).
+var story := StoryState.new()
+## Numbers of the whole game for the credits: battles fought, steps walked and gold won
+## (in battle and from chests).
+var battles := 0
+var steps := 0
+var gold_earned := 0
 ## The open return portal of an Ala de viaje: the village it stands in ("" while none is
 ## open) and the zone and spot it leads back to, once.
 var portal_town := ""
@@ -161,6 +169,11 @@ func needs_rest() -> bool:
 ## comes with the story).
 func is_finished() -> bool:
 	return has_flag(FINAL_BOSS)
+
+
+## The story chapter now (StoryState.Chapter).
+func chapter() -> StoryState.Chapter:
+	return story.chapter(world_flags)
 
 
 ## Gold lost on a defeat: half of what is carried, rounded down (gold - lost remains).

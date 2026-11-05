@@ -137,6 +137,8 @@ var _pause: PauseMenu
 var _audio: AudioDirector
 var _options: GameOptions
 var _save := {}
+## The name typed on the NameEntry for a new game ("" for the default).
+var _hero_name := ""
 var _busy := false
 var _leaving := false
 var _autoplay := false
@@ -151,11 +153,13 @@ var _rng := RandomNumberGenerator.new()
 
 
 ## audio and options come from the title screen; save is the Dictionary read by
-## SaveStore.load_game(), empty for a new game.
-func setup(audio: AudioDirector, options: GameOptions, save: Dictionary) -> void:
+## SaveStore.load_game(), empty for a new game, which gets hero_name.
+func setup(audio: AudioDirector, options: GameOptions, save: Dictionary,
+		hero_name := "") -> void:
 	_audio = audio
 	_options = options
 	_save = save
+	_hero_name = hero_name
 
 
 func _ready() -> void:
@@ -183,7 +187,9 @@ func _ready() -> void:
 					info.play_time)))
 		else:
 			load_failed = true
-	elif _autoplay:
+	if _save.is_empty() or load_failed:
+		state.hero.display_name = StoryState.clean_name(_hero_name)
+	if _save.is_empty() and _autoplay:
 		_apply_autoplay_zone(args)
 	_build_shop()
 	_build_fade()
@@ -233,6 +239,7 @@ func _apply_autoplay_zone(args: PackedStringArray) -> void:
 		state.town_zone = start.get("town", state.town_zone)
 		if start.quest_done:
 			state.quest.stage = Quest.Stage.DONE
+		state.story.mark_seen_for_flags(state.world_flags)
 		print("Zona de inicio: %s (Nv %d)" % [zone_id, state.hero.level])
 
 
