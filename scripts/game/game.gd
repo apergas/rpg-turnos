@@ -476,6 +476,7 @@ func _on_portal() -> void:
 	_world.arm_blocked_point_skip()
 	_on_village_changed(_world.in_village())
 	_refresh_status()
+	_update_boss()
 	await _fade_to(0.0)
 	await _world.freeze(false)
 	_world.show_notice(PORTAL_BACK_NOTICE)
@@ -544,10 +545,12 @@ func _on_shop(shop_id: String) -> void:
 
 ## The innkeeper: Sí fades to black and back with HP and MP full and saves (it costs
 ## nothing); with No, nothing happens. On autoplay it only stops there below
-## AUTOPLAY_INN_RATIO of max HP or MP.
+## AUTOPLAY_INN_RATIO of max HP or MP, on GameState.needs_rest() or below the boss's
+## thresholds (or a retreat for the boss would come back unhealed).
 func _on_inn(inn_id: String) -> void:
 	var hurt := state.hero.hp < state.hero.max_hp * AUTOPLAY_INN_RATIO \
-		or state.hero.mp < state.hero.max_mp * AUTOPLAY_INN_RATIO or state.needs_rest()
+		or state.hero.mp < state.hero.max_mp * AUTOPLAY_INN_RATIO or state.needs_rest() \
+		or not _rested_for_boss()
 	if _busy or (_autoplay and not hurt):
 		return
 	_set_busy(true)
@@ -568,6 +571,7 @@ func _on_inn(inn_id: String) -> void:
 	await _world.show_dialogue(Inn.keeper(inn_id), lines)
 	_refresh_status()
 	if slept:
+		_update_boss()
 		_autosave(true)
 	_set_busy(false)
 
