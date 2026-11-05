@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="Cutscene" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/cutscene.gd" id="1_cutscene"]
+
+[resource]
+script = ExtResource("1_cutscene")
+id = "rey_slime"
+steps = [
+["wait", 0.4],
+["approach", "Abuela Rosa", "hero", 1.8],
+["face", "hero", "Abuela Rosa"],
+["say", "Abuela Rosa", ["¡Increíble, {nombre}! El Rey Slime se ha ido rodando colina abajo.", "Y mira: la niebla del camino del norte se aparta."]],
+["camera_to", Vector3(0, 0, -28.6), 12.0],
+["sfx", "door"],
+["wait", 0.8],
+["say", "Abuela Rosa", ["Al norte está el bosque. Dicen que allí vive una bruja...", "y que lleva colgada una piedra que brilla. ¡Es un fragmento del amuleto!", "Ve con cuidado. Y no hables con setas desconocidas."]],
+["camera_back"],
+["move", "Abuela Rosa", Vector3(-2.5, 0, -20)]
+]

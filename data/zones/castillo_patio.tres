@@ -47,10 +47,11 @@ npcs = [{
 "pos": Vector3(6, 0, 15),
 "yaw": 180.0
 }, {
-"after_flag": "senor_niebla",
 "kind": "npc",
 "lines": ["Este campamento es lo último antes del castillo.", "La niebla sale de la sala del trono, arriba del todo.", "Los esqueletos del patio no duermen nunca. Ve con cuidado."],
-"lines_after": ["¡La niebla se ha ido! Se ve el cielo por primera vez en años.", "Lleva los fragmentos del amuleto de vuelta a Villaclaro."],
+"lines_by_chapter": {
+5: ["¡La niebla se ha ido! Se ve el cielo por primera vez en años.", "Por fin podré escribir a casa algo más que el parte del tiempo."]
+},
 "look": "VILLAGER",
 "name": "Soldado",
 "pos": Vector3(-5, 0, 23),

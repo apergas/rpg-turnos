@@ -2,15 +2,20 @@ class_name TitleScreen extends Node
 ## Main scene. Shows the game's name over the meadow seen from a slowly drifting
 ## top-down camera, with "Nueva partida", "Continuar" (disabled without a save) and
 ## "Opciones" (keyboard, mouse and touch). Owns the only AudioDirector and the options,
-## and creates a Game for the new or loaded session (new_game / continue_game); when
-## the Game emits quit_to_title it frees it and shows the title again.
-## With `-- --autoplay` it starts a new game at once, without showing the title. With
-## `--autoplay-save` too, going back to the title loads the save straight away.
+## and creates a Game for the new or loaded session (new_game / continue_game); a new
+## game first asks the hero's name (NameEntry, over the meadow). When the Game emits
+## quit_to_title it frees it and shows the title again. A finished save shows
+## "Continuar (terminada)".
+## With `-- --autoplay` the name entry types AUTOPLAY_NAME by itself and the new game
+## starts at once, without the menu. With `--autoplay-save` too, going back to the title
+## loads the save straight away.
 
 signal new_game
 signal continue_game
 
 const GAME_SCENE := preload("res://scenes/game/game.tscn")
+## The name the autoplay types (an accent, to try the grid's last row).
+const AUTOPLAY_NAME := "Rocío"
 const TITLE_TEXT := "Villaclaro"
 const TITLE_SIZE := 96
 const FONT_SIZE := 28
@@ -33,6 +38,8 @@ var _continue_button: Button
 var _options_button: Button
 var _options_window: PanelContainer
 var _options_panel: OptionsPanel
+var _name_entry: NameEntry
+var _title_label: Label
 var _fade: ColorRect
 var _game: Game
 var _drift := 0.0
@@ -51,12 +58,11 @@ func _ready() -> void:
 	add_child(_audio)
 	_audio.set_volumes(_options.music_volume, _options.sfx_volume)
 	_build_fade()
-	new_game.connect(func() -> void: _start_game({}))
+	new_game.connect(_open_name_entry)
 	continue_game.connect(func() -> void: _start_game(_load_save()))
+	_open_title()
 	if _autoplay:
-		_start_game({})
-	else:
-		_open_title()
+		_open_name_entry()
 
 
 func _process(delta: float) -> void:
@@ -102,6 +108,8 @@ func _close_title() -> void:
 	_ui = null
 	_options_window = null
 	_options_panel = null
+	_name_entry = null
+	_title_label = null
 	_menu_window = null
 	_continue_button = null
 	_options_button = null
@@ -116,8 +124,31 @@ func _load_save() -> Dictionary:
 	return save
 
 
-## Fades out, swaps the title for a Game (save empty = new game) and fades in.
-func _start_game(save: Dictionary) -> void:
+## The menu gives way to the NameEntry; its name starts a new game, Volver brings the
+## menu back.
+func _open_name_entry() -> void:
+	if _starting or _name_entry != null:
+		return
+	_audio.play_sfx(SfxLibrary.ACCEPT)
+	_menu_window.hide()
+	_title_label.hide()
+	_name_entry = NameEntry.new()
+	_name_entry.setup(_audio)
+	_ui.add_child(_name_entry)
+	_name_entry.accepted.connect(func(hero_name: String) -> void: _start_game({}, hero_name))
+	_name_entry.cancelled.connect(func() -> void:
+		_name_entry.queue_free()
+		_name_entry = null
+		_title_label.show()
+		_menu_window.show()
+		_focus(_continue_button if not _continue_button.disabled else _options_button))
+	if _autoplay:
+		_name_entry.demo(AUTOPLAY_NAME)
+
+
+## Fades out, swaps the title for a Game (save empty = new game with hero_name) and fades
+## in.
+func _start_game(save: Dictionary, hero_name := "") -> void:
 	if _starting:
 		return
 	_starting = true
@@ -126,7 +157,7 @@ func _start_game(save: Dictionary) -> void:
 		await _fade_to(1.0)
 		_close_title()
 	_game = GAME_SCENE.instantiate()
-	_game.setup(_audio, _options, save)
+	_game.setup(_audio, _options, save, hero_name)
 	_game.quit_to_title.connect(_on_quit_to_title)
 	add_child(_game)
 	await _fade_to(0.0)
@@ -171,6 +202,7 @@ func _build_menu() -> void:
 	title.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.0))
 	title.add_theme_constant_override("outline_size", 18)
 	root.add_child(title)
+	_title_label = title
 	title.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP, \
 		Control.PRESET_MODE_MINSIZE, 90)
 	var center := CenterContainer.new()
@@ -189,6 +221,9 @@ func _build_menu() -> void:
 	menu.add_child(start)
 	_continue_button = _button("Continuar")
 	_continue_button.disabled = not SaveStore.has_save()
+	var story: Variant = SaveStore.load_game().get("story")
+	if story is Dictionary and story.get("finished", false) == true:
+		_continue_button.text = "Continuar (terminada)"
 	_continue_button.pressed.connect(func() -> void: continue_game.emit())
 	menu.add_child(_continue_button)
 	_options_button = _button("Opciones")

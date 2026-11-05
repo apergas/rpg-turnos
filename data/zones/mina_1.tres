@@ -46,10 +46,12 @@ npcs = [{
 "pos": Vector3(8, 0, 12),
 "yaw": 180.0
 }, {
-"after_flag": "golem_piedra",
 "kind": "npc",
 "lines": ["Este refugio es lo único que queda de la vieja mina.", "Abajo, en la tercera planta, despertó un golem de piedra.", "Dicen que una palanca abre las rejas de la segunda planta."],
-"lines_after": ["¿Has vencido al golem? ¡Por fin podremos volver a picar!", "La niebla viene del castillo, al otro lado de las montañas."],
+"lines_by_chapter": {
+4: ["¿Has vencido al golem? ¡Por fin podremos volver a picar!", "La niebla viene del castillo, al otro lado de las montañas."],
+5: ["¡Se acabó la niebla! Hasta las arañas parecen de mejor humor."]
+},
 "look": "VILLAGER",
 "name": "Minera",
 "pos": Vector3(-10, 0, 19),

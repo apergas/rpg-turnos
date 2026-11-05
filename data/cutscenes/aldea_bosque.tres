@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="Cutscene" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/cutscene.gd" id="1_cutscene"]
+
+[resource]
+script = ExtResource("1_cutscene")
+id = "aldea_bosque"
+steps = [
+["wait", 0.3],
+["approach", "Leñadora", "hero", 1.8],
+["face", "hero", "Leñadora"],
+["say", "Leñadora", ["¡Vaya, una cara nueva! Te doy la bienvenida a la aldea del bosque.", "Te llamas {nombre}, ¿verdad? La Abuela Rosa ya nos avisó con una paloma."]],
+["camera_to", Vector3(0, 0, -34), 16.0],
+["say", "Leñadora", ["La Bruja vive en el claro del norte, y desde que tiene ese fragmento los lobos no paran de aullar.", "Si vas a por ella, compra antes algo mejor que eso que llevas."]],
+["camera_back"],
+["move", "Leñadora", Vector3(-10.46, 0, -2.23)]
+]

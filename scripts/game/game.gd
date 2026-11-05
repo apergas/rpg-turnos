@@ -24,11 +24,17 @@ class_name Game extends Node
 ## boss), autosaves after talking, after every won battle, after shopping, (silently)
 ## after opening a chest, after a defeat and after every change of zone, and opens the
 ## pause menu. Emits quit_to_title when the player goes back to the title.
-## Beating the Señor de la Niebla (GameState.FINAL_BOSS) marks the game as finished
-## (GameState.is_finished()) with a notice; the ending itself comes with the story.
+## The story (GameState.story): a new game opens with the prologue in the hero's house
+## (data/cutscenes/prologo.tres, which starts the slimes quest); each boss beaten plays
+## its cutscene (StoryState.AFTER_BOSS) and the first visit to each village its own
+## (StoryState.ON_VILLAGE), through the CutscenePlayer; the villagers' lines follow the
+## chapter. Beating the Señor de la Niebla (GameState.FINAL_BOSS) plays the ending (back
+## to Villaclaro), marks the save as finished (story.finished) and rolls the credits with
+## the numbers of the game (CreditsScreen); then it goes back to the title. A finished
+## save loads in Villaclaro and the world can still be walked.
 ## On autoplay it prints the gold and the equipment each time they change, the level and
-## the play time on every change of zone and, once the Señor de la Niebla falls, the play
-## time of the whole run; then it quits. After a won battle, when the hero needs rest
+## the play time on every change of zone and, after the credits, the play time of the
+## whole run (TitleScreen then quits). After a won battle, when the hero needs rest
 ## (GameState.needs_rest()) away from a village, it flies back with an Ala de viaje, sleeps
 ## at the inn, restocks at the shop and goes back through the portal; after a defeat it
 ## sleeps and restocks too.
@@ -49,6 +55,9 @@ signal quit_to_title
 const HERO_DATA := preload("res://data/hero.tres")
 const BATTLE_SCENE := preload("res://scenes/battle/battle_scene.tscn")
 const WORLD_SCENE := preload("res://scenes/world/world.tscn")
+const CUTSCENE_PATH := "res://data/cutscenes/%s.tres"
+## The author shown in the credits.
+const AUTHOR := "apergas"
 const FADE_TIME := 0.3
 const HEAL_LINE := "Descansas un momento. PV y PM recuperados."
 const SAVED_NOTICE := "Partida guardada."
@@ -137,6 +146,9 @@ var _pause: PauseMenu
 var _audio: AudioDirector
 var _options: GameOptions
 var _save := {}
+## The name typed on the NameEntry for a new game ("" for the default).
+var _hero_name := ""
+var _cutscenes: CutscenePlayer
 var _busy := false
 var _leaving := false
 var _autoplay := false
@@ -151,11 +163,13 @@ var _rng := RandomNumberGenerator.new()
 
 
 ## audio and options come from the title screen; save is the Dictionary read by
-## SaveStore.load_game(), empty for a new game.
-func setup(audio: AudioDirector, options: GameOptions, save: Dictionary) -> void:
+## SaveStore.load_game(), empty for a new game, which gets hero_name.
+func setup(audio: AudioDirector, options: GameOptions, save: Dictionary,
+		hero_name := "") -> void:
 	_audio = audio
 	_options = options
 	_save = save
+	_hero_name = hero_name
 
 
 func _ready() -> void:
@@ -183,23 +197,38 @@ func _ready() -> void:
 					info.play_time)))
 		else:
 			load_failed = true
-	elif _autoplay:
+	if _save.is_empty() or load_failed:
+		state.hero.display_name = StoryState.clean_name(_hero_name)
+	if _save.is_empty() and _autoplay:
 		_apply_autoplay_zone(args)
 	_build_shop()
 	_build_fade()
 	_build_pause()
+	_build_cutscenes()
+	if _autoplay_menu:
+		# The tour of the pause menu needs the map, not a scene.
+		state.story.mark_seen("prologo")
+	# Busy until the map is ready (no ☰ either): arriving inside a village must not start its
+	# cutscene yet.
+	_set_busy(true)
 	_switch_zone(state.zone_id, "")
 	if start_pos != null:
 		_world.place_player(start_pos)
-	_world.freeze(false)
+	var prologue := state.chapter() == StoryState.Chapter.PROLOGUE
+	if prologue:
+		# Under black: the prologue fades in by itself.
+		_fade.color.a = 1.0
+		_play_prologue.call_deferred()
 	# Synthesize the tracks played later now, under black, so no first play stalls.
 	for id in [MusicLibrary.VILLAGE, MusicLibrary.VICTORY, MusicLibrary.DEFEAT]:
 		MusicLibrary.build(id)
 	_play_map_music()
-	if load_failed:
-		_world.show_notice(LOAD_FAILED_NOTICE)
 	if _autoplay_menu:
 		get_tree().create_timer(MENU_TOUR_DELAY).timeout.connect(_pause.tour)
+	if not prologue:
+		await _world.freeze(false)
+		_set_busy(false)
+		_check_village_scene()
 
 
 func _process(delta: float) -> void:
@@ -233,6 +262,7 @@ func _apply_autoplay_zone(args: PackedStringArray) -> void:
 		state.town_zone = start.get("town", state.town_zone)
 		if start.quest_done:
 			state.quest.stage = Quest.Stage.DONE
+		state.story.mark_seen_for_flags(state.world_flags)
 		print("Zona de inicio: %s (Nv %d)" % [zone_id, state.hero.level])
 
 
@@ -264,6 +294,7 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 	_world.key_taken.connect(_on_key)
 	_world.door_used.connect(_on_door)
 	_world.village_changed.connect(_on_village_changed)
+	_world.stepped.connect(func() -> void: state.steps += 2)
 	if entry_id != "":
 		_world.place_at_entry(entry_id)
 	for id in state.opened_chests:
@@ -284,6 +315,7 @@ func _on_encounter(boss: bool) -> void:
 	if _busy:
 		return
 	_set_busy(true)
+	state.battles += 1
 	var enemies: Array[Combatant] = []
 	if boss:
 		enemies.append(EnemyLibrary.data(_zone.boss_id))
@@ -306,14 +338,17 @@ func _on_encounter(boss: bool) -> void:
 	var won := outcome == BattleEngine.State.WON
 	await _fade_to(1.0)
 	var notice := ""
+	var scene := ""
 	var mission_done := false
 	if won:
 		state.gold += battle.engine.gold_won
+		state.gold_earned += battle.engine.gold_won
 		var quest_was_on := state.quest.stage != Quest.Stage.DONE
 		for enemy in battle.engine.enemies:
 			state.quest.on_victory(enemy.id)
 			if enemy.is_boss:
 				notice = _boss_notice(enemy)
+				scene = state.story.scene_after_boss(enemy.id)
 		mission_done = quest_was_on and state.quest.stage == Quest.Stage.DONE
 	elif outcome == BattleEngine.State.LOST:
 		state.gold -= battle.gold_lost
@@ -329,12 +364,22 @@ func _on_encounter(boss: bool) -> void:
 	# ignored and leave the map waiting forever.
 	_world.freeze(true)
 	_play_map_music()
+	if scene != "":
+		# Under black: no status window or map square while the map fades in.
+		_world.begin_cutscene()
 	await _fade_to(0.0)
-	await _world.freeze(false)
-	if notice != "":
-		_world.show_notice(notice)
+	if scene != "":
+		# The boss's cutscene says what the notice would (the fragment, the open road).
+		await _play_scene(scene)
+	else:
+		await _world.freeze(false)
+		if notice != "":
+			_world.show_notice(notice)
 	if mission_done:
 		_world.show_mission_done(Quest.DONE_TEXT)
+	if won and state.is_finished() and not state.story.finished:
+		await _finish_game()
+		return
 	if outcome == BattleEngine.State.LOST:
 		_autosave(false)  # the gold lost sticks: going back to the title can't undo it
 	if won:
@@ -344,11 +389,7 @@ func _on_encounter(boss: bool) -> void:
 			quit_to_title.emit()
 			return
 	_set_busy(false)
-	if _autoplay and won and state.is_finished():
-		print("Juego completado: Nv %d, tiempo de juego %s" % [state.hero.level,
-			_clock(play_time)])
-		get_tree().quit()
-	elif _autoplay and won and _wants_retreat():
+	if _autoplay and won and _wants_retreat():
 		state.inventory.take(Inventory.WING)
 		print("Retirada al pueblo (PV %d/%d, PM %d, pociones %d)" % [state.hero.hp,
 			state.hero.max_hp, state.hero.mp, state.inventory.count(Inventory.POTION)])
@@ -430,6 +471,7 @@ func _on_exit(zone_id: String, entry_id: String) -> void:
 	await _world.freeze(false)
 	_autosave(false)
 	_set_busy(false)
+	_check_village_scene()
 
 
 ## The Ala de viaje, used from the pause menu (it has already taken it): to the last
@@ -492,11 +534,105 @@ func _show_portal() -> void:
 		state.portal_pos)
 
 
-## Inside a village it becomes the last one visited; the music follows.
+## Inside a village it becomes the last one visited; the music follows. The first
+## visit plays the village's cutscene.
 func _on_village_changed(inside: bool) -> void:
 	if inside and _zone.town_entry != "":
 		state.town_zone = _zone.id
 	_play_map_music()
+	if inside:
+		_check_village_scene()
+
+
+## Plays the cutscene of this zone's village if the hero is inside it and has not seen
+## it yet (only when nothing else is going on); autosaves after it.
+func _check_village_scene() -> void:
+	if _busy or not _world.in_village():
+		return
+	var scene := state.story.scene_on_village(_zone.id)
+	if scene == "":
+		return
+	_set_busy(true)
+	await _play_scene(scene)
+	_autosave(false)
+	_set_busy(false)
+
+
+## Plays data/cutscenes/<scene_id>.tres on the current map and marks it seen. The
+## caller is busy; the map is the player's again when it returns.
+func _play_scene(scene_id: String) -> void:
+	var scene := load(CUTSCENE_PATH % scene_id) as Cutscene
+	state.story.mark_seen(scene_id)
+	_cutscenes.world = _world
+	_cutscenes.hero_name = state.hero.display_name
+	await _cutscenes.play(scene)
+	_refresh_status()
+
+
+## A new game: the prologue (it fades in from black), then the slimes quest is on. A
+## save that could not be read also lands here, and says so now the map is visible.
+func _play_prologue() -> void:
+	await _play_scene("prologo")
+	state.quest.start()
+	_refresh_status()
+	_autosave(false)
+	_set_busy(false)
+	if not _save.is_empty():
+		_world.show_notice(LOAD_FAILED_NOTICE)
+
+
+## After the ending: the save is marked finished (the hero is back in Villaclaro), the
+## credits roll with the numbers of the game and Game goes back to the title. They cover
+## everything, and Game stays busy, so no status window, map square, ☰ or prompt shows.
+func _finish_game() -> void:
+	state.story.finished = true
+	_world.freeze(true)
+	_autosave(false)
+	var time_text := _clock(play_time)
+	_audio.play_music(MusicLibrary.TITLE)
+	var layer := CanvasLayer.new()
+	layer.layer = 11
+	add_child(layer)
+	var credits := CreditsScreen.new()
+	layer.add_child(credits)
+	await _fade_to(0.0)
+	await credits.run(_credits_sections(time_text))
+	if _autoplay:
+		print("Juego completado: Nv %d, tiempo de juego %s" % [state.hero.level, time_text])
+	quit_to_title.emit()
+
+
+## The credits: who made the game, with what, and the numbers of this game.
+func _credits_sections(time_text: String) -> Array:
+	return [
+		["Villaclaro", ["La historia de %s" % state.hero.display_name]],
+		["Creado por", [AUTHOR]],
+		["Motor", ["Godot Engine 4.7"]],
+		["Modelos 3D", ["KayKit, de Kay Lousberg (CC0)"]],
+		["Música y sonido", ["Música y efectos generados por el juego"]],
+		["Tu partida", [
+			"Tiempo de juego: %s" % time_text,
+			"Combates: %d" % state.battles,
+			"Pasos: %d" % state.steps,
+			"Oro ganado: %d G" % state.gold_earned,
+			"Misiones cumplidas: %d" % state.quests_done(),
+			"Nivel: %d" % state.hero.level,
+		]],
+		["Gracias por jugar", []],
+	]
+
+
+## What CutscenePlayer's "travel" step does: builds zone_id at entry_id under black and
+## hands the new map over.
+func _scene_travel(zone_id: String, entry_id: String) -> World:
+	_switch_zone(zone_id, entry_id)
+	return _world
+
+
+## What CutscenePlayer's "flag" step does.
+func _scene_flag(flag: String) -> void:
+	state.world_flags[flag] = true
+	_world.set_world_flags(state.world_flags)
 
 
 ## The old woman always heals; what she says and gives comes from the quest.
@@ -504,9 +640,17 @@ func _on_talk() -> void:
 	if _busy:
 		return
 	_set_busy(true)
+	var done := state.quest.stage == Quest.Stage.DONE
 	var result := state.quest.talk()
+	var said: Array = result.lines
+	if done:
+		# Her quest over, the Abuela Rosa speaks of the story (her ZoneData lines).
+		var story_lines := _world.npc_lines(_quest_npc(), state.chapter())
+		if not story_lines.is_empty():
+			said = story_lines
 	var lines: Array[String] = []
-	lines.append_array(result.lines)
+	for line: String in said:
+		lines.append(StoryState.fill(line, state.hero.display_name))
 	lines.append(HEAL_LINE)
 	state.heal_full()
 	if result.potions > 0:
@@ -518,12 +662,23 @@ func _on_talk() -> void:
 	_set_busy(false)
 
 
-## A villager: says its lines (World.npc_lines(): they change with the world flags).
+## The index of the zone's "quest" figure (the Abuela Rosa) in ZoneData.npcs.
+func _quest_npc() -> int:
+	for i in _zone.npcs.size():
+		if _zone.npcs[i].kind == "quest":
+			return i
+	return -1
+
+
+## A villager: says its lines (World.npc_lines(): they change with the chapter).
 func _on_npc(index: int) -> void:
 	if _busy:
 		return
 	_set_busy(true)
-	await _world.show_dialogue(_zone.npcs[index].name, _world.npc_lines(index))
+	var lines: Array[String] = []
+	for line in _world.npc_lines(index, state.chapter()):
+		lines.append(StoryState.fill(line, state.hero.display_name))
+	await _world.show_dialogue(_zone.npcs[index].name, lines)
 	_set_busy(false)
 
 
@@ -584,6 +739,7 @@ func _on_chest(chest_id: String) -> void:
 	var result := Chests.open(state, chest_id)
 	if not result.opened:
 		return
+	state.gold_earned += Chests.CHESTS[chest_id].get("gold", 0)
 	_world.set_chest_open(chest_id, true)
 	_audio.play_sfx(SfxLibrary.LEVEL_UP)
 	_refresh_status()
@@ -731,6 +887,15 @@ func _build_shop() -> void:
 	_shop.changed.connect(func() -> void:
 		_shop_changed = true
 		_refresh_status())
+
+
+func _build_cutscenes() -> void:
+	_cutscenes = CutscenePlayer.new()
+	_cutscenes.audio = _audio
+	_cutscenes.fade = _fade_to
+	_cutscenes.set_flag = _scene_flag
+	_cutscenes.travel = _scene_travel
+	add_child(_cutscenes)
 
 
 func _build_fade() -> void:

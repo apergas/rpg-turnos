@@ -1,17 +1,14 @@
 class_name GameState extends RefCounted
 ## State of the play session, kept in memory while the game is open. The hero, the
-## inventory, the gold, the equipment, the village quest and the progress through the
-## world live here for the whole session; battles, shops, chests, exits and dialogue
-## change them in place.
+## inventory, the gold, the equipment, the village quest, the progress through the
+## world and the story live here for the whole session; battles, shops, chests, exits,
+## dialogue and cutscenes change them in place. The hero's name is hero.display_name.
 
 const START_GOLD := 50
 ## The last boss: its world flag marks the game as finished.
 const FINAL_BOSS := "senor_niebla"
 ## The autoplay retreat: below this share of max HP the hero needs rest.
 const REST_HP_RATIO := 0.3
-## Mission lines when none is assigned, on an open map and on a dungeon floor.
-const NO_MISSION_FIELD := "Sigue el sendero"
-const NO_MISSION_DUNGEON := "Explora el mapa"
 
 var hero: Combatant
 var inventory := Inventory.new()
@@ -34,6 +31,14 @@ var zone_id := "pradera"
 ## ZoneData id of the last village visited: the Ala de viaje and a defeat lead to its
 ## town entry.
 var town_zone := "pradera"
+## The story: cutscenes seen, the ending reached; the chapter follows from it and the
+## world flags (chapter()).
+var story := StoryState.new()
+## Numbers of the whole game for the credits: battles fought, steps walked and gold won
+## (in battle and from chests).
+var battles := 0
+var steps := 0
+var gold_earned := 0
 ## The open return portal of an Ala de viaje: the village it stands in ("" while none is
 ## open) and the zone and spot it leads back to, once.
 var portal_town := ""
@@ -57,16 +62,16 @@ func heal_full() -> void:
 	hero.mp = hero.max_mp
 
 
-## The missions under way, for the map's status window and the pause menu; never empty.
-## The one place that reads them: the story's quest log only has to change this.
+## The missions under way, for the map's status window and the pause menu; never empty:
+## with none in progress, the story's next step. The one place that reads them: the story's
+## quest log only has to change this.
 func current_missions() -> Array[String]:
 	var missions: Array[String] = []
 	var line := quest.status_text()
 	if line != "":
 		missions.append(line)
 	if missions.is_empty():
-		var dungeon := ZoneData.by_id(zone_id).is_dungeon()
-		missions.append(NO_MISSION_DUNGEON if dungeon else NO_MISSION_FIELD)
+		missions.append(story.goal_text(world_flags))
 	return missions
 
 
@@ -157,10 +162,20 @@ func needs_rest() -> bool:
 	return inventory.count(Inventory.POTION) == 0 and hero.mp < heal_cost * 2
 
 
-## True once the Señor de la Niebla is beaten: the adventure is over (the ending itself
-## comes with the story).
+## True once the Señor de la Niebla is beaten: the adventure is over (the ending
+## cutscene and the credits follow; story.finished is set after them).
 func is_finished() -> bool:
 	return has_flag(FINAL_BOSS)
+
+
+## The story chapter now (StoryState.Chapter).
+func chapter() -> StoryState.Chapter:
+	return story.chapter(world_flags)
+
+
+## Quests completed, for the credits: the village quest.
+func quests_done() -> int:
+	return 1 if quest.stage == Quest.Stage.DONE else 0
 
 
 ## Gold lost on a defeat: half of what is carried, rounded down (gold - lost remains).

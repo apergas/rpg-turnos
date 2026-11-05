@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="Cutscene" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/cutscene.gd" id="1_cutscene"]
+
+[resource]
+script = ExtResource("1_cutscene")
+id = "castillo"
+steps = [
+["wait", 0.3],
+["approach", "Soldado", "hero", 1.8],
+["face", "hero", "Soldado"],
+["say", "Soldado", ["¡Por fin refuerzos! ...¿Solo tú? Bueno, algo es algo."]],
+["camera_to", Vector3(0, 0, 2), 20.0],
+["say", "Soldado", ["Ahí delante está el Castillo de la Niebla, {nombre}. Nadie ha cruzado el patio y ha vuelto para contarlo.", "Arriba, en la sala del trono, el Señor de la Niebla guarda el último fragmento.", "Descansa y compra lo que puedas. Dicen que no se rinde a la primera."]],
+["camera_back"],
+["move", "Soldado", Vector3(-5, 0, 23)]
+]

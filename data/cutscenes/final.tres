@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="Cutscene" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/cutscene.gd" id="1_cutscene"]
+
+[resource]
+script = ExtResource("1_cutscene")
+id = "final"
+steps = [
+["wait", 0.5],
+["sfx", "level_up"],
+["say", "", ["El Señor de la Niebla se deshace como humo al sol.", "¡Consigues el último Fragmento del amuleto (3/3)!", "Los tres fragmentos se juntan en tus manos. ¡El Amuleto del Alba vuelve a estar entero!", "Una luz dorada llena la sala, y la niebla se retira por fin más allá de las montañas."]],
+["flag", "amuleto_alba"],
+["fade_out"],
+["travel", "pradera", "pueblo"],
+["music", "village"],
+["wait", 0.4],
+["fade_in"],
+["say", "", ["Días después, en Villaclaro..."]],
+["approach", "Abuela Rosa", "hero", 1.8],
+["face", "hero", "Abuela Rosa"],
+["move", "Mercader", Vector3(-1.8, 0, -13.4), true],
+["move", "Posadero", Vector3(3, 0, -16.4), true],
+["move", "Granjero", Vector3(3.2, 0, -13.4)],
+["face", "Mercader", "hero"],
+["face", "Posadero", "hero"],
+["face", "Granjero", "hero"],
+["say", "Abuela Rosa", ["¡{nombre}! ¡Has vuelto! Desde aquí vimos cómo la niebla se iba del norte.", "Sabía que lo conseguirías. Bueno... estaba casi segura."]],
+["say", "Mercader", ["¡Para celebrarlo, hoy todo a mitad de precio!", "...Es broma. Pero te invito a un pastel."]],
+["say", "Posadero", ["Tu cama está hecha, por si algún día quieres dormir más de una noche seguida."]],
+["say", "Granjero", ["¡Mis gallinas vuelven a poner los huevos derechos! Eso se lo debemos a {nombre}."]],
+["cheer", ["hero", "Abuela Rosa", "Mercader", "Posadero", "Granjero"]],
+["say", "Abuela Rosa", ["El Amuleto del Alba se queda aquí, y lo cuidaremos entre todos.", "Y tú, descansa. Te lo has ganado."]],
+["wait", 0.6],
+["fade_out"]
+]

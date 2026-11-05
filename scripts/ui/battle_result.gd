@@ -59,7 +59,7 @@ func show_victory(exp_gained: int, hero: Combatant, new_level: int, gold: int,
 
 ## gold_lost: the gold taken from the hero (0 shows no gold line).
 func show_defeat(gold_lost := 0) -> void:
-	_title.text = "Has sido derrotado"
+	_title.text = "Has caído"
 	_clear_detail()
 	if gold_lost > 0:
 		_add_line("Pierdes %d G." % gold_lost, StatBar.GOLD)

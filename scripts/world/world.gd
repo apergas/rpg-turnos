@@ -42,6 +42,8 @@ signal portal_used
 signal lever_pulled
 signal key_taken
 signal door_used
+## Every STEP_DISTANCE metres walked (two steps of the hero; the game's step count).
+signal stepped
 
 const PLAYER_SCENE := preload("res://scenes/world/player.tscn")
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
@@ -126,6 +128,12 @@ var _grass: ShaderMaterial
 var _player: Player
 var _camera: FollowCamera
 var _boss: StaticBody3D
+## ZoneData.npcs "name" -> its figure (a StaticBody3D with the BattleActor under it).
+var _figures := {}
+## What a cutscene's camera looks at (camera_to); null until the first one.
+var _camera_spot: Node3D
+## The status window and the map square under it: a cutscene hides them together.
+var _status_column: VBoxContainer
 ## chest id -> lid pivot (rotation.x opens it); a chest in _open_chests is open.
 var _chest_lids := {}
 var _open_chests: Array[String] = []
@@ -186,7 +194,8 @@ func _ready() -> void:
 		_dungeon.zone = zone
 		add_child(_dungeon)
 	for npc: Dictionary in zone.npcs:
-		_add_figure(BattleActor.Look[npc.look], npc.pos, npc.yaw, 0.4, 1.8)
+		_figures[npc.name] = _add_figure(BattleActor.Look[npc.look], npc.pos, npc.yaw, 0.4,
+			1.8)
 	if zone.boss_id != "":
 		_boss = _add_figure(EnemyLibrary.look(zone.boss_id), zone.boss_pos, 180.0, 1.0, 2.0)
 	for id in Chests.of_zone(zone.id):
@@ -394,14 +403,18 @@ func pull_lever() -> void:
 		_dungeon.pull_lever()
 
 
-## The lines villager zone.npcs[index] says now (lines_after once its after_flag is set).
-func npc_lines(index: int) -> Array[String]:
+## The lines figure zone.npcs[index] says in chapter (StoryState.Chapter): its
+## lines_by_chapter entry with the highest chapter not past it, else its lines.
+func npc_lines(index: int, chapter: int) -> Array[String]:
 	var npc: Dictionary = zone.npcs[index]
 	var lines: Array[String] = []
-	if npc.has("after_flag") and _flags.get(npc.after_flag, false):
-		lines.assign(npc.lines_after)
-	else:
-		lines.assign(npc.lines)
+	lines.assign(npc.get("lines", []))
+	var by_chapter: Dictionary = npc.get("lines_by_chapter", {})
+	var best := -1
+	for key: int in by_chapter:
+		if key <= chapter and key > best:
+			best = key
+			lines.assign(by_chapter[key])
 	return lines
 
 
@@ -410,6 +423,88 @@ func show_dialogue(speaker: String, lines: Array[String]) -> void:
 	freeze(true)
 	await _dialogue.say(speaker, lines)
 	await freeze(false)
+
+
+## Cutscenes: the map stops answering the player (frozen, which also hides the prompts,
+## the portal's too), the status window, the map square and the notice go, and the hero
+## stops where he is, not walking on his own, until end_cutscene().
+func begin_cutscene() -> void:
+	freeze(true)
+	_player.scripted = true
+	_player.move_target = null
+	_player.model().set_walking(false)
+	_use_on_arrival = {}
+	_status_column.hide()
+	_notice_window.hide()
+
+
+## Puts every figure back on its spot, gives the camera back to the hero and the
+## controls back to the player (with the encounter grace restarted).
+func end_cutscene() -> void:
+	reset_figures()
+	_camera.follow(_player)
+	_player.scripted = false
+	_status_column.show()
+	_meter.reset()
+	_was_near = {}
+	await freeze(false)
+
+
+## A dialogue inside a cutscene: like show_dialogue() but the map stays frozen.
+func say_lines(speaker: String, lines: Array[String]) -> void:
+	await _dialogue.say(speaker, lines)
+
+
+## The node a cutscene moves for who ("hero" or a figure's name; null if none here).
+func figure_node(who: String) -> Node3D:
+	if who == Cutscene.HERO:
+		return _player
+	return _figures.get(who)
+
+
+## The node a cutscene turns for who: the hero's model, or the figure itself.
+func figure_turn(who: String) -> Node3D:
+	if who == Cutscene.HERO:
+		return _player.model()
+	return _figures.get(who)
+
+
+## The BattleActor of who (walking and cheering), null if none here.
+func figure_actor(who: String) -> BattleActor:
+	if who == Cutscene.HERO:
+		return _player.model()
+	var body: Node3D = _figures.get(who)
+	if body == null:
+		return null
+	for child in body.get_children():
+		if child is BattleActor:
+			return child
+	return null
+
+
+## Every figure back on its ZoneData spot and yaw, standing still.
+func reset_figures() -> void:
+	for npc: Dictionary in zone.npcs:
+		var body: Node3D = _figures[npc.name]
+		body.position = npc.pos
+		body.rotation_degrees.y = npc.yaw
+		var actor := figure_actor(npc.name)
+		if actor:
+			actor.set_walking(false)
+
+
+## The camera glides to look at point from at_distance metres (cutscenes).
+func focus_camera(point: Vector3, at_distance: float) -> void:
+	if _camera_spot == null:
+		_camera_spot = Node3D.new()
+		add_child(_camera_spot)
+	_camera_spot.position = point
+	_camera.show_point(_camera_spot, at_distance)
+
+
+## The camera follows the hero again.
+func follow_camera() -> void:
+	_camera.follow(_player)
 
 
 ## Freezes the player (no walking, prompts, encounters, exits or uses) while a dialogue
@@ -625,7 +720,8 @@ func _connect_standalone() -> void:
 		var lines: Array[String] = ["Hola, viajero."]
 		await show_dialogue(Quest.NPC_NAME, lines))
 	npc_requested.connect(func(index: int) -> void:
-		await show_dialogue(zone.npcs[index].name, npc_lines(index)))
+		await show_dialogue(zone.npcs[index].name,
+			npc_lines(index, StoryState.Chapter.END)))
 	shop_requested.connect(func(shop_id: String) -> void: print("Tienda: %s" % shop_id))
 	inn_requested.connect(func(inn_id: String) -> void: print("Posada: %s" % inn_id))
 	chest_opened.connect(func(chest_id: String) -> void:
@@ -823,6 +919,7 @@ func _build_ui() -> void:
 	column.add_theme_constant_override("separation", 8)
 	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ui.add_child(column)
+	_status_column = column
 	var panel := BattleHud.make_window()
 	column.add_child(panel)
 	_map_square = MapSquare.new()
@@ -882,6 +979,7 @@ func _play_steps() -> void:
 	if _step_m < STEP_DISTANCE:
 		return
 	_step_m -= STEP_DISTANCE
+	stepped.emit()
 	if _audio:
 		_audio.play_sfx(SfxLibrary.STEP)
 

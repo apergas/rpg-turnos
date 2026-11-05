@@ -10,7 +10,7 @@ class_name BattleActor extends Node3D
 
 enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPER, WOLF,
 	GOBLIN, PLANT, WITCH, MUD_GOLEM, STONE_GOLEM, SPIDER, SPECTER, SKELETON_WARRIOR,
-	SKELETON_ROGUE, SKELETON_MAGE, FOG_LORD }
+	SKELETON_ROGUE, SKELETON_MAGE, FOG_LORD, FARMER }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -207,6 +207,18 @@ const LOOKS := {
 		],
 		"anims": CHARACTER_ANIMS,
 		"tint": Color(1.0, 0.75, 0.5),
+	},
+	Look.FARMER: {
+		"scene": MAGE,
+		"scale": CHARACTER_SCALE,
+		"top": 2.2,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/Spellbook",
+			"Rig/Skeleton3D/handslot_l/Spellbook_open",
+			"Rig/Skeleton3D/handslot_r/1H_Wand",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(0.65, 0.8, 1.0),
 	},
 	Look.SLIME: {
 		"color": Color(0.55, 0.3, 0.85),

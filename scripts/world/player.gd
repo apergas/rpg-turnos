@@ -19,6 +19,9 @@ const TARGET_REACHED := 0.3
 const STUCK_FRAMES := 12
 
 var input_enabled := true
+## A cutscene moves the player (CutscenePlayer tweens its position): no physics, no
+## keys, no route and no animation of its own meanwhile.
+var scripted := false
 ## Points walked in a loop on --autoplay (ZoneData.autoplay_route); set by World.
 var route: Array[Vector3] = []
 ## Horizontal meters moved during the last physics frame.
@@ -50,6 +53,11 @@ func _ready() -> void:
 	add_child(_model)
 
 
+## The hero's figure, for cutscenes (walking animation, turning, cheering).
+func model() -> BattleActor:
+	return _model
+
+
 ## Shows the weapon and shield worn on the model (Equipment ids, "" for none).
 func set_equipment(weapon_id: String, shield_id: String) -> void:
 	_model.set_equipment(weapon_id, shield_id)
@@ -74,6 +82,9 @@ func move_to(point: Vector3) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if scripted:
+		last_step_m = 0.0
+		return
 	if not input_enabled:
 		move_target = null
 	var dir := _wanted_direction() if input_enabled else Vector3.ZERO
