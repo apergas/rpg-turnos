@@ -854,8 +854,9 @@ func _refresh_status() -> void:
 	for slot in Equipment.SLOTS:
 		if loadout.worn(slot) != "":
 			worn.append(Equipment.display_name(loadout.worn(slot)))
-	var gear_text := "Oro %d G · Equipo: %s · ATK %d DEF %d" % [state.gold, ", ".join(worn),
-		state.hero.total_attack(), state.hero.total_defense()]
+	var gear_text := "Oro %d G · Equipo: %s · ATK %d DEF %d VEL %d" % [state.gold,
+		", ".join(worn), state.hero.total_attack(), state.hero.total_defense(),
+		state.hero.total_speed()]
 	if _autoplay and gear_text != _last_gear_text:
 		print(gear_text)
 	_last_gear_text = gear_text

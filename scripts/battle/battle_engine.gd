@@ -10,7 +10,9 @@ class_name BattleEngine extends RefCounted
 ## BattleEvent.HERO or an index into `enemies`. An enemy that picks "charge" spends its
 ## turn gathering strength and its next turn is a blow of CHARGE_MULT times the damage
 ## that never misses or crits (Defender still halves it). A boss with a next_phase that
-## reaches 0 HP rises once with that phase's stats (a PHASE event) instead of falling.
+## reaches 0 HP rises once with that phase's stats (a PHASE event) instead of falling. An
+## enemy that picks "escape" runs away and the battle ends as FLED (the Slime de Metal,
+## who fights alone).
 
 enum State { ONGOING, WON, LOST, FLED }
 
@@ -23,6 +25,7 @@ const CMD_NONE := "none"
 const CMD_STAGGER := "stagger"
 const CMD_CALL := "call"
 const CMD_CHARGE := "charge"
+const CMD_ESCAPE := "escape"
 
 const POISON := "poison"
 const SLEEP := "sleep"
@@ -152,7 +155,7 @@ func flee_chance() -> float:
 	for i in alive:
 		total += enemies[i].speed
 	var mean := total / maxf(1.0, alive.size())
-	return clampf(FLEE_BASE + (hero.speed - mean) * FLEE_PER_SPEED, FLEE_MIN, FLEE_MAX)
+	return clampf(FLEE_BASE + (hero.total_speed() - mean) * FLEE_PER_SPEED, FLEE_MIN, FLEE_MAX)
 
 
 ## Resolves a full round with the hero's command and the enemies' own choices. Returns
@@ -232,6 +235,8 @@ func _enemy_command(who: int) -> Dictionary:
 			return {"type": CMD_STAGGER}
 		CMD_CHARGE:
 			return {"type": CMD_CHARGE}
+		CMD_ESCAPE:
+			return {"type": CMD_ESCAPE}
 	var skill := enemy.find_skill(choice)
 	if skill != null and enemy.mp >= skill.mp_cost and not enemy.status.has(SILENCE):
 		return cmd_skill(skill, BattleEvent.HERO)
@@ -257,7 +262,7 @@ func _turn_order(hero_cmd: Dictionary) -> Array[int]:
 
 
 func _initiative(c: Combatant) -> float:
-	return c.speed * _rng.randf_range(INITIATIVE_SPREAD.x, INITIATIVE_SPREAD.y)
+	return c.total_speed() * _rng.randf_range(INITIATIVE_SPREAD.x, INITIATIVE_SPREAD.y)
 
 
 func _act(who: int, cmd: Dictionary, events: Array[Dictionary]) -> void:
@@ -281,6 +286,9 @@ func _act(who: int, cmd: Dictionary, events: Array[Dictionary]) -> void:
 		CMD_CHARGE:
 			_charged[who] = true
 			events.append(BattleEvent.charge(who))
+		CMD_ESCAPE:
+			state = State.FLED
+			events.append(BattleEvent.enemy_flee(who))
 		CMD_CALL:
 			_called[who] = true
 			enemies.append(enemies[who].help.duplicate() as Combatant)
@@ -418,7 +426,7 @@ func _fall(who: int, events: Array[Dictionary]) -> void:
 
 func _add_status(target: int, status: String, events: Array[Dictionary]) -> void:
 	var fighter := _fighter(target)
-	if not fighter.is_alive() or fighter.status.has(status):
+	if not fighter.is_alive() or fighter.status.has(status) or fighter.is_immune(status):
 		return
 	# Silence counts down at the end of every round, the one it starts in too, so it
 	# gets one extra round to last SILENCE_ROUNDS whole rounds.

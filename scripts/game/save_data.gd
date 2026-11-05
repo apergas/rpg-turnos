@@ -15,11 +15,14 @@ class_name SaveData extends RefCounted
 ## portal open and nothing explored. STORY_VERSION (the story) adds the hero's name, the
 ## story (cutscenes seen, the ending reached) and the numbers for the credits; an older save
 ## gets the default name, the cutscenes its world flags have left behind marked seen
-## (StoryState.mark_seen_for_flags()) and the numbers at 0.
+## (StoryState.mark_seen_for_flags()) and the numbers at 0. QUESTS_VERSION (the side quests)
+## adds the accessory slot to the loadout; an older save gets it empty.
 
-const VERSION := 6
+const VERSION := 7
 ## First version with the story's fields.
 const STORY_VERSION := 6
+## First version with the accessory slot.
+const QUESTS_VERSION := 7
 ## Oldest version apply() still reads.
 const OLDEST_VERSION := 2
 ## Combatant fields of the hero that change while playing (the rest come from hero.tres).
@@ -201,6 +204,8 @@ static func _valid_equipment(data: Dictionary) -> bool:
 	if not loadout is Dictionary:
 		return false
 	for slot in Equipment.SLOTS:
+		if slot == Equipment.ACCESSORY and int(data.version) < QUESTS_VERSION:
+			continue
 		var id: Variant = (loadout as Dictionary).get(slot)
 		if not id is String or (id != "" and Equipment.slot(id) != slot):
 			return false

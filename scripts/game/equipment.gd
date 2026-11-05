@@ -1,21 +1,27 @@
 class_name Equipment extends RefCounted
-## The equipment catalog: every weapon, armor and shield, with its slot, bonus (ATK for
-## a weapon, DEF for armor and shields), price in gold, the zone whose shop sells it (0:
-## no shop, the starting gear) and the mesh the hero shows for it (a handslot mesh of
-## Knight.glb, STICK_MESH built in code, or "" for none). Pure: no nodes.
+## The equipment catalog: every weapon, armor, shield and accessory, with its slot, bonus
+## (ATK for a weapon, DEF for armor and shields, VEL for an accessory), price in gold, the
+## zone whose shop sells it (0: no shop, the starting gear; -1: never sold, a quest's
+## reward), the mesh the hero shows for it (a handslot mesh of Knight.glb, STICK_MESH built
+## in code, or "" for none) and, on some accessories, the status it keeps away ("immune").
+## Pure: no nodes.
 
 const WEAPON := "weapon"
 const ARMOR := "armor"
 const SHIELD := "shield"
+const ACCESSORY := "accessory"
 ## Slot order of every list (status, Equipo page, shop comparison).
-const SLOTS: Array[String] = [WEAPON, ARMOR, SHIELD]
-const SLOT_NAMES := {WEAPON: "Arma", ARMOR: "Armadura", SHIELD: "Escudo"}
+const SLOTS: Array[String] = [WEAPON, ARMOR, SHIELD, ACCESSORY]
+const SLOT_NAMES := {WEAPON: "Arma", ARMOR: "Armadura", SHIELD: "Escudo",
+	ACCESSORY: "Accesorio"}
 
 const STICK := "palo"
 const CLOTHES := "ropa"
 const COPPER_SWORD := "espada_cobre"
 const LEATHER_MAIL := "cota_cuero"
 const WOODEN_SHIELD := "escudo_madera"
+const POISON_RING := "anillo_antiveneno"
+const SPEED_AMULET := "amuleto_velocidad"
 ## Not a Knight.glb mesh: BattleActor builds a plain wooden stick for it.
 const STICK_MESH := "stick"
 
@@ -48,6 +54,10 @@ const EQUIPMENT := {
 		"bonus": 22, "price": 550, "zone": 4, "mesh": ""},
 	"escudo_platino": {"name": "Escudo de platino", "article": "un", "slot": SHIELD,
 		"bonus": 10, "price": 300, "zone": 4, "mesh": "Spike_Shield"},
+	POISON_RING: {"name": "Anillo antiveneno", "article": "un", "slot": ACCESSORY,
+		"bonus": 0, "price": 0, "zone": -1, "mesh": "", "immune": "poison"},
+	SPEED_AMULET: {"name": "Amuleto de velocidad", "article": "un", "slot": ACCESSORY,
+		"bonus": 3, "price": 0, "zone": -1, "mesh": ""},
 }
 
 
@@ -85,9 +95,26 @@ static func mesh(id: String) -> String:
 	return EQUIPMENT[id].mesh if EQUIPMENT.has(id) else ""
 
 
-## "ATK" for weapons, "DEF" for the rest.
+## "ATK" for weapons, "VEL" for accessories, "DEF" for the rest.
 static func stat_name(id: String) -> String:
-	return "ATK" if slot(id) == WEAPON else "DEF"
+	match slot(id):
+		WEAPON:
+			return "ATK"
+		ACCESSORY:
+			return "VEL"
+	return "DEF"
+
+
+## The status this piece keeps away ("" for none).
+static func immunity(id: String) -> String:
+	return EQUIPMENT[id].get("immune", "") if EQUIPMENT.has(id) else ""
+
+
+## What a piece gives, for the Equipo page: "ATK +6", "VEL +3", "Inmune al veneno".
+static func effect_text(id: String) -> String:
+	if immunity(id) == "poison":
+		return "Inmune al veneno"
+	return "%s +%d" % [stat_name(id), bonus(id)]
 
 
 ## The ids sold in a zone, in catalog order.

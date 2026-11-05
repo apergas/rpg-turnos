@@ -84,6 +84,8 @@ func use_item(id: String) -> Dictionary:
 func refresh_equipment() -> void:
 	hero.equip_attack = loadout.attack_bonus()
 	hero.equip_defense = loadout.defense_bonus()
+	hero.equip_speed = loadout.speed_bonus()
+	hero.equip_immune = loadout.immunities()
 
 
 ## Puts on a piece from the bag; what it replaces goes to the bag. False if id is not
