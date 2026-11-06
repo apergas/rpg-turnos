@@ -68,14 +68,21 @@ static func keys_of(action: String) -> Array[int]:
 static func keys_text(action: String) -> String:
 	var names := PackedStringArray()
 	for code in keys_of(action):
-		names.append(OS.get_keycode_string(code))
+		names.append(_key_name(code))
 	return ", ".join(names)
 
 
 ## The name of the first key of action, for the map's prompts.
 static func first_key_name(action: String) -> String:
 	var codes := keys_of(action)
-	return OS.get_keycode_string(codes[0]) if not codes.is_empty() else ""
+	return _key_name(codes[0]) if not codes.is_empty() else ""
+
+
+## What the key at that physical position says on the player's keyboard layout.
+static func _key_name(code: int) -> String:
+	if DisplayServer.get_name() in ["headless", "Web"]:
+		return OS.get_keycode_string(code)  # the web and headless runs can't tell
+	return OS.get_keycode_string(DisplayServer.keyboard_get_keycode_from_physical(code as Key))
 
 
 static func _set_keys(action: String, codes: Array) -> void:
