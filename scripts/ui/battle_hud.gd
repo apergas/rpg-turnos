@@ -55,7 +55,7 @@ const BADGES := {
 
 ## Returns the enemy index under a screen point, or -1. Set by BattleScene.
 var pick_target: Callable
-## Seconds per typed character (the text speed option).
+## Seconds per typed character (the text speed option); 0.0 shows the message at once.
 var char_time := CHAR_TIME
 
 var _engine: BattleEngine
@@ -217,7 +217,7 @@ func show_message(text: String) -> void:
 	var shown := 0.0
 	while _message.visible_characters < total and not _advance_requested:
 		await get_tree().process_frame
-		shown += get_process_delta_time() / char_time
+		shown = float(total) if char_time <= 0.0 else shown + get_process_delta_time() / char_time
 		_message.visible_characters = mini(total, int(shown))
 	_message.visible_characters = -1
 	_advance_requested = false
@@ -271,23 +271,22 @@ func _input(event: InputEvent) -> void:
 	var key := event as InputEventKey
 	if _page == Page.NONE or key == null or not key.pressed:
 		return
-	match key.physical_keycode:
-		KEY_W, KEY_UP:
-			_move(-1)
-		KEY_S, KEY_DOWN:
-			_move(1)
-		KEY_A, KEY_LEFT:
-			_aim(-1)
-		KEY_D, KEY_RIGHT:
-			_aim(1)
-		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE, KEY_E:
-			if not key.echo:
-				_accept()
-		KEY_ESCAPE, KEY_Q, KEY_BACKSPACE, KEY_X:
-			if not key.echo:
-				_back()
-		_:
-			return
+	if key.is_action(KeyMap.MOVE_UP):
+		_move(-1)
+	elif key.is_action(KeyMap.MOVE_DOWN):
+		_move(1)
+	elif key.is_action(KeyMap.MOVE_LEFT):
+		_aim(-1)
+	elif key.is_action(KeyMap.MOVE_RIGHT):
+		_aim(1)
+	elif key.is_action(KeyMap.ACCEPT):
+		if not key.echo:
+			_accept()
+	elif key.is_action(KeyMap.CANCEL):
+		if not key.echo:
+			_back()
+	else:
+		return
 	get_viewport().set_input_as_handled()
 
 
@@ -297,10 +296,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	var click := mouse != null and mouse.pressed and mouse.button_index == MOUSE_BUTTON_LEFT
 	match _page:
 		Page.NONE:
-			var key := event as InputEventKey
-			var e_key := key != null and key.pressed and not key.echo \
-				and key.physical_keycode == KEY_E
-			if click or e_key or event.is_action_pressed("ui_accept"):
+			if click or event.is_action_pressed(KeyMap.ACCEPT):
 				_advance_requested = true
 		Page.SPELLS, Page.ITEMS:
 			# A click on a grey row (it lets clicks through) keeps the list open, so the
@@ -557,7 +553,8 @@ func _build_bottom() -> void:
 
 ## Sets the message and fits its window to it, in the room the command window leaves.
 func _set_message(text: String) -> void:
-	var room := get_viewport_rect().size.x - EDGE * 2.0 - GAP - maxf(_menu.size.x, MENU_WIDTH)
+	var menu_width := maxf(_menu.get_combined_minimum_size().x, MENU_WIDTH)
+	var room := get_viewport_rect().size.x - EDGE * 2.0 - GAP - menu_width
 	fit_label(_message, text, room - WINDOW_MARGIN.x * 2.0)
 
 

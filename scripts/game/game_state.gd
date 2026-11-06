@@ -48,6 +48,8 @@ var portal_zone := ""
 var portal_pos := Vector3.ZERO
 ## What the hero has seen of each zone: zone id -> ExploredMap (explored_map()).
 var explored := {}
+## A Difficulty id, chosen for each game.
+var difficulty := Difficulty.NORMAL
 
 
 func _init(hero_data: Combatant) -> void:

@@ -140,6 +140,9 @@ const CASTLE_MIST := [
 ]
 const CASTLE_TORCHES := [Vector3(-4.0, 2.0, -10.0), Vector3(4.0, 2.0, -10.0)]
 
+## Low graphics quality: no SSAO and no sun shadows (DisplaySettings sets it).
+static var plain_light := false
+
 
 ## zone: whose sky, light and backdrop to use (null: the meadow's).
 static func build(root: Node3D, zone: ZoneData = null) -> void:
@@ -349,7 +352,7 @@ static func _add_environment(root: Node3D, zone: ZoneData) -> void:
 	# Linear, not ACES: under the Compatibility renderer ACES lifts the midtones and clips
 	# anything bright in the sun, so skin, hair and steel all turned white and trees mint.
 	env.tonemap_mode = Environment.TONE_MAPPER_LINEAR
-	env.ssao_enabled = true
+	env.ssao_enabled = not plain_light
 	env.glow_enabled = true
 	env.glow_intensity = 0.6
 	env.fog_enabled = true
@@ -387,6 +390,6 @@ static func _add_sun(root: Node3D, zone: ZoneData) -> void:
 	# Tuned for the Compatibility renderer (needed for the web build); 1.3 looked
 	# right under Forward+ but washes everything out here. The meadow uses 0.6.
 	sun.light_energy = zone.sun_energy
-	sun.shadow_enabled = true
+	sun.shadow_enabled = not plain_light
 	sun.rotation_degrees = Vector3(-40, 35, 0)
 	root.add_child(sun)

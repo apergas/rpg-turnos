@@ -118,19 +118,11 @@ func _physics_process(delta: float) -> void:
 func _wanted_direction() -> Vector3:
 	if _autoplay:
 		return _route_direction()
-	var keys := Vector2.ZERO
-	if Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT):
-		keys.x -= 1.0
-	if Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT):
-		keys.x += 1.0
-	if Input.is_physical_key_pressed(KEY_W) or Input.is_physical_key_pressed(KEY_UP):
-		keys.y -= 1.0
-	if Input.is_physical_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_DOWN):
-		keys.y += 1.0
+	var keys := Input.get_vector(KeyMap.MOVE_LEFT, KeyMap.MOVE_RIGHT, KeyMap.MOVE_UP,
+		KeyMap.MOVE_DOWN)
 	if keys == Vector2.ZERO:
 		return _target_direction()
 	move_target = null
-	keys = keys.normalized()
 	# The camera sits south of the player looking north: screen up is -Z, right is +X.
 	return Vector3(keys.x, 0.0, keys.y)
 

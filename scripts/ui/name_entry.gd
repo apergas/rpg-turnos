@@ -11,7 +11,7 @@ signal cancelled
 
 const FONT_SIZE := 26
 const NAME_SIZE := 44
-const TITLE_COLOR := Color(1.0, 0.85, 0.3)
+const TITLE_COLOR := UiStyle.TITLE_COLOR
 const HINT_COLOR := Color(0.7, 0.72, 0.8)
 const KEY_SIZE := Vector2(58, 50)
 const COLUMNS := 8
@@ -104,7 +104,8 @@ func _input(event: InputEvent) -> void:
 			var typed := String.chr(key.unicode) if key.unicode > 0 else ""
 			if typed == "" or typed.to_upper() == typed.to_lower():
 				return
-			_add(typed)
+			# Typed letters follow the grid's case: a capital first, then small ones.
+			_add(typed.to_upper() if _upper else typed.to_lower())
 	get_viewport().set_input_as_handled()
 
 

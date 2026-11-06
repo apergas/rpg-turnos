@@ -18,8 +18,13 @@ const GAME_SCENE := preload("res://scenes/game/game.tscn")
 const AUTOPLAY_NAME := "Rocío"
 const TITLE_TEXT := "Villaclaro"
 const TITLE_SIZE := 96
+const SUBTITLE_TEXT := "La Niebla del Norte"
+const SUBTITLE_SIZE := 36
+const VERSION_SIZE := 18
 const FONT_SIZE := 28
 const FADE_TIME := 0.4
+## Where the menu's room starts under the title.
+const MENU_TOP := 160
 ## Drifting camera: looks down PITCH_DEG from DISTANCE m at a point that wanders over
 ## the field at DRIFT_SPEED (radians per second of its slow loop).
 const PITCH_DEG := 55.0
@@ -39,7 +44,9 @@ var _options_button: Button
 var _options_window: PanelContainer
 var _options_panel: OptionsPanel
 var _name_entry: NameEntry
+var _difficulty_window: DifficultyWindow
 var _title_label: Label
+var _menu_center: CenterContainer
 var _fade: ColorRect
 var _game: Game
 var _drift := 0.0
@@ -54,6 +61,8 @@ func _ready() -> void:
 	_autoplay = args.has("--autoplay")
 	_autoplay_save = _autoplay and args.has("--autoplay-save")
 	_options = SaveStore.load_options()
+	DisplaySettings.apply(get_window(), _options)
+	KeyMap.apply(_options.keys)
 	_audio = AudioDirector.new()
 	add_child(_audio)
 	_audio.set_volumes(_options.music_volume, _options.sfx_volume)
@@ -109,6 +118,7 @@ func _close_title() -> void:
 	_options_window = null
 	_options_panel = null
 	_name_entry = null
+	_difficulty_window = null
 	_title_label = null
 	_menu_window = null
 	_continue_button = null
@@ -135,20 +145,45 @@ func _open_name_entry() -> void:
 	_name_entry = NameEntry.new()
 	_name_entry.setup(_audio)
 	_ui.add_child(_name_entry)
-	_name_entry.accepted.connect(func(hero_name: String) -> void: _start_game({}, hero_name))
-	_name_entry.cancelled.connect(func() -> void:
-		_name_entry.queue_free()
-		_name_entry = null
-		_title_label.show()
-		_menu_window.show()
-		_focus(_continue_button if not _continue_button.disabled else _options_button))
+	_name_entry.accepted.connect(_on_name_accepted)
+	_name_entry.cancelled.connect(_back_to_menu)
 	if _autoplay:
 		_name_entry.demo(AUTOPLAY_NAME)
 
 
-## Fades out, swaps the title for a Game (save empty = new game with hero_name) and fades
-## in.
-func _start_game(save: Dictionary, hero_name := "") -> void:
+## The name is set: the difficulty comes next (on autoplay Game picks it from the arguments).
+func _on_name_accepted(hero_name: String) -> void:
+	if _autoplay:
+		_start_game({}, hero_name)
+		return
+	_close_name_entry()
+	_difficulty_window = DifficultyWindow.new()
+	_difficulty_window.setup(_audio)
+	_ui.add_child(_difficulty_window)
+	_difficulty_window.chosen.connect(func(id: String) -> void: _start_game({}, hero_name, id))
+	_difficulty_window.cancelled.connect(_back_to_menu)
+
+
+## Volver from the name or the difficulty: the menu again.
+func _back_to_menu() -> void:
+	_close_name_entry()
+	if _difficulty_window != null:
+		_difficulty_window.queue_free()
+		_difficulty_window = null
+	_title_label.show()
+	_menu_window.show()
+	_focus(_continue_button if not _continue_button.disabled else _options_button)
+
+
+func _close_name_entry() -> void:
+	if _name_entry != null:
+		_name_entry.queue_free()
+		_name_entry = null
+
+
+## Fades out, swaps the title for a Game (save empty = new game with hero_name and
+## difficulty) and fades in.
+func _start_game(save: Dictionary, hero_name := "", difficulty := Difficulty.NORMAL) -> void:
 	if _starting:
 		return
 	_starting = true
@@ -157,7 +192,7 @@ func _start_game(save: Dictionary, hero_name := "") -> void:
 		await _fade_to(1.0)
 		_close_title()
 	_game = GAME_SCENE.instantiate()
-	_game.setup(_audio, _options, save, hero_name)
+	_game.setup(_audio, _options, save, hero_name, difficulty)
 	_game.quit_to_title.connect(_on_quit_to_title)
 	add_child(_game)
 	await _fade_to(0.0)
@@ -205,11 +240,35 @@ func _build_menu() -> void:
 	_title_label = title
 	title.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP, \
 		Control.PRESET_MODE_MINSIZE, 90)
+	var subtitle := Label.new()
+	subtitle.text = SUBTITLE_TEXT
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle.add_theme_font_size_override("font_size", SUBTITLE_SIZE)
+	subtitle.add_theme_color_override("font_color", Color(1.0, 0.95, 0.8))
+	subtitle.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.0))
+	subtitle.add_theme_constant_override("outline_size", 10)
+	title.add_child(subtitle)  # it comes and goes with the title
+	subtitle.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	subtitle.offset_left = 0.0
+	subtitle.offset_right = 0.0
+	subtitle.offset_top = 0.0
+	subtitle.offset_bottom = 0.0
+	subtitle.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	subtitle.grow_vertical = Control.GROW_DIRECTION_END
+	var version := Label.new()
+	version.text = "v%s" % ProjectSettings.get_setting("application/config/version")
+	version.add_theme_font_size_override("font_size", VERSION_SIZE)
+	version.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.0))
+	version.add_theme_constant_override("outline_size", 6)
+	root.add_child(version)
+	version.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, \
+		Control.PRESET_MODE_MINSIZE, 12)
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	center.offset_top = 160
+	center.offset_top = MENU_TOP
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(center)
+	_menu_center = center
 	_menu_window = BattleHud.make_window()
 	_menu_window.custom_minimum_size = Vector2(320, 0)
 	center.add_child(_menu_window)
@@ -242,6 +301,9 @@ func _build_menu() -> void:
 func _open_options() -> void:
 	_audio.play_sfx(SfxLibrary.ACCEPT)
 	_menu_window.hide()
+	# The options need the whole height of the screen.
+	_title_label.hide()
+	_menu_center.offset_top = 0
 	_options_window.show()
 	_quiet_focus = true
 	_options_panel.focus_first()
@@ -250,6 +312,8 @@ func _open_options() -> void:
 
 func _close_options() -> void:
 	_options_window.hide()
+	_title_label.show()
+	_menu_center.offset_top = MENU_TOP
 	_menu_window.show()
 	_focus(_options_button)
 

@@ -6,9 +6,9 @@ class_name JournalPage extends VBoxContainer
 ## A little smaller than the other pages: seven missions must fit a 720 p window.
 const HEADING_SIZE := 22
 const ENTRY_SIZE := 20
-const TEXT_SIZE := 18
-const TITLE_COLOR := Color(1.0, 0.85, 0.3)
-const GREY := Color(0.6, 0.6, 0.65)
+const TEXT_SIZE := UiStyle.TEXT_SIZE
+const TITLE_COLOR := UiStyle.TITLE_COLOR
+const GREY := UiStyle.GREY
 ## Long lines wrap past this width.
 const TEXT_WIDTH := 720.0
 

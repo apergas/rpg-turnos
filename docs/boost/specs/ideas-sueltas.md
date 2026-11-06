@@ -109,4 +109,15 @@ Formato: una sección por idea, con la fecha, la idea en palabras del usuario y 
 - **Notas:**
   - No se hace hasta que esté todo el juego, porque requiere más investigación. Queda para futuras versiones.
   - No forma parte de ningún plan actual.
-- **Estado:** aplazada a futuras versiones.
+- **Estado:** fuera de la fase 7 (zoom con dos dedos, botones más grandes, aviso táctil y rendimiento en un móvil medio). Es lo primero al acabarla, con su propio diseño y plan.
+
+## Lo que no entra en la versión 1.0
+
+- **Fecha:** 2026-11-06
+- **Idea:** lo que queda fuera de la fase 7 ([plan](../plans/2026-11-06-pulido-publicacion.md)).
+- **Notas:**
+  - Inglés: descartado por el usuario, el juego queda solo en español.
+  - Subir a itch.io: el material está en `docs/itch/`, y subirlo lo decide y lo hace el usuario.
+  - Probar los ejecutables de Windows y Linux: las plantillas de escritorio no están en este PC; los genera el workflow con un tag `v*`.
+  - Mando, tutoriales, bestiario, ciclo de día y noche, correr, exportar la partida y partida nueva +: siguen en `2026-11-03-ideas-juego-completo.md`, sin plan.
+- **Estado:** sin decidir.

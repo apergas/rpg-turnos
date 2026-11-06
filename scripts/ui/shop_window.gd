@@ -16,15 +16,16 @@ signal _left
 signal _answered(yes: bool)
 
 const FONT_SIZE := 24
-const TEXT_SIZE := 18
-const TITLE_COLOR := Color(1.0, 0.85, 0.3)
-const GREY := Color(0.6, 0.6, 0.65)
+const TITLE_COLOR := UiStyle.TITLE_COLOR
+const GREY := UiStyle.GREY
 const BETTER := Color(0.35, 1.0, 0.4)
 const WORSE := Color(1.0, 0.35, 0.3)
 const NAME_WIDTH := 300.0
 const PRICE_WIDTH := 90.0
 ## Messages under the list wrap past this width.
 const MESSAGE_WIDTH := 640.0
+## What the header, the title, a two-line message and the margins leave for the rows.
+const ROWS_RESERVED := 220.0
 ## Seconds each step stays on screen on autoplay.
 const AUTOPLAY_STEP := 0.7
 
@@ -92,9 +93,10 @@ func _ready() -> void:
 	header.add_child(_gold)
 	_title = _label("", Color.WHITE)
 	box.add_child(_title)
-	_rows = VBoxContainer.new()
+	var scroll := ScrollBox.new(ROWS_RESERVED)
+	box.add_child(scroll)
+	_rows = scroll.content
 	_rows.add_theme_constant_override("separation", 6)
-	box.add_child(_rows)
 	_message = _label("", Color.WHITE)
 	_message.hide()
 	box.add_child(_message)
@@ -225,7 +227,7 @@ func _add_buy_row(id: String) -> void:
 		row.add_child(_label("%s +%d" % [info.stat, info.bonus], Color.WHITE))
 		row.add_child(comparison(info.diff))
 	else:
-		row.add_child(_description(id))
+		UiStyle.add_description(row, id)
 	if why != "":
 		row.add_child(_label(why, GREY))
 
@@ -246,7 +248,7 @@ func _add_sell_row(id: String) -> void:
 	price.custom_minimum_size.x = PRICE_WIDTH
 	row.add_child(price)
 	if not Shop.is_equipment(id):
-		row.add_child(_description(id))
+		UiStyle.add_description(row, id)
 	if why != "":
 		row.add_child(_label(why, GREY))
 
@@ -396,13 +398,6 @@ func _button(text: String) -> Button:
 
 func _label(text: String, color: Color) -> Label:
 	return _make_label(text, color)
-
-
-## What an item does, small, after its price.
-func _description(id: String) -> Label:
-	var label := _label(Inventory.description(id), GREY)
-	label.add_theme_font_size_override("font_size", TEXT_SIZE)
-	return label
 
 
 static func _make_label(text: String, color: Color) -> Label:
