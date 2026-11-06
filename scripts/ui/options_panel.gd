@@ -1,9 +1,9 @@
 class_name OptionsPanel extends VBoxContainer
 ## Options page shared by the title screen and the pause menu: music and effects volume
 ## (sliders, 0-100 % in steps of 10), text speed, combat speed, graphics quality, camera
-## shake, large text and, on desktop, fullscreen. Changes apply at once; "Volver" (or back())
-## saves them with SaveStore and emits closed. The rows scroll when the screen is short.
-## Call setup() before adding it to the tree.
+## shake, large text, on desktop fullscreen, and Teclas (KeysPanel). Changes apply at once;
+## "Volver" (or back()) saves them with SaveStore and emits closed. The rows scroll when the
+## screen is short. Call setup() before adding it to the tree.
 
 signal closed
 
@@ -23,6 +23,8 @@ var _sfx_slider: HSlider
 var _music_value: Label
 var _sfx_value: Label
 var _back_button: Button
+var _keys_button: Button
+var _keys_panel: KeysPanel
 
 
 func setup(options: GameOptions, audio: AudioDirector) -> void:
@@ -62,9 +64,17 @@ func _ready() -> void:
 			func(i: int) -> void:
 				_options.fullscreen = i == 0
 				_apply_display())
+	_keys_button = _button("Teclas")
+	_keys_button.pressed.connect(_open_keys)
+	_rows.add_child(_keys_button)
 	_back_button = _button("Volver")
 	_back_button.pressed.connect(back)
 	_main.add_child(_back_button)
+	_keys_panel = KeysPanel.new()
+	_keys_panel.setup(_options, _audio)
+	_keys_panel.closed.connect(_close_keys)
+	_keys_panel.hide()
+	add_child(_keys_panel)
 	_update_values()
 
 
@@ -72,8 +82,11 @@ func focus_first() -> void:
 	_music_slider.grab_focus()
 
 
-## Saves the options and closes the page.
+## Saves the options and closes the page (from Teclas: back to the options first).
 func back() -> void:
+	if _keys_panel.visible:
+		_close_keys()
+		return
 	SaveStore.save_options(_options)
 	if _audio:
 		_audio.play_sfx(SfxLibrary.CANCEL)
@@ -96,6 +109,22 @@ func _apply() -> void:
 	if _audio:
 		_audio.set_volumes(_options.music_volume, _options.sfx_volume)
 	_update_values()
+
+
+func _open_keys() -> void:
+	_main.hide()
+	_keys_panel.show()
+	_keys_panel.focus_first()
+	if _audio:
+		_audio.play_sfx(SfxLibrary.ACCEPT)
+
+
+func _close_keys() -> void:
+	_keys_panel.hide()
+	_main.show()
+	_keys_button.grab_focus()
+	if _audio:
+		_audio.play_sfx(SfxLibrary.CANCEL)
 
 
 func _apply_display() -> void:

@@ -58,6 +58,7 @@ func _ready() -> void:
 	_autoplay_save = _autoplay and args.has("--autoplay-save")
 	_options = SaveStore.load_options()
 	DisplaySettings.apply(get_window(), _options)
+	KeyMap.apply(_options.keys)
 	_audio = AudioDirector.new()
 	add_child(_audio)
 	_audio.set_volumes(_options.music_volume, _options.sfx_volume)

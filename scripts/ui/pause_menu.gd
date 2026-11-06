@@ -166,15 +166,12 @@ func tour() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	var key := event as InputEventKey
-	if key == null or not key.pressed or key.echo:
-		return
-	if key.physical_keycode != KEY_ESCAPE and key.physical_keycode != KEY_P:
-		return
 	if not is_open():
-		if available:
+		if available and event.is_action_pressed(KeyMap.PAUSE):
 			get_viewport().set_input_as_handled()
 			open()
+		return
+	if not (event.is_action_pressed(KeyMap.PAUSE) or event.is_action_pressed(KeyMap.CANCEL)):
 		return
 	get_viewport().set_input_as_handled()
 	match _page:

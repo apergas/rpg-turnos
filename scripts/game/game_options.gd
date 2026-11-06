@@ -28,6 +28,8 @@ var quality := Quality.HIGH
 var camera_shake := true
 var fullscreen := false
 var large_text := false
+## What the player reassigned: KeyMap action -> key codes.
+var keys := {}
 
 
 ## Seconds per typed character of the battle messages; 0.0 shows them at once.
@@ -44,7 +46,7 @@ func combat_scale() -> float:
 func to_dict() -> Dictionary:
 	return {"music": music_volume, "sfx": sfx_volume, "text_speed": text_speed,
 		"combat_speed": combat_speed, "quality": quality, "camera_shake": camera_shake,
-		"fullscreen": fullscreen, "large_text": large_text}
+		"fullscreen": fullscreen, "large_text": large_text, "keys": keys}
 
 
 ## Options from a Dictionary read from disk; missing or wrong values keep the default.
@@ -68,4 +70,18 @@ static func from_dict(data: Dictionary) -> GameOptions:
 		options.fullscreen = data.fullscreen
 	if data.get("large_text") is bool:
 		options.large_text = data.large_text
+	options.keys = _valid_keys(data.get("keys"))
 	return options
+
+
+## Only known actions with at least one key, and every key a number.
+static func _valid_keys(saved: Variant) -> Dictionary:
+	var valid := {}
+	if not saved is Dictionary:
+		return valid
+	for action: Variant in saved:
+		var codes: Variant = saved[action]
+		if action in KeyMap.ACTIONS and codes is Array and not codes.is_empty() \
+				and codes.all(func(code: Variant) -> bool: return code is float):
+			valid[action] = codes
+	return valid
