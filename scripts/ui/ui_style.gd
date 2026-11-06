@@ -18,3 +18,14 @@ static func add_description(parent: Node, id: String) -> void:
 	parent.add_child(label)
 	BattleHud.fit_label(label, Inventory.description(id),
 		TOUCH_DESCRIPTION_WIDTH if Device.is_touch() else DESCRIPTION_WIDTH)
+
+
+## Least width of a button on a phone, so "Sí" or "Usar" are not a sliver.
+const TOUCH_BUTTON_WIDTH := 120.0
+
+
+## On a phone, makes a menu row big enough for a finger. Flat rows need it: the phone's button
+## theme does not draw their "normal" style, so it does not give them any height.
+static func fit_finger(button: Button) -> void:
+	if Device.is_touch():
+		button.custom_minimum_size = Vector2(TOUCH_BUTTON_WIDTH, DisplaySettings.TOUCH_BUTTON_HEIGHT)

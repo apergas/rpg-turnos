@@ -9,6 +9,7 @@ class_name WorldStage extends RefCounted
 
 ## The Medieval Hexagon buildings are miniatures (a house is 0.8 m wide, 0.9 m tall).
 const BUILDING_SCALE := 3.5
+const TREE_SHADER := preload("res://shaders/tree.gdshader")
 ## Models named by ZoneData (buildings, tree_models, clump_model).
 const MODELS := {
 	"house_A_red": preload("res://assets/medieval/building_home_A_red.gltf"),
@@ -225,9 +226,22 @@ static func _add_trees(root: Node3D, zone: ZoneData) -> void:
 			root.add_child(body)
 			add_cylinder_shape(body, CLUMP_RADIUS if clump else TRUNK_RADIUS,
 				TREE_COLLIDER_HEIGHT)
-	LowPoly.add_multimesh(root, BattleStage.scene_mesh(MODELS[zone.tree_models[0]]), single_a)
-	LowPoly.add_multimesh(root, BattleStage.scene_mesh(MODELS[zone.tree_models[1]]), single_b)
-	LowPoly.add_multimesh(root, BattleStage.scene_mesh(MODELS[zone.clump_model]), clumps)
+	_add_tree_kind(root, MODELS[zone.tree_models[0]], single_a)
+	_add_tree_kind(root, MODELS[zone.tree_models[1]], single_b)
+	_add_tree_kind(root, MODELS[zone.clump_model], clumps)
+
+
+## One kind of tree, drawn with its model's texture through the shader that lets the hero
+## show through (shaders/tree.gdshader).
+static func _add_tree_kind(root: Node3D, scene: PackedScene, transforms: Array[Transform3D]) -> void:
+	var mesh := BattleStage.scene_mesh(scene)
+	var source := mesh.surface_get_material(0) as BaseMaterial3D
+	var material := ShaderMaterial.new()
+	material.shader = TREE_SHADER
+	material.set_shader_parameter("albedo_texture", source.albedo_texture)
+	material.set_shader_parameter("albedo_color", source.albedo_color)
+	material.set_shader_parameter("roughness_value", source.roughness)
+	LowPoly.add_multimesh(root, mesh, transforms, material)
 
 
 static func _tree_fits(zone: ZoneData, pos: Vector3, placed: Array[Vector2]) -> bool:

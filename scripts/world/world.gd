@@ -51,6 +51,9 @@ signal stepped
 const PLAYER_SCENE := preload("res://scenes/world/player.tscn")
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
 const HERO_DATA := preload("res://data/hero.tres")
+## Global shader parameter the trees read; NO_HERO_POS (below the ground) leaves them whole.
+const HERO_POS_PARAM := &"hero_pos"
+const NO_HERO_POS := Vector3(0, -100, 0)
 const NOTICE_TIME := 2.0
 ## Seconds "Misión cumplida" stays in the status window.
 const MISSION_DONE_TIME := 4.0
@@ -81,6 +84,10 @@ const PORTAL_PULSE := 1.08
 const MECHANISM_RADIUS := 2.2
 ## A click or tap this close to a figure or a chest means "go there and use it".
 const NPC_TAP_RADIUS := 1.2
+## A tap on a figure is measured at this height, so its feet and its head both count.
+const TAP_HEIGHT := 0.9
+## Taps on the map are ignored this long after a dialogue or a window closes.
+const TAP_GUARD_MS := 400
 ## Kinds of the things the player can use on the map, and their prompts.
 const TALK := "talk"
 const NPC := "npc"
@@ -193,6 +200,8 @@ var _talking := false
 var _was_near := {}
 ## Set by a click or tap on a figure or chest: use it as soon as it is in reach.
 var _use_on_arrival := {}
+## Taps on the map count from this time on (Time.get_ticks_msec()).
+var _taps_from_ms := 0
 ## Autoplay only: npc indexes already talked to on this map.
 var _autoplay_talked := {}
 var _marker: MeshInstance3D
@@ -258,6 +267,7 @@ func _physics_process(_delta: float) -> void:
 			_use_on_arrival = {}  # walking off by hand drops the tap's errand
 	if _grass:
 		Vegetation.set_pusher(_grass, _player.global_position)
+	RenderingServer.global_shader_parameter_set(HERO_POS_PARAM, _player.global_position)
 	_map_square.follow(_player.global_position)
 	_marker.visible = _player.move_target != null
 	if _marker.visible:
@@ -286,10 +296,11 @@ func _physics_process(_delta: float) -> void:
 		_hide_prompt()
 	else:
 		_show_prompt(near)
-	if not near.is_empty() and near == _use_on_arrival:
+	if not _use_on_arrival.is_empty() and _in_reach(_use_on_arrival):
+		var errand := _use_on_arrival
 		_use_on_arrival = {}
 		_player.move_target = null
-		_use(near)
+		_use(errand)
 	elif not near.is_empty() and near != _was_near and _autoplay and near.kind != PORTAL:
 		# Autoplay talks to each villager once per visit to the zone, and again when a
 		# mark over it says there is something new.
@@ -299,6 +310,11 @@ func _physics_process(_delta: float) -> void:
 			_autoplay_talked[near.index] = true
 			_use(near)
 	_was_near = near
+
+
+## The title's meadow has no hero: its trees stay whole.
+func _exit_tree() -> void:
+	RenderingServer.global_shader_parameter_set(HERO_POS_PARAM, NO_HERO_POS)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -313,11 +329,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		return  # the mouse events left are the touches again
 	var point: Variant = _pointer_on_ground(event)
-	if point == null:
+	if point == null or Time.get_ticks_msec() < _taps_from_ms:
 		return
 	get_viewport().set_input_as_handled()
 	if event is InputEventMouseButton:
-		_use_on_arrival = _tapped_use(point)
+		_use_on_arrival = _tapped_use((event as InputEventMouseButton).position)
 	_player.move_to(point)
 
 
@@ -345,10 +361,12 @@ func _ground_point(screen: Vector2) -> Variant:
 
 ## A tap on the ground (phones): walk there, and use what is there once in reach.
 func _on_tapped(screen: Vector2) -> void:
+	if Time.get_ticks_msec() < _taps_from_ms:
+		return
 	var point: Variant = _ground_point(screen)
 	if point == null:
 		return
-	_use_on_arrival = _tapped_use(point)
+	_use_on_arrival = _tapped_use(screen)
 	_player.move_to(point)
 
 
@@ -603,6 +621,7 @@ func freeze(on: bool) -> void:
 	await get_tree().process_frame
 	_player.input_enabled = true
 	_talking = false
+	_taps_from_ms = Time.get_ticks_msec() + TAP_GUARD_MS
 
 
 ## What the quests show on this map (Game passes GameState.quests' answers): marks is figure
@@ -793,12 +812,25 @@ func _nearest_use(pos: Vector3) -> Dictionary:
 	return best
 
 
-## The thing a click or tap at point means ({} if none): within NPC_TAP_RADIUS of it.
-func _tapped_use(point: Vector3) -> Dictionary:
+## The thing a click or tap at a screen point means ({} if none): within NPC_TAP_RADIUS of it
+## at TAP_HEIGHT.
+func _tapped_use(screen: Vector2) -> Dictionary:
+	var point: Variant = Plane(Vector3.UP, TAP_HEIGHT).intersects_ray(
+		_camera.project_ray_origin(screen), _camera.project_ray_normal(screen))
+	if point == null:
+		return {}
 	for use in _uses():
 		if _flat_distance(point, use.pos) <= NPC_TAP_RADIUS:
 			return {"kind": use.kind, "id": use.id, "index": use.index}
 	return {}
+
+
+## Whether a use asked for by a tap is in reach of the hero now.
+func _in_reach(wanted: Dictionary) -> bool:
+	for use in _uses():
+		if use.kind == wanted.kind and use.id == wanted.id and use.index == wanted.index:
+			return _flat_distance(_player.global_position, use.pos) <= use.radius
+	return false
 
 
 ## Everything usable now: the zone's figures, its closed chests and, on a dungeon floor,

@@ -30,6 +30,7 @@ const HERO_PAGES := [["Estado", "status"], ["Objetos", "items"], ["Equipo", "equ
 ## Long texts wrap past this width.
 const TEXT_WIDTH := 480.0
 const MISSION_WIDTH := 420.0
+const TOUCH_MESSAGE_WIDTH := 240.0
 ## What the title, the message, Volver and the margins leave out of a page's scrolling list.
 const LIST_RESERVED := 200.0
 const STATUS_BAR_WIDTH := 300.0
@@ -249,10 +250,11 @@ func _fill_status() -> void:
 	BattleHud.fit_label(_spells_label, "Hechizos: %s" % ", ".join(spells), TEXT_WIDTH)
 
 
-## A line under a page's rows; an empty one takes no room, so the window hugs the rows.
+## An empty line takes no room off a phone; on a phone it keeps its place, so a message never
+## moves the buttons from under the finger.
 func _set_line(label: Label, text: String) -> void:
 	label.text = text
-	label.visible = text != ""
+	label.visible = text != "" or Device.is_touch()
 
 
 ## One row per item carried: name, count and "Usar" (disabled, with the reason, when it
@@ -363,7 +365,7 @@ func _fill_equipment() -> void:
 		row.add_theme_constant_override("separation", 12)
 		_equip_box.add_child(row)
 		var button := _button(Equipment.display_name(id))
-		button.custom_minimum_size = Vector2(260, 0)
+		button.custom_minimum_size.x = 260.0
 		button.pressed.connect(_on_equip.bind(id))
 		row.add_child(button)
 		row.add_child(_label(Equipment.effect_text(id), Color.WHITE))
@@ -486,7 +488,9 @@ func _build_main(center: CenterContainer) -> void:
 		button.pressed.connect(entry[1])
 		system_box.add_child(button)
 	_main_message = _label("", Color.WHITE)
-	_main_message.hide()
+	_main_message.visible = Device.is_touch()
+	if Device.is_touch():
+		_main_message.custom_minimum_size.x = TOUCH_MESSAGE_WIDTH
 	system_box.add_child(_main_message)
 
 
@@ -607,6 +611,7 @@ func _button(text: String) -> Button:
 	var button := Button.new()
 	button.text = text
 	button.flat = true
+	UiStyle.fit_finger(button)
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.add_theme_font_size_override("font_size", FONT_SIZE)
 	button.focus_entered.connect(func() -> void:

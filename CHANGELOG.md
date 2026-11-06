@@ -1,5 +1,14 @@
 # Registro de cambios
 
+## Próxima versión
+
+- Móvil: en vertical aparece "Gira el móvil" en lugar de una pantalla negra.
+- Móvil: botones más grandes y "Pantalla completa" en el menú principal.
+- Móvil: las ventanas ya no se mueven al aparecer un mensaje, y al elegir objetivo solo queda lo que responde.
+- Tocar una figura la usa al llegar, y un toque de más tras un diálogo ya no hace andar al héroe.
+- Los árboles dejan ver al héroe cuando pasa por detrás.
+- La Seta saltarina y el Murciélago son menos duros: a nivel 1 ya se puede salir del sendero.
+
 ## 1.0.0 (2026)
 
 Primera versión completa de **Villaclaro: la Niebla del Norte**.
