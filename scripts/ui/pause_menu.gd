@@ -365,7 +365,7 @@ func _fill_equipment() -> void:
 		row.add_theme_constant_override("separation", 12)
 		_equip_box.add_child(row)
 		var button := _button(Equipment.display_name(id))
-		button.custom_minimum_size = Vector2(260, 0)
+		button.custom_minimum_size.x = 260.0
 		button.pressed.connect(_on_equip.bind(id))
 		row.add_child(button)
 		row.add_child(_label(Equipment.effect_text(id), Color.WHITE))
