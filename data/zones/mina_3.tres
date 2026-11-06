@@ -7,11 +7,11 @@ script = ExtResource("1_zone")
 wells = [{
 "id": "mina_3_vida",
 "kind": "hp",
-"pos": Vector3(-16, 0, 4)
+"pos": Vector3(-24, 0, -16)
 }, {
 "id": "mina_3_mana",
 "kind": "mp",
-"pos": Vector3(20, 0, -12)
+"pos": Vector3(24, 0, -12)
 }]
 id = "mina_3"
 display_name = "la mina"
@@ -55,5 +55,5 @@ door_flag = "mina_puerta"
 door_key = "llave_mina"
 door_text = "La reja está cerrada con llave."
 floor_key = "llave_mina"
-autoplay_route = Array[Vector3]([Vector3(-16, 0, -16), Vector3(-20, 0, -16), Vector3(-20, 0, -8), Vector3(0, 0, -8), Vector3(0, 0, -20), Vector3(23, 0, -20), Vector3(22, 0, -16), Vector3(22, 0, -12), Vector3(20, 0, -8), Vector3(20, 0, 0), Vector3(-4, 0, 0), Vector3(-4, 0, 12), Vector3(4, 0, 12), Vector3(4, 0, 8), Vector3(20, 0, 8), Vector3(20, 0, 10.8), Vector3(20, 0, 16), Vector3(24, 0, 18), Vector3(20, 0, 8), Vector3(4, 0, 8), Vector3(4, 0, 12), Vector3(-4, 0, 12), Vector3(-4, 0, 0), Vector3(-12, 0, 0), Vector3(-12, 0, 12), Vector3(-23, 0, 12), Vector3(-12, 0, 12), Vector3(-12, 0, -8), Vector3(-20, 0, -8), Vector3(-20, 0, -16)])
+autoplay_route = Array[Vector3]([Vector3(-16, 0, -16), Vector3(-20, 0, -16), Vector3(-20, 0, -8), Vector3(0, 0, -8), Vector3(0, 0, -20), Vector3(23, 0, -20), Vector3(20, 0, -16), Vector3(20, 0, 0), Vector3(-4, 0, 0), Vector3(-4, 0, 12), Vector3(4, 0, 12), Vector3(4, 0, 8), Vector3(20, 0, 8), Vector3(20, 0, 10.8), Vector3(20, 0, 16), Vector3(24, 0, 18), Vector3(20, 0, 8), Vector3(4, 0, 8), Vector3(4, 0, 12), Vector3(-4, 0, 12), Vector3(-4, 0, 0), Vector3(-12, 0, 0), Vector3(-12, 0, 12), Vector3(-23, 0, 12), Vector3(-12, 0, 12), Vector3(-12, 0, -8), Vector3(-20, 0, -8), Vector3(-20, 0, -16)])
 autoplay_boss_level = 13

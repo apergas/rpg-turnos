@@ -11,7 +11,7 @@ wells = [{
 }, {
 "id": "mina_1_mana",
 "kind": "mp",
-"pos": Vector3(20, 0, -4)
+"pos": Vector3(24, 0, -4)
 }]
 id = "mina_1"
 display_name = "la mina"
@@ -92,5 +92,5 @@ ambient_color = Color(0.5, 0.48, 0.6, 1)
 ambient_energy = 1.0
 rock_color = Color(0.48, 0.42, 0.37, 1)
 stairs_down = "mina_2"
-autoplay_route = Array[Vector3]([Vector3(0, 0, 17), Vector3(-6.5, 0, 12.5), Vector3(6.5, 0, 12.5), Vector3(0, 0, 12), Vector3(0, 0, 4), Vector3(22, 0, 4), Vector3(22, 0, -4), Vector3(22, 0, -20), Vector3(20, 0, -20), Vector3(16, 0, -18.5), Vector3(-4, 0, -20), Vector3(-4, 0, -4), Vector3(-16, 0, -4), Vector3(-16, 0, -12), Vector3(-12, 0, -20)])
+autoplay_route = Array[Vector3]([Vector3(0, 0, 17), Vector3(-6.5, 0, 12.5), Vector3(6.5, 0, 12.5), Vector3(0, 0, 12), Vector3(0, 0, 4), Vector3(20, 0, 4), Vector3(20, 0, -20), Vector3(16, 0, -18.5), Vector3(-4, 0, -20), Vector3(-4, 0, -4), Vector3(-16, 0, -4), Vector3(-16, 0, -12), Vector3(-12, 0, -20)])
 autoplay_boss_level = 13

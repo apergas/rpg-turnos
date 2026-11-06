@@ -788,8 +788,6 @@ func _on_inn(inn_id: String) -> void:
 	_set_busy(false)
 
 
-## A closed chest: gives what it holds, opens the lid and saves without a notice (the
-## notice shows what was found).
 ## The hero used a well: drinks if it is full and the hero is not. On autoplay only a full
 ## well and a hero in need.
 func _on_well(id: String, kind: String) -> void:
@@ -808,6 +806,8 @@ func _on_well(id: String, kind: String) -> void:
 	_set_busy(false)
 
 
+## A closed chest: gives what it holds, opens the lid and saves without a notice (the
+## notice shows what was found).
 func _on_chest(chest_id: String) -> void:
 	if _busy:
 		return
