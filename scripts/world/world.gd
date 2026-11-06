@@ -674,6 +674,7 @@ func set_chest_open(chest_id: String, open: bool, instant := false) -> void:
 ## The pause menu covers the middle of the screen and says the same as the status window,
 ## which goes away behind it (with the map square).
 func set_status_shown(on: bool) -> void:
+	_reset_pad()  # a finger's release is lost while the tree is paused
 	_status_column.visible = on
 	_map_square.visible = on
 
