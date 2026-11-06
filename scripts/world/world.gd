@@ -100,16 +100,16 @@ const DOOR := "door"
 const PORTAL := "portal"
 const BOARD := "board"
 const PROMPTS := {
-	TALK: "%s o toca: hablar",
-	NPC: "%s o toca: hablar",
-	SHOP: "%s o toca: comprar",
-	INN: "%s o toca: hablar",
-	CHEST: "%s o toca: abrir",
-	LEVER: "%s o toca: tirar",
-	KEY: "%s o toca: coger",
-	DOOR: "%s o toca: abrir",
-	PORTAL: "%s o toca: volver",
-	BOARD: "%s o toca: leer",
+	TALK: "Hablar",
+	NPC: "Hablar",
+	SHOP: "Comprar",
+	INN: "Descansar",
+	CHEST: "Abrir",
+	LEVER: "Tirar",
+	KEY: "Coger",
+	DOOR: "Abrir",
+	PORTAL: "Volver",
+	BOARD: "Leer",
 }
 ## ZoneData.npcs kinds -> use kinds.
 const NPC_KINDS := {"quest": TALK, "npc": NPC, "shop": SHOP, "inn": INN, "board": BOARD}
@@ -372,10 +372,9 @@ func _on_tapped(screen: Vector2) -> void:
 
 ## Shows what is in reach: the prompt, or on phones the use button.
 func _show_prompt(near: Dictionary) -> void:
-	var text: String = PROMPTS[near.kind] % KeyMap.first_key_name(KeyMap.ACCEPT)
+	var text: String = PROMPTS[near.kind]
 	if _use_button:
-		var verb := text.substr(text.find(": ") + 2)
-		_use_button.text = verb.substr(0, 1).to_upper() + verb.substr(1)
+		_use_button.text = text
 		_use_button.show()
 		return
 	_prompt.text = text
@@ -1144,7 +1143,7 @@ func _build_ui() -> void:
 	_notice = _label()
 	_notice_window.add_child(_notice)
 	_prompt = _label()
-	_prompt.text = PROMPTS[TALK] % KeyMap.first_key_name(KeyMap.ACCEPT)
+	_prompt.text = PROMPTS[TALK]
 	_prompt.add_theme_color_override("font_outline_color", Color.BLACK)
 	_prompt.add_theme_constant_override("outline_size", 8)
 	_ui.add_child(_prompt)

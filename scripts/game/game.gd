@@ -746,8 +746,9 @@ func _on_shop(shop_id: String) -> void:
 	_set_busy(false)
 
 
-## The innkeeper: Sí fades to black and back with HP and MP full and saves (it costs
-## nothing); with No, nothing happens. On autoplay it only stops there below
+## The innkeeper speaks; if HP or MP are missing, the hero rests at once (fade to black and
+## back with HP and MP full, free) and the game saves, with no question asked. Full HP and
+## MP: the keeper just remarks on it. On autoplay it only stops there below
 ## AUTOPLAY_INN_RATIO of max HP or MP, on GameState.needs_rest() or below the boss's
 ## thresholds (or a retreat for the boss would come back unhealed).
 func _on_inn(inn_id: String) -> void:
@@ -757,25 +758,23 @@ func _on_inn(inn_id: String) -> void:
 	if _busy or (_autoplay and not hurt):
 		return
 	_set_busy(true)
+	var keeper := Inn.keeper(inn_id)
+	var lines: Array[String] = [Inn.FULL if Inn.is_rested(state) else Inn.REST]
+	await _world.show_dialogue(keeper, lines)
+	if Inn.is_rested(state):
+		_set_busy(false)
+		return
 	_world.freeze(true)
-	var lines: Array[String] = []
-	var slept := false
-	if await _shop.ask(Inn.keeper(inn_id), Inn.OFFER):
-		slept = true
-		lines.append(Inn.stay(state))
-		await _fade_to(1.0)
-		_refresh_status()
-		_audio.play_sfx(SfxLibrary.HEAL)
-		await get_tree().create_timer(INN_NIGHT_TIME).timeout
-		await _fade_to(0.0)
-	else:
-		lines.append("Vuelve cuando quieras.")
-	await _world.freeze(false)
-	await _world.show_dialogue(Inn.keeper(inn_id), lines)
+	Inn.stay(state)
+	await _fade_to(1.0)
 	_refresh_status()
-	if slept:
-		_update_boss()
-		_autosave(true)
+	_audio.play_sfx(SfxLibrary.HEAL)
+	await get_tree().create_timer(INN_NIGHT_TIME).timeout
+	await _fade_to(0.0)
+	await _world.freeze(false)
+	_refresh_status()
+	_update_boss()
+	_autosave(true)
 	_set_busy(false)
 
 

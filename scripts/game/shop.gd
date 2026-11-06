@@ -34,7 +34,9 @@ const SHOPS := {
 }
 const NO_GOLD := "Falta oro"
 const WORN := "Lo llevas puesto"
-const WORTHLESS := "No vale nada"
+const NOT_FOR_SALE := "No se vende"
+## What the starting gear sells for: it is worth almost nothing, but it clears the bag.
+const STARTING_GEAR_PRICE := 1
 const NOT_CARRIED := "No lo llevas"
 ## Potions --autoplay keeps in stock once it has the shop's equipment.
 const AUTOPLAY_POTIONS := 3
@@ -67,8 +69,11 @@ static func price(id: String) -> int:
 	return Equipment.price(id) if is_equipment(id) else int(Inventory.ITEMS[id].price)
 
 
-## What the shop pays for id: half its price, rounded down.
+## What the shop pays for id: half its price, rounded down. The starting gear (zone 0)
+## has no price but sells for STARTING_GEAR_PRICE; quest rewards can't be sold.
 static func sell_price(id: String) -> int:
+	if is_equipment(id) and Equipment.EQUIPMENT[id].zone == 0:
+		return STARTING_GEAR_PRICE
 	return floori(price(id) / 2.0)
 
 
@@ -124,7 +129,7 @@ static func sell_problem(state: GameState, id: String) -> String:
 	if sell_count(state, id) <= 0:
 		return WORN if state.loadout.is_worn(id) else NOT_CARRIED
 	if sell_price(id) <= 0:
-		return WORTHLESS
+		return NOT_FOR_SALE
 	return ""
 
 

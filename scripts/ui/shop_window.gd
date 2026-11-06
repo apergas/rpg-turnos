@@ -6,14 +6,12 @@ class_name ShopWindow extends Control
 ## carries at half price (what is worn is listed but can't be sold). Rows that can't be
 ## used now are grey with the reason. Keyboard (↑ / ↓, Enter / Space, Esc goes back),
 ## mouse and touch. The rules are Shop's; this window only shows them. Emits changed
-## after every purchase, sale or change of equipment. ask() puts a yes / no question in
-## the same window (the inn). Call setup() before adding it.
+## after every purchase, sale or change of equipment. Call setup() before adding it.
 ## With `-- --autoplay` run() buys Shop.autoplay_picks() by itself, equips every piece,
-## shows the sell page and prints each message; ask() answers Sí by itself.
+## shows the sell page and prints each message.
 
 signal changed
 signal _left
-signal _answered(yes: bool)
 
 const FONT_SIZE := 24
 const TITLE_COLOR := UiStyle.TITLE_COLOR
@@ -122,24 +120,6 @@ func run(shop_id: String) -> void:
 	_page = ""
 
 
-## Shows speaker and question with Sí / No and returns true for Sí (Esc is No).
-func ask(speaker: String, question: String) -> bool:
-	_keeper.text = speaker
-	_set_message("")
-	show()
-	_sfx(SfxLibrary.DIALOGUE)
-	_show_page("question")
-	_title.text = question
-	if _autoplay:
-		print("%s: %s" % [speaker, question])
-		get_tree().create_timer(AUTOPLAY_STEP).timeout.connect(
-			func() -> void: _answered.emit(true))
-	var yes: bool = await _answered
-	hide()
-	_page = ""
-	return yes
-
-
 func _unhandled_input(event: InputEvent) -> void:
 	if _page == "" or _autoplay:
 		return
@@ -157,8 +137,6 @@ func _back() -> void:
 			_left.emit()
 		"ask":
 			_answer(false)
-		"question":
-			_answered.emit(false)
 		_:
 			_set_message("")
 			_show_page("menu")
@@ -196,13 +174,6 @@ func _show_page(page: String, focus_id := "") -> void:
 			_title.text = "¿Te %s equipas ahora?" % Equipment.pronoun(_asking)
 			_add_button("Sí", func() -> void: _answer(true))
 			_add_button("No", func() -> void: _answer(false))
-		"question":
-			_add_button("Sí", func() -> void:
-				_sfx(SfxLibrary.ACCEPT)
-				_answered.emit(true))
-			_add_button("No", func() -> void:
-				_sfx(SfxLibrary.CANCEL)
-				_answered.emit(false))
 	if focus_id == "" or not _focus_id(focus_id):
 		_focus_first()
 	if focus_id != "":
