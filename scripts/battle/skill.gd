@@ -26,6 +26,8 @@ const THUNDER := "thunder"
 ## Status it may cause on each target it hits ("" for none) and the chance (0..1).
 @export var status := ""
 @export var status_chance := 0.0
+## The spell of the hero this one replaces once learned ("" for none).
+@export var replaces := ""
 
 
 ## True if the hero has to pick one enemy for it.

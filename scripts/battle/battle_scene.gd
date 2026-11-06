@@ -384,7 +384,10 @@ func _play_event(event: Dictionary) -> void:
 			await _say(_gains_text(event.gains))
 		BattleEvent.LEARN:
 			_sfx(SfxLibrary.LEVEL_UP)
-			await _say("¡%s aprende %s!" % [hero.display_name, event.name])
+			var learned := "¡%s aprende %s!" % [hero.display_name, event.name]
+			if event.replaced != "":
+				learned += " Sustituye a %s." % event.replaced
+			await _say(learned)
 		BattleEvent.DROP:
 			await _say("¡%s ha dejado %s %s!" % [_cap(_the(_fighter(event.owner))),
 				Inventory.article(event.item), Inventory.display_name(event.item)])

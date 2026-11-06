@@ -101,8 +101,8 @@ static func level_up(level: int, gains: Dictionary, hero: Combatant) -> Dictiona
 		"max_hp": hero.max_hp, "mp": hero.mp, "max_mp": hero.max_mp}
 
 
-static func learn(skill_name: String) -> Dictionary:
-	return {"type": LEARN, "name": skill_name}
+static func learn(skill_name: String, replaced_name := "") -> Dictionary:
+	return {"type": LEARN, "name": skill_name, "replaced": replaced_name}
 
 
 ## owner: the enemy that left it.
