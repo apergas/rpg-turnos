@@ -101,7 +101,7 @@ func _ready() -> void:
 	_rows = _scroll.content
 	_rows.add_theme_constant_override("separation", 6)
 	_message = _label("", Color.WHITE)
-	_message.hide()
+	_message.visible = Device.is_touch()
 	box.add_child(_message)
 	hide()
 
@@ -348,10 +348,11 @@ func _say(text: String) -> void:
 		print(text)
 
 
-## The line under the list; an empty one takes no room, so the window hugs the rows.
+## The line under the list. Off a phone an empty one takes no room, so the window hugs the
+## rows; on a phone it keeps its place, so a message never moves the rows under the finger.
 func _set_message(text: String) -> void:
 	BattleHud.fit_label(_message, text, MESSAGE_WIDTH)
-	_message.visible = text != ""
+	_message.visible = text != "" or Device.is_touch()
 
 
 func _row() -> HBoxContainer:

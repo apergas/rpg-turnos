@@ -54,4 +54,6 @@ static func _touch_theme() -> Theme:
 		box.content_margin_top = extra
 		box.content_margin_bottom = extra
 		theme.set_stylebox(style_name, "Button", box)
+	# No keyboard to follow, and a scroll list would clip the border anyway.
+	theme.set_stylebox("focus", "Button", StyleBoxEmpty.new())
 	return theme
