@@ -109,7 +109,7 @@ Formato: una sección por idea, con la fecha, la idea en palabras del usuario y 
 - **Notas:**
   - No se hace hasta que esté todo el juego, porque requiere más investigación. Queda para futuras versiones.
   - No forma parte de ningún plan actual.
-- **Estado:** fuera de la fase 7 (zoom con dos dedos, botones más grandes, aviso táctil y rendimiento en un móvil medio). Es lo primero al acabarla, con su propio diseño y plan.
+- **Estado:** hecha: [diseño](2026-11-06-moviles-design.md) y [plan](../plans/2026-11-06-moviles.md). Palanca flotante, zoom con dos dedos, botones y ventanas grandes, aviso de girar el móvil, calidad y fotogramas bajos y la instalación en la pantalla de inicio. Queda abierto: probarlo en un móvil de verdad (fotogramas, calor, Safari en iPhone, el sonido tras el primer toque, la instalación); si no llega a 30 FPS en un móvil medio, bajar primero `TOUCH_3D_LOW` y luego `Vegetation.SPACING`.
 
 ## Lo que no entra en la versión 1.0
 

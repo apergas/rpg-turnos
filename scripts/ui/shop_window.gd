@@ -21,6 +21,8 @@ const GREY := UiStyle.GREY
 const BETTER := Color(0.35, 1.0, 0.4)
 const WORSE := Color(1.0, 0.35, 0.3)
 const NAME_WIDTH := 300.0
+## Phone: narrower names, so the widest row still fits the screen.
+const TOUCH_NAME_WIDTH := 240.0
 const PRICE_WIDTH := 90.0
 ## Messages under the list wrap past this width.
 const MESSAGE_WIDTH := 640.0
@@ -41,6 +43,7 @@ var _keeper: Label
 var _gold: Label
 var _title: Label
 var _rows: VBoxContainer
+var _scroll: ScrollBox
 var _message: Label
 
 
@@ -93,9 +96,9 @@ func _ready() -> void:
 	header.add_child(_gold)
 	_title = _label("", Color.WHITE)
 	box.add_child(_title)
-	var scroll := ScrollBox.new(ROWS_RESERVED)
-	box.add_child(scroll)
-	_rows = scroll.content
+	_scroll = ScrollBox.new(ROWS_RESERVED)
+	box.add_child(_scroll)
+	_rows = _scroll.content
 	_rows.add_theme_constant_override("separation", 6)
 	_message = _label("", Color.WHITE)
 	_message.hide()
@@ -164,6 +167,7 @@ func _back() -> void:
 ## focus_id puts the cursor back on that item's row when it is still there and usable,
 ## so buying or selling several in a row needs no walking down the list again.
 func _show_page(page: String, focus_id := "") -> void:
+	var kept := _scroll.scroll_vertical
 	_page = page
 	_gold.text = "Oro %d G" % _state.gold
 	for child in _rows.get_children():
@@ -201,6 +205,14 @@ func _show_page(page: String, focus_id := "") -> void:
 				_answered.emit(false))
 	if focus_id == "" or not _focus_id(focus_id):
 		_focus_first()
+	if focus_id != "":
+		_keep_scroll(kept)
+
+
+## The rows were just rebuilt: once they are laid out, the list goes back where it was.
+func _keep_scroll(value: int) -> void:
+	await get_tree().process_frame
+	_scroll.scroll_vertical = value
 
 
 func _open(page: String) -> void:
@@ -214,7 +226,7 @@ func _add_buy_row(id: String) -> void:
 	var row := _row()
 	var why := Shop.buy_problem(_state, id)
 	var button := _button(Shop.display_name(id))
-	button.custom_minimum_size.x = NAME_WIDTH
+	button.custom_minimum_size.x = TOUCH_NAME_WIDTH if Device.is_touch() else NAME_WIDTH
 	button.disabled = why != ""
 	button.pressed.connect(_buy.bind(id))
 	button.set_meta("id", id)
@@ -239,7 +251,7 @@ func _add_sell_row(id: String) -> void:
 	var count := Shop.sell_count(_state, id)
 	var text := Shop.display_name(id) if count <= 1 else "%s ×%d" % [Shop.display_name(id), count]
 	var button := _button(text)
-	button.custom_minimum_size.x = NAME_WIDTH
+	button.custom_minimum_size.x = TOUCH_NAME_WIDTH if Device.is_touch() else NAME_WIDTH
 	button.disabled = why != ""
 	button.pressed.connect(_sell.bind(id))
 	button.set_meta("id", id)

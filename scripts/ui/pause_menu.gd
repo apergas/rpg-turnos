@@ -530,8 +530,14 @@ func _build_items(stack: VBoxContainer) -> void:
 
 func _build_equipment(stack: VBoxContainer) -> void:
 	var page := _page_box(stack, "equipment", "Equipo")
-	_equip_box = VBoxContainer.new()
-	page.add_child(_equip_box)
+	if Device.is_touch():
+		# The slot's list of pieces is taller than a phone's screen.
+		var scroll := ScrollBox.new(LIST_RESERVED)
+		page.add_child(scroll)
+		_equip_box = scroll.content
+	else:
+		_equip_box = VBoxContainer.new()
+		page.add_child(_equip_box)
 	_equip_message = _label("", Color.WHITE)
 	page.add_child(_equip_message)
 	page.add_child(_back_button())

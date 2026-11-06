@@ -35,7 +35,11 @@ static func save_options(options: GameOptions) -> bool:
 
 ## Saved options, or the defaults.
 static func load_options() -> GameOptions:
-	return GameOptions.from_dict(_read(OPTIONS_PATH))
+	var data := _read(OPTIONS_PATH)
+	var options := GameOptions.from_dict(data)
+	if Device.is_touch() and not data.has("quality"):
+		options.quality = GameOptions.Quality.LOW
+	return options
 
 
 static func _write(path: String, data: Dictionary) -> bool:

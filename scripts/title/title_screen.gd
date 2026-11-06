@@ -25,6 +25,9 @@ const FONT_SIZE := 28
 const FADE_TIME := 0.4
 ## Where the menu's room starts under the title.
 const MENU_TOP := 160
+## On a phone the title moves up, so the menu fits under its subtitle.
+const TOUCH_MENU_TOP := 205
+const TOUCH_TITLE_TOP := 24
 ## Drifting camera: looks down PITCH_DEG from DISTANCE m at a point that wanders over
 ## the field at DRIFT_SPEED (radians per second of its slow loop).
 const PITCH_DEG := 55.0
@@ -62,6 +65,12 @@ func _ready() -> void:
 	_autoplay_save = _autoplay and args.has("--autoplay-save")
 	_options = SaveStore.load_options()
 	DisplaySettings.apply(get_window(), _options)
+	if Device.is_touch():
+		# A child of the title itself, which stays while the Game comes and goes.
+		var hint_layer := CanvasLayer.new()
+		hint_layer.layer = 100
+		hint_layer.add_child(RotateHint.new())
+		add_child(hint_layer)
 	KeyMap.apply(_options.keys)
 	_audio = AudioDirector.new()
 	add_child(_audio)
@@ -239,7 +248,7 @@ func _build_menu() -> void:
 	root.add_child(title)
 	_title_label = title
 	title.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP, \
-		Control.PRESET_MODE_MINSIZE, 90)
+		Control.PRESET_MODE_MINSIZE, TOUCH_TITLE_TOP if Device.is_touch() else 90)
 	var subtitle := Label.new()
 	subtitle.text = SUBTITLE_TEXT
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -265,7 +274,7 @@ func _build_menu() -> void:
 		Control.PRESET_MODE_MINSIZE, 12)
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	center.offset_top = MENU_TOP
+	center.offset_top = _menu_top()
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(center)
 	_menu_center = center
@@ -313,7 +322,7 @@ func _open_options() -> void:
 func _close_options() -> void:
 	_options_window.hide()
 	_title_label.show()
-	_menu_center.offset_top = MENU_TOP
+	_menu_center.offset_top = _menu_top()
 	_menu_window.show()
 	_focus(_options_button)
 
@@ -351,3 +360,7 @@ func _fade_to(alpha: float) -> void:
 	t.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	t.tween_property(_fade, "color:a", alpha, FADE_TIME)
 	await t.finished
+
+
+func _menu_top() -> int:
+	return TOUCH_MENU_TOP if Device.is_touch() else MENU_TOP

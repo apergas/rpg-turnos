@@ -43,6 +43,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	_zoom_goal = clampf(_zoom_goal, MIN_DISTANCE, MAX_DISTANCE)
 
 
+## Two fingers: spreading them brings the camera closer.
+func zoom_by(ratio: float) -> void:
+	if ratio > 0.0:
+		_zoom_goal = clampf(_zoom_goal / ratio, MIN_DISTANCE, MAX_DISTANCE)
+
+
 # Same tick as the player's movement, so the follow does not stutter.
 func _physics_process(delta: float) -> void:
 	if target == null:

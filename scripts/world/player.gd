@@ -28,6 +28,8 @@ var route: Array[Vector3] = []
 var last_step_m := 0.0
 ## Point being walked to after a click or tap (y = 0); null when there is none.
 var move_target: Variant = null
+## Where the touch stick points (screen axes, set by World); keys win over it.
+var stick_direction := Vector2.ZERO
 
 var _model: BattleActor
 var _autoplay := false
@@ -120,6 +122,8 @@ func _wanted_direction() -> Vector3:
 		return _route_direction()
 	var keys := Input.get_vector(KeyMap.MOVE_LEFT, KeyMap.MOVE_RIGHT, KeyMap.MOVE_UP,
 		KeyMap.MOVE_DOWN)
+	if keys == Vector2.ZERO:
+		keys = stick_direction
 	if keys == Vector2.ZERO:
 		return _target_direction()
 	move_target = null

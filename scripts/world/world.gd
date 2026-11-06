@@ -57,6 +57,11 @@ const MISSION_DONE_TIME := 4.0
 ## The notice window, top centre (clear of the status window and the ☰ button).
 const NOTICE_MAX_WIDTH := 640.0
 const UI_EDGE := 24.0
+## Phone: the mission line wraps here and the bars narrow to fit.
+const TOUCH_MISSION_WIDTH := 300.0
+## The use button of the phone interface.
+const USE_BUTTON_FONT := 28
+const USE_BUTTON_SIZE := Vector2(180, 72)
 const FONT_SIZE := 24
 ## How close the player must be to talk to a figure / to open a chest / to run into the
 ## boss / to take an exit.
@@ -177,6 +182,9 @@ var _notice: Label
 var _notice_window: PanelContainer
 var _notice_serial := 0
 var _prompt: Label
+## Phones: the button that replaces the prompt, and the pad that reads the fingers.
+var _use_button: Button
+var _pad: TouchPad
 var _dialogue: DialogueBox
 var _autoplay := false
 var _waiting := false
@@ -244,6 +252,10 @@ func _ready() -> void:
 
 
 func _physics_process(_delta: float) -> void:
+	if _pad:
+		_player.stick_direction = _pad.direction
+		if _pad.direction != Vector2.ZERO:
+			_use_on_arrival = {}  # walking off by hand drops the tap's errand
 	if _grass:
 		Vegetation.set_pusher(_grass, _player.global_position)
 	_map_square.follow(_player.global_position)
@@ -270,9 +282,10 @@ func _physics_process(_delta: float) -> void:
 		_trigger(false)
 		return
 	var near := _nearest_use(pos)
-	_prompt.visible = not near.is_empty()
-	if _prompt.visible:
-		_prompt.text = PROMPTS[near.kind] % KeyMap.first_key_name(KeyMap.ACCEPT)
+	if near.is_empty():
+		_hide_prompt()
+	else:
+		_show_prompt(near)
 	if not near.is_empty() and near == _use_on_arrival:
 		_use_on_arrival = {}
 		_player.move_target = null
@@ -291,10 +304,14 @@ func _physics_process(_delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _waiting or _talking:
 		return
-	if _prompt.visible and event.is_action_pressed("ui_accept") and not event.is_echo():
+	if _prompt_showing() and event.is_action_pressed("ui_accept") and not event.is_echo():
 		get_viewport().set_input_as_handled()
 		_use(_nearest_use(_player.global_position))
 		return
+	if _pad:
+		if _pad.handle(event):
+			get_viewport().set_input_as_handled()
+		return  # the mouse events left are the touches again
 	var point: Variant = _pointer_on_ground(event)
 	if point == null:
 		return
@@ -316,9 +333,51 @@ func _pointer_on_ground(event: InputEvent) -> Variant:
 		screen = motion.position
 	else:
 		return null
+	return _ground_point(screen)
+
+
+## Where the camera's line through a screen point meets the ground plane.
+func _ground_point(screen: Vector2) -> Variant:
 	var ground := Plane(Vector3.UP, 0.0)
 	return ground.intersects_ray(_camera.project_ray_origin(screen),
 		_camera.project_ray_normal(screen))
+
+
+## A tap on the ground (phones): walk there, and use what is there once in reach.
+func _on_tapped(screen: Vector2) -> void:
+	var point: Variant = _ground_point(screen)
+	if point == null:
+		return
+	_use_on_arrival = _tapped_use(point)
+	_player.move_to(point)
+
+
+## Shows what is in reach: the prompt, or on phones the use button.
+func _show_prompt(near: Dictionary) -> void:
+	var text: String = PROMPTS[near.kind] % KeyMap.first_key_name(KeyMap.ACCEPT)
+	if _use_button:
+		var verb := text.substr(text.find(": ") + 2)
+		_use_button.text = verb.substr(0, 1).to_upper() + verb.substr(1)
+		_use_button.show()
+		return
+	_prompt.text = text
+	_prompt.show()
+
+
+func _hide_prompt() -> void:
+	_prompt.hide()
+	if _use_button:
+		_use_button.hide()
+
+
+func _prompt_showing() -> bool:
+	return _use_button.visible if _use_button else _prompt.visible
+
+
+## Forgets the fingers on the map (a window, a battle or a cutscene took over).
+func _reset_pad() -> void:
+	if _pad:
+		_pad.reset()
 
 
 ## Hidden and frozen while a battle is on top; back on, the encounter grace restarts.
@@ -327,6 +386,7 @@ func set_active(active: bool) -> void:
 	visible = active
 	_ui.visible = active
 	_camera.current = active
+	_reset_pad()
 	if active:
 		_meter.reset()
 		_waiting = false
@@ -450,9 +510,11 @@ func begin_cutscene() -> void:
 	freeze(true)
 	_player.scripted = true
 	_player.move_target = null
+	_reset_pad()
 	_player.model().set_walking(false)
 	_use_on_arrival = {}
 	_status_column.hide()
+	_map_square.hide()
 	_notice_window.hide()
 	_show_quest_marks()
 
@@ -464,6 +526,7 @@ func end_cutscene() -> void:
 	_camera.follow(_player)
 	_player.scripted = false
 	_status_column.show()
+	_map_square.show()
 	_show_quest_marks()
 	_meter.reset()
 	_was_near = {}
@@ -534,7 +597,8 @@ func freeze(on: bool) -> void:
 	if on:
 		_talking = true
 		_player.input_enabled = false
-		_prompt.hide()
+		_hide_prompt()
+		_reset_pad()
 		return
 	await get_tree().process_frame
 	_player.input_enabled = true
@@ -612,7 +676,9 @@ func set_chest_open(chest_id: String, open: bool, instant := false) -> void:
 ## The pause menu covers the middle of the screen and says the same as the status window,
 ## which goes away behind it (with the map square).
 func set_status_shown(on: bool) -> void:
+	_reset_pad()  # a finger's release is lost while the tree is paused
 	_status_column.visible = on
+	_map_square.visible = on
 
 
 func refresh_status(hero: Combatant, potions: int, gold: int, missions: Array[String] = []) -> void:
@@ -647,11 +713,13 @@ func _show_missions(lines: Array[String], color: Color) -> void:
 	for child in _mission_box.get_children():
 		_mission_box.remove_child(child)
 		child.queue_free()
-	for line in lines:
+	var shown := lines.slice(0, 1) if Device.is_touch() else lines
+	var width := TOUCH_MISSION_WIDTH if Device.is_touch() else MISSION_WIDTH
+	for line in shown:
 		var label := _label()
 		label.add_theme_color_override("font_color", color)
 		_mission_box.add_child(label)
-		BattleHud.fit_label(label, line, MISSION_WIDTH)
+		BattleHud.fit_label(label, line, width)
 
 
 ## Shows a short line in its own window for NOTICE_TIME seconds (a newer one replaces it).
@@ -672,7 +740,8 @@ func _trigger(boss: bool) -> void:
 		_audio.play_sfx(SfxLibrary.ENCOUNTER)
 	_waiting = true
 	_player.input_enabled = false
-	_prompt.hide()
+	_hide_prompt()
+	_reset_pad()
 	encounter_triggered.emit(boss)
 
 
@@ -704,7 +773,8 @@ func _check_exits(pos: Vector3) -> bool:
 		return false
 	_waiting = true
 	_player.input_enabled = false
-	_prompt.hide()
+	_hide_prompt()
+	_reset_pad()
 	exit_requested.emit(nearest.to, nearest.entry)
 	return true
 
@@ -995,8 +1065,18 @@ func _build_ui() -> void:
 	_status_column = column
 	var panel := BattleHud.make_window()
 	column.add_child(panel)
-	_map_square = MapSquare.new()
-	column.add_child(_map_square)
+	_map_square = MapSquare.new(MapSquare.TOUCH_SIDE if Device.is_touch() else MapSquare.SIDE)
+	if Device.is_touch():
+		# Under the menu button, top right.
+		_ui.add_child(_map_square)
+		_map_square.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+		_map_square.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+		_map_square.offset_right = -PauseMenu.MENU_BUTTON_MARGIN
+		_map_square.offset_left = _map_square.offset_right - MapSquare.TOUCH_SIDE
+		_map_square.offset_top = PauseMenu.MENU_BUTTON_MARGIN + PauseMenu.MENU_BUTTON_SIZE.y + 8.0
+		_map_square.offset_bottom = _map_square.offset_top + MapSquare.TOUCH_SIDE
+	else:
+		column.add_child(_map_square)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
 	panel.add_child(box)
@@ -1010,6 +1090,10 @@ func _build_ui() -> void:
 	box.add_child(_exp_bar)
 	_potion_label = _label()
 	box.add_child(_potion_label)
+	if Device.is_touch():
+		# Estado and Objetos in the pause menu say the same.
+		_exp_bar.hide()
+		_potion_label.hide()
 	_gold_label = _label()
 	_gold_label.add_theme_color_override("font_color", StatBar.GOLD)
 	box.add_child(_gold_label)
@@ -1035,8 +1119,33 @@ func _build_ui() -> void:
 	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, \
 		Control.PRESET_MODE_MINSIZE, 200)
 	_prompt.hide()
+	if Device.is_touch():
+		_build_touch_controls()
 	_dialogue = DialogueBox.new()
 	_ui.add_child(_dialogue)
+
+
+## Phones: the pad behind every window, and the big use button.
+func _build_touch_controls() -> void:
+	_pad = TouchPad.new()
+	_ui.add_child(_pad)
+	_ui.move_child(_pad, 0)
+	_pad.tapped.connect(_on_tapped)
+	_pad.pinched.connect(_camera.zoom_by)
+	_use_button = Button.new()
+	_use_button.focus_mode = Control.FOCUS_NONE
+	_use_button.add_theme_font_size_override("font_size", USE_BUTTON_FONT)
+	_use_button.custom_minimum_size = USE_BUTTON_SIZE
+	_use_button.hide()
+	_ui.add_child(_use_button)
+	_use_button.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_use_button.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_use_button.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_use_button.offset_right = -UI_EDGE
+	_use_button.offset_bottom = -UI_EDGE
+	_use_button.offset_left = -UI_EDGE - USE_BUTTON_SIZE.x
+	_use_button.offset_top = -UI_EDGE - USE_BUTTON_SIZE.y
+	_use_button.pressed.connect(func() -> void: _use(_nearest_use(_player.global_position)))
 
 
 func _label() -> Label:

@@ -80,7 +80,7 @@ static func first_key_name(action: String) -> String:
 
 ## What the key at that physical position says on the player's keyboard layout.
 static func _key_name(code: int) -> String:
-	if DisplayServer.get_name() in ["headless", "Web"]:
+	if OS.has_feature("web") or DisplayServer.get_name() == "headless":
 		return OS.get_keycode_string(code)  # the web and headless runs can't tell
 	return OS.get_keycode_string(DisplayServer.keyboard_get_keycode_from_physical(code as Key))
 
