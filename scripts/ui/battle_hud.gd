@@ -55,7 +55,7 @@ const BADGES := {
 
 ## Returns the enemy index under a screen point, or -1. Set by BattleScene.
 var pick_target: Callable
-## Seconds per typed character (the text speed option).
+## Seconds per typed character (the text speed option); 0.0 shows the message at once.
 var char_time := CHAR_TIME
 
 var _engine: BattleEngine
@@ -217,7 +217,7 @@ func show_message(text: String) -> void:
 	var shown := 0.0
 	while _message.visible_characters < total and not _advance_requested:
 		await get_tree().process_frame
-		shown += get_process_delta_time() / char_time
+		shown = float(total) if char_time <= 0.0 else shown + get_process_delta_time() / char_time
 		_message.visible_characters = mini(total, int(shown))
 	_message.visible_characters = -1
 	_advance_requested = false

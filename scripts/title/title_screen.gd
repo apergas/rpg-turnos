@@ -20,6 +20,8 @@ const TITLE_TEXT := "Villaclaro"
 const TITLE_SIZE := 96
 const FONT_SIZE := 28
 const FADE_TIME := 0.4
+## Where the menu's room starts under the title.
+const MENU_TOP := 160
 ## Drifting camera: looks down PITCH_DEG from DISTANCE m at a point that wanders over
 ## the field at DRIFT_SPEED (radians per second of its slow loop).
 const PITCH_DEG := 55.0
@@ -40,6 +42,7 @@ var _options_window: PanelContainer
 var _options_panel: OptionsPanel
 var _name_entry: NameEntry
 var _title_label: Label
+var _menu_center: CenterContainer
 var _fade: ColorRect
 var _game: Game
 var _drift := 0.0
@@ -54,6 +57,7 @@ func _ready() -> void:
 	_autoplay = args.has("--autoplay")
 	_autoplay_save = _autoplay and args.has("--autoplay-save")
 	_options = SaveStore.load_options()
+	DisplaySettings.apply(get_window(), _options)
 	_audio = AudioDirector.new()
 	add_child(_audio)
 	_audio.set_volumes(_options.music_volume, _options.sfx_volume)
@@ -207,9 +211,10 @@ func _build_menu() -> void:
 		Control.PRESET_MODE_MINSIZE, 90)
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	center.offset_top = 160
+	center.offset_top = MENU_TOP
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(center)
+	_menu_center = center
 	_menu_window = BattleHud.make_window()
 	_menu_window.custom_minimum_size = Vector2(320, 0)
 	center.add_child(_menu_window)
@@ -242,6 +247,9 @@ func _build_menu() -> void:
 func _open_options() -> void:
 	_audio.play_sfx(SfxLibrary.ACCEPT)
 	_menu_window.hide()
+	# The options need the whole height of the screen.
+	_title_label.hide()
+	_menu_center.offset_top = 0
 	_options_window.show()
 	_quiet_focus = true
 	_options_panel.focus_first()
@@ -250,6 +258,8 @@ func _open_options() -> void:
 
 func _close_options() -> void:
 	_options_window.hide()
+	_title_label.show()
+	_menu_center.offset_top = MENU_TOP
 	_menu_window.show()
 	_focus(_options_button)
 

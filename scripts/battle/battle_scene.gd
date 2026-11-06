@@ -59,6 +59,10 @@ var inventory: Inventory
 var char_time := BattleHud.CHAR_TIME
 ## Gold the hero loses if defeated (Game takes it away; the battle only says so).
 var gold_lost := 0
+## How fast the battle runs (GameOptions.combat_scale()); the map is frozen meanwhile.
+var time_scale := 1.0
+## False: critical hits and big blows don't shake the camera.
+var camera_shake := true
 ## Zone the battle is fought in: its sky, light and backdrop (null: the meadow's). Set
 ## before adding it to the tree.
 var zone: ZoneData
@@ -121,6 +125,7 @@ func _ready() -> void:
 		"Call setup() before adding BattleScene to the tree")
 	_rng.randomize()
 	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
+	Engine.time_scale = time_scale
 	BattleStage.build(self, zone)
 	_hero_actor = _spawn_actor(BattleActor.Look.HERO, HERO_POS, ENEMY_POS)
 	_hero_actor.set_equipment(_weapon_id, _shield_id)
@@ -151,6 +156,10 @@ func _ready() -> void:
 		_autoplay_defend = _autoplay_battles % AUTOPLAY_EVERY == AUTOPLAY_DEFEND_AT
 	await _say(_intro_text())
 	_ask_command()
+
+
+func _exit_tree() -> void:
+	Engine.time_scale = 1.0
 
 
 ## The life bars follow their figures on screen (camera moves and shakes included).
@@ -586,6 +595,8 @@ func _reset_camera() -> void:
 
 
 func _shake_camera() -> void:
+	if not camera_shake:
+		return
 	if _shake_tween:
 		_shake_tween.kill()
 	var t := create_tween()

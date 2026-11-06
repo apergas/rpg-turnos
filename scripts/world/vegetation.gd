@@ -21,6 +21,9 @@ const FLOWERS_PER_M2 := 300.0 / 3600.0
 const FLOWER_COLORS := [Color(0.95, 0.95, 0.9), Color(0.98, 0.85, 0.2), Color(0.62, 0.42, 0.88)]
 const FLOWER_HEIGHT := Vector2(0.6, 0.85)
 
+## Low graphics quality: half the tufts and half the flowers (DisplaySettings sets it).
+static var half_density := false
+
 
 ## Fills area (metres on XZ: position.x = min X, position.y = min Z) with grass and
 ## flowers where is_free.call(Vector3) is true. tips: the two tip greens (sRGB) mixed in
@@ -34,6 +37,7 @@ static func build(root: Node3D, area: Rect2, is_free: Callable, seed: int, \
 	var material := ShaderMaterial.new()
 	material.shader = GRASS_SHADER
 	var chunks := {}
+	var spacing := SPACING * sqrt(2.0) if half_density else SPACING
 	var x := area.position.x
 	while x < area.end.x:
 		var z := area.position.y
@@ -51,8 +55,8 @@ static func build(root: Node3D, area: Rect2, is_free: Callable, seed: int, \
 					chunks[key] = []
 				var basis := Basis(Vector3.UP, yaw).scaled(Vector3.ONE * scl)
 				chunks[key].append([Transform3D(basis, pos), tint])
-			z += SPACING
-		x += SPACING
+			z += spacing
+		x += spacing
 	var tuft := _tuft_mesh()
 	for key in chunks:
 		_add_multimesh(root, tuft, material, chunks[key], true)
@@ -90,7 +94,7 @@ static func _tuft_mesh() -> ArrayMesh:
 static func _add_flowers(root: Node3D, area: Rect2, is_free: Callable, \
 		rng: RandomNumberGenerator) -> void:
 	var items := []
-	for i in roundi(area.get_area() * FLOWERS_PER_M2):
+	for i in roundi(area.get_area() * FLOWERS_PER_M2 * (0.5 if half_density else 1.0)):
 		var pos := Vector3(rng.randf_range(area.position.x, area.end.x),
 			rng.randf_range(FLOWER_HEIGHT.x, FLOWER_HEIGHT.y),
 			rng.randf_range(area.position.y, area.end.y))

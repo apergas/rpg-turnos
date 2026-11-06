@@ -238,7 +238,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	play_time += delta
+	play_time += delta / Engine.time_scale  # a fast battle takes less play time, not more
 
 
 ## --autoplay-zone=<id>: starts the new game in that zone with AUTOPLAY_ZONES' state.
@@ -338,6 +338,8 @@ func _on_encounter(boss: bool) -> void:
 		state.loadout.worn(Equipment.SHIELD))
 	battle.gold_lost = state.defeat_gold_loss()
 	battle.char_time = _options.char_time()
+	battle.time_scale = _options.combat_scale()
+	battle.camera_shake = _options.camera_shake
 	battle.zone = _zone
 	add_child(battle)
 	await _fade_to(0.0)
