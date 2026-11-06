@@ -301,6 +301,7 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 	_world.shop_requested.connect(_on_shop)
 	_world.inn_requested.connect(_on_inn)
 	_world.chest_opened.connect(_on_chest)
+	_world.well_requested.connect(_on_well)
 	_world.exit_requested.connect(_on_exit)
 	_world.portal_used.connect(_on_portal)
 	_world.lever_pulled.connect(_on_lever)
@@ -308,6 +309,7 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 	_world.door_used.connect(_on_door)
 	_world.village_changed.connect(_on_village_changed)
 	_world.stepped.connect(func() -> void: state.steps += 2)
+	_world.set_dry_wells(Wells.dry_ids(state))
 	if entry_id != "":
 		_world.place_at_entry(entry_id)
 	for id in state.opened_chests:
@@ -358,6 +360,9 @@ func _on_encounter(boss: bool) -> void:
 	for enemy in battle.engine.enemies:
 		state.see_enemy(enemy.id)
 	var won := outcome == BattleEngine.State.WON
+	if won or outcome == BattleEngine.State.LOST:
+		Wells.on_battle(state)
+		_world.set_dry_wells(Wells.dry_ids(state))
 	await _fade_to(1.0)
 	var notice := ""
 	var scene := ""
@@ -785,6 +790,24 @@ func _on_inn(inn_id: String) -> void:
 
 ## A closed chest: gives what it holds, opens the lid and saves without a notice (the
 ## notice shows what was found).
+## The hero used a well: drinks if it is full and the hero is not. On autoplay only a full
+## well and a hero in need.
+func _on_well(id: String, kind: String) -> void:
+	if _busy or (_autoplay and (Wells.is_dry(state, id) or Inn.is_rested(state))):
+		return
+	_set_busy(true)
+	var was_dry := Wells.is_dry(state, id)
+	var text := Wells.drink(state, id, kind)
+	if not was_dry and Wells.is_dry(state, id):
+		_audio.play_sfx(SfxLibrary.HEAL)
+		_refresh_status()
+		_world.set_dry_wells(Wells.dry_ids(state))
+		_autosave(false)
+	var lines: Array[String] = [text]
+	await _world.show_dialogue("", lines)
+	_set_busy(false)
+
+
 func _on_chest(chest_id: String) -> void:
 	if _busy:
 		return

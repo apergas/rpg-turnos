@@ -15,6 +15,15 @@ village_name = "el campamento"
 village_pos = Vector3(0, 0, 20)
 village_radius = 13.0
 buildings = [[Vector3(-9.5, 0, 22.5), 30.0, "tent"], [Vector3(9.5, 0, 22.5), -30.0, "tent"]]
+wells = [{
+"id": "castillo_patio_vida",
+"kind": "hp",
+"pos": Vector3(24, 0, 0)
+}, {
+"id": "castillo_patio_mana",
+"kind": "mp",
+"pos": Vector3(-24, 0, -20)
+}]
 entries = {
 "campamento": [Vector3(0, 0, 18), 0.0],
 "sur": [Vector3(0, 0, 21), 0.0]

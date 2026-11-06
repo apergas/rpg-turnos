@@ -35,6 +35,8 @@ signal inn_requested(inn_id: String)
 ## The player asked to open a closed chest (a Chests.CHESTS key); Game opens it in the
 ## GameState and calls set_chest_open().
 signal chest_opened(chest_id: String)
+## The player drank (or tried to) from the well id, which fills kind (Wells.HP or Wells.MP).
+signal well_requested(id: String, kind: String)
 ## The player walked into (true) or out of (false) the village clearing.
 signal village_changed(inside: bool)
 ## The player walked into an open exit: Game loads zone_id at its entry entry_id.
@@ -70,6 +72,7 @@ const FONT_SIZE := 24
 ## boss / to take an exit.
 const TALK_RADIUS := 2.5
 const CHEST_RADIUS := 1.8
+const WELL_RADIUS := 2.2
 const BOSS_RADIUS := 2.5
 const EXIT_RADIUS := 1.2
 ## After arriving (or after a closed exit's notice) exits wait until the player is this
@@ -94,6 +97,7 @@ const NPC := "npc"
 const SHOP := "shop"
 const INN := "inn"
 const CHEST := "chest"
+const WELL := "well"
 const LEVER := "lever"
 const KEY := "key"
 const DOOR := "door"
@@ -105,6 +109,7 @@ const PROMPTS := {
 	SHOP: "Comprar",
 	INN: "Descansar",
 	CHEST: "Abrir",
+	WELL: "Beber",
 	LEVER: "Tirar",
 	KEY: "Coger",
 	DOOR: "Abrir",
@@ -120,6 +125,12 @@ const CHEST_WOOD := Color(0.5, 0.3, 0.14)
 const CHEST_BAND := Color(1.0, 0.78, 0.2)
 ## Angle of an open lid (degrees about X: the front edge swings up and back).
 const CHEST_OPEN_ANGLE := 110.0
+## Wells: a collider the hero walks around, and a disc of coloured water with a light.
+const WELL_COLLIDER := 1.3
+const WATER_HP := Color(1.0, 0.25, 0.25)
+const WATER_MP := Color(0.25, 0.5, 1.0)
+const WATER_RADIUS := 0.95
+const WATER_HEIGHT := 1.2
 ## Exit arch: two posts and a beam of dark wood, a sign board with the exit's label
 ## (always facing the camera, south) and, while closed, a bank of fog.
 const ARCH_WOOD := Color(0.36, 0.22, 0.1)
@@ -159,6 +170,8 @@ var _camera_spot: Node3D
 var _status_column: VBoxContainer
 ## chest id -> lid pivot (rotation.x opens it); a chest in _open_chests is open.
 var _chest_lids := {}
+## Well id -> its water and light, hidden while it is dry.
+var _well_waters := {}
 var _open_chests: Array[String] = []
 ## exit id -> fog bank shown while the exit is closed.
 var _fogs := {}
@@ -232,6 +245,8 @@ func _ready() -> void:
 		_boss = _add_figure(EnemyLibrary.look(zone.boss_id), zone.boss_pos, 180.0, 1.0, 2.0)
 	for id in Chests.of_zone(zone.id):
 		_chest_lids[id] = build_chest(self, Chests.CHESTS[id])
+	for well: Dictionary in zone.wells:
+		_build_well(well)
 	_exits = zone.all_exits()
 	for exit: Dictionary in _exits:
 		if not exit.get("stairs", false):
@@ -849,6 +864,9 @@ func _uses() -> Array[Dictionary]:
 	if _portal != null:
 		uses.append({"kind": PORTAL, "id": "", "index": -1, "pos": zone.portal_pos,
 			"radius": MECHANISM_RADIUS})
+	for well: Dictionary in zone.wells:
+		uses.append({"kind": WELL, "id": well.id, "index": -1, "pos": well.pos,
+			"radius": WELL_RADIUS})
 	if _dungeon == null:
 		return uses
 	var mechanisms := [[ZoneData.LEVER, LEVER, zone.lever_flag],
@@ -874,6 +892,8 @@ func _use(use: Dictionary) -> void:
 			inn_requested.emit(use.id)
 		CHEST:
 			chest_opened.emit(use.id)
+		WELL:
+			well_requested.emit(use.id, _well_kind(use.id))
 		LEVER:
 			lever_pulled.emit()
 		KEY:
@@ -901,6 +921,8 @@ func _connect_standalone() -> void:
 	chest_opened.connect(func(chest_id: String) -> void:
 		print("Cofre: %s" % chest_id)
 		set_chest_open(chest_id, true))
+	well_requested.connect(func(id: String, kind: String) -> void:
+		print("Pozo: %s (%s)" % [id, kind]))
 	exit_requested.connect(func(zone_id: String, entry_id: String) -> void:
 		print("Salida: %s (%s)" % [zone_id, entry_id])
 		set_active(true))
@@ -1026,6 +1048,56 @@ func _build_portal(pos: Vector3, full: bool) -> Node3D:
 		.set_trans(Tween.TRANS_SINE)
 	pulse.tween_property(oval, "scale", PORTAL_SIZE, 0.6).set_trans(Tween.TRANS_SINE)
 	return root
+
+
+## Hides the water and the light of the wells in dry.
+func set_dry_wells(dry: Array[String]) -> void:
+	for id: String in _well_waters:
+		(_well_waters[id] as Node3D).visible = not dry.has(id)
+
+
+## The kind (Wells.HP or Wells.MP) of the well id of this zone.
+func _well_kind(id: String) -> String:
+	for well: Dictionary in zone.wells:
+		if well.id == id:
+			return well.kind
+	return Wells.HP
+
+
+## A well: its model (green in the forest village, red elsewhere) on a cylinder collider,
+## with a disc of coloured water inside the rim and a light over it.
+func _build_well(well: Dictionary) -> void:
+	var body := StaticBody3D.new()
+	body.position = well.pos
+	add_child(body)
+	WorldStage.add_cylinder_shape(body, WELL_COLLIDER, 2.0)
+	var model_id := "well_green" if zone.id == "bosque" else "well_red"
+	BattleStage.add_model(body, WorldStage.MODELS[model_id], Vector3.ZERO,
+		WorldStage.BUILDING_SCALE)
+	var water := Node3D.new()
+	water.position.y = WATER_HEIGHT
+	body.add_child(water)
+	var color := WATER_HP if well.kind == Wells.HP else WATER_MP
+	var disc := CylinderMesh.new()
+	disc.top_radius = WATER_RADIUS
+	disc.bottom_radius = WATER_RADIUS
+	disc.height = 0.05
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_color = color
+	var mesh := MeshInstance3D.new()
+	mesh.mesh = disc
+	mesh.material_override = material
+	mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	water.add_child(mesh)
+	var light := OmniLight3D.new()
+	light.light_color = color
+	light.light_energy = 1.5
+	light.omni_range = 4.0
+	light.shadow_enabled = false
+	light.position.y = 0.6
+	water.add_child(light)
+	_well_waters[well.id] = water
 
 
 ## A closed chest on a box collider under root: wooden box with a gold band around it and a lid on

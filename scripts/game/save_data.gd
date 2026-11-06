@@ -74,6 +74,7 @@ static func from_state(state: GameState, player_pos: Vector3, play_time: float) 
 		"quests": state.quests.to_dict(),
 		"difficulty": state.difficulty,
 		"bestiary": state.seen_enemies.duplicate(),
+		"wells": state.well_charge.duplicate(),
 		"position": [player_pos.x, player_pos.z],
 		"play_time": play_time,
 	}
@@ -150,6 +151,10 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 		for flag: String in state.world_flags:
 			if EnemyLibrary.ENEMIES.has(flag):
 				state.see_enemy(flag)
+	state.well_charge = {}
+	var wells: Dictionary = data.get("wells", {})
+	for id: String in wells:
+		state.well_charge[id] = int(wells[id])
 	var pos: Array = data.position
 	return {"valid": true, "position": Vector3(pos[0], 0.0, pos[1]),
 		"play_time": float(data.play_time)}
@@ -172,7 +177,7 @@ static func is_valid(data: Dictionary) -> bool:
 		return false
 	if int(data.version) >= DIFFICULTY_VERSION and not _valid_difficulty(data):
 		return false
-	if int(data.version) >= EVOLUTION_VERSION and not _valid_bestiary(data):
+	if int(data.version) >= EVOLUTION_VERSION and not (_valid_bestiary(data) and _valid_wells(data)):
 		return false
 	var hero: Variant = data.get("hero")
 	if not hero is Dictionary:
@@ -204,6 +209,17 @@ static func _valid_bestiary(data: Dictionary) -> bool:
 		return false
 	for id: Variant in seen:
 		if not (id is String and EnemyLibrary.ENEMIES.has(id)):
+			return false
+	return true
+
+
+## EVOLUTION_VERSION field: a Dictionary of well ids to the battles left.
+static func _valid_wells(data: Dictionary) -> bool:
+	var wells: Variant = data.get("wells")
+	if not wells is Dictionary:
+		return false
+	for id: Variant in wells:
+		if not (id is String and wells[id] is float):
 			return false
 	return true
 

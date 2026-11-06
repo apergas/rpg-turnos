@@ -24,6 +24,8 @@ var bag_equipment: Array[String] = []
 var opened_chests: Array[String] = []
 ## Enemy ids met in battle (EnemyLibrary ids), for the bestiary.
 var seen_enemies: Array[String] = []
+## Dry wells: well id -> battles left until it is full again (absent: full).
+var well_charge := {}
 ## Progress through the world: flag -> true. A boss sets its enemy id when defeated
 ## ("rey_slime" lifts the fog of the meadow's north exit); ZoneData exits name the flag
 ## that opens them.

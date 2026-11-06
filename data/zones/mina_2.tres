@@ -4,6 +4,15 @@
 
 [resource]
 script = ExtResource("1_zone")
+wells = [{
+"id": "mina_2_vida",
+"kind": "hp",
+"pos": Vector3(0, 0, 16)
+}, {
+"id": "mina_2_mana",
+"kind": "mp",
+"pos": Vector3(-16, 0, -12)
+}]
 id = "mina_2"
 display_name = "la mina"
 number = 3

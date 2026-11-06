@@ -66,6 +66,8 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export_group("Props")
 ## [position, yaw, WorldStage.MODELS key] of each building (box collider fitted to it).
 @export var buildings: Array = []
+## The map's wells: {"id", "pos", "kind": Wells.HP or Wells.MP}.
+@export var wells: Array = []
 ## [position, rock model (BattleStage.ROCK_SCENES index), scale, yaw] of each rock.
 @export var rocks: Array = []
 ## Trees: tree_tries random spots over the field plus outer_margin, with a fixed seed. A

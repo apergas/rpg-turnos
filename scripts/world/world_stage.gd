@@ -307,9 +307,9 @@ static func _near_figure(zone: ZoneData, pos: Vector3) -> bool:
 	return false
 
 
-## True within margin of one of the zone's chests (Chests.CHESTS of this zone). The
-## chest spots of the last zone asked about are kept, so the thousands of grass, tree and
-## bush candidates of a build don't look them up each time.
+## True within margin of one of the zone's chests (Chests.CHESTS of this zone) or wells
+## (zone.wells). The spots of the last zone asked about are kept, so the thousands of
+## grass, tree and bush candidates of a build don't look them up each time.
 static func _near_chest(zone: ZoneData, pos: Vector3, margin: float) -> bool:
 	if _chest_zone != zone.id:
 		_chest_zone = zone.id
@@ -317,6 +317,8 @@ static func _near_chest(zone: ZoneData, pos: Vector3, margin: float) -> bool:
 		for chest_id in Chests.of_zone(zone.id):
 			var chest_pos: Vector3 = Chests.CHESTS[chest_id].pos
 			_chest_spots.append(Vector2(chest_pos.x, chest_pos.z))
+		for well: Dictionary in zone.wells:
+			_chest_spots.append(Vector2(well.pos.x, well.pos.z))
 	var p := Vector2(pos.x, pos.z)
 	for spot in _chest_spots:
 		if p.distance_to(spot) < margin:
