@@ -351,7 +351,6 @@ func _open(page: Page, cursor: int) -> void:
 	_set_cursor(cursor)
 
 
-## Items in stock that can be used in battle, in Inventory.IDS order.
 ## Phone: nothing tells the player that a touch off the menu goes back, so a row does.
 func _add_back_row() -> void:
 	if not Device.is_touch() or _back_row >= 0:
@@ -360,6 +359,7 @@ func _add_back_row() -> void:
 	_add_row("Volver", true)
 
 
+## Items in stock that can be used in battle, in Inventory.IDS order.
 func _item_ids() -> Array[String]:
 	var ids: Array[String] = []
 	for id in Inventory.IDS:

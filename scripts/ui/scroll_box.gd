@@ -7,6 +7,8 @@ class_name ScrollBox extends ScrollContainer
 const SCROLL_STEP := 40
 ## Width kept for the scroll bar while it shows.
 const BAR_ROOM := 14.0
+## A finger that shakes this little on a row is still pressing it, not dragging the list.
+const TOUCH_DEADZONE := 14
 
 var content := VBoxContainer.new()
 
@@ -17,6 +19,8 @@ func _init(reserved_height: float) -> void:
 	_reserved = reserved_height
 	horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	follow_focus = true
+	if Device.is_touch():
+		scroll_deadzone = TOUCH_DEADZONE
 	add_child(content)
 	content.minimum_size_changed.connect(_fit)
 	visibility_changed.connect(_on_visibility_changed)
