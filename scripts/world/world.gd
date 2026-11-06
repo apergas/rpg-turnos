@@ -131,6 +131,11 @@ const WATER_HP := Color(1.0, 0.25, 0.25)
 const WATER_MP := Color(0.25, 0.5, 1.0)
 const WATER_RADIUS := 0.95
 const WATER_HEIGHT := 1.2
+## Marks on the map square.
+const MARK_SHOP := Color(1.0, 0.8, 0.2)
+const MARK_INN := Color(1.0, 0.6, 0.85)
+const MARK_EXIT := Color(0.35, 1.0, 0.45)
+const MARK_DRY := Color(0.55, 0.55, 0.55)
 ## Exit arch: two posts and a beam of dark wood, a sign board with the exit's label
 ## (always facing the camera, south) and, while closed, a bank of fog.
 const ARCH_WOOD := Color(0.36, 0.22, 0.1)
@@ -198,6 +203,8 @@ var _missions: Array[String] = []
 var _mission_done_serial := 0
 var _mission_done := false
 var _map_square: MapSquare
+var _has_explored := false
+var _dry_wells: Array[String] = []
 var _notice: Label
 var _notice_window: PanelContainer
 var _notice_serial := 0
@@ -487,6 +494,26 @@ func set_world_flags(flags: Dictionary) -> void:
 ## its own the map keeps its own).
 func set_explored(map: ExploredMap) -> void:
 	_map_square.set_map(map)
+	_has_explored = true
+	_refresh_map_marks()
+
+
+## The map square's points of interest: shops, inns, wells (grey while dry) and exits.
+func _refresh_map_marks() -> void:
+	if not _has_explored:
+		return
+	var marks: Array[Dictionary] = []
+	for npc: Dictionary in zone.npcs:
+		if npc.kind == "shop":
+			marks.append({"pos": npc.pos, "color": MARK_SHOP})
+		elif npc.kind == "inn":
+			marks.append({"pos": npc.pos, "color": MARK_INN})
+	for well: Dictionary in zone.wells:
+		var color := WATER_HP if well.kind == Wells.HP else WATER_MP
+		marks.append({"pos": well.pos, "color": MARK_DRY if _dry_wells.has(well.id) else color})
+	for exit: Dictionary in zone.all_exits():
+		marks.append({"pos": exit.pos, "color": MARK_EXIT})
+	_map_square.set_marks(marks)
 
 
 ## Shows or removes the return portal at the zone's portal_pos.
@@ -1054,6 +1081,8 @@ func _build_portal(pos: Vector3, full: bool) -> Node3D:
 func set_dry_wells(dry: Array[String]) -> void:
 	for id: String in _well_waters:
 		(_well_waters[id] as Node3D).visible = not dry.has(id)
+	_dry_wells = dry
+	_refresh_map_marks()
 
 
 ## The kind (Wells.HP or Wells.MP) of the well id of this zone.
