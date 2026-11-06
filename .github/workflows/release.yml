@@ -1,0 +1,52 @@
+# Exports the Windows and Linux builds on each version tag (v*) and keeps them as artifacts
+# of the run. It publishes nothing: uploading to itch.io is done by hand.
+name: Desktop builds
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  GODOT_VERSION: 4.7.2
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Godot and export templates
+        run: |
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          curl -fsSL -o godot.zip "$base/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          curl -fsSL -o templates.tpz "$base/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          unzip -q godot.zip
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
+          templates="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          mkdir -p "$templates"
+          unzip -q templates.tpz
+          mv templates/* "$templates/"
+          rm -rf godot.zip templates.tpz templates
+
+      - name: Import and export
+        run: |
+          ./godot --headless --path . --import
+          mkdir -p build/windows build/linux
+          ./godot --headless --path . --export-release "Windows Desktop" build/windows/Villaclaro.exe
+          ./godot --headless --path . --export-release "Linux" build/linux/Villaclaro.x86_64
+          test -f build/windows/Villaclaro.exe
+          test -f build/linux/Villaclaro.x86_64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: villaclaro-windows
+          path: build/windows
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: villaclaro-linux
+          path: build/linux

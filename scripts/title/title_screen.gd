@@ -18,6 +18,9 @@ const GAME_SCENE := preload("res://scenes/game/game.tscn")
 const AUTOPLAY_NAME := "Rocío"
 const TITLE_TEXT := "Villaclaro"
 const TITLE_SIZE := 96
+const SUBTITLE_TEXT := "La Niebla del Norte"
+const SUBTITLE_SIZE := 36
+const VERSION_SIZE := 18
 const FONT_SIZE := 28
 const FADE_TIME := 0.4
 ## Where the menu's room starts under the title.
@@ -237,6 +240,28 @@ func _build_menu() -> void:
 	_title_label = title
 	title.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP, \
 		Control.PRESET_MODE_MINSIZE, 90)
+	var subtitle := Label.new()
+	subtitle.text = SUBTITLE_TEXT
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle.add_theme_font_size_override("font_size", SUBTITLE_SIZE)
+	subtitle.add_theme_color_override("font_color", Color(1.0, 0.95, 0.8))
+	subtitle.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.0))
+	subtitle.add_theme_constant_override("outline_size", 10)
+	title.add_child(subtitle)  # it comes and goes with the title
+	subtitle.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	subtitle.offset_left = 0.0
+	subtitle.offset_right = 0.0
+	subtitle.offset_top = 0.0
+	subtitle.offset_bottom = 0.0
+	subtitle.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	subtitle.grow_vertical = Control.GROW_DIRECTION_END
+	var version := Label.new()
+	version.text = "v%s" % ProjectSettings.get_setting("application/config/version")
+	version.add_theme_font_size_override("font_size", VERSION_SIZE)
+	version.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.0))
+	version.add_theme_constant_override("outline_size", 6)
+	root.add_child(version)
+	version.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, 		Control.PRESET_MODE_MINSIZE, 12)
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	center.offset_top = MENU_TOP

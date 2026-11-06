@@ -6,6 +6,7 @@ class_name DisplaySettings extends RefCounted
 
 
 static func apply(window: Window, options: GameOptions) -> void:
+	window.title = ProjectSettings.get_setting("application/config/name")
 	window.content_scale_factor = GameOptions.LARGE_TEXT_SCALE if options.large_text else 1.0
 	if not OS.has_feature("web"):
 		var is_fullscreen := window.mode == Window.MODE_FULLSCREEN
