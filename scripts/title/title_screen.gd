@@ -62,6 +62,12 @@ func _ready() -> void:
 	_autoplay_save = _autoplay and args.has("--autoplay-save")
 	_options = SaveStore.load_options()
 	DisplaySettings.apply(get_window(), _options)
+	if Device.is_touch():
+		# A child of the title itself, which stays while the Game comes and goes.
+		var hint_layer := CanvasLayer.new()
+		hint_layer.layer = 100
+		hint_layer.add_child(RotateHint.new())
+		add_child(hint_layer)
 	KeyMap.apply(_options.keys)
 	_audio = AudioDirector.new()
 	add_child(_audio)

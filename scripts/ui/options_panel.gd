@@ -68,14 +68,20 @@ func _ready() -> void:
 			func(i: int) -> void:
 				_options.fullscreen = i == 0
 				_apply_display())
+	elif Device.is_touch() and not Device.is_ios():
+		# The browser only allows fullscreen from a press, so it is set here, not by apply().
+		_choice_row("Pantalla completa", YES_NO,
+			0 if get_window().mode == Window.MODE_FULLSCREEN else 1, func(i: int) -> void:
+				get_window().mode = Window.MODE_FULLSCREEN if i == 0 else Window.MODE_WINDOWED)
 	if _state != null:
 		var names: Array = Difficulty.IDS.map(func(id: String) -> String:
 			return Difficulty.NAMES[id])
 		_choice_row("Dificultad", names, Difficulty.IDS.find(_state.difficulty),
 			func(i: int) -> void: _state.difficulty = Difficulty.IDS[i])
-	_keys_button = _button("Teclas")
-	_keys_button.pressed.connect(_open_keys)
-	_rows.add_child(_keys_button)
+	if not Device.is_touch():
+		_keys_button = _button("Teclas")
+		_keys_button.pressed.connect(_open_keys)
+		_rows.add_child(_keys_button)
 	_back_button = _button("Volver")
 	_back_button.pressed.connect(back)
 	_main.add_child(_back_button)
@@ -131,7 +137,8 @@ func _open_keys() -> void:
 func _close_keys() -> void:
 	_keys_panel.hide()
 	_main.show()
-	_keys_button.grab_focus()
+	if _keys_button:
+		_keys_button.grab_focus()
 	if _audio:
 		_audio.play_sfx(SfxLibrary.CANCEL)
 
