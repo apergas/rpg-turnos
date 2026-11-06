@@ -1,6 +1,6 @@
 class_name KeysPanel extends VBoxContainer
 ## The Teclas page of the options: one row per action with its keys. Pressing a row waits
-## for the new key (a click cancels), which replaces the first key of that action; a key that
+## for the new key (a click or Esc cancels), which replaces the first key of that action; a key that
 ## can't change hands says why. Restablecer goes back to the project's keys. The rules are
 ## KeyMap's. Call setup() before adding it to the tree.
 
@@ -66,7 +66,7 @@ func _input(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 	var action := _waiting
 	_waiting = ""
-	if click or key.physical_keycode == KEY_NONE:
+	if click or key.physical_keycode in [KEY_NONE, KEY_ESCAPE]:
 		_refresh()
 		return
 	_say(KeyMap.assign(_options.keys, action, int(key.physical_keycode)))
