@@ -254,6 +254,8 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	if _pad:
 		_player.stick_direction = _pad.direction
+		if _pad.direction != Vector2.ZERO:
+			_use_on_arrival = {}  # walking off by hand drops the tap's errand
 	if _grass:
 		Vegetation.set_pusher(_grass, _player.global_position)
 	_map_square.follow(_player.global_position)

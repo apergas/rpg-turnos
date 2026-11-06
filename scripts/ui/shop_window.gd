@@ -43,6 +43,7 @@ var _keeper: Label
 var _gold: Label
 var _title: Label
 var _rows: VBoxContainer
+var _scroll: ScrollBox
 var _message: Label
 
 
@@ -95,9 +96,9 @@ func _ready() -> void:
 	header.add_child(_gold)
 	_title = _label("", Color.WHITE)
 	box.add_child(_title)
-	var scroll := ScrollBox.new(ROWS_RESERVED)
-	box.add_child(scroll)
-	_rows = scroll.content
+	_scroll = ScrollBox.new(ROWS_RESERVED)
+	box.add_child(_scroll)
+	_rows = _scroll.content
 	_rows.add_theme_constant_override("separation", 6)
 	_message = _label("", Color.WHITE)
 	_message.hide()
@@ -166,6 +167,7 @@ func _back() -> void:
 ## focus_id puts the cursor back on that item's row when it is still there and usable,
 ## so buying or selling several in a row needs no walking down the list again.
 func _show_page(page: String, focus_id := "") -> void:
+	var kept := _scroll.scroll_vertical
 	_page = page
 	_gold.text = "Oro %d G" % _state.gold
 	for child in _rows.get_children():
@@ -203,6 +205,14 @@ func _show_page(page: String, focus_id := "") -> void:
 				_answered.emit(false))
 	if focus_id == "" or not _focus_id(focus_id):
 		_focus_first()
+	if focus_id != "":
+		_keep_scroll(kept)
+
+
+## The rows were just rebuilt: once they are laid out, the list goes back where it was.
+func _keep_scroll(value: int) -> void:
+	await get_tree().process_frame
+	_scroll.scroll_vertical = value
 
 
 func _open(page: String) -> void:
