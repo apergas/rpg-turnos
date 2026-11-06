@@ -71,13 +71,13 @@ const SAVED_NOTICE := "Partida guardada."
 const LOAD_FAILED_NOTICE := "No se pudo cargar la partida. Empiezas de nuevo."
 ## Notice after beating a boss (by id); other bosses announce their key item.
 const BOSS_NOTICES := {
-	"rey_slime": "¡Villaclaro está a salvo! La niebla del norte se disipa...",
+	"rey_slime": "¡Villaclaro está a salvo! La niebla deja libre el camino del norte.",
 	"senor_niebla": "¡Consigues el último Fragmento del amuleto! La niebla se levanta.",
 }
 const KEY_ITEM_NOTICE := "¡Consigues un %s!"
 const LEVER_NOTICE := "¡Tiras de la palanca! Se oye cómo se abre una reja."
 const KEY_NOTICE := "¡Encuentras la %s!"
-const DOOR_NOTICE := "Abres la puerta con la %s."
+const DOOR_NOTICE := "Abres la reja con la %s."
 const PORTAL_OPEN_NOTICE := "Vuelas %s. El portal te espera para volver."
 const PORTAL_REPLACED_NOTICE := "Vuelas %s. El portal anterior se ha cerrado."
 const PORTAL_BACK_NOTICE := "El portal te devuelve y se cierra tras de ti."
@@ -638,7 +638,7 @@ func _credits_sections(time_text: String) -> Array:
 		["Creado por", [AUTHOR]],
 		["Motor", ["Godot Engine 4.7"]],
 		["Modelos 3D", ["KayKit, de Kay Lousberg (CC0)"]],
-		["Música y sonido", ["Música y efectos generados por el juego"]],
+		["Música y sonido", ["Generados por el propio juego"]],
 		["Tu partida", [
 			"Tiempo de juego: %s" % time_text,
 			"Combates: %d" % state.battles,

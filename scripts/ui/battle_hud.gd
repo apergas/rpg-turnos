@@ -113,7 +113,7 @@ func set_engine(engine: BattleEngine) -> void:
 
 
 func update_level(level: int) -> void:
-	_name_label.text = "%s lvl %d" % [_engine.hero.display_name, level]
+	_name_label.text = "%s Nv %d" % [_engine.hero.display_name, level]
 
 
 func update_hp(hp: int, max_hp: int) -> void:

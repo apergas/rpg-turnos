@@ -5,7 +5,7 @@ class_name TitleScreen extends Node
 ## and creates a Game for the new or loaded session (new_game / continue_game); a new
 ## game first asks the hero's name (NameEntry, over the meadow). When the Game emits
 ## quit_to_title it frees it and shows the title again. A finished save shows
-## "Continuar (terminada)".
+## "Continuar (partida terminada)".
 ## With `-- --autoplay` the name entry types AUTOPLAY_NAME by itself and the new game
 ## starts at once, without the menu. With `--autoplay-save` too, going back to the title
 ## loads the save straight away.
@@ -291,7 +291,7 @@ func _build_menu() -> void:
 	_continue_button.disabled = not SaveStore.has_save()
 	var story: Variant = SaveStore.load_game().get("story")
 	if story is Dictionary and story.get("finished", false) == true:
-		_continue_button.text = "Continuar (terminada)"
+		_continue_button.text = "Continuar (partida terminada)"
 	_continue_button.pressed.connect(func() -> void: continue_game.emit())
 	menu.add_child(_continue_button)
 	_options_button = _button("Opciones")

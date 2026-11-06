@@ -34,9 +34,9 @@ const CHAPTER_BOSSES: Array[String] = ["rey_slime", "bruja", "golem_piedra", "se
 const GOALS := {
 	Chapter.PROLOGUE: "Objetivo: habla con la Abuela Rosa",
 	Chapter.MEADOW: "Objetivo: ayuda a la Abuela Rosa",
-	Chapter.FOREST: "Objetivo: la Bruja del bosque",
-	Chapter.MINE: "Objetivo: el Golem de la mina",
-	Chapter.CASTLE: "Objetivo: el Señor de la Niebla",
+	Chapter.FOREST: "Objetivo: vence a la Bruja del bosque",
+	Chapter.MINE: "Objetivo: vence al Golem de la mina",
+	Chapter.CASTLE: "Objetivo: vence al Señor de la Niebla",
 	Chapter.END: "Villaclaro está en paz",
 }
 

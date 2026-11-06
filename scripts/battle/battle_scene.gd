@@ -194,7 +194,7 @@ func _intro_text() -> String:
 		return "¡%s te cierra el paso!" % _cap(_the(first))
 	if enemies.size() == 2:
 		return "¡Aparecen %s y %s!" % [first.display_name, enemies[1].display_name]
-	return "¡%s %s salvaje aparece!" % ["Una" if first.female else "Un", first.display_name]
+	return "¡Aparece %s %s!" % ["una" if first.female else "un", first.display_name]
 
 
 ## Asleep, the hero does nothing; on autoplay the bot picks; otherwise the menu opens.
@@ -364,7 +364,7 @@ func _play_event(event: Dictionary) -> void:
 			await _actor(event.target).play_defeat()
 			if event.target == BattleEvent.HERO:
 				_music(MusicLibrary.DEFEAT)
-				await _say("¡Has caído...!")
+				await _say("Has caído...")
 			else:
 				var foe := _fighter(event.target)
 				await _say("¡%s ha sido derrotad%s!" % [foe.display_name, _ending(foe)])
@@ -411,7 +411,7 @@ func _play_damage(event: Dictionary) -> void:
 	var target := _fighter(event.target)
 	match event.affinity:
 		BattleEvent.WEAK:
-			await _say("¡Es muy eficaz contra %s!" % _the(target))
+			await _say("¡%s es débil a esto!" % _cap(_the(target)))
 		BattleEvent.RESIST:
 			await _say("¡%s lo resiste!" % _cap(_the(target)))
 	await _say("¡%s recibe %d de daño!" % [target.display_name, event.amount])

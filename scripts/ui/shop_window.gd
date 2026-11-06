@@ -169,7 +169,7 @@ func _back() -> void:
 func _show_page(page: String, focus_id := "") -> void:
 	var kept := _scroll.scroll_vertical
 	_page = page
-	_gold.text = "Oro %d G" % _state.gold
+	_gold.text = "%d G" % _state.gold
 	for child in _rows.get_children():
 		_rows.remove_child(child)
 		child.queue_free()

@@ -1,7 +1,7 @@
 class_name PauseMenu extends Control
 ## Pause menu of the world map. Esc or P, or the ☰ button in the top right corner
 ## (mouse and touch), open it while `available`; it pauses the tree until it closes.
-## Main page: two windows side by side. The hero's ("Héroe lvl X", the pages of
+## Main page: two windows side by side. The hero's ("Héroe Nv X", the pages of
 ## HERO_PAGES and the missions under way) and the system's (Guardar, Opciones, Volver al
 ## título, Cerrar). Other pages: Estado (hero stats, gold, spells), Objetos (items usable
 ## outside battle, the Ala de viaje too, and the key items, each with what it does),
@@ -243,7 +243,7 @@ func _fill_status() -> void:
 	_exp_bar.show_exp(hero)
 	_stats_label.text = "ATK %d   DEF %d   VEL %d" % [hero.total_attack(),
 		hero.total_defense(), hero.total_speed()]
-	_gold_label.text = "Oro %d G" % _state.gold
+	_gold_label.text = "%d G" % _state.gold
 	var spells := PackedStringArray()
 	for skill in hero.skills:
 		spells.append(skill.display_name)

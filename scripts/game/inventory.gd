@@ -31,7 +31,7 @@ const ITEMS := {
 		"price": 10, "battle": true, "field": false, "text": "Cura el veneno."},
 	WING: {"name": "Ala de viaje", "article": "un", "effect": "travel", "value": 0,
 		"price": 25, "battle": false, "field": true,
-		"text": "Te lleva al último pueblo y deja un portal para volver una vez."},
+		"text": "Te lleva al último lugar seguro y deja un portal para volver una vez."},
 	SETA: {"name": "Seta", "article": "una", "effect": "quest", "value": 0, "price": 0,
 		"battle": false, "field": false,
 		"text": "De las que saltan. Alguien de Villaclaro las anda buscando."},
@@ -49,7 +49,7 @@ const ITEMS := {
 const IDS: Array[String] = [POTION, ETHER, ANTIDOTE, WING, SEED_ATTACK, SEED_DEFENSE,
 	SEED_SPEED, SETA]
 ## Why an Ala de viaje can't be used in a village.
-const IN_TOWN := "Ya estás en un pueblo"
+const IN_TOWN := "Ya estás en un lugar seguro"
 ## Why a "quest" item can't be used.
 const QUEST_ITEM := "Para una misión"
 ## The stat a seed raises, as the status windows name it.
@@ -116,7 +116,7 @@ func problem(id: String, c: Combatant, in_battle: bool) -> String:
 	if item.effect == "quest":
 		return QUEST_ITEM
 	if in_battle and not item.battle:
-		return "Fuera de combate"
+		return "Solo fuera de combate"
 	if not in_battle and not item.field:
 		return "Solo en combate"
 	match item.effect:

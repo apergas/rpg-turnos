@@ -706,7 +706,7 @@ func refresh_status(hero: Combatant, potions: int, gold: int, missions: Array[St
 	_mp_bar.show_mp(hero.mp, hero.max_mp)
 	_exp_bar.show_exp(hero)
 	_potion_label.text = "%s ×%d" % [Inventory.display_name(Inventory.POTION), potions]
-	_gold_label.text = "Oro %d G" % gold
+	_gold_label.text = "%d G" % gold
 	_missions = missions
 	if not _mission_done:
 		_show_missions(missions, Color.WHITE)
