@@ -50,9 +50,19 @@ func _on_visibility_changed() -> void:
 		_fit()
 
 
+## A finger dragging from a button must move the list too, and most rows are buttons.
+func _pass_touches(node: Node) -> void:
+	for child in node.get_children():
+		if child is BaseButton:
+			(child as Control).mouse_filter = Control.MOUSE_FILTER_PASS
+		_pass_touches(child)
+
+
 func _fit() -> void:
 	if not is_inside_tree():
 		return
+	if Device.is_touch():
+		_pass_touches(content)
 	var wanted := content.get_combined_minimum_size()
 	var room := get_viewport_rect().size.y - _reserved
 	var scrolls := wanted.y > room
