@@ -75,6 +75,7 @@ static func from_state(state: GameState, player_pos: Vector3, play_time: float) 
 		"difficulty": state.difficulty,
 		"bestiary": state.seen_enemies.duplicate(),
 		"wells": state.well_charge.duplicate(),
+		"ally": state.ally_id,
 		"position": [player_pos.x, player_pos.z],
 		"play_time": play_time,
 	}
@@ -155,6 +156,7 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 	var wells: Dictionary = data.get("wells", {})
 	for id: String in wells:
 		state.well_charge[id] = int(wells[id])
+	state.ally_id = data.get("ally", "")
 	var pos: Array = data.position
 	return {"valid": true, "position": Vector3(pos[0], 0.0, pos[1]),
 		"play_time": float(data.play_time)}
@@ -177,7 +179,8 @@ static func is_valid(data: Dictionary) -> bool:
 		return false
 	if int(data.version) >= DIFFICULTY_VERSION and not _valid_difficulty(data):
 		return false
-	if int(data.version) >= EVOLUTION_VERSION and not (_valid_bestiary(data) and _valid_wells(data)):
+	if int(data.version) >= EVOLUTION_VERSION and not (_valid_bestiary(data) and _valid_wells(data)
+			and _valid_ally(data)):
 		return false
 	var hero: Variant = data.get("hero")
 	if not hero is Dictionary:
@@ -211,6 +214,12 @@ static func _valid_bestiary(data: Dictionary) -> bool:
 		if not (id is String and EnemyLibrary.ENEMIES.has(id)):
 			return false
 	return true
+
+
+## EVOLUTION_VERSION field: the creature's id, "" for none.
+static func _valid_ally(data: Dictionary) -> bool:
+	var ally: Variant = data.get("ally")
+	return ally is String and (ally == "" or Allies.exists(ally))
 
 
 ## EVOLUTION_VERSION field: a Dictionary of well ids to the battles left.

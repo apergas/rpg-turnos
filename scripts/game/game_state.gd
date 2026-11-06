@@ -26,6 +26,8 @@ var opened_chests: Array[String] = []
 var seen_enemies: Array[String] = []
 ## Dry wells: well id -> battles left until it is full again (absent: full).
 var well_charge := {}
+## The creature fighting beside the hero (Allies id, "" for none).
+var ally_id := ""
 ## Progress through the world: flag -> true. A boss sets its enemy id when defeated
 ## ("rey_slime" lifts the fog of the meadow's north exit); ZoneData exits name the flag
 ## that opens them.

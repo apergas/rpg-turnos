@@ -32,6 +32,8 @@ const PHASE := "phase"
 const ENEMY_FLEE := "enemy_flee"
 
 const HERO := -1
+## The creature fighting beside the hero.
+const ALLY := -2
 ## Values of DAMAGE "affinity": the target is weak to / resists the spell's element.
 const WEAK := "weak"
 const RESIST := "resist"

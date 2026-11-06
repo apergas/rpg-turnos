@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "esqueleto_leal"
+display_name = "Esqueleto leal"
+max_hp = 90
+hp = 90
+attack = 38
+defense = 28
+speed = 12
