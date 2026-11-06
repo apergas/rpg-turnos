@@ -22,6 +22,7 @@ const NAME_WIDTH := 300.0
 ## Phone: narrower names, so the widest row still fits the screen.
 const TOUCH_NAME_WIDTH := 240.0
 const PRICE_WIDTH := 90.0
+const BULK_WIDTH := 72.0
 ## Messages under the list wrap past this width.
 const MESSAGE_WIDTH := 640.0
 ## What the header, the title, a two-line message and the margins leave for the rows.
@@ -217,9 +218,27 @@ func _add_buy_row(id: String) -> void:
 		row.add_child(_label("%s +%d" % [info.stat, info.bonus], Color.WHITE))
 		row.add_child(comparison(info.diff))
 	else:
+		var bulk := _button("×%d" % Shop.BULK)
+		bulk.custom_minimum_size.x = BULK_WIDTH
+		bulk.alignment = HORIZONTAL_ALIGNMENT_CENTER
+		bulk.disabled = not Shop.can_buy_bulk(_state, id)
+		bulk.pressed.connect(_buy_bulk.bind(id))
+		bulk.set_meta("bulk", id)
+		row.add_child(bulk)
 		UiStyle.add_description(row, id)
 	if why != "":
 		row.add_child(_label(why, GREY))
+
+
+func _buy_bulk(id: String) -> void:
+	var result := Shop.buy_bulk(_state, id)
+	_say(result.text)
+	if not result.ok:
+		_sfx(SfxLibrary.CANCEL)
+		return
+	_sfx(SfxLibrary.ACCEPT)
+	changed.emit()
+	_show_page("buy", id)
 
 
 ## Name with the count carried, the price paid, and why it can't be sold if so.

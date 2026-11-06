@@ -41,6 +41,8 @@ const STARTING_GEAR_PRICE := 1
 const NOT_CARRIED := "No lo llevas"
 ## Potions --autoplay keeps in stock once it has the shop's equipment.
 const AUTOPLAY_POTIONS := 3
+## The ×5 button of consumables.
+const BULK := 5
 
 
 static func keeper(shop_id: String) -> String:
@@ -99,6 +101,19 @@ static func buy(state: GameState, id: String) -> Dictionary:
 		state.inventory.add(id)
 	return {"ok": true, "text": "Compras %s %s por %d G." % [article(id), display_name(id),
 		price(id)]}
+
+
+static func can_buy_bulk(state: GameState, id: String) -> bool:
+	return not is_equipment(id) and state.gold >= price(id) * BULK
+
+
+static func buy_bulk(state: GameState, id: String) -> Dictionary:
+	if not can_buy_bulk(state, id):
+		return {"ok": false, "text": "%s." % NO_GOLD}
+	state.gold -= price(id) * BULK
+	state.inventory.add(id, BULK)
+	return {"ok": true, "text": "Compras %s ×%d por %d G." % [display_name(id), BULK,
+		price(id) * BULK]}
 
 
 ## What can be offered for sale, in list order: the equipment worn (it can't be sold, but
