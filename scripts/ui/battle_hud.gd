@@ -481,7 +481,13 @@ func _ask_target(cmd: Dictionary, back: Page) -> void:
 	_targets = _engine.alive_enemies()
 	_add_back_row()
 	_page = Page.TARGET
-	_set_message("¿A quién?")
+	var touch := Device.is_touch()
+	if touch:
+		# Only the enemies and Volver answer here, so the rest of the menu goes.
+		for i in _rows.size():
+			_rows[i].visible = i == _back_row
+		_set_cursor(_back_row)
+	_set_message("¿A quién? Toca al enemigo." if touch else "¿A quién?")
 	_message.visible_characters = -1
 	_aim_at(0)
 
