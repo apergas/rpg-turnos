@@ -17,13 +17,16 @@ class_name SaveData extends RefCounted
 ## gets the default name, the cutscenes its world flags have left behind marked seen
 ## (StoryState.mark_seen_for_flags()) and the numbers at 0. QUESTS_VERSION (the side quests)
 ## adds the accessory slot to the loadout and the side quests' progress; an older save gets
-## the slot empty and no side quest taken.
+## the slot empty and no side quest taken. DIFFICULTY_VERSION (phase 7) adds the difficulty;
+## an older save plays on Normal.
 
-const VERSION := 7
+const VERSION := 8
 ## First version with the story's fields.
 const STORY_VERSION := 6
 ## First version with the accessory slot and the side quests.
 const QUESTS_VERSION := 7
+## First version with the difficulty.
+const DIFFICULTY_VERSION := 8
 ## Oldest version apply() still reads.
 const OLDEST_VERSION := 2
 ## Combatant fields of the hero that change while playing (the rest come from hero.tres).
@@ -65,6 +68,7 @@ static func from_state(state: GameState, player_pos: Vector3, play_time: float) 
 		"story": state.story.to_dict(),
 		"stats": {"battles": state.battles, "steps": state.steps, "gold": state.gold_earned},
 		"quests": state.quests.to_dict(),
+		"difficulty": state.difficulty,
 		"position": [player_pos.x, player_pos.z],
 		"play_time": play_time,
 	}
@@ -132,6 +136,7 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 		state.steps = 0
 		state.gold_earned = 0
 	state.quests.set_from(data.get("quests", {}))
+	state.difficulty = data.get("difficulty", Difficulty.NORMAL)
 	var pos: Array = data.position
 	return {"valid": true, "position": Vector3(pos[0], 0.0, pos[1]),
 		"play_time": float(data.play_time)}
@@ -151,6 +156,8 @@ static func is_valid(data: Dictionary) -> bool:
 	if int(data.version) >= STORY_VERSION and not _valid_story(data):
 		return false
 	if int(data.version) >= QUESTS_VERSION and not _valid_quests(data):
+		return false
+	if int(data.version) >= DIFFICULTY_VERSION and not _valid_difficulty(data):
 		return false
 	var hero: Variant = data.get("hero")
 	if not hero is Dictionary:
@@ -173,6 +180,12 @@ static func is_valid(data: Dictionary) -> bool:
 	if not (pos is Array and pos.size() == 2 and pos[0] is float and pos[1] is float):
 		return false
 	return data.get("play_time") is float
+
+
+## DIFFICULTY_VERSION field: a Difficulty id.
+static func _valid_difficulty(data: Dictionary) -> bool:
+	var difficulty: Variant = data.get("difficulty")
+	return difficulty is String and difficulty in Difficulty.IDS
 
 
 ## Version 5 field: no portal ({}), or its village and zone are ZoneData ids and its spot

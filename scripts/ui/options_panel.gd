@@ -3,7 +3,8 @@ class_name OptionsPanel extends VBoxContainer
 ## (sliders, 0-100 % in steps of 10), text speed, combat speed, graphics quality, camera
 ## shake, large text, on desktop fullscreen, and Teclas (KeysPanel). Changes apply at once;
 ## "Volver" (or back()) saves them with SaveStore and emits closed. The rows scroll when the
-## screen is short. Call setup() before adding it to the tree.
+## screen is short. From the pause menu (with state) it also changes the game's difficulty.
+## Call setup() before adding it to the tree.
 
 signal closed
 
@@ -16,6 +17,7 @@ const YES_NO := ["Sí", "No"]
 
 var _options: GameOptions
 var _audio: AudioDirector
+var _state: GameState
 var _main: VBoxContainer
 var _rows: VBoxContainer
 var _music_slider: HSlider
@@ -27,9 +29,11 @@ var _keys_button: Button
 var _keys_panel: KeysPanel
 
 
-func setup(options: GameOptions, audio: AudioDirector) -> void:
+## state: the game under way, whose difficulty can change here (null on the title screen).
+func setup(options: GameOptions, audio: AudioDirector, state: GameState = null) -> void:
 	_options = options
 	_audio = audio
+	_state = state
 
 
 func _ready() -> void:
@@ -64,6 +68,11 @@ func _ready() -> void:
 			func(i: int) -> void:
 				_options.fullscreen = i == 0
 				_apply_display())
+	if _state != null:
+		var names: Array = Difficulty.IDS.map(func(id: String) -> String:
+			return Difficulty.NAMES[id])
+		_choice_row("Dificultad", names, Difficulty.IDS.find(_state.difficulty),
+			func(i: int) -> void: _state.difficulty = Difficulty.IDS[i])
 	_keys_button = _button("Teclas")
 	_keys_button.pressed.connect(_open_keys)
 	_rows.add_child(_keys_button)

@@ -64,6 +64,9 @@ var state := State.ONGOING
 var exp_won := 0
 var gold_won := 0
 var drops_won: Array[String] = []
+## The difficulty: what the hero's damage and the EXP won are multiplied by.
+var damage_mult := 1.0
+var exp_mult := 1.0
 
 var _rng: RandomNumberGenerator
 var _defending := false
@@ -390,6 +393,8 @@ func _use_item(who: int, id: String, events: Array[Dictionary]) -> void:
 func _hurt(target: int, amount: int, crit: bool, magic: bool, affinity: String, \
 		events: Array[Dictionary]) -> void:
 	var fighter := _fighter(target)
+	if target == BattleEvent.HERO:
+		amount = _taken(amount)
 	if target == BattleEvent.HERO and _defending:
 		amount = maxi(1, ceili(amount / 2.0))
 	fighter.hp = maxi(fighter.hp - amount, 0)
@@ -442,6 +447,8 @@ func _end_of_round(events: Array[Dictionary]) -> void:
 		var fighter := _fighter(who)
 		if fighter.status.has(POISON) and fighter.is_alive():
 			var amount := maxi(1, roundi(fighter.max_hp * POISON_SHARE))
+			if who == BattleEvent.HERO:
+				amount = _taken(amount)
 			fighter.hp = maxi(fighter.hp - amount, 0)
 			events.append(BattleEvent.status_tick(who, POISON, amount, fighter.hp))
 			if fighter.hp == 0:
@@ -474,6 +481,7 @@ func _win(events: Array[Dictionary]) -> void:
 	for enemy in enemies:
 		exp_won += enemy.exp_reward
 		gold_won += enemy.gold_reward
+	exp_won = roundi(exp_won * exp_mult)
 	hero.experience += exp_won
 	events.append(BattleEvent.victory(exp_won))
 	if gold_won > 0:
@@ -485,6 +493,11 @@ func _win(events: Array[Dictionary]) -> void:
 				inventory.add(id)
 				drops_won.append(id)
 				events.append(BattleEvent.drop(id, i))
+
+
+## What the difficulty leaves of damage to the hero, at least 1.
+func _taken(amount: int) -> int:
+	return maxi(1, roundi(amount * damage_mult))
 
 
 func _roll_damage(attacker: Combatant, defender: Combatant, crit: bool) -> int:

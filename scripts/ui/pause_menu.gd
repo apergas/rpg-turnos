@@ -548,7 +548,7 @@ func _build_journal(stack: VBoxContainer) -> void:
 
 func _build_options(stack: VBoxContainer) -> void:
 	_options_panel = OptionsPanel.new()
-	_options_panel.setup(_options, _audio)
+	_options_panel.setup(_options, _audio, _state)
 	_options_panel.closed.connect(func() -> void: _show_page("main"))
 	stack.add_child(_options_panel)
 	_pages["options"] = _options_panel

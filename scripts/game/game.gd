@@ -55,6 +55,7 @@ class_name Game extends Node
 ## record frames of it.
 ## `-- --autoplay --autoplay-zone=<id>`: a new game that starts in that zone with the
 ## level, gold, gear and progress AUTOPLAY_ZONES gives it.
+## `-- --autoplay --autoplay-easy`: a new game on Fácil.
 
 signal quit_to_title
 
@@ -154,6 +155,8 @@ var _options: GameOptions
 var _save := {}
 ## The name typed on the NameEntry for a new game ("" for the default).
 var _hero_name := ""
+## The difficulty chosen for a new game.
+var _difficulty := Difficulty.NORMAL
 var _cutscenes: CutscenePlayer
 var _busy := false
 var _leaving := false
@@ -169,13 +172,14 @@ var _rng := RandomNumberGenerator.new()
 
 
 ## audio and options come from the title screen; save is the Dictionary read by
-## SaveStore.load_game(), empty for a new game, which gets hero_name.
+## SaveStore.load_game(), empty for a new game, which gets hero_name and difficulty.
 func setup(audio: AudioDirector, options: GameOptions, save: Dictionary,
-		hero_name := "") -> void:
+		hero_name := "", difficulty := Difficulty.NORMAL) -> void:
 	_audio = audio
 	_options = options
 	_save = save
 	_hero_name = hero_name
+	_difficulty = difficulty
 
 
 func _ready() -> void:
@@ -205,6 +209,9 @@ func _ready() -> void:
 			load_failed = true
 	if _save.is_empty() or load_failed:
 		state.hero.display_name = StoryState.clean_name(_hero_name)
+		state.difficulty = _difficulty
+		if _autoplay and OS.get_cmdline_user_args().has("--autoplay-easy"):
+			state.difficulty = Difficulty.EASY
 	if _save.is_empty() and _autoplay:
 		_apply_autoplay_zone(args)
 	_build_shop()
@@ -340,6 +347,7 @@ func _on_encounter(boss: bool) -> void:
 	battle.char_time = _options.char_time()
 	battle.time_scale = _options.combat_scale()
 	battle.camera_shake = _options.camera_shake
+	battle.difficulty = state.difficulty
 	battle.zone = _zone
 	add_child(battle)
 	await _fade_to(0.0)
