@@ -63,6 +63,8 @@ var _name_label: Label
 var _badges: HBoxContainer
 var _hp_bar: StatBar
 var _mp_bar: StatBar
+var _ally_name: Label
+var _ally_bar: StatBar
 var _menu: PanelContainer
 var _list: VBoxContainer
 var _message: Label
@@ -122,6 +124,18 @@ func update_hp(hp: int, max_hp: int) -> void:
 
 func update_mp(mp: int, max_mp: int) -> void:
 	_mp_bar.show_mp(mp, max_mp)
+
+
+## Adds the creature's name and life under the hero's bars.
+func show_ally(ally: Combatant) -> void:
+	_ally_name.text = ally.display_name
+	_ally_name.show()
+	_ally_bar.show()
+	update_ally_hp(ally.hp, ally.max_hp)
+
+
+func update_ally_hp(hp: int, max_hp: int) -> void:
+	_ally_bar.show_hp(hp, max_hp)
 
 
 ## Adds the bar of the next enemy, full. BattleScene places it every frame (it follows the
@@ -542,6 +556,12 @@ func _build_status() -> void:
 	box.add_child(_hp_bar)
 	_mp_bar = StatBar.new(StatBar.MP)
 	box.add_child(_mp_bar)
+	_ally_name = _label()
+	_ally_name.hide()
+	box.add_child(_ally_name)
+	_ally_bar = StatBar.new(StatBar.HP)
+	_ally_bar.hide()
+	box.add_child(_ally_bar)
 
 
 func _build_bottom() -> void:

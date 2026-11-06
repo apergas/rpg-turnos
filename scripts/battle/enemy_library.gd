@@ -40,6 +40,11 @@ const LOOKS := {
 	"esqueleto_mago": BattleActor.Look.SKELETON_MAGE,
 	"senor_niebla": BattleActor.Look.FOG_LORD,
 	"slime_metal": BattleActor.Look.METAL_SLIME,
+	# The creatures that fight beside the hero (data in Allies, not in ENEMIES).
+	"gallina": BattleActor.Look.CHICKEN,
+	"lobezno": BattleActor.Look.WOLF_CUB,
+	"golem_pequeno": BattleActor.Look.MINI_GOLEM,
+	"esqueleto_leal": BattleActor.Look.LOYAL_SKELETON,
 }
 
 
