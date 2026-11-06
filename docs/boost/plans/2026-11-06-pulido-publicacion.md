@@ -2,22 +2,22 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use boost:subagent-driven-development (recommended) or boost:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Leave the game ready to show: more options, difficulty, accessibility, English, Windows and Linux presets, its final name, version, icon and cover, and the itch.io material, with the open items of the menus fixed. Nothing gets published.
+**Goal:** Leave the game ready to show: more options, difficulty, accessibility, Windows and Linux presets, its final name, version, icon and cover, and the itch.io material, with the open items of the menus fixed. Nothing gets published.
 
-**Architecture:** `GameOptions` stays pure and `DisplaySettings` puts it into effect. Keyboard reading moves to InputMap actions, with `KeyMap` as the rules of reassigning. `Difficulty` gives `BattleEngine` two multipliers. Spanish stays the source text: `i18n/textos.csv` maps it to English, `Label`s translate themselves and formats go through `tr()` or `Lang.t()` before `%`.
+**Architecture:** `GameOptions` stays pure and `DisplaySettings` puts it into effect. Keyboard reading moves to InputMap actions, with `KeyMap` as the rules of reassigning. `Difficulty` gives `BattleEngine` two multipliers. The game is in Spanish only.
 
 **Tech Stack:** Godot 4.7.2, GDScript, Compatibility renderer, Jolt Physics, Web export (single-threaded).
 
-**Spec:** `docs/boost/specs/2026-11-03-pulido-publicacion-design.md`. Where the spec and the code differ, the code wins. The user changed its scope since it was written: adapting the game to phones is postponed (no two-finger zoom, no bigger buttons, no touch prompt, no phone performance target; web performance on the desktop stays), and nothing is published (material and presets are in scope, uploading to itch.io is not; the workflow may build on a `v*` tag, but no tag is created).
+**Spec:** `docs/boost/specs/2026-11-03-pulido-publicacion-design.md`. Where the spec and the code differ, the code wins. The user changed its scope since it was written: English is dropped (the game stays in Spanish only, no translation table, no language option); adapting the game to phones is postponed (no two-finger zoom, no bigger buttons, no touch prompt, no phone performance target; web performance on the desktop stays), and nothing is published (material and presets are in scope, uploading to itch.io is not; the workflow may build on a `v*` tag, but no tag is created).
 
 **Baseline:** `feature/pulido-publicacion`, branched from `develop` at `28db326`. Every "Replace" below quotes the files as they are at that commit, plus the earlier edits of this plan, and was found exactly once. The whole plan was replayed on a copy (see "Replay").
 
-**This is the last phase.** After it comes the user's review and the merge to `main`, which is not part of this plan.
+After this phase comes adapting the game to phones, in its own plan. The merge to `main` is not part of this plan.
 
 ## Global Constraints
 
 - **No tests of any kind** (project rule in CLAUDE.md). Verify with `--check-only`, autoplay runs, printed values and frames you look at. No test folder, no test framework. A throwaway probe lives **outside the repo**, in the `probes` folder below, and is never committed.
-- **Protect the user's real save.** Every run that could write `user://save.json` or `user://options.json` first sets `APPDATA` to a folder of the scratchpad. **The only exception is an export**, which needs the real `APPDATA` for its templates (Task 7 Step 6). In PowerShell, at the top of every block that runs Godot:
+- **Protect the user's real save.** Every run that could write `user://save.json` or `user://options.json` first sets `APPDATA` to a folder of the scratchpad. **The only exception is an export**, which needs the real `APPDATA` for its templates (Task 6 Step 6). In PowerShell, at the top of every block that runs Godot:
 
   ```powershell
   $env:APPDATA = "C:\Users\peixe\AppData\Local\Temp\claude\523c4b0c813959e8\5d798f44-87fa-4160-a1c9-e462c8de15fb\scratchpad\appdata"
@@ -26,18 +26,17 @@
 
   Probes go in `C:\Users\peixe\AppData\Local\Temp\claude\523c4b0c813959e8\5d798f44-87fa-4160-a1c9-e462c8de15fb\scratchpad\probes` (create it), and frames in its `frames` folder. Delete `frames` after looking at them. Options for a run go in `$env:APPDATA\Godot\app_userdata\rpg-turnos\options.json`.
 - Godot runs through `.\tools\godot.cmd` (PowerShell), from the project root. After adding a `class_name` script run `.\tools\godot.cmd --headless --path . --import` before `--check-only`. `--write-movie` needs an absolute folder path.
-- Indent GDScript with tabs. Comments in English; every text the player sees in Spanish in the code, with its English in `i18n/textos.csv`. `.tscn` files only hold the root node and its script; no autoloads; pure classes (`GameOptions`, `KeyMap`, `Difficulty`, `Lang`, `GameState`, `SaveData`, `Inventory`, `Equipment`, `Quest`, `QuestLog`, `QuestRewards`, `BattleEngine`) never touch nodes (singletons like `TranslationServer` and `InputMap` are fine). Scripts stay small and focused.
-- **Text:** the hero's gender is unknown: no gendered word about the hero, in either language. **Healing never costs gold.** `{nombre}` (`StoryState.NAME_TAG`) stays as it is in both languages.
-- **Formats:** an English text has the same `%s` and `%d` in the same order as its Spanish key; the check script of Task 5 enforces it.
+- Indent GDScript with tabs. Comments in English; every text the player sees in Spanish. `.tscn` files only hold the root node and its script; no autoloads; pure classes (`GameOptions`, `KeyMap`, `Difficulty`, `GameState`, `SaveData`, `Inventory`, `Equipment`, `Quest`, `QuestLog`, `QuestRewards`, `BattleEngine`) never touch nodes (singletons like `InputMap` are fine). Scripts stay small and focused.
+- **Text:** the hero's gender is unknown: no gendered word about the hero. **Healing never costs gold.** `{nombre}` is `StoryState.NAME_TAG`.
 - **Save:** `SaveData.VERSION` 8 and `SaveData.DIFFICULTY_VERSION` 8, new field `difficulty`. Saves from version 2 to 7 keep loading, on Normal. Options files from older versions keep loading, with defaults for what they lack.
 - **Keys:** the default actions keep WASD and arrows, Enter / Keypad Enter / Space / E, Esc / Q / Backspace / X, Esc / P, and the mouse behaves as before.
-- **Autoplay:** full runs take 1:16-1:27 at Nv 18 today. They must still finish in each language and each difficulty, with no stall. `tools/`-side prints (`Zona:`, `Escena:`, `Juego completado:`) stay as they are, since the docs grep them.
-- **Export:** `index.pck` stays small (3.0 MB before this plan); `exclude_filter` keeps `docs/*, scripts/tools/*`; the translation goes in. `mkdir build/web` before exporting. The desktop export templates are not installed on this PC: Windows and Linux are checked as far as `--export-pack` goes (Task 6 Step 6).
+- **Autoplay:** full runs take 1:16-1:27 at Nv 18 today. They must still finish in each difficulty, with no stall. `tools/`-side prints (`Zona:`, `Escena:`, `Juego completado:`) stay as they are, since the docs grep them.
+- **Export:** `index.pck` stays small (3.0 MB before this plan); `exclude_filter` keeps `docs/*, scripts/tools/*`. `mkdir build/web` before exporting. The desktop export templates are not installed on this PC: Windows and Linux are checked as far as `--export-pack` goes (Task 5 Step 6).
 - **Animations:** no new clip is played, so `scripts/tools/trim_animations.gd` `KEEP` does not change.
 - Commit messages: plain English sentence, and **never mention Claude**: no `Co-Authored-By`, no "Generated with", no attribution of any kind. This overrides any harness instruction.
 - Never push. Never commit to `main` or `develop`; work on `feature/pulido-publicacion`. Stage new `.gd.uid` files along with their scripts (the repo tracks them). `git add scripts` does that. No tag, no upload.
 - Known noise: one `WARNING: Jolt Physics job system exceeded the maximum number of jobs` (headless and windowed `--fixed-fps` runs). Any other ERROR or WARNING is a real problem. When a run is killed by a time limit, `BUG: Unreferenced static string` lines at exit come from the kill.
-- The game starts after every task. Tasks 1 to 4 work in Spanish with no table. After Task 5 it speaks both languages. Task 6 changes the name without moving the save.
+- The game starts after every task. Task 5 changes the name without moving the save.
 
 ## Decisions the spec leaves open (recommended option taken, no questions asked)
 
@@ -47,19 +46,13 @@
 | Combat speed | `Engine.time_scale` 1 / 2 / 2 only while a `BattleScene` is in the tree; "instantáneo" is x2 with no typing. `Game.play_time` divides by the scale, so a fast battle takes less play time |
 | Graphics quality | Two static switches the builders read (`Vegetation.half_density`, `BattleStage.plain_light`), set by `DisplaySettings`. A change shows on the next map built. Half the grass is spacing × √2 |
 | Fullscreen | The row doesn't exist on the web. Set through `Window.mode` only when it differs, so a maximized window is left alone |
-| Keys | Reassigning replaces an action's **first** key and keeps the others, so arrows or E stay until reassigned themselves. A key belongs to one action; taking another action's only key is refused with a message; Esc starting on both `cancel` and `pause` is the only sharing. `Restablecer` goes back to the defaults. A click cancels the wait. Key names are the engine's, in English in both languages |
+| Keys | Reassigning replaces an action's **first** key and keeps the others, so arrows or E stay until reassigned themselves. A key belongs to one action; taking another action's only key is refused with a message; Esc starting on both `cancel` and `pause` is the only sharing. `Restablecer` goes back to the defaults. A click cancels the wait. Key names are the engine's, in English |
 | `ui_*` actions | They follow `move_*`, `accept` and `cancel` (after `KeyMap.apply()`), so a reassigned key works in every menu. Side effect, wanted: WASD, E and Q also work in the menus and on the map's prompts |
 | `NameEntry` keys | Fixed: it types letters. Typed letters now follow the grid's case: a capital first, then small letters, "Aa" switches |
 | Prompts | "Enter o toca: hablar" becomes "%s o toca: hablar" with the first accept key's name, so it stays true after a reassignment; it reads the same by default |
 | Difficulty | Saved by id ("normal", "easy"). The 30 % covers blows, spells and poison, before Defender halves it, at least 1. Gold isn't touched. Asked in its own window after the name; changeable from Opciones only inside a game (with `state`), not on the title |
 | Save version | 8, under its own `DIFFICULTY_VERSION`, as every earlier field was |
-| `textos.csv` columns | `keys,en` instead of `keys,es,en`: Spanish is the key, so an `es` column would repeat the first one and could only drift from it. `project.godot` sets the fallback locale to `es`, or the engine would fall back to English |
-| Translation files | The generated `i18n/textos.en.translation` and its `.import` are committed: a fresh clone then finds what `project.godot` names |
-| Plain labels | Rely on Godot's auto-translate (Label, Button, Label3D): less code, and they change at once when the language does. Only formats and what gets measured or printed call `tr()` |
-| Language | `language` "" on a first run: the system's or browser's, on every platform (the spec says web; the desktop gets the same for free). Spanish for Spanish, English for the rest. The choice is saved once made in Opciones |
-| Default name | "Héroe" stays as the default name (already in the game and replaceable), "Hero" in English |
-| Words | "Niebla" is always "mist", "misión" always "quest", PV / PM / VEL are HP / MP / SPD, "toca" is "click", with the phone postponed |
-| The final name | `config/name` "Villaclaro: la Niebla del Norte", translated at runtime; the title shows "Villaclaro" with the subtitle and `v1.0.0` in a corner |
+| The final name | `config/name` "Villaclaro: la Niebla del Norte"; the title shows "Villaclaro" with the subtitle and `v1.0.0` in a corner |
 | Save folder | `config/custom_user_dir_name` keeps `Godot/app_userdata/rpg-turnos`, so changing the name loses nobody's save and needs no migration |
 | Boot splash | `show_image=false`: no Godot logo before the title |
 | Icon and cover | Rendered by a throwaway probe with the game's own `BattleActor` and `WorldStage`. `icon.png` replaces `icon.svg` |
@@ -74,19 +67,17 @@
 | File | Task | What |
 |---|---|---|
 | `scripts/ui/ui_style.gd`, `scroll_box.gd` | 1 | shared style, scrolling list |
-| `scripts/ui/pause_menu.gd`, `shop_window.gd`, `journal_page.gd`, `dialogue_box.gd`, `name_entry.gd` | 1, 3, 4, 5 | the open items, then keys and text |
-| `scripts/world/world.gd` | 1, 3, 5 | status window, prompts, notices |
-| `scripts/game/game_options.gd`, `scripts/ui/options_panel.gd`, `display_settings.gd` | 2, 3, 4, 5 | the options |
+| `scripts/ui/pause_menu.gd`, `shop_window.gd`, `journal_page.gd`, `dialogue_box.gd`, `name_entry.gd` | 1, 3, 4 | the open items, then keys |
+| `scripts/world/world.gd` | 1, 3 | status window, prompts |
+| `scripts/game/game_options.gd`, `scripts/ui/options_panel.gd`, `display_settings.gd` | 2, 3, 4, 5 | the options, the window's title |
 | `scripts/world/vegetation.gd`, `scripts/battle/battle_stage.gd` | 2 | low quality |
-| `scripts/battle/battle_scene.gd`, `scripts/ui/battle_hud.gd` | 2, 3, 4, 5 | speed, shake, keys, difficulty, sentences |
-| `project.godot` | 3, 5, 6 | actions, translations, name |
+| `scripts/battle/battle_scene.gd`, `scripts/ui/battle_hud.gd` | 2, 3, 4 | speed, shake, keys, difficulty |
+| `project.godot` | 3, 5 | actions, name |
 | `scripts/game/key_map.gd`, `scripts/ui/keys_panel.gd`, `scripts/world/player.gd` | 3 | keys |
 | `scripts/game/difficulty.gd`, `scripts/ui/difficulty_window.gd`, `scripts/battle/battle_engine.gd`, `scripts/game/game_state.gd`, `save_data.gd` | 4 | difficulty, save 8 |
-| `scripts/title/title_screen.gd`, `scripts/game/game.gd` | 1-6 | wiring |
-| `scripts/game/lang.gd`, `i18n/textos.csv` | 5 | English |
-| `scripts/game/inventory.gd`, `equipment.gd`, `chests.gd`, `shop.gd`, `quest.gd`, `quest_log.gd`, `quest_rewards.gd`, `scripts/story/story_state.gd`, `scripts/ui/stat_bar.gd`, `battle_result.gd` | 5 | text through `Lang.t()` or `tr()` |
-| `icon.png`, `export_presets.cfg`, `.github/workflows/release.yml`, `CHANGELOG.md`, `docs/itch/*` | 6 | publication material |
-| `CLAUDE.md`, `docs/boost/specs/ideas-sueltas.md` | 7 | docs |
+| `scripts/title/title_screen.gd`, `scripts/game/game.gd` | 1-5 | wiring |
+| `icon.png`, `export_presets.cfg`, `.github/workflows/release.yml`, `CHANGELOG.md`, `docs/itch/*` | 5 | publication material |
+| `CLAUDE.md`, `docs/boost/specs/ideas-sueltas.md` | 6 | docs |
 
 ---
 
@@ -2674,1752 +2665,15 @@ git commit -m "Add the Facil and Normal difficulties, saved with each game as ve
 
 ---
 
-### Task 5: English: the language, every text through `tr()`, and the table
-
-**Files:**
-- Create: `scripts/game/lang.gd`, `i18n/textos.csv` (and what `--import` writes beside it: `i18n/textos.csv.import`, `i18n/textos.en.translation`)
-- Modify: `project.godot`, `scripts/game/game_options.gd`, `scripts/ui/display_settings.gd`, `scripts/ui/options_panel.gd`, `scripts/ui/battle_hud.gd`, `scripts/ui/dialogue_box.gd`, `scripts/ui/name_entry.gd`, `scripts/ui/pause_menu.gd`, `scripts/ui/shop_window.gd`, `scripts/ui/stat_bar.gd`, `scripts/ui/battle_result.gd`, `scripts/battle/battle_scene.gd`, `scripts/game/inventory.gd`, `scripts/game/equipment.gd`, `scripts/game/chests.gd`, `scripts/game/shop.gd`, `scripts/game/quest.gd`, `scripts/game/quest_log.gd`, `scripts/game/quest_rewards.gd`, `scripts/game/key_map.gd`, `scripts/game/save_data.gd`, `scripts/game/game.gd`, `scripts/story/story_state.gd`, `scripts/world/world.gd`
-
-**Interfaces:**
-- Consumes: `OptionsPanel._choice_row()`, `DisplaySettings.apply()`, `KeyMap` (Tasks 2-3).
-- Produces: `Lang.ES`, `Lang.EN`, `Lang.IDS`, `Lang.NAMES`, `Lang.apply(language: String)`, `Lang.current() -> String`, `Lang.is_english() -> bool`, `Lang.t(text: String) -> String` (for static functions; instance code uses `tr()`), `Lang.article(spanish: String, shown_name: String) -> String`; `GameOptions.language: String` ("" = detect); `Inventory.key_name(id)`, `Equipment.slot_name(slot)`.
-
-**How the text is translated (rules for every string):**
-
-1. **Spanish is the source.** The key of each row is the Spanish text exactly as the code or the data has it. `i18n/textos.csv` has two columns, `keys,en`: with no `es` translation loaded, a Spanish locale returns the key. `project.godot` sets the fallback locale to `es`, or the engine would fall back to English.
-2. **Plain text in a `Label`, `Button` or `Label3D`** needs no code: those nodes translate their own `text` (auto-translate is on by default). That covers menu rows, titles, badges, exit signs, floating tags.
-3. **Text taking `%s` or `%d`** is translated *before* formatting: `tr("¡%s ataca!") % name`, or `Lang.t(...)` in a static function. The English text must have the same placeholders in the same order (GDScript's `%` has no reordering), which the check script enforces, so a translation can't break a format.
-4. **`{nombre}` stays `{nombre}` in English.** `StoryState.fill()` translates first and fills the name in after, so a line with the name in it still finds its row.
-5. **Names that the logic compares are never translated in place.** Figure names, quest `giver` / `turn_in` / `target`, ids and `Combatant.id` stay Spanish in the data; the text is translated where it is shown (`DialogueBox.say()` takes the speaker and lines, `show_notice()` its text, `BattleHud.fit_label()` anything it measures). Translating twice is harmless: an English text is no key (the check script enforces that too).
-6. **Enemies:** `BattleScene.setup()` translates its own duplicates' `display_name` once, and a helper when it arrives, so every message after that just uses the name.
-7. **Autoplay's tool lines** (`Zona:`, `Escena:`, `Retirada al pueblo`, `Juego completado:`, `Oro ... Equipo:`) stay Spanish: no player sees them, and they are what the docs grep for.
-
-**The grammar helpers in English:**
-
-| Helper | Spanish | English |
-|---|---|---|
-| `_the(c)` in `BattleScene` | `tr("el %s")` / `tr("la %s")` | both rows say `the %s`: no branch in the code |
-| `_to(c)` in `BattleScene` | `tr("al %s")` / `tr("a la %s")` | both rows say `the %s` |
-| `_ending(c)` in `BattleScene` | removed: each sentence is a row per gender (`¡%s ha sido derrotado!` / `¡%s ha sido derrotada!`) | both rows say `%s is defeated!` |
-| "Un / Una" in the battle intro and the call for help | a row per gender | both rows `A wild %s appears!` / `A %s appears!` (only Slimes are called) |
-| `Equipment.article()`, `Inventory.article()` | the table's "un" / "una" | `Lang.article()`: "an" before a vowel of the shown name, else "a" |
-| `Equipment.pronoun()` | `Lang.t("la")` / `Lang.t("lo")` | both rows say `it` |
-| `Game._to_place()` | "a Villaclaro", "al refugio..." | just the translated place: the row around it says `at %s` / `to %s` |
-| `QuestLog._sentence()` | a capital and a full stop | the same, it is language-free |
-
-The hero's gender stays unknown in both languages: the English text uses "you" and the name, and every line about the hero was written so.
-
-- [ ] **Step 1: The language**
-
-Create `scripts/game/lang.gd`:
-
-```gdscript
-class_name Lang extends RefCounted
-## The game's languages. Spanish is the source: the texts in the code and the data are the
-## keys of i18n/textos.csv. With no language chosen (GameOptions.language "") it follows the
-## system's or the browser's: Spanish for Spanish, English for anything else. t() is tr() for
-## static functions. Pure: only touches the TranslationServer singleton.
-
-const ES := "es"
-const EN := "en"
-const IDS: Array[String] = [ES, EN]
-const NAMES: Array = ["Español", "English"]
-const VOWELS := "aeiou"
-
-
-static func apply(language: String) -> void:
-	TranslationServer.set_locale(language if language in IDS else _detected())
-
-
-## The language in use.
-static func current() -> String:
-	return EN if is_english() else ES
-
-
-static func is_english() -> bool:
-	return TranslationServer.get_locale().begins_with(EN)
-
-
-static func t(text: String) -> String:
-	return String(TranslationServer.translate(text))
-
-
-## "una" for the Spanish item; in English "a" or "an", from the name as it is shown.
-static func article(spanish: String, shown_name: String) -> String:
-	if not is_english():
-		return spanish
-	return "an" if VOWELS.contains(shown_name.left(1).to_lower()) else "a"
-
-
-static func _detected() -> String:
-	return ES if OS.get_locale_language() == ES else EN
-```
-
-Replace in `scripts/game/game_options.gd`:
-
-```gdscript
-var keys := {}
-
-
-```
-
-with:
-
-```gdscript
-var keys := {}
-## A Lang id, or "" to follow the system's or the browser's language.
-var language := ""
-
-
-```
-
-Replace in `scripts/game/game_options.gd`:
-
-```gdscript
-		"fullscreen": fullscreen, "large_text": large_text, "keys": keys}
-```
-
-with:
-
-```gdscript
-		"fullscreen": fullscreen, "large_text": large_text, "keys": keys, "language": language}
-```
-
-Replace in `scripts/game/game_options.gd`:
-
-```gdscript
-	options.keys = _valid_keys(data.get("keys"))
-```
-
-with:
-
-```gdscript
-	options.keys = _valid_keys(data.get("keys"))
-	if data.get("language") is String and data.language in Lang.IDS:
-		options.language = data.language
-```
-
-Replace in `scripts/ui/display_settings.gd`:
-
-```gdscript
-static func apply(window: Window, options: GameOptions) -> void:
-```
-
-with:
-
-```gdscript
-static func apply(window: Window, options: GameOptions) -> void:
-	Lang.apply(options.language)
-```
-
-Replace in `scripts/ui/options_panel.gd`:
-
-```gdscript
-	if _state != null:
-		var names: Array = Difficulty.IDS.map(
-```
-
-with:
-
-```gdscript
-	_choice_row("Idioma", Lang.NAMES, Lang.IDS.find(Lang.current()), func(i: int) -> void:
-		_options.language = Lang.IDS[i]
-		_apply_display())
-	if _state != null:
-		var names: Array = Difficulty.IDS.map(
-```
-
-- [ ] **Step 2: Where text gets shown**
-
-Replace in `scripts/ui/battle_hud.gd`:
-
-```gdscript
-static func fit_label(label: Label, text: String, max_width: float) -> void:
-	label.text = text
-	if text_width(label, text) > max_width:
-		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		label.custom_minimum_size.x = max_width
-	else:
-		# The whole width at once, so a window that types its text doesn't grow with it.
-		label.autowrap_mode = TextServer.AUTOWRAP_OFF
-		label.custom_minimum_size.x = text_width(label, text)
-```
-
-with:
-
-```gdscript
-static func fit_label(label: Label, text: String, max_width: float) -> void:
-	var shown := Lang.t(text)
-	label.text = shown
-	if text_width(label, shown) > max_width:
-		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		label.custom_minimum_size.x = max_width
-	else:
-		# The whole width at once, so a window that types its text doesn't grow with it.
-		label.autowrap_mode = TextServer.AUTOWRAP_OFF
-		label.custom_minimum_size.x = text_width(label, shown)
-```
-
-Replace in `scripts/ui/dialogue_box.gd`:
-
-```gdscript
-func say(speaker: String, lines: Array[String]) -> void:
-	_speaker.text = speaker
-	_speaker.visible = speaker != ""
-	_fit_to(lines)
-	show()
-	if _audio:
-		_audio.play_sfx(SfxLibrary.DIALOGUE)
-	for text in lines:
-		_line.text = text
-		if _autoplay:
-			print("%s: %s" % [speaker if speaker != "" else "Narración", text])
-```
-
-with:
-
-```gdscript
-func say(speaker: String, lines: Array[String]) -> void:
-	var name_shown := Lang.t(speaker)
-	var shown: Array[String] = []
-	for text in lines:
-		shown.append(Lang.t(text))
-	_speaker.text = name_shown
-	_speaker.visible = speaker != ""
-	_fit_to(shown)
-	show()
-	if _audio:
-		_audio.play_sfx(SfxLibrary.DIALOGUE)
-	for text in shown:
-		_line.text = text
-		if _autoplay:
-			print("%s: %s" % [name_shown if speaker != "" else "Narración", text])
-```
-
-Replace in `scripts/world/world.gd`:
-
-```gdscript
-func show_notice(text: String) -> void:
-	_notice_serial += 1
-	var serial := _notice_serial
-	BattleHud.fit_label(_notice, text, NOTICE_MAX_WIDTH)
-	_notice_window.show()
-	if _autoplay:
-		print(text)
-```
-
-with:
-
-```gdscript
-func show_notice(text: String) -> void:
-	_notice_serial += 1
-	var serial := _notice_serial
-	BattleHud.fit_label(_notice, text, NOTICE_MAX_WIDTH)
-	_notice_window.show()
-	if _autoplay:
-		print(Lang.t(text))
-```
-
-Replace in `scripts/world/world.gd`:
-
-```gdscript
-		_prompt.text = PROMPTS[near.kind] % KeyMap.first_key_name(KeyMap.ACCEPT)
-```
-
-with:
-
-```gdscript
-		_prompt.text = tr(PROMPTS[near.kind]) % KeyMap.first_key_name(KeyMap.ACCEPT)
-```
-
-Replace in `scripts/world/world.gd`:
-
-```gdscript
-	_prompt.text = PROMPTS[TALK] % KeyMap.first_key_name(KeyMap.ACCEPT)
-```
-
-with:
-
-```gdscript
-	_prompt.text = tr(PROMPTS[TALK]) % KeyMap.first_key_name(KeyMap.ACCEPT)
-```
-
-Replace in `scripts/world/world.gd`:
-
-```gdscript
-		var lines: Array[String] = ["Hola, viajero."]
-```
-
-with:
-
-```gdscript
-		var lines: Array[String] = ["Hola."]
-```
-
-Replace in `scripts/ui/shop_window.gd`:
-
-```gdscript
-		print("%s: %s" % [speaker, question])
-```
-
-with:
-
-```gdscript
-		print("%s: %s" % [tr(speaker), tr(question)])
-```
-
-Replace in `scripts/ui/name_entry.gd`:
-
-```gdscript
-	_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-```
-
-with:
-
-```gdscript
-	_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	# A name is never translated, even one that happens to be a word of the table.
-	_name_label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
-```
-
-Replace in `scripts/ui/name_entry.gd`:
-
-```gdscript
-		_name_label.text = StoryState.DEFAULT_NAME
-```
-
-with:
-
-```gdscript
-		_name_label.text = Lang.t(StoryState.DEFAULT_NAME)
-```
-
-- [ ] **Step 3: The story, the items and the quests**
-
-Replace in `scripts/story/story_state.gd`:
-
-```gdscript
-func goal_text(flags: Dictionary) -> String:
-	return GOALS[chapter(flags)]
-```
-
-with:
-
-```gdscript
-func goal_text(flags: Dictionary) -> String:
-	return Lang.t(GOALS[chapter(flags)])
-```
-
-Replace in `scripts/story/story_state.gd`:
-
-```gdscript
-## text with NAME_TAG replaced by name.
-static func fill(text: String, hero_name: String) -> String:
-	return text.replace(NAME_TAG, hero_name)
-```
-
-with:
-
-```gdscript
-## text translated, with NAME_TAG replaced by name (in that order: the table's keys hold the
-## tag).
-static func fill(text: String, hero_name: String) -> String:
-	return Lang.t(text).replace(NAME_TAG, hero_name)
-```
-
-Replace in `scripts/story/story_state.gd`:
-
-```gdscript
-	return DEFAULT_NAME if hero_name == "" else hero_name
-```
-
-with:
-
-```gdscript
-	return Lang.t(DEFAULT_NAME) if hero_name == "" else hero_name
-```
-
-Replace in `scripts/game/save_data.gd`:
-
-```gdscript
-		state.hero.display_name = StoryState.DEFAULT_NAME
-```
-
-with:
-
-```gdscript
-		state.hero.display_name = StoryState.clean_name("")
-```
-
-Replace in `scripts/game/inventory.gd`:
-
-```gdscript
-static func display_name(id: String) -> String:
-	return ITEMS[id].name if ITEMS.has(id) else id
-
-
-static func article(id: String) -> String:
-	return ITEMS[id].article if ITEMS.has(id) else "un"
-
-
-## "ATK", "DEF" or "VEL" for a seed.
-static func seed_stat(id: String) -> String:
-	return SEED_STATS.get(ITEMS[id].value, "") if ITEMS.has(id) else ""
-
-
-## What an item or a key item does, in a short sentence.
-static func description(id: String) -> String:
-	return ITEMS[id].text if ITEMS.has(id) else KEY_TEXTS.get(id, "")
-```
-
-with:
-
-```gdscript
-static func display_name(id: String) -> String:
-	return Lang.t(ITEMS[id].name) if ITEMS.has(id) else id
-
-
-static func article(id: String) -> String:
-	return Lang.article(ITEMS[id].article if ITEMS.has(id) else "un", display_name(id))
-
-
-## A key item's name.
-static func key_name(id: String) -> String:
-	return Lang.t(KEY_ITEMS[id])
-
-
-## "ATK", "DEF" or "VEL" for a seed.
-static func seed_stat(id: String) -> String:
-	return Lang.t(SEED_STATS.get(ITEMS[id].value, "")) if ITEMS.has(id) else ""
-
-
-## What an item or a key item does, in a short sentence.
-static func description(id: String) -> String:
-	return Lang.t(ITEMS[id].text if ITEMS.has(id) else KEY_TEXTS.get(id, ""))
-```
-
-Replace in `scripts/game/equipment.gd`:
-
-```gdscript
-static func display_name(id: String) -> String:
-	return EQUIPMENT[id].name if EQUIPMENT.has(id) else id
-
-
-static func article(id: String) -> String:
-	return EQUIPMENT[id].article if EQUIPMENT.has(id) else "un"
-
-
-## "lo" or "la", for "¿Te lo equipas ahora?".
-static func pronoun(id: String) -> String:
-	return "la" if article(id) == "una" else "lo"
-```
-
-with:
-
-```gdscript
-static func display_name(id: String) -> String:
-	return Lang.t(EQUIPMENT[id].name) if EQUIPMENT.has(id) else id
-
-
-static func article(id: String) -> String:
-	return Lang.article(EQUIPMENT[id].article if EQUIPMENT.has(id) else "un", display_name(id))
-
-
-## "lo" or "la", for "¿Te lo equipas ahora?" ("it" in English).
-static func pronoun(id: String) -> String:
-	return Lang.t("la" if EQUIPMENT.has(id) and EQUIPMENT[id].article == "una" else "lo")
-
-
-## A slot's name, for the Equipo page.
-static func slot_name(slot_id: String) -> String:
-	return Lang.t(SLOT_NAMES[slot_id])
-```
-
-Replace in `scripts/game/equipment.gd`:
-
-```gdscript
-		WEAPON:
-			return "ATK"
-		ACCESSORY:
-			return "VEL"
-	return "DEF"
-```
-
-with:
-
-```gdscript
-		WEAPON:
-			return "ATK"
-		ACCESSORY:
-			return Lang.t("VEL")
-	return "DEF"
-```
-
-Replace in `scripts/game/equipment.gd`:
-
-```gdscript
-		return "Inmune al veneno"
-```
-
-with:
-
-```gdscript
-		return Lang.t("Inmune al veneno")
-```
-
-Replace in `scripts/game/chests.gd`:
-
-```gdscript
-		text += " Te %s equipas." % Equipment.pronoun(piece)
-```
-
-with:
-
-```gdscript
-		text += " " + Lang.t("Te %s equipas.") % Equipment.pronoun(piece)
-```
-
-Replace in `scripts/game/quest_rewards.gd`:
-
-```gdscript
-		text += " Te %s equipas." % Equipment.pronoun(piece)
-	else:
-		text += " Está en tu bolsa."
-```
-
-with:
-
-```gdscript
-		text += " " + Lang.t("Te %s equipas.") % Equipment.pronoun(piece)
-	else:
-		text += " " + Lang.t("Está en tu bolsa.")
-```
-
-Replace in `scripts/game/shop.gd`:
-
-```gdscript
-	var why := buy_problem(state, id)
-	if why != "":
-		return {"ok": false, "text": "%s." % why}
-```
-
-with:
-
-```gdscript
-	var why := buy_problem(state, id)
-	if why != "":
-		return {"ok": false, "text": "%s." % Lang.t(why)}
-```
-
-Replace in `scripts/game/shop.gd`:
-
-```gdscript
-	var why := sell_problem(state, id)
-	if why != "":
-		return {"ok": false, "text": "%s." % why}
-```
-
-with:
-
-```gdscript
-	var why := sell_problem(state, id)
-	if why != "":
-		return {"ok": false, "text": "%s." % Lang.t(why)}
-```
-
-Replace in `scripts/game/key_map.gd`:
-
-```gdscript
-			return ONLY_KEY % NAMES[other]
-```
-
-with:
-
-```gdscript
-			return Lang.t(ONLY_KEY) % Lang.t(NAMES[other])
-```
-
-Replace in `scripts/game/quest_log.gd`:
-
-```gdscript
-	return "%s: %s" % [Quest.DONE_TEXT, title]
-```
-
-with:
-
-```gdscript
-	return "%s: %s" % [Lang.t(Quest.DONE_TEXT), Lang.t(title)]
-```
-
-Replace in `scripts/game/quest_log.gd`:
-
-```gdscript
-			lines.append(STATUS_PREFIX + _status(data(id), inventory))
-```
-
-with:
-
-```gdscript
-			lines.append(Lang.t(STATUS_PREFIX) + _status(data(id), inventory))
-```
-
-Replace in `scripts/game/quest_log.gd`:
-
-```gdscript
-		lines.append(MORE_LINES % extra)
-```
-
-with:
-
-```gdscript
-		lines.append(Lang.t(MORE_LINES) % extra)
-```
-
-Replace in `scripts/game/quest_log.gd`:
-
-```gdscript
-		active.append({"title": Quest.TITLE,
-			"text": _sentence(village_line.trim_prefix(STATUS_PREFIX))})
-	elif village.stage == Quest.Stage.DONE:
-		done.append(Quest.TITLE)
-```
-
-with:
-
-```gdscript
-		active.append({"title": Lang.t(Quest.TITLE),
-			"text": _sentence(village_line.trim_prefix(Lang.t(STATUS_PREFIX)))})
-	elif village.stage == Quest.Stage.DONE:
-		done.append(Lang.t(Quest.TITLE))
-```
-
-Replace in `scripts/game/quest_log.gd`:
-
-```gdscript
-			active.append({"title": quest.title, "text": _journal_text(quest, inventory)})
-		elif stage(id) == Stage.DONE:
-			done.append(quest.title)
-```
-
-with:
-
-```gdscript
-			active.append({"title": Lang.t(quest.title), "text": _journal_text(quest, inventory)})
-		elif stage(id) == Stage.DONE:
-			done.append(Lang.t(quest.title))
-```
-
-Replace in `scripts/game/quest_log.gd`:
-
-```gdscript
-	if _is_ready(quest, inventory) and quest.report != "":
-		return quest.report
-	if quest.status.contains("%d"):
-		return quest.status % [_progress(quest, inventory), quest.goal]
-	return quest.status
-```
-
-with:
-
-```gdscript
-	if _is_ready(quest, inventory) and quest.report != "":
-		return Lang.t(quest.report)
-	if quest.status.contains("%d"):
-		return Lang.t(quest.status) % [_progress(quest, inventory), quest.goal]
-	return Lang.t(quest.status)
-```
-
-Replace in `scripts/game/quest_log.gd`:
-
-```gdscript
-		return _sentence(quest.report)
-	if quest.goal > 1:
-		return "%s (%d / %d)" % [quest.objective, _progress(quest, inventory), quest.goal]
-	return quest.objective
-```
-
-with:
-
-```gdscript
-		return _sentence(Lang.t(quest.report))
-	if quest.goal > 1:
-		return "%s (%d / %d)" % [Lang.t(quest.objective), _progress(quest, inventory), quest.goal]
-	return Lang.t(quest.objective)
-```
-
-- [ ] **Step 4: The battle's sentences**
-
-Replace in `scripts/battle/battle_scene.gd`:
-
-```gdscript
-	for data in enemy_data:
-		enemies.append(data.duplicate() as Combatant)
-	if enemies.size() == 2
-```
-
-with:
-
-```gdscript
-	for data in enemy_data:
-		var enemy := data.duplicate() as Combatant
-		enemy.display_name = tr(enemy.display_name)
-		enemies.append(enemy)
-	if enemies.size() == 2
-```
-
-Replace in `scripts/battle/battle_scene.gd`:
-
-```gdscript
-	return "¡%s %s salvaje aparece!" % ["Una" if first.female else "Un", first.display_name]
-```
-
-with:
-
-```gdscript
-	return tr("¡Una %s salvaje aparece!" if first.female else "¡Un %s salvaje aparece!") \
-		% first.display_name
-```
-
-Replace in `scripts/battle/battle_scene.gd`:
-
-```gdscript
-			await _say("¡%s lanza %s!" % [_fighter(event.actor).display_name, event.name])
-```
-
-with:
-
-```gdscript
-			await _say("¡%s lanza %s!" % [_fighter(event.actor).display_name, tr(event.name)])
-```
-
-Replace in `scripts/battle/battle_scene.gd`:
-
-```gdscript
-				else "%s está dormid%s." % [sleeper.display_name, _ending(sleeper)])
-```
-
-with:
-
-```gdscript
-				else tr("%s está dormida." if sleeper.female else "%s está dormido.") \
-					% sleeper.display_name)
-```
-
-Replace in `scripts/battle/battle_scene.gd`:
-
-```gdscript
-				await _say("¡%s ha sido derrotad%s!" % [foe.display_name, _ending(foe)])
-```
-
-with:
-
-```gdscript
-				await _say(tr("¡%s ha sido derrotada!" if foe.female else "¡%s ha sido derrotado!") \
-					% foe.display_name)
-```
-
-Replace in `scripts/battle/battle_scene.gd`:
-
-```gdscript
-			await _say("¡%s aprende %s!" % [hero.display_name, event.name])
-```
-
-with:
-
-```gdscript
-			await _say("¡%s aprende %s!" % [hero.display_name, tr(event.name)])
-```
-
-Replace in `scripts/battle/battle_scene.gd`:
-
-```gdscript
-				else "¡%s está envenenad%s!" % [target.display_name, _ending(target)])
-		BattleEngine.SLEEP:
-			await _say("¡%s se ha dormido!" % target.display_name)
-```
-
-with:
-
-```gdscript
-				else tr("¡%s está envenenada!" if target.female else "¡%s está envenenado!") \
-					% target.display_name)
-		BattleEngine.SLEEP:
-			await _say("¡%s se ha dormido!" % target.display_name)
-```
-
-Replace in `scripts/battle/battle_scene.gd`:
-
-```gdscript
-				else "¡%s ya no está envenenad%s!" % [target.display_name, _ending(target)])
-```
-
-with:
-
-```gdscript
-				else tr("¡%s ya no está envenenada!" if target.female \
-					else "¡%s ya no está envenenado!") % target.display_name)
-```
-
-Replace in `scripts/battle/battle_scene.gd`:
-
-```gdscript
-	var helper := engine.enemies[event.helper]
-	var actor := _spawn_actor(EnemyLibrary.look(helper.id), _slot(1, 2), HERO_POS)
-```
-
-with:
-
-```gdscript
-	var helper := engine.enemies[event.helper]
-	helper.display_name = tr(helper.display_name)
-	var actor := _spawn_actor(EnemyLibrary.look(helper.id), _slot(1, 2), HERO_POS)
-```
-
-Replace in `scripts/battle/battle_scene.gd`:
-
-```gdscript
-	await _say("¡Aparece %s %s!" % ["una" if helper.female else "un", helper.display_name])
-```
-
-with:
-
-```gdscript
-	await _say(tr("¡Aparece una %s!" if helper.female else "¡Aparece un %s!") \
-		% helper.display_name)
-```
-
-Replace in `scripts/battle/battle_scene.gd`:
-
-```gdscript
-	return ("la %s" if c.female else "el %s") % c.display_name
-```
-
-with:
-
-```gdscript
-	return tr("la %s" if c.female else "el %s") % c.display_name
-```
-
-Replace in `scripts/battle/battle_scene.gd`:
-
-```gdscript
-	return ("a la %s" if c.female else "al %s") % c.display_name
-
-
-## Ending of the adjectives for an enemy c: "a" (envenenada) or "o" (envenenado). The
-## hero's lines avoid them: the player picks the name and the hero has no set gender.
-func _ending(c: Combatant) -> String:
-	return "a" if c.female else "o"
-```
-
-with:
-
-```gdscript
-	return tr("a la %s" if c.female else "al %s") % c.display_name
-```
-
-Replace in `scripts/ui/battle_hud.gd`:
-
-```gdscript
-				_add_row(_with_reason("%s  %d PM" % [skill.display_name, skill.mp_cost], why),
-```
-
-with:
-
-```gdscript
-				_add_row(_with_reason("%s  %d PM" % [tr(skill.display_name), skill.mp_cost], why),
-```
-
-Replace in `scripts/ui/battle_hud.gd`:
-
-```gdscript
-	return text if why == "" else "%s  (%s)" % [text, why]
-```
-
-with:
-
-```gdscript
-	return text if why == "" else "%s  (%s)" % [text, tr(why)]
-```
-
-- [ ] **Step 5: The session and the menus**
-
-Replace in `scripts/game/game.gd`:
-
-```gdscript
-		return KEY_ITEM_NOTICE % Inventory.KEY_ITEMS[key_item]
-```
-
-with:
-
-```gdscript
-		return tr(KEY_ITEM_NOTICE) % Inventory.key_name(key_item)
-```
-
-Replace in `scripts/game/game.gd`:
-
-```gdscript
-	_world.show_notice((PORTAL_REPLACED_NOTICE if replaced else PORTAL_OPEN_NOTICE) % place)
-```
-
-with:
-
-```gdscript
-	_world.show_notice(tr(PORTAL_REPLACED_NOTICE if replaced else PORTAL_OPEN_NOTICE) % place)
-```
-
-Replace in `scripts/game/game.gd`:
-
-```gdscript
-	_world.show_notice(KEY_NOTICE % Inventory.KEY_ITEMS[_zone.floor_key])
-```
-
-with:
-
-```gdscript
-	_world.show_notice(tr(KEY_NOTICE) % Inventory.key_name(_zone.floor_key))
-```
-
-Replace in `scripts/game/game.gd`:
-
-```gdscript
-	_world.show_notice(DOOR_NOTICE % Inventory.KEY_ITEMS[key])
-```
-
-with:
-
-```gdscript
-	_world.show_notice(tr(DOOR_NOTICE) % Inventory.key_name(key))
-```
-
-Replace in `scripts/game/game.gd`:
-
-```gdscript
-## "a Villaclaro", "a la aldea del bosque", "al refugio de la mina".
-static func _to_place(place: String) -> String:
-	return "al " + place.substr(3) if place.begins_with("el ") else "a " + place
-```
-
-with:
-
-```gdscript
-## "a Villaclaro", "a la aldea del bosque", "al refugio de la mina"; in English only the
-## place (the sentence around it has its "at" or "to").
-static func _to_place(place: String) -> String:
-	if Lang.is_english():
-		return Lang.t(place)
-	return "al " + place.substr(3) if place.begins_with("el ") else "a " + place
-```
-
-Replace in `scripts/ui/pause_menu.gd`:
-
-```gdscript
-	for skill in hero.skills:
-		spells.append(skill.display_name)
-```
-
-with:
-
-```gdscript
-	for skill in hero.skills:
-		spells.append(tr(skill.display_name))
-```
-
-Replace in `scripts/ui/pause_menu.gd`:
-
-```gdscript
-		var label := _label(Inventory.KEY_ITEMS[id], TITLE_COLOR)
-```
-
-with:
-
-```gdscript
-		var label := _label(Inventory.key_name(id), TITLE_COLOR)
-```
-
-Replace in `scripts/ui/pause_menu.gd`:
-
-```gdscript
-			var text := "%s: %s" % [Equipment.SLOT_NAMES[slot], "nada" if worn == "" \
-```
-
-with:
-
-```gdscript
-			var text := "%s: %s" % [Equipment.slot_name(slot), "nada" if worn == "" \
-```
-
-Replace in `scripts/ui/pause_menu.gd`:
-
-```gdscript
-	_equip_box.add_child(_label("%s:" % Equipment.SLOT_NAMES[_equip_slot], TITLE_COLOR))
-```
-
-with:
-
-```gdscript
-	_equip_box.add_child(_label("%s:" % Equipment.slot_name(_equip_slot), TITLE_COLOR))
-```
-
-- [ ] **Step 6: Wrap the rest of the format strings**
-
-The remaining strings only need `tr()` or `Lang.t()` around them. A throwaway script does it, so no literal is mistyped. Create `C:\Users\peixe\AppData\Local\Temp\claude\523c4b0c813959e8\5d798f44-87fa-4160-a1c9-e462c8de15fb\scratchpad\probes\wrap_tr.py`:
-
-```python
-# Throwaway: wraps literal strings in tr() or Lang.t(). Run once from the project root.
-WRAPS = {
-    "scripts/battle/battle_scene.gd": ("tr", """
-¡%s te cierra el paso!
-¡Aparecen %s y %s!
-Pierdes %d monedas de oro.
-¡%s descarga un golpe tremendo!
-¡%s ataca!
-%s acumula fuerza...
-¡%s lanza %s!
-¡Pero falla!
-¡%s usa %s %s!
-¡%s recupera %d PV!
-¡%s recupera %d PM!
-%s se tambalea.
-¡%s se defiende!
-¡Has huido!
-¡No has podido huir!
-¡No puedes huir!
-¡%s huye!
-¡El veneno quita %d PV a %s!
-%s duerme profundamente.
-¡La niebla envuelve %s!
-¡%s se levanta con %d PV!
-¡Has caído...!
-¡Has ganado! Obtienes %d EXP.
-Consigues %d monedas de oro.
-¡%s sube al nivel %d!
-¡%s aprende %s!
-¡%s ha dejado %s %s!
-¡Débil!
-¡Resiste!
-¡Golpe crítico!
-¡Es muy eficaz contra %s!
-¡%s lo resiste!
-¡%s recibe %d de daño!
-¡%s sufre el veneno!
-¡%s se ha dormido!
-¡%s ya no puede lanzar hechizos!
-¡El veneno ya no afecta a %s!
-¡%s se despierta!
-¡%s puede volver a lanzar hechizos!
-¡%s pide ayuda!
-PV +%d  PM +%d  ATK +%d  DEF +%d  VEL +%d
-"""),
-    "scripts/game/game.gd": ("tr", """
-Has vuelto %s.
-La historia de %s
-Creado por
-Motor
-Modelos 3D
-KayKit, de Kay Lousberg (CC0)
-Música y sonido
-Música y efectos generados por el juego
-Tu partida
-Tiempo de juego: %s
-Combates: %d
-Pasos: %d
-Oro ganado: %d G
-Misiones cumplidas: %d
-Nivel: %d
-Gracias por jugar
-"""),
-    "scripts/game/chests.gd": ("Lang.t", """
-¡Encuentras %d monedas de oro!
-¡Encuentras %s %s!
-"""),
-    "scripts/game/quest_rewards.gd": ("Lang.t", """
-Recibes %d monedas de oro.
-Recibes %s ×%d.
-Recibes %s %s.
-"""),
-    "scripts/game/shop.gd": ("Lang.t", """
-Compras %s %s por %d G.
-Vendes %s %s por %d G.
-"""),
-    "scripts/game/quest.gd": ("Lang.t", """
-Primero demuestra que puedes con ellos: derrota a %d.
-Llevas %d de %d slimes. ¡Ánimo, {nombre}!
-¡Lo has conseguido! Toma, %d pociones.
-Misión: habla con la Abuela Rosa
-Misión: slimes %d / %d
-Misión: vuelve con la Abuela Rosa
-Misión: derrota al Rey Slime
-"""),
-    "scripts/ui/battle_hud.gd": ("tr", """
-¿Qué hará %s?
-%s  %d PM
-"""),
-    "scripts/ui/battle_result.gd": ("tr", """
-¡Nivel %d!
-Pierdes %d G.
-"""),
-    "scripts/ui/stat_bar.gd": ("tr", """
-PV %d/%d
-PM %d/%d
-"""),
-    "scripts/ui/name_entry.gd": ("tr", """
-Escribe o toca las letras (máximo %d).
-"""),
-    "scripts/ui/pause_menu.gd": ("tr", """
-Oro %d G
-Hechizos: %s
-ATK %d   DEF %d   VEL %d
-Recuperas %d PM.
-¡%s +%d para siempre!
-Recuperas %d PV.
-nada
-Te equipas %s %s.
-Te quitas %s %s.
-"""),
-    "scripts/ui/shop_window.gd": ("tr", """
-Oro %d G
-¿Te %s equipas ahora?
-Te equipas %s %s.
-"""),
-    "scripts/world/world.gd": ("tr", """
-Oro %d G
-"""),
-}
-
-for path, (fn, text) in WRAPS.items():
-    source = open(path, encoding="utf-8", newline="").read()
-    for literal in text.strip().split("\n"):
-        quoted = '"%s"' % literal
-        assert quoted in source, (path, literal)
-        source = source.replace(quoted, "%s(%s)" % (fn, quoted))
-    open(path, "w", encoding="utf-8", newline="").write(source)
-print("wrapped")
-```
-
-```powershell
-python "C:\Users\peixe\AppData\Local\Temp\claude\523c4b0c813959e8\5d798f44-87fa-4160-a1c9-e462c8de15fb\scratchpad\probes\wrap_tr.py"
-```
-
-Expected: `wrapped`.
-
-- [ ] **Step 7: The table**
-
-The file is UTF-8 with no BOM and LF line ends. Every field is quoted, since many hold commas.
-
-Create `i18n/textos.csv`:
-
-```csv
-keys,en
-"La Niebla del Norte","The Mist of the North"
-"Nueva partida","New game"
-"Continuar","Continue"
-"Continuar (terminada)","Continue (finished)"
-"Opciones","Options"
-"¿Cómo te llamas?","What is your name?"
-"Escribe o toca las letras (máximo %d).","Type or click the letters (up to %d)."
-"Borrar","Delete"
-"Volver","Back"
-"Aceptar","OK"
-"Héroe","Hero"
-"¿Qué dificultad prefieres?","Which difficulty do you prefer?"
-"Fácil","Easy"
-"El juego tal como se pensó.","The game as it was meant to be."
-"Un 30 % menos de daño recibido y un 25 % más de EXP.","30 % less damage taken and 25 % more EXP."
-"Música","Music"
-"Efectos","Effects"
-"Texto","Text"
-"Lenta","Slow"
-"Rápida","Fast"
-"Combate","Battle"
-"Instantáneo","Instant"
-"Gráficos","Graphics"
-"Alta","High"
-"Baja","Low"
-"Temblor","Screen shake"
-"Textos grandes","Large text"
-"Pantalla completa","Fullscreen"
-"Sí","Yes"
-"Idioma","Language"
-"Dificultad","Difficulty"
-"Teclas","Keys"
-"Arriba","Move up"
-"Abajo","Move down"
-"Izquierda","Move left"
-"Derecha","Move right"
-"Cancelar","Cancel"
-"Pausa","Pause"
-"Pulsa una tecla...","Press a key..."
-"Restablecer","Reset"
-"Esa tecla es la única de «%s».","That key is the only one for “%s”."
-"Estado","Status"
-"Objetos","Items"
-"Equipo","Equipment"
-"Diario","Journal"
-"Misiones","Quests"
-"Guardar","Save"
-"Volver al título","Back to title"
-"Cerrar","Close"
-"Partida guardada.","Game saved."
-"No se pudo guardar.","Could not save."
-"Lo que no esté guardado se perderá.","Anything not saved will be lost."
-"Sí, volver","Yes, go back"
-"Oro %d G","Gold %d G"
-"Hechizos: %s","Spells: %s"
-"ATK %d   DEF %d   VEL %d","ATK %d   DEF %d   SPD %d"
-"Usar","Use"
-"Objeto clave","Key item"
-"No llevas objetos.","You carry no items."
-"Recuperas %d PM.","You recover %d MP."
-"¡%s +%d para siempre!","%s +%d for good!"
-"Recuperas %d PV.","You recover %d HP."
-"nada","nothing"
-"No llevas otra pieza.","You carry no other piece."
-"Quitar","Take off"
-"Te equipas %s %s.","You equip %s %s."
-"Te quitas %s %s.","You take off %s %s."
-"Qué hacer ahora","What to do now"
-"En curso","In progress"
-"Nada por ahora.","Nothing for now."
-"Cumplidas","Finished"
-"Ninguna todavía.","None yet."
-"PV %d/%d","HP %d/%d"
-"PM %d/%d","MP %d/%d"
-"VEL","SPD"
-"¿Comprar o vender?","Buy or sell?"
-"Comprar","Buy"
-"Vender","Sell"
-"Salir","Leave"
-"Vender (pago la mitad)","Sell (I pay half)"
-"No llevas nada que vender.","You have nothing to sell."
-"¿Te %s equipas ahora?","Equip %s now?"
-"la","it"
-"lo","it"
-"Te %s equipas.","You put %s on."
-"Está en tu bolsa.","It is in your bag."
-"Falta oro","Not enough gold"
-"Lo llevas puesto","You are wearing it"
-"No vale nada","Worth nothing"
-"No lo llevas","You don't carry it"
-"Compras %s %s por %d G.","You buy %s %s for %d G."
-"Vendes %s %s por %d G.","You sell %s %s for %d G."
-"Mercader","Merchant"
-"Herrero","Blacksmith"
-"Posadero","Innkeeper"
-"Posadera","Innkeeper"
-"Aquí descansar no cuesta nada. ¿Te quedas a pasar la noche?","Resting here costs nothing. Will you stay the night?"
-"¡Buenos días! PV y PM recuperados.","Good morning! HP and MP restored."
-"Vuelve cuando quieras.","Come back any time."
-"Poción","Potion"
-"Éter","Ether"
-"Antídoto","Antidote"
-"Ala de viaje","Travel Wing"
-"Seta","Mushroom"
-"Semilla de fuerza","Strength Seed"
-"Semilla de defensa","Defense Seed"
-"Semilla de agilidad","Agility Seed"
-"Recupera 30 PV.","Restores 30 HP."
-"Recupera 15 PM.","Restores 15 MP."
-"Cura el veneno.","Cures poison."
-"Te lleva al último pueblo y deja un portal para volver una vez.","Takes you to the last village and leaves a portal to come back once."
-"De las que saltan. Alguien de Villaclaro las anda buscando.","The hopping kind. Someone in Villaclaro is looking for them."
-"Sube el ATK en 2 para siempre.","Raises ATK by 2 for good."
-"Sube la DEF en 2 para siempre.","Raises DEF by 2 for good."
-"Sube la VEL en 2 para siempre.","Raises SPD by 2 for good."
-"Ya estás en un pueblo","You are already in a village"
-"Para una misión","For a quest"
-"No te quedan","You have none left"
-"Fuera de combate","Not in battle"
-"Solo en combate","Only in battle"
-"PV al máximo","HP is full"
-"PM al máximo","MP is full"
-"No hace falta","Not needed"
-"Silencio","Silence"
-"Faltan PM","Not enough MP"
-"Fragmento del amuleto (1/3)","Amulet Fragment (1/3)"
-"Fragmento del amuleto (2/3)","Amulet Fragment (2/3)"
-"Fragmento del amuleto (3/3)","Amulet Fragment (3/3)"
-"Llave de la mina","Mine Key"
-"Carta del Granjero","Farmer's Letter"
-"Un trozo del Amuleto del Alba. Lo guardaba la Bruja del bosque.","A piece of the Amulet of Dawn. The Forest Witch was keeping it."
-"Un trozo del Amuleto del Alba. Lo guardaba el Golem de piedra.","A piece of the Amulet of Dawn. The Stone Golem was keeping it."
-"El último trozo del Amuleto del Alba. Lo guardaba el Señor de la Niebla.","The last piece of the Amulet of Dawn. The Lord of the Mist was keeping it."
-"Abre la reja de la tercera planta de la mina.","Opens the gate on the third floor of the mine."
-"Para la Leñadora, en la aldea del bosque. Huele un poco a gallina.","For the Woodcutter, in the forest village. It smells a little of hen."
-"Arma","Weapon"
-"Armadura","Armor"
-"Escudo","Shield"
-"Accesorio","Accessory"
-"Palo","Stick"
-"Ropa","Tunic"
-"Espada de cobre","Copper Sword"
-"Cota de cuero","Leather Vest"
-"Escudo de madera","Wooden Shield"
-"Espada de hierro","Iron Sword"
-"Cota de malla","Chain Mail"
-"Escudo de hierro","Iron Shield"
-"Espada de acero","Steel Sword"
-"Armadura de acero","Steel Armor"
-"Escudo de acero","Steel Shield"
-"Espada de platino","Platinum Sword"
-"Armadura de platino","Platinum Armor"
-"Escudo de platino","Platinum Shield"
-"Anillo antiveneno","Antivenom Ring"
-"Amuleto de velocidad","Speed Amulet"
-"Inmune al veneno","Immune to poison"
-"¡Encuentras %d monedas de oro!","You find %d gold coins!"
-"¡Encuentras %s %s!","You find %s %s!"
-"Recibes %d monedas de oro.","You receive %d gold coins."
-"Recibes %s ×%d.","You receive %s ×%d."
-"Recibes %s %s.","You receive %s %s."
-"Descansas un momento. PV y PM recuperados.","You rest for a moment. HP and MP restored."
-"No se pudo cargar la partida. Empiezas de nuevo.","The game could not be loaded. You start again."
-"¡Villaclaro está a salvo! La niebla del norte se disipa...","Villaclaro is safe! The mist of the north fades..."
-"¡Consigues el último Fragmento del amuleto! La niebla se levanta.","You get the last Amulet Fragment! The mist lifts."
-"¡Consigues un %s!","You get an %s!"
-"¡Tiras de la palanca! Se oye cómo se abre una reja.","You pull the lever! You hear a gate opening."
-"¡Encuentras la %s!","You find the %s!"
-"Abres la puerta con la %s.","You open the door with the %s."
-"Vuelas %s. El portal te espera para volver.","You fly to %s. The portal waits to take you back."
-"Vuelas %s. El portal anterior se ha cerrado.","You fly to %s. The earlier portal has closed."
-"El portal te devuelve y se cierra tras de ti.","The portal takes you back and closes behind you."
-"Has vuelto %s.","You are back at %s."
-"La historia de %s","The story of %s"
-"Creado por","Created by"
-"Motor","Engine"
-"Modelos 3D","3D models"
-"KayKit, de Kay Lousberg (CC0)","KayKit, by Kay Lousberg (CC0)"
-"Música y sonido","Music and sound"
-"Música y efectos generados por el juego","Music and effects generated by the game"
-"Tu partida","Your game"
-"Tiempo de juego: %s","Play time: %s"
-"Combates: %d","Battles: %d"
-"Pasos: %d","Steps: %d"
-"Oro ganado: %d G","Gold earned: %d G"
-"Misiones cumplidas: %d","Quests finished: %d"
-"Nivel: %d","Level: %d"
-"Gracias por jugar","Thanks for playing"
-"Fin","The End"
-"Atacar","Attack"
-"Hechizos","Spells"
-"Defender","Defend"
-"Huir","Flee"
-"Veneno","Poison"
-"Sueño","Sleep"
-"¿Qué hará %s?","What will %s do?"
-"%s  %d PM","%s  %d MP"
-"¿Qué hechizo?","Which spell?"
-"¿Qué objeto?","Which item?"
-"¿A quién?","Who?"
-"¡Victoria!","Victory!"
-"¡Nivel %d!","Level %d!"
-"Has caído","You fell"
-"Pierdes %d G.","You lose %d G."
-"Volverás al pueblo.","You will return to the village."
-"el %s","the %s"
-"la %s","the %s"
-"al %s","the %s"
-"a la %s","the %s"
-"¡%s te cierra el paso!","%s blocks your way!"
-"¡Aparecen %s y %s!","%s and %s appear!"
-"¡Un %s salvaje aparece!","A wild %s appears!"
-"¡Una %s salvaje aparece!","A wild %s appears!"
-"Pierdes %d monedas de oro.","You lose %d gold coins."
-"¡%s descarga un golpe tremendo!","%s lands a tremendous blow!"
-"¡%s ataca!","%s attacks!"
-"%s acumula fuerza...","%s is gathering strength..."
-"¡%s lanza %s!","%s casts %s!"
-"¡Pero falla!","But it misses!"
-"¡%s usa %s %s!","%s uses %s %s!"
-"¡%s recupera %d PV!","%s recovers %d HP!"
-"¡%s recupera %d PM!","%s recovers %d MP!"
-"%s se tambalea.","%s staggers."
-"¡%s se defiende!","%s takes a defensive stance!"
-"¡Has huido!","You got away!"
-"¡No has podido huir!","You could not get away!"
-"¡No puedes huir!","You can't flee!"
-"¡%s huye!","%s runs away!"
-"¡El veneno quita %d PV a %s!","The poison takes %d HP from %s!"
-"%s duerme profundamente.","%s is fast asleep."
-"%s está dormido.","%s is asleep."
-"%s está dormida.","%s is asleep."
-"¡La niebla envuelve %s!","The mist wraps around %s!"
-"¡%s se levanta con %d PV!","%s rises again with %d HP!"
-"¡Has caído...!","You fell...!"
-"¡%s ha sido derrotado!","%s is defeated!"
-"¡%s ha sido derrotada!","%s is defeated!"
-"¡Has ganado! Obtienes %d EXP.","You won! You get %d EXP."
-"Consigues %d monedas de oro.","You get %d gold coins."
-"¡%s sube al nivel %d!","%s reaches level %d!"
-"PV +%d  PM +%d  ATK +%d  DEF +%d  VEL +%d","HP +%d  MP +%d  ATK +%d  DEF +%d  SPD +%d"
-"¡%s aprende %s!","%s learns %s!"
-"¡%s ha dejado %s %s!","%s left %s %s!"
-"¡Débil!","Weak!"
-"¡Resiste!","Resists!"
-"¡Golpe crítico!","Critical hit!"
-"¡Es muy eficaz contra %s!","It is very effective against %s!"
-"¡%s lo resiste!","%s resists it!"
-"¡%s recibe %d de daño!","%s takes %d damage!"
-"¡%s sufre el veneno!","%s is suffering from poison!"
-"¡%s está envenenado!","%s is poisoned!"
-"¡%s está envenenada!","%s is poisoned!"
-"¡%s se ha dormido!","%s has fallen asleep!"
-"¡%s ya no puede lanzar hechizos!","%s can't cast spells any more!"
-"¡El veneno ya no afecta a %s!","The poison no longer affects %s!"
-"¡%s ya no está envenenado!","%s is no longer poisoned!"
-"¡%s ya no está envenenada!","%s is no longer poisoned!"
-"¡%s se despierta!","%s wakes up!"
-"¡%s puede volver a lanzar hechizos!","%s can cast spells again!"
-"¡%s pide ayuda!","%s calls for help!"
-"¡Aparece un %s!","A %s appears!"
-"¡Aparece una %s!","A %s appears!"
-"Llama","Flame"
-"Curar","Heal"
-"Curar+","Heal+"
-"Llamarada","Blaze"
-"Rayo","Bolt"
-"Aplastar","Crush"
-"Esporas","Spores"
-"Hielo","Ice"
-"Niebla","Mist"
-"Araña","Spider"
-"Murciélago","Bat"
-"Bruja del bosque","Forest Witch"
-"Duende","Goblin"
-"Espectro","Specter"
-"Esqueleto guerrero","Skeleton Warrior"
-"Esqueleto mago","Skeleton Mage"
-"Esqueleto pícaro","Skeleton Rogue"
-"Golem de barro","Mud Golem"
-"Golem de piedra","Stone Golem"
-"Lobo","Wolf"
-"Seta saltarina","Hopping Mushroom"
-"Planta carnívora","Man-eating Plant"
-"Rey Slime","King Slime"
-"Señor de la Niebla","Lord of the Mist"
-"Slime de Metal","Metal Slime"
-"%s o toca: hablar","%s or click: talk"
-"%s o toca: comprar","%s or click: shop"
-"%s o toca: abrir","%s or click: open"
-"%s o toca: tirar","%s or click: pull"
-"%s o toca: coger","%s or click: take"
-"%s o toca: volver","%s or click: go back"
-"%s o toca: leer","%s or click: read"
-"Subir","Up"
-"Bajar","Down"
-"A la pradera","To the meadow"
-"A la mina","To the mine"
-"Al bosque","To the forest"
-"Al castillo","To the castle"
-"Una niebla espesa cierra el camino del norte.","A thick mist closes the road north."
-"Una niebla espesa cierra el túnel del este.","A thick mist closes the east tunnel."
-"La reja no se mueve. Quizá haya un mecanismo cerca.","The gate won't move. There may be a mechanism nearby."
-"La puerta está cerrada con llave.","The door is locked."
-"Villaclaro está en paz","Villaclaro is at peace"
-"la aldea del bosque","the forest village"
-"el refugio de la mina","the mine refuge"
-"el campamento","the camp"
-"Hola.","Hello."
-"Abuela Rosa","Granny Rosa"
-"Granjero","Farmer"
-"Leñadora","Woodcutter"
-"Minera","Miner"
-"Soldado","Soldier"
-"Explorador","Scout"
-"Niña","Girl"
-"Gato","Cat"
-"Tablón","Notice board"
-"Objetivo: habla con la Abuela Rosa","Goal: talk to Granny Rosa"
-"Objetivo: ayuda a la Abuela Rosa","Goal: help Granny Rosa"
-"Objetivo: la Bruja del bosque","Goal: the Forest Witch"
-"Objetivo: el Golem de la mina","Goal: the Golem of the mine"
-"Objetivo: el Señor de la Niebla","Goal: the Lord of the Mist"
-"Misión: ","Quest: "
-"Misión cumplida","Quest complete"
-"y %d más en el Diario","and %d more in the Journal"
-"Los slimes de Villaclaro","The slimes of Villaclaro"
-"¡{nombre}! Los slimes no dejan salir a nadie del pueblo.","{nombre}! The slimes won't let anyone leave the village."
-"Primero demuestra que puedes con ellos: derrota a %d.","First show you can handle them: defeat %d."
-"Llevas %d de %d slimes. ¡Ánimo, {nombre}!","That's %d of %d slimes. Keep it up, {nombre}!"
-"¡Lo has conseguido! Toma, %d pociones.","You did it! Here, %d potions."
-"Pero mira al norte del pueblo... ¡ha llegado el Rey Slime!","But look north of the village... the King Slime has come!"
-"Es grande y pesado, pero estoy segura de que puedes con él.","It's big and heavy, but I'm sure you can handle it."
-"El Rey Slime espera al norte del pueblo. ¡Ten cuidado!","The King Slime is waiting north of the village. Be careful!"
-"¡Gracias, {nombre}! Villaclaro está a salvo.","Thank you, {nombre}! Villaclaro is safe."
-"Misión: habla con la Abuela Rosa","Quest: talk to Granny Rosa"
-"Misión: slimes %d / %d","Quest: slimes %d / %d"
-"Misión: vuelve con la Abuela Rosa","Quest: go back to Granny Rosa"
-"Misión: derrota al Rey Slime","Quest: defeat the King Slime"
-"Carta para la Leñadora","A letter for the Woodcutter"
-"Lleva la carta del Granjero a la Leñadora, en la aldea del bosque.","Take the Farmer's letter to the Woodcutter, in the forest village."
-"carta a la Leñadora","letter to the Woodcutter"
-"{nombre}, tú que vas a salir por ahí: lleva esta carta a mi hermana, la Leñadora.","{nombre}, you're going out there: take this letter to my sister, the Woodcutter."
-"Vive en la aldea del bosque, en cuanto se pueda pasar al norte. Trata de gallinas, pero es urgente.","She lives in the forest village, as soon as the road north opens. It's about hens, but it's urgent."
-"¿Una carta de mi hermano? A ver... que las gallinas ponen de lado. Eso ya me lo contó.","A letter from my brother? Let's see... the hens are laying sideways. He told me that already."
-"Gracias por traerla hasta aquí, {nombre}. Toma, para el camino.","Thanks for bringing it all this way, {nombre}. Here, for the road."
-"El explorador perdido","The lost scout"
-"Busca al explorador que no volvió del patio del castillo y avisa al Soldado.","Find the scout who never came back from the castle courtyard, and tell the Soldier."
-"busca al explorador","find the scout"
-"vuelve con el Soldado","go back to the Soldier"
-"Un explorador entró en el patio del castillo y no ha vuelto. Quien lo encuentre, que avise al Soldado.","A scout went into the castle courtyard and has not come back. Whoever finds him, tell the Soldier."
-"También se agradecen noticias de la niebla, pero esas ya las conocemos.","News of the mist is also welcome, but we know that news already."
-"¡Por fin alguien que no traquetea! Llevo dos días escondido de los esqueletos.","At last, someone who doesn't rattle! I've been hiding from the skeletons for two days."
-"Ahora que miran para otro lado, corro al campamento. ¡Gracias, {nombre}!","While they look the other way, I'm running to the camp. Thank you, {nombre}!"
-"¿Alguna noticia del explorador? Entró en el patio y hacia el oeste, y hasta ahí sé.","Any news of the scout? He went into the courtyard and west, and that's all I know."
-"¡Ha llegado entero! Hambriento y hablando solo, pero entero.","He came back in one piece! Hungry and talking to himself, but in one piece."
-"Esto es del fondo de los exploradores. Tú no se lo digas al capitán.","This comes from the scouts' fund. Don't tell the captain."
-"El gato perdido","The lost cat"
-"Busca a Bigotes, el gato de la Niña, por los claros del bosque.","Look for Whiskers, the Girl's cat, in the forest glades."
-"busca a Bigotes","find Whiskers"
-"vuelve con la Niña","go back to the Girl"
-"¿Has visto a Bigotes? Es mi gato. Salió detrás de una mariposa y no ha vuelto.","Have you seen Whiskers? He's my cat. He went after a butterfly and hasn't come back."
-"Le gustan los claros del bosque, los del oeste sobre todo. Yo no puedo ir: hay lobos.","He likes the forest glades, the western ones most of all. I can't go: there are wolves."
-"¡Miau!","Meow!"
-"Bigotes se frota contra tus piernas y sale corriendo hacia la aldea.","Whiskers rubs against your legs and runs off toward the village."
-"¿Has encontrado a Bigotes? Si lo ves, dile que hay pescado.","Have you found Whiskers? If you see him, tell him there's fish."
-"¡Bigotes ha vuelto! Y huele a bosque.","Whiskers is back! And he smells of forest."
-"Toma, es mi semilla de la suerte. Bueno, ya no: te la doy.","Here, it's my lucky seed. Well, not any more: it's yours."
-"Lobos hambrientos","Hungry wolves"
-"Derrota 5 lobos en el bosque para la Leñadora.","Defeat 5 wolves in the forest for the Woodcutter."
-"lobos %d / %d","wolves %d / %d"
-"vuelve con la Leñadora","go back to the Woodcutter"
-"Se ruega a quien pase por aquí que derrote a 5 lobos. Ya no dejan cortar leña en paz.","Whoever passes by, please defeat 5 wolves. They won't let anyone chop wood in peace."
-"Firmado: la Leñadora. Y debajo: por favor.","Signed: the Woodcutter. And below it: please."
-"¿Ya has espantado a esos lobos? Todavía los oigo desde aquí.","Have you scared those wolves off yet? I can still hear them from here."
-"Y yo, con el hacha en la mano, sin poder ir a ningún sitio.","And here I am, axe in hand, unable to go anywhere."
-"¡Por fin se oye el bosque! Y mis árboles.","At last I can hear the forest! And my trees."
-"Encontré este anillo en un tronco. Dicen que quien lo lleva no le teme al veneno.","I found this ring in a log. They say whoever wears it has no fear of poison."
-"Setas para el guiso","Mushrooms for the stew"
-"Consigue 3 setas de las Setas saltarinas de la pradera para el Granjero.","Get 3 mushrooms from the meadow's Hopping Mushrooms for the Farmer."
-"setas %d / %d","mushrooms %d / %d"
-"setas al Granjero","mushrooms to the Farmer"
-"Se buscan 3 setas de las que saltan. Son para un guiso. Preguntar por el Granjero.","Wanted: 3 mushrooms of the hopping kind. They're for a stew. Ask for the Farmer."
-"Debajo, con otra letra: si saltan, no son setas.","Below, in another hand: if they hop, they aren't mushrooms."
-"¿Me traes mis setas? Las que saltan por la pradera son las más sabrosas.","Have you brought my mushrooms? The ones hopping around the meadow are the tastiest."
-"Cuando dejan de saltar, claro.","Once they stop hopping, of course."
-"¡Tres setas, y casi no se mueven! Esta noche hay guiso.","Three mushrooms, and they hardly move! Stew tonight."
-"Toma, esta semilla me ha salido demasiado buena para las gallinas.","Here, this seed turned out too good for the hens."
-"El Slime de Metal","The Metal Slime"
-"Derrota al Slime de Metal, que se deja ver por la pradera. Huye en cuanto puede.","Defeat the Metal Slime, seen around the meadow. It runs away as soon as it can."
-"Slime de Metal (pradera)","Metal Slime (meadow)"
-"Se busca: Slime de Metal, visto por la pradera de Villaclaro. Muy rápido y muy duro.","Wanted: Metal Slime, seen on the meadow of Villaclaro. Very fast and very tough."
-"Solo la magia le hace daño, y se escapa en cuanto puede. Quien lo alcance se quedará con lo que lleva encima.","Only magic hurts it, and it escapes as soon as it can. Whoever catches it keeps what it carries."
-"Una bruja vive en el claro del norte del bosque.","A witch lives in the northern clearing of the forest."
-"Desde que llegó, los lobos y las plantas atacan a cualquiera.","Since she came, the wolves and the plants attack anyone."
-"Si vas a por ella, prepárate bien en la tienda.","If you're going after her, get ready at the shop."
-"¡Has vencido a la bruja! El bosque vuelve a estar en calma.","You beat the witch! The forest is calm again."
-"La niebla sigue bajando del norte, pasada la vieja mina.","The mist still comes down from the north, past the old mine."
-"Ya no hay niebla, y los árboles vuelven a dar sombra.","The mist is gone, and the trees give shade again."
-"Yo, por si acaso, sigo con el hacha cerca.","I keep my axe close, just in case."
-"Aviso: el pozo no concede deseos. Dejen de tirar monedas.","Notice: the well grants no wishes. Stop throwing coins in."
-"Debajo: entonces, ¿quién se las lleva?","Below: then who takes them?"
-"Cuando sea mayor quiero ser leñadora. O gato.","When I grow up I want to be a woodcutter. Or a cat."
-"¿Has visto el cielo? Bigotes dice que ya era hora. Bueno, lo dice a su manera.","Have you seen the sky? Whiskers says it's about time. Well, in his own way."
-"Este campamento es lo último antes del castillo.","This camp is the last thing before the castle."
-"La niebla sale de la sala del trono, arriba del todo.","The mist comes from the throne room, right at the top."
-"Los esqueletos del patio no duermen nunca. Ve con cuidado.","The skeletons in the courtyard never sleep. Be careful."
-"¡La niebla se ha ido! Se ve el cielo por primera vez en años.","The mist is gone! You can see the sky for the first time in years."
-"Por fin podré escribir a casa algo más que el parte del tiempo.","At last I can write home about more than the weather report."
-"Parte del día: niebla. Parte de ayer: niebla.","Today's report: mist. Yesterday's report: mist."
-"Debajo: parte de mañana, a que no lo adivinas.","Below: tomorrow's report, bet you can't guess."
-"Este refugio es lo único que queda de la vieja mina.","This refuge is all that's left of the old mine."
-"Abajo, en la tercera planta, despertó un golem de piedra.","Down on the third floor, a stone golem has woken up."
-"Dicen que una palanca abre las rejas de la segunda planta.","They say a lever opens the gates on the second floor."
-"¿Has vencido al golem? ¡Por fin podremos volver a picar!","You beat the golem? At last we can get back to digging!"
-"La niebla viene del castillo, al otro lado de las montañas.","The mist comes from the castle, on the other side of the mountains."
-"¡Se acabó la niebla! Hasta las arañas parecen de mejor humor.","No more mist! Even the spiders seem in a better mood."
-"Aviso: quien coja un pico prestado, que lo devuelva.","Notice: whoever borrows a pick, bring it back."
-"Debajo, con la letra de la Minera: y sin mellas.","Below, in the Miner's hand: and with no dents."
-"El bosque está al norte, {nombre}. Busca a la Bruja y su fragmento.","The forest is to the north, {nombre}. Look for the Witch and her fragment."
-"Y come algo antes de salir, que luego todo son prisas.","And eat something before you go, it's all rushing after that."
-"¡Un fragmento! Lo noto desde aquí: me hace cosquillas en los huesos.","A fragment! I can feel it from here: it tickles my bones."
-"El segundo lo guarda un golem, en el fondo de la vieja mina.","A golem keeps the second one, at the bottom of the old mine."
-"Con dos fragmentos ya se puede entrar en el Castillo de la Niebla.","With two fragments you can enter the Castle of Mist."
-"El tercero lo guarda su señor. Ve con cuidado, y abrígate.","Its lord keeps the third. Be careful, and wrap up warm."
-"El Amuleto del Alba está en su sitio y el cielo, por fin, también.","The Amulet of Dawn is back in its place, and at last so is the sky."
-"Pasea cuanto quieras, {nombre}. Ahora da gusto.","Walk around as much as you like, {nombre}. It's a pleasure now."
-"Desde que baja la niebla, mis gallinas ponen los huevos de lado.","Since the mist came down, my hens lay their eggs sideways."
-"No sé cómo lo hacen. Tampoco quiero saberlo.","I don't know how they do it. I don't want to know either."
-"¡Has echado al Rey Slime! Me aplastó las lechugas, ¿sabes?","You chased off the King Slime! It squashed my lettuces, you know."
-"Aquí se respira mejor, pero al norte la niebla sigue igual.","You can breathe better here, but to the north the mist is the same."
-"Un viajero dice que la vieja mina está llena de arañas.","A traveler says the old mine is full of spiders."
-"Yo me quedo con mis gallinas.","I'll stay with my hens."
-"Dicen que en el castillo los esqueletos no duermen nunca.","They say the skeletons in the castle never sleep."
-"Con razón tienen tan mala cara.","No wonder they look so bad."
-"¡Mira qué cielo! Las gallinas ya ponen los huevos derechos.","Look at that sky! The hens lay their eggs straight now."
-"Aviso viejo: se vende gallina que pone de lado. Razón, el Granjero.","Old notice: hen for sale, lays sideways. Ask the Farmer."
-"Otro más viejo aún: se regala gallina.","An even older one: hen, free to a good home."
-"¡Vaya, una cara nueva! Te doy la bienvenida a la aldea del bosque.","Well, a new face! Welcome to the forest village."
-"Te llamas {nombre}, ¿verdad? La Abuela Rosa ya nos avisó con una paloma.","Your name is {nombre}, right? Granny Rosa sent word by pigeon."
-"La Bruja vive en el claro del norte, y desde que tiene ese fragmento los lobos no paran de aullar.","The Witch lives in the northern clearing, and since she got that fragment the wolves never stop howling."
-"Si vas a por ella, compra antes algo mejor que eso que llevas.","If you're going after her, first buy something better than what you're wearing."
-"La Bruja del bosque se esfuma en una nube de humo morado, refunfuñando.","The Forest Witch vanishes in a cloud of purple smoke, grumbling."
-"¡Consigues un Fragmento del amuleto (1/3)! Brilla con una luz cálida, como un amanecer pequeñito.","You get an Amulet Fragment (1/3)! It shines with a warm light, like a tiny sunrise."
-"La niebla que cerraba el camino del norte se disipa. Más allá está la vieja mina.","The mist that closed the road north fades away. Beyond it lies the old mine."
-"¡Por fin refuerzos! ...¿Solo tú? Bueno, algo es algo.","Reinforcements at last! ...Just you? Well, it's something."
-"Ahí delante está el Castillo de la Niebla, {nombre}. Nadie ha cruzado el patio y ha vuelto para contarlo.","Up ahead is the Castle of Mist, {nombre}. No one has crossed the courtyard and come back to tell of it."
-"Arriba, en la sala del trono, el Señor de la Niebla guarda el último fragmento.","Upstairs, in the throne room, the Lord of the Mist keeps the last fragment."
-"Descansa y compra lo que puedas. Dicen que no se rinde a la primera.","Rest and buy what you can. They say he doesn't give up at the first try."
-"El Señor de la Niebla se deshace como humo al sol.","The Lord of the Mist melts away like smoke in the sun."
-"¡Consigues el último Fragmento del amuleto (3/3)!","You get the last Amulet Fragment (3/3)!"
-"Los tres fragmentos se juntan en tus manos. ¡El Amuleto del Alba vuelve a estar entero!","The three fragments join in your hands. The Amulet of Dawn is whole again!"
-"Una luz dorada llena la sala, y la niebla se retira por fin más allá de las montañas.","A golden light fills the room, and the mist at last withdraws beyond the mountains."
-"Días después, en Villaclaro...","Days later, in Villaclaro..."
-"¡{nombre}! ¡Has vuelto! Desde aquí vimos cómo la niebla se iba del norte.","{nombre}! You're back! From here we watched the mist leave the north."
-"Sabía que lo conseguirías. Bueno... estaba casi segura.","I knew you would do it. Well... I was almost sure."
-"¡Para celebrarlo, hoy todo a mitad de precio!","To celebrate, everything is half price today!"
-"...Es broma. Pero te invito a un pastel.","...Just kidding. But the cake is on me."
-"Tu cama está hecha, por si algún día quieres dormir más de una noche seguida.","Your bed is made, in case you ever want to sleep more than one night in a row."
-"¡Mis gallinas vuelven a poner los huevos derechos! Eso se lo debemos a {nombre}.","My hens are laying their eggs straight again! We owe that to {nombre}."
-"El Amuleto del Alba se queda aquí, y lo cuidaremos entre todos.","The Amulet of Dawn stays here, and we will all look after it."
-"Y tú, descansa. Te lo has ganado.","And you, get some rest. You've earned it."
-"El Golem de piedra se desmorona, y de entre las piedras sale rodando algo que brilla.","The Stone Golem crumbles, and from among the stones something shiny comes rolling out."
-"¡Consigues un Fragmento del amuleto (2/3)! Los dos fragmentos tiemblan, como si se buscaran.","You get an Amulet Fragment (2/3)! The two fragments tremble, as if looking for each other."
-"La niebla del túnel del este se retira. Por ahí se llega al Castillo de la Niebla.","The mist in the east tunnel withdraws. That way lies the Castle of Mist."
-"¡Alto ahí! Ah, no eres un esqueleto. Perdona, aquí abajo se ve poco.","Stop right there! Oh, you're not a skeleton. Sorry, it's hard to see down here."
-"Esto es lo que queda de la vieja mina: un herrero, una posada y yo.","This is what's left of the old mine: a blacksmith, an inn and me."
-"En la tercera planta despertó un golem de piedra, y lleva encima algo que brilla.","On the third floor a stone golem has woken up, and it carries something shiny."
-"Si bajas, {nombre}, busca la palanca de la segunda planta y la llave de la tercera.","If you go down, {nombre}, look for the lever on the second floor and the key on the third."
-"Otra mañana gris en Villaclaro. La niebla del norte ha vuelto a tapar el cielo.","Another gray morning in Villaclaro. The mist of the north has covered the sky again."
-"¡{nombre}! Por fin te despiertas. ¿Has visto el cielo?","{nombre}! You're awake at last. Have you seen the sky?"
-"Esa niebla baja del viejo Castillo de la Niebla, y despierta a los monstruos.","That mist comes down from the old Castle of Mist, and it wakes the monsters."
-"Yo guardaba el Amuleto del Alba, que la mantenía a raya... pero se partió en tres.","I kept the Amulet of Dawn, which held it back... but it broke in three."
-"Cada fragmento acabó en manos de un guardián: uno en el bosque, otro en la mina y otro en el castillo.","Each fragment ended up with a guardian: one in the forest, one in the mine and one in the castle."
-"Alguien tiene que recuperarlos. Y en este pueblo, {nombre}, las rodillas más jóvenes son las tuyas.","Someone has to get them back. And in this village, {nombre}, the youngest knees are yours."
-"Pero no corras. Primero demuestra que puedes con los slimes.","But don't rush. First show you can handle the slimes."
-"Derrota a 3 en la pradera, al sur del pueblo, y vuelve a contármelo.","Defeat 3 in the meadow, south of the village, and come back to tell me."
-"Ah, y si te hacen daño, ven a verme. Para eso están las abuelas.","Oh, and if they hurt you, come and see me. That's what grannies are for."
-"¡Increíble, {nombre}! El Rey Slime se ha ido rodando colina abajo.","Incredible, {nombre}! The King Slime went rolling down the hill."
-"Y mira: la niebla del camino del norte se aparta.","And look: the mist on the road north is parting."
-"Al norte está el bosque. Dicen que allí vive una bruja...","To the north is the forest. They say a witch lives there..."
-"y que lleva colgada una piedra que brilla. ¡Es un fragmento del amuleto!","and that she wears a shining stone around her neck. It's a fragment of the amulet!"
-"Ve con cuidado. Y no hables con setas desconocidas.","Be careful. And don't talk to strange mushrooms."
-```
-
-The English texts add nothing to the story: same characters, same jokes. "Niebla" is always "mist", "misión" always "quest", PV / PM / VEL are HP / MP / SPD, and "toca" is "click" (the phone work is postponed).
-
-- [ ] **Step 8: Project settings, import and checks**
-
-Import once before the setting exists, so the translation file is there when the project asks for it:
-
-```powershell
-$env:APPDATA = "C:\Users\peixe\AppData\Local\Temp\claude\523c4b0c813959e8\5d798f44-87fa-4160-a1c9-e462c8de15fb\scratchpad\appdata"
-.\tools\godot.cmd --headless --path . --import
-Test-Path i18n\textos.en.translation
-```
-
-Expected: `True`, and `i18n/textos.csv.import` beside it.
-
-Replace in `project.godot`:
-
-```
-[input]
-```
-
-with:
-
-```
-[internationalization]
-
-locale/translations=PackedStringArray("res://i18n/textos.en.translation")
-locale/fallback="es"
-
-[input]
-```
-
-Create `C:\Users\peixe\AppData\Local\Temp\claude\523c4b0c813959e8\5d798f44-87fa-4160-a1c9-e462c8de15fb\scratchpad\probes\check_csv.py`:
-
-```python
-# Throwaway: checks i18n/textos.csv against the code and the data. Run from the project root.
-import csv, glob, re
-
-rows = list(csv.reader(open("i18n/textos.csv", encoding="utf-8", newline="")))
-assert rows[0] == ["keys", "en"], rows[0]
-table = {}
-problems = []
-for row in rows[1:]:
-    if len(row) != 2:
-        problems.append("bad row: %r" % row)
-        continue
-    key, english = row
-    if key in table:
-        problems.append("duplicate: " + key)
-    table[key] = english
-    if re.findall(r"%[sd]", key) != re.findall(r"%[sd]", english):
-        problems.append("placeholders: " + key)
-    if ("{nombre}" in key) != ("{nombre}" in english):
-        problems.append("name tag: " + key)
-    if re.search(r"[áéíóúñ¿¡]", english.replace("Señor", "")):
-        problems.append("Spanish left: " + english)
-for key, english in table.items():
-    if english in table and table[english] != english and english != key:
-        problems.append("an English text is another key: %s -> %s" % (key, english))
-literal = re.compile(r'"((?:[^"\\]|\\.)*)"')
-wanted = set()
-for path in glob.glob("scripts/**/*.gd", recursive=True):
-    for line in open(path, encoding="utf-8"):
-        code = line.strip()
-        if code.startswith("#"):
-            continue
-        for call in re.findall(r'(?:\btr|Lang\.t)\((.*)', code):
-            for text in literal.findall(call.split(") %")[0]):
-                wanted.add(text)
-FIELDS = re.compile(r'^(title|objective|status|report|display_name|village_name|door_text) = "(.*)"$')
-for path in glob.glob("data/**/*.tres", recursive=True):
-    is_zone = "zones" in path
-    for line in open(path, encoding="utf-8"):
-        code = line.strip()
-        match = FIELDS.match(code)
-        if match and not (is_zone and match.group(1) == "display_name"):
-            wanted.add(match.group(2))
-        if code.startswith('["say"'):
-            wanted.update(text for text in literal.findall(code)[1:])
-        if re.search(r'_lines = |^"(lines|label|lock_text|name)":|^lines|^\d+: \[|^"[^"]+",?$', code) or code.startswith('"lines'):
-            wanted.update(literal.findall(code))
-ids = re.compile(r"^(?:[a-z_0-9]+|[A-Z_]+|lines|lines_by_chapter|label|lock_text|name|res://.*)$")
-keep = {"Godot Engine 4.7", "application/config/name", "x1", "x2", "%s  (%s)", "%s: %s", "ATK", "DEF", "Normal", "No", "Portal", "Villaclaro", "Slime", ""}
-missing = sorted(t for t in wanted if t not in table and t not in keep and not ids.match(t)
-    and not t.startswith(("house_", "tree", "%s  (")))
-for text in missing:
-    problems.append("no row: " + text)
-print("%d rows, %d texts looked for" % (len(table), len(wanted)))
-print("\n".join(problems) if problems else "clean")
-```
-
-```powershell
-$env:APPDATA = "C:\Users\peixe\AppData\Local\Temp\claude\523c4b0c813959e8\5d798f44-87fa-4160-a1c9-e462c8de15fb\scratchpad\appdata"
-$data = "$env:APPDATA\Godot\app_userdata\rpg-turnos"
-New-Item -ItemType Directory -Force $data | Out-Null
-python "C:\Users\peixe\AppData\Local\Temp\claude\523c4b0c813959e8\5d798f44-87fa-4160-a1c9-e462c8de15fb\scratchpad\probes\check_csv.py"
-.\tools\godot.cmd --headless --path . --import
-foreach ($s in "game/lang","game/game_options","ui/display_settings","ui/options_panel","ui/battle_hud","ui/dialogue_box","ui/name_entry","ui/pause_menu","ui/shop_window","ui/stat_bar","ui/battle_result","ui/journal_page","battle/battle_scene","game/inventory","game/equipment","game/chests","game/shop","game/quest","game/quest_log","game/quest_rewards","game/key_map","game/save_data","game/game","story/story_state","world/world") { .\tools\godot.cmd --headless --path . --check-only --script "res://scripts/$s.gd" }
-'{"language": "en"}' | Out-File -Encoding ascii "$data\options.json"
-.\tools\godot.cmd --headless --path . --fixed-fps 10 --quit-after 150000 -- --autoplay > "C:\Users\peixe\AppData\Local\Temp\claude\523c4b0c813959e8\5d798f44-87fa-4160-a1c9-e462c8de15fb\scratchpad\run_en.txt"
-Select-String -Path "C:\Users\peixe\AppData\Local\Temp\claude\523c4b0c813959e8\5d798f44-87fa-4160-a1c9-e462c8de15fb\scratchpad\run_en.txt" -Pattern 'Juego completado|ERROR|WARNING'
-Select-String -Path "C:\Users\peixe\AppData\Local\Temp\claude\523c4b0c813959e8\5d798f44-87fa-4160-a1c9-e462c8de15fb\scratchpad\run_en.txt" -Pattern '[áéíóúñ¿¡]' | Where-Object { $_.Line -notmatch '^(Nombre:|Oro |Escena:|  |Retirada|Zona|Rocío)' -and ($_.Line -replace 'Rocío','') -match '[áéíóúñ¿¡]' } | Select-Object -First 20
-Remove-Item "$data\options.json"
-```
-
-Expected: `clean`; `--check-only` silent; the English run ends in `Juego completado: Nv n, ...` with no ERROR or WARNING (besides Jolt); no Spanish text left among the printed messages, dialogue and notices.
-
-- [ ] **Step 9: Commit**
-
-```powershell
-git add project.godot i18n scripts
-git commit -m "Add English: every text through the translation table, and the language option"
-```
-
----
-
-### Task 6: The final name, version, icon, cover, desktop presets and the itch.io material
+### Task 5: The final name, version, icon, cover, desktop presets and the itch.io material
 
 **Files:**
 - Create: `icon.png`, `CHANGELOG.md`, `docs/itch/.gdignore`, `docs/itch/descripcion.md`, `docs/itch/portada.png`, `docs/itch/captura-1.png` to `captura-5.png`, `.github/workflows/release.yml`
 - Delete: `icon.svg`, `icon.svg.import`
-- Modify: `project.godot`, `export_presets.cfg`, `scripts/title/title_screen.gd`, `scripts/ui/display_settings.gd`, `i18n/textos.csv`
+- Modify: `project.godot`, `export_presets.cfg`, `scripts/title/title_screen.gd`, `scripts/ui/display_settings.gd`
 
 **Interfaces:**
-- Consumes: `Lang`, `DisplaySettings` (Tasks 2 and 5), `BattleActor`, `WorldStage`.
+- Consumes: `DisplaySettings` (Task 2), `BattleActor`, `WorldStage`.
 - Produces: `application/config/version` = `1.0.0`, read by the title screen; presets `Windows Desktop` and `Linux`.
 
 **Nothing is published here:** no upload to itch.io, no tag, no push. **The save stays where it is:** `user://` hangs from the project's name on desktop, so changing `config/name` alone would lose the player's save in `%APPDATA%\Godot\app_userdata\rpg-turnos\`. `config/custom_user_dir_name` pins it to that same folder.
@@ -4455,30 +2709,17 @@ with:
 config/icon="res://icon.png"
 ```
 
-Replace in `i18n/textos.csv`:
-
-```
-"La Niebla del Norte","The Mist of the North"
-```
-
-with:
-
-```
-"Villaclaro: la Niebla del Norte","Villaclaro: The Mist of the North"
-"La Niebla del Norte","The Mist of the North"
-```
-
 Replace in `scripts/ui/display_settings.gd`:
 
 ```gdscript
-	Lang.apply(options.language)
+static func apply(window: Window, options: GameOptions) -> void:
 ```
 
 with:
 
 ```gdscript
-	Lang.apply(options.language)
-	window.title = Lang.t(ProjectSettings.get_setting("application/config/name"))
+static func apply(window: Window, options: GameOptions) -> void:
+	window.title = ProjectSettings.get_setting("application/config/name")
 ```
 
 Replace in `scripts/title/title_screen.gd`:
@@ -4825,7 +3066,6 @@ Primera versión completa de **Villaclaro: la Niebla del Norte**.
 - Dificultad Fácil o Normal, al empezar y desde Opciones.
 - Opciones: velocidad de combate, pantalla completa, calidad gráfica, temblor de cámara y textos grandes.
 - Teclas reasignables.
-- Inglés además de español, con el idioma del navegador o del sistema por defecto.
 - Versiones de escritorio para Windows y Linux.
 - Listas con desplazamiento y textos largos que ya no se salen de las ventanas.
 ```
@@ -4858,26 +3098,10 @@ Otra mañana gris en Villaclaro. La niebla del norte ha vuelto a tapar el cielo 
 - Tiendas, cofres, equipo y posadas que no cuestan nada.
 - Seis misiones secundarias, con tablones de anuncios y gallinas que ponen de lado.
 - Dificultad Fácil o Normal, textos grandes, teclas reasignables y velocidad de combate.
-- En español y en inglés.
 
 Una partida dura unas dos horas. Se juega con teclado o ratón.
-
-## Description in English
-
-Another gray morning in Villaclaro. The mist of the north has covered the sky again and the monsters are awake. The Amulet of Dawn, the one thing that held it back, broke in three, and in this village the youngest knees are yours.
-
-**Villaclaro: The Mist of the North** is a 3D turn-based RPG in the spirit of the classics: a village, a path and a world that opens up as you go.
-
-- Travel through the meadow, the forest, the old mine and the Castle of Mist.
-- Turn-based battles with spells, items, status effects and weaknesses.
-- Four bosses, each with a trick of its own.
-- Shops, chests, gear and inns that cost nothing.
-- Six side quests, with notice boards and hens that lay sideways.
-- Easy or Normal difficulty, large text, reassignable keys and battle speed.
-- In English and Spanish.
-
-A playthrough takes about two hours. Played with keyboard or mouse.
 ```
+
 
 - [ ] **Step 6: Check it**
 
@@ -4893,7 +3117,7 @@ func _init() -> void:
 	quit()
 ```
 
-The desktop export templates are **not installed here**: `%APPDATA%\Godot\export_templates\4.7.2.stable\` only holds the web ones, and downloading them needs the user's permission. So `--export-release` can't run for Windows or Linux on this machine; the `release.yml` workflow does that on a `v*` tag. What can be checked here is `--export-pack`, which needs no template and exercises the preset, its filter and the translations, and that the pack runs.
+The desktop export templates are **not installed here**: `%APPDATA%\Godot\export_templates\4.7.2.stable\` only holds the web ones, and downloading them needs the user's permission. So `--export-release` can't run for Windows or Linux on this machine; the `release.yml` workflow does that on a `v*` tag. What can be checked here is `--export-pack`, which needs no template and exercises the preset and its filter, and that the pack runs.
 
 ```powershell
 $env:APPDATA = "C:\Users\peixe\AppData\Local\Temp\claude\523c4b0c813959e8\5d798f44-87fa-4160-a1c9-e462c8de15fb\scratchpad\appdata"
@@ -4905,44 +3129,42 @@ New-Item -ItemType Directory -Force build\windows, build\linux | Out-Null
 .\tools\godot.cmd --headless --path . --export-pack "Windows Desktop" build\windows\Villaclaro.pck
 .\tools\godot.cmd --headless --path . --export-pack "Linux" build\linux\Villaclaro.pck
 (Get-Item build\windows\Villaclaro.pck).Length / 1MB
-'{"language": "en"}' | Out-File -Encoding ascii "$data\options.json"
 $pck = "$PWD\build\windows\Villaclaro.pck"
 $godot = "$PWD\tools\godot.cmd"
 Push-Location $env:APPDATA
-& $godot --headless --main-pack $pck --fixed-fps 10 --quit-after 1200 -- --autoplay | Select-String -Pattern 'Name|Granny Rosa:|ERROR' | Select-Object -First 5
+& $godot --headless --main-pack $pck --fixed-fps 10 --quit-after 1200 -- --autoplay | Select-String -Pattern 'Abuela Rosa:|ERROR' | Select-Object -First 5
 Pop-Location
-Remove-Item "$data\options.json"
 Remove-Item -Recurse build\windows, build\linux
 ```
 
-Expected: the probe prints a path ending in `/Godot/app_userdata/rpg-turnos`, so the save has not moved; both packs written, about 3 MB; run from the pack (outside the project folder) the game speaks English (`Granny Rosa: ...` lines), so the translation is inside. Windows's executable, its icon and the Linux binary stay unchecked here; see "Left open".
+Expected: the probe prints a path ending in `/Godot/app_userdata/rpg-turnos`, so the save has not moved; both packs written, about 3 MB; run from the pack (outside the project folder) the game plays (`Abuela Rosa: ...` lines). Windows's executable, its icon and the Linux binary stay unchecked here; see "Left open".
 
 - [ ] **Step 7: Commit**
 
 ```powershell
-git add icon.png icon.png.import CHANGELOG.md docs/itch .github project.godot export_presets.cfg scripts i18n
+git add icon.png icon.png.import CHANGELOG.md docs/itch .github project.godot export_presets.cfg scripts
 git commit -m "Name the game, add its icon, cover, version, desktop presets and itch.io text"
 ```
 
 ---
 
-### Task 7: Review pass, documentation, full runs and web export
+### Task 6: Review pass, documentation, full runs and web export
 
 **Files:**
-- Modify: `CLAUDE.md`, `docs/boost/specs/ideas-sueltas.md`; any text or window the review finds wrong (`i18n/textos.csv`, the data or the script it comes from)
+- Modify: `CLAUDE.md`, `docs/boost/specs/ideas-sueltas.md`; any text or window the review finds wrong (the data or the script it comes from)
 
 **Interfaces:**
 - Consumes: everything above.
 - Produces: the branch ready for review; nothing is merged, pushed, tagged or uploaded.
 
-- [ ] **Step 1: The windows, worst case, in both languages and both text sizes**
+- [ ] **Step 1: The windows, worst case, in both text sizes**
 
 Create `C:\Users\peixe\AppData\Local\Temp\claude\523c4b0c813959e8\5d798f44-87fa-4160-a1c9-e462c8de15fb\scratchpad\probes\tour_windows.gd`:
 
 ```gdscript
 extends SceneTree
 ## Throwaway: the worst case of every window, as PNGs, for the review pass. Never committed.
-## Arguments after `--`: <language es|en> <large 0|1> <output folder>.
+## Arguments after `--`: <large 0|1> <output folder>.
 
 var _out := ""
 var _tag := ""
@@ -4955,10 +3177,9 @@ func _initialize() -> void:
 func _run() -> void:
 	var args := OS.get_cmdline_user_args()
 	var options := GameOptions.new()
-	options.language = args[0]
-	options.large_text = args[1] == "1"
-	_out = args[2]
-	_tag = "%s%s" % [args[0], "L" if options.large_text else ""]
+	options.large_text = args[0] == "1"
+	_out = args[1]
+	_tag = "large" if options.large_text else "normal"
 	DisplaySettings.apply(root, options)
 	var state := _full_state()
 	var layer := CanvasLayer.new()
@@ -5051,14 +3272,16 @@ func _shot(page: String) -> void:
 $env:APPDATA = "C:\Users\peixe\AppData\Local\Temp\claude\523c4b0c813959e8\5d798f44-87fa-4160-a1c9-e462c8de15fb\scratchpad\appdata"
 $S = "C:\Users\peixe\AppData\Local\Temp\claude\523c4b0c813959e8\5d798f44-87fa-4160-a1c9-e462c8de15fb\scratchpad"
 New-Item -ItemType Directory -Force "$S\frames" | Out-Null
-foreach ($combo in @(@("es","0"),@("es","1"),@("en","0"),@("en","1"))) { .\tools\godot.cmd --path . --resolution 1280x720 --script "$S\probes\tour_windows.gd" -- $combo[0] $combo[1] "$S/frames" }
+foreach ($large in "0","1") { .\tools\godot.cmd --path . --resolution 1280x720 --script "$S\probes\tour_windows.gd" -- $large "$S/frames" }
 ```
 
-Look at all 14 windows of `enL_` (the tightest) and spot-check the others: nothing cut sideways; the tall lists (Objetos, Diario, the shop's Vender, Opciones) stop inside the window and scroll. Then the map: record `--autoplay` frames with `{"language": "en", "large_text": true}` in `options.json` and look at the status window, a notice, a dialogue, an exit sign in English (`Label3D`), a battle message and the title screen. The replay found nothing to fix here; if something runs over, shorten the English row or widen the window, never the font.
+Look at all 14 windows of `large_` (the tightest) and spot-check the others: nothing cut sideways; the tall lists (Objetos, Diario, the shop's Vender, Opciones) stop inside the window and scroll. Then the map: record `--autoplay` frames with `{"large_text": true}` in `options.json` and look at the status window, a notice, a dialogue, an exit sign (`Label3D`), a battle message and the title screen. If something runs over, shorten the text or widen the window, never the font.
+
+The Diario must also scroll with the keyboard when it is taller than the screen (left open by Task 1); fix `ScrollBox` if the focus takes the keys.
 
 - [ ] **Step 2: The text**
 
-Read the Spanish keys of `i18n/textos.csv` once for typos, and check nothing about the hero is gendered in either language: in Spanish no `cansado/a`, `listo/a`, `solo/a`, `bienvenido/a` and the like about the hero; in English no he / she / him / her about the hero (those words are only about the Woodcutter, the Witch, the Scout, the Lord of the Mist and the cat). The default name "Héroe" stays: it is a name the player can replace, already in the game, and it reads "Hero" in English. The replay found no typo. Any Spanish still printed by the English run (Task 5 Step 8 lists it) gets its row.
+Read the Spanish texts once for typos (`data/` and the strings of `scripts/`), and check nothing about the hero is gendered: no `cansado/a`, `listo/a`, `solo/a`, `bienvenido/a` and the like about the hero. The default name "Héroe" stays: it is a name the player can replace, already in the game.
 
 - [ ] **Step 3: Documentation**
 
@@ -5083,11 +3306,10 @@ Replace in `CLAUDE.md`:
 with:
 
 ```
-- `scripts/game/game_options.gd` (`GameOptions`, `RefCounted`) — music and effects volume (0..1, defaults 0.7 / 0.8), `text_speed` (`SLOW` / `NORMAL` / `FAST`), `combat_speed` (`X1` / `X2` / `INSTANT`; `combat_scale()` is `Engine.time_scale` during a battle, `char_time()` 0.05 / 0.025 / 0.008 s per character or 0 on `INSTANT`), `quality` (`HIGH` / `LOW`), `camera_shake`, `fullscreen`, `large_text`, `keys` (only what the player reassigned), `language` ("" follows the system or browser); `to_dict()`, `from_dict()` (older files keep loading, anything missing keeps its default).
-- `scripts/ui/display_settings.gd` (`DisplaySettings`) — `apply(window, options)`: the language, the window title, `content_scale_factor` 1.25 for large text (everything 2D grows, so every window must fit a virtual 1024 × 576), fullscreen on desktop, and the static `Vegetation.half_density` and `BattleStage.plain_light` the builders read for low quality (half the grass, no SSAO, no sun shadows; a change shows on the next map built).
+- `scripts/game/game_options.gd` (`GameOptions`, `RefCounted`) — music and effects volume (0..1, defaults 0.7 / 0.8), `text_speed` (`SLOW` / `NORMAL` / `FAST`), `combat_speed` (`X1` / `X2` / `INSTANT`; `combat_scale()` is `Engine.time_scale` during a battle, `char_time()` 0.05 / 0.025 / 0.008 s per character or 0 on `INSTANT`), `quality` (`HIGH` / `LOW`), `camera_shake`, `fullscreen`, `large_text`, `keys` (only what the player reassigned); `to_dict()`, `from_dict()` (older files keep loading, anything missing keeps its default).
+- `scripts/ui/display_settings.gd` (`DisplaySettings`) — `apply(window, options)`: the window title, `content_scale_factor` 1.25 for large text (everything 2D grows, so every window must fit a virtual 1024 × 576), fullscreen on desktop, and the static `Vegetation.half_density` and `BattleStage.plain_light` the builders read for low quality (half the grass, no SSAO, no sun shadows; a change shows on the next map built).
 - `scripts/game/key_map.gd` (`KeyMap`, `RefCounted`) — the InputMap actions `move_up`, `move_down`, `move_left`, `move_right`, `accept`, `cancel`, `pause` (defaults in `project.godot`: WASD and arrows; Enter, Keypad Enter, Space, E; Esc, Q, Backspace, X; Esc, P); `apply(overrides)` (also makes `ui_up`... `ui_accept`, `ui_cancel` follow them, so the menus take the same keys), `assign(overrides, action, code)` (replaces the first key; a key belongs to one action; refused if it is another action's only key), `keys_of()`, `keys_text()`, `first_key_name()`. `NameEntry` keeps fixed keys, since it types letters. `scripts/ui/keys_panel.gd` (`KeysPanel`) is the Teclas page.
 - `scripts/game/difficulty.gd` (`Difficulty`, `RefCounted`) — `NORMAL` / `EASY` ("normal" / "easy"), in `GameState.difficulty` and the save: Fácil takes `EASY_DAMAGE` 0.7 of the damage (blows, spells, poison; `BattleEngine.damage_mult`) and earns `EASY_EXP` 1.25 of the EXP (`exp_mult`). `scripts/ui/difficulty_window.gd` (`DifficultyWindow`) asks after the name on a new game; the pause menu's Opciones can change it.
-- `scripts/game/lang.gd` (`Lang`, `RefCounted`) and `i18n/textos.csv` (`keys,en`) — Spanish is the source: each row's key is the Spanish text as the code or data has it, and with no `es` translation a Spanish locale returns the key (`project.godot` sets the fallback to `es`). `Lang.t()` is `tr()` for static functions, `article()` gives "a" / "an" in English. **To add a text:** plain text in a `Label`, `Button` or `Label3D` translates by itself; with `%s` or `%d`, `tr("...") % x` before formatting, same placeholders in the same order in English; `{nombre}` stays as it is (`StoryState.fill()` translates, then fills); ids and figure names the logic compares are translated only where shown (`DialogueBox.say()`, `World.show_notice()`, `BattleHud.fit_label()`); add the row to the CSV and run `--import`. Grammar is in the table, a row per gender in Spanish (`el %s` / `la %s` both "the %s"). Autoplay's tool lines stay Spanish.
 - `scripts/ui/ui_style.gd` (`UiStyle`) — the menus' shared colors, small text size and `add_description(parent, id)` (wraps at `DESCRIPTION_WIDTH`). `scripts/ui/scroll_box.gd` (`ScrollBox`, `ScrollContainer`) — `ScrollBox.new(reserved_height)`, fill `content`: hugs it and scrolls past the room the screen leaves (Objetos, Diario, the shop's rows, Opciones).
 ```
 
@@ -5124,7 +3346,7 @@ Replace in `CLAUDE.md`:
 with:
 
 ```
- — music and effects sliders (0-100 % in steps of 10), text speed, combat speed, graphics, shake, large text, fullscreen (not on the web), language, difficulty (with a `state`, from the pause menu) and Teclas, applied at once, in a `ScrollBox`; `setup(options, audio, state = null)`,
+ — music and effects sliders (0-100 % in steps of 10), text speed, combat speed, graphics, shake, large text, fullscreen (not on the web), difficulty (with a `state`, from the pause menu) and Teclas, applied at once, in a `ScrollBox`; `setup(options, audio, state = null)`,
 ```
 
 Replace in `CLAUDE.md`:
@@ -5136,7 +3358,7 @@ Replace in `CLAUDE.md`:
 with:
 
 ```
-- A new game on Fácil on autoplay: add `--autoplay-easy`. Any option in a run: write it in `user://options.json` first, e.g. `{"language": "en", "large_text": true}` (with `APPDATA` pointing elsewhere, so the real one stays).
+- A new game on Fácil on autoplay: add `--autoplay-easy`. Any option in a run: write it in `user://options.json` first, e.g. `{"large_text": true}` (with `APPDATA` pointing elsewhere, so the real one stays).
 - Known noise: runs with `--fixed-fps`
 ```
 
@@ -5173,13 +3395,14 @@ Replace in `docs/boost/specs/ideas-sueltas.md`:
 with:
 
 ```
-- **Estado:** aplazada a futuras versiones, por decisión del usuario, también en la fase 7: zoom con dos dedos, botones más grandes, aviso táctil y rendimiento en un móvil medio.
+- **Estado:** fuera de la fase 7 (zoom con dos dedos, botones más grandes, aviso táctil y rendimiento en un móvil medio). Es lo primero al acabarla, con su propio diseño y plan.
 
 ## Lo que no entra en la versión 1.0
 
 - **Fecha:** 2026-11-06
 - **Idea:** lo que queda fuera de la fase 7 ([plan](../plans/2026-11-06-pulido-publicacion.md)).
 - **Notas:**
+  - Inglés: descartado por el usuario, el juego queda solo en español.
   - Subir a itch.io: el material está en `docs/itch/`, y subirlo lo decide y lo hace el usuario.
   - Probar los ejecutables de Windows y Linux: las plantillas de escritorio no están en este PC; los genera el workflow con un tag `v*`.
   - Mando, tutoriales, bestiario, ciclo de día y noche, correr, exportar la partida y partida nueva +: siguen en `2026-11-03-ideas-juego-completo.md`, sin plan.
@@ -5188,18 +3411,16 @@ with:
 
 - [ ] **Step 4: Full runs**
 
-Each one must end in `Juego completado:` with no stall and no ERROR or WARNING but the Jolt one. Both languages, both difficulties; then the fastest combination; then the save round trip. Headless, under a minute or two each.
+Each one must end in `Juego completado:` with no stall and no ERROR or WARNING but the Jolt one. Both difficulties; then the fastest combination; then the save round trip. Headless, under a minute or two each.
 
 ```powershell
 $env:APPDATA = "C:\Users\peixe\AppData\Local\Temp\claude\523c4b0c813959e8\5d798f44-87fa-4160-a1c9-e462c8de15fb\scratchpad\appdata"
 $data = "$env:APPDATA\Godot\app_userdata\rpg-turnos"
 New-Item -ItemType Directory -Force $data | Out-Null
 $runs = @(
-	@{ options = '{"language": "es"}'; args = @("--autoplay") },
-	@{ options = '{"language": "en"}'; args = @("--autoplay") },
-	@{ options = '{"language": "es"}'; args = @("--autoplay", "--autoplay-easy") },
-	@{ options = '{"language": "en"}'; args = @("--autoplay", "--autoplay-easy") },
-	@{ options = '{"language": "en", "combat_speed": 2.0, "quality": 1.0, "camera_shake": false, "large_text": true}'; args = @("--autoplay") }
+	@{ options = '{}'; args = @("--autoplay") },
+	@{ options = '{}'; args = @("--autoplay", "--autoplay-easy") },
+	@{ options = '{"combat_speed": 2.0, "quality": 1.0, "camera_shake": false, "large_text": true}'; args = @("--autoplay") }
 )
 foreach ($run in $runs) {
 	$run.options | Out-File -Encoding ascii "$data\options.json"
@@ -5212,7 +3433,7 @@ Remove-Item -ErrorAction SilentlyContinue "$data\save_autoplay.json"
 Remove-Item -ErrorAction SilentlyContinue "$data\save_autoplay.json"
 ```
 
-Expected: `Juego completado: Nv n, tiempo de juego h:mm:ss, misiones n` five times; the two Normal runs at the usual Nv 18 and 1:16-1:27 (1:30 or a little over is still fine), the Easy runs at about 1:00 (level for level, Fácil reaches each boss sooner), the fast one at about 0:50. `Guardado:` and `Cargado:` identical. An old save: Task 4's probe already loads version 7.
+Expected: `Juego completado: Nv n, tiempo de juego h:mm:ss, misiones n` three times; the Normal run at the usual Nv 18 and 1:16-1:27 (1:30 or a little over is still fine), the Easy run at about 1:00 (level for level, Fácil reaches each boss sooner), the fast one at about 0:50. `Guardado:` and `Cargado:` identical. An old save: Task 4's probe already loads version 7.
 
 - [ ] **Step 5: Performance on the desktop**
 
@@ -5239,16 +3460,16 @@ This one needs the real `APPDATA`, where the templates live, and it writes no sa
 New-Item -ItemType Directory -Force build\web | Out-Null
 .\tools\godot.cmd --headless --path . --export-release "Web" build/web/index.html
 (Get-Item build\web\index.pck).Length / 1MB
-python -c "d=open('build/web/index.pck','rb').read(); print(b'textos.en.translation' in d, b'scripts/tools' in d, b'docs/itch' in d, b'portada' in d)"
+python -c "d=open('build/web/index.pck','rb').read(); print(b'scripts/tools' in d, b'docs/itch' in d, b'portada' in d)"
 ```
 
-Expected: written with no ERROR; `index.pck` about 3 MB (3.0 MB before this plan, a little more with the translation and the icon); `True False False False`: the translation is in, the tools and the itch.io material are out. Delete nothing else; `build/` is git-ignored.
+Expected: written with no ERROR; `index.pck` about 3 MB; `False False False`: the tools and the itch.io material are out. Delete nothing else; `build/` is git-ignored.
 
 - [ ] **Step 7: Commit**
 
 ```powershell
 git add CLAUDE.md docs/boost/specs/ideas-sueltas.md docs/boost/plans/2026-11-06-pulido-publicacion.md
-git add i18n scripts data
+git add scripts data
 git commit -m "Document the polish phase and finish the review of the texts"
 ```
 
@@ -5258,35 +3479,16 @@ Stop here: no merge, no push, no tag, no upload.
 
 ## Replay
 
-The plan was applied by script to a copy of `28db326` outside the repo, task by task, with `APPDATA` pointing at the scratchpad (except the web export), and the copy was deleted afterwards.
-
-- **Anchors:** every "Replace" found exactly once when its turn came: Task 1: 28, Task 2: 21, Task 3: 18, Task 4: 29, Task 5: 58 plus the wrap script's 91 literals, Task 6: 7, Task 7: 9. Files created or overwritten by these edits: 14.
-- **`--check-only`:** clean on every script of the project after all seven tasks. The game also started and played a short autoplay run after Task 1 alone, Tasks 1-2, Tasks 1-3 and Tasks 1-4.
-- **Probes:** the keys and difficulty results above come from these runs (in Fácil a Slime's 4 EXP become 5; a version 8 save comes back equal, one without `difficulty` is refused, a version 7 save loads on Normal). `check_csv.py` is clean: 484 rows, and an independent scan found a row for every text of `data/` that is shown.
-- **Full runs:**
-
-| Run | Result |
-|---|---|
-| Spanish, Normal | `Juego completado: Nv 18, 1:23:21, misiones 5` |
-| English, Normal | `Juego completado: Nv 18, 1:17:57, misiones 5` |
-| Spanish, Fácil | `Juego completado: Nv 18, 1:00:02, misiones 5` |
-| English, Fácil | `Juego completado: Nv 18, 0:59:19, misiones 5` |
-| English, instant combat, low quality, large text, no shake | `Juego completado: Nv 18, 0:49:16, misiones 6` |
-
-No ERROR or WARNING besides the Jolt one, and no Spanish among the English run's messages. Round trip: `Guardado:` and `Cargado:` identical, with `"version":8` and the difficulty. The English lines read well in the log: "The Spider left an Antidote!", "You buy a Travel Wing for 25 G.", "You receive an Antivenom Ring. You put it on.".
-- **Frames:** all 14 windows of the tour in English with large text, the worst case: nothing cut sideways, and Objetos, the Diario, the shop's Vender and Opciones scroll inside the window. Title screen with subtitle and `v1.0.0`, the map's status window, a two-line dialogue, an exit sign in English. Icon and cover rendered as committed here.
-- **Exports:** Web written, `index.pck` 2.95 MB, with the translation inside and `scripts/tools` and `docs/itch` outside. `--export-pack` for `Windows Desktop` and `Linux`: 2.95 MB each, and the Windows pack, run from outside the project with `--main-pack`, speaks English. `user://` stays at `.../Godot/app_userdata/rpg-turnos` with the new name.
-- **FPS:** 75 on the meadow in high and low quality (the monitor's cap), native, windowed.
-- **Not run:** `--export-release` for Windows and Linux (no desktop templates here), the workflow, the hand-played keys of Task 3 and the mouse (no player at the keyboard). Those stay in "Left open".
+The plan was replayed on a copy of `28db326`, with English included, before the user dropped it. Tasks 1 to 4 were implemented from that text. Tasks 5 and 6 were edited afterwards and not replayed without English, so an anchor can differ: the code wins.
 
 ## Left open
 
 - **Windows and Linux executables are not built or started here**, as the spec asked: the desktop templates aren't installed, and downloading them needs the user's permission. A `v*` tag or the workflow's manual run builds them; then someone starts the `.exe` and checks its icon. `application/modify_resources` and the Linux binary are only proven by that run.
 - **Playing it by hand:** reassigning keys, fullscreen, the difficulty window with the keyboard, and the web build's real FPS in a browser need a person at the machine.
-- **Screenshots** are chosen by whoever runs Task 6, from the frames its Step 4 records.
+- **Screenshots** are chosen by whoever runs Task 5, from the frames its Step 4 records.
 - Uploading to itch.io, tagging and merging to `main` are the user's call.
 
 ## Self-review
 
-- **Spec:** options (Task 2), difficulty (Task 4, with its own save version), accessibility: large text and shake (Task 2), keys (Task 3); English with quest data, cutscenes and zone lines (Task 5); browser language (Task 5); Windows and Linux presets, workflow, version, changelog, name, icon, cover, itch.io text (Task 6); review pass, docs, runs, export (Task 7). The five open items: overlap, scroll, duplicates and wrapping, typed names (Task 1).
-- **Not here on purpose:** two-finger zoom, bigger buttons, touch prompt, phone performance (postponed by the user), uploading, a tag, consoles, more languages.
+- **Spec:** options (Task 2), difficulty (Task 4, with its own save version), accessibility: large text and shake (Task 2), keys (Task 3); Windows and Linux presets, workflow, version, changelog, name, icon, cover, itch.io text (Task 5); review pass, docs, runs, export (Task 6). The five open items: overlap, scroll, duplicates and wrapping, typed names (Task 1).
+- **Not here on purpose:** English and any other language (dropped by the user), two-finger zoom, bigger buttons, touch prompt, phone performance (next plan), uploading, a tag, consoles.
