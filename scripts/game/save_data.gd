@@ -73,6 +73,7 @@ static func from_state(state: GameState, player_pos: Vector3, play_time: float) 
 		"stats": {"battles": state.battles, "steps": state.steps, "gold": state.gold_earned},
 		"quests": state.quests.to_dict(),
 		"difficulty": state.difficulty,
+		"bestiary": state.seen_enemies.duplicate(),
 		"position": [player_pos.x, player_pos.z],
 		"play_time": play_time,
 	}
@@ -141,6 +142,14 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 		state.gold_earned = 0
 	state.quests.set_from(data.get("quests", {}))
 	state.difficulty = data.get("difficulty", Difficulty.NORMAL)
+	state.seen_enemies.clear()
+	if int(data.version) >= EVOLUTION_VERSION:
+		state.seen_enemies.assign(data.bestiary)
+	else:
+		# Before the bestiary: the bosses already beaten have been seen.
+		for flag: String in state.world_flags:
+			if EnemyLibrary.ENEMIES.has(flag):
+				state.see_enemy(flag)
 	var pos: Array = data.position
 	return {"valid": true, "position": Vector3(pos[0], 0.0, pos[1]),
 		"play_time": float(data.play_time)}
@@ -163,6 +172,8 @@ static func is_valid(data: Dictionary) -> bool:
 		return false
 	if int(data.version) >= DIFFICULTY_VERSION and not _valid_difficulty(data):
 		return false
+	if int(data.version) >= EVOLUTION_VERSION and not _valid_bestiary(data):
+		return false
 	var hero: Variant = data.get("hero")
 	if not hero is Dictionary:
 		return false
@@ -184,6 +195,17 @@ static func is_valid(data: Dictionary) -> bool:
 	if not (pos is Array and pos.size() == 2 and pos[0] is float and pos[1] is float):
 		return false
 	return data.get("play_time") is float
+
+
+## EVOLUTION_VERSION field: an Array of EnemyLibrary ids.
+static func _valid_bestiary(data: Dictionary) -> bool:
+	var seen: Variant = data.get("bestiary")
+	if not seen is Array:
+		return false
+	for id: Variant in seen:
+		if not (id is String and EnemyLibrary.ENEMIES.has(id)):
+			return false
+	return true
 
 
 ## DIFFICULTY_VERSION field: a Difficulty id.

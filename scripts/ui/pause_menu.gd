@@ -26,7 +26,7 @@ const TITLE_COLOR := UiStyle.TITLE_COLOR
 const GREY := UiStyle.GREY
 ## Rows of the hero's window: text and page. A new page only needs its row here.
 const HERO_PAGES := [["Estado", "status"], ["Objetos", "items"], ["Equipo", "equipment"],
-	["Diario", "journal"]]
+	["Diario", "journal"], ["Bestiario", "bestiary"]]
 ## Long texts wrap past this width.
 const TEXT_WIDTH := 480.0
 const MISSION_WIDTH := 420.0
@@ -74,6 +74,8 @@ var _equip_message: Label
 ## Slot whose pieces the Equipo page lists ("" for the list of the three slots).
 var _equip_slot := ""
 var _journal: JournalPage
+var _bestiary: BestiaryPage
+var _bestiary_button: Button
 var _options_panel: OptionsPanel
 var _page := ""
 ## True while the code moves the focus itself, so that move makes no sound.
@@ -113,6 +115,7 @@ func _ready() -> void:
 	_build_items(stack)
 	_build_equipment(stack)
 	_build_journal(stack)
+	_build_bestiary(stack)
 	_build_options(stack)
 	_build_confirm(stack)
 	available = available
@@ -161,7 +164,7 @@ func tour() -> void:
 	available = true
 	await get_tree().create_timer(TOUR_STEP, true).timeout
 	open()
-	for page in ["main", "status", "items", "equipment", "journal", "options"]:
+	for page in ["main", "status", "items", "equipment", "journal", "bestiary", "options"]:
 		_show_page(page)
 		print("Menú: %s" % page)
 		await get_tree().create_timer(TOUR_STEP, true).timeout
@@ -217,6 +220,8 @@ func _show_page(page: String) -> void:
 			_fill_equipment()
 		"journal":
 			_journal.fill(_state)
+		"bestiary":
+			_bestiary.fill(_state)
 	_quiet_focus = true
 	if page == "options":
 		_options_panel.focus_first()
@@ -235,6 +240,7 @@ func _back_to_main() -> void:
 ## The hero's name and level and the missions under way (they can change between visits).
 func _fill_main() -> void:
 	_hero_label.text = StatBar.hero_title(_state.hero)
+	_bestiary_button.text = BestiaryPage.count_text(_state)
 	for child in _mission_box.get_children():
 		_mission_box.remove_child(child)
 		child.queue_free()
@@ -480,6 +486,8 @@ func _build_main(center: CenterContainer) -> void:
 		var button := _button(entry[0])
 		button.pressed.connect(_open_page.bind(entry[1]))
 		hero_box.add_child(button)
+		if entry[1] == "bestiary":
+			_bestiary_button = button
 	hero_box.add_child(_label("Misiones", TITLE_COLOR))
 	_mission_box = VBoxContainer.new()
 	_mission_box.add_theme_constant_override("separation", 0)
@@ -561,6 +569,13 @@ func _build_journal(stack: VBoxContainer) -> void:
 	page.add_child(scroll)
 	_journal = JournalPage.new()
 	scroll.content.add_child(_journal)
+	page.add_child(_back_button())
+
+
+func _build_bestiary(stack: VBoxContainer) -> void:
+	var page := _page_box(stack, "bestiary", "Bestiario")
+	_bestiary = BestiaryPage.new()
+	page.add_child(_bestiary)
 	page.add_child(_back_button())
 
 

@@ -22,6 +22,8 @@ var loadout := Loadout.new()
 var bag_equipment: Array[String] = []
 ## Ids of the chests already opened (Chests.CHESTS keys).
 var opened_chests: Array[String] = []
+## Enemy ids met in battle (EnemyLibrary ids), for the bestiary.
+var seen_enemies: Array[String] = []
 ## Progress through the world: flag -> true. A boss sets its enemy id when defeated
 ## ("rey_slime" lifts the fog of the meadow's north exit); ZoneData exits name the flag
 ## that opens them.
@@ -183,3 +185,8 @@ func quests_done() -> int:
 ## Gold lost on a defeat: half of what is carried, rounded down (gold - lost remains).
 func defeat_gold_loss() -> int:
 	return floori(gold / 2.0)
+
+
+func see_enemy(id: String) -> void:
+	if not seen_enemies.has(id):
+		seen_enemies.append(id)

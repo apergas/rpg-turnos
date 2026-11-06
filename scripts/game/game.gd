@@ -335,6 +335,8 @@ func _on_encounter(boss: bool) -> void:
 	else:
 		enemies = EncounterTable.pick(_zone, _world.player_position(), _rng,
 			state.quests.wanted_enemies())
+	for enemy in enemies:
+		state.see_enemy(enemy.id)
 	await _fade_to(1.0)
 	_world.set_active(false)
 	_audio.play_music(MusicLibrary.BOSS if boss else MusicLibrary.BATTLE)
@@ -352,6 +354,9 @@ func _on_encounter(boss: bool) -> void:
 	add_child(battle)
 	await _fade_to(0.0)
 	var outcome: int = await battle.finished
+	# A call for help adds enemies during the fight.
+	for enemy in battle.engine.enemies:
+		state.see_enemy(enemy.id)
 	var won := outcome == BattleEngine.State.WON
 	await _fade_to(1.0)
 	var notice := ""
