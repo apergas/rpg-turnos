@@ -261,7 +261,7 @@ func _build_menu() -> void:
 	version.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.0))
 	version.add_theme_constant_override("outline_size", 6)
 	root.add_child(version)
-	version.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, 		Control.PRESET_MODE_MINSIZE, 12)
+	version.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, \n		Control.PRESET_MODE_MINSIZE, 12)
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	center.offset_top = MENU_TOP
