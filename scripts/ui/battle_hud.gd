@@ -86,6 +86,8 @@ var _menu_opened_ms := 0
 var _advance_requested := false
 ## True while the code moves the cursor itself, so that move makes no sound.
 var _quiet_focus := false
+## Phone: the row that goes back (-1 when the page has none).
+var _back_row := -1
 
 
 func _ready() -> void:
@@ -322,6 +324,7 @@ func _open(page: Page, cursor: int) -> void:
 		_list.remove_child(child)
 		child.queue_free()
 	_rows.clear()
+	_back_row = -1
 	_cursor = 0
 	match page:
 		Page.MAIN:
@@ -333,6 +336,7 @@ func _open(page: Page, cursor: int) -> void:
 				var why := _engine.problem(BattleEngine.cmd_skill(skill))
 				_add_row(_with_reason("%s  %d PM" % [skill.display_name, skill.mp_cost], why),
 					why == "")
+			_add_back_row()
 			_set_message("¿Qué hechizo?")
 		Page.ITEMS:
 			for id in _item_ids():
@@ -341,12 +345,21 @@ func _open(page: Page, cursor: int) -> void:
 					_engine.inventory.count(id), Inventory.description(id)], why), why == "")
 			if _rows.is_empty():
 				_list.add_child(_label("No llevas objetos."))
+			_add_back_row()
 			_set_message("¿Qué objeto?")
 	_message.visible_characters = -1
 	_set_cursor(cursor)
 
 
 ## Items in stock that can be used in battle, in Inventory.IDS order.
+## Phone: nothing tells the player that a touch off the menu goes back, so a row does.
+func _add_back_row() -> void:
+	if not Device.is_touch() or _back_row >= 0:
+		return
+	_back_row = _rows.size()
+	_add_row("Volver", true)
+
+
 func _item_ids() -> Array[String]:
 	var ids: Array[String] = []
 	for id in Inventory.IDS:
@@ -418,6 +431,9 @@ func _accept() -> void:
 func _press(index: int) -> void:
 	if _page == Page.NONE or Time.get_ticks_msec() - _menu_opened_ms < MENU_GUARD * 1000.0:
 		return
+	if index == _back_row and _page != Page.MAIN:
+		_back()
+		return
 	var first: int = _engine.alive_enemies()[0]
 	match _page:
 		Page.MAIN:
@@ -462,6 +478,7 @@ func _ask_target(cmd: Dictionary, back: Page) -> void:
 	_target_back = back
 	_target_back_cursor = _cursor
 	_targets = _engine.alive_enemies()
+	_add_back_row()
 	_page = Page.TARGET
 	_set_message("¿A quién?")
 	_message.visible_characters = -1

@@ -21,6 +21,8 @@ const GREY := UiStyle.GREY
 const BETTER := Color(0.35, 1.0, 0.4)
 const WORSE := Color(1.0, 0.35, 0.3)
 const NAME_WIDTH := 300.0
+## Phone: narrower names, so the widest row still fits the screen.
+const TOUCH_NAME_WIDTH := 240.0
 const PRICE_WIDTH := 90.0
 ## Messages under the list wrap past this width.
 const MESSAGE_WIDTH := 640.0
@@ -214,7 +216,7 @@ func _add_buy_row(id: String) -> void:
 	var row := _row()
 	var why := Shop.buy_problem(_state, id)
 	var button := _button(Shop.display_name(id))
-	button.custom_minimum_size.x = NAME_WIDTH
+	button.custom_minimum_size.x = TOUCH_NAME_WIDTH if Device.is_touch() else NAME_WIDTH
 	button.disabled = why != ""
 	button.pressed.connect(_buy.bind(id))
 	button.set_meta("id", id)
@@ -239,7 +241,7 @@ func _add_sell_row(id: String) -> void:
 	var count := Shop.sell_count(_state, id)
 	var text := Shop.display_name(id) if count <= 1 else "%s ×%d" % [Shop.display_name(id), count]
 	var button := _button(text)
-	button.custom_minimum_size.x = NAME_WIDTH
+	button.custom_minimum_size.x = TOUCH_NAME_WIDTH if Device.is_touch() else NAME_WIDTH
 	button.disabled = why != ""
 	button.pressed.connect(_sell.bind(id))
 	button.set_meta("id", id)

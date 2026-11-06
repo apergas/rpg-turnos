@@ -15,6 +15,8 @@ const TITLE_COLOR := UiStyle.TITLE_COLOR
 const HINT_COLOR := Color(0.7, 0.72, 0.8)
 const KEY_SIZE := Vector2(58, 50)
 const COLUMNS := 8
+## Phone: wider and shorter, so the grid and its buttons fit a landscape screen.
+const TOUCH_COLUMNS := 11
 ## The grid, in capitals (lower-cased when the case is switched).
 const LETTERS := "ABCDEFGHIJKLMNÑOPQRSTUVWXYZÁÉÍÓÚ"
 ## --autoplay: seconds between two key presses of demo().
@@ -52,10 +54,11 @@ func _ready() -> void:
 	_name_label = _label("", Color.WHITE, NAME_SIZE)
 	_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_name_label)
-	box.add_child(_label("Escribe o toca las letras (máximo %d)." \
-		% StoryState.MAX_NAME_LENGTH, HINT_COLOR, 20))
+	var hint := "Toca las letras" if Device.is_touch() else "Escribe o toca las letras"
+	box.add_child(_label("%s (máximo %d)." % [hint, StoryState.MAX_NAME_LENGTH],
+		HINT_COLOR, 20))
 	var grid := GridContainer.new()
-	grid.columns = COLUMNS
+	grid.columns = TOUCH_COLUMNS if Device.is_touch() else COLUMNS
 	grid.add_theme_constant_override("h_separation", 4)
 	grid.add_theme_constant_override("v_separation", 4)
 	box.add_child(grid)

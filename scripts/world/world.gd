@@ -57,6 +57,8 @@ const MISSION_DONE_TIME := 4.0
 ## The notice window, top centre (clear of the status window and the ☰ button).
 const NOTICE_MAX_WIDTH := 640.0
 const UI_EDGE := 24.0
+## Phone: the mission line wraps here and the bars narrow to fit.
+const TOUCH_MISSION_WIDTH := 300.0
 ## The use button of the phone interface.
 const USE_BUTTON_FONT := 28
 const USE_BUTTON_SIZE := Vector2(180, 72)
@@ -510,6 +512,7 @@ func begin_cutscene() -> void:
 	_player.model().set_walking(false)
 	_use_on_arrival = {}
 	_status_column.hide()
+	_map_square.hide()
 	_notice_window.hide()
 	_show_quest_marks()
 
@@ -521,6 +524,7 @@ func end_cutscene() -> void:
 	_camera.follow(_player)
 	_player.scripted = false
 	_status_column.show()
+	_map_square.show()
 	_show_quest_marks()
 	_meter.reset()
 	_was_near = {}
@@ -671,6 +675,7 @@ func set_chest_open(chest_id: String, open: bool, instant := false) -> void:
 ## which goes away behind it (with the map square).
 func set_status_shown(on: bool) -> void:
 	_status_column.visible = on
+	_map_square.visible = on
 
 
 func refresh_status(hero: Combatant, potions: int, gold: int, missions: Array[String] = []) -> void:
@@ -705,11 +710,13 @@ func _show_missions(lines: Array[String], color: Color) -> void:
 	for child in _mission_box.get_children():
 		_mission_box.remove_child(child)
 		child.queue_free()
-	for line in lines:
+	var shown := lines.slice(0, 1) if Device.is_touch() else lines
+	var width := TOUCH_MISSION_WIDTH if Device.is_touch() else MISSION_WIDTH
+	for line in shown:
 		var label := _label()
 		label.add_theme_color_override("font_color", color)
 		_mission_box.add_child(label)
-		BattleHud.fit_label(label, line, MISSION_WIDTH)
+		BattleHud.fit_label(label, line, width)
 
 
 ## Shows a short line in its own window for NOTICE_TIME seconds (a newer one replaces it).
@@ -1055,8 +1062,18 @@ func _build_ui() -> void:
 	_status_column = column
 	var panel := BattleHud.make_window()
 	column.add_child(panel)
-	_map_square = MapSquare.new()
-	column.add_child(_map_square)
+	_map_square = MapSquare.new(MapSquare.TOUCH_SIDE if Device.is_touch() else MapSquare.SIDE)
+	if Device.is_touch():
+		# Under the menu button, top right.
+		_ui.add_child(_map_square)
+		_map_square.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+		_map_square.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+		_map_square.offset_right = -PauseMenu.MENU_BUTTON_MARGIN
+		_map_square.offset_left = _map_square.offset_right - MapSquare.TOUCH_SIDE
+		_map_square.offset_top = PauseMenu.MENU_BUTTON_MARGIN + PauseMenu.MENU_BUTTON_SIZE.y + 8.0
+		_map_square.offset_bottom = _map_square.offset_top + MapSquare.TOUCH_SIDE
+	else:
+		column.add_child(_map_square)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
 	panel.add_child(box)
@@ -1070,6 +1087,10 @@ func _build_ui() -> void:
 	box.add_child(_exp_bar)
 	_potion_label = _label()
 	box.add_child(_potion_label)
+	if Device.is_touch():
+		# Estado and Objetos in the pause menu say the same.
+		_exp_bar.hide()
+		_potion_label.hide()
 	_gold_label = _label()
 	_gold_label.add_theme_color_override("font_color", StatBar.GOLD)
 	box.add_child(_gold_label)

@@ -5,12 +5,14 @@ class_name MapSquare extends PanelContainer
 ## nothing on the web build. It takes no clicks: the ground under it can still be tapped.
 
 const SIDE := 150.0
+const TOUCH_SIDE := 110.0
 const BACK := Color(0.04, 0.04, 0.12, 0.45)
 const BORDER := Color(1.0, 1.0, 1.0, 0.7)
 const ALPHA := 0.8
 const MARKER_SIZE := 7.0
 const MARKER_COLOR := Color.WHITE
 
+var _side := SIDE
 var _map: ExploredMap
 var _image: Image
 var _texture: ImageTexture
@@ -21,6 +23,10 @@ var _scale := 1.0
 var _origin := Vector2.ZERO
 
 
+func _init(side := SIDE) -> void:
+	_side = side
+
+
 func _ready() -> void:
 	var style := StyleBoxFlat.new()
 	style.bg_color = BACK
@@ -28,7 +34,7 @@ func _ready() -> void:
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(4)
 	add_theme_stylebox_override("panel", style)
-	custom_minimum_size = Vector2(SIDE, SIDE)
+	custom_minimum_size = Vector2(_side, _side)
 	size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var inside := Control.new()
@@ -57,9 +63,9 @@ func set_map(map: ExploredMap) -> void:
 				_image.set_pixel(x, y, map.color_of(Vector2i(x, y)))
 	_texture = ImageTexture.create_from_image(_image)
 	_picture.texture = _texture
-	_scale = floorf(SIDE / maxi(map.size.x, map.size.y))
+	_scale = floorf(_side / maxi(map.size.x, map.size.y))
 	var drawn := Vector2(map.size) * _scale
-	_origin = ((Vector2.ONE * SIDE - drawn) / 2.0).floor()
+	_origin = ((Vector2.ONE * _side - drawn) / 2.0).floor()
 	_picture.position = _origin
 	_picture.size = drawn
 
