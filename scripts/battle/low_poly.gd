@@ -49,9 +49,10 @@ static func bush_mesh() -> ArrayMesh:
 	return mesh
 
 
-## One MultiMeshInstance3D drawing mesh (with its own surface materials) at every
-## transform. Does nothing for an empty list.
-static func add_multimesh(root: Node3D, mesh: Mesh, transforms: Array[Transform3D]) -> void:
+## One MultiMeshInstance3D drawing mesh (with its own surface materials, or override) at
+## every transform. Does nothing for an empty list.
+static func add_multimesh(root: Node3D, mesh: Mesh, transforms: Array[Transform3D], \
+		override: Material = null) -> void:
 	if transforms.is_empty():
 		return
 	var mm := MultiMesh.new()
@@ -62,6 +63,7 @@ static func add_multimesh(root: Node3D, mesh: Mesh, transforms: Array[Transform3
 		mm.set_instance_transform(i, transforms[i])
 	var mmi := MultiMeshInstance3D.new()
 	mmi.multimesh = mm
+	mmi.material_override = override
 	root.add_child(mmi)
 
 

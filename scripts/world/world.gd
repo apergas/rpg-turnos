@@ -51,6 +51,9 @@ signal stepped
 const PLAYER_SCENE := preload("res://scenes/world/player.tscn")
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
 const HERO_DATA := preload("res://data/hero.tres")
+## Global shader parameter the trees read; NO_HERO_POS (below the ground) leaves them whole.
+const HERO_POS_PARAM := &"hero_pos"
+const NO_HERO_POS := Vector3(0, -100, 0)
 const NOTICE_TIME := 2.0
 ## Seconds "Misión cumplida" stays in the status window.
 const MISSION_DONE_TIME := 4.0
@@ -258,6 +261,7 @@ func _physics_process(_delta: float) -> void:
 			_use_on_arrival = {}  # walking off by hand drops the tap's errand
 	if _grass:
 		Vegetation.set_pusher(_grass, _player.global_position)
+	RenderingServer.global_shader_parameter_set(HERO_POS_PARAM, _player.global_position)
 	_map_square.follow(_player.global_position)
 	_marker.visible = _player.move_target != null
 	if _marker.visible:
@@ -299,6 +303,11 @@ func _physics_process(_delta: float) -> void:
 			_autoplay_talked[near.index] = true
 			_use(near)
 	_was_near = near
+
+
+## The title's meadow has no hero: its trees stay whole.
+func _exit_tree() -> void:
+	RenderingServer.global_shader_parameter_set(HERO_POS_PARAM, NO_HERO_POS)
 
 
 func _unhandled_input(event: InputEvent) -> void:
