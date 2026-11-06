@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="QuestData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/quest_data.gd" id="1_quest"]
+
+[resource]
+script = ExtResource("1_quest")
+id = "lobos"
+title = "Lobos hambrientos"
+zone = "bosque"
+giver = "Tablón"
+turn_in_zone = "bosque"
+turn_in = "Leñadora"
+target = "lobo"
+goal = 5
+objective = "Derrota 5 lobos en el bosque para la Leñadora."
+status = "lobos %d / %d"
+report = "vuelve con la Leñadora"
+offer_lines = Array[String](["Se ruega a quien pase por aquí que derrote a 5 lobos. Ya no dejan cortar leña en paz.", "Firmado: la Leñadora. Y debajo: por favor."])
+wait_lines = Array[String](["¿Ya has espantado a esos lobos? Todavía los oigo desde aquí.", "Y yo, con el hacha en la mano, sin poder ir a ningún sitio."])
+done_lines = Array[String](["¡Por fin se oye el bosque! Y mis árboles.", "Encontré este anillo en un tronco. Dicen que quien lo lleva no le teme al veneno."])
+reward_gold = 120
+reward_equipment = "anillo_antiveneno"

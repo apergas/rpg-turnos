@@ -10,7 +10,7 @@ class_name BattleActor extends Node3D
 
 enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPER, WOLF,
 	GOBLIN, PLANT, WITCH, MUD_GOLEM, STONE_GOLEM, SPIDER, SPECTER, SKELETON_WARRIOR,
-	SKELETON_ROGUE, SKELETON_MAGE, FOG_LORD, FARMER }
+	SKELETON_ROGUE, SKELETON_MAGE, FOG_LORD, FARMER, METAL_SLIME, BOARD, CAT, CHILD }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -220,6 +220,33 @@ const LOOKS := {
 		"anims": CHARACTER_ANIMS,
 		"tint": Color(0.65, 0.8, 1.0),
 	},
+	# The Niña of the forest village: a small Mage in pink.
+	Look.CHILD: {
+		"scene": MAGE,
+		"scale": 0.48,
+		"top": 1.7,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/Spellbook",
+			"Rig/Skeleton3D/handslot_l/Spellbook_open",
+			"Rig/Skeleton3D/handslot_r/1H_Wand",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(1.0, 0.72, 0.8),
+	},
+	# A notice board: it stands still.
+	Look.BOARD: {
+		"color": Color(0.56, 0.38, 0.2),
+		"dark_color": Color(0.36, 0.22, 0.1),
+		"paper_color": Color(0.93, 0.89, 0.75),
+		"top": 1.9,
+	},
+	Look.CAT: {
+		"color": Color(0.85, 0.55, 0.25),
+		"dark_color": Color(0.62, 0.36, 0.14),
+		"eye_color": Color(0.2, 0.75, 0.3),
+		"scale": 1.2,
+		"top": 1.2,
+	},
 	Look.SLIME: {
 		"color": Color(0.55, 0.3, 0.85),
 		"scale": 1.0,
@@ -231,6 +258,12 @@ const LOOKS := {
 		"scale": 1.6,
 		"top": 2.1,
 		"crown": true,
+	},
+	Look.METAL_SLIME: {
+		"color": Color(0.78, 0.82, 0.88),
+		"scale": 0.8,
+		"top": 1.1,
+		"crown": false,
 	},
 	Look.BAT: {
 		"color": Color(0.32, 0.22, 0.42),
@@ -397,6 +430,10 @@ func _ready() -> void:
 		_build_spider(data)
 	elif look == Look.SPECTER:
 		_build_specter(data)
+	elif look == Look.BOARD:
+		_build_board(data)
+	elif look == Look.CAT:
+		_build_cat(data)
 	else:
 		_build_slime(data)
 	for node in _body.find_children("*", "MeshInstance3D", true, false):
@@ -688,6 +725,37 @@ func _build_slime(data: Dictionary) -> void:
 				Vector3(cos(angle) * 0.19, 1.01, sin(angle) * 0.19), 0.4)  # spike
 
 
+## A notice board on two posts, with its papers on the side it faces (-Z).
+func _build_board(data: Dictionary) -> void:
+	var post := BoxMesh.new()
+	post.size = Vector3(0.12, 1.7, 0.12)
+	for x in [-0.6, 0.6]:
+		_add_mesh(_body, post, data.dark_color, Vector3(x, 0.85, 0))
+	var board := BoxMesh.new()
+	board.size = Vector3(1.5, 0.9, 0.08)
+	_add_mesh(_body, board, data.color, Vector3(0, 1.3, 0))
+	var paper := BoxMesh.new()
+	paper.size = Vector3(0.32, 0.4, 0.01)
+	for spot in [Vector3(-0.42, 1.32, -0.05), Vector3(0.02, 1.26, -0.05),
+			Vector3(0.44, 1.36, -0.05)]:
+		_add_mesh(_body, paper, data.paper_color, spot)
+
+
+## A sitting cat: a rounded body, a head with pointed ears and eyes, and a tail.
+func _build_cat(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	_add_blob(root, SLIME_PROFILE, SLIME_SEGMENTS, data.color, Vector3.ZERO, Vector3.ZERO,
+		Vector3(0.5, 0.6, 0.65))
+	_add_mesh(root, _sphere(0.2), data.color, Vector3(0, 0.62, -0.1))
+	for x in [-0.11, 0.11]:
+		_add_mesh(root, _cone(0.07, 0.16), data.dark_color, Vector3(x, 0.84, -0.1))  # ear
+		_add_mesh(root, _sphere(0.04), data.eye_color, Vector3(x * 0.8, 0.66, -0.28))  # eye
+	_add_mesh(root, _cylinder(0.04, 0.5), data.dark_color, Vector3(0, 0.22, 0.4))  # tail
+	(root.get_child(-1) as Node3D).rotation_degrees.x = 60.0
+
+
 ## A bat: round body with ears and eyes, hovering at data.fly, with two wings on pivots
 ## that the idle loop flaps.
 func _build_bat(data: Dictionary) -> void:
@@ -878,6 +946,8 @@ func _build_specter(data: Dictionary) -> void:
 ## specter floats, the rest squash and stretch (the wolf, the golems and the spider only
 ## breathe).
 func _start_idle() -> void:
+	if look == Look.BOARD:
+		return
 	if not _wings.is_empty():
 		_start_flap()
 	elif _sway:
@@ -885,7 +955,8 @@ func _start_idle() -> void:
 	elif _hover:
 		_start_float()
 	else:
-		var gentle := look in [Look.WOLF, Look.MUD_GOLEM, Look.STONE_GOLEM, Look.SPIDER]
+		var gentle := look in [Look.WOLF, Look.MUD_GOLEM, Look.STONE_GOLEM, Look.SPIDER,
+			Look.CAT]
 		_start_bounce(0.4 if gentle else 1.0)
 
 

@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="QuestData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/quest_data.gd" id="1_quest"]
+
+[resource]
+script = ExtResource("1_quest")
+id = "gato"
+title = "El gato perdido"
+kind = 3
+zone = "bosque"
+giver = "Niña"
+turn_in_zone = "bosque"
+turn_in = "Niña"
+target = "Gato"
+target_zone = "bosque"
+objective = "Busca a Bigotes, el gato de la Niña, por los claros del bosque."
+status = "busca a Bigotes"
+report = "vuelve con la Niña"
+offer_lines = Array[String](["¿Has visto a Bigotes? Es mi gato. Salió detrás de una mariposa y no ha vuelto.", "Le gustan los claros del bosque, los del oeste sobre todo. Yo no puedo ir: hay lobos."])
+found_lines = Array[String](["¡Miau!", "Bigotes se frota contra tus piernas y sale corriendo hacia la aldea."])
+wait_lines = Array[String](["¿Has encontrado a Bigotes? Si lo ves, dile que hay pescado."])
+done_lines = Array[String](["¡Bigotes ha vuelto! Y huele a bosque.", "Toma, es mi semilla de la suerte. Bueno, ya no: te la doy."])
+reward_gold = 80
+reward_items = {
+"semilla_agilidad": 1
+}

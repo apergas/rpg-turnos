@@ -312,6 +312,13 @@ func _play_event(event: Dictionary) -> void:
 			await _say("¡No has podido huir!")
 		BattleEvent.NO_ESCAPE:
 			await _say("¡No puedes huir!")
+		BattleEvent.ENEMY_FLEE:
+			_sfx(SfxLibrary.CANCEL)
+			_show_arrow(-1)
+			_hud.hide_enemy_bar(event.actor)
+			await _actor(event.actor).play_dodge()
+			_actor(event.actor).hide()
+			await _say("¡%s huye!" % _cap(_the(_fighter(event.actor))))
 		BattleEvent.STATUS_ON:
 			await _play_status_on(event)
 		BattleEvent.STATUS_TICK:

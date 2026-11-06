@@ -5,8 +5,9 @@ class_name PauseMenu extends Control
 ## HERO_PAGES and the missions under way) and the system's (Guardar, Opciones, Volver al
 ## título, Cerrar). Other pages: Estado (hero stats, gold, spells), Objetos (items usable
 ## outside battle, the Ala de viaje too, and the key items, each with what it does),
-## Equipo (the three slots; choosing one lists the pieces of that slot in the bag, with
-## the comparison, and Quitar), Opciones (OptionsPanel) and a confirmation before going
+## Equipo (the four slots; choosing one lists the pieces of that slot in the bag, with
+## the comparison, and Quitar), Diario (JournalPage: what to do now, the missions in progress
+## and the finished ones), Opciones (OptionsPanel) and a confirmation before going
 ## back to the title. Esc goes back one page. Keeps running while paused. Call setup()
 ## before adding it to the tree.
 
@@ -23,7 +24,8 @@ const TEXT_SIZE := 18
 const TITLE_COLOR := Color(1.0, 0.85, 0.3)
 const GREY := Color(0.6, 0.6, 0.65)
 ## Rows of the hero's window: text and page. A new page only needs its row here.
-const HERO_PAGES := [["Estado", "status"], ["Objetos", "items"], ["Equipo", "equipment"]]
+const HERO_PAGES := [["Estado", "status"], ["Objetos", "items"], ["Equipo", "equipment"],
+	["Diario", "journal"]]
 ## Long texts wrap past this width.
 const TEXT_WIDTH := 480.0
 const STATUS_BAR_WIDTH := 300.0
@@ -66,6 +68,7 @@ var _equip_box: VBoxContainer
 var _equip_message: Label
 ## Slot whose pieces the Equipo page lists ("" for the list of the three slots).
 var _equip_slot := ""
+var _journal: JournalPage
 var _options_panel: OptionsPanel
 var _page := ""
 ## True while the code moves the focus itself, so that move makes no sound.
@@ -101,6 +104,7 @@ func _ready() -> void:
 	_build_status(stack)
 	_build_items(stack)
 	_build_equipment(stack)
+	_build_journal(stack)
 	_build_options(stack)
 	_build_confirm(stack)
 	available = available
@@ -147,7 +151,7 @@ func tour() -> void:
 	available = true
 	await get_tree().create_timer(TOUR_STEP, true).timeout
 	open()
-	for page in ["main", "status", "items", "equipment", "options"]:
+	for page in ["main", "status", "items", "equipment", "journal", "options"]:
 		_show_page(page)
 		print("Menú: %s" % page)
 		await get_tree().create_timer(TOUR_STEP, true).timeout
@@ -199,6 +203,8 @@ func _show_page(page: String) -> void:
 			_equip_slot = ""
 			_set_line(_equip_message, "")
 			_fill_equipment()
+		"journal":
+			_journal.fill(_state)
 	_quiet_focus = true
 	if page == "options":
 		_options_panel.focus_first()
@@ -230,7 +236,7 @@ func _fill_status() -> void:
 	_mp_bar.show_mp(hero.mp, hero.max_mp)
 	_exp_bar.show_exp(hero)
 	_stats_label.text = "ATK %d   DEF %d   VEL %d" % [hero.total_attack(),
-		hero.total_defense(), hero.speed]
+		hero.total_defense(), hero.total_speed()]
 	_gold_label.text = "Oro %d G" % _state.gold
 	var spells := PackedStringArray()
 	for skill in hero.skills:
@@ -303,8 +309,7 @@ func _on_use_item(id: String) -> void:
 		return
 	_sfx(SfxLibrary.HEAL)
 	_fill_items()
-	_set_line(_items_message, ("Recuperas %d PM." if result.effect == "mp" \
-		else "Recuperas %d PV.") % result.amount)
+	_set_line(_items_message, _use_text(id, result))
 	state_changed.emit()
 	_quiet_focus = true
 	var first := _first_button(_pages["items"])
@@ -313,7 +318,17 @@ func _on_use_item(id: String) -> void:
 	_quiet_focus = false
 
 
-## The three slots with what is worn ("Arma: Palo  ATK +2") and the totals; with a slot
+## What the menu says after using an item (Inventory.use()'s result).
+func _use_text(id: String, result: Dictionary) -> String:
+	match result.effect:
+		"mp":
+			return "Recuperas %d PM." % result.amount
+		"seed":
+			return "¡%s +%d para siempre!" % [Inventory.seed_stat(id), result.amount]
+	return "Recuperas %d PV." % result.amount
+
+
+## The four slots with what is worn ("Arma: Palo  ATK +2") and the totals; with a slot
 ## chosen, the pieces of that slot in the bag (bonus and comparison), Quitar and Volver.
 func _fill_equipment() -> void:
 	for child in _equip_box.get_children():
@@ -325,13 +340,12 @@ func _fill_equipment() -> void:
 		for slot in Equipment.SLOTS:
 			var worn := loadout.worn(slot)
 			var text := "%s: %s" % [Equipment.SLOT_NAMES[slot], "nada" if worn == "" \
-				else "%s  %s +%d" % [Equipment.display_name(worn), Equipment.stat_name(worn),
-				Equipment.bonus(worn)]]
+				else "%s  %s" % [Equipment.display_name(worn), Equipment.effect_text(worn)]]
 			var button := _button(text)
 			button.pressed.connect(_choose_slot.bind(slot))
 			_equip_box.add_child(button)
-		_equip_box.add_child(_label("ATK %d   DEF %d" % [hero.total_attack(),
-			hero.total_defense()], Color.WHITE))
+		_equip_box.add_child(_label("ATK %d   DEF %d   VEL %d" % [hero.total_attack(),
+			hero.total_defense(), hero.total_speed()], Color.WHITE))
 		_focus_first_in(_equip_box)
 		return
 	_equip_box.add_child(_label("%s:" % Equipment.SLOT_NAMES[_equip_slot], TITLE_COLOR))
@@ -347,10 +361,10 @@ func _fill_equipment() -> void:
 		button.custom_minimum_size = Vector2(260, 0)
 		button.pressed.connect(_on_equip.bind(id))
 		row.add_child(button)
-		row.add_child(_label("%s +%d" % [Equipment.stat_name(id), Equipment.bonus(id)],
-			Color.WHITE))
-		row.add_child(ShopWindow.comparison(
-			Equipment.bonus(id) - Equipment.bonus(loadout.worn(_equip_slot))))
+		row.add_child(_label(Equipment.effect_text(id), Color.WHITE))
+		if _equip_slot != Equipment.ACCESSORY:
+			row.add_child(ShopWindow.comparison(
+				Equipment.bonus(id) - Equipment.bonus(loadout.worn(_equip_slot))))
 	if listed.is_empty():
 		_equip_box.add_child(_label("No llevas otra pieza.", Color.WHITE))
 	if loadout.worn(_equip_slot) != "":
@@ -514,6 +528,13 @@ func _build_equipment(stack: VBoxContainer) -> void:
 	page.add_child(_equip_box)
 	_equip_message = _label("", Color.WHITE)
 	page.add_child(_equip_message)
+	page.add_child(_back_button())
+
+
+func _build_journal(stack: VBoxContainer) -> void:
+	var page := _page_box(stack, "journal", "Diario")
+	_journal = JournalPage.new()
+	page.add_child(_journal)
 	page.add_child(_back_button())
 
 

@@ -32,6 +32,12 @@ class_name Game extends Node
 ## to Villaclaro), marks the save as finished (story.finished) and rolls the credits with
 ## the numbers of the game (CreditsScreen); then it goes back to the title. A finished
 ## save loads in Villaclaro and the world can still be walked.
+## The side quests (GameState.quests): a villager or a board asks the QuestLog first (a
+## report, a figure found, a new offer) and says its chapter lines if it has nothing about
+## any; the map shows the marks and the sought figures it says. Each finished quest shows
+## for a few seconds (World.show_mission_done()) and no quest holds anything back. On
+## autoplay it reads and talks like a player on its route, uses the seeds at once and flies
+## back to report to whoever is waiting in the last village.
 ## On autoplay it prints the gold and the equipment each time they change, the level and
 ## the play time on every change of zone and, after the credits, the play time of the
 ## whole run (TitleScreen then quits). After a won battle, when the hero needs rest
@@ -320,7 +326,8 @@ func _on_encounter(boss: bool) -> void:
 	if boss:
 		enemies.append(EnemyLibrary.data(_zone.boss_id))
 	else:
-		enemies = EncounterTable.pick(_zone, _world.player_position(), _rng)
+		enemies = EncounterTable.pick(_zone, _world.player_position(), _rng,
+			state.quests.wanted_enemies())
 	await _fade_to(1.0)
 	_world.set_active(false)
 	_audio.play_music(MusicLibrary.BOSS if boss else MusicLibrary.BATTLE)
@@ -340,6 +347,7 @@ func _on_encounter(boss: bool) -> void:
 	var notice := ""
 	var scene := ""
 	var mission_done := false
+	var finished_quests: Array[Dictionary] = []
 	if won:
 		state.gold += battle.engine.gold_won
 		state.gold_earned += battle.engine.gold_won
@@ -350,6 +358,8 @@ func _on_encounter(boss: bool) -> void:
 				notice = _boss_notice(enemy)
 				scene = state.story.scene_after_boss(enemy.id)
 		mission_done = quest_was_on and state.quest.stage == Quest.Stage.DONE
+		for enemy in battle.engine.enemies:
+			finished_quests.append_array(state.quests.on_victory(state, enemy.id))
 	elif outcome == BattleEngine.State.LOST:
 		state.gold -= battle.gold_lost
 		state.heal_full()
@@ -376,14 +386,17 @@ func _on_encounter(boss: bool) -> void:
 		if notice != "":
 			_world.show_notice(notice)
 	if mission_done:
-		_world.show_mission_done(Quest.DONE_TEXT)
+		_world.show_mission_done(QuestLog.done_text(Quest.TITLE))
+	for finished: Dictionary in finished_quests:
+		_world.show_mission_done(QuestLog.done_text(finished.title))
+		_world.show_notice(" ".join(finished.lines))
 	if won and state.is_finished() and not state.story.finished:
 		await _finish_game()
 		return
 	if outcome == BattleEngine.State.LOST:
 		_autosave(false)  # the gold lost sticks: going back to the title can't undo it
 	if won:
-		var data := _autosave(not boss)
+		var data := _autosave(not boss and finished_quests.is_empty())  # keep its reward readable
 		if _autoplay_save and _save.is_empty() and not data.is_empty():
 			print("Guardado: %s" % _summary(data))
 			quit_to_title.emit()
@@ -400,10 +413,12 @@ func _on_encounter(boss: bool) -> void:
 		await _autoplay_restock()
 
 
-## Autoplay: needs rest (GameState.needs_rest()), or is only kept from the zone's boss by
-## its HP or MP, away from a village, with an Ala de viaje (the night at the inn is free).
+## Autoplay: needs rest (GameState.needs_rest()), is only kept from the zone's boss by its
+## HP or MP, or has a report waiting in the last village, away from a village, with an Ala
+## de viaje (the night at the inn is free). The route may never pass the one who waits.
 func _wants_retreat() -> bool:
-	return (state.needs_rest() or _boss_needs_rest()) and not _world.in_village() \
+	var report := not state.quests.reports_here(state.town_zone, state.inventory).is_empty()
+	return (state.needs_rest() or _boss_needs_rest() or report) and not _world.in_village() \
 		and state.inventory.count(Inventory.WING) > 0
 
 
@@ -436,6 +451,9 @@ func _autoplay_restock() -> void:
 	for npc: Dictionary in _zone.npcs:
 		if npc.kind == "shop":
 			await _on_shop(npc.id)
+	for i in _zone.npcs.size():
+		if _zone.npcs[i].name in state.quests.reports_here(_zone.id, state.inventory):
+			await _on_npc(i)
 
 
 ## Sets the boss's world flag, gives its key item and says so.
@@ -598,7 +616,8 @@ func _finish_game() -> void:
 	await _fade_to(0.0)
 	await credits.run(_credits_sections(time_text))
 	if _autoplay:
-		print("Juego completado: Nv %d, tiempo de juego %s" % [state.hero.level, time_text])
+		print("Juego completado: Nv %d, tiempo de juego %s, misiones %d" % [state.hero.level,
+			time_text, state.quests_done()])
 	quit_to_title.emit()
 
 
@@ -670,16 +689,35 @@ func _quest_npc() -> int:
 	return -1
 
 
-## A villager: says its lines (World.npc_lines(): they change with the chapter).
+## A villager or a board: what it has about a quest (the log moves the quest on and pays),
+## or else its lines (World.npc_lines(): they change with the chapter).
 func _on_npc(index: int) -> void:
 	if _busy:
 		return
 	_set_busy(true)
+	var figure: String = _zone.npcs[index].name
+	var talk := state.quests.talk(state, _zone.id, figure)
+	var said: Array = talk.get("lines", _world.npc_lines(index, state.chapter()))
 	var lines: Array[String] = []
-	for line in _world.npc_lines(index, state.chapter()):
+	for line: String in said:
 		lines.append(StoryState.fill(line, state.hero.display_name))
-	await _world.show_dialogue(_zone.npcs[index].name, lines)
+	await _world.show_dialogue(figure, lines)
+	if not talk.is_empty():
+		_after_quest_talk(talk.done)
 	_set_busy(false)
+
+
+## The map shows what changed; a finished quest says so; the game is saved.
+func _after_quest_talk(done_title: String) -> void:
+	if _autoplay:
+		for id in Inventory.SEEDS:
+			while state.inventory.count(id) > 0:
+				state.use_item(id)
+	_refresh_status()
+	if done_title != "":
+		_audio.play_sfx(SfxLibrary.LEVEL_UP)
+		_world.show_mission_done(QuestLog.done_text(done_title))
+	_autosave(done_title == "")
 
 
 ## The merchant: the ShopWindow until the player leaves; autosaves if anything changed.
@@ -839,12 +877,15 @@ func _set_busy(busy: bool) -> void:
 	_pause.available = not busy and not _autoplay
 
 
-## Updates the map's status window and the hero's weapon and shield; on autoplay also
-## prints each new quest line and each change of gold or equipment.
+## Updates the map's status window, the quests' marks and sought figures and the hero's
+## weapon and shield; on autoplay also prints each new quest line and each change of gold
+## or equipment.
 func _refresh_status() -> void:
 	var missions := state.current_missions()
 	_world.refresh_status(state.hero, state.inventory.count(Inventory.POTION), state.gold,
 		missions)
+	_world.set_quest_view(state.quests.markers(_zone.id, state.inventory),
+		state.quests.hidden_figures(_zone.id))
 	var loadout := state.loadout
 	_world.set_hero_equipment(loadout.worn(Equipment.WEAPON), loadout.worn(Equipment.SHIELD))
 	if _autoplay and missions != _last_missions:
@@ -854,8 +895,9 @@ func _refresh_status() -> void:
 	for slot in Equipment.SLOTS:
 		if loadout.worn(slot) != "":
 			worn.append(Equipment.display_name(loadout.worn(slot)))
-	var gear_text := "Oro %d G · Equipo: %s · ATK %d DEF %d" % [state.gold, ", ".join(worn),
-		state.hero.total_attack(), state.hero.total_defense()]
+	var gear_text := "Oro %d G · Equipo: %s · ATK %d DEF %d VEL %d" % [state.gold,
+		", ".join(worn), state.hero.total_attack(), state.hero.total_defense(),
+		state.hero.total_speed()]
 	if _autoplay and gear_text != _last_gear_text:
 		print(gear_text)
 	_last_gear_text = gear_text

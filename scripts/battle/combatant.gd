@@ -21,6 +21,9 @@ class_name Combatant extends Resource
 ## GameState.refresh_equipment() (never saved: the loadout is).
 @export var equip_attack := 0
 @export var equip_defense := 0
+@export var equip_speed := 0
+## Hero only: status effects the equipment keeps away.
+@export var equip_immune: Array[String] = []
 @export var speed := 1
 @export var skills: Array[Skill] = []
 ## Hero only: spell learned on reaching each level (level -> Skill).
@@ -74,6 +77,14 @@ func total_attack() -> int:
 
 func total_defense() -> int:
 	return defense + equip_defense
+
+
+func total_speed() -> int:
+	return speed + equip_speed
+
+
+func is_immune(status_id: String) -> bool:
+	return status_id in equip_immune
 
 
 func find_skill(skill_id: String) -> Skill:

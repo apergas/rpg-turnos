@@ -18,12 +18,15 @@ class_name World extends Node3D
 ## lantern underground, and next to the lever, the key or a locked gate Enter / Space
 ## pulls it (lever_pulled), takes it (key_taken) or tries the gate (door_used).
 ## Encounters and exits freeze the player until set_active(true) (or until Game frees
-## the map). Run on its own (res://scenes/world/world.tscn) it prints each encounter,
-## talk, shop, inn, chest and exit and goes on.
+## the map). A "!" or "?" floats over a figure with something about a quest, and a figure a
+## quest has not brought out is not on the map (set_quest_view()). Run on its own
+## (res://scenes/world/world.tscn) it prints each encounter, talk, shop, inn, chest and exit
+## and goes on.
 
 signal encounter_triggered(boss: bool)
 signal talk_requested
-## The player talked to the villager zone.npcs[index] (kind "npc").
+## The player talked to the villager zone.npcs[index] (kind "npc") or read the board (kind
+## "board").
 signal npc_requested(index: int)
 ## The player asked the merchant of shop_id (a Shop.SHOPS key) to trade.
 signal shop_requested(shop_id: String)
@@ -83,6 +86,7 @@ const LEVER := "lever"
 const KEY := "key"
 const DOOR := "door"
 const PORTAL := "portal"
+const BOARD := "board"
 const PROMPTS := {
 	TALK: "Enter o toca: hablar",
 	NPC: "Enter o toca: hablar",
@@ -93,9 +97,10 @@ const PROMPTS := {
 	KEY: "Enter o toca: coger",
 	DOOR: "Enter o toca: abrir",
 	PORTAL: "Enter o toca: volver",
+	BOARD: "Enter o toca: leer",
 }
 ## ZoneData.npcs kinds -> use kinds.
-const NPC_KINDS := {"quest": TALK, "npc": NPC, "shop": SHOP, "inn": INN}
+const NPC_KINDS := {"quest": TALK, "npc": NPC, "shop": SHOP, "inn": INN, "board": BOARD}
 ## Chest model: wooden box with a gold band and a lid hinged at the back.
 const CHEST_SIZE := Vector3(0.9, 0.45, 0.6)
 const CHEST_LID_HEIGHT := 0.2
@@ -118,6 +123,10 @@ const LANTERN_COLOR := Color(1.0, 0.85, 0.65)
 const LANTERN_ENERGY := 2.0
 const LANTERN_RANGE := 10.0
 const LANTERN_HEIGHT := 2.4
+## The "!" and "?" of the quests: over the figure, bobbing.
+const QUEST_MARK_COLOR := Color(1.0, 0.85, 0.2)
+const QUEST_MARK_GAP := 0.35
+const QUEST_MARK_BOB := 0.12
 
 ## The map to build; set before add_child.
 var zone: ZoneData
@@ -180,6 +189,10 @@ var _marker: MeshInstance3D
 var _audio: AudioDirector
 var _in_village := false
 var _step_m := 0.0
+## Figure name -> "!" or "?", the figures that are not on the map, and the labels so far.
+var _quest_marks := {}
+var _hidden_figures: Array[String] = []
+var _mark_labels := {}
 
 
 func _ready() -> void:
@@ -263,8 +276,11 @@ func _physics_process(_delta: float) -> void:
 		_player.move_target = null
 		_use(near)
 	elif not near.is_empty() and near != _was_near and _autoplay and near.kind != PORTAL:
-		# Autoplay talks to each villager once per visit to the zone.
-		if near.kind != NPC or not _autoplay_talked.has(near.index):
+		# Autoplay talks to each villager once per visit to the zone, and again when a
+		# mark over it says there is something new.
+		var chats: bool = near.kind == NPC or near.kind == BOARD
+		if not chats or not _autoplay_talked.has(near.index) \
+				or _quest_marks.has(zone.npcs[near.index].name):
 			_autoplay_talked[near.index] = true
 			_use(near)
 	_was_near = near
@@ -436,6 +452,7 @@ func begin_cutscene() -> void:
 	_use_on_arrival = {}
 	_status_column.hide()
 	_notice_window.hide()
+	_show_quest_marks()
 
 
 ## Puts every figure back on its spot, gives the camera back to the hero and the
@@ -445,6 +462,7 @@ func end_cutscene() -> void:
 	_camera.follow(_player)
 	_player.scripted = false
 	_status_column.show()
+	_show_quest_marks()
 	_meter.reset()
 	_was_near = {}
 	await freeze(false)
@@ -519,6 +537,51 @@ func freeze(on: bool) -> void:
 	await get_tree().process_frame
 	_player.input_enabled = true
 	_talking = false
+
+
+## What the quests show on this map (Game passes GameState.quests' answers): marks is figure
+## name -> "!" or "?"; hidden_names are figures not on the map now, with no collider and
+## nothing to use.
+func set_quest_view(marks: Dictionary, hidden_names: Array[String]) -> void:
+	_quest_marks = marks
+	_hidden_figures = hidden_names
+	for npc: Dictionary in zone.npcs:
+		var body: StaticBody3D = _figures[npc.name]
+		var shown := not hidden_names.has(npc.name)
+		body.visible = shown
+		body.process_mode = Node.PROCESS_MODE_INHERIT if shown else Node.PROCESS_MODE_DISABLED
+	_show_quest_marks()
+
+
+## One floating label per figure with a mark; none during a cutscene.
+func _show_quest_marks() -> void:
+	for npc: Dictionary in zone.npcs:
+		var text: String = _quest_marks.get(npc.name, "")
+		var label: Label3D = _mark_labels.get(npc.name)
+		if label == null:
+			if text == "":
+				continue
+			label = _build_mark(npc.name)
+		label.text = text
+		label.visible = text != "" and not _player.scripted
+
+
+func _build_mark(figure_name: String) -> Label3D:
+	var label := Label3D.new()
+	label.font_size = 96
+	label.pixel_size = 0.01
+	label.outline_size = 16
+	label.modulate = QUEST_MARK_COLOR
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	label.position.y = figure_actor(figure_name).top_height() + QUEST_MARK_GAP
+	(_figures[figure_name] as Node3D).add_child(label)
+	_mark_labels[figure_name] = label
+	var bob := label.create_tween().set_loops()
+	bob.tween_property(label, "position:y", label.position.y + QUEST_MARK_BOB, 0.5) \
+		.set_trans(Tween.TRANS_SINE)
+	bob.tween_property(label, "position:y", label.position.y, 0.5).set_trans(Tween.TRANS_SINE)
+	return label
 
 
 ## Shows the weapon and shield worn on the hero (Equipment ids, "" for none).
@@ -666,6 +729,8 @@ func _uses() -> Array[Dictionary]:
 	var uses: Array[Dictionary] = []
 	for i in zone.npcs.size():
 		var npc: Dictionary = zone.npcs[i]
+		if _hidden_figures.has(npc.name):
+			continue
 		uses.append({"kind": NPC_KINDS[npc.kind], "id": npc.get("id", ""), "index": i,
 			"pos": npc.pos, "radius": TALK_RADIUS})
 	for id in _chest_lids:
@@ -692,7 +757,7 @@ func _use(use: Dictionary) -> void:
 	match use.get("kind", ""):
 		TALK:
 			talk_requested.emit()
-		NPC:
+		NPC, BOARD:
 			npc_requested.emit(use.index)
 		SHOP:
 			shop_requested.emit(use.id)

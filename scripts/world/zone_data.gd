@@ -105,7 +105,8 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## (zone id), "entry" (entry id there), "label" (sign text), "lock" (GameState.world_flags
 ## key that opens it, "" for always open), "lock_text" (notice while it is closed)}.
 @export var exits: Array = []
-## Each figure: {"kind": "quest" (the old woman), "shop", "inn" or "npc", "id" (Shop /
+## Each figure: {"kind": "quest" (the old woman), "shop", "inn", "npc" or "board" (a notice
+## board: read, not talked to), "id" (Shop /
 ## Inn id), "look" (BattleActor.Look name), "pos", "yaw" (0 faces -Z; 180 faces the
 ## camera), "name" (unique on the map: cutscenes call the figure by it), and what it says:
 ## "lines" and / or "lines_by_chapter" (StoryState.Chapter -> lines, from that chapter on;
@@ -123,6 +124,10 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var start_formations: Array = []
 @export var start_pos := Vector3.ZERO
 @export var start_radius := 0.0
+## An enemy that only comes while a quest hunts it, alone, with this chance per encounter
+## (EnemyLibrary id, "" for none).
+@export var rare_enemy := ""
+@export var rare_chance := 0.0
 ## EncounterMeter: free meters after each battle, then this chance per meter on grass.
 @export var encounter_grace := 9.0
 @export var encounter_chance := 0.01

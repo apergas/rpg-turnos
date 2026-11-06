@@ -56,6 +56,19 @@ npcs = [{
 "name": "Soldado",
 "pos": Vector3(-5, 0, 23),
 "yaw": 180.0
+}, {
+"kind": "board",
+"lines": ["Parte del día: niebla. Parte de ayer: niebla.", "Debajo: parte de mañana, a que no lo adivinas."],
+"look": "BOARD",
+"name": "Tablón",
+"pos": Vector3(2.5, 0, 14.5),
+"yaw": 180.0
+}, {
+"kind": "npc",
+"look": "FARMER",
+"name": "Explorador",
+"pos": Vector3(-20.5, 0, 0.5),
+"yaw": 90.0
 }]
 formations = [["esqueleto_guerrero"], ["esqueleto_picaro"], ["esqueleto_mago"], ["esqueleto_picaro"], ["esqueleto_guerrero", "esqueleto_mago"], ["esqueleto_picaro", "esqueleto_mago"]]
 start_formations = [["esqueleto_guerrero"], ["esqueleto_picaro"], ["esqueleto_mago"]]

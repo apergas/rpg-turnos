@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "slime_metal"
+display_name = "Slime de Metal"
+max_hp = 40
+hp = 40
+attack = 28
+defense = 300
+speed = 30
+exp_reward = 300
+gold_reward = 150
+ai_weights = {
+"attack": 35,
+"escape": 30,
+"stagger": 15
+}
+resist = Array[String](["fire", "ice", "thunder"])

@@ -92,6 +92,13 @@ npcs = [{
 "name": "Granjero",
 "pos": Vector3(3.5, 0, -15.5),
 "yaw": 180.0
+}, {
+"kind": "board",
+"lines": ["Aviso viejo: se vende gallina que pone de lado. Razón, el Granjero.", "Otro más viejo aún: se regala gallina."],
+"look": "BOARD",
+"name": "Tablón",
+"pos": Vector3(2.8, 0, -17.3),
+"yaw": 180.0
 }]
 boss_id = "rey_slime"
 boss_pos = Vector3(0, 0, -27.5)
@@ -99,6 +106,8 @@ formations = [["slime"], ["slime"], ["bat"], ["mushroom"], ["slime", "slime"], [
 start_formations = [["slime"], ["slime", "slime"]]
 start_pos = Vector3(0, 0, 26)
 start_radius = 20.0
+rare_enemy = "slime_metal"
+rare_chance = 0.25
 encounter_grace = 9.0
 encounter_chance = 0.01
 music = "map"

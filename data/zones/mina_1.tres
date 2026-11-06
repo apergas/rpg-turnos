@@ -56,6 +56,13 @@ npcs = [{
 "name": "Minera",
 "pos": Vector3(-10, 0, 19),
 "yaw": 180.0
+}, {
+"kind": "board",
+"lines": ["Aviso: quien coja un pico prestado, que lo devuelva.", "Debajo, con la letra de la Minera: y sin mellas."],
+"look": "BOARD",
+"name": "Tablón",
+"pos": Vector3(-3, 0, 17),
+"yaw": 180.0
 }]
 formations = [["golem_barro"], ["arana"], ["espectro"], ["arana"], ["arana", "espectro"], ["golem_barro", "arana"]]
 start_formations = [["golem_barro"], ["arana"], ["espectro"]]
