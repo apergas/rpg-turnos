@@ -20,3 +20,4 @@ Primera versión completa de **Villaclaro: la Niebla del Norte**.
 - Teclas reasignables.
 - Versiones de escritorio para Windows y Linux.
 - Listas con desplazamiento y textos largos que ya no se salen de las ventanas.
+- Se puede jugar en el navegador del móvil, en apaisado: palanca flotante, zoom con dos dedos, botones grandes y se instala en la pantalla de inicio.
