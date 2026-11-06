@@ -32,7 +32,7 @@ const ITEMS := {
 	WING: {"name": "Ala de viaje", "article": "un", "effect": "travel", "value": 0,
 		"price": 25, "battle": false, "field": true,
 		"text": "Te lleva al último pueblo y deja un portal para volver una vez."},
-	SETA: {"name": "Seta", "article": "una", "effect": "quest", "value": 0, "price": 4,
+	SETA: {"name": "Seta", "article": "una", "effect": "quest", "value": 0, "price": 0,
 		"battle": false, "field": false,
 		"text": "De las que saltan. Alguien de Villaclaro las anda buscando."},
 	SEED_ATTACK: {"name": "Semilla de fuerza", "article": "una", "effect": "seed",

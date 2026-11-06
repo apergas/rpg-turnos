@@ -28,4 +28,6 @@ static func _give_piece(state: GameState, piece: String) -> String:
 	if state.loadout.worn(Equipment.slot(piece)) == "":
 		state.equip(piece)
 		text += " Te %s equipas." % Equipment.pronoun(piece)
+	else:
+		text += " Está en tu bolsa."
 	return text

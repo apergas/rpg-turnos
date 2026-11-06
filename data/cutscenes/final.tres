@@ -19,7 +19,7 @@ steps = [
 ["approach", "Abuela Rosa", "hero", 1.8],
 ["face", "hero", "Abuela Rosa"],
 ["move", "Mercader", Vector3(-1.8, 0, -13.4), true],
-["move", "Posadero", Vector3(3, 0, -16.4), true],
+["move", "Posadero", Vector3(4.4, 0, -16.2), true],
 ["move", "Granjero", Vector3(3.2, 0, -13.4)],
 ["face", "Mercader", "hero"],
 ["face", "Posadero", "hero"],

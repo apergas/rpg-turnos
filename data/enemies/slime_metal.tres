@@ -15,7 +15,7 @@ exp_reward = 300
 gold_reward = 150
 ai_weights = {
 "attack": 35,
-"escape": 50,
+"escape": 30,
 "stagger": 15
 }
 resist = Array[String](["fire", "ice", "thunder"])
