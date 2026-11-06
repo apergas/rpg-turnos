@@ -607,6 +607,7 @@ func _button(text: String) -> Button:
 	var button := Button.new()
 	button.text = text
 	button.flat = true
+	UiStyle.fit_finger(button)
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.add_theme_font_size_override("font_size", FONT_SIZE)
 	button.focus_entered.connect(func() -> void:
