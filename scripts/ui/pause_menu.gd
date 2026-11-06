@@ -18,16 +18,20 @@ signal state_changed
 ## An Ala de viaje was used (the menu closes): Game takes the hero to the last village and
 ## leaves the portal back.
 signal travel_requested
+## The menu opened or closed: the map hides its status window behind it.
+signal open_changed(is_open: bool)
 
 const FONT_SIZE := 24
-const TEXT_SIZE := 18
-const TITLE_COLOR := Color(1.0, 0.85, 0.3)
-const GREY := Color(0.6, 0.6, 0.65)
+const TITLE_COLOR := UiStyle.TITLE_COLOR
+const GREY := UiStyle.GREY
 ## Rows of the hero's window: text and page. A new page only needs its row here.
 const HERO_PAGES := [["Estado", "status"], ["Objetos", "items"], ["Equipo", "equipment"],
 	["Diario", "journal"]]
 ## Long texts wrap past this width.
 const TEXT_WIDTH := 480.0
+const MISSION_WIDTH := 420.0
+## What the title, the message, Volver and the margins leave out of a page's scrolling list.
+const LIST_RESERVED := 200.0
 const STATUS_BAR_WIDTH := 300.0
 const MENU_BUTTON_SIZE := Vector2(64, 64)
 const MENU_BUTTON_MARGIN := 24.0
@@ -123,6 +127,7 @@ func open() -> void:
 	_set_line(_main_message, "")
 	_sfx(SfxLibrary.ACCEPT)
 	_show_page("main")
+	open_changed.emit(true)
 
 
 func close() -> void:
@@ -135,6 +140,7 @@ func close() -> void:
 	_sfx(SfxLibrary.CANCEL)
 	get_tree().paused = false
 	available = available
+	open_changed.emit(false)
 
 
 ## Game calls it after save_requested with whether the file was written.
@@ -227,7 +233,9 @@ func _fill_main() -> void:
 		_mission_box.remove_child(child)
 		child.queue_free()
 	for line in _state.current_missions():
-		_mission_box.add_child(_label(line, Color.WHITE))
+		var label := _label("", Color.WHITE)
+		_mission_box.add_child(label)
+		BattleHud.fit_label(label, line, MISSION_WIDTH)
 
 
 func _fill_status() -> void:
@@ -268,7 +276,7 @@ func _fill_items() -> void:
 		_items_box.add_child(row)
 		var label := _label("%s ×%d" % [Inventory.display_name(id), inventory.count(id)],
 			Color.WHITE)
-		label.custom_minimum_size = Vector2(220, 0)
+		label.custom_minimum_size = Vector2(260, 0)
 		row.add_child(label)
 		var use := _button("Usar")
 		var why := _use_problem(id)
@@ -277,17 +285,17 @@ func _fill_items() -> void:
 		row.add_child(use)
 		if why != "":
 			row.add_child(_label(why, GREY))
-		_items_box.add_child(_description(id))
+		UiStyle.add_description(_items_box, id)
 	for id in _state.key_items:
 		any = true
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 16)
 		_items_box.add_child(row)
 		var label := _label(Inventory.KEY_ITEMS[id], TITLE_COLOR)
-		label.custom_minimum_size = Vector2(220, 0)
+		label.custom_minimum_size = Vector2(260, 0)
 		row.add_child(label)
 		row.add_child(_label("Objeto clave", GREY))
-		_items_box.add_child(_description(id))
+		UiStyle.add_description(_items_box, id)
 	if not any:
 		_items_box.add_child(_label("No llevas objetos.", Color.WHITE))
 
@@ -515,8 +523,9 @@ func _build_status(stack: VBoxContainer) -> void:
 
 func _build_items(stack: VBoxContainer) -> void:
 	var page := _page_box(stack, "items", "Objetos")
-	_items_box = VBoxContainer.new()
-	page.add_child(_items_box)
+	var scroll := ScrollBox.new(LIST_RESERVED)
+	page.add_child(scroll)
+	_items_box = scroll.content
 	_items_message = _label("", Color.WHITE)
 	page.add_child(_items_message)
 	page.add_child(_back_button())
@@ -533,8 +542,10 @@ func _build_equipment(stack: VBoxContainer) -> void:
 
 func _build_journal(stack: VBoxContainer) -> void:
 	var page := _page_box(stack, "journal", "Diario")
+	var scroll := ScrollBox.new(LIST_RESERVED)
+	page.add_child(scroll)
 	_journal = JournalPage.new()
-	page.add_child(_journal)
+	scroll.content.add_child(_journal)
 	page.add_child(_back_button())
 
 
@@ -599,13 +610,6 @@ func _button(text: String) -> Button:
 		if not _quiet_focus:
 			_sfx(SfxLibrary.CURSOR))
 	return button
-
-
-## What an item or a key item does, small, under its row.
-func _description(id: String) -> Label:
-	var label := _label(Inventory.description(id), GREY)
-	label.add_theme_font_size_override("font_size", TEXT_SIZE)
-	return label
 
 
 func _label(text: String, color: Color) -> Label:

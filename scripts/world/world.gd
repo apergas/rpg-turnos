@@ -127,6 +127,8 @@ const LANTERN_HEIGHT := 2.4
 const QUEST_MARK_COLOR := Color(1.0, 0.85, 0.2)
 const QUEST_MARK_GAP := 0.35
 const QUEST_MARK_BOB := 0.12
+## Mission lines wrap past this width, so the status window stays at the side of the screen.
+const MISSION_WIDTH := 420.0
 
 ## The map to build; set before add_child.
 var zone: ZoneData
@@ -607,6 +609,12 @@ func set_chest_open(chest_id: String, open: bool, instant := false) -> void:
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
+## The pause menu covers the middle of the screen and says the same as the status window,
+## which goes away behind it (with the map square).
+func set_status_shown(on: bool) -> void:
+	_status_column.visible = on
+
+
 func refresh_status(hero: Combatant, potions: int, gold: int, missions: Array[String] = []) -> void:
 	_name_label.text = StatBar.hero_title(hero)
 	_hp_bar.show_hp(hero.hp, hero.max_hp)
@@ -641,9 +649,9 @@ func _show_missions(lines: Array[String], color: Color) -> void:
 		child.queue_free()
 	for line in lines:
 		var label := _label()
-		label.text = line
 		label.add_theme_color_override("font_color", color)
 		_mission_box.add_child(label)
+		BattleHud.fit_label(label, line, MISSION_WIDTH)
 
 
 ## Shows a short line in its own window for NOTICE_TIME seconds (a newer one replaces it).

@@ -11,6 +11,8 @@ const SPEAKER_COLOR := Color(1.0, 0.85, 0.3)
 const AUTOPLAY_DELAY := 0.8
 const MAX_WIDTH := 1000.0
 const BOTTOM := 24.0
+## Screen margins and window margins: what a line can't use of the screen's width.
+const SIDE_ROOM := 76.0
 
 var _autoplay := false
 var _listening := false
@@ -88,8 +90,9 @@ func _fit_to(lines: Array[String]) -> void:
 		if line_width > width:
 			longest = text
 			width = line_width
-	BattleHud.fit_label(_line, longest, MAX_WIDTH)
-	_line.custom_minimum_size.x = minf(width, MAX_WIDTH)
+	var room := minf(MAX_WIDTH, get_viewport_rect().size.x - SIDE_ROOM)
+	BattleHud.fit_label(_line, longest, room)
+	_line.custom_minimum_size.x = minf(width, room)
 
 
 func _label(color: Color) -> Label:

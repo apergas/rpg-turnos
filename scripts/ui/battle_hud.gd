@@ -557,7 +557,8 @@ func _build_bottom() -> void:
 
 ## Sets the message and fits its window to it, in the room the command window leaves.
 func _set_message(text: String) -> void:
-	var room := get_viewport_rect().size.x - EDGE * 2.0 - GAP - maxf(_menu.size.x, MENU_WIDTH)
+	var menu_width := maxf(_menu.get_combined_minimum_size().x, MENU_WIDTH)
+	var room := get_viewport_rect().size.x - EDGE * 2.0 - GAP - menu_width
 	fit_label(_message, text, room - WINDOW_MARGIN.x * 2.0)
 
 

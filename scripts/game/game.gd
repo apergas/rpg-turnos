@@ -963,6 +963,8 @@ func _build_pause() -> void:
 	_pause.travel_requested.connect(_on_travel_requested)
 	_pause.in_village = func() -> bool: return _world.in_village()
 	_pause.state_changed.connect(_refresh_status)
+	_pause.open_changed.connect(func(is_open: bool) -> void:
+		_world.set_status_shown(not is_open))
 	_pause.available = not _autoplay
 
 
