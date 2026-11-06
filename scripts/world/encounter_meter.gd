@@ -2,10 +2,10 @@ class_name EncounterMeter extends RefCounted
 ## Random encounter rule. Only meters walked on grass count. After reset() the first
 ## grace_m meters are free; after that every full meter has chance_per_m of a battle.
 ## Each zone sets its own pace (ZoneData.encounter_grace / encounter_chance); the
-## meadow and the forest use 9 m and 1 %: a battle every ~110 m, ~22 s walking at 5 m/s.
+## meadow and the forest use 5 m and 2.5 %: a battle every ~45 m of grass, ~9 s at 5 m/s.
 
-const GRACE_M := 9.0
-const CHANCE_PER_M := 0.01
+const GRACE_M := 5.0
+const CHANCE_PER_M := 0.025
 
 var grace_m := GRACE_M
 var chance_per_m := CHANCE_PER_M

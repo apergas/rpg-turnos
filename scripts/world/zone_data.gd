@@ -129,8 +129,8 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var rare_enemy := ""
 @export var rare_chance := 0.0
 ## EncounterMeter: free meters after each battle, then this chance per meter on grass.
-@export var encounter_grace := 9.0
-@export var encounter_chance := 0.01
+@export var encounter_grace := 5.0
+@export var encounter_chance := 0.025
 
 @export_group("Look and sound")
 @export var music := "map"
