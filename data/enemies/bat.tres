@@ -6,9 +6,9 @@
 script = ExtResource("1_combatant")
 id = "bat"
 display_name = "Murciélago"
-max_hp = 26
-hp = 26
-attack = 10
+max_hp = 22
+hp = 22
+attack = 8
 defense = 2
 speed = 12
 exp_reward = 5

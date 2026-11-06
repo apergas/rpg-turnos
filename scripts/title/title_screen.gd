@@ -297,6 +297,13 @@ func _build_menu() -> void:
 	_options_button = _button("Opciones")
 	_options_button.pressed.connect(_open_options)
 	menu.add_child(_options_button)
+	if Device.is_touch() and not Device.is_ios() and get_window().mode != Window.MODE_FULLSCREEN:
+		# The browser's bar takes a quarter of the height, and fullscreen needs a press.
+		var fullscreen := _button("Pantalla completa")
+		fullscreen.pressed.connect(func() -> void:
+			get_window().mode = Window.MODE_FULLSCREEN
+			fullscreen.hide())
+		menu.add_child(fullscreen)
 	_options_window = BattleHud.make_window()
 	_options_window.hide()
 	center.add_child(_options_window)
@@ -337,6 +344,7 @@ func _button(text: String) -> Button:
 	var button := Button.new()
 	button.text = text
 	button.flat = true
+	UiStyle.fit_finger(button)
 	button.add_theme_font_size_override("font_size", FONT_SIZE)
 	button.focus_entered.connect(func() -> void:
 		if not _quiet_focus:
