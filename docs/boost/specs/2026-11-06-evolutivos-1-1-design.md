@@ -232,15 +232,12 @@ Pendiente de aprobar. Lo no listado se queda como está: el tono y el humor de l
 
 | # | Dónde | Ahora | Propuesta | Por qué |
 |---|---|---|---|---|
-| A1 | `battle_scene.gd:349` | "%s está dormido" o "dormida" | "%s sigue durmiendo." | Con un nombre femenino dice "¡Rocío está dormido!". El héroe no tiene género |
-| A2 | `battle_scene.gd:439` | "¡%s está envenenado!" o "envenenada" | "¡%s se envenena!" | Igual |
-| A3 | `battle_scene.gd:454` | "¡%s ya no está envenenado!" o "envenenada" | "¡%s se cura del veneno!" | Igual |
-| A4 | `inventory.gd:119` | "Fuera de combate" | "Solo fuera de combate" | Se lee como "derrotado", y sobre todo junto a "Solo en combate" |
-| A5 | `mina.tres:12` | "Ah, no eres un esqueleto." | "Ah, no eres un espectro." | En la mina no hay esqueletos: están en el castillo |
-| A6 | `inventory.gd:70` y `game.gd:80`, `mina_3.tres:45` | "reja" y "puerta" para lo mismo | "reja" en los tres: "Abre la reja...", "Abres la reja con la %s.", "La reja está cerrada con llave." | Es una reja de hierro y debe llamarse igual |
-| A7 | `game.gd:74` | "¡Villaclaro está a salvo! La niebla del norte se disipa..." | "¡Villaclaro está a salvo! La niebla deja libre el camino del norte." | La niebla sigue ahí hasta el final del juego |
-| A8 | `stat_bar.gd:30`, `battle_hud.gd:116` | "Héroe lvl 3" | "Héroe Nv 3" | "lvl" es inglés |
-| A9 | `slime_metal.tres` | Nombra la pradera | "Se busca: Slime de Metal, visto por las galerías de la mina. Muy rápido y muy duro." · "Derrota al Slime de Metal, que se deja ver por la mina. Huye en cuanto puede." · "Slime de Metal (mina)" | Consecuencia del punto 1.1 |
+| A1 | `inventory.gd:119` | "Fuera de combate" | "Solo fuera de combate" | Se lee como "derrotado", y sobre todo junto a "Solo en combate" |
+| A2 | `mina.tres:12` | "Ah, no eres un esqueleto." | "Ah, no eres un espectro." | En la mina no hay esqueletos: están en el castillo |
+| A3 | `inventory.gd:70` y `game.gd:80`, `mina_3.tres:45` | "reja" y "puerta" para lo mismo | "reja" en los tres: "Abre la reja...", "Abres la reja con la %s.", "La reja está cerrada con llave." | Es una reja de hierro y debe llamarse igual |
+| A4 | `game.gd:74` | "¡Villaclaro está a salvo! La niebla del norte se disipa..." | "¡Villaclaro está a salvo! La niebla deja libre el camino del norte." | La niebla sigue ahí hasta el final del juego |
+| A5 | `stat_bar.gd:30`, `battle_hud.gd:116` | "Héroe lvl 3" | "Héroe Nv 3" | "lvl" es inglés |
+| A6 | `slime_metal.tres` | Nombra la pradera | "Se busca: Slime de Metal, visto por las galerías de la mina. Muy rápido y muy duro." · "Derrota al Slime de Metal, que se deja ver por la mina. Huye en cuanto puede." · "Slime de Metal (mina)" | Consecuencia del punto 1.1 |
 
 ### B. Claridad
 
