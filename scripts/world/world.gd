@@ -669,8 +669,8 @@ func _build_mark(figure_name: String) -> Label3D:
 
 
 ## Shows the weapon and shield worn on the hero (Equipment ids, "" for none).
-func set_hero_equipment(weapon_id: String, shield_id: String) -> void:
-	_player.set_equipment(weapon_id, shield_id)
+func set_hero_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> void:
+	_player.set_equipment(weapon_id, shield_id, helmet_id)
 
 
 ## Opens (lid tipped back, tweened unless instant) or closes a chest of this zone. An

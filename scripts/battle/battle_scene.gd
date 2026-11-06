@@ -92,6 +92,7 @@ var _audio: AudioDirector
 ## Equipment ids the hero's figure shows (set_equipment()).
 var _weapon_id := Equipment.STICK
 var _shield_id := ""
+var _helmet_id := ""
 
 
 ## The hero and the inventory are used as is, so HP, MP, EXP and items stay with the
@@ -113,11 +114,12 @@ func set_audio(audio: AudioDirector) -> void:
 	_audio = audio
 
 
-## The weapon and shield the hero's figure holds (Equipment ids, "" for none). Call
-## before adding it to the tree; without it the hero holds the starting Palo.
-func set_equipment(weapon_id: String, shield_id: String) -> void:
+## The weapon, shield and helmet the hero's figure shows (Equipment ids, "" for none).
+## Call before adding it to the tree; without it the hero holds the starting Palo.
+func set_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> void:
 	_weapon_id = weapon_id
 	_shield_id = shield_id
+	_helmet_id = helmet_id
 
 
 func _ready() -> void:
@@ -130,7 +132,7 @@ func _ready() -> void:
 	Engine.time_scale = time_scale
 	BattleStage.build(self, zone)
 	_hero_actor = _spawn_actor(BattleActor.Look.HERO, HERO_POS, ENEMY_POS)
-	_hero_actor.set_equipment(_weapon_id, _shield_id)
+	_hero_actor.set_equipment(_weapon_id, _shield_id, _helmet_id)
 	for i in enemies.size():
 		_enemy_actors.append(_spawn_actor(EnemyLibrary.look(enemies[i].id),
 			_slot(i, enemies.size()), HERO_POS))

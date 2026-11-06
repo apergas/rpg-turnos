@@ -18,15 +18,19 @@ class_name SaveData extends RefCounted
 ## (StoryState.mark_seen_for_flags()) and the numbers at 0. QUESTS_VERSION (the side quests)
 ## adds the accessory slot to the loadout and the side quests' progress; an older save gets
 ## the slot empty and no side quest taken. DIFFICULTY_VERSION (phase 7) adds the difficulty;
-## an older save plays on Normal.
+## an older save plays on Normal. EVOLUTION_VERSION (1.1.0) adds the helmet slot, the
+## enemies seen, the wells' charge and the creature; an older save gets the slot empty,
+## the bosses it has beaten seen, every well full and no creature.
 
-const VERSION := 8
+const VERSION := 9
 ## First version with the story's fields.
 const STORY_VERSION := 6
 ## First version with the accessory slot and the side quests.
 const QUESTS_VERSION := 7
 ## First version with the difficulty.
 const DIFFICULTY_VERSION := 8
+## First version with the helmet slot, the bestiary, the wells and the creature.
+const EVOLUTION_VERSION := 9
 ## Oldest version apply() still reads.
 const OLDEST_VERSION := 2
 ## Combatant fields of the hero that change while playing (the rest come from hero.tres).
@@ -223,6 +227,8 @@ static func _valid_equipment(data: Dictionary) -> bool:
 		return false
 	for slot in Equipment.SLOTS:
 		if slot == Equipment.ACCESSORY and int(data.version) < QUESTS_VERSION:
+			continue
+		if slot == Equipment.HELMET and int(data.version) < EVOLUTION_VERSION:
 			continue
 		var id: Variant = (loadout as Dictionary).get(slot)
 		if not id is String or (id != "" and Equipment.slot(id) != slot):

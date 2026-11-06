@@ -13,22 +13,23 @@ const CASTILLO := "castillo"
 const SHOPS := {
 	VILLACLARO: {
 		"keeper": "Mercader",
-		"equipment": [Equipment.COPPER_SWORD, Equipment.LEATHER_MAIL, Equipment.WOODEN_SHIELD],
+		"equipment": [Equipment.COPPER_SWORD, Equipment.LEATHER_MAIL, Equipment.WOODEN_SHIELD,
+			"casco_cobre"],
 		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.WING],
 	},
 	BOSQUE: {
 		"keeper": "Mercader",
-		"equipment": ["espada_hierro", "cota_malla", "escudo_hierro"],
+		"equipment": ["espada_hierro", "cota_malla", "escudo_hierro", "casco_hierro"],
 		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.WING],
 	},
 	MINA: {
 		"keeper": "Herrero",
-		"equipment": ["espada_acero", "armadura_acero", "escudo_acero"],
+		"equipment": ["espada_acero", "armadura_acero", "escudo_acero", "casco_acero"],
 		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.WING],
 	},
 	CASTILLO: {
 		"keeper": "Mercader",
-		"equipment": ["espada_platino", "armadura_platino", "escudo_platino"],
+		"equipment": ["espada_platino", "armadura_platino", "escudo_platino", "casco_platino"],
 		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.WING],
 	},
 }

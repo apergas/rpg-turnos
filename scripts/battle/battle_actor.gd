@@ -129,6 +129,7 @@ const HERO_HEAD_TEXTURE := preload("res://assets/characters/hero_head_texture.pn
 const HERO_TUNIC := Color(0.75, 1.0, 1.7)
 const HERO_LEGS := Color(0.95, 0.75, 0.6)
 ## Hand slots of the KayKit characters (BoneAttachment3D nodes).
+const HELMET_PATH := "Rig/Skeleton3D/head/Knight_Helmet"
 const HAND_R := "Rig/Skeleton3D/handslot_r"
 const HAND_L := "Rig/Skeleton3D/handslot_l"
 ## The wooden stick built in code for Equipment.STICK_MESH: along the hand's +Y like the
@@ -472,14 +473,22 @@ func set_walking(on: bool) -> void:
 
 
 ## Hero only: shows the hand meshes of the weapon and shield worn (Equipment ids, ""
-## for none) and hides the rest. Armor does not change the model. Others ignore it.
-func set_equipment(weapon_id: String, shield_id: String) -> void:
+## for none) and hides the rest. A helmet shows the model's helmet mesh tinted with its
+## color. Armor does not change the model. Others ignore it.
+func set_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> void:
 	if look != Look.HERO or _model == null:
 		return
 	var shown := {HAND_R: Equipment.mesh(weapon_id), HAND_L: Equipment.mesh(shield_id)}
 	for hand: String in shown:
 		for child in _model.get_node(hand).get_children():
 			(child as Node3D).visible = child.name == shown[hand] and shown[hand] != ""
+	var helmet := _model.get_node(HELMET_PATH) as MeshInstance3D
+	helmet.visible = helmet_id != ""
+	if helmet_id != "":
+		# Drop the previous tint first, or _tint_mesh() would multiply onto it.
+		for i in helmet.mesh.get_surface_count():
+			helmet.set_surface_override_material(i, null)
+		_tint_mesh(helmet, Equipment.helmet_tint(helmet_id))
 
 
 ## Swings (characters) and lunges toward the target and steps back; the plant opens

@@ -8,6 +8,7 @@ var _slots := {
 	Equipment.ARMOR: Equipment.CLOTHES,
 	Equipment.SHIELD: "",
 	Equipment.ACCESSORY: "",
+	Equipment.HELMET: "",
 }
 
 
@@ -40,7 +41,8 @@ func attack_bonus() -> int:
 
 
 func defense_bonus() -> int:
-	return Equipment.bonus(worn(Equipment.ARMOR)) + Equipment.bonus(worn(Equipment.SHIELD))
+	return Equipment.bonus(worn(Equipment.ARMOR)) + Equipment.bonus(worn(Equipment.SHIELD)) \
+		+ Equipment.bonus(worn(Equipment.HELMET))
 
 
 func speed_bonus() -> int:

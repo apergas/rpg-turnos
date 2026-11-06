@@ -342,7 +342,7 @@ func _on_encounter(boss: bool) -> void:
 	battle.setup(state.hero, enemies, state.inventory)
 	battle.set_audio(_audio)
 	battle.set_equipment(state.loadout.worn(Equipment.WEAPON),
-		state.loadout.worn(Equipment.SHIELD))
+		state.loadout.worn(Equipment.SHIELD), state.loadout.worn(Equipment.HELMET))
 	battle.gold_lost = state.defeat_gold_loss()
 	battle.char_time = _options.char_time()
 	battle.time_scale = _options.combat_scale()
@@ -896,7 +896,8 @@ func _refresh_status() -> void:
 	_world.set_quest_view(state.quests.markers(_zone.id, state.inventory),
 		state.quests.hidden_figures(_zone.id))
 	var loadout := state.loadout
-	_world.set_hero_equipment(loadout.worn(Equipment.WEAPON), loadout.worn(Equipment.SHIELD))
+	_world.set_hero_equipment(loadout.worn(Equipment.WEAPON), loadout.worn(Equipment.SHIELD),
+		loadout.worn(Equipment.HELMET))
 	if _autoplay and missions != _last_missions:
 		print(" · ".join(missions))
 	_last_missions = missions
