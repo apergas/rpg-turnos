@@ -9,17 +9,24 @@ class_name World extends Node3D
 ## one of them walks there and does it on arrival. With the boss present, walking into
 ## it starts the boss battle. Walking into an open exit (or onto the stairs of a dungeon
 ## floor) emits exit_requested; a closed one (its world flag not set: set_world_flags())
-## shows its fog and its notice. A dungeon floor (ZoneData.layout) is a DungeonMap: its
+## shows its fog and its notice. With set_portal(true) the zone's portal_pos holds the
+## return portal of an Ala de viaje, used like a figure (portal_used); set_return_mark()
+## shows on the ground the spot it leads back to. Under the status window a MapSquare shows
+## what has been seen of the zone (set_explored()). A dungeon floor (ZoneData.layout) is a
+## DungeonMap: its
 ## rock blocks turn see-through between the camera and the hero, the hero carries a
 ## lantern underground, and next to the lever, the key or a locked gate Enter / Space
 ## pulls it (lever_pulled), takes it (key_taken) or tries the gate (door_used).
 ## Encounters and exits freeze the player until set_active(true) (or until Game frees
-## the map). Run on its own (res://scenes/world/world.tscn) it prints each encounter,
-## talk, shop, inn, chest and exit and goes on.
+## the map). A "!" or "?" floats over a figure with something about a quest, and a figure a
+## quest has not brought out is not on the map (set_quest_view()). Run on its own
+## (res://scenes/world/world.tscn) it prints each encounter, talk, shop, inn, chest and exit
+## and goes on.
 
 signal encounter_triggered(boss: bool)
 signal talk_requested
-## The player talked to the villager zone.npcs[index] (kind "npc").
+## The player talked to the villager zone.npcs[index] (kind "npc") or read the board (kind
+## "board").
 signal npc_requested(index: int)
 ## The player asked the merchant of shop_id (a Shop.SHOPS key) to trade.
 signal shop_requested(shop_id: String)
@@ -32,15 +39,29 @@ signal chest_opened(chest_id: String)
 signal village_changed(inside: bool)
 ## The player walked into an open exit: Game loads zone_id at its entry entry_id.
 signal exit_requested(zone_id: String, entry_id: String)
+## The player used the return portal: Game takes them back.
+signal portal_used
 ## Dungeon floors: the player pulled the lever, took the key or tried a locked gate.
 signal lever_pulled
 signal key_taken
 signal door_used
+## Every STEP_DISTANCE metres walked (two steps of the hero; the game's step count).
+signal stepped
 
 const PLAYER_SCENE := preload("res://scenes/world/player.tscn")
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
 const HERO_DATA := preload("res://data/hero.tres")
 const NOTICE_TIME := 2.0
+## Seconds "Misión cumplida" stays in the status window.
+const MISSION_DONE_TIME := 4.0
+## The notice window, top centre (clear of the status window and the ☰ button).
+const NOTICE_MAX_WIDTH := 640.0
+const UI_EDGE := 24.0
+## Phone: the mission line wraps here and the bars narrow to fit.
+const TOUCH_MISSION_WIDTH := 300.0
+## The use button of the phone interface.
+const USE_BUTTON_FONT := 28
+const USE_BUTTON_SIZE := Vector2(180, 72)
 const FONT_SIZE := 24
 ## How close the player must be to talk to a figure / to open a chest / to run into the
 ## boss / to take an exit.
@@ -51,6 +72,11 @@ const EXIT_RADIUS := 1.2
 ## After arriving (or after a closed exit's notice) exits wait until the player is this
 ## much farther than EXIT_RADIUS from all of them.
 const EXIT_REARM := 0.8
+## The return portal: an upright glowing oval on a ring, pulsing, with its sign. The spot
+## it leads back to is the same ring alone, flat on the ground.
+const PORTAL_COLOR := Color(0.2, 0.45, 1.0, 0.7)
+const PORTAL_SIZE := Vector3(0.95, 1.35, 0.7)
+const PORTAL_PULSE := 1.08
 ## How close the player must be to a lever, a key or a gate (its centre) to use it.
 const MECHANISM_RADIUS := 2.2
 ## A click or tap this close to a figure or a chest means "go there and use it".
@@ -64,18 +90,22 @@ const CHEST := "chest"
 const LEVER := "lever"
 const KEY := "key"
 const DOOR := "door"
+const PORTAL := "portal"
+const BOARD := "board"
 const PROMPTS := {
-	TALK: "Enter o toca: hablar",
-	NPC: "Enter o toca: hablar",
-	SHOP: "Enter o toca: comprar",
-	INN: "Enter o toca: hablar",
-	CHEST: "Enter o toca: abrir",
-	LEVER: "Enter o toca: tirar",
-	KEY: "Enter o toca: coger",
-	DOOR: "Enter o toca: abrir",
+	TALK: "%s o toca: hablar",
+	NPC: "%s o toca: hablar",
+	SHOP: "%s o toca: comprar",
+	INN: "%s o toca: hablar",
+	CHEST: "%s o toca: abrir",
+	LEVER: "%s o toca: tirar",
+	KEY: "%s o toca: coger",
+	DOOR: "%s o toca: abrir",
+	PORTAL: "%s o toca: volver",
+	BOARD: "%s o toca: leer",
 }
 ## ZoneData.npcs kinds -> use kinds.
-const NPC_KINDS := {"quest": TALK, "npc": NPC, "shop": SHOP, "inn": INN}
+const NPC_KINDS := {"quest": TALK, "npc": NPC, "shop": SHOP, "inn": INN, "board": BOARD}
 ## Chest model: wooden box with a gold band and a lid hinged at the back.
 const CHEST_SIZE := Vector3(0.9, 0.45, 0.6)
 const CHEST_LID_HEIGHT := 0.2
@@ -98,6 +128,12 @@ const LANTERN_COLOR := Color(1.0, 0.85, 0.65)
 const LANTERN_ENERGY := 2.0
 const LANTERN_RANGE := 10.0
 const LANTERN_HEIGHT := 2.4
+## The "!" and "?" of the quests: over the figure, bobbing.
+const QUEST_MARK_COLOR := Color(1.0, 0.85, 0.2)
+const QUEST_MARK_GAP := 0.35
+const QUEST_MARK_BOB := 0.12
+## Mission lines wrap past this width, so the status window stays at the side of the screen.
+const MISSION_WIDTH := 420.0
 
 ## The map to build; set before add_child.
 var zone: ZoneData
@@ -108,6 +144,12 @@ var _grass: ShaderMaterial
 var _player: Player
 var _camera: FollowCamera
 var _boss: StaticBody3D
+## ZoneData.npcs "name" -> its figure (a StaticBody3D with the BattleActor under it).
+var _figures := {}
+## What a cutscene's camera looks at (camera_to); null until the first one.
+var _camera_spot: Node3D
+## The status window and the map square under it: a cutscene hides them together.
+var _status_column: VBoxContainer
 ## chest id -> lid pivot (rotation.x opens it); a chest in _open_chests is open.
 var _chest_lids := {}
 var _open_chests: Array[String] = []
@@ -119,18 +161,30 @@ var _exits: Array = []
 var _dungeon: DungeonMap
 var _flags := {}
 var _exits_armed := false
+## The return portal and the mark of the spot it leads back to (null while not on this map).
+var _portal: Node3D
+var _return_mark: Node3D
 var _boss_present := false
 var _ui: CanvasLayer
 var _name_label: Label
-var _hp_label: Label
-var _mp_label: Label
-var _exp_label: Label
+var _hp_bar: StatBar
+var _mp_bar: StatBar
+var _exp_bar: StatBar
 var _potion_label: Label
 var _gold_label: Label
-var _quest_label: Label
+var _mission_box: VBoxContainer
+## The lines of the status window, and the serial that lets "Misión cumplida" put them back.
+var _missions: Array[String] = []
+var _mission_done_serial := 0
+var _mission_done := false
+var _map_square: MapSquare
 var _notice: Label
+var _notice_window: PanelContainer
 var _notice_serial := 0
 var _prompt: Label
+## Phones: the button that replaces the prompt, and the pad that reads the fingers.
+var _use_button: Button
+var _pad: TouchPad
 var _dialogue: DialogueBox
 var _autoplay := false
 var _waiting := false
@@ -145,6 +199,10 @@ var _marker: MeshInstance3D
 var _audio: AudioDirector
 var _in_village := false
 var _step_m := 0.0
+## Figure name -> "!" or "?", the figures that are not on the map, and the labels so far.
+var _quest_marks := {}
+var _hidden_figures: Array[String] = []
+var _mark_labels := {}
 
 
 func _ready() -> void:
@@ -159,7 +217,8 @@ func _ready() -> void:
 		_dungeon.zone = zone
 		add_child(_dungeon)
 	for npc: Dictionary in zone.npcs:
-		_add_figure(BattleActor.Look[npc.look], npc.pos, npc.yaw, 0.4, 1.8)
+		_figures[npc.name] = _add_figure(BattleActor.Look[npc.look], npc.pos, npc.yaw, 0.4,
+			1.8)
 	if zone.boss_id != "":
 		_boss = _add_figure(EnemyLibrary.look(zone.boss_id), zone.boss_pos, 180.0, 1.0, 2.0)
 	for id in Chests.of_zone(zone.id):
@@ -185,6 +244,7 @@ func _ready() -> void:
 	_camera.target = _player
 	_marker = _build_marker()
 	_build_ui()
+	set_explored(ExploredMap.new(zone))
 	place_at_entry(zone.start_entry)
 	_camera.current = true
 	if get_parent() == get_tree().root:
@@ -192,8 +252,13 @@ func _ready() -> void:
 
 
 func _physics_process(_delta: float) -> void:
+	if _pad:
+		_player.stick_direction = _pad.direction
+		if _pad.direction != Vector2.ZERO:
+			_use_on_arrival = {}  # walking off by hand drops the tap's errand
 	if _grass:
 		Vegetation.set_pusher(_grass, _player.global_position)
+	_map_square.follow(_player.global_position)
 	_marker.visible = _player.move_target != null
 	if _marker.visible:
 		_marker.position = _player.move_target
@@ -217,16 +282,20 @@ func _physics_process(_delta: float) -> void:
 		_trigger(false)
 		return
 	var near := _nearest_use(pos)
-	_prompt.visible = not near.is_empty()
-	if _prompt.visible:
-		_prompt.text = PROMPTS[near.kind]
+	if near.is_empty():
+		_hide_prompt()
+	else:
+		_show_prompt(near)
 	if not near.is_empty() and near == _use_on_arrival:
 		_use_on_arrival = {}
 		_player.move_target = null
 		_use(near)
-	elif not near.is_empty() and near != _was_near and _autoplay:
-		# Autoplay talks to each villager once per visit to the zone.
-		if near.kind != NPC or not _autoplay_talked.has(near.index):
+	elif not near.is_empty() and near != _was_near and _autoplay and near.kind != PORTAL:
+		# Autoplay talks to each villager once per visit to the zone, and again when a
+		# mark over it says there is something new.
+		var chats: bool = near.kind == NPC or near.kind == BOARD
+		if not chats or not _autoplay_talked.has(near.index) \
+				or _quest_marks.has(zone.npcs[near.index].name):
 			_autoplay_talked[near.index] = true
 			_use(near)
 	_was_near = near
@@ -235,10 +304,14 @@ func _physics_process(_delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _waiting or _talking:
 		return
-	if _prompt.visible and event.is_action_pressed("ui_accept") and not event.is_echo():
+	if _prompt_showing() and event.is_action_pressed("ui_accept") and not event.is_echo():
 		get_viewport().set_input_as_handled()
 		_use(_nearest_use(_player.global_position))
 		return
+	if _pad:
+		if _pad.handle(event):
+			get_viewport().set_input_as_handled()
+		return  # the mouse events left are the touches again
 	var point: Variant = _pointer_on_ground(event)
 	if point == null:
 		return
@@ -260,9 +333,51 @@ func _pointer_on_ground(event: InputEvent) -> Variant:
 		screen = motion.position
 	else:
 		return null
+	return _ground_point(screen)
+
+
+## Where the camera's line through a screen point meets the ground plane.
+func _ground_point(screen: Vector2) -> Variant:
 	var ground := Plane(Vector3.UP, 0.0)
 	return ground.intersects_ray(_camera.project_ray_origin(screen),
 		_camera.project_ray_normal(screen))
+
+
+## A tap on the ground (phones): walk there, and use what is there once in reach.
+func _on_tapped(screen: Vector2) -> void:
+	var point: Variant = _ground_point(screen)
+	if point == null:
+		return
+	_use_on_arrival = _tapped_use(point)
+	_player.move_to(point)
+
+
+## Shows what is in reach: the prompt, or on phones the use button.
+func _show_prompt(near: Dictionary) -> void:
+	var text: String = PROMPTS[near.kind] % KeyMap.first_key_name(KeyMap.ACCEPT)
+	if _use_button:
+		var verb := text.substr(text.find(": ") + 2)
+		_use_button.text = verb.substr(0, 1).to_upper() + verb.substr(1)
+		_use_button.show()
+		return
+	_prompt.text = text
+	_prompt.show()
+
+
+func _hide_prompt() -> void:
+	_prompt.hide()
+	if _use_button:
+		_use_button.hide()
+
+
+func _prompt_showing() -> bool:
+	return _use_button.visible if _use_button else _prompt.visible
+
+
+## Forgets the fingers on the map (a window, a battle or a cutscene took over).
+func _reset_pad() -> void:
+	if _pad:
+		_pad.reset()
 
 
 ## Hidden and frozen while a battle is on top; back on, the encounter grace restarts.
@@ -271,6 +386,7 @@ func set_active(active: bool) -> void:
 	visible = active
 	_ui.visible = active
 	_camera.current = active
+	_reset_pad()
 	if active:
 		_meter.reset()
 		_waiting = false
@@ -286,6 +402,11 @@ func place_at_entry(entry_id: String) -> void:
 ## Puts the player at pos facing yaw_deg (0 faces north; a loaded game faces north),
 ## with the encounter grace restarted and the exits waiting until the player steps
 ## away from them. in_village() is right at once; village_changed is not emitted.
+## After a return through the portal on autoplay: lets the player skip a blocked route point.
+func arm_blocked_point_skip() -> void:
+	_player.arm_blocked_point_skip()
+
+
 func place_player(pos: Vector3, yaw_deg := 0.0) -> void:
 	_player.place(pos, deg_to_rad(yaw_deg))
 	_camera.snap()
@@ -330,20 +451,48 @@ func set_world_flags(flags: Dictionary) -> void:
 		_dungeon.set_flags(flags)
 
 
+## What has been seen of this zone, for the map square (Game passes GameState's; run on
+## its own the map keeps its own).
+func set_explored(map: ExploredMap) -> void:
+	_map_square.set_map(map)
+
+
+## Shows or removes the return portal at the zone's portal_pos.
+func set_portal(on: bool) -> void:
+	if _portal != null:
+		_portal.queue_free()
+		_portal = null
+	if on:
+		_portal = _build_portal(zone.portal_pos, true)
+
+
+## Shows or removes the mark on the ground of the spot the portal leads back to.
+func set_return_mark(on: bool, pos: Vector3) -> void:
+	if _return_mark != null:
+		_return_mark.queue_free()
+		_return_mark = null
+	if on:
+		_return_mark = _build_portal(pos, false)
+
+
 ## Swings the lever down (Game sets its flag and calls set_world_flags()).
 func pull_lever() -> void:
 	if _dungeon:
 		_dungeon.pull_lever()
 
 
-## The lines villager zone.npcs[index] says now (lines_after once its after_flag is set).
-func npc_lines(index: int) -> Array[String]:
+## The lines figure zone.npcs[index] says in chapter (StoryState.Chapter): its
+## lines_by_chapter entry with the highest chapter not past it, else its lines.
+func npc_lines(index: int, chapter: int) -> Array[String]:
 	var npc: Dictionary = zone.npcs[index]
 	var lines: Array[String] = []
-	if npc.has("after_flag") and _flags.get(npc.after_flag, false):
-		lines.assign(npc.lines_after)
-	else:
-		lines.assign(npc.lines)
+	lines.assign(npc.get("lines", []))
+	var by_chapter: Dictionary = npc.get("lines_by_chapter", {})
+	var best := -1
+	for key: int in by_chapter:
+		if key <= chapter and key > best:
+			best = key
+			lines.assign(by_chapter[key])
 	return lines
 
 
@@ -354,6 +503,93 @@ func show_dialogue(speaker: String, lines: Array[String]) -> void:
 	await freeze(false)
 
 
+## Cutscenes: the map stops answering the player (frozen, which also hides the prompts,
+## the portal's too), the status window, the map square and the notice go, and the hero
+## stops where he is, not walking on his own, until end_cutscene().
+func begin_cutscene() -> void:
+	freeze(true)
+	_player.scripted = true
+	_player.move_target = null
+	_reset_pad()
+	_player.model().set_walking(false)
+	_use_on_arrival = {}
+	_status_column.hide()
+	_map_square.hide()
+	_notice_window.hide()
+	_show_quest_marks()
+
+
+## Puts every figure back on its spot, gives the camera back to the hero and the
+## controls back to the player (with the encounter grace restarted).
+func end_cutscene() -> void:
+	reset_figures()
+	_camera.follow(_player)
+	_player.scripted = false
+	_status_column.show()
+	_map_square.show()
+	_show_quest_marks()
+	_meter.reset()
+	_was_near = {}
+	await freeze(false)
+
+
+## A dialogue inside a cutscene: like show_dialogue() but the map stays frozen.
+func say_lines(speaker: String, lines: Array[String]) -> void:
+	await _dialogue.say(speaker, lines)
+
+
+## The node a cutscene moves for who ("hero" or a figure's name; null if none here).
+func figure_node(who: String) -> Node3D:
+	if who == Cutscene.HERO:
+		return _player
+	return _figures.get(who)
+
+
+## The node a cutscene turns for who: the hero's model, or the figure itself.
+func figure_turn(who: String) -> Node3D:
+	if who == Cutscene.HERO:
+		return _player.model()
+	return _figures.get(who)
+
+
+## The BattleActor of who (walking and cheering), null if none here.
+func figure_actor(who: String) -> BattleActor:
+	if who == Cutscene.HERO:
+		return _player.model()
+	var body: Node3D = _figures.get(who)
+	if body == null:
+		return null
+	for child in body.get_children():
+		if child is BattleActor:
+			return child
+	return null
+
+
+## Every figure back on its ZoneData spot and yaw, standing still.
+func reset_figures() -> void:
+	for npc: Dictionary in zone.npcs:
+		var body: Node3D = _figures[npc.name]
+		body.position = npc.pos
+		body.rotation_degrees.y = npc.yaw
+		var actor := figure_actor(npc.name)
+		if actor:
+			actor.set_walking(false)
+
+
+## The camera glides to look at point from at_distance metres (cutscenes).
+func focus_camera(point: Vector3, at_distance: float) -> void:
+	if _camera_spot == null:
+		_camera_spot = Node3D.new()
+		add_child(_camera_spot)
+	_camera_spot.position = point
+	_camera.show_point(_camera_spot, at_distance)
+
+
+## The camera follows the hero again.
+func follow_camera() -> void:
+	_camera.follow(_player)
+
+
 ## Freezes the player (no walking, prompts, encounters, exits or uses) while a dialogue
 ## or the shop is open. Unfreezing waits one frame, so the key that closed the window
 ## does not open it again; await it.
@@ -361,11 +597,57 @@ func freeze(on: bool) -> void:
 	if on:
 		_talking = true
 		_player.input_enabled = false
-		_prompt.hide()
+		_hide_prompt()
+		_reset_pad()
 		return
 	await get_tree().process_frame
 	_player.input_enabled = true
 	_talking = false
+
+
+## What the quests show on this map (Game passes GameState.quests' answers): marks is figure
+## name -> "!" or "?"; hidden_names are figures not on the map now, with no collider and
+## nothing to use.
+func set_quest_view(marks: Dictionary, hidden_names: Array[String]) -> void:
+	_quest_marks = marks
+	_hidden_figures = hidden_names
+	for npc: Dictionary in zone.npcs:
+		var body: StaticBody3D = _figures[npc.name]
+		var shown := not hidden_names.has(npc.name)
+		body.visible = shown
+		body.process_mode = Node.PROCESS_MODE_INHERIT if shown else Node.PROCESS_MODE_DISABLED
+	_show_quest_marks()
+
+
+## One floating label per figure with a mark; none during a cutscene.
+func _show_quest_marks() -> void:
+	for npc: Dictionary in zone.npcs:
+		var text: String = _quest_marks.get(npc.name, "")
+		var label: Label3D = _mark_labels.get(npc.name)
+		if label == null:
+			if text == "":
+				continue
+			label = _build_mark(npc.name)
+		label.text = text
+		label.visible = text != "" and not _player.scripted
+
+
+func _build_mark(figure_name: String) -> Label3D:
+	var label := Label3D.new()
+	label.font_size = 96
+	label.pixel_size = 0.01
+	label.outline_size = 16
+	label.modulate = QUEST_MARK_COLOR
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	label.position.y = figure_actor(figure_name).top_height() + QUEST_MARK_GAP
+	(_figures[figure_name] as Node3D).add_child(label)
+	_mark_labels[figure_name] = label
+	var bob := label.create_tween().set_loops()
+	bob.tween_property(label, "position:y", label.position.y + QUEST_MARK_BOB, 0.5) \
+		.set_trans(Tween.TRANS_SINE)
+	bob.tween_property(label, "position:y", label.position.y, 0.5).set_trans(Tween.TRANS_SINE)
+	return label
 
 
 ## Shows the weapon and shield worn on the hero (Equipment ids, "" for none).
@@ -391,32 +673,66 @@ func set_chest_open(chest_id: String, open: bool, instant := false) -> void:
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
-func refresh_status(hero: Combatant, potions: int, gold: int, quest_text := "") -> void:
-	_name_label.text = "%s  Nv %d" % [hero.display_name, hero.level]
-	_hp_label.text = "PV %d / %d" % [hero.hp, hero.max_hp]
-	_mp_label.text = "PM %d / %d" % [hero.mp, hero.max_mp]
-	var next := Leveling.exp_for_next(hero.level)
-	if next < 0:
-		_exp_label.text = "EXP %d" % hero.experience
-	else:
-		_exp_label.text = "EXP %d / %d" % [hero.experience, next]
+## The pause menu covers the middle of the screen and says the same as the status window,
+## which goes away behind it (with the map square).
+func set_status_shown(on: bool) -> void:
+	_reset_pad()  # a finger's release is lost while the tree is paused
+	_status_column.visible = on
+	_map_square.visible = on
+
+
+func refresh_status(hero: Combatant, potions: int, gold: int, missions: Array[String] = []) -> void:
+	_name_label.text = StatBar.hero_title(hero)
+	_hp_bar.show_hp(hero.hp, hero.max_hp)
+	_mp_bar.show_mp(hero.mp, hero.max_mp)
+	_exp_bar.show_exp(hero)
 	_potion_label.text = "%s ×%d" % [Inventory.display_name(Inventory.POTION), potions]
 	_gold_label.text = "Oro %d G" % gold
-	_quest_label.text = quest_text
-	_quest_label.visible = quest_text != ""
+	_missions = missions
+	if not _mission_done:
+		_show_missions(missions, Color.WHITE)
 
 
-## Shows a short line under the status for NOTICE_TIME seconds (a newer one replaces it).
+## Puts "Misión cumplida" (or text) in the mission list for a few seconds, then the
+## missions under way come back.
+func show_mission_done(text: String) -> void:
+	_mission_done_serial += 1
+	var serial := _mission_done_serial
+	_mission_done = true
+	var lines: Array[String] = [text]
+	_show_missions(lines, StatBar.GOLD)
+	if _autoplay:
+		print(text)
+	await get_tree().create_timer(MISSION_DONE_TIME).timeout
+	if serial == _mission_done_serial:
+		_mission_done = false
+		_show_missions(_missions, Color.WHITE)
+
+
+func _show_missions(lines: Array[String], color: Color) -> void:
+	for child in _mission_box.get_children():
+		_mission_box.remove_child(child)
+		child.queue_free()
+	var shown := lines.slice(0, 1) if Device.is_touch() else lines
+	var width := TOUCH_MISSION_WIDTH if Device.is_touch() else MISSION_WIDTH
+	for line in shown:
+		var label := _label()
+		label.add_theme_color_override("font_color", color)
+		_mission_box.add_child(label)
+		BattleHud.fit_label(label, line, width)
+
+
+## Shows a short line in its own window for NOTICE_TIME seconds (a newer one replaces it).
 func show_notice(text: String) -> void:
 	_notice_serial += 1
 	var serial := _notice_serial
-	_notice.text = text
-	_notice.show()
+	BattleHud.fit_label(_notice, text, NOTICE_MAX_WIDTH)
+	_notice_window.show()
 	if _autoplay:
 		print(text)
 	await get_tree().create_timer(NOTICE_TIME).timeout
 	if serial == _notice_serial:
-		_notice.hide()
+		_notice_window.hide()
 
 
 func _trigger(boss: bool) -> void:
@@ -424,7 +740,8 @@ func _trigger(boss: bool) -> void:
 		_audio.play_sfx(SfxLibrary.ENCOUNTER)
 	_waiting = true
 	_player.input_enabled = false
-	_prompt.hide()
+	_hide_prompt()
+	_reset_pad()
 	encounter_triggered.emit(boss)
 
 
@@ -456,7 +773,8 @@ func _check_exits(pos: Vector3) -> bool:
 		return false
 	_waiting = true
 	_player.input_enabled = false
-	_prompt.hide()
+	_hide_prompt()
+	_reset_pad()
 	exit_requested.emit(nearest.to, nearest.entry)
 	return true
 
@@ -489,12 +807,17 @@ func _uses() -> Array[Dictionary]:
 	var uses: Array[Dictionary] = []
 	for i in zone.npcs.size():
 		var npc: Dictionary = zone.npcs[i]
+		if _hidden_figures.has(npc.name):
+			continue
 		uses.append({"kind": NPC_KINDS[npc.kind], "id": npc.get("id", ""), "index": i,
 			"pos": npc.pos, "radius": TALK_RADIUS})
 	for id in _chest_lids:
 		if not _open_chests.has(id):
 			uses.append({"kind": CHEST, "id": id, "index": -1, "pos": Chests.CHESTS[id].pos,
 				"radius": CHEST_RADIUS})
+	if _portal != null:
+		uses.append({"kind": PORTAL, "id": "", "index": -1, "pos": zone.portal_pos,
+			"radius": MECHANISM_RADIUS})
 	if _dungeon == null:
 		return uses
 	var mechanisms := [[ZoneData.LEVER, LEVER, zone.lever_flag],
@@ -512,7 +835,7 @@ func _use(use: Dictionary) -> void:
 	match use.get("kind", ""):
 		TALK:
 			talk_requested.emit()
-		NPC:
+		NPC, BOARD:
 			npc_requested.emit(use.index)
 		SHOP:
 			shop_requested.emit(use.id)
@@ -526,6 +849,8 @@ func _use(use: Dictionary) -> void:
 			key_taken.emit()
 		DOOR:
 			door_used.emit()
+		PORTAL:
+			portal_used.emit()
 
 
 func _connect_standalone() -> void:
@@ -538,7 +863,8 @@ func _connect_standalone() -> void:
 		var lines: Array[String] = ["Hola, viajero."]
 		await show_dialogue(Quest.NPC_NAME, lines))
 	npc_requested.connect(func(index: int) -> void:
-		await show_dialogue(zone.npcs[index].name, npc_lines(index)))
+		await show_dialogue(zone.npcs[index].name,
+			npc_lines(index, StoryState.Chapter.END)))
 	shop_requested.connect(func(shop_id: String) -> void: print("Tienda: %s" % shop_id))
 	inn_requested.connect(func(inn_id: String) -> void: print("Posada: %s" % inn_id))
 	chest_opened.connect(func(chest_id: String) -> void:
@@ -626,6 +952,51 @@ func _build_exit(exit: Dictionary) -> Node3D:
 	return fog
 
 
+## A ring on the ground at pos and, for the portal itself, a pulsing see-through oval over
+## it with its sign. Nothing to bump into.
+func _build_portal(pos: Vector3, full: bool) -> Node3D:
+	var root := Node3D.new()
+	root.position = pos
+	add_child(root)
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.albedo_color = PORTAL_COLOR
+	var ring := TorusMesh.new()
+	ring.inner_radius = 0.9
+	ring.outer_radius = 1.05
+	ring.rings = 24
+	ring.ring_segments = 6
+	var base := MeshInstance3D.new()
+	base.mesh = ring
+	base.material_override = material
+	base.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	base.position.y = 0.05
+	root.add_child(base)
+	if not full:
+		return root
+	var oval := MeshInstance3D.new()
+	oval.mesh = BattleStage.unit_sphere()
+	oval.material_override = material
+	oval.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	oval.position.y = PORTAL_SIZE.y
+	oval.scale = PORTAL_SIZE
+	root.add_child(oval)
+	var label := Label3D.new()
+	label.text = "Portal"
+	label.font_size = 48
+	label.pixel_size = 0.008
+	label.outline_size = 10
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.position.y = PORTAL_SIZE.y * 2.0 + 0.4
+	root.add_child(label)
+	var pulse := root.create_tween().set_loops()
+	pulse.tween_property(oval, "scale", PORTAL_SIZE * PORTAL_PULSE, 0.6) \
+		.set_trans(Tween.TRANS_SINE)
+	pulse.tween_property(oval, "scale", PORTAL_SIZE, 0.6).set_trans(Tween.TRANS_SINE)
+	return root
+
+
 ## A closed chest on a box collider under root: wooden box with a gold band around it and a lid on
 ## a pivot at its back edge. Returns the lid pivot.
 static func build_chest(root: Node3D, chest: Dictionary) -> Node3D:
@@ -681,40 +1052,100 @@ func _add_figure(look: BattleActor.Look, pos: Vector3, yaw_deg: float, radius: f
 func _build_ui() -> void:
 	_ui = CanvasLayer.new()
 	add_child(_ui)
+	# No size of its own: the column follows the status window as it grows and shrinks.
+	var column := VBoxContainer.new()
+	column.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	column.offset_left = UI_EDGE
+	column.offset_top = UI_EDGE
+	column.offset_right = UI_EDGE
+	column.offset_bottom = UI_EDGE
+	column.add_theme_constant_override("separation", 8)
+	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui.add_child(column)
+	_status_column = column
 	var panel := BattleHud.make_window()
-	panel.position = Vector2(24, 24)
-	panel.custom_minimum_size = Vector2(240, 0)
-	_ui.add_child(panel)
+	column.add_child(panel)
+	_map_square = MapSquare.new(MapSquare.TOUCH_SIDE if Device.is_touch() else MapSquare.SIDE)
+	if Device.is_touch():
+		# Under the menu button, top right.
+		_ui.add_child(_map_square)
+		_map_square.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+		_map_square.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+		_map_square.offset_right = -PauseMenu.MENU_BUTTON_MARGIN
+		_map_square.offset_left = _map_square.offset_right - MapSquare.TOUCH_SIDE
+		_map_square.offset_top = PauseMenu.MENU_BUTTON_MARGIN + PauseMenu.MENU_BUTTON_SIZE.y + 8.0
+		_map_square.offset_bottom = _map_square.offset_top + MapSquare.TOUCH_SIDE
+	else:
+		column.add_child(_map_square)
 	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 4)
 	panel.add_child(box)
 	_name_label = _label()
 	box.add_child(_name_label)
-	_hp_label = _label()
-	box.add_child(_hp_label)
-	_mp_label = _label()
-	box.add_child(_mp_label)
-	_exp_label = _label()
-	box.add_child(_exp_label)
+	_hp_bar = StatBar.new(StatBar.HP)
+	box.add_child(_hp_bar)
+	_mp_bar = StatBar.new(StatBar.MP)
+	box.add_child(_mp_bar)
+	_exp_bar = StatBar.new(StatBar.EXP)
+	box.add_child(_exp_bar)
 	_potion_label = _label()
 	box.add_child(_potion_label)
+	if Device.is_touch():
+		# Estado and Objetos in the pause menu say the same.
+		_exp_bar.hide()
+		_potion_label.hide()
 	_gold_label = _label()
+	_gold_label.add_theme_color_override("font_color", StatBar.GOLD)
 	box.add_child(_gold_label)
-	_quest_label = _label()
-	_quest_label.hide()
-	box.add_child(_quest_label)
+	_mission_box = VBoxContainer.new()
+	_mission_box.add_theme_constant_override("separation", 0)
+	box.add_child(_mission_box)
+	_notice_window = BattleHud.make_window()
+	_notice_window.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_notice_window.offset_left = 0
+	_notice_window.offset_right = 0
+	_notice_window.offset_top = UI_EDGE
+	_notice_window.offset_bottom = UI_EDGE
+	_notice_window.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_notice_window.hide()
+	_ui.add_child(_notice_window)
 	_notice = _label()
-	_notice.hide()
-	box.add_child(_notice)
+	_notice_window.add_child(_notice)
 	_prompt = _label()
-	_prompt.text = PROMPTS[TALK]
+	_prompt.text = PROMPTS[TALK] % KeyMap.first_key_name(KeyMap.ACCEPT)
 	_prompt.add_theme_color_override("font_outline_color", Color.BLACK)
 	_prompt.add_theme_constant_override("outline_size", 8)
 	_ui.add_child(_prompt)
 	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, \
 		Control.PRESET_MODE_MINSIZE, 200)
 	_prompt.hide()
+	if Device.is_touch():
+		_build_touch_controls()
 	_dialogue = DialogueBox.new()
 	_ui.add_child(_dialogue)
+
+
+## Phones: the pad behind every window, and the big use button.
+func _build_touch_controls() -> void:
+	_pad = TouchPad.new()
+	_ui.add_child(_pad)
+	_ui.move_child(_pad, 0)
+	_pad.tapped.connect(_on_tapped)
+	_pad.pinched.connect(_camera.zoom_by)
+	_use_button = Button.new()
+	_use_button.focus_mode = Control.FOCUS_NONE
+	_use_button.add_theme_font_size_override("font_size", USE_BUTTON_FONT)
+	_use_button.custom_minimum_size = USE_BUTTON_SIZE
+	_use_button.hide()
+	_ui.add_child(_use_button)
+	_use_button.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_use_button.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_use_button.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_use_button.offset_right = -UI_EDGE
+	_use_button.offset_bottom = -UI_EDGE
+	_use_button.offset_left = -UI_EDGE - USE_BUTTON_SIZE.x
+	_use_button.offset_top = -UI_EDGE - USE_BUTTON_SIZE.y
+	_use_button.pressed.connect(func() -> void: _use(_nearest_use(_player.global_position)))
 
 
 func _label() -> Label:
@@ -730,6 +1161,7 @@ func _play_steps() -> void:
 	if _step_m < STEP_DISTANCE:
 		return
 	_step_m -= STEP_DISTANCE
+	stepped.emit()
 	if _audio:
 		_audio.play_sfx(SfxLibrary.STEP)
 

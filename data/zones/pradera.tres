@@ -20,7 +20,7 @@ safe_discs = [[Vector3(0, 0, 26), 4.0], [Vector3(0, 0, -22), 8.0]]
 village_name = "Villaclaro"
 village_pos = Vector3(0, 0, -22)
 village_radius = 8.0
-buildings = [[Vector3(-5.5, 0, -25), 60.0, "house_A_red"], [Vector3(5.5, 0, -25), -60.0, "house_B_red"], [Vector3(4.5, 0, -19), 0.0, "well_red"]]
+buildings = [[Vector3(-5.5, 0, -25), 60.0, "house_A_red"], [Vector3(5.5, 0, -25), -60.0, "house_B_red"], [Vector3(4.5, 0, -19), 0.0, "well_red"], [Vector3(-6.2, 0, -17.5), 60.0, "house_A_red"]]
 rocks = [[Vector3(-20, 0, -16), 2, 8.0, 15.0], [Vector3(-22, 0, 14), 4, 9.0, 60.0], [Vector3(18, 0, -18), 3, 9.0, 130.0], [Vector3(22, 0, 16), 4, 10.0, 200.0], [Vector3(-10, 0, -18), 1, 8.0, 290.0], [Vector3(12, 0, -20), 2, 9.0, 80.0], [Vector3(-12, 0, 23), 0, 10.0, 170.0], [Vector3(24, 0, 0), 3, 10.0, 240.0], [Vector3(-24, 0, -2), 2, 10.0, 320.0], [Vector3(7, 0, -15), 1, 7.0, 45.0]]
 tree_seed = 23
 tree_tries = 600
@@ -35,12 +35,14 @@ glades = []
 bush_seed = 31
 bush_tries = 220
 entries = {
+"casa": [Vector3(-3.7, 0, -16.1), -120.0],
 "inicio": [Vector3(0, 0, 26), 0.0],
 "norte": [Vector3(0, 0, -25.5), 180.0],
 "pueblo": [Vector3(0.8, 0, -14.5), 0.0]
 }
-start_entry = "inicio"
+start_entry = "casa"
 town_entry = "pueblo"
+portal_pos = Vector3(-3.5, 0, -15)
 exits = [{
 "entry": "sur",
 "id": "norte",
@@ -53,8 +55,14 @@ exits = [{
 }]
 npcs = [{
 "kind": "quest",
+"lines_by_chapter": {
+2: ["El bosque está al norte, {nombre}. Busca a la Bruja y su fragmento.", "Y come algo antes de salir, que luego todo son prisas."],
+3: ["¡Un fragmento! Lo noto desde aquí: me hace cosquillas en los huesos.", "El segundo lo guarda un golem, en el fondo de la vieja mina."],
+4: ["Con dos fragmentos ya se puede entrar en el Castillo de la Niebla.", "El tercero lo guarda su señor. Ve con cuidado, y abrígate."],
+5: ["El Amuleto del Alba está en su sitio y el cielo, por fin, también.", "Pasea cuanto quieras, {nombre}. Ahora da gusto."]
+},
 "look": "VILLAGER",
-"name": "Anciana",
+"name": "Abuela Rosa",
 "pos": Vector3(-2.5, 0, -20),
 "yaw": 180.0
 }, {
@@ -71,6 +79,26 @@ npcs = [{
 "name": "Posadero",
 "pos": Vector3(2.8, 0, -22),
 "yaw": 180.0
+}, {
+"kind": "npc",
+"lines_by_chapter": {
+0: ["Desde que baja la niebla, mis gallinas ponen los huevos de lado.", "No sé cómo lo hacen. Tampoco quiero saberlo."],
+2: ["¡Has echado al Rey Slime! Me aplastó las lechugas, ¿sabes?", "Aquí se respira mejor, pero al norte la niebla sigue igual."],
+3: ["Un viajero dice que la vieja mina está llena de arañas.", "Yo me quedo con mis gallinas."],
+4: ["Dicen que en el castillo los esqueletos no duermen nunca.", "Con razón tienen tan mala cara."],
+5: ["¡Mira qué cielo! Las gallinas ya ponen los huevos derechos."]
+},
+"look": "FARMER",
+"name": "Granjero",
+"pos": Vector3(3.5, 0, -15.5),
+"yaw": 180.0
+}, {
+"kind": "board",
+"lines": ["Aviso viejo: se vende gallina que pone de lado. Razón, el Granjero.", "Otro más viejo aún: se regala gallina."],
+"look": "BOARD",
+"name": "Tablón",
+"pos": Vector3(2.8, 0, -17.3),
+"yaw": 180.0
 }]
 boss_id = "rey_slime"
 boss_pos = Vector3(0, 0, -27.5)
@@ -78,8 +106,10 @@ formations = [["slime"], ["slime"], ["bat"], ["mushroom"], ["slime", "slime"], [
 start_formations = [["slime"], ["slime", "slime"]]
 start_pos = Vector3(0, 0, 26)
 start_radius = 20.0
-encounter_grace = 9.0
-encounter_chance = 0.01
+rare_enemy = "slime_metal"
+rare_chance = 0.25
+encounter_grace = 5.0
+encounter_chance = 0.025
 music = "map"
 village_music = "village"
 sky_top = Color(0.32, 0.52, 0.88, 1)

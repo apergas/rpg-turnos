@@ -21,6 +21,7 @@ entries = {
 }
 start_entry = "sur"
 town_entry = "campamento"
+portal_pos = Vector3(5, 0, 20)
 exits = [{
 "entry": "castillo",
 "id": "sur",
@@ -46,21 +47,35 @@ npcs = [{
 "pos": Vector3(6, 0, 15),
 "yaw": 180.0
 }, {
-"after_flag": "senor_niebla",
 "kind": "npc",
 "lines": ["Este campamento es lo último antes del castillo.", "La niebla sale de la sala del trono, arriba del todo.", "Los esqueletos del patio no duermen nunca. Ve con cuidado."],
-"lines_after": ["¡La niebla se ha ido! Se ve el cielo por primera vez en años.", "Lleva los fragmentos del amuleto de vuelta a Villaclaro."],
+"lines_by_chapter": {
+5: ["¡La niebla se ha ido! Se ve el cielo por primera vez en años.", "Por fin podré escribir a casa algo más que el parte del tiempo."]
+},
 "look": "VILLAGER",
 "name": "Soldado",
 "pos": Vector3(-5, 0, 23),
 "yaw": 180.0
+}, {
+"kind": "board",
+"lines": ["Parte del día: niebla. Parte de ayer: niebla.", "Debajo: parte de mañana, a que no lo adivinas."],
+"look": "BOARD",
+"name": "Tablón",
+"pos": Vector3(2.5, 0, 14.5),
+"yaw": 180.0
+}, {
+"kind": "npc",
+"look": "FARMER",
+"name": "Explorador",
+"pos": Vector3(-20.5, 0, 0.5),
+"yaw": 90.0
 }]
 formations = [["esqueleto_guerrero"], ["esqueleto_picaro"], ["esqueleto_mago"], ["esqueleto_picaro"], ["esqueleto_guerrero", "esqueleto_mago"], ["esqueleto_picaro", "esqueleto_mago"]]
 start_formations = [["esqueleto_guerrero"], ["esqueleto_picaro"], ["esqueleto_mago"]]
 start_pos = Vector3(0, 0, 20)
 start_radius = 26.0
-encounter_grace = 6.0
-encounter_chance = 0.025
+encounter_grace = 4.0
+encounter_chance = 0.04
 music = "castle"
 village_music = "village"
 sky_top = Color(0.26, 0.24, 0.36, 1)

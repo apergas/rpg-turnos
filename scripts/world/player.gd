@@ -19,16 +19,24 @@ const TARGET_REACHED := 0.3
 const STUCK_FRAMES := 12
 
 var input_enabled := true
+## A cutscene moves the player (CutscenePlayer tweens its position): no physics, no
+## keys, no route and no animation of its own meanwhile.
+var scripted := false
 ## Points walked in a loop on --autoplay (ZoneData.autoplay_route); set by World.
 var route: Array[Vector3] = []
 ## Horizontal meters moved during the last physics frame.
 var last_step_m := 0.0
 ## Point being walked to after a click or tap (y = 0); null when there is none.
 var move_target: Variant = null
+## Where the touch stick points (screen axes, set by World); keys win over it.
+var stick_direction := Vector2.ZERO
 
 var _model: BattleActor
 var _autoplay := false
 var _route_index := 0
+## Set after a return through the portal: until the first route point is reached, a hero
+## stuck on the way to it (a wall in between) skips to the next one.
+var _skip_blocked_point := false
 var _stuck_frames := 0
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 
@@ -47,6 +55,11 @@ func _ready() -> void:
 	add_child(_model)
 
 
+## The hero's figure, for cutscenes (walking animation, turning, cheering).
+func model() -> BattleActor:
+	return _model
+
+
 ## Shows the weapon and shield worn on the model (Equipment ids, "" for none).
 func set_equipment(weapon_id: String, shield_id: String) -> void:
 	_model.set_equipment(weapon_id, shield_id)
@@ -59,6 +72,7 @@ func place(pos: Vector3, facing_yaw: float) -> void:
 	_model.rotation.y = facing_yaw
 	last_step_m = 0.0
 	move_target = null
+	_skip_blocked_point = false
 	_route_index = _nearest_route_point(pos)
 
 
@@ -70,6 +84,9 @@ func move_to(point: Vector3) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if scripted:
+		last_step_m = 0.0
+		return
 	if not input_enabled:
 		move_target = null
 	var dir := _wanted_direction() if input_enabled else Vector3.ZERO
@@ -88,6 +105,12 @@ func _physics_process(delta: float) -> void:
 		_stuck_frames = _stuck_frames + 1 if last_step_m < SPEED * delta * 0.25 else 0
 		if _stuck_frames > STUCK_FRAMES:
 			move_target = null
+	elif _autoplay and _skip_blocked_point and dir != Vector3.ZERO:
+		# Placed back by the portal, the nearest route point can be behind a wall.
+		_stuck_frames = _stuck_frames + 1 if last_step_m < SPEED * delta * 0.25 else 0
+		if _stuck_frames > STUCK_FRAMES:
+			_stuck_frames = 0
+			_route_index = (_route_index + 1) % route.size()
 	if dir != Vector3.ZERO:
 		var target_yaw := atan2(-dir.x, -dir.z)  # the model faces -Z
 		_model.rotation.y = lerp_angle(_model.rotation.y, target_yaw, minf(1.0, TURN_SPEED * delta))
@@ -97,19 +120,13 @@ func _physics_process(delta: float) -> void:
 func _wanted_direction() -> Vector3:
 	if _autoplay:
 		return _route_direction()
-	var keys := Vector2.ZERO
-	if Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT):
-		keys.x -= 1.0
-	if Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT):
-		keys.x += 1.0
-	if Input.is_physical_key_pressed(KEY_W) or Input.is_physical_key_pressed(KEY_UP):
-		keys.y -= 1.0
-	if Input.is_physical_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_DOWN):
-		keys.y += 1.0
+	var keys := Input.get_vector(KeyMap.MOVE_LEFT, KeyMap.MOVE_RIGHT, KeyMap.MOVE_UP,
+		KeyMap.MOVE_DOWN)
+	if keys == Vector2.ZERO:
+		keys = stick_direction
 	if keys == Vector2.ZERO:
 		return _target_direction()
 	move_target = null
-	keys = keys.normalized()
 	# The camera sits south of the player looking north: screen up is -Z, right is +X.
 	return Vector3(keys.x, 0.0, keys.y)
 
@@ -132,8 +149,14 @@ func _route_direction() -> Vector3:
 	to_goal.y = 0.0
 	if to_goal.length() < ROUTE_REACHED:
 		_route_index = (_route_index + 1) % route.size()
+		_skip_blocked_point = false
 		return Vector3.ZERO
 	return to_goal.normalized()
+
+
+## Arms the skip of a route point the hero can't reach (see _skip_blocked_point).
+func arm_blocked_point_skip() -> void:
+	_skip_blocked_point = true
 
 
 ## The route point to walk to first after being placed at pos: the nearest one.

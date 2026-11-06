@@ -7,29 +7,68 @@ const POTION := "potion"
 const ETHER := "ether"
 const ANTIDOTE := "antidote"
 const WING := "wing"
+const SETA := "seta"
+const SEED_ATTACK := "semilla_fuerza"
+const SEED_DEFENSE := "semilla_defensa"
+const SEED_SPEED := "semilla_agilidad"
 const START_POTIONS := 3
+## What a seed adds to its stat, for good.
+const SEED_BONUS := 2
+const SEEDS: Array[String] = [SEED_ATTACK, SEED_DEFENSE, SEED_SPEED]
 ## name and article (for "una Poción"); effect "hp" (heals value HP), "mp" (restores
-## value MP), "cure" (removes the status named by value) or "travel" (the Ala de viaje:
-## Game takes the hero to the last village visited); price in gold (Shop sells at it and
-## buys back at half); battle / field: usable in battle / from the pause menu.
+## value MP), "cure" (removes the status named by value), "travel" (the Ala de viaje:
+## Game takes the hero to the last village visited and leaves a portal there that leads
+## back once), "seed" (adds SEED_BONUS to the Combatant field named by value) or "quest"
+## (of no use: someone is asking for it); price in gold (Shop sells at it and
+## buys back at half); battle / field: usable in battle / from the pause menu; text: what
+## it does, shown in the shop, in Objetos and in battle.
 const ITEMS := {
 	POTION: {"name": "Poción", "article": "una", "effect": "hp", "value": 30, "price": 8,
-		"battle": true, "field": true},
+		"battle": true, "field": true, "text": "Recupera 30 PV."},
 	ETHER: {"name": "Éter", "article": "un", "effect": "mp", "value": 15, "price": 30,
-		"battle": true, "field": true},
+		"battle": true, "field": true, "text": "Recupera 15 PM."},
 	ANTIDOTE: {"name": "Antídoto", "article": "un", "effect": "cure", "value": "poison",
-		"price": 10, "battle": true, "field": false},
+		"price": 10, "battle": true, "field": false, "text": "Cura el veneno."},
 	WING: {"name": "Ala de viaje", "article": "un", "effect": "travel", "value": 0,
-		"price": 25, "battle": false, "field": true},
+		"price": 25, "battle": false, "field": true,
+		"text": "Te lleva al último pueblo y deja un portal para volver una vez."},
+	SETA: {"name": "Seta", "article": "una", "effect": "quest", "value": 0, "price": 0,
+		"battle": false, "field": false,
+		"text": "De las que saltan. Alguien de Villaclaro las anda buscando."},
+	SEED_ATTACK: {"name": "Semilla de fuerza", "article": "una", "effect": "seed",
+		"value": "attack", "price": 0, "battle": false, "field": true,
+		"text": "Sube el ATK en 2 para siempre."},
+	SEED_DEFENSE: {"name": "Semilla de defensa", "article": "una", "effect": "seed",
+		"value": "defense", "price": 0, "battle": false, "field": true,
+		"text": "Sube la DEF en 2 para siempre."},
+	SEED_SPEED: {"name": "Semilla de agilidad", "article": "una", "effect": "seed",
+		"value": "speed", "price": 0, "battle": false, "field": true,
+		"text": "Sube la VEL en 2 para siempre."},
 }
 ## Order of the item lists.
-const IDS: Array[String] = [POTION, ETHER, ANTIDOTE, WING]
+const IDS: Array[String] = [POTION, ETHER, ANTIDOTE, WING, SEED_ATTACK, SEED_DEFENSE,
+	SEED_SPEED, SETA]
+## Why an Ala de viaje can't be used in a village.
+const IN_TOWN := "Ya estás en un pueblo"
+## Why a "quest" item can't be used.
+const QUEST_ITEM := "Para una misión"
+## The stat a seed raises, as the status windows name it.
+const SEED_STATS := {"attack": "ATK", "defense": "DEF", "speed": "VEL"}
 ## Key items (GameState.key_items): never used up, sold or dropped; id -> name.
 const KEY_ITEMS := {
 	"fragmento_bosque": "Fragmento del amuleto (1/3)",
 	"fragmento_mina": "Fragmento del amuleto (2/3)",
 	"fragmento_castillo": "Fragmento del amuleto (3/3)",
 	"llave_mina": "Llave de la mina",
+	"carta_granjero": "Carta del Granjero",
+}
+## What each key item is, for Objetos.
+const KEY_TEXTS := {
+	"fragmento_bosque": "Un trozo del Amuleto del Alba. Lo guardaba la Bruja del bosque.",
+	"fragmento_mina": "Un trozo del Amuleto del Alba. Lo guardaba el Golem de piedra.",
+	"fragmento_castillo": "El último trozo del Amuleto del Alba. Lo guardaba el Señor de la Niebla.",
+	"llave_mina": "Abre la reja de la tercera planta de la mina.",
+	"carta_granjero": "Para la Leñadora, en la aldea del bosque. Huele un poco a gallina.",
 }
 
 var _items := {}
@@ -41,6 +80,16 @@ static func display_name(id: String) -> String:
 
 static func article(id: String) -> String:
 	return ITEMS[id].article if ITEMS.has(id) else "un"
+
+
+## "ATK", "DEF" or "VEL" for a seed.
+static func seed_stat(id: String) -> String:
+	return SEED_STATS.get(ITEMS[id].value, "") if ITEMS.has(id) else ""
+
+
+## What an item or a key item does, in a short sentence.
+static func description(id: String) -> String:
+	return ITEMS[id].text if ITEMS.has(id) else KEY_TEXTS.get(id, "")
 
 
 func count(id: String) -> int:
@@ -64,6 +113,8 @@ func problem(id: String, c: Combatant, in_battle: bool) -> String:
 	if count(id) <= 0:
 		return "No te quedan"
 	var item: Dictionary = ITEMS[id]
+	if item.effect == "quest":
+		return QUEST_ITEM
 	if in_battle and not item.battle:
 		return "Fuera de combate"
 	if not in_battle and not item.field:
@@ -102,6 +153,9 @@ func use(id: String, c: Combatant, in_battle: bool) -> Dictionary:
 		"cure":
 			c.status.erase(item.value)
 			result.status = item.value
+		"seed":
+			c.set(item.value, int(c.get(item.value)) + SEED_BONUS)
+			result.amount = SEED_BONUS
 	return result
 
 

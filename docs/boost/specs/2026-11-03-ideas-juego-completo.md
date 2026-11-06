@@ -366,7 +366,7 @@ Cada idea lleva una talla aproximada:
 - **Guardar partida (M):** 3 ranuras, autoguardado al entrar en un pueblo, y en la web se guarda en el navegador.
 - **Exportar e importar la partida como archivo (S).**
 - **Opciones (M):** volumen, velocidad del texto y del combate, pantalla completa, calidad.
-- **Español e inglés (M).**
+- **~~Español e inglés (M).~~** Descartado por el usuario (2026-11-06): el juego queda solo en español.
 - **Estadísticas de la partida en los créditos (S):** tiempo, combates y pasos.
 
 ### 13. Dificultad y accesibilidad
@@ -412,6 +412,6 @@ Las he ordenado yo, como pediste.
 | 4. Economía y equipo | Oro, tiendas, posada, ranuras de equipo, cofres | Da sentido a luchar y explorar |
 | 5. Mundo | Zonas 2, 3 y 4 con sus enemigos, jefes, mazmorras y pueblos | Es el grueso del contenido; con las fases anteriores hechas, cada zona es "solo" contenido |
 | 6. Historia | Argumento, escenas, misiones secundarias, diario, final y créditos | Une todas las zonas |
-| 7. Pulido y publicación | Opciones, dificultad, accesibilidad, idiomas, táctil, itch.io | Para enseñarlo fuera |
+| 7. Pulido y publicación | Opciones, dificultad, accesibilidad, itch.io (los móviles van después, con su propio diseño; el inglés se descarta) | Para enseñarlo fuera |
 
 Cada fase pasa por su propio diseño, plan e implementación, como los sub-proyectos anteriores.

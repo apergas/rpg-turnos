@@ -138,7 +138,12 @@ const CASTLE_MIST := [
 	[Vector3(-6, 0.3, -6), Vector3(5, 0.5, 3)], [Vector3(6, 0.3, -7), Vector3(6, 0.5, 3)],
 	[Vector3(-8, 0.3, 1), Vector3(4, 0.5, 4)], [Vector3(9, 0.3, 0), Vector3(4, 0.5, 4)],
 ]
+const LOW_SHADOW_DISTANCE := 35.0
 const CASTLE_TORCHES := [Vector3(-4.0, 2.0, -10.0), Vector3(4.0, 2.0, -10.0)]
+
+## Low graphics quality: no SSAO and cheap, short sun shadows (DisplaySettings sets it). The
+## shadows stay on: under Compatibility a sun without them lights everything darker and greyer.
+static var plain_light := false
 
 
 ## zone: whose sky, light and backdrop to use (null: the meadow's).
@@ -346,8 +351,10 @@ static func _add_environment(root: Node3D, zone: ZoneData) -> void:
 	env.background_mode = Environment.BG_SKY
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.tonemap_mode = Environment.TONE_MAPPER_ACES
-	env.ssao_enabled = true
+	# Linear, not ACES: under the Compatibility renderer ACES lifts the midtones and clips
+	# anything bright in the sun, so skin, hair and steel all turned white and trees mint.
+	env.tonemap_mode = Environment.TONE_MAPPER_LINEAR
+	env.ssao_enabled = not plain_light
 	env.glow_enabled = true
 	env.glow_intensity = 0.6
 	env.fog_enabled = true
@@ -386,5 +393,8 @@ static func _add_sun(root: Node3D, zone: ZoneData) -> void:
 	# right under Forward+ but washes everything out here. The meadow uses 0.6.
 	sun.light_energy = zone.sun_energy
 	sun.shadow_enabled = true
+	if plain_light:
+		sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+		sun.directional_shadow_max_distance = LOW_SHADOW_DISTANCE
 	sun.rotation_degrees = Vector3(-40, 35, 0)
 	root.add_child(sun)

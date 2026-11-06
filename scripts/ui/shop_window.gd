@@ -16,13 +16,18 @@ signal _left
 signal _answered(yes: bool)
 
 const FONT_SIZE := 24
-const TITLE_COLOR := Color(1.0, 0.85, 0.3)
-const GREY := Color(0.6, 0.6, 0.65)
+const TITLE_COLOR := UiStyle.TITLE_COLOR
+const GREY := UiStyle.GREY
 const BETTER := Color(0.35, 1.0, 0.4)
 const WORSE := Color(1.0, 0.35, 0.3)
 const NAME_WIDTH := 300.0
+## Phone: narrower names, so the widest row still fits the screen.
+const TOUCH_NAME_WIDTH := 240.0
 const PRICE_WIDTH := 90.0
-const WINDOW_WIDTH := 640.0
+## Messages under the list wrap past this width.
+const MESSAGE_WIDTH := 640.0
+## What the header, the title, a two-line message and the margins leave for the rows.
+const ROWS_RESERVED := 220.0
 ## Seconds each step stays on screen on autoplay.
 const AUTOPLAY_STEP := 0.7
 
@@ -38,6 +43,7 @@ var _keeper: Label
 var _gold: Label
 var _title: Label
 var _rows: VBoxContainer
+var _scroll: ScrollBox
 var _message: Label
 
 
@@ -76,25 +82,26 @@ func _ready() -> void:
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(center)
 	var window := BattleHud.make_window()
-	window.custom_minimum_size = Vector2(WINDOW_WIDTH, 0)
 	center.add_child(window)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 10)
+	box.add_theme_constant_override("separation", 8)
 	window.add_child(box)
 	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation", 24)
 	box.add_child(header)
 	_keeper = _label("", TITLE_COLOR)
 	_keeper.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(_keeper)
-	_gold = _label("", Color.WHITE)
+	_gold = _label("", StatBar.GOLD)
 	header.add_child(_gold)
 	_title = _label("", Color.WHITE)
 	box.add_child(_title)
-	_rows = VBoxContainer.new()
+	_scroll = ScrollBox.new(ROWS_RESERVED)
+	box.add_child(_scroll)
+	_rows = _scroll.content
 	_rows.add_theme_constant_override("separation", 6)
-	box.add_child(_rows)
 	_message = _label("", Color.WHITE)
-	_message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_message.hide()
 	box.add_child(_message)
 	hide()
 
@@ -103,7 +110,7 @@ func _ready() -> void:
 func run(shop_id: String) -> void:
 	_shop_id = shop_id
 	_keeper.text = Shop.keeper(shop_id)
-	_message.text = ""
+	_set_message("")
 	show()
 	_sfx(SfxLibrary.DIALOGUE)
 	_show_page("menu")
@@ -118,7 +125,7 @@ func run(shop_id: String) -> void:
 ## Shows speaker and question with Sí / No and returns true for Sí (Esc is No).
 func ask(speaker: String, question: String) -> bool:
 	_keeper.text = speaker
-	_message.text = ""
+	_set_message("")
 	show()
 	_sfx(SfxLibrary.DIALOGUE)
 	_show_page("question")
@@ -153,13 +160,14 @@ func _back() -> void:
 		"question":
 			_answered.emit(false)
 		_:
-			_message.text = ""
+			_set_message("")
 			_show_page("menu")
 
 
 ## focus_id puts the cursor back on that item's row when it is still there and usable,
 ## so buying or selling several in a row needs no walking down the list again.
 func _show_page(page: String, focus_id := "") -> void:
+	var kept := _scroll.scroll_vertical
 	_page = page
 	_gold.text = "Oro %d G" % _state.gold
 	for child in _rows.get_children():
@@ -197,11 +205,19 @@ func _show_page(page: String, focus_id := "") -> void:
 				_answered.emit(false))
 	if focus_id == "" or not _focus_id(focus_id):
 		_focus_first()
+	if focus_id != "":
+		_keep_scroll(kept)
+
+
+## The rows were just rebuilt: once they are laid out, the list goes back where it was.
+func _keep_scroll(value: int) -> void:
+	await get_tree().process_frame
+	_scroll.scroll_vertical = value
 
 
 func _open(page: String) -> void:
 	_sfx(SfxLibrary.ACCEPT)
-	_message.text = ""
+	_set_message("")
 	_show_page(page)
 
 
@@ -210,18 +226,20 @@ func _add_buy_row(id: String) -> void:
 	var row := _row()
 	var why := Shop.buy_problem(_state, id)
 	var button := _button(Shop.display_name(id))
-	button.custom_minimum_size.x = NAME_WIDTH
+	button.custom_minimum_size.x = TOUCH_NAME_WIDTH if Device.is_touch() else NAME_WIDTH
 	button.disabled = why != ""
 	button.pressed.connect(_buy.bind(id))
 	button.set_meta("id", id)
 	row.add_child(button)
-	var price := _label("%d G" % Shop.price(id), GREY if why != "" else Color.WHITE)
+	var price := _label("%d G" % Shop.price(id), GREY if why != "" else StatBar.GOLD)
 	price.custom_minimum_size.x = PRICE_WIDTH
 	row.add_child(price)
 	var info := Shop.compare(_state, id)
 	if not info.is_empty():
 		row.add_child(_label("%s +%d" % [info.stat, info.bonus], Color.WHITE))
 		row.add_child(comparison(info.diff))
+	else:
+		UiStyle.add_description(row, id)
 	if why != "":
 		row.add_child(_label(why, GREY))
 
@@ -233,14 +251,16 @@ func _add_sell_row(id: String) -> void:
 	var count := Shop.sell_count(_state, id)
 	var text := Shop.display_name(id) if count <= 1 else "%s ×%d" % [Shop.display_name(id), count]
 	var button := _button(text)
-	button.custom_minimum_size.x = NAME_WIDTH
+	button.custom_minimum_size.x = TOUCH_NAME_WIDTH if Device.is_touch() else NAME_WIDTH
 	button.disabled = why != ""
 	button.pressed.connect(_sell.bind(id))
 	button.set_meta("id", id)
 	row.add_child(button)
-	var price := _label("%d G" % Shop.sell_price(id), GREY if why != "" else Color.WHITE)
+	var price := _label("%d G" % Shop.sell_price(id), GREY if why != "" else StatBar.GOLD)
 	price.custom_minimum_size.x = PRICE_WIDTH
 	row.add_child(price)
+	if not Shop.is_equipment(id):
+		UiStyle.add_description(row, id)
 	if why != "":
 		row.add_child(_label(why, GREY))
 
@@ -323,9 +343,15 @@ func _wait() -> void:
 
 ## Shows text under the list; on autoplay also prints it.
 func _say(text: String) -> void:
-	_message.text = text
+	_set_message(text)
 	if _autoplay:
 		print(text)
+
+
+## The line under the list; an empty one takes no room, so the window hugs the rows.
+func _set_message(text: String) -> void:
+	BattleHud.fit_label(_message, text, MESSAGE_WIDTH)
+	_message.visible = text != ""
 
 
 func _row() -> HBoxContainer:

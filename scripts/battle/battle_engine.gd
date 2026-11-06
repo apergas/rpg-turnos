@@ -10,7 +10,9 @@ class_name BattleEngine extends RefCounted
 ## BattleEvent.HERO or an index into `enemies`. An enemy that picks "charge" spends its
 ## turn gathering strength and its next turn is a blow of CHARGE_MULT times the damage
 ## that never misses or crits (Defender still halves it). A boss with a next_phase that
-## reaches 0 HP rises once with that phase's stats (a PHASE event) instead of falling.
+## reaches 0 HP rises once with that phase's stats (a PHASE event) instead of falling. An
+## enemy that picks "escape" runs away and the battle ends as FLED (the Slime de Metal,
+## who fights alone).
 
 enum State { ONGOING, WON, LOST, FLED }
 
@@ -23,6 +25,7 @@ const CMD_NONE := "none"
 const CMD_STAGGER := "stagger"
 const CMD_CALL := "call"
 const CMD_CHARGE := "charge"
+const CMD_ESCAPE := "escape"
 
 const POISON := "poison"
 const SLEEP := "sleep"
@@ -61,6 +64,9 @@ var state := State.ONGOING
 var exp_won := 0
 var gold_won := 0
 var drops_won: Array[String] = []
+## The difficulty: what the hero's damage and the EXP won are multiplied by.
+var damage_mult := 1.0
+var exp_mult := 1.0
 
 var _rng: RandomNumberGenerator
 var _defending := false
@@ -152,7 +158,7 @@ func flee_chance() -> float:
 	for i in alive:
 		total += enemies[i].speed
 	var mean := total / maxf(1.0, alive.size())
-	return clampf(FLEE_BASE + (hero.speed - mean) * FLEE_PER_SPEED, FLEE_MIN, FLEE_MAX)
+	return clampf(FLEE_BASE + (hero.total_speed() - mean) * FLEE_PER_SPEED, FLEE_MIN, FLEE_MAX)
 
 
 ## Resolves a full round with the hero's command and the enemies' own choices. Returns
@@ -232,6 +238,8 @@ func _enemy_command(who: int) -> Dictionary:
 			return {"type": CMD_STAGGER}
 		CMD_CHARGE:
 			return {"type": CMD_CHARGE}
+		CMD_ESCAPE:
+			return {"type": CMD_ESCAPE}
 	var skill := enemy.find_skill(choice)
 	if skill != null and enemy.mp >= skill.mp_cost and not enemy.status.has(SILENCE):
 		return cmd_skill(skill, BattleEvent.HERO)
@@ -257,7 +265,7 @@ func _turn_order(hero_cmd: Dictionary) -> Array[int]:
 
 
 func _initiative(c: Combatant) -> float:
-	return c.speed * _rng.randf_range(INITIATIVE_SPREAD.x, INITIATIVE_SPREAD.y)
+	return c.total_speed() * _rng.randf_range(INITIATIVE_SPREAD.x, INITIATIVE_SPREAD.y)
 
 
 func _act(who: int, cmd: Dictionary, events: Array[Dictionary]) -> void:
@@ -281,6 +289,9 @@ func _act(who: int, cmd: Dictionary, events: Array[Dictionary]) -> void:
 		CMD_CHARGE:
 			_charged[who] = true
 			events.append(BattleEvent.charge(who))
+		CMD_ESCAPE:
+			state = State.FLED
+			events.append(BattleEvent.enemy_flee(who))
 		CMD_CALL:
 			_called[who] = true
 			enemies.append(enemies[who].help.duplicate() as Combatant)
@@ -382,6 +393,8 @@ func _use_item(who: int, id: String, events: Array[Dictionary]) -> void:
 func _hurt(target: int, amount: int, crit: bool, magic: bool, affinity: String, \
 		events: Array[Dictionary]) -> void:
 	var fighter := _fighter(target)
+	if target == BattleEvent.HERO:
+		amount = _taken(amount)
 	if target == BattleEvent.HERO and _defending:
 		amount = maxi(1, ceili(amount / 2.0))
 	fighter.hp = maxi(fighter.hp - amount, 0)
@@ -418,7 +431,7 @@ func _fall(who: int, events: Array[Dictionary]) -> void:
 
 func _add_status(target: int, status: String, events: Array[Dictionary]) -> void:
 	var fighter := _fighter(target)
-	if not fighter.is_alive() or fighter.status.has(status):
+	if not fighter.is_alive() or fighter.status.has(status) or fighter.is_immune(status):
 		return
 	# Silence counts down at the end of every round, the one it starts in too, so it
 	# gets one extra round to last SILENCE_ROUNDS whole rounds.
@@ -434,6 +447,8 @@ func _end_of_round(events: Array[Dictionary]) -> void:
 		var fighter := _fighter(who)
 		if fighter.status.has(POISON) and fighter.is_alive():
 			var amount := maxi(1, roundi(fighter.max_hp * POISON_SHARE))
+			if who == BattleEvent.HERO:
+				amount = _taken(amount)
 			fighter.hp = maxi(fighter.hp - amount, 0)
 			events.append(BattleEvent.status_tick(who, POISON, amount, fighter.hp))
 			if fighter.hp == 0:
@@ -466,6 +481,7 @@ func _win(events: Array[Dictionary]) -> void:
 	for enemy in enemies:
 		exp_won += enemy.exp_reward
 		gold_won += enemy.gold_reward
+	exp_won = roundi(exp_won * exp_mult)
 	hero.experience += exp_won
 	events.append(BattleEvent.victory(exp_won))
 	if gold_won > 0:
@@ -477,6 +493,11 @@ func _win(events: Array[Dictionary]) -> void:
 				inventory.add(id)
 				drops_won.append(id)
 				events.append(BattleEvent.drop(id, i))
+
+
+## What the difficulty leaves of damage to the hero, at least 1.
+func _taken(amount: int) -> int:
+	return maxi(1, roundi(amount * damage_mult))
 
 
 func _roll_damage(attacker: Combatant, defender: Combatant, crit: bool) -> int:

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="QuestData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/quest_data.gd" id="1_quest"]
+
+[resource]
+script = ExtResource("1_quest")
+id = "slime_metal"
+title = "El Slime de Metal"
+zone = "mina_1"
+giver = "Tablón"
+target = "slime_metal"
+objective = "Derrota al Slime de Metal, que se deja ver por la pradera. Huye en cuanto puede."
+status = "Slime de Metal (pradera)"
+offer_lines = Array[String](["Se busca: Slime de Metal, visto por la pradera de Villaclaro. Muy rápido y muy duro.", "Solo la magia le hace daño, y se escapa en cuanto puede. Quien lo alcance se quedará con lo que lleva encima."])
+reward_equipment = "amuleto_velocidad"

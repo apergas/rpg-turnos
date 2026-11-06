@@ -7,6 +7,7 @@ var _slots := {
 	Equipment.WEAPON: Equipment.STICK,
 	Equipment.ARMOR: Equipment.CLOTHES,
 	Equipment.SHIELD: "",
+	Equipment.ACCESSORY: "",
 }
 
 
@@ -40,6 +41,20 @@ func attack_bonus() -> int:
 
 func defense_bonus() -> int:
 	return Equipment.bonus(worn(Equipment.ARMOR)) + Equipment.bonus(worn(Equipment.SHIELD))
+
+
+func speed_bonus() -> int:
+	return Equipment.bonus(worn(Equipment.ACCESSORY))
+
+
+## The status effects what is worn keeps away.
+func immunities() -> Array[String]:
+	var immune: Array[String] = []
+	for slot in Equipment.SLOTS:
+		var status := Equipment.immunity(worn(slot))
+		if status != "":
+			immune.append(status)
+	return immune
 
 
 ## Copy as slot -> id, for the save game.

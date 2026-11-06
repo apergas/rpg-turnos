@@ -8,12 +8,13 @@ const BOSQUE := "bosque"
 const MINA := "mina"
 const CASTILLO := "castillo"
 ## shop id -> keeper's name, equipment and items (Inventory ids) on sale, in list order.
-## Zone 1 sells no Éter (it comes with the zone 2 shop, with the Ala de viaje).
+## Zone 1 sells no Éter (it comes with the zone 2 shop); the Ala de viaje is sold
+## everywhere.
 const SHOPS := {
 	VILLACLARO: {
 		"keeper": "Mercader",
 		"equipment": [Equipment.COPPER_SWORD, Equipment.LEATHER_MAIL, Equipment.WOODEN_SHIELD],
-		"items": [Inventory.POTION, Inventory.ANTIDOTE],
+		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.WING],
 	},
 	BOSQUE: {
 		"keeper": "Mercader",
@@ -151,18 +152,20 @@ static func compare(state: GameState, id: String) -> Dictionary:
 		"diff": Equipment.bonus(id) - Equipment.bonus(worn)}
 
 
-## For --autoplay: one Ala de viaje where it is sold if none is carried (the autoplay
-## retreat flies back with it), then the equipment of the shop that beats what is worn
-## and is not in the bag yet, in slot order, as long as the gold lasts. Once there is no
-## such piece left (bought or not), potions up to AUTOPLAY_POTIONS.
+## For --autoplay: one Ala de viaje if none is carried (the autoplay retreat flies back
+## with it), then the equipment of the shop that beats what is worn and is not in the bag
+## yet, in slot order, as long as the gold lasts. Once there is no such piece left (bought
+## or not), or with no potions at all, potions up to AUTOPLAY_POTIONS. In Villaclaro the first 50 G must go on the
+## gear and the village is close by, so there the Ala waits until the gear is bought.
 static func autoplay_picks(state: GameState, shop_id: String) -> Array[String]:
 	var picks: Array[String] = []
 	var gold := state.gold
 	var upgrades := 0
-	if Inventory.WING in SHOPS[shop_id].items and state.inventory.count(Inventory.WING) == 0 \
-			and gold >= price(Inventory.WING):
+	var wants_wing := state.inventory.count(Inventory.WING) == 0
+	if wants_wing and shop_id != VILLACLARO and gold >= price(Inventory.WING):
 		picks.append(Inventory.WING)
 		gold -= price(Inventory.WING)
+		wants_wing = false
 	for id: String in SHOPS[shop_id].equipment:
 		if compare(state, id).diff <= 0 or id in state.bag_equipment:
 			continue
@@ -170,9 +173,12 @@ static func autoplay_picks(state: GameState, shop_id: String) -> Array[String]:
 		if gold >= price(id):
 			picks.append(id)
 			gold -= price(id)
-	if upgrades > 0:
-		return picks
 	var potions := state.inventory.count(Inventory.POTION)
+	if upgrades > 0 and potions > 0:
+		return picks
+	if upgrades == 0 and wants_wing and gold >= price(Inventory.WING):
+		picks.append(Inventory.WING)
+		gold -= price(Inventory.WING)
 	while potions < AUTOPLAY_POTIONS and gold >= price(Inventory.POTION):
 		picks.append(Inventory.POTION)
 		gold -= price(Inventory.POTION)

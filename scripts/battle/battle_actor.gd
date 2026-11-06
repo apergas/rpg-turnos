@@ -10,7 +10,7 @@ class_name BattleActor extends Node3D
 
 enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPER, WOLF,
 	GOBLIN, PLANT, WITCH, MUD_GOLEM, STONE_GOLEM, SPIDER, SPECTER, SKELETON_WARRIOR,
-	SKELETON_ROGUE, SKELETON_MAGE, FOG_LORD }
+	SKELETON_ROGUE, SKELETON_MAGE, FOG_LORD, FARMER, METAL_SLIME, BOARD, CAT, CHILD }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -120,6 +120,14 @@ const AURA_ALPHA := 0.22
 ## Angle (radians about X) of the plant's upper jaw: resting, and wide open to bite.
 const JAW_REST := 0.3
 const JAW_OPEN := 0.95
+## The hero as a person, not a suit of steel: the KayKit Knight's helmet is hidden and its
+## armor meshes (one grey palette cell) are tinted bare arms, a blue tunic and leather
+## legs. Multiplied over a grey that peaks near 0.42 linear, hence the values above 1.
+const HERO_SKIN := Color(1.75, 1.28, 1.02)
+## The Knight's atlas with the hair cell brown: the head's hair and skin share one mesh.
+const HERO_HEAD_TEXTURE := preload("res://assets/characters/hero_head_texture.png")
+const HERO_TUNIC := Color(0.75, 1.0, 1.7)
+const HERO_LEGS := Color(0.95, 0.75, 0.6)
 ## Hand slots of the KayKit characters (BoneAttachment3D nodes).
 const HAND_R := "Rig/Skeleton3D/handslot_r"
 const HAND_L := "Rig/Skeleton3D/handslot_l"
@@ -132,7 +140,7 @@ const STICK_CENTER := 0.45
 ## Everything that changes between looks. Characters: scene, scale, top (height of the
 ## damage numbers), hide (prop nodes of the model to hide), anims and, optional, tint
 ## (multiplies every imported material: the merchant is a green Mage, the innkeeper an
-## orange one), and optional props (hand bone -> weapon model, for the skeletons) and
+## orange one), mesh_tints (mesh under the skeleton -> tint, the hero), and optional props (hand bone -> weapon model, for the skeletons) and
 ## aura (the Señor de la Niebla); the hero hides
 ## every hand mesh and shows only those of its equipment (set_equipment()). Slimes: color,
 ## scale (the whole blob, eyes and crown included), top and crown. Bat: color, wing
@@ -147,6 +155,7 @@ const LOOKS := {
 		"scale": CHARACTER_SCALE,
 		"top": 1.9,
 		"hide": [
+			"Rig/Skeleton3D/head/Knight_Helmet",
 			"Rig/Skeleton3D/handslot_l/1H_Sword_Offhand",
 			"Rig/Skeleton3D/handslot_l/Badge_Shield",
 			"Rig/Skeleton3D/handslot_l/Rectangle_Shield",
@@ -155,6 +164,13 @@ const LOOKS := {
 			"Rig/Skeleton3D/handslot_r/1H_Sword",
 			"Rig/Skeleton3D/handslot_r/2H_Sword",
 		],
+		"mesh_tints": {
+			"Knight_ArmLeft": HERO_SKIN,
+			"Knight_ArmRight": HERO_SKIN,
+			"Knight_Body": HERO_TUNIC,
+			"Knight_LegLeft": HERO_LEGS,
+			"Knight_LegRight": HERO_LEGS,
+		},
 		"anims": CHARACTER_ANIMS,
 	},
 	Look.VILLAGER: {
@@ -192,6 +208,45 @@ const LOOKS := {
 		"anims": CHARACTER_ANIMS,
 		"tint": Color(1.0, 0.75, 0.5),
 	},
+	Look.FARMER: {
+		"scene": MAGE,
+		"scale": CHARACTER_SCALE,
+		"top": 2.2,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/Spellbook",
+			"Rig/Skeleton3D/handslot_l/Spellbook_open",
+			"Rig/Skeleton3D/handslot_r/1H_Wand",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(0.65, 0.8, 1.0),
+	},
+	# The Niña of the forest village: a small Mage in pink.
+	Look.CHILD: {
+		"scene": MAGE,
+		"scale": 0.48,
+		"top": 1.7,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/Spellbook",
+			"Rig/Skeleton3D/handslot_l/Spellbook_open",
+			"Rig/Skeleton3D/handslot_r/1H_Wand",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(1.0, 0.72, 0.8),
+	},
+	# A notice board: it stands still.
+	Look.BOARD: {
+		"color": Color(0.56, 0.38, 0.2),
+		"dark_color": Color(0.36, 0.22, 0.1),
+		"paper_color": Color(0.93, 0.89, 0.75),
+		"top": 1.9,
+	},
+	Look.CAT: {
+		"color": Color(0.85, 0.55, 0.25),
+		"dark_color": Color(0.62, 0.36, 0.14),
+		"eye_color": Color(0.2, 0.75, 0.3),
+		"scale": 1.2,
+		"top": 1.2,
+	},
 	Look.SLIME: {
 		"color": Color(0.55, 0.3, 0.85),
 		"scale": 1.0,
@@ -203,6 +258,12 @@ const LOOKS := {
 		"scale": 1.6,
 		"top": 2.1,
 		"crown": true,
+	},
+	Look.METAL_SLIME: {
+		"color": Color(0.78, 0.82, 0.88),
+		"scale": 0.8,
+		"top": 1.1,
+		"crown": false,
 	},
 	Look.BAT: {
 		"color": Color(0.32, 0.22, 0.42),
@@ -369,6 +430,10 @@ func _ready() -> void:
 		_build_spider(data)
 	elif look == Look.SPECTER:
 		_build_specter(data)
+	elif look == Look.BOARD:
+		_build_board(data)
+	elif look == Look.CAT:
+		_build_cat(data)
 	else:
 		_build_slime(data)
 	for node in _body.find_children("*", "MeshInstance3D", true, false):
@@ -614,6 +679,14 @@ func _build_character(data: Dictionary) -> void:
 		slot.add_child((data.props[bone] as PackedScene).instantiate())
 	if data.has("tint"):
 		_tint(model, data.tint)
+	var mesh_tints: Dictionary = data.get("mesh_tints", {})
+	for mesh_name: String in mesh_tints:
+		_tint_mesh(bones.get_node(mesh_name) as MeshInstance3D, mesh_tints[mesh_name])
+	if look == Look.HERO:
+		var head := bones.get_node("Knight_Head") as MeshInstance3D
+		var head_material := head.get_active_material(0).duplicate() as BaseMaterial3D
+		head_material.albedo_texture = HERO_HEAD_TEXTURE
+		head.set_surface_override_material(0, head_material)
 	if data.has("aura"):
 		_add_ghost(_body, _sphere(0.5), data.aura, FOG_AURA_ALPHA, Vector3(0, _top * 0.45, 0),
 			Vector3(2.2, 3.2, 2.2))
@@ -650,6 +723,37 @@ func _build_slime(data: Dictionary) -> void:
 			var angle := TAU * i / 5.0
 			_add_mesh(blob, _cone(0.06, 0.16), GOLD,
 				Vector3(cos(angle) * 0.19, 1.01, sin(angle) * 0.19), 0.4)  # spike
+
+
+## A notice board on two posts, with its papers on the side it faces (-Z).
+func _build_board(data: Dictionary) -> void:
+	var post := BoxMesh.new()
+	post.size = Vector3(0.12, 1.7, 0.12)
+	for x in [-0.6, 0.6]:
+		_add_mesh(_body, post, data.dark_color, Vector3(x, 0.85, 0))
+	var board := BoxMesh.new()
+	board.size = Vector3(1.5, 0.9, 0.08)
+	_add_mesh(_body, board, data.color, Vector3(0, 1.3, 0))
+	var paper := BoxMesh.new()
+	paper.size = Vector3(0.32, 0.4, 0.01)
+	for spot in [Vector3(-0.42, 1.32, -0.05), Vector3(0.02, 1.26, -0.05),
+			Vector3(0.44, 1.36, -0.05)]:
+		_add_mesh(_body, paper, data.paper_color, spot)
+
+
+## A sitting cat: a rounded body, a head with pointed ears and eyes, and a tail.
+func _build_cat(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	_add_blob(root, SLIME_PROFILE, SLIME_SEGMENTS, data.color, Vector3.ZERO, Vector3.ZERO,
+		Vector3(0.5, 0.6, 0.65))
+	_add_mesh(root, _sphere(0.2), data.color, Vector3(0, 0.62, -0.1))
+	for x in [-0.11, 0.11]:
+		_add_mesh(root, _cone(0.07, 0.16), data.dark_color, Vector3(x, 0.84, -0.1))  # ear
+		_add_mesh(root, _sphere(0.04), data.eye_color, Vector3(x * 0.8, 0.66, -0.28))  # eye
+	_add_mesh(root, _cylinder(0.04, 0.5), data.dark_color, Vector3(0, 0.22, 0.4))  # tail
+	(root.get_child(-1) as Node3D).rotation_degrees.x = 60.0
 
 
 ## A bat: round body with ears and eyes, hovering at data.fly, with two wings on pivots
@@ -842,6 +946,8 @@ func _build_specter(data: Dictionary) -> void:
 ## specter floats, the rest squash and stretch (the wolf, the golems and the spider only
 ## breathe).
 func _start_idle() -> void:
+	if look == Look.BOARD:
+		return
 	if not _wings.is_empty():
 		_start_flap()
 	elif _sway:
@@ -849,7 +955,8 @@ func _start_idle() -> void:
 	elif _hover:
 		_start_float()
 	else:
-		var gentle := look in [Look.WOLF, Look.MUD_GOLEM, Look.STONE_GOLEM, Look.SPIDER]
+		var gentle := look in [Look.WOLF, Look.MUD_GOLEM, Look.STONE_GOLEM, Look.SPIDER,
+			Look.CAT]
 		_start_bounce(0.4 if gentle else 1.0)
 
 
@@ -958,14 +1065,17 @@ func _float_label(text: String, font_size: int, color: Color, y: float) -> void:
 ## multiplied by color (the texture is multiplied too).
 static func _tint(model: Node3D, color: Color) -> void:
 	for node in model.find_children("*", "MeshInstance3D", true, false):
-		var mi := node as MeshInstance3D
-		for i in mi.mesh.get_surface_count():
-			var source := mi.get_active_material(i) as BaseMaterial3D
-			if source == null:
-				continue
-			var tinted := source.duplicate() as BaseMaterial3D
-			tinted.albedo_color = source.albedo_color * color
-			mi.set_surface_override_material(i, tinted)
+		_tint_mesh(node as MeshInstance3D, color)
+
+
+static func _tint_mesh(mi: MeshInstance3D, color: Color) -> void:
+	for i in mi.mesh.get_surface_count():
+		var source := mi.get_active_material(i) as BaseMaterial3D
+		if source == null:
+			continue
+		var tinted := source.duplicate() as BaseMaterial3D
+		tinted.albedo_color = source.albedo_color * color
+		mi.set_surface_override_material(i, tinted)
 
 
 ## Additive overlay on every mesh, so it works on the imported materials too.

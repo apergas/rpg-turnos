@@ -41,6 +41,7 @@ entries = {
 }
 start_entry = "sur"
 town_entry = "aldea"
+portal_pos = Vector3(-7, 0, 9.5)
 exits = [{
 "entry": "norte",
 "id": "sur",
@@ -75,14 +76,39 @@ npcs = [{
 "pos": Vector3(-14.95, 0, 4.06),
 "yaw": 180.0
 }, {
-"after_flag": "bruja",
 "kind": "npc",
 "lines": ["Una bruja vive en el claro del norte del bosque.", "Desde que llegó, los lobos y las plantas atacan a cualquiera.", "Si vas a por ella, prepárate bien en la tienda."],
-"lines_after": ["¡Has vencido a la bruja! El bosque vuelve a estar en calma.", "Dicen que la niebla sale de una vieja mina, más al norte."],
+"lines_by_chapter": {
+3: ["¡Has vencido a la bruja! El bosque vuelve a estar en calma.", "La niebla sigue bajando del norte, pasada la vieja mina."],
+5: ["Ya no hay niebla, y los árboles vuelven a dar sombra.", "Yo, por si acaso, sigo con el hacha cerca."]
+},
 "look": "VILLAGER",
 "name": "Leñadora",
 "pos": Vector3(-10.46, 0, -2.23),
 "yaw": 180.0
+}, {
+"kind": "board",
+"lines": ["Aviso: el pozo no concede deseos. Dejen de tirar monedas.", "Debajo: entonces, ¿quién se las lleva?"],
+"look": "BOARD",
+"name": "Tablón",
+"pos": Vector3(-8.2, 0, 7),
+"yaw": 180.0
+}, {
+"kind": "npc",
+"lines": ["Cuando sea mayor quiero ser leñadora. O gato."],
+"lines_by_chapter": {
+5: ["¿Has visto el cielo? Bigotes dice que ya era hora. Bueno, lo dice a su manera."]
+},
+"look": "CHILD",
+"name": "Niña",
+"pos": Vector3(-13, 0, 6.2),
+"yaw": 180.0
+}, {
+"kind": "npc",
+"look": "CAT",
+"name": "Gato",
+"pos": Vector3(-20.6, 0, -21),
+"yaw": 120.0
 }]
 boss_id = "bruja"
 boss_pos = Vector3(0, 0, -34)
@@ -90,8 +116,8 @@ formations = [["lobo"], ["duende"], ["planta"], ["lobo"], ["lobo", "duende"], ["
 start_formations = [["lobo"], ["duende"], ["planta"]]
 start_pos = Vector3(0, 0, 35)
 start_radius = 18.0
-encounter_grace = 9.0
-encounter_chance = 0.01
+encounter_grace = 5.0
+encounter_chance = 0.025
 music = "forest"
 village_music = "village"
 sky_top = Color(0.28, 0.45, 0.75, 1)

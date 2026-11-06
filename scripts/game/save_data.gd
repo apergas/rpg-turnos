@@ -9,9 +9,24 @@ class_name SaveData extends RefCounted
 ## every chest closed. Version 4 (the world of zones) adds the zone the hero is on, the
 ## world flags, the key items and the last village visited; a version 2 or 3 save still
 ## loads on the meadow (its position is a meadow one), with the "rey_slime" flag set if
-## its quest was already done, no key items and Villaclaro as the last village.
+## its quest was already done, no key items and Villaclaro as the last village. Version 5
+## (the interface pass) adds the open return portal of the Ala de viaje and what has been
+## explored of each zone (its ExploredMap cells in base64); an older save loads with no
+## portal open and nothing explored. STORY_VERSION (the story) adds the hero's name, the
+## story (cutscenes seen, the ending reached) and the numbers for the credits; an older save
+## gets the default name, the cutscenes its world flags have left behind marked seen
+## (StoryState.mark_seen_for_flags()) and the numbers at 0. QUESTS_VERSION (the side quests)
+## adds the accessory slot to the loadout and the side quests' progress; an older save gets
+## the slot empty and no side quest taken. DIFFICULTY_VERSION (phase 7) adds the difficulty;
+## an older save plays on Normal.
 
-const VERSION := 4
+const VERSION := 8
+## First version with the story's fields.
+const STORY_VERSION := 6
+## First version with the accessory slot and the side quests.
+const QUESTS_VERSION := 7
+## First version with the difficulty.
+const DIFFICULTY_VERSION := 8
 ## Oldest version apply() still reads.
 const OLDEST_VERSION := 2
 ## Combatant fields of the hero that change while playing (the rest come from hero.tres).
@@ -28,6 +43,11 @@ static func from_state(state: GameState, player_pos: Vector3, play_time: float) 
 		if state.world_flags[flag]:
 			flags.append(flag)
 	flags.sort()
+	var explored := {}
+	for id: String in state.explored:
+		var map: ExploredMap = state.explored[id]
+		if map.any_seen():
+			explored[id] = Marshalls.raw_to_base64(map.cells)
 	return {
 		"version": VERSION,
 		"hero": hero,
@@ -41,6 +61,14 @@ static func from_state(state: GameState, player_pos: Vector3, play_time: float) 
 		"town": state.town_zone,
 		"flags": flags,
 		"key_items": state.key_items.duplicate(),
+		"portal": {} if not state.has_portal() else {"town": state.portal_town,
+			"zone": state.portal_zone, "pos": [state.portal_pos.x, state.portal_pos.z]},
+		"explored": explored,
+		"name": state.hero.display_name,
+		"story": state.story.to_dict(),
+		"stats": {"battles": state.battles, "steps": state.steps, "gold": state.gold_earned},
+		"quests": state.quests.to_dict(),
+		"difficulty": state.difficulty,
 		"position": [player_pos.x, player_pos.z],
 		"play_time": play_time,
 	}
@@ -82,6 +110,33 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 		state.key_items.clear()
 		state.zone_id = "pradera"
 		state.town_zone = "pradera"
+	state.close_portal()
+	var portal: Dictionary = data.get("portal", {})
+	if not portal.is_empty():
+		state.portal_town = portal.town
+		state.portal_zone = portal.zone
+		state.portal_pos = Vector3(portal.pos[0], 0.0, portal.pos[1])
+	state.explored = {}
+	var explored: Dictionary = data.get("explored", {})
+	for id: String in explored:
+		state.explored[id] = ExploredMap.new(ZoneData.by_id(id),
+			Marshalls.base64_to_raw(explored[id]))
+	state.story = StoryState.new()
+	if int(data.version) >= STORY_VERSION:
+		state.hero.display_name = data.name
+		state.story.set_from(data.story)
+		state.battles = int(data.stats.battles)
+		state.steps = int(data.stats.steps)
+		state.gold_earned = int(data.stats.gold)
+	else:
+		# Before the story: the default name, and the cutscenes already left behind seen.
+		state.hero.display_name = StoryState.DEFAULT_NAME
+		state.story.mark_seen_for_flags(state.world_flags)
+		state.battles = 0
+		state.steps = 0
+		state.gold_earned = 0
+	state.quests.set_from(data.get("quests", {}))
+	state.difficulty = data.get("difficulty", Difficulty.NORMAL)
 	var pos: Array = data.position
 	return {"valid": true, "position": Vector3(pos[0], 0.0, pos[1]),
 		"play_time": float(data.play_time)}
@@ -95,6 +150,14 @@ static func is_valid(data: Dictionary) -> bool:
 	if int(data.version) >= 3 and not _valid_equipment(data):
 		return false
 	if int(data.version) >= 4 and not _valid_world(data):
+		return false
+	if int(data.version) >= 5 and not (_valid_portal(data) and _valid_explored(data)):
+		return false
+	if int(data.version) >= STORY_VERSION and not _valid_story(data):
+		return false
+	if int(data.version) >= QUESTS_VERSION and not _valid_quests(data):
+		return false
+	if int(data.version) >= DIFFICULTY_VERSION and not _valid_difficulty(data):
 		return false
 	var hero: Variant = data.get("hero")
 	if not hero is Dictionary:
@@ -119,6 +182,39 @@ static func is_valid(data: Dictionary) -> bool:
 	return data.get("play_time") is float
 
 
+## DIFFICULTY_VERSION field: a Difficulty id.
+static func _valid_difficulty(data: Dictionary) -> bool:
+	var difficulty: Variant = data.get("difficulty")
+	return difficulty is String and difficulty in Difficulty.IDS
+
+
+## Version 5 field: no portal ({}), or its village and zone are ZoneData ids and its spot
+## two numbers.
+static func _valid_portal(data: Dictionary) -> bool:
+	var portal: Variant = data.get("portal")
+	if not portal is Dictionary:
+		return false
+	if (portal as Dictionary).is_empty():
+		return true
+	for key in ["town", "zone"]:
+		var zone_id: Variant = portal.get(key)
+		if not (zone_id is String and zone_id in ZoneData.IDS):
+			return false
+	var pos: Variant = portal.get("pos")
+	return pos is Array and pos.size() == 2 and pos[0] is float and pos[1] is float
+
+
+## Version 5 field: zone id -> a string (cells that don't fit the zone are ignored).
+static func _valid_explored(data: Dictionary) -> bool:
+	var explored: Variant = data.get("explored")
+	if not explored is Dictionary:
+		return false
+	for id: Variant in explored:
+		if not (id is String and id in ZoneData.IDS and explored[id] is String):
+			return false
+	return true
+
+
 ## Version 3 fields: every worn id fits its slot, every bag id is equipment and every
 ## chest id exists.
 static func _valid_equipment(data: Dictionary) -> bool:
@@ -126,6 +222,8 @@ static func _valid_equipment(data: Dictionary) -> bool:
 	if not loadout is Dictionary:
 		return false
 	for slot in Equipment.SLOTS:
+		if slot == Equipment.ACCESSORY and int(data.version) < QUESTS_VERSION:
+			continue
 		var id: Variant = (loadout as Dictionary).get(slot)
 		if not id is String or (id != "" and Equipment.slot(id) != slot):
 			return false
@@ -140,6 +238,40 @@ static func _valid_equipment(data: Dictionary) -> bool:
 		return false
 	for id: Variant in chests:
 		if not (id is String and Chests.CHESTS.has(id)):
+			return false
+	return true
+
+
+## QUESTS_VERSION field: quest id -> its stage and count.
+static func _valid_quests(data: Dictionary) -> bool:
+	var quests: Variant = data.get("quests")
+	if not quests is Dictionary:
+		return false
+	for id: Variant in quests:
+		if not (id is String and QuestLog.QUESTS.has(id)):
+			return false
+		var entry: Variant = quests[id]
+		if not (entry is Dictionary and entry.get("stage") is float \
+				and entry.get("count") is float):
+			return false
+	return true
+
+
+## STORY_VERSION fields: a name StoryState.clean_name() keeps as it is, the story's seen
+## list and finished flag, and the three numbers.
+static func _valid_story(data: Dictionary) -> bool:
+	var hero_name: Variant = data.get("name")
+	if not (hero_name is String and StoryState.clean_name(hero_name) == hero_name):
+		return false
+	var story: Variant = data.get("story")
+	if not (story is Dictionary and story.get("seen") is Array \
+			and story.get("finished") is bool):
+		return false
+	var stats: Variant = data.get("stats")
+	if not stats is Dictionary:
+		return false
+	for key in ["battles", "steps", "gold"]:
+		if not (stats as Dictionary).get(key) is float:
 			return false
 	return true
 

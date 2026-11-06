@@ -2,19 +2,32 @@ class_name TitleScreen extends Node
 ## Main scene. Shows the game's name over the meadow seen from a slowly drifting
 ## top-down camera, with "Nueva partida", "Continuar" (disabled without a save) and
 ## "Opciones" (keyboard, mouse and touch). Owns the only AudioDirector and the options,
-## and creates a Game for the new or loaded session (new_game / continue_game); when
-## the Game emits quit_to_title it frees it and shows the title again.
-## With `-- --autoplay` it starts a new game at once, without showing the title. With
-## `--autoplay-save` too, going back to the title loads the save straight away.
+## and creates a Game for the new or loaded session (new_game / continue_game); a new
+## game first asks the hero's name (NameEntry, over the meadow). When the Game emits
+## quit_to_title it frees it and shows the title again. A finished save shows
+## "Continuar (terminada)".
+## With `-- --autoplay` the name entry types AUTOPLAY_NAME by itself and the new game
+## starts at once, without the menu. With `--autoplay-save` too, going back to the title
+## loads the save straight away.
 
 signal new_game
 signal continue_game
 
 const GAME_SCENE := preload("res://scenes/game/game.tscn")
+## The name the autoplay types (an accent, to try the grid's last row).
+const AUTOPLAY_NAME := "Rocío"
 const TITLE_TEXT := "Villaclaro"
 const TITLE_SIZE := 96
+const SUBTITLE_TEXT := "La Niebla del Norte"
+const SUBTITLE_SIZE := 36
+const VERSION_SIZE := 18
 const FONT_SIZE := 28
 const FADE_TIME := 0.4
+## Where the menu's room starts under the title.
+const MENU_TOP := 160
+## On a phone the title moves up, so the menu fits under its subtitle.
+const TOUCH_MENU_TOP := 205
+const TOUCH_TITLE_TOP := 24
 ## Drifting camera: looks down PITCH_DEG from DISTANCE m at a point that wanders over
 ## the field at DRIFT_SPEED (radians per second of its slow loop).
 const PITCH_DEG := 55.0
@@ -33,6 +46,10 @@ var _continue_button: Button
 var _options_button: Button
 var _options_window: PanelContainer
 var _options_panel: OptionsPanel
+var _name_entry: NameEntry
+var _difficulty_window: DifficultyWindow
+var _title_label: Label
+var _menu_center: CenterContainer
 var _fade: ColorRect
 var _game: Game
 var _drift := 0.0
@@ -47,16 +64,23 @@ func _ready() -> void:
 	_autoplay = args.has("--autoplay")
 	_autoplay_save = _autoplay and args.has("--autoplay-save")
 	_options = SaveStore.load_options()
+	DisplaySettings.apply(get_window(), _options)
+	if Device.is_touch():
+		# A child of the title itself, which stays while the Game comes and goes.
+		var hint_layer := CanvasLayer.new()
+		hint_layer.layer = 100
+		hint_layer.add_child(RotateHint.new())
+		add_child(hint_layer)
+	KeyMap.apply(_options.keys)
 	_audio = AudioDirector.new()
 	add_child(_audio)
 	_audio.set_volumes(_options.music_volume, _options.sfx_volume)
 	_build_fade()
-	new_game.connect(func() -> void: _start_game({}))
+	new_game.connect(_open_name_entry)
 	continue_game.connect(func() -> void: _start_game(_load_save()))
+	_open_title()
 	if _autoplay:
-		_start_game({})
-	else:
-		_open_title()
+		_open_name_entry()
 
 
 func _process(delta: float) -> void:
@@ -102,6 +126,9 @@ func _close_title() -> void:
 	_ui = null
 	_options_window = null
 	_options_panel = null
+	_name_entry = null
+	_difficulty_window = null
+	_title_label = null
 	_menu_window = null
 	_continue_button = null
 	_options_button = null
@@ -116,8 +143,56 @@ func _load_save() -> Dictionary:
 	return save
 
 
-## Fades out, swaps the title for a Game (save empty = new game) and fades in.
-func _start_game(save: Dictionary) -> void:
+## The menu gives way to the NameEntry; its name starts a new game, Volver brings the
+## menu back.
+func _open_name_entry() -> void:
+	if _starting or _name_entry != null:
+		return
+	_audio.play_sfx(SfxLibrary.ACCEPT)
+	_menu_window.hide()
+	_title_label.hide()
+	_name_entry = NameEntry.new()
+	_name_entry.setup(_audio)
+	_ui.add_child(_name_entry)
+	_name_entry.accepted.connect(_on_name_accepted)
+	_name_entry.cancelled.connect(_back_to_menu)
+	if _autoplay:
+		_name_entry.demo(AUTOPLAY_NAME)
+
+
+## The name is set: the difficulty comes next (on autoplay Game picks it from the arguments).
+func _on_name_accepted(hero_name: String) -> void:
+	if _autoplay:
+		_start_game({}, hero_name)
+		return
+	_close_name_entry()
+	_difficulty_window = DifficultyWindow.new()
+	_difficulty_window.setup(_audio)
+	_ui.add_child(_difficulty_window)
+	_difficulty_window.chosen.connect(func(id: String) -> void: _start_game({}, hero_name, id))
+	_difficulty_window.cancelled.connect(_back_to_menu)
+
+
+## Volver from the name or the difficulty: the menu again.
+func _back_to_menu() -> void:
+	_close_name_entry()
+	if _difficulty_window != null:
+		_difficulty_window.queue_free()
+		_difficulty_window = null
+	_title_label.show()
+	_menu_window.show()
+	_focus(_continue_button if not _continue_button.disabled else _options_button)
+
+
+func _close_name_entry() -> void:
+	if _name_entry != null:
+		_name_entry.queue_free()
+		_name_entry = null
+
+
+## Fades out, swaps the title for a Game (save empty = new game with hero_name and
+## difficulty) and fades in.
+func _start_game(save: Dictionary, hero_name := "", difficulty := Difficulty.NORMAL) -> void:
 	if _starting:
 		return
 	_starting = true
@@ -126,7 +201,7 @@ func _start_game(save: Dictionary) -> void:
 		await _fade_to(1.0)
 		_close_title()
 	_game = GAME_SCENE.instantiate()
-	_game.setup(_audio, _options, save)
+	_game.setup(_audio, _options, save, hero_name, difficulty)
 	_game.quit_to_title.connect(_on_quit_to_title)
 	add_child(_game)
 	await _fade_to(0.0)
@@ -171,13 +246,38 @@ func _build_menu() -> void:
 	title.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.0))
 	title.add_theme_constant_override("outline_size", 18)
 	root.add_child(title)
+	_title_label = title
 	title.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP, \
-		Control.PRESET_MODE_MINSIZE, 90)
+		Control.PRESET_MODE_MINSIZE, TOUCH_TITLE_TOP if Device.is_touch() else 90)
+	var subtitle := Label.new()
+	subtitle.text = SUBTITLE_TEXT
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle.add_theme_font_size_override("font_size", SUBTITLE_SIZE)
+	subtitle.add_theme_color_override("font_color", Color(1.0, 0.95, 0.8))
+	subtitle.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.0))
+	subtitle.add_theme_constant_override("outline_size", 10)
+	title.add_child(subtitle)  # it comes and goes with the title
+	subtitle.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	subtitle.offset_left = 0.0
+	subtitle.offset_right = 0.0
+	subtitle.offset_top = 0.0
+	subtitle.offset_bottom = 0.0
+	subtitle.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	subtitle.grow_vertical = Control.GROW_DIRECTION_END
+	var version := Label.new()
+	version.text = "v%s" % ProjectSettings.get_setting("application/config/version")
+	version.add_theme_font_size_override("font_size", VERSION_SIZE)
+	version.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.0))
+	version.add_theme_constant_override("outline_size", 6)
+	root.add_child(version)
+	version.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, \
+		Control.PRESET_MODE_MINSIZE, 12)
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	center.offset_top = 160
+	center.offset_top = _menu_top()
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(center)
+	_menu_center = center
 	_menu_window = BattleHud.make_window()
 	_menu_window.custom_minimum_size = Vector2(320, 0)
 	center.add_child(_menu_window)
@@ -189,6 +289,9 @@ func _build_menu() -> void:
 	menu.add_child(start)
 	_continue_button = _button("Continuar")
 	_continue_button.disabled = not SaveStore.has_save()
+	var story: Variant = SaveStore.load_game().get("story")
+	if story is Dictionary and story.get("finished", false) == true:
+		_continue_button.text = "Continuar (terminada)"
 	_continue_button.pressed.connect(func() -> void: continue_game.emit())
 	menu.add_child(_continue_button)
 	_options_button = _button("Opciones")
@@ -207,6 +310,9 @@ func _build_menu() -> void:
 func _open_options() -> void:
 	_audio.play_sfx(SfxLibrary.ACCEPT)
 	_menu_window.hide()
+	# The options need the whole height of the screen.
+	_title_label.hide()
+	_menu_center.offset_top = 0
 	_options_window.show()
 	_quiet_focus = true
 	_options_panel.focus_first()
@@ -215,6 +321,8 @@ func _open_options() -> void:
 
 func _close_options() -> void:
 	_options_window.hide()
+	_title_label.show()
+	_menu_center.offset_top = _menu_top()
 	_menu_window.show()
 	_focus(_options_button)
 
@@ -252,3 +360,7 @@ func _fade_to(alpha: float) -> void:
 	t.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	t.tween_property(_fade, "color:a", alpha, FADE_TIME)
 	await t.finished
+
+
+func _menu_top() -> int:
+	return TOUCH_MENU_TOP if Device.is_touch() else MENU_TOP

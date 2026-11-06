@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="QuestData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/quest_data.gd" id="1_quest"]
+
+[resource]
+script = ExtResource("1_quest")
+id = "setas"
+title = "Setas para el guiso"
+kind = 1
+zone = "pradera"
+giver = "Tablón"
+turn_in_zone = "pradera"
+turn_in = "Granjero"
+target = "seta"
+goal = 3
+objective = "Consigue 3 setas de las Setas saltarinas de la pradera para el Granjero."
+status = "setas %d / %d"
+report = "setas al Granjero"
+offer_lines = Array[String](["Se buscan 3 setas de las que saltan. Son para un guiso. Preguntar por el Granjero.", "Debajo, con otra letra: si saltan, no son setas."])
+wait_lines = Array[String](["¿Me traes mis setas? Las que saltan por la pradera son las más sabrosas.", "Cuando dejan de saltar, claro."])
+done_lines = Array[String](["¡Tres setas, y casi no se mueven! Esta noche hay guiso.", "Toma, esta semilla me ha salido demasiado buena para las gallinas."])
+reward_gold = 40
+reward_items = {
+"semilla_fuerza": 1
+}

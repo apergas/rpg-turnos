@@ -26,10 +26,13 @@ const CAMERA_POS := Vector3(0.8, 2.6, 6.0)
 const CAMERA_FOV := 50.0
 ## How far the camera moves toward the target during an attack (0..1).
 const CAMERA_FOCUS := 0.18
+## How far over a figure's top its life bar floats; the target arrow goes above the bar.
+const BAR_GAP := 0.15
+const ARROW_GAP := 0.5
 const ARROW_COLOR := Color(1.0, 0.9, 0.3)
 ## A click this close (pixels) to an enemy aims at it.
 const PICK_RADIUS := 120.0
-const MP_COLOR := Color(0.4, 0.6, 1.0)
+const MP_COLOR := StatBar.MP
 const DEFEND_COLOR := Color(0.6, 0.8, 1.0)
 ## Glow of an enemy gathering strength for a charged blow.
 const CHARGE_COLOR := Color(1.0, 0.55, 0.15)
@@ -56,6 +59,12 @@ var inventory: Inventory
 var char_time := BattleHud.CHAR_TIME
 ## Gold the hero loses if defeated (Game takes it away; the battle only says so).
 var gold_lost := 0
+## How fast the battle runs (GameOptions.combat_scale()); the map is frozen meanwhile.
+var time_scale := 1.0
+## False: critical hits and big blows don't shake the camera.
+var camera_shake := true
+## A Difficulty id: the multipliers of this battle's engine.
+var difficulty := Difficulty.NORMAL
 ## Zone the battle is fought in: its sky, light and backdrop (null: the meadow's). Set
 ## before adding it to the tree.
 var zone: ZoneData
@@ -118,6 +127,7 @@ func _ready() -> void:
 		"Call setup() before adding BattleScene to the tree")
 	_rng.randomize()
 	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
+	Engine.time_scale = time_scale
 	BattleStage.build(self, zone)
 	_hero_actor = _spawn_actor(BattleActor.Look.HERO, HERO_POS, ENEMY_POS)
 	_hero_actor.set_equipment(_weapon_id, _shield_id)
@@ -139,13 +149,29 @@ func _ready() -> void:
 	ui.add_child(_result)
 	_result.continue_requested.connect(_finish)
 	engine = BattleEngine.new(hero, enemies, _rng, inventory)
+	engine.damage_mult = Difficulty.damage_mult(difficulty)
+	engine.exp_mult = Difficulty.exp_mult(difficulty)
 	_hud.set_engine(engine)
+	for i in _enemy_actors.size():
+		_hud.add_enemy_bar()
 	if _autoplay and not engine.has_boss():
 		_autoplay_battles += 1
 		_autoplay_flee = _autoplay_battles % AUTOPLAY_EVERY == 0
 		_autoplay_defend = _autoplay_battles % AUTOPLAY_EVERY == AUTOPLAY_DEFEND_AT
 	await _say(_intro_text())
 	_ask_command()
+
+
+func _exit_tree() -> void:
+	Engine.time_scale = 1.0
+
+
+## The life bars follow their figures on screen (camera moves and shakes included).
+func _process(_delta: float) -> void:
+	for i in _enemy_actors.size():
+		var actor := _enemy_actors[i]
+		var over := actor.global_position + Vector3.UP * (actor.top_height() + BAR_GAP)
+		_hud.place_enemy_bar(i, _camera.unproject_position(over))
 
 
 func _setup_standalone() -> void:
@@ -205,7 +231,7 @@ func _on_command_chosen(cmd: Dictionary) -> void:
 			_finish()
 			return
 		BattleEngine.State.WON:
-			_result.show_victory(engine.exp_won, hero.experience, _new_level, engine.gold_won,
+			_result.show_victory(engine.exp_won, hero, _new_level, engine.gold_won,
 				engine.drops_won)
 		BattleEngine.State.LOST:
 			if gold_lost > 0:
@@ -275,8 +301,7 @@ func _play_event(event: Dictionary) -> void:
 			_sfx(SfxLibrary.HEAL)
 			_reset_camera()
 			await _actor(event.target).play_heal(event.amount)
-			if event.target == BattleEvent.HERO:
-				_hud.update_hp(event.hp_left, hero.max_hp)
+			_show_life(event.target, event.hp_left)
 			await _say("¡%s recupera %d PV!" % [
 				_fighter(event.target).display_name, event.amount])
 		BattleEvent.MP_HEAL:
@@ -300,13 +325,19 @@ func _play_event(event: Dictionary) -> void:
 			await _say("¡No has podido huir!")
 		BattleEvent.NO_ESCAPE:
 			await _say("¡No puedes huir!")
+		BattleEvent.ENEMY_FLEE:
+			_sfx(SfxLibrary.CANCEL)
+			_show_arrow(-1)
+			_hud.hide_enemy_bar(event.actor)
+			await _actor(event.actor).play_dodge()
+			_actor(event.actor).hide()
+			await _say("¡%s huye!" % _cap(_the(_fighter(event.actor))))
 		BattleEvent.STATUS_ON:
 			await _play_status_on(event)
 		BattleEvent.STATUS_TICK:
 			_sfx(SfxLibrary.HIT)
 			await _actor(event.target).play_status(STATUS_COLORS[event.status], event.amount)
-			if event.target == BattleEvent.HERO:
-				_hud.update_hp(event.hp_left, hero.max_hp)
+			_show_life(event.target, event.hp_left)
 			await _say("¡El veneno quita %d PV a %s!" % [event.amount,
 				_fighter(event.target).display_name])
 		BattleEvent.STATUS_OFF:
@@ -314,7 +345,8 @@ func _play_event(event: Dictionary) -> void:
 		BattleEvent.ASLEEP:
 			await _actor(event.actor).play_status(STATUS_COLORS[BattleEngine.SLEEP])
 			var sleeper := _fighter(event.actor)
-			await _say("%s está dormid%s." % [sleeper.display_name, _ending(sleeper)])
+			await _say("%s duerme profundamente." % sleeper.display_name if sleeper == hero
+				else "%s está dormid%s." % [sleeper.display_name, _ending(sleeper)])
 		BattleEvent.CALL_HELP:
 			await _play_call_help(event)
 		BattleEvent.PHASE:
@@ -322,14 +354,17 @@ func _play_event(event: Dictionary) -> void:
 			_sfx(SfxLibrary.ENCOUNTER)
 			_shake_camera()
 			await _actor(event.target).play_phase()
+			_show_life(event.target, event.hp_left)
 			await _say("¡La niebla envuelve %s!" % _to(boss))
 			await _say("¡%s se levanta con %d PV!" % [_cap(_the(boss)), event.hp_left])
 		BattleEvent.DEFEATED:
 			_show_arrow(-1)
+			if event.target != BattleEvent.HERO:
+				_hud.hide_enemy_bar(event.target)
 			await _actor(event.target).play_defeat()
 			if event.target == BattleEvent.HERO:
 				_music(MusicLibrary.DEFEAT)
-				await _say("¡Has sido derrotado...!")
+				await _say("¡Has caído...!")
 			else:
 				var foe := _fighter(event.target)
 				await _say("¡%s ha sido derrotad%s!" % [foe.display_name, _ending(foe)])
@@ -370,8 +405,7 @@ func _play_damage(event: Dictionary) -> void:
 	else:
 		await _actor(event.target).play_hit(event.amount, event.crit, tag)
 	_reset_camera()
-	if event.target == BattleEvent.HERO:
-		_hud.update_hp(event.hp_left, hero.max_hp)
+	_show_life(event.target, event.hp_left)
 	if event.crit:
 		await _say("¡Golpe crítico!")
 	var target := _fighter(event.target)
@@ -383,6 +417,16 @@ func _play_damage(event: Dictionary) -> void:
 	await _say("¡%s recibe %d de daño!" % [target.display_name, event.amount])
 
 
+## The life left of a fighter as the events play it back: the hero's PV bar or the
+## enemy's thin bar (the engine has already resolved the whole round, so its HP can't be
+## read directly).
+func _show_life(who: int, hp_left: int) -> void:
+	if who == BattleEvent.HERO:
+		_hud.update_hp(hp_left, hero.max_hp)
+	else:
+		_hud.set_enemy_life(who, float(hp_left) / maxf(1.0, engine.enemies[who].max_hp))
+
+
 func _play_status_on(event: Dictionary) -> void:
 	_sfx(SfxLibrary.MISS)
 	await _actor(event.target).play_status(STATUS_COLORS[event.status])
@@ -391,7 +435,8 @@ func _play_status_on(event: Dictionary) -> void:
 		_hud.update_status(hero.status)
 	match event.status:
 		BattleEngine.POISON:
-			await _say("¡%s está envenenad%s!" % [target.display_name, _ending(target)])
+			await _say("¡%s sufre el veneno!" % target.display_name if target == hero
+				else "¡%s está envenenad%s!" % [target.display_name, _ending(target)])
 		BattleEngine.SLEEP:
 			await _say("¡%s se ha dormido!" % target.display_name)
 		BattleEngine.SILENCE:
@@ -405,7 +450,8 @@ func _play_status_off(event: Dictionary) -> void:
 	match event.status:
 		BattleEngine.POISON:
 			_sfx(SfxLibrary.HEAL)
-			await _say("¡%s ya no está envenenad%s!" % [target.display_name, _ending(target)])
+			await _say("¡El veneno ya no afecta a %s!" % target.display_name if target == hero
+				else "¡%s ya no está envenenad%s!" % [target.display_name, _ending(target)])
 		BattleEngine.SLEEP:
 			await _say("¡%s se despierta!" % target.display_name)
 		BattleEngine.SILENCE:
@@ -425,6 +471,7 @@ func _play_call_help(event: Dictionary) -> void:
 	var helper := engine.enemies[event.helper]
 	var actor := _spawn_actor(EnemyLibrary.look(helper.id), _slot(1, 2), HERO_POS)
 	_enemy_actors.append(actor)
+	_hud.add_enemy_bar()
 	await actor.play_appear()
 	await _say("¡Aparece %s %s!" % ["una" if helper.female else "un", helper.display_name])
 
@@ -456,7 +503,8 @@ func _to(c: Combatant) -> String:
 	return ("a la %s" if c.female else "al %s") % c.display_name
 
 
-## Ending of the adjectives for c: "a" (envenenada) or "o" (envenenado).
+## Ending of the adjectives for an enemy c: "a" (envenenada) or "o" (envenenado). The
+## hero's lines avoid them: the player picks the name and the hero has no set gender.
 func _ending(c: Combatant) -> String:
 	return "a" if c.female else "o"
 
@@ -508,7 +556,7 @@ func _show_arrow(index: int) -> void:
 		_arrow.hide()
 		return
 	var actor := _enemy_actors[index]
-	_arrow.position = actor.position + Vector3(0, actor.top_height() + 0.1, 0)
+	_arrow.position = actor.position + Vector3(0, actor.top_height() + ARROW_GAP, 0)
 	_arrow.show()
 	_arrow_tween = create_tween().set_loops()
 	_arrow_tween.tween_interval(0.25)
@@ -551,6 +599,8 @@ func _reset_camera() -> void:
 
 
 func _shake_camera() -> void:
+	if not camera_shake:
+		return
 	if _shake_tween:
 		_shake_tween.kill()
 	var t := create_tween()

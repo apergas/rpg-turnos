@@ -8,7 +8,7 @@ Paso: fase 7 de `2026-11-03-ideas-juego-completo.md`, la última. Va después de
 Dejar el juego listo para enseñarlo fuera:
 
 - Opciones completas, dificultad y accesibilidad.
-- Inglés además de español.
+- ~~Inglés además de español.~~ Descartado por el usuario (2026-11-06): el juego queda solo en español.
 - Controles táctiles completos.
 - Versiones de escritorio.
 - Página en itch.io.
