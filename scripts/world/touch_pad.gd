@@ -55,7 +55,12 @@ func reset() -> void:
 
 
 func _on_touch(touch: InputEventScreenTouch) -> void:
+	if touch.canceled:
+		reset()  # the system took the finger: no tap
+		return
 	if touch.pressed:
+		if _touches.has(touch.index):
+			reset()  # its release got lost on the way
 		_touches[touch.index] = touch.position
 		if _touches.size() == 1:
 			_origin = touch.position
