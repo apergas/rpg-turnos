@@ -95,6 +95,9 @@ func _ready() -> void:
 	_shade.color = Color(0, 0, 0, 0.5)
 	_shade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_shade.hide()
+	_shade.gui_input.connect(func(event: InputEvent) -> void:
+		if UiStyle.is_outside_tap(event):
+			_go_back())
 	add_child(_shade)
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -175,6 +178,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not (event.is_action_pressed(KeyMap.PAUSE) or event.is_action_pressed(KeyMap.CANCEL)):
 		return
 	get_viewport().set_input_as_handled()
+	_go_back()
+
+
+## What Esc, Q or a tap outside the windows does on the current page.
+func _go_back() -> void:
 	match _page:
 		"main":
 			close()

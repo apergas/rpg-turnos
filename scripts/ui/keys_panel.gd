@@ -75,6 +75,11 @@ func _input(event: InputEvent) -> void:
 		_audio.play_sfx(SfxLibrary.ACCEPT)
 
 
+## Whether a row is waiting for its key, when nothing else may close the page.
+func is_waiting() -> bool:
+	return _waiting != ""
+
+
 func _listen(action: String) -> void:
 	_waiting = action
 	_say("")

@@ -75,6 +75,13 @@ func _ready() -> void:
 	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# A tap outside the window is "Volver".
+	var backdrop := Control.new()
+	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
+	backdrop.gui_input.connect(func(event: InputEvent) -> void:
+		if UiStyle.is_outside_tap(event) and not _autoplay:
+			_back())
+	add_child(backdrop)
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE

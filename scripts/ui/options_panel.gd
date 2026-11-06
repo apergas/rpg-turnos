@@ -99,6 +99,8 @@ func focus_first() -> void:
 
 ## Saves the options and closes the page (from Teclas: back to the options first).
 func back() -> void:
+	if _keys_panel.visible and _keys_panel.is_waiting():
+		return
 	if _keys_panel.visible:
 		_close_keys()
 		return

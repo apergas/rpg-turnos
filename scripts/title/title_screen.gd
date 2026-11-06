@@ -45,6 +45,7 @@ var _menu_window: PanelContainer
 var _continue_button: Button
 var _options_button: Button
 var _options_window: PanelContainer
+var _options_backdrop: Control
 var _options_panel: OptionsPanel
 var _name_entry: NameEntry
 var _difficulty_window: DifficultyWindow
@@ -125,6 +126,7 @@ func _close_title() -> void:
 	_ui.queue_free()
 	_ui = null
 	_options_window = null
+	_options_backdrop = null
 	_options_panel = null
 	_name_entry = null
 	_difficulty_window = null
@@ -304,6 +306,15 @@ func _build_menu() -> void:
 			get_window().mode = Window.MODE_FULLSCREEN
 			fullscreen.hide())
 		menu.add_child(fullscreen)
+	# A tap outside the options window goes back; under the centred windows, shown only while open.
+	_options_backdrop = Control.new()
+	_options_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_options_backdrop.gui_input.connect(func(event: InputEvent) -> void:
+		if UiStyle.is_outside_tap(event):
+			_options_panel.back())
+	_options_backdrop.hide()
+	root.add_child(_options_backdrop)
+	root.move_child(_options_backdrop, center.get_index())
 	_options_window = BattleHud.make_window()
 	_options_window.hide()
 	center.add_child(_options_window)
@@ -321,6 +332,7 @@ func _open_options() -> void:
 	_title_label.hide()
 	_menu_center.offset_top = 0
 	_options_window.show()
+	_options_backdrop.show()
 	_quiet_focus = true
 	_options_panel.focus_first()
 	_quiet_focus = false
@@ -328,6 +340,7 @@ func _open_options() -> void:
 
 func _close_options() -> void:
 	_options_window.hide()
+	_options_backdrop.hide()
 	_title_label.show()
 	_menu_center.offset_top = _menu_top()
 	_menu_window.show()
