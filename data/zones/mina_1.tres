@@ -65,6 +65,8 @@ npcs = [{
 "yaw": 180.0
 }]
 formations = [["golem_barro"], ["arana"], ["espectro"], ["arana"], ["arana", "espectro"], ["golem_barro", "arana"]]
+rare_enemy = "slime_metal"
+rare_chance = 0.25
 start_formations = [["golem_barro"], ["arana"], ["espectro"]]
 start_pos = Vector3(0, 0, 17)
 start_radius = 24.0
