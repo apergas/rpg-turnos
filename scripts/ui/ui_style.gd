@@ -24,10 +24,8 @@ static func add_description(parent: Node, id: String) -> void:
 const TOUCH_BUTTON_WIDTH := 120.0
 
 
-## On a phone, makes a menu row big enough for a finger and drops its focus border (there is no
-## keyboard to follow, and a scroll list would clip it). Flat rows need it: the phone's window
-## theme does not reach them, since their windows sit under a CanvasLayer.
+## On a phone, makes a menu row big enough for a finger. Flat rows need it: the phone's button
+## theme does not draw their "normal" style, so it does not give them any height.
 static func fit_finger(button: Button) -> void:
 	if Device.is_touch():
 		button.custom_minimum_size = Vector2(TOUCH_BUTTON_WIDTH, DisplaySettings.TOUCH_BUTTON_HEIGHT)
-		button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())

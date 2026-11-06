@@ -13,7 +13,7 @@ const TOUCH_LOW_FPS := 30
 ## Height a button with a 24 font reaches on a phone.
 const TOUCH_BUTTON_HEIGHT := 56.0
 const BUTTON_FONT := 24.0
-const BUTTON_STYLES := ["normal", "hover", "pressed", "focus", "disabled"]
+const BUTTON_STYLES := ["normal", "hover", "pressed", "disabled"]
 
 
 static func apply(window: Window, options: GameOptions) -> void:
@@ -38,22 +38,26 @@ static func _apply_touch(window: Window, options: GameOptions) -> void:
 	Engine.max_fps = TOUCH_LOW_FPS if low else 0
 	if OS.get_cmdline_user_args().has("--touch"):
 		Input.emulate_touch_from_mouse = true
-	if window.theme == null:
-		window.theme = _touch_theme()
+	_set_touch_buttons()
 
 
-## A theme whose buttons are taller; the window's theme reaches every control under it.
-static func _touch_theme() -> Theme:
-	var theme := Theme.new()
-	var default := ThemeDB.get_default_theme()
-	var font := default.get_default_font()
-	var text_height := font.get_height(int(BUTTON_FONT))
+## Whether the default theme already has the phone's buttons.
+static var _touch_buttons_set := false
+
+
+## Taller buttons with no focus border, on the default theme: a Window's theme does not reach
+## the controls under a CanvasLayer, which is nearly all of them. There is no keyboard to
+## follow on a phone, and a scroll list would clip the border anyway.
+static func _set_touch_buttons() -> void:
+	if _touch_buttons_set:
+		return
+	_touch_buttons_set = true
+	var theme := ThemeDB.get_default_theme()
+	var text_height := theme.get_default_font().get_height(int(BUTTON_FONT))
+	var extra := maxf(0.0, (TOUCH_BUTTON_HEIGHT - text_height) / 2.0)
 	for style_name: String in BUTTON_STYLES:
-		var box := default.get_stylebox(style_name, "Button").duplicate() as StyleBox
-		var extra := maxf(0.0, (TOUCH_BUTTON_HEIGHT - text_height) / 2.0)
+		var box := theme.get_stylebox(style_name, "Button").duplicate() as StyleBox
 		box.content_margin_top = extra
 		box.content_margin_bottom = extra
 		theme.set_stylebox(style_name, "Button", box)
-	# No keyboard to follow, and a scroll list would clip the border anyway.
 	theme.set_stylebox("focus", "Button", StyleBoxEmpty.new())
-	return theme
