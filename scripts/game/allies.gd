@@ -4,13 +4,13 @@ class_name Allies extends RefCounted
 ## one of a lower tier can't be bought. Pure: no nodes.
 
 const CREATURES := {
-	"gallina": {"article": "una", "tier": 1, "price": 70,
+	"gallina": {"article": "una", "tier": 1, "price": 55,
 		"data": preload("res://data/allies/gallina.tres")},
-	"lobezno": {"article": "un", "tier": 2, "price": 250,
+	"lobezno": {"article": "un", "tier": 2, "price": 190,
 		"data": preload("res://data/allies/lobezno.tres")},
-	"golem_pequeno": {"article": "un", "tier": 3, "price": 650,
+	"golem_pequeno": {"article": "un", "tier": 3, "price": 490,
 		"data": preload("res://data/allies/golem_pequeno.tres")},
-	"esqueleto_leal": {"article": "un", "tier": 4, "price": 1000,
+	"esqueleto_leal": {"article": "un", "tier": 4, "price": 750,
 		"data": preload("res://data/allies/esqueleto_leal.tres")},
 }
 
