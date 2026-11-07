@@ -10,9 +10,10 @@ const WEAPON := "weapon"
 const ARMOR := "armor"
 const SHIELD := "shield"
 const ACCESSORY := "accessory"
+const HELMET := "helmet"
 ## Slot order of every list (status, Equipo page, shop comparison).
-const SLOTS: Array[String] = [WEAPON, ARMOR, SHIELD, ACCESSORY]
-const SLOT_NAMES := {WEAPON: "Arma", ARMOR: "Armadura", SHIELD: "Escudo",
+const SLOTS: Array[String] = [WEAPON, HELMET, ARMOR, SHIELD, ACCESSORY]
+const SLOT_NAMES := {WEAPON: "Arma", HELMET: "Casco", ARMOR: "Armadura", SHIELD: "Escudo",
 	ACCESSORY: "Accesorio"}
 
 const STICK := "palo"
@@ -54,6 +55,14 @@ const EQUIPMENT := {
 		"bonus": 22, "price": 550, "zone": 4, "mesh": ""},
 	"escudo_platino": {"name": "Escudo de platino", "article": "un", "slot": SHIELD,
 		"bonus": 10, "price": 300, "zone": 4, "mesh": "Spike_Shield"},
+	"casco_cobre": {"name": "Casco de cobre", "article": "un", "slot": HELMET, "bonus": 2,
+		"price": 20, "zone": 1, "mesh": "", "tint": Color(1.4, 0.58, 0.18)},
+	"casco_hierro": {"name": "Casco de hierro", "article": "un", "slot": HELMET, "bonus": 3,
+		"price": 70, "zone": 2, "mesh": "", "tint": Color(0.7, 0.7, 0.72)},
+	"casco_acero": {"name": "Casco de acero", "article": "un", "slot": HELMET, "bonus": 5,
+		"price": 180, "zone": 3, "mesh": "", "tint": Color(0.95, 0.97, 1.0)},
+	"casco_platino": {"name": "Casco de platino", "article": "un", "slot": HELMET, "bonus": 7,
+		"price": 260, "zone": 4, "mesh": "", "tint": Color(0.85, 0.9, 1.2)},
 	POISON_RING: {"name": "Anillo antiveneno", "article": "un", "slot": ACCESSORY,
 		"bonus": 0, "price": 0, "zone": -1, "mesh": "", "immune": "poison"},
 	SPEED_AMULET: {"name": "Amuleto de velocidad", "article": "un", "slot": ACCESSORY,
@@ -93,6 +102,11 @@ static func price(id: String) -> int:
 
 static func mesh(id: String) -> String:
 	return EQUIPMENT[id].mesh if EQUIPMENT.has(id) else ""
+
+
+## The color a helmet tints the model's helmet mesh with.
+static func helmet_tint(id: String) -> Color:
+	return EQUIPMENT[id].get("tint", Color.WHITE) if EQUIPMENT.has(id) else Color.WHITE
 
 
 ## "ATK" for weapons, "VEL" for accessories, "DEF" for the rest.

@@ -11,7 +11,10 @@ const BORDER := Color(1.0, 1.0, 1.0, 0.7)
 const ALPHA := 0.8
 const MARKER_SIZE := 7.0
 const MARKER_COLOR := Color.WHITE
+const MARK_SIZE := 5.0
 
+## [{"node": ColorRect, "cell": Vector2i}], shown once their cell has been seen.
+var _marks: Array[Dictionary] = []
 var _side := SIDE
 var _map: ExploredMap
 var _image: Image
@@ -70,6 +73,31 @@ func set_map(map: ExploredMap) -> void:
 	_picture.size = drawn
 
 
+## Replaces the points of interest: each shows once its cell has been seen. Put under the
+## hero's marker.
+func set_marks(marks: Array[Dictionary]) -> void:
+	for mark in _marks:
+		(mark.node as Node).queue_free()
+	_marks.clear()
+	for mark in marks:
+		var node := ColorRect.new()
+		node.color = mark.color
+		node.size = Vector2.ONE * MARK_SIZE
+		node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var point := _map.grid_point(mark.pos)
+		node.position = (_origin + point * _scale - Vector2.ONE * MARK_SIZE / 2.0).floor()
+		_marker.get_parent().add_child(node)
+		_marker.get_parent().move_child(node, _marker.get_index())
+		var cell := Vector2i(point).clamp(Vector2i.ZERO, _map.size - Vector2i.ONE)
+		_marks.append({"node": node, "cell": cell})
+	_refresh_marks()
+
+
+func _refresh_marks() -> void:
+	for mark in _marks:
+		(mark.node as Control).visible = _map.is_seen(mark.cell)
+
+
 ## The hero at pos: reveals what they see from there and moves the marker.
 func follow(pos: Vector3) -> void:
 	var fresh := _map.reveal(pos)
@@ -77,6 +105,7 @@ func follow(pos: Vector3) -> void:
 		for cell in fresh:
 			_image.set_pixelv(cell, _map.color_of(cell))
 		_texture.update(_image)
+		_refresh_marks()
 	var at := (_origin + _map.grid_point(pos) * _scale - Vector2.ONE * MARKER_SIZE / 2.0).floor()
 	if at != _marker.position:
 		_marker.position = at

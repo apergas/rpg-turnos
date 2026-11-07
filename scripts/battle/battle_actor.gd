@@ -3,14 +3,15 @@ class_name BattleActor extends Node3D
 ## skeletons are KayKit models with their own animations (the skeletons get their
 ## weapons from KayKit too, and the Señor de la Niebla a purple aura); the slimes, the
 ## bat, the mushroom, the wolf,
-## the goblin, the carnivorous plant, the golems, the spider and the specter are
-## low-poly figures built in code (see LOOKS).
+## the goblin, the carnivorous plant, the golems, the spider, the specter and the
+## creatures that fight beside the hero are low-poly figures built in code (see LOOKS).
 ## Set look before add_child. The figure faces -Z, so look_at() the opponent. Every
 ## play_* can be awaited: it returns when its animation and its tween are done.
 
 enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPER, WOLF,
 	GOBLIN, PLANT, WITCH, MUD_GOLEM, STONE_GOLEM, SPIDER, SPECTER, SKELETON_WARRIOR,
-	SKELETON_ROGUE, SKELETON_MAGE, FOG_LORD, FARMER, METAL_SLIME, BOARD, CAT, CHILD }
+	SKELETON_ROGUE, SKELETON_MAGE, FOG_LORD, FARMER, METAL_SLIME, BOARD, CAT, CHILD,
+	CHICKEN, WOLF_CUB, MINI_GOLEM, LOYAL_SKELETON, TAMER }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -129,6 +130,7 @@ const HERO_HEAD_TEXTURE := preload("res://assets/characters/hero_head_texture.pn
 const HERO_TUNIC := Color(0.75, 1.0, 1.7)
 const HERO_LEGS := Color(0.95, 0.75, 0.6)
 ## Hand slots of the KayKit characters (BoneAttachment3D nodes).
+const HELMET_PATH := "Rig/Skeleton3D/head/Knight_Helmet"
 const HAND_R := "Rig/Skeleton3D/handslot_r"
 const HAND_L := "Rig/Skeleton3D/handslot_l"
 ## The wooden stick built in code for Equipment.STICK_MESH: along the hand's +Y like the
@@ -195,6 +197,18 @@ const LOOKS := {
 		],
 		"anims": CHARACTER_ANIMS,
 		"tint": Color(0.75, 1.0, 0.65),
+	},
+	Look.TAMER: {
+		"scene": MAGE,
+		"scale": CHARACTER_SCALE,
+		"top": 2.2,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/Spellbook",
+			"Rig/Skeleton3D/handslot_l/Spellbook_open",
+			"Rig/Skeleton3D/handslot_r/1H_Wand",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(0.35, 0.75, 0.65),
 	},
 	Look.INNKEEPER: {
 		"scene": MAGE,
@@ -283,6 +297,38 @@ const LOOKS := {
 		"eye_color": Color(1.0, 0.8, 0.2),
 		"scale": 1.15,
 		"top": 1.5,
+	},
+	# The creatures that fight beside the hero.
+	Look.WOLF_CUB: {
+		"color": Color(0.45, 0.45, 0.52),
+		"dark_color": Color(0.26, 0.26, 0.32),
+		"eye_color": Color(1.0, 0.8, 0.2),
+		"scale": 1.15 * 0.7,
+		"top": 1.5 * 0.7,
+	},
+	Look.MINI_GOLEM: {
+		"color": Color(0.72, 0.55, 0.38),
+		"dark_color": Color(0.55, 0.4, 0.26),
+		"eye_color": Color(1.0, 0.85, 0.3),
+		"scale": 0.7,
+		"top": 2.0 * 0.7,
+	},
+	Look.LOYAL_SKELETON: {
+		"scene": SKELETON_WARRIOR,
+		"scale": CHARACTER_SCALE,
+		"top": 1.9,
+		"hide": [],
+		"anims": SKELETON_ANIMS,
+		"props": {RIGHT_HAND_BONE: SKELETON_BLADE, LEFT_HAND_BONE: SKELETON_SHIELD},
+		"tint": Color(0.75, 0.9, 1.0),
+	},
+	Look.CHICKEN: {
+		"color": Color(0.97, 0.97, 0.94),
+		"comb_color": Color(0.85, 0.12, 0.1),
+		"beak_color": Color(1.0, 0.6, 0.15),
+		"leg_color": Color(0.95, 0.6, 0.2),
+		"scale": 0.8,
+		"top": 0.9,
 	},
 	Look.GOBLIN: {
 		"color": Color(0.4, 0.68, 0.25),
@@ -418,13 +464,15 @@ func _ready() -> void:
 		_build_bat(data)
 	elif look == Look.MUSHROOM:
 		_build_mushroom(data)
-	elif look == Look.WOLF:
+	elif look == Look.WOLF or look == Look.WOLF_CUB:
 		_build_wolf(data)
+	elif look == Look.CHICKEN:
+		_build_chicken(data)
 	elif look == Look.GOBLIN:
 		_build_goblin(data)
 	elif look == Look.PLANT:
 		_build_plant(data)
-	elif look == Look.MUD_GOLEM or look == Look.STONE_GOLEM:
+	elif look in [Look.MUD_GOLEM, Look.STONE_GOLEM, Look.MINI_GOLEM]:
 		_build_golem(data)
 	elif look == Look.SPIDER:
 		_build_spider(data)
@@ -472,14 +520,22 @@ func set_walking(on: bool) -> void:
 
 
 ## Hero only: shows the hand meshes of the weapon and shield worn (Equipment ids, ""
-## for none) and hides the rest. Armor does not change the model. Others ignore it.
-func set_equipment(weapon_id: String, shield_id: String) -> void:
+## for none) and hides the rest. A helmet shows the model's helmet mesh tinted with its
+## color. Armor does not change the model. Others ignore it.
+func set_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> void:
 	if look != Look.HERO or _model == null:
 		return
 	var shown := {HAND_R: Equipment.mesh(weapon_id), HAND_L: Equipment.mesh(shield_id)}
 	for hand: String in shown:
 		for child in _model.get_node(hand).get_children():
 			(child as Node3D).visible = child.name == shown[hand] and shown[hand] != ""
+	var helmet := _model.get_node(HELMET_PATH) as MeshInstance3D
+	helmet.visible = helmet_id != ""
+	if helmet_id != "":
+		# Drop the previous tint first, or _tint_mesh() would multiply onto it.
+		for i in helmet.mesh.get_surface_count():
+			helmet.set_surface_override_material(i, null)
+		_tint_mesh(helmet, Equipment.helmet_tint(helmet_id))
 
 
 ## Swings (characters) and lunges toward the target and steps back; the plant opens
@@ -826,6 +882,27 @@ func _build_wolf(data: Dictionary) -> void:
 	(root.get_child(-1) as Node3D).rotation_degrees.x = 55.0
 
 
+## A chicken: a white round body with a red comb and wattle, an orange beak, two thin
+## legs and black eyes, facing -Z. About 0.7 m tall.
+func _build_chicken(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	_add_blob(root, SLIME_PROFILE, SLIME_SEGMENTS, data.color, Vector3(0, 0.2, 0.05),
+		Vector3.ZERO, Vector3(0.4, 0.55, 0.5))  # body
+	_add_mesh(root, _sphere(0.17), data.color, Vector3(0, 0.62, -0.18))  # head
+	_add_mesh(root, _cone(0.1, 0.22), data.color, Vector3(0, 0.45, 0.32))  # tail
+	(root.get_child(-1) as Node3D).rotation_degrees.x = -35.0
+	_add_mesh(root, _cone(0.05, 0.14), data.comb_color, Vector3(0, 0.82, -0.18))  # comb
+	_add_mesh(root, _sphere(0.045), data.comb_color, Vector3(0, 0.5, -0.3))  # wattle
+	_add_mesh(root, _cone(0.05, 0.14), data.beak_color, Vector3(0, 0.62, -0.38))  # beak
+	(root.get_child(-1) as Node3D).rotation_degrees.x = -90.0
+	for x in [-0.08, 0.08]:
+		_add_mesh(root, _sphere(0.025), Color(0.05, 0.05, 0.05),
+			Vector3(x * 1.2, 0.67, -0.31))  # eye
+		_add_mesh(root, _cylinder(0.018, 0.2), data.leg_color, Vector3(x * 1.3, 0.1, 0.0))  # leg
+
+
 ## A goblin: a small green slime with pointed ears and a red pointed hat.
 func _build_goblin(data: Dictionary) -> void:
 	var blob := Node3D.new()
@@ -956,7 +1033,7 @@ func _start_idle() -> void:
 		_start_float()
 	else:
 		var gentle := look in [Look.WOLF, Look.MUD_GOLEM, Look.STONE_GOLEM, Look.SPIDER,
-			Look.CAT]
+			Look.CAT, Look.WOLF_CUB, Look.MINI_GOLEM]
 		_start_bounce(0.4 if gentle else 1.0)
 
 

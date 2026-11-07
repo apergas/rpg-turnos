@@ -25,9 +25,9 @@ func _init(color: Color, width := BAR_SIZE.x) -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
-## "Héroe lvl 3", the name every window gives the hero.
+## "Héroe Nv 3", the name every window gives the hero.
 static func hero_title(hero: Combatant) -> String:
-	return "%s lvl %d" % [hero.display_name, hero.level]
+	return "%s Nv %d" % [hero.display_name, hero.level]
 
 
 func show_hp(hp: int, max_hp: int) -> void:

@@ -22,6 +22,12 @@ var loadout := Loadout.new()
 var bag_equipment: Array[String] = []
 ## Ids of the chests already opened (Chests.CHESTS keys).
 var opened_chests: Array[String] = []
+## Enemy ids met in battle (EnemyLibrary ids), for the bestiary.
+var seen_enemies: Array[String] = []
+## Dry wells: well id -> battles left until it is full again (absent: full).
+var well_charge := {}
+## The creature fighting beside the hero (Allies id, "" for none).
+var ally_id := ""
 ## Progress through the world: flag -> true. A boss sets its enemy id when defeated
 ## ("rey_slime" lifts the fog of the meadow's north exit); ZoneData exits name the flag
 ## that opens them.
@@ -66,12 +72,17 @@ func heal_full() -> void:
 	hero.mp = hero.max_mp
 
 
-## The missions under way, for the map's status window and the pause menu; never empty:
-## with none in progress, the story's next step. The one place that reads them.
+## The next thing the story asks: the village quest while it lasts, then the chapter's goal.
+func main_goal() -> String:
+	var line := quest.status_text()
+	return line if line != "" else story.goal_text(world_flags)
+
+
+## The lines of the mission lists (status window, pause menu): the main goal first, then
+## the side quests. Never empty. The one place that reads them.
 func current_missions() -> Array[String]:
-	var missions := quests.status_lines(inventory)
-	if missions.is_empty():
-		missions.append(story.goal_text(world_flags))
+	var missions: Array[String] = [main_goal()]
+	missions.append_array(quests.status_lines(inventory))
 	return missions
 
 
@@ -183,3 +194,8 @@ func quests_done() -> int:
 ## Gold lost on a defeat: half of what is carried, rounded down (gold - lost remains).
 func defeat_gold_loss() -> int:
 	return floori(gold / 2.0)
+
+
+func see_enemy(id: String) -> void:
+	if not seen_enemies.has(id):
+		seen_enemies.append(id)

@@ -35,6 +35,8 @@ signal inn_requested(inn_id: String)
 ## The player asked to open a closed chest (a Chests.CHESTS key); Game opens it in the
 ## GameState and calls set_chest_open().
 signal chest_opened(chest_id: String)
+## The player drank (or tried to) from the well id, which fills kind (Wells.HP or Wells.MP).
+signal well_requested(id: String, kind: String)
 ## The player walked into (true) or out of (false) the village clearing.
 signal village_changed(inside: bool)
 ## The player walked into an open exit: Game loads zone_id at its entry entry_id.
@@ -70,6 +72,7 @@ const FONT_SIZE := 24
 ## boss / to take an exit.
 const TALK_RADIUS := 2.5
 const CHEST_RADIUS := 1.8
+const WELL_RADIUS := 2.2
 const BOSS_RADIUS := 2.5
 const EXIT_RADIUS := 1.2
 ## After arriving (or after a closed exit's notice) exits wait until the player is this
@@ -86,6 +89,10 @@ const MECHANISM_RADIUS := 2.2
 const NPC_TAP_RADIUS := 1.2
 ## A tap on a figure is measured at this height, so its feet and its head both count.
 const TAP_HEIGHT := 0.9
+## Height of a figure's head and hat, the other height a tap on one is measured at.
+const FIGURE_TOP_TAP_HEIGHT := 2.2
+## Narrow: the head is slim, and a wider circle up there takes taps on the ground behind it.
+const FIGURE_TOP_TAP_RADIUS := 0.7
 ## Taps on the map are ignored this long after a dialogue or a window closes.
 const TAP_GUARD_MS := 400
 ## Kinds of the things the player can use on the map, and their prompts.
@@ -94,22 +101,24 @@ const NPC := "npc"
 const SHOP := "shop"
 const INN := "inn"
 const CHEST := "chest"
+const WELL := "well"
 const LEVER := "lever"
 const KEY := "key"
 const DOOR := "door"
 const PORTAL := "portal"
 const BOARD := "board"
 const PROMPTS := {
-	TALK: "%s o toca: hablar",
-	NPC: "%s o toca: hablar",
-	SHOP: "%s o toca: comprar",
-	INN: "%s o toca: hablar",
-	CHEST: "%s o toca: abrir",
-	LEVER: "%s o toca: tirar",
-	KEY: "%s o toca: coger",
-	DOOR: "%s o toca: abrir",
-	PORTAL: "%s o toca: volver",
-	BOARD: "%s o toca: leer",
+	TALK: "Hablar",
+	NPC: "Hablar",
+	SHOP: "Comprar",
+	INN: "Descansar",
+	CHEST: "Abrir",
+	WELL: "Beber",
+	LEVER: "Tirar",
+	KEY: "Coger",
+	DOOR: "Abrir",
+	PORTAL: "Volver",
+	BOARD: "Leer",
 }
 ## ZoneData.npcs kinds -> use kinds.
 const NPC_KINDS := {"quest": TALK, "npc": NPC, "shop": SHOP, "inn": INN, "board": BOARD}
@@ -120,6 +129,17 @@ const CHEST_WOOD := Color(0.5, 0.3, 0.14)
 const CHEST_BAND := Color(1.0, 0.78, 0.2)
 ## Angle of an open lid (degrees about X: the front edge swings up and back).
 const CHEST_OPEN_ANGLE := 110.0
+## Wells: a collider the hero walks around, and a disc of coloured water with a light.
+const WELL_COLLIDER := 1.3
+const WATER_HP := Color(1.0, 0.25, 0.25)
+const WATER_MP := Color(0.25, 0.5, 1.0)
+const WATER_RADIUS := 0.95
+const WATER_HEIGHT := 1.2
+## Marks on the map square.
+const MARK_SHOP := Color(1.0, 0.8, 0.2)
+const MARK_INN := Color(1.0, 0.6, 0.85)
+const MARK_EXIT := Color(0.35, 1.0, 0.45)
+const MARK_DRY := Color(0.55, 0.55, 0.55)
 ## Exit arch: two posts and a beam of dark wood, a sign board with the exit's label
 ## (always facing the camera, south) and, while closed, a bank of fog.
 const ARCH_WOOD := Color(0.36, 0.22, 0.1)
@@ -139,6 +159,11 @@ const LANTERN_HEIGHT := 2.4
 const QUEST_MARK_COLOR := Color(1.0, 0.85, 0.2)
 const QUEST_MARK_GAP := 0.35
 const QUEST_MARK_BOB := 0.12
+const FIGURE_SIGN_GAP := 0.25
+const FIGURE_SIGN_FONT := 48
+const FIGURE_SIGN_PIXEL := 0.012
+const FIGURE_SIGN_OUTLINE := 14
+const FIGURE_SIGN_COLOR := Color(1.0, 0.95, 0.8)
 ## Mission lines wrap past this width, so the status window stays at the side of the screen.
 const MISSION_WIDTH := 420.0
 
@@ -159,6 +184,8 @@ var _camera_spot: Node3D
 var _status_column: VBoxContainer
 ## chest id -> lid pivot (rotation.x opens it); a chest in _open_chests is open.
 var _chest_lids := {}
+## Well id -> its water and light, hidden while it is dry.
+var _well_waters := {}
 var _open_chests: Array[String] = []
 ## exit id -> fog bank shown while the exit is closed.
 var _fogs := {}
@@ -185,6 +212,8 @@ var _missions: Array[String] = []
 var _mission_done_serial := 0
 var _mission_done := false
 var _map_square: MapSquare
+var _has_explored := false
+var _dry_wells: Array[String] = []
 var _notice: Label
 var _notice_window: PanelContainer
 var _notice_serial := 0
@@ -212,6 +241,7 @@ var _step_m := 0.0
 var _quest_marks := {}
 var _hidden_figures: Array[String] = []
 var _mark_labels := {}
+var _figure_signs: Array[Label3D] = []
 
 
 func _ready() -> void:
@@ -228,10 +258,13 @@ func _ready() -> void:
 	for npc: Dictionary in zone.npcs:
 		_figures[npc.name] = _add_figure(BattleActor.Look[npc.look], npc.pos, npc.yaw, 0.4,
 			1.8)
+		_add_figure_sign(npc)
 	if zone.boss_id != "":
 		_boss = _add_figure(EnemyLibrary.look(zone.boss_id), zone.boss_pos, 180.0, 1.0, 2.0)
 	for id in Chests.of_zone(zone.id):
 		_chest_lids[id] = build_chest(self, Chests.CHESTS[id])
+	for well: Dictionary in zone.wells:
+		_build_well(well)
 	_exits = zone.all_exits()
 	for exit: Dictionary in _exits:
 		if not exit.get("stairs", false):
@@ -372,10 +405,9 @@ func _on_tapped(screen: Vector2) -> void:
 
 ## Shows what is in reach: the prompt, or on phones the use button.
 func _show_prompt(near: Dictionary) -> void:
-	var text: String = PROMPTS[near.kind] % KeyMap.first_key_name(KeyMap.ACCEPT)
+	var text: String = PROMPTS[near.kind]
 	if _use_button:
-		var verb := text.substr(text.find(": ") + 2)
-		_use_button.text = verb.substr(0, 1).to_upper() + verb.substr(1)
+		_use_button.text = text
 		_use_button.show()
 		return
 	_prompt.text = text
@@ -473,6 +505,26 @@ func set_world_flags(flags: Dictionary) -> void:
 ## its own the map keeps its own).
 func set_explored(map: ExploredMap) -> void:
 	_map_square.set_map(map)
+	_has_explored = true
+	_refresh_map_marks()
+
+
+## The map square's points of interest: shops, inns, wells (grey while dry) and exits.
+func _refresh_map_marks() -> void:
+	if not _has_explored:
+		return
+	var marks: Array[Dictionary] = []
+	for npc: Dictionary in zone.npcs:
+		if npc.kind == "shop":
+			marks.append({"pos": npc.pos, "color": MARK_SHOP})
+		elif npc.kind == "inn":
+			marks.append({"pos": npc.pos, "color": MARK_INN})
+	for well: Dictionary in zone.wells:
+		var color := WATER_HP if well.kind == Wells.HP else WATER_MP
+		marks.append({"pos": well.pos, "color": MARK_DRY if _dry_wells.has(well.id) else color})
+	for exit: Dictionary in zone.all_exits():
+		marks.append({"pos": exit.pos, "color": MARK_EXIT})
+	_map_square.set_marks(marks)
 
 
 ## Shows or removes the return portal at the zone's portal_pos.
@@ -535,6 +587,8 @@ func begin_cutscene() -> void:
 	_map_square.hide()
 	_notice_window.hide()
 	_show_quest_marks()
+	for label in _figure_signs:
+		label.hide()
 
 
 ## Puts every figure back on its spot, gives the camera back to the hero and the
@@ -546,6 +600,8 @@ func end_cutscene() -> void:
 	_status_column.show()
 	_map_square.show()
 	_show_quest_marks()
+	for label in _figure_signs:
+		label.show()
 	_meter.reset()
 	_was_near = {}
 	await freeze(false)
@@ -651,6 +707,33 @@ func _show_quest_marks() -> void:
 		label.visible = text != "" and not _player.scripted
 
 
+## What a figure offers, over its head: its model alone doesn't tell.
+static func _figure_sign_text(npc: Dictionary) -> String:
+	match npc.kind:
+		"shop":
+			return "Criaturas" if Shop.sells_ally(npc.id) else "Tienda"
+		"inn":
+			return "Posada"
+	return ""
+
+
+func _add_figure_sign(npc: Dictionary) -> void:
+	var text := _figure_sign_text(npc)
+	if text == "":
+		return
+	var label := Label3D.new()
+	label.text = text
+	label.font_size = FIGURE_SIGN_FONT
+	label.pixel_size = FIGURE_SIGN_PIXEL
+	label.outline_size = FIGURE_SIGN_OUTLINE
+	label.modulate = FIGURE_SIGN_COLOR
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	label.position.y = figure_actor(npc.name).top_height() + FIGURE_SIGN_GAP
+	(_figures[npc.name] as Node3D).add_child(label)
+	_figure_signs.append(label)
+
+
 func _build_mark(figure_name: String) -> Label3D:
 	var label := Label3D.new()
 	label.font_size = 96
@@ -670,8 +753,8 @@ func _build_mark(figure_name: String) -> Label3D:
 
 
 ## Shows the weapon and shield worn on the hero (Equipment ids, "" for none).
-func set_hero_equipment(weapon_id: String, shield_id: String) -> void:
-	_player.set_equipment(weapon_id, shield_id)
+func set_hero_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> void:
+	_player.set_equipment(weapon_id, shield_id, helmet_id)
 
 
 ## Opens (lid tipped back, tweened unless instant) or closes a chest of this zone. An
@@ -706,7 +789,7 @@ func refresh_status(hero: Combatant, potions: int, gold: int, missions: Array[St
 	_mp_bar.show_mp(hero.mp, hero.max_mp)
 	_exp_bar.show_exp(hero)
 	_potion_label.text = "%s ×%d" % [Inventory.display_name(Inventory.POTION), potions]
-	_gold_label.text = "Oro %d G" % gold
+	_gold_label.text = "%d G" % gold
 	_missions = missions
 	if not _mission_done:
 		_show_missions(missions, Color.WHITE)
@@ -813,14 +896,18 @@ func _nearest_use(pos: Vector3) -> Dictionary:
 
 
 ## The thing a click or tap at a screen point means ({} if none): within NPC_TAP_RADIUS of it
-## at TAP_HEIGHT.
+## at TAP_HEIGHT, or, for a figure, at FIGURE_TOP_TAP_HEIGHT too.
 func _tapped_use(screen: Vector2) -> Dictionary:
-	var point: Variant = Plane(Vector3.UP, TAP_HEIGHT).intersects_ray(
-		_camera.project_ray_origin(screen), _camera.project_ray_normal(screen))
-	if point == null:
+	var origin := _camera.project_ray_origin(screen)
+	var normal := _camera.project_ray_normal(screen)
+	var low: Variant = Plane(Vector3.UP, TAP_HEIGHT).intersects_ray(origin, normal)
+	var high: Variant = Plane(Vector3.UP, FIGURE_TOP_TAP_HEIGHT).intersects_ray(origin, normal)
+	if low == null or high == null:
 		return {}
 	for use in _uses():
-		if _flat_distance(point, use.pos) <= NPC_TAP_RADIUS:
+		var on_top: bool = use.kind in NPC_KINDS.values() \
+			and _flat_distance(high, use.pos) <= FIGURE_TOP_TAP_RADIUS
+		if on_top or _flat_distance(low, use.pos) <= NPC_TAP_RADIUS:
 			return {"kind": use.kind, "id": use.id, "index": use.index}
 	return {}
 
@@ -850,6 +937,9 @@ func _uses() -> Array[Dictionary]:
 	if _portal != null:
 		uses.append({"kind": PORTAL, "id": "", "index": -1, "pos": zone.portal_pos,
 			"radius": MECHANISM_RADIUS})
+	for well: Dictionary in zone.wells:
+		uses.append({"kind": WELL, "id": well.id, "index": -1, "pos": well.pos,
+			"radius": WELL_RADIUS})
 	if _dungeon == null:
 		return uses
 	var mechanisms := [[ZoneData.LEVER, LEVER, zone.lever_flag],
@@ -875,6 +965,8 @@ func _use(use: Dictionary) -> void:
 			inn_requested.emit(use.id)
 		CHEST:
 			chest_opened.emit(use.id)
+		WELL:
+			well_requested.emit(use.id, _well_kind(use.id))
 		LEVER:
 			lever_pulled.emit()
 		KEY:
@@ -902,6 +994,8 @@ func _connect_standalone() -> void:
 	chest_opened.connect(func(chest_id: String) -> void:
 		print("Cofre: %s" % chest_id)
 		set_chest_open(chest_id, true))
+	well_requested.connect(func(id: String, kind: String) -> void:
+		print("Pozo: %s (%s)" % [id, kind]))
 	exit_requested.connect(func(zone_id: String, entry_id: String) -> void:
 		print("Salida: %s (%s)" % [zone_id, entry_id])
 		set_active(true))
@@ -1029,6 +1123,58 @@ func _build_portal(pos: Vector3, full: bool) -> Node3D:
 	return root
 
 
+## Hides the water and the light of the wells in dry.
+func set_dry_wells(dry: Array[String]) -> void:
+	for id: String in _well_waters:
+		(_well_waters[id] as Node3D).visible = not dry.has(id)
+	_dry_wells = dry
+	_refresh_map_marks()
+
+
+## The kind (Wells.HP or Wells.MP) of the well id of this zone.
+func _well_kind(id: String) -> String:
+	for well: Dictionary in zone.wells:
+		if well.id == id:
+			return well.kind
+	return Wells.HP
+
+
+## A well: its model (green in the forest village, red elsewhere) on a cylinder collider,
+## with a disc of coloured water inside the rim and a light over it.
+func _build_well(well: Dictionary) -> void:
+	var body := StaticBody3D.new()
+	body.position = well.pos
+	add_child(body)
+	WorldStage.add_cylinder_shape(body, WELL_COLLIDER, 2.0)
+	var model_id := "well_green" if zone.id == "bosque" else "well_red"
+	BattleStage.add_model(body, WorldStage.MODELS[model_id], Vector3.ZERO,
+		WorldStage.BUILDING_SCALE)
+	var water := Node3D.new()
+	water.position.y = WATER_HEIGHT
+	body.add_child(water)
+	var color := WATER_HP if well.kind == Wells.HP else WATER_MP
+	var disc := CylinderMesh.new()
+	disc.top_radius = WATER_RADIUS
+	disc.bottom_radius = WATER_RADIUS
+	disc.height = 0.05
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_color = color
+	var mesh := MeshInstance3D.new()
+	mesh.mesh = disc
+	mesh.material_override = material
+	mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	water.add_child(mesh)
+	var light := OmniLight3D.new()
+	light.light_color = color
+	light.light_energy = 1.5
+	light.omni_range = 4.0
+	light.shadow_enabled = false
+	light.position.y = 0.6
+	water.add_child(light)
+	_well_waters[well.id] = water
+
+
 ## A closed chest on a box collider under root: wooden box with a gold band around it and a lid on
 ## a pivot at its back edge. Returns the lid pivot.
 static func build_chest(root: Node3D, chest: Dictionary) -> Node3D:
@@ -1144,7 +1290,7 @@ func _build_ui() -> void:
 	_notice = _label()
 	_notice_window.add_child(_notice)
 	_prompt = _label()
-	_prompt.text = PROMPTS[TALK] % KeyMap.first_key_name(KeyMap.ACCEPT)
+	_prompt.text = PROMPTS[TALK]
 	_prompt.add_theme_color_override("font_outline_color", Color.BLACK)
 	_prompt.add_theme_constant_override("outline_size", 8)
 	_ui.add_child(_prompt)

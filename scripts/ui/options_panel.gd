@@ -51,14 +51,14 @@ func _ready() -> void:
 	_sfx_slider = _volume_row("Efectos", _options.sfx_volume, _sfx_value)
 	_music_slider.value_changed.connect(_on_music_changed)
 	_sfx_slider.value_changed.connect(_on_sfx_changed)
-	_choice_row("Texto", GameOptions.SPEED_NAMES, _options.text_speed, func(i: int) -> void:
+	_choice_row("Velocidad del texto", GameOptions.SPEED_NAMES, _options.text_speed, func(i: int) -> void:
 		_options.text_speed = i as GameOptions.TextSpeed)
-	_choice_row("Combate", GameOptions.COMBAT_NAMES, _options.combat_speed, func(i: int) -> void:
+	_choice_row("Velocidad de combate", GameOptions.COMBAT_NAMES, _options.combat_speed, func(i: int) -> void:
 		_options.combat_speed = i as GameOptions.CombatSpeed)
 	_choice_row("Gráficos", GameOptions.QUALITY_NAMES, _options.quality, func(i: int) -> void:
 		_options.quality = i as GameOptions.Quality
 		_apply_display())
-	_choice_row("Temblor", YES_NO, 0 if _options.camera_shake else 1, func(i: int) -> void:
+	_choice_row("Temblor de cámara", YES_NO, 0 if _options.camera_shake else 1, func(i: int) -> void:
 		_options.camera_shake = i == 0)
 	_choice_row("Textos grandes", YES_NO, 0 if _options.large_text else 1, func(i: int) -> void:
 		_options.large_text = i == 0
@@ -99,6 +99,8 @@ func focus_first() -> void:
 
 ## Saves the options and closes the page (from Teclas: back to the options first).
 func back() -> void:
+	if _keys_panel.visible and _keys_panel.is_waiting():
+		return
 	if _keys_panel.visible:
 		_close_keys()
 		return
@@ -198,6 +200,7 @@ func _named_row(title: String) -> HBoxContainer:
 func _button(text: String) -> Button:
 	var button := Button.new()
 	button.text = text
+	UiStyle.fit_finger(button)
 	button.add_theme_font_size_override("font_size", FONT_SIZE)
 	return button
 

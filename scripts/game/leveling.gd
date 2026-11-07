@@ -26,8 +26,9 @@ static func apply(hero: Combatant) -> Array[Dictionary]:
 		events.append(BattleEvent.level_up(hero.level, GAINS, hero))
 		var skill: Skill = hero.learn.get(hero.level)
 		if skill != null and hero.find_skill(skill.id) == null:
+			var replaced := _replace(hero, skill)
 			hero.skills.append(skill)
-			events.append(BattleEvent.learn(skill.display_name))
+			events.append(BattleEvent.learn(skill.display_name, replaced))
 	return events
 
 
@@ -38,7 +39,17 @@ static func sync_skills(hero: Combatant) -> void:
 	for level: int in levels:
 		var skill: Skill = hero.learn[level]
 		if level <= hero.level and hero.find_skill(skill.id) == null:
+			_replace(hero, skill)
 			hero.skills.append(skill)
+
+
+## Removes the spell skill replaces from the hero; returns its name ("" if none).
+static func _replace(hero: Combatant, skill: Skill) -> String:
+	var old: Skill = hero.find_skill(skill.replaces) if skill.replaces != "" else null
+	if old == null:
+		return ""
+	hero.skills.erase(old)
+	return old.display_name
 
 
 ## Total EXP needed for the next level, or -1 at MAX_LEVEL.

@@ -15,6 +15,15 @@ village_name = "el campamento"
 village_pos = Vector3(0, 0, 20)
 village_radius = 13.0
 buildings = [[Vector3(-9.5, 0, 22.5), 30.0, "tent"], [Vector3(9.5, 0, 22.5), -30.0, "tent"]]
+wells = [{
+"id": "castillo_patio_vida",
+"kind": "hp",
+"pos": Vector3(24, 0, 0)
+}, {
+"id": "castillo_patio_mana",
+"kind": "mp",
+"pos": Vector3(-24, 0, -20)
+}]
 entries = {
 "campamento": [Vector3(0, 0, 18), 0.0],
 "sur": [Vector3(0, 0, 21), 0.0]
@@ -39,6 +48,13 @@ npcs = [{
 "name": "Mercader",
 "pos": Vector3(-6, 0, 15),
 "yaw": 180.0
+}, {
+"id": "domadora_castillo",
+"kind": "shop",
+"look": "TAMER",
+"name": "Domadora",
+"pos": Vector3(9, 0, 19),
+"yaw": 0.0
 }, {
 "id": "castillo",
 "kind": "inn",
@@ -90,5 +106,5 @@ floor_color = Color(0.34, 0.33, 0.36, 1)
 castle = true
 mist_banks = 10
 stairs_up = "castillo_trono"
-autoplay_route = Array[Vector3]([Vector3(0, 0, 20), Vector3(-6, 0, 16.8), Vector3(6, 0, 16.8), Vector3(0, 0, 16), Vector3(0, 0, 12), Vector3(0, 0, 0), Vector3(12, 0, 0), Vector3(12, 0, 4), Vector3(20, 0, 4), Vector3(20, 0, -12), Vector3(24, 0, -16), Vector3(24, 0, -20), Vector3(27, 0, -24), Vector3(24, 0, -20), Vector3(20, 0, -12), Vector3(4, 0, -12), Vector3(4, 0, -20), Vector3(-4, 0, -20), Vector3(-4, 0, -12), Vector3(-20, 0, -12), Vector3(-20, 0, -4), Vector3(-23, 0, 0), Vector3(-20, 0, -4), Vector3(-20, 0, -12), Vector3(-4, 0, -12), Vector3(-4, 0, -20), Vector3(0, 0, -20), Vector3(0, 0, -24)])
+autoplay_route = Array[Vector3]([Vector3(0, 0, 20), Vector3(-6, 0, 16.8), Vector3(6, 0, 16.8), Vector3(7.5, 0, 17.8), Vector3(0, 0, 16), Vector3(0, 0, 12), Vector3(0, 0, 0), Vector3(12, 0, 0), Vector3(12, 0, 4), Vector3(20, 0, 4), Vector3(20, 0, -12), Vector3(24, 0, -16), Vector3(24, 0, -20), Vector3(27, 0, -24), Vector3(24, 0, -20), Vector3(20, 0, -12), Vector3(4, 0, -12), Vector3(4, 0, -20), Vector3(-4, 0, -20), Vector3(-4, 0, -12), Vector3(-20, 0, -12), Vector3(-20, 0, -4), Vector3(-23, 0, 0), Vector3(-20, 0, -4), Vector3(-20, 0, -12), Vector3(-4, 0, -12), Vector3(-4, 0, -20), Vector3(0, 0, -20), Vector3(0, 0, -24)])
 autoplay_boss_level = 17

@@ -52,11 +52,11 @@ func talk() -> Dictionary:
 		Stage.REPORT:
 			lines.append("¡Lo has conseguido! Toma, %d pociones." % REWARD_POTIONS)
 			lines.append("Pero mira al norte del pueblo... ¡ha llegado el Rey Slime!")
-			lines.append("Es grande y pesado, pero estoy segura de que puedes con él.")
+			lines.append("Es grande y pesado. Si te cuesta, entrena un poco más por la pradera y vuelve a por él.")
 			potions = REWARD_POTIONS
 			stage = Stage.BOSS
 		Stage.BOSS:
-			lines.append("El Rey Slime espera al norte del pueblo. ¡Ten cuidado!")
+			lines.append("El Rey Slime espera al norte del pueblo. Si ves que puede contigo, entrena un poco antes.")
 		Stage.DONE:
 			lines.append("¡Gracias, {nombre}! Villaclaro está a salvo.")
 	return {"lines": lines, "potions": potions}

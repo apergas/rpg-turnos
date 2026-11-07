@@ -21,6 +21,15 @@ village_name = "Villaclaro"
 village_pos = Vector3(0, 0, -22)
 village_radius = 8.0
 buildings = [[Vector3(-5.5, 0, -25), 60.0, "house_A_red"], [Vector3(5.5, 0, -25), -60.0, "house_B_red"], [Vector3(4.5, 0, -19), 0.0, "well_red"], [Vector3(-6.2, 0, -17.5), 60.0, "house_A_red"]]
+wells = [{
+"id": "pradera_vida",
+"kind": "hp",
+"pos": Vector3(-22, 0, 10)
+}, {
+"id": "pradera_mana",
+"kind": "mp",
+"pos": Vector3(22, 0, -4)
+}]
 rocks = [[Vector3(-20, 0, -16), 2, 8.0, 15.0], [Vector3(-22, 0, 14), 4, 9.0, 60.0], [Vector3(18, 0, -18), 3, 9.0, 130.0], [Vector3(22, 0, 16), 4, 10.0, 200.0], [Vector3(-10, 0, -18), 1, 8.0, 290.0], [Vector3(12, 0, -20), 2, 9.0, 80.0], [Vector3(-12, 0, 23), 0, 10.0, 170.0], [Vector3(24, 0, 0), 3, 10.0, 240.0], [Vector3(-24, 0, -2), 2, 10.0, 320.0], [Vector3(7, 0, -15), 1, 7.0, 45.0]]
 tree_seed = 23
 tree_tries = 600
@@ -73,6 +82,13 @@ npcs = [{
 "pos": Vector3(-3, 0, -23.6),
 "yaw": 180.0
 }, {
+"id": "domadora_villaclaro",
+"kind": "shop",
+"look": "TAMER",
+"name": "Domadora",
+"pos": Vector3(6.8, 0, -21.5),
+"yaw": 0.0
+}, {
 "id": "villaclaro",
 "kind": "inn",
 "look": "INNKEEPER",
@@ -106,8 +122,6 @@ formations = [["slime"], ["slime"], ["bat"], ["mushroom"], ["slime", "slime"], [
 start_formations = [["slime"], ["slime", "slime"]]
 start_pos = Vector3(0, 0, 26)
 start_radius = 20.0
-rare_enemy = "slime_metal"
-rare_chance = 0.25
 encounter_grace = 5.0
 encounter_chance = 0.025
 music = "map"
@@ -118,5 +132,5 @@ fog_density = 0.008
 sun_color = Color(1, 0.9, 0.75, 1)
 sun_energy = 0.6
 backdrop = "pradera"
-autoplay_route = Array[Vector3]([Vector3(8, 0, 18), Vector3(16, 0, 6), Vector3(10, 0, -6), Vector3(1, 0, -14), Vector3(-1.5, 0, -18), Vector3(-1.2, 0, -23), Vector3(0, 0, -26.5), Vector3(0, 0, -28.6), Vector3(2, 0, -14), Vector3(-6, 0, -4), Vector3(-14, 0, 8), Vector3(-6, 0, 18)])
+autoplay_route = Array[Vector3]([Vector3(8, 0, 18), Vector3(16, 0, 6), Vector3(10, 0, -6), Vector3(1, 0, -14), Vector3(-1.5, 0, -18), Vector3(-1.2, 0, -23), Vector3(4.6, 0, -22.3), Vector3(0, 0, -26.5), Vector3(0, 0, -28.6), Vector3(2, 0, -14), Vector3(-6, 0, -4), Vector3(-14, 0, 8), Vector3(-6, 0, 18)])
 autoplay_boss_level = 5

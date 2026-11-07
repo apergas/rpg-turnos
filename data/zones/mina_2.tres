@@ -4,6 +4,15 @@
 
 [resource]
 script = ExtResource("1_zone")
+wells = [{
+"id": "mina_2_vida",
+"kind": "hp",
+"pos": Vector3(0, 0, 16)
+}, {
+"id": "mina_2_mana",
+"kind": "mp",
+"pos": Vector3(-16, 0, -12)
+}]
 id = "mina_2"
 display_name = "la mina"
 number = 3
@@ -11,6 +20,8 @@ half_size = Vector2(30, 26)
 ground_color = Color(0.24, 0.21, 0.19, 1)
 has_grass = false
 formations = [["golem_barro"], ["arana"], ["espectro"], ["arana"], ["arana", "espectro"], ["golem_barro", "arana"]]
+rare_enemy = "slime_metal"
+rare_chance = 0.25
 encounter_grace = 4.0
 encounter_chance = 0.04
 music = "mine"

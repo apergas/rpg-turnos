@@ -166,19 +166,16 @@ func hidden_figures(zone_id: String) -> Array[String]:
 	return hidden
 
 
-## The mission lines of the quests in progress, village quest first (empty with none);
-## GameState.current_missions() is what reads them.
+## One line per side quest under way, leaving room for the main goal above them
+## (GameState.current_missions() puts it first).
 func status_lines(inventory: Inventory) -> Array[String]:
 	var lines: Array[String] = []
-	var village_line := village.status_text()
-	if village_line != "":
-		lines.append(village_line)
 	for id: String in QUESTS:
 		if is_active(id):
 			lines.append(STATUS_PREFIX + _status(data(id), inventory))
-	var extra := lines.size() - MAX_STATUS_LINES
+	var extra := lines.size() - (MAX_STATUS_LINES - 1)
 	if extra > 0:
-		lines.resize(MAX_STATUS_LINES)
+		lines.resize(MAX_STATUS_LINES - 1)
 		lines.append(MORE_LINES % extra)
 	return lines
 

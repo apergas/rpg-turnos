@@ -60,9 +60,9 @@ func model() -> BattleActor:
 	return _model
 
 
-## Shows the weapon and shield worn on the model (Equipment ids, "" for none).
-func set_equipment(weapon_id: String, shield_id: String) -> void:
-	_model.set_equipment(weapon_id, shield_id)
+## Shows the weapon, shield and helmet worn on the model (Equipment ids, "" for none).
+func set_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> void:
+	_model.set_equipment(weapon_id, shield_id, helmet_id)
 
 
 ## Puts the player at pos with the model turned to facing_yaw (0 faces -Z).

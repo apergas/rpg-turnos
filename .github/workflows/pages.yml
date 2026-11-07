@@ -44,6 +44,8 @@ jobs:
           mkdir -p build/web
           ./godot --headless --path . --export-release "Web" build/web/index.html
           test -f build/web/index.wasm
+          jq '.short_name = "Villaclaro"' build/web/index.manifest.json > manifest.tmp
+          mv manifest.tmp build/web/index.manifest.json
 
       - uses: actions/configure-pages@v6
 
