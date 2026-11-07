@@ -27,6 +27,11 @@ const FONT_SIZE := 24
 const BADGE_FONT_SIZE := 16
 ## Least width of the command window (a longer row widens it).
 const MENU_WIDTH := 240.0
+## On a phone the status window is compact: HP and MP side by side, the creature on one row.
+const TOUCH_BAR_WIDTH := 170.0
+const TOUCH_ALLY_BAR_WIDTH := 110.0
+## With large text everything draws at 1.6, so a row of 48 is as tall on screen as 56 at 1.35.
+const TOUCH_LARGE_ROW_HEIGHT := 48.0
 ## Margin of the windows to the screen edges and gap between them.
 const EDGE := 24.0
 const GAP := 16.0
@@ -391,6 +396,8 @@ func _add_row(text: String, enabled: bool) -> void:
 	button.text = text
 	button.flat = true
 	UiStyle.fit_finger(button)
+	if Device.is_touch() and get_window().content_scale_factor >= DisplaySettings.TOUCH_LARGE_SCALE:
+		_shrink_row(button)
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.add_theme_font_size_override("font_size", FONT_SIZE)
 	button.add_theme_color_override("font_disabled_color", Color(0.5, 0.5, 0.55))
@@ -400,6 +407,19 @@ func _add_row(text: String, enabled: bool) -> void:
 	_list.add_child(button)
 	_set_enabled(button, enabled)
 	_rows.append(button)
+
+
+## The phone's button theme pads every button to 56; with large text a row gets 48 instead.
+func _shrink_row(button: Button) -> void:
+	button.custom_minimum_size.y = TOUCH_LARGE_ROW_HEIGHT
+	var theme := ThemeDB.get_default_theme()
+	var text_height := theme.get_default_font().get_height(FONT_SIZE)
+	var pad := maxf(0.0, (TOUCH_LARGE_ROW_HEIGHT - text_height) / 2.0)
+	for style_name: String in DisplaySettings.BUTTON_STYLES:
+		var box := theme.get_stylebox(style_name, "Button").duplicate() as StyleBox
+		box.content_margin_top = pad
+		box.content_margin_bottom = pad
+		button.add_theme_stylebox_override(style_name, box)
 
 
 ## Moves the cursor to row i, or to the nearest enabled row after it (wrapping).
@@ -552,16 +572,29 @@ func _build_status() -> void:
 	_badges = HBoxContainer.new()
 	_badges.add_theme_constant_override("separation", 4)
 	title_row.add_child(_badges)
-	_hp_bar = StatBar.new(StatBar.HP)
-	box.add_child(_hp_bar)
-	_mp_bar = StatBar.new(StatBar.MP)
-	box.add_child(_mp_bar)
+	var touch := Device.is_touch()
+	var width := TOUCH_BAR_WIDTH if touch else StatBar.BAR_SIZE.x
+	_hp_bar = StatBar.new(StatBar.HP, width)
+	_mp_bar = StatBar.new(StatBar.MP, width)
+	var bars: Container = box
+	if touch:
+		bars = HBoxContainer.new()
+		bars.add_theme_constant_override("separation", 8)
+		box.add_child(bars)
+	bars.add_child(_hp_bar)
+	bars.add_child(_mp_bar)
+	var ally_row: Container = box
+	if touch:
+		ally_row = HBoxContainer.new()
+		ally_row.add_theme_constant_override("separation", 8)
+		box.add_child(ally_row)
 	_ally_name = _label()
 	_ally_name.hide()
-	box.add_child(_ally_name)
-	_ally_bar = StatBar.new(StatBar.HP)
+	ally_row.add_child(_ally_name)
+	_ally_bar = StatBar.new(StatBar.HP, TOUCH_ALLY_BAR_WIDTH if touch else StatBar.BAR_SIZE.x)
+	_ally_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL if touch else Control.SIZE_FILL
 	_ally_bar.hide()
-	box.add_child(_ally_bar)
+	ally_row.add_child(_ally_bar)
 
 
 func _build_bottom() -> void:
