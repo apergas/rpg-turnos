@@ -86,7 +86,6 @@ La mina fue lo que más costó a los dos QA.
 | M-14 | Objetivo más visible en combate (Héctor) | La flecha amarilla se pierde en algunos fondos | Además de la flecha, el enemigo apuntado se ilumina un poco y su nombre sale encima de su barra | S |
 | M-15 | Primeros pasos en el móvil (Héctor) | No queda claro cómo moverse con el dedo | La primera vez que se entra al mapa en un móvil, una línea: "Toca el suelo para ir allí, o arrastra el dedo para andar." Desaparece al andar. Se guarda en las opciones | S |
 | M-16 | Datos de la partida en el título (Héctor) | "Continuar" no dice qué partida vas a cargar | Bajo "Continuar", una línea pequeña: "Rocío · Nv 12 · Mina · 1:05". Sale del propio guardado. En la 1.3.0 pasa a cada ranura (M-20) | S |
-| M-17 | Avisos de derrota (I05) | La primera derrota sorprende: pierdes la mitad del oro y apareces en otro sitio | Una frase de la Abuela Rosa o del Diario antes del Rey Slime: "Si caes, despiertas en el último lugar seguro, pero pierdes la mitad del oro." No se da un nivel recomendado: eso lo descartaste | S |
 
 ### Prioridad 4: cierre y contenido
 
@@ -133,7 +132,8 @@ Vienen de `2026-11-03-ideas-juego-completo.md`. Las dejo ordenadas por lo que cr
 
 | Propuesta | Motivo |
 |---|---|
-| Nivel recomendado antes de cada jefe | Lo descartaste en los evolutivos. La Abuela ya sugiere entrenar antes del Rey Slime, y M-17 avisa de lo que cuesta caer |
+| Nivel recomendado antes de cada jefe | Lo descartaste en los evolutivos. La Abuela ya sugiere entrenar antes del Rey Slime |
+| Avisar de lo que cuesta caer (M-17, I05) | Descartado por ti: la primera derrota lo enseña |
 | Límite a la sequía de encuentros (I08) | Choca con lo que pide Héctor, que quiere menos combates. El ritmo ya se ajustó en la 1.0.0 |
 | Fijar una misión en la pantalla (I04) | El objetivo principal ya va primero, y en el móvil no cabe más |
 | Pruebas de regresión automáticas (E04) | El proyecto no tiene tests, por decisión tuya |
@@ -147,7 +147,7 @@ Vienen de `2026-11-03-ideas-juego-completo.md`. Las dejo ordenadas por lo que cr
 | Versión | Contenido | Plan |
 |---|---|---|
 | **1.1.1** | M-01 a M-06 y M-23 a M-25: errores, confusiones y lo heredado | [plan](plans/2026-11-07-version-1-1-1.md) |
-| **1.2.0** | M-07 a M-17: orientación y comodidad | [plan](plans/2026-11-07-version-1-2-0.md) |
+| **1.2.0** | M-07 a M-16: orientación y comodidad | [plan](plans/2026-11-07-version-1-2-0.md) |
 | **1.3.0** | M-18 a M-21: colección y partidas | [plan](plans/2026-11-07-version-1-3-0.md) |
 | **1.4.0** | M-22: el Eco de la Niebla | [plan](plans/2026-11-07-version-1-4-0.md) |
 
