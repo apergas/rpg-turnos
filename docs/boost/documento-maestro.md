@@ -118,8 +118,6 @@ Vienen de `2026-11-03-ideas-juego-completo.md`. Las dejo ordenadas por lo que cr
 
 | Idea | Comentario |
 |---|---|
-| Correr | Ayuda a lo mismo que M-12. Si M-12 no basta, es lo siguiente |
-| Tutoriales de una ventana | M-15 cubre el más necesario |
 | Ataque sorpresa | Barato y da variedad al combate |
 | Pluma de fénix y Despertador | Objetos sencillos con las reglas actuales |
 | Variantes de color de los enemigos | Más variedad con poco trabajo |
@@ -127,7 +125,6 @@ Vienen de `2026-11-03-ideas-juego-completo.md`. Las dejo ordenadas por lo que cr
 | Medallas pequeñas | Da sentido a explorar; pide un coleccionista y premios |
 | Sonido de ambiente y partículas | Ambientación |
 | Soporte de mando | Útil en escritorio; en la web depende del navegador |
-| Ciclo de día y noche, jarrones, estatuas de guardado, iglesia, PNJ que pasean y animales | Poco valor para lo que cuestan |
 | Menú de depuración | Solo para desarrollo; `--autoplay-zone` ya cubre lo principal |
 
 ---
