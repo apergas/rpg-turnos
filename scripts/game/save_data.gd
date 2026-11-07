@@ -20,7 +20,7 @@ class_name SaveData extends RefCounted
 ## the slot empty and no side quest taken. DIFFICULTY_VERSION (phase 7) adds the difficulty;
 ## an older save plays on Normal. EVOLUTION_VERSION (1.1.0) adds the helmet slot, the
 ## enemies seen, the wells' charge and the creature; an older save gets the slot empty,
-## the bosses it has beaten seen, every well full and no creature.
+## the bosses it has beaten and the common enemies of their zones seen (and the Slime de Metal if its quest is done), every well full and no creature.
 
 const VERSION := 9
 ## First version with the story's fields.
@@ -148,10 +148,7 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 	if int(data.version) >= EVOLUTION_VERSION:
 		state.seen_enemies.assign(data.bestiary)
 	else:
-		# Before the bestiary: the bosses already beaten have been seen.
-		for flag: String in state.world_flags:
-			if EnemyLibrary.ENEMIES.has(flag):
-				state.see_enemy(flag)
+		_see_before_bestiary(state)
 	state.well_charge = {}
 	var wells: Dictionary = data.get("wells", {})
 	for id: String in wells:
@@ -160,6 +157,23 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 	var pos: Array = data.position
 	return {"valid": true, "position": Vector3(pos[0], 0.0, pos[1]),
 		"play_time": float(data.play_time)}
+
+
+## Before the bestiary: every boss beaten, the common enemies of the zone it guarded and the
+## Slime de Metal once its quest is done have been seen.
+static func _see_before_bestiary(state: GameState) -> void:
+	for flag: String in state.world_flags:
+		if EnemyLibrary.ENEMIES.has(flag):
+			state.see_enemy(flag)
+	for zone_id in ZoneData.IDS:
+		var zone := ZoneData.by_id(zone_id)
+		if zone.boss_id == "" or not state.has_flag(zone.boss_id):
+			continue
+		for formation: Array in zone.formations + zone.start_formations:
+			for enemy_id: String in formation:
+				state.see_enemy(enemy_id)
+	if state.quests.stage("slime_metal") == QuestLog.Stage.DONE:
+		state.see_enemy("slime_metal")
 
 
 ## True if data has a version apply() reads and every field with the right type.

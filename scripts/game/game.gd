@@ -336,7 +336,7 @@ func _on_encounter(boss: bool) -> void:
 		enemies.append(EnemyLibrary.data(_zone.boss_id))
 	else:
 		enemies = EncounterTable.pick(_zone, _world.player_position(), _rng,
-			state.quests.wanted_enemies())
+			state.quests.wanted_enemies(), state.quests.hunted_enemies())
 	for enemy in enemies:
 		state.see_enemy(enemy.id)
 	await _fade_to(1.0)
