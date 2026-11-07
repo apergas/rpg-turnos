@@ -21,7 +21,6 @@ const DROP := "drop"
 const DEFEND := "defend"
 const FLEE_OK := "flee_ok"
 const FLEE_FAIL := "flee_fail"
-const NO_ESCAPE := "no_escape"
 const STATUS_ON := "status_on"
 const STATUS_TICK := "status_tick"
 const STATUS_OFF := "status_off"
@@ -122,11 +121,6 @@ static func flee_ok() -> Dictionary:
 
 static func flee_fail() -> Dictionary:
 	return {"type": FLEE_FAIL}
-
-
-## Fleeing from a boss: nothing else happens and the hero picks again.
-static func no_escape() -> Dictionary:
-	return {"type": NO_ESCAPE}
 
 
 static func status_on(target: int, status: String) -> Dictionary:

@@ -347,8 +347,11 @@ func _open(page: Page, cursor: int) -> void:
 	_cursor = 0
 	match page:
 		Page.MAIN:
-			for text in MAIN_ROWS:
-				_add_row(text, true)
+			for i in MAIN_ROWS.size():
+				var why := ""
+				if i == MAIN_ROW_OF[BattleEngine.CMD_FLEE]:
+					why = _engine.problem(BattleEngine.cmd_flee())
+				_add_row(_with_reason(MAIN_ROWS[i], why), why == "")
 			_set_message("¿Qué hará %s?" % _engine.hero.display_name)
 		Page.SPELLS:
 			for skill in _engine.hero.skills:
