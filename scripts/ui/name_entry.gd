@@ -23,6 +23,8 @@ const LETTERS := "ABCDEFGHIJKLMNÑOPQRSTUVWXYZÁÉÍÓÚ"
 const DEMO_STEP := 0.15
 
 var _audio: AudioDirector
+## The name already typed when it opens (Volver from the difficulty); set before add_child.
+var preset := ""
 var _typed := ""
 var _upper := true
 var _name_label: Label
@@ -84,6 +86,8 @@ func _ready() -> void:
 	_accept_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_accept_button.pressed.connect(_accept)
 	row.add_child(_accept_button)
+	if preset != "":
+		_typed = preset
 	_refresh()
 	_quiet_focus = true
 	_keys[0].grab_focus()

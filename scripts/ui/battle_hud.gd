@@ -370,9 +370,9 @@ func _open(page: Page, cursor: int) -> void:
 	_set_cursor(cursor)
 
 
-## Phone: nothing tells the player that a touch off the menu goes back, so a row does.
+## The row that goes back: nothing else tells the player a click off the menu does.
 func _add_back_row() -> void:
-	if not Device.is_touch() or _back_row >= 0:
+	if _back_row >= 0:
 		return
 	_back_row = _rows.size()
 	_add_row("Volver", true)

@@ -198,7 +198,7 @@ func _cancel_new_game_confirm() -> void:
 
 ## The menu gives way to the NameEntry; its name starts a new game, Volver brings the
 ## menu back.
-func _open_name_entry() -> void:
+func _open_name_entry(preset := "") -> void:
 	if _starting or _name_entry != null:
 		return
 	_audio.play_sfx(SfxLibrary.ACCEPT)
@@ -206,6 +206,7 @@ func _open_name_entry() -> void:
 	_title_label.hide()
 	_name_entry = NameEntry.new()
 	_name_entry.setup(_audio)
+	_name_entry.preset = preset
 	_ui.add_child(_name_entry)
 	_name_entry.accepted.connect(_on_name_accepted)
 	_name_entry.cancelled.connect(_back_to_menu)
@@ -223,7 +224,14 @@ func _on_name_accepted(hero_name: String) -> void:
 	_difficulty_window.setup(_audio)
 	_ui.add_child(_difficulty_window)
 	_difficulty_window.chosen.connect(func(id: String) -> void: _start_game({}, hero_name, id))
-	_difficulty_window.cancelled.connect(_back_to_menu)
+	_difficulty_window.cancelled.connect(_back_to_name.bind(hero_name))
+
+
+## Volver from the difficulty: the name again, as it was typed.
+func _back_to_name(hero_name: String) -> void:
+	_difficulty_window.queue_free()
+	_difficulty_window = null
+	_open_name_entry(hero_name)
 
 
 ## Volver from the name or the difficulty: the menu again.
