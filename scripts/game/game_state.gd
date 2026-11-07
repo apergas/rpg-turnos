@@ -72,12 +72,17 @@ func heal_full() -> void:
 	hero.mp = hero.max_mp
 
 
-## The missions under way, for the map's status window and the pause menu; never empty:
-## with none in progress, the story's next step. The one place that reads them.
+## The next thing the story asks: the village quest while it lasts, then the chapter's goal.
+func main_goal() -> String:
+	var line := quest.status_text()
+	return line if line != "" else story.goal_text(world_flags)
+
+
+## The lines of the mission lists (status window, pause menu): the main goal first, then
+## the side quests. Never empty. The one place that reads them.
 func current_missions() -> Array[String]:
-	var missions := quests.status_lines(inventory)
-	if missions.is_empty():
-		missions.append(story.goal_text(world_flags))
+	var missions: Array[String] = [main_goal()]
+	missions.append_array(quests.status_lines(inventory))
 	return missions
 
 
