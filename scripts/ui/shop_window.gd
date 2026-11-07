@@ -119,7 +119,8 @@ func run(shop_id: String) -> void:
 	_set_message("")
 	show()
 	_sfx(SfxLibrary.DIALOGUE)
-	_show_page("menu")
+	# A tamer has one creature to show: no menu, no selling.
+	_show_page("buy" if Shop.sells_ally(shop_id) else "menu")
 	if _autoplay:
 		await _autoplay_run()
 	else:
@@ -146,6 +147,10 @@ func _back() -> void:
 		"ask":
 			_answer(false)
 		_:
+			if Shop.sells_ally(_shop_id):
+				_page = ""
+				_left.emit()
+				return
 			_set_message("")
 			_show_page("menu")
 
@@ -166,7 +171,7 @@ func _show_page(page: String, focus_id := "") -> void:
 			_add_button("Vender", func() -> void: _open("sell"))
 			_add_button("Salir", _back)
 		"buy":
-			_title.text = "Comprar"
+			_title.text = "Criaturas" if Shop.sells_ally(_shop_id) else "Comprar"
 			for id in Shop.stock(_shop_id):
 				_add_buy_row(id)
 			_add_button("Volver", _back)
@@ -213,6 +218,17 @@ func _add_buy_row(id: String) -> void:
 	var price := _label("%d G" % Shop.price(id), GREY if why != "" else StatBar.GOLD)
 	price.custom_minimum_size.x = PRICE_WIDTH
 	row.add_child(price)
+	if Shop.is_ally(id):
+		# Stats with the note under them, so a long note never widens the window.
+		var info_box := VBoxContainer.new()
+		info_box.add_child(_label(Allies.stats_text(id), Color.WHITE))
+		if why != "":
+			info_box.add_child(_label(why, GREY))
+		if _state.ally_id != "" and why != Shop.HAS_IT and why != Shop.HAS_BETTER:
+			info_box.add_child(_label("Sustituye a %s" % Allies.display_name(_state.ally_id),
+				GREY))
+		row.add_child(info_box)
+		return
 	var info := Shop.compare(_state, id)
 	if not info.is_empty():
 		row.add_child(_label("%s +%d" % [info.stat, info.bonus], Color.WHITE))
@@ -328,6 +344,8 @@ func _autoplay_run() -> void:
 			await _wait()
 			_answer(true)
 		await _wait()
+	if Shop.sells_ally(_shop_id):
+		return
 	_show_page("sell")
 	await _wait()
 	_show_page("menu")

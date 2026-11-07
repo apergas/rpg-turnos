@@ -32,6 +32,16 @@ const SHOPS := {
 		"equipment": ["espada_platino", "armadura_platino", "escudo_platino", "casco_platino"],
 		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.WING],
 	},
+	# The tamers: they sell one creature each. gear_shop: the shop whose gear autoplay
+	# buys first.
+	"domadora_villaclaro": {"keeper": "Domadora", "equipment": [], "items": [],
+		"ally": "gallina", "gear_shop": VILLACLARO},
+	"domadora_bosque": {"keeper": "Domadora", "equipment": [], "items": [],
+		"ally": "lobezno", "gear_shop": BOSQUE},
+	"domadora_mina": {"keeper": "Domadora", "equipment": [], "items": [],
+		"ally": "golem_pequeno", "gear_shop": MINA},
+	"domadora_castillo": {"keeper": "Domadora", "equipment": [], "items": [],
+		"ally": "esqueleto_leal", "gear_shop": CASTILLO},
 }
 const NO_GOLD := "Falta oro"
 const WORN := "Lo llevas puesto"
@@ -39,6 +49,8 @@ const NOT_FOR_SALE := "No se vende"
 ## What the starting gear sells for: it is worth almost nothing, but it clears the bag.
 const STARTING_GEAR_PRICE := 1
 const NOT_CARRIED := "No lo llevas"
+const HAS_IT := "Ya la tienes"
+const HAS_BETTER := "Ya tienes una mejor"
 ## Potions --autoplay keeps in stock once it has the shop's equipment.
 const AUTOPLAY_POTIONS := 3
 ## The ×5 button of consumables.
@@ -49,10 +61,20 @@ static func keeper(shop_id: String) -> String:
 	return SHOPS[shop_id].keeper
 
 
-## Every id on sale: equipment first, then items.
+static func sells_ally(shop_id: String) -> bool:
+	return SHOPS[shop_id].has("ally")
+
+
+static func is_ally(id: String) -> bool:
+	return Allies.exists(id)
+
+
+## Every id on sale: equipment first, then items, then the creature of a tamer.
 static func stock(shop_id: String) -> Array[String]:
 	var ids: Array[String] = []
 	ids.assign(SHOPS[shop_id].equipment + SHOPS[shop_id].items)
+	if sells_ally(shop_id):
+		ids.append(SHOPS[shop_id].ally)
 	return ids
 
 
@@ -61,14 +83,20 @@ static func is_equipment(id: String) -> bool:
 
 
 static func display_name(id: String) -> String:
+	if is_ally(id):
+		return Allies.display_name(id)
 	return Equipment.display_name(id) if is_equipment(id) else Inventory.display_name(id)
 
 
 static func article(id: String) -> String:
+	if is_ally(id):
+		return Allies.article(id)
 	return Equipment.article(id) if is_equipment(id) else Inventory.article(id)
 
 
 static func price(id: String) -> int:
+	if is_ally(id):
+		return Allies.price(id)
 	return Equipment.price(id) if is_equipment(id) else int(Inventory.ITEMS[id].price)
 
 
@@ -82,6 +110,11 @@ static func sell_price(id: String) -> int:
 
 ## Why state can't buy id now ("" if it can).
 static func buy_problem(state: GameState, id: String) -> String:
+	if is_ally(id):
+		if state.ally_id == id:
+			return HAS_IT
+		if Allies.tier(state.ally_id) > Allies.tier(id):
+			return HAS_BETTER
 	return NO_GOLD if state.gold < price(id) else ""
 
 
@@ -95,7 +128,9 @@ static func buy(state: GameState, id: String) -> Dictionary:
 	if why != "":
 		return {"ok": false, "text": "%s." % why}
 	state.gold -= price(id)
-	if is_equipment(id):
+	if is_ally(id):
+		state.ally_id = id
+	elif is_equipment(id):
 		state.bag_equipment.append(id)
 	else:
 		state.inventory.add(id)
@@ -180,6 +215,11 @@ static func compare(state: GameState, id: String) -> Dictionary:
 ## gear and the village is close by, so there the Ala waits until the gear is bought.
 static func autoplay_picks(state: GameState, shop_id: String) -> Array[String]:
 	var picks: Array[String] = []
+	if sells_ally(shop_id):
+		var ally: String = SHOPS[shop_id].ally
+		if can_buy(state, ally) and not _gear_pending(state, shop_id):
+			picks.append(ally)
+		return picks
 	var gold := state.gold
 	var upgrades := 0
 	var wants_wing := state.inventory.count(Inventory.WING) == 0
@@ -205,3 +245,11 @@ static func autoplay_picks(state: GameState, shop_id: String) -> Array[String]:
 		gold -= price(Inventory.POTION)
 		potions += 1
 	return picks
+
+
+## True while the village's shop still has an upgrade not bought (even if unaffordable).
+static func _gear_pending(state: GameState, shop_id: String) -> bool:
+	for id: String in SHOPS[SHOPS[shop_id].gear_shop].equipment:
+		if compare(state, id).diff > 0 and not id in state.bag_equipment:
+			return true
+	return false

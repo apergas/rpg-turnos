@@ -82,6 +82,13 @@ npcs = [{
 "pos": Vector3(-3, 0, -23.6),
 "yaw": 180.0
 }, {
+"id": "domadora_villaclaro",
+"kind": "shop",
+"look": "TAMER",
+"name": "Domadora",
+"pos": Vector3(6.8, 0, -21.5),
+"yaw": 0.0
+}, {
 "id": "villaclaro",
 "kind": "inn",
 "look": "INNKEEPER",
@@ -125,5 +132,5 @@ fog_density = 0.008
 sun_color = Color(1, 0.9, 0.75, 1)
 sun_energy = 0.6
 backdrop = "pradera"
-autoplay_route = Array[Vector3]([Vector3(8, 0, 18), Vector3(16, 0, 6), Vector3(10, 0, -6), Vector3(1, 0, -14), Vector3(-1.5, 0, -18), Vector3(-1.2, 0, -23), Vector3(0, 0, -26.5), Vector3(0, 0, -28.6), Vector3(2, 0, -14), Vector3(-6, 0, -4), Vector3(-14, 0, 8), Vector3(-6, 0, 18)])
+autoplay_route = Array[Vector3]([Vector3(8, 0, 18), Vector3(16, 0, 6), Vector3(10, 0, -6), Vector3(1, 0, -14), Vector3(-1.5, 0, -18), Vector3(-1.2, 0, -23), Vector3(4.6, 0, -22.3), Vector3(0, 0, -26.5), Vector3(0, 0, -28.6), Vector3(2, 0, -14), Vector3(-6, 0, -4), Vector3(-14, 0, 8), Vector3(-6, 0, 18)])
 autoplay_boss_level = 5

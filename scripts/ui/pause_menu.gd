@@ -67,6 +67,7 @@ var _exp_bar: StatBar
 var _stats_label: Label
 var _gold_label: Label
 var _spells_label: Label
+var _ally_label: Label
 var _items_box: VBoxContainer
 var _items_message: Label
 var _equip_box: VBoxContainer
@@ -262,6 +263,10 @@ func _fill_status() -> void:
 	for skill in hero.skills:
 		spells.append(skill.display_name)
 	BattleHud.fit_label(_spells_label, "Hechizos: %s" % ", ".join(spells), TEXT_WIDTH)
+	_ally_label.visible = _state.ally_id != ""
+	if _state.ally_id != "":
+		BattleHud.fit_label(_ally_label, "Criatura: %s" % Allies.display_name(_state.ally_id),
+			TEXT_WIDTH)
 
 
 ## An empty line takes no room off a phone; on a phone it keeps its place, so a message never
@@ -535,6 +540,8 @@ func _build_status(stack: VBoxContainer) -> void:
 	page.add_child(_gold_label)
 	_spells_label = _label("", Color.WHITE)
 	page.add_child(_spells_label)
+	_ally_label = _label("", Color.WHITE)
+	page.add_child(_ally_label)
 	page.add_child(_back_button())
 
 
