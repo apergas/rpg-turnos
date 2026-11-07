@@ -66,7 +66,8 @@ var _mp_bar: StatBar
 var _exp_bar: StatBar
 var _stats_label: Label
 var _gold_label: Label
-var _spells_label: Label
+## Estado's right column: each spell, its MP and what it does.
+var _spells_box: VBoxContainer
 var _ally_label: Label
 var _items_box: VBoxContainer
 var _items_message: Label
@@ -261,10 +262,14 @@ func _fill_status() -> void:
 	_stats_label.text = "ATK %d   DEF %d   VEL %d" % [hero.total_attack(),
 		hero.total_defense(), hero.total_speed()]
 	_gold_label.text = "%d G" % _state.gold
-	var spells := PackedStringArray()
+	for child in _spells_box.get_children():
+		_spells_box.remove_child(child)
+		child.queue_free()
+	_spells_box.add_child(_label("Hechizos", TITLE_COLOR))
 	for skill in hero.skills:
-		spells.append(skill.display_name)
-	BattleHud.fit_label(_spells_label, "Hechizos: %s" % ", ".join(spells), TEXT_WIDTH)
+		_spells_box.add_child(_label("%s  %d PM" % [skill.display_name, skill.mp_cost],
+			Color.WHITE))
+		UiStyle.add_small_text(_spells_box, skill.description)
 	_ally_label.visible = _state.ally_id != ""
 	if _state.ally_id != "":
 		BattleHud.fit_label(_ally_label, "Criatura: %s" % Allies.display_name(_state.ally_id),
@@ -528,20 +533,27 @@ func _main_window() -> VBoxContainer:
 
 func _build_status(stack: VBoxContainer) -> void:
 	var page := _page_box(stack, "status", "Estado")
+	var columns := HBoxContainer.new()
+	columns.add_theme_constant_override("separation", 24)
+	page.add_child(columns)
+	var left := VBoxContainer.new()
+	left.add_theme_constant_override("separation", 8)
+	columns.add_child(left)
 	_hp_bar = StatBar.new(StatBar.HP, STATUS_BAR_WIDTH)
-	page.add_child(_hp_bar)
+	left.add_child(_hp_bar)
 	_mp_bar = StatBar.new(StatBar.MP, STATUS_BAR_WIDTH)
-	page.add_child(_mp_bar)
+	left.add_child(_mp_bar)
 	_exp_bar = StatBar.new(StatBar.EXP, STATUS_BAR_WIDTH)
-	page.add_child(_exp_bar)
+	left.add_child(_exp_bar)
 	_stats_label = _label("", Color.WHITE)
-	page.add_child(_stats_label)
+	left.add_child(_stats_label)
 	_gold_label = _label("", StatBar.GOLD)
-	page.add_child(_gold_label)
-	_spells_label = _label("", Color.WHITE)
-	page.add_child(_spells_label)
+	left.add_child(_gold_label)
 	_ally_label = _label("", Color.WHITE)
-	page.add_child(_ally_label)
+	left.add_child(_ally_label)
+	_spells_box = VBoxContainer.new()
+	_spells_box.add_theme_constant_override("separation", 2)
+	columns.add_child(_spells_box)
 	page.add_child(_back_button())
 
 

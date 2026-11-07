@@ -6,6 +6,7 @@
 script = ExtResource("1_skill")
 id = "curar_mas"
 display_name = "Curar+"
+description = "Cura 90 PV."
 mp_cost = 7
 power = 90
 color = Color(0.5, 1, 0.6, 1)
