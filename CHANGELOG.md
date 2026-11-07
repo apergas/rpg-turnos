@@ -19,6 +19,13 @@
 - El Slime de Metal aparece en la mina: ninguna misión obliga a volver atrás.
 - Bruja y Rey Slime más suaves; mina, castillo y Señor de la Niebla, más peligrosos.
 - Repaso de los textos del juego.
+- "Nueva partida" avisa antes de sustituir una partida guardada, y una dañada se ve en el título.
+- El objetivo principal va siempre primero, y la Abuela Rosa sugiere entrenar antes del Rey Slime.
+- Tiendas, posadas y domadoras llevan un rótulo sobre la cabeza.
+- Móvil: el estado del combate ya no se monta sobre el menú, y los botones de Opciones se pueden tocar.
+- "Volver" visible en la tienda y en los submenús de combate; de la dificultad se vuelve al nombre.
+- En la web, el título avisa cuando hay una versión nueva.
+- Los arbustos dejan ver al héroe, y las teclas se llaman en castellano.
 
 ## 1.0.0 (2026)
 
