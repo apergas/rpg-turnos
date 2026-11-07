@@ -14,3 +14,4 @@ kind = "heal"
 targets = "one"
 status = ""
 status_chance = 0.0
+replaces = "curar"

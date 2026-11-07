@@ -23,7 +23,7 @@ func fill(state: GameState) -> void:
 		child.queue_free()
 	var journal := state.quests.journal(state.inventory)
 	_heading("Qué hacer ahora")
-	_line(state.story.goal_text(state.world_flags), Color.WHITE, ENTRY_SIZE)
+	_line(state.main_goal(), Color.WHITE, ENTRY_SIZE)
 	_heading("En curso")
 	if journal.active.is_empty():
 		_line("Nada por ahora.", GREY, ENTRY_SIZE)

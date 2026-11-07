@@ -1,7 +1,7 @@
 class_name PauseMenu extends Control
 ## Pause menu of the world map. Esc or P, or the ☰ button in the top right corner
 ## (mouse and touch), open it while `available`; it pauses the tree until it closes.
-## Main page: two windows side by side. The hero's ("Héroe lvl X", the pages of
+## Main page: two windows side by side. The hero's ("Héroe Nv X", the pages of
 ## HERO_PAGES and the missions under way) and the system's (Guardar, Opciones, Volver al
 ## título, Cerrar). Other pages: Estado (hero stats, gold, spells), Objetos (items usable
 ## outside battle, the Ala de viaje too, and the key items, each with what it does),
@@ -26,13 +26,13 @@ const TITLE_COLOR := UiStyle.TITLE_COLOR
 const GREY := UiStyle.GREY
 ## Rows of the hero's window: text and page. A new page only needs its row here.
 const HERO_PAGES := [["Estado", "status"], ["Objetos", "items"], ["Equipo", "equipment"],
-	["Diario", "journal"]]
+	["Diario", "journal"], ["Bestiario", "bestiary"]]
 ## Long texts wrap past this width.
 const TEXT_WIDTH := 480.0
 const MISSION_WIDTH := 420.0
-const TOUCH_MESSAGE_WIDTH := 240.0
+const MESSAGE_WIDTH := 240.0
 ## What the title, the message, Volver and the margins leave out of a page's scrolling list.
-const LIST_RESERVED := 200.0
+const LIST_RESERVED := 245.0
 const STATUS_BAR_WIDTH := 300.0
 const MENU_BUTTON_SIZE := Vector2(64, 64)
 const MENU_BUTTON_MARGIN := 24.0
@@ -67,13 +67,18 @@ var _exp_bar: StatBar
 var _stats_label: Label
 var _gold_label: Label
 var _spells_label: Label
+var _ally_label: Label
 var _items_box: VBoxContainer
 var _items_message: Label
 var _equip_box: VBoxContainer
+## ATK / DEF / VEL under the list of slots, outside the part that scrolls.
+var _equip_stats: Label
 var _equip_message: Label
 ## Slot whose pieces the Equipo page lists ("" for the list of the three slots).
 var _equip_slot := ""
 var _journal: JournalPage
+var _bestiary: BestiaryPage
+var _bestiary_button: Button
 var _options_panel: OptionsPanel
 var _page := ""
 ## True while the code moves the focus itself, so that move makes no sound.
@@ -95,6 +100,9 @@ func _ready() -> void:
 	_shade.color = Color(0, 0, 0, 0.5)
 	_shade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_shade.hide()
+	_shade.gui_input.connect(func(event: InputEvent) -> void:
+		if UiStyle.is_outside_tap(event):
+			_go_back())
 	add_child(_shade)
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -110,6 +118,7 @@ func _ready() -> void:
 	_build_items(stack)
 	_build_equipment(stack)
 	_build_journal(stack)
+	_build_bestiary(stack)
 	_build_options(stack)
 	_build_confirm(stack)
 	available = available
@@ -158,7 +167,7 @@ func tour() -> void:
 	available = true
 	await get_tree().create_timer(TOUR_STEP, true).timeout
 	open()
-	for page in ["main", "status", "items", "equipment", "journal", "options"]:
+	for page in ["main", "status", "items", "equipment", "journal", "bestiary", "options"]:
 		_show_page(page)
 		print("Menú: %s" % page)
 		await get_tree().create_timer(TOUR_STEP, true).timeout
@@ -175,6 +184,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not (event.is_action_pressed(KeyMap.PAUSE) or event.is_action_pressed(KeyMap.CANCEL)):
 		return
 	get_viewport().set_input_as_handled()
+	_go_back()
+
+
+## What Esc, Q or a tap outside the windows does on the current page.
+func _go_back() -> void:
 	match _page:
 		"main":
 			close()
@@ -209,6 +223,8 @@ func _show_page(page: String) -> void:
 			_fill_equipment()
 		"journal":
 			_journal.fill(_state)
+		"bestiary":
+			_bestiary.fill(_state)
 	_quiet_focus = true
 	if page == "options":
 		_options_panel.focus_first()
@@ -227,6 +243,7 @@ func _back_to_main() -> void:
 ## The hero's name and level and the missions under way (they can change between visits).
 func _fill_main() -> void:
 	_hero_label.text = StatBar.hero_title(_state.hero)
+	_bestiary_button.text = BestiaryPage.count_text(_state)
 	for child in _mission_box.get_children():
 		_mission_box.remove_child(child)
 		child.queue_free()
@@ -243,18 +260,20 @@ func _fill_status() -> void:
 	_exp_bar.show_exp(hero)
 	_stats_label.text = "ATK %d   DEF %d   VEL %d" % [hero.total_attack(),
 		hero.total_defense(), hero.total_speed()]
-	_gold_label.text = "Oro %d G" % _state.gold
+	_gold_label.text = "%d G" % _state.gold
 	var spells := PackedStringArray()
 	for skill in hero.skills:
 		spells.append(skill.display_name)
 	BattleHud.fit_label(_spells_label, "Hechizos: %s" % ", ".join(spells), TEXT_WIDTH)
+	_ally_label.visible = _state.ally_id != ""
+	if _state.ally_id != "":
+		BattleHud.fit_label(_ally_label, "Criatura: %s" % Allies.display_name(_state.ally_id),
+			TEXT_WIDTH)
 
 
-## An empty line takes no room off a phone; on a phone it keeps its place, so a message never
-## moves the buttons from under the finger.
+## The message lines always keep their place, so a message never moves the buttons.
 func _set_line(label: Label, text: String) -> void:
 	label.text = text
-	label.visible = text != "" or Device.is_touch()
 
 
 ## One row per item carried: name, count and "Usar" (disabled, with the reason, when it
@@ -351,10 +370,12 @@ func _fill_equipment() -> void:
 			var button := _button(text)
 			button.pressed.connect(_choose_slot.bind(slot))
 			_equip_box.add_child(button)
-		_equip_box.add_child(_label("ATK %d   DEF %d   VEL %d" % [hero.total_attack(),
-			hero.total_defense(), hero.total_speed()], Color.WHITE))
+		_equip_stats.text = "ATK %d   DEF %d   VEL %d" % [hero.total_attack(),
+			hero.total_defense(), hero.total_speed()]
+		_equip_stats.show()
 		_focus_first_in(_equip_box)
 		return
+	_equip_stats.hide()
 	_equip_box.add_child(_label("%s:" % Equipment.SLOT_NAMES[_equip_slot], TITLE_COLOR))
 	var listed: Array[String] = []
 	for id in _state.bag_equipment:
@@ -472,6 +493,8 @@ func _build_main(center: CenterContainer) -> void:
 		var button := _button(entry[0])
 		button.pressed.connect(_open_page.bind(entry[1]))
 		hero_box.add_child(button)
+		if entry[1] == "bestiary":
+			_bestiary_button = button
 	hero_box.add_child(_label("Misiones", TITLE_COLOR))
 	_mission_box = VBoxContainer.new()
 	_mission_box.add_theme_constant_override("separation", 0)
@@ -488,9 +511,7 @@ func _build_main(center: CenterContainer) -> void:
 		button.pressed.connect(entry[1])
 		system_box.add_child(button)
 	_main_message = _label("", Color.WHITE)
-	_main_message.visible = Device.is_touch()
-	if Device.is_touch():
-		_main_message.custom_minimum_size.x = TOUCH_MESSAGE_WIDTH
+	_main_message.custom_minimum_size.x = MESSAGE_WIDTH
 	system_box.add_child(_main_message)
 
 
@@ -519,6 +540,8 @@ func _build_status(stack: VBoxContainer) -> void:
 	page.add_child(_gold_label)
 	_spells_label = _label("", Color.WHITE)
 	page.add_child(_spells_label)
+	_ally_label = _label("", Color.WHITE)
+	page.add_child(_ally_label)
 	page.add_child(_back_button())
 
 
@@ -542,6 +565,8 @@ func _build_equipment(stack: VBoxContainer) -> void:
 	else:
 		_equip_box = VBoxContainer.new()
 		page.add_child(_equip_box)
+	_equip_stats = _label("", Color.WHITE)
+	page.add_child(_equip_stats)
 	_equip_message = _label("", Color.WHITE)
 	page.add_child(_equip_message)
 	page.add_child(_back_button())
@@ -553,6 +578,13 @@ func _build_journal(stack: VBoxContainer) -> void:
 	page.add_child(scroll)
 	_journal = JournalPage.new()
 	scroll.content.add_child(_journal)
+	page.add_child(_back_button())
+
+
+func _build_bestiary(stack: VBoxContainer) -> void:
+	var page := _page_box(stack, "bestiary", "Bestiario")
+	_bestiary = BestiaryPage.new()
+	page.add_child(_bestiary)
 	page.add_child(_back_button())
 
 

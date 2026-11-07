@@ -29,14 +29,14 @@ const ON_VILLAGE := {
 }
 ## The boss whose flag ends each chapter, from the meadow on.
 const CHAPTER_BOSSES: Array[String] = ["rey_slime", "bruja", "golem_piedra", "senor_niebla"]
-## The next step of the story, by chapter (GameState.current_missions() once no quest is
-## in progress).
+## The next step of the story, by chapter: GameState.main_goal() once the village quest
+## is done.
 const GOALS := {
 	Chapter.PROLOGUE: "Objetivo: habla con la Abuela Rosa",
 	Chapter.MEADOW: "Objetivo: ayuda a la Abuela Rosa",
-	Chapter.FOREST: "Objetivo: la Bruja del bosque",
-	Chapter.MINE: "Objetivo: el Golem de la mina",
-	Chapter.CASTLE: "Objetivo: el Señor de la Niebla",
+	Chapter.FOREST: "Objetivo: vence a la Bruja del bosque",
+	Chapter.MINE: "Objetivo: vence al Golem de la mina",
+	Chapter.CASTLE: "Objetivo: vence al Señor de la Niebla",
 	Chapter.END: "Villaclaro está en paz",
 }
 

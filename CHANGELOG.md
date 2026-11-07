@@ -1,6 +1,6 @@
 # Registro de cambios
 
-## Próxima versión
+## 1.1.0 (2026)
 
 - Móvil: en vertical aparece "Gira el móvil" en lugar de una pantalla negra.
 - Móvil: botones más grandes y "Pantalla completa" en el menú principal.
@@ -8,6 +8,24 @@
 - Tocar una figura la usa al llegar, y un toque de más tras un diálogo ya no hace andar al héroe.
 - Los árboles dejan ver al héroe cuando pasa por detrás.
 - La Seta saltarina y el Murciélago son menos duros: a nivel 1 ya se puede salir del sendero.
+- El casco: una casilla nueva de equipo, con un casco en cada tienda.
+- Bestiario: un álbum con los monstruos vistos y la silueta de los que faltan.
+- Pozos de vida y de maná repartidos por todos los mapas.
+- Marcas en el mapa para tiendas, posadas, pozos y salidas.
+- Criaturas: la Domadora de cada aldea vende una que combate a tu lado.
+- Curar+ sustituye a Curar y Llamarada a Ascuas, el nuevo nombre de Llama.
+- Tocar fuera de una ventana la cierra, y se pueden comprar cinco objetos de golpe.
+- La posada ya no pregunta, y Palo y Ropa se pueden vender.
+- El Slime de Metal aparece en la mina: ninguna misión obliga a volver atrás.
+- Bruja y Rey Slime más suaves; mina, castillo y Señor de la Niebla, más peligrosos.
+- Repaso de los textos del juego.
+- "Nueva partida" avisa antes de sustituir una partida guardada, y una dañada se ve en el título.
+- El objetivo principal va siempre primero, y la Abuela Rosa sugiere entrenar antes del Rey Slime.
+- Tiendas, posadas y domadoras llevan un rótulo sobre la cabeza.
+- Móvil: el estado del combate ya no se monta sobre el menú, y los botones de Opciones se pueden tocar.
+- "Volver" visible en la tienda y en los submenús de combate; de la dificultad se vuelve al nombre.
+- En la web, el título avisa cuando hay una versión nueva.
+- Los arbustos dejan ver al héroe, y las teclas se llaman en castellano.
 
 ## 1.0.0 (2026)
 

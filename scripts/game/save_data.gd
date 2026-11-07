@@ -18,15 +18,19 @@ class_name SaveData extends RefCounted
 ## (StoryState.mark_seen_for_flags()) and the numbers at 0. QUESTS_VERSION (the side quests)
 ## adds the accessory slot to the loadout and the side quests' progress; an older save gets
 ## the slot empty and no side quest taken. DIFFICULTY_VERSION (phase 7) adds the difficulty;
-## an older save plays on Normal.
+## an older save plays on Normal. EVOLUTION_VERSION (1.1.0) adds the helmet slot, the
+## enemies seen, the wells' charge and the creature; an older save gets the slot empty,
+## the bosses it has beaten seen, every well full and no creature.
 
-const VERSION := 8
+const VERSION := 9
 ## First version with the story's fields.
 const STORY_VERSION := 6
 ## First version with the accessory slot and the side quests.
 const QUESTS_VERSION := 7
 ## First version with the difficulty.
 const DIFFICULTY_VERSION := 8
+## First version with the helmet slot, the bestiary, the wells and the creature.
+const EVOLUTION_VERSION := 9
 ## Oldest version apply() still reads.
 const OLDEST_VERSION := 2
 ## Combatant fields of the hero that change while playing (the rest come from hero.tres).
@@ -69,6 +73,9 @@ static func from_state(state: GameState, player_pos: Vector3, play_time: float) 
 		"stats": {"battles": state.battles, "steps": state.steps, "gold": state.gold_earned},
 		"quests": state.quests.to_dict(),
 		"difficulty": state.difficulty,
+		"bestiary": state.seen_enemies.duplicate(),
+		"wells": state.well_charge.duplicate(),
+		"ally": state.ally_id,
 		"position": [player_pos.x, player_pos.z],
 		"play_time": play_time,
 	}
@@ -137,6 +144,19 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 		state.gold_earned = 0
 	state.quests.set_from(data.get("quests", {}))
 	state.difficulty = data.get("difficulty", Difficulty.NORMAL)
+	state.seen_enemies.clear()
+	if int(data.version) >= EVOLUTION_VERSION:
+		state.seen_enemies.assign(data.bestiary)
+	else:
+		# Before the bestiary: the bosses already beaten have been seen.
+		for flag: String in state.world_flags:
+			if EnemyLibrary.ENEMIES.has(flag):
+				state.see_enemy(flag)
+	state.well_charge = {}
+	var wells: Dictionary = data.get("wells", {})
+	for id: String in wells:
+		state.well_charge[id] = int(wells[id])
+	state.ally_id = data.get("ally", "")
 	var pos: Array = data.position
 	return {"valid": true, "position": Vector3(pos[0], 0.0, pos[1]),
 		"play_time": float(data.play_time)}
@@ -159,27 +179,70 @@ static func is_valid(data: Dictionary) -> bool:
 		return false
 	if int(data.version) >= DIFFICULTY_VERSION and not _valid_difficulty(data):
 		return false
+	if int(data.version) >= EVOLUTION_VERSION and not (_valid_bestiary(data) and _valid_wells(data)
+			and _valid_ally(data)):
+		return false
 	var hero: Variant = data.get("hero")
 	if not hero is Dictionary:
 		return false
 	for field in HERO_FIELDS:
 		if not (hero as Dictionary).get(field) is float:
 			return false
+	if not _valid_hero_ranges(hero):
+		return false
 	var inventory: Variant = data.get("inventory")
 	if not inventory is Dictionary:
 		return false
 	for count: Variant in (inventory as Dictionary).values():
-		if not count is float:
+		if not (count is float and count >= 0.0):
 			return false
 	var quest: Variant = data.get("quest")
-	if not (quest is Dictionary and quest.get("stage") is float and quest.get("kills") is float):
+	if not (quest is Dictionary and quest.get("stage") is float and quest.get("kills") is float
+			and quest.kills >= 0.0):
 		return false
-	if not data.get("gold") is float:
+	if not (data.get("gold") is float and data.gold >= 0.0):
 		return false
 	var pos: Variant = data.get("position")
 	if not (pos is Array and pos.size() == 2 and pos[0] is float and pos[1] is float):
 		return false
-	return data.get("play_time") is float
+	return data.get("play_time") is float and data.play_time >= 0.0
+
+
+## Numbers a played game can't reach: below zero, a level off the table, a dead hero.
+static func _valid_hero_ranges(hero: Dictionary) -> bool:
+	for field in HERO_FIELDS:
+		if hero[field] < 0.0:
+			return false
+	return hero.level >= 1.0 and hero.level <= Leveling.MAX_LEVEL \
+		and hero.hp >= 1.0 and hero.hp <= hero.max_hp and hero.mp <= hero.max_mp
+
+
+## EVOLUTION_VERSION field: an Array of EnemyLibrary ids.
+static func _valid_bestiary(data: Dictionary) -> bool:
+	var seen: Variant = data.get("bestiary")
+	if not seen is Array:
+		return false
+	for id: Variant in seen:
+		if not (id is String and EnemyLibrary.ENEMIES.has(id)):
+			return false
+	return true
+
+
+## EVOLUTION_VERSION field: the creature's id, "" for none.
+static func _valid_ally(data: Dictionary) -> bool:
+	var ally: Variant = data.get("ally")
+	return ally is String and (ally == "" or Allies.exists(ally))
+
+
+## EVOLUTION_VERSION field: a Dictionary of well ids to the battles left.
+static func _valid_wells(data: Dictionary) -> bool:
+	var wells: Variant = data.get("wells")
+	if not wells is Dictionary:
+		return false
+	for id: Variant in wells:
+		if not (id is String and wells[id] is float and wells[id] >= 0.0):
+			return false
+	return true
 
 
 ## DIFFICULTY_VERSION field: a Difficulty id.
@@ -224,6 +287,8 @@ static func _valid_equipment(data: Dictionary) -> bool:
 	for slot in Equipment.SLOTS:
 		if slot == Equipment.ACCESSORY and int(data.version) < QUESTS_VERSION:
 			continue
+		if slot == Equipment.HELMET and int(data.version) < EVOLUTION_VERSION:
+			continue
 		var id: Variant = (loadout as Dictionary).get(slot)
 		if not id is String or (id != "" and Equipment.slot(id) != slot):
 			return false
@@ -252,7 +317,7 @@ static func _valid_quests(data: Dictionary) -> bool:
 			return false
 		var entry: Variant = quests[id]
 		if not (entry is Dictionary and entry.get("stage") is float \
-				and entry.get("count") is float):
+				and entry.get("count") is float and entry.count >= 0.0):
 			return false
 	return true
 
@@ -271,7 +336,8 @@ static func _valid_story(data: Dictionary) -> bool:
 	if not stats is Dictionary:
 		return false
 	for key in ["battles", "steps", "gold"]:
-		if not (stats as Dictionary).get(key) is float:
+		var value: Variant = (stats as Dictionary).get(key)
+		if not (value is float and value >= 0.0):
 			return false
 	return true
 

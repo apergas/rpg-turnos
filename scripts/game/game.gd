@@ -71,13 +71,13 @@ const SAVED_NOTICE := "Partida guardada."
 const LOAD_FAILED_NOTICE := "No se pudo cargar la partida. Empiezas de nuevo."
 ## Notice after beating a boss (by id); other bosses announce their key item.
 const BOSS_NOTICES := {
-	"rey_slime": "¡Villaclaro está a salvo! La niebla del norte se disipa...",
+	"rey_slime": "¡Villaclaro está a salvo! La niebla deja libre el camino del norte.",
 	"senor_niebla": "¡Consigues el último Fragmento del amuleto! La niebla se levanta.",
 }
 const KEY_ITEM_NOTICE := "¡Consigues un %s!"
 const LEVER_NOTICE := "¡Tiras de la palanca! Se oye cómo se abre una reja."
 const KEY_NOTICE := "¡Encuentras la %s!"
-const DOOR_NOTICE := "Abres la puerta con la %s."
+const DOOR_NOTICE := "Abres la reja con la %s."
 const PORTAL_OPEN_NOTICE := "Vuelas %s. El portal te espera para volver."
 const PORTAL_REPLACED_NOTICE := "Vuelas %s. El portal anterior se ha cerrado."
 const PORTAL_BACK_NOTICE := "El portal te devuelve y se cierra tras de ti."
@@ -301,6 +301,7 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 	_world.shop_requested.connect(_on_shop)
 	_world.inn_requested.connect(_on_inn)
 	_world.chest_opened.connect(_on_chest)
+	_world.well_requested.connect(_on_well)
 	_world.exit_requested.connect(_on_exit)
 	_world.portal_used.connect(_on_portal)
 	_world.lever_pulled.connect(_on_lever)
@@ -308,6 +309,7 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 	_world.door_used.connect(_on_door)
 	_world.village_changed.connect(_on_village_changed)
 	_world.stepped.connect(func() -> void: state.steps += 2)
+	_world.set_dry_wells(Wells.dry_ids(state))
 	if entry_id != "":
 		_world.place_at_entry(entry_id)
 	for id in state.opened_chests:
@@ -335,6 +337,8 @@ func _on_encounter(boss: bool) -> void:
 	else:
 		enemies = EncounterTable.pick(_zone, _world.player_position(), _rng,
 			state.quests.wanted_enemies())
+	for enemy in enemies:
+		state.see_enemy(enemy.id)
 	await _fade_to(1.0)
 	_world.set_active(false)
 	_audio.play_music(MusicLibrary.BOSS if boss else MusicLibrary.BATTLE)
@@ -342,17 +346,25 @@ func _on_encounter(boss: bool) -> void:
 	battle.setup(state.hero, enemies, state.inventory)
 	battle.set_audio(_audio)
 	battle.set_equipment(state.loadout.worn(Equipment.WEAPON),
-		state.loadout.worn(Equipment.SHIELD))
+		state.loadout.worn(Equipment.SHIELD), state.loadout.worn(Equipment.HELMET))
 	battle.gold_lost = state.defeat_gold_loss()
 	battle.char_time = _options.char_time()
 	battle.time_scale = _options.combat_scale()
 	battle.camera_shake = _options.camera_shake
 	battle.difficulty = state.difficulty
 	battle.zone = _zone
+	if state.ally_id != "":
+		battle.ally = Allies.data(state.ally_id)
 	add_child(battle)
 	await _fade_to(0.0)
 	var outcome: int = await battle.finished
+	# A call for help adds enemies during the fight.
+	for enemy in battle.engine.enemies:
+		state.see_enemy(enemy.id)
 	var won := outcome == BattleEngine.State.WON
+	if won or outcome == BattleEngine.State.LOST:
+		Wells.on_battle(state)
+		_world.set_dry_wells(Wells.dry_ids(state))
 	await _fade_to(1.0)
 	var notice := ""
 	var scene := ""
@@ -638,7 +650,7 @@ func _credits_sections(time_text: String) -> Array:
 		["Creado por", [AUTHOR]],
 		["Motor", ["Godot Engine 4.7"]],
 		["Modelos 3D", ["KayKit, de Kay Lousberg (CC0)"]],
-		["Música y sonido", ["Música y efectos generados por el juego"]],
+		["Música y sonido", ["Generados por el propio juego"]],
 		["Tu partida", [
 			"Tiempo de juego: %s" % time_text,
 			"Combates: %d" % state.battles,
@@ -746,8 +758,9 @@ func _on_shop(shop_id: String) -> void:
 	_set_busy(false)
 
 
-## The innkeeper: Sí fades to black and back with HP and MP full and saves (it costs
-## nothing); with No, nothing happens. On autoplay it only stops there below
+## The innkeeper speaks; if HP or MP are missing, the hero rests at once (fade to black and
+## back with HP and MP full, free) and the game saves, with no question asked. Full HP and
+## MP: the keeper just remarks on it. On autoplay it only stops there below
 ## AUTOPLAY_INN_RATIO of max HP or MP, on GameState.needs_rest() or below the boss's
 ## thresholds (or a retreat for the boss would come back unhealed).
 func _on_inn(inn_id: String) -> void:
@@ -757,25 +770,41 @@ func _on_inn(inn_id: String) -> void:
 	if _busy or (_autoplay and not hurt):
 		return
 	_set_busy(true)
+	var keeper := Inn.keeper(inn_id)
+	var lines: Array[String] = [Inn.FULL if Inn.is_rested(state) else Inn.REST]
+	await _world.show_dialogue(keeper, lines)
+	if Inn.is_rested(state):
+		_set_busy(false)
+		return
 	_world.freeze(true)
-	var lines: Array[String] = []
-	var slept := false
-	if await _shop.ask(Inn.keeper(inn_id), Inn.OFFER):
-		slept = true
-		lines.append(Inn.stay(state))
-		await _fade_to(1.0)
-		_refresh_status()
-		_audio.play_sfx(SfxLibrary.HEAL)
-		await get_tree().create_timer(INN_NIGHT_TIME).timeout
-		await _fade_to(0.0)
-	else:
-		lines.append("Vuelve cuando quieras.")
-	await _world.freeze(false)
-	await _world.show_dialogue(Inn.keeper(inn_id), lines)
+	Inn.stay(state)
+	await _fade_to(1.0)
 	_refresh_status()
-	if slept:
-		_update_boss()
-		_autosave(true)
+	_audio.play_sfx(SfxLibrary.HEAL)
+	await get_tree().create_timer(INN_NIGHT_TIME).timeout
+	await _fade_to(0.0)
+	await _world.freeze(false)
+	_refresh_status()
+	_update_boss()
+	_autosave(true)
+	_set_busy(false)
+
+
+## The hero used a well: drinks if it is full and the hero is not. On autoplay only a full
+## well and a hero in need.
+func _on_well(id: String, kind: String) -> void:
+	if _busy or (_autoplay and (Wells.is_dry(state, id) or Inn.is_rested(state))):
+		return
+	_set_busy(true)
+	var was_dry := Wells.is_dry(state, id)
+	var text := Wells.drink(state, id, kind)
+	if not was_dry and Wells.is_dry(state, id):
+		_audio.play_sfx(SfxLibrary.HEAL)
+		_refresh_status()
+		_world.set_dry_wells(Wells.dry_ids(state))
+		_autosave(false)
+	var lines: Array[String] = [text]
+	await _world.show_dialogue("", lines)
 	_set_busy(false)
 
 
@@ -897,7 +926,8 @@ func _refresh_status() -> void:
 	_world.set_quest_view(state.quests.markers(_zone.id, state.inventory),
 		state.quests.hidden_figures(_zone.id))
 	var loadout := state.loadout
-	_world.set_hero_equipment(loadout.worn(Equipment.WEAPON), loadout.worn(Equipment.SHIELD))
+	_world.set_hero_equipment(loadout.worn(Equipment.WEAPON), loadout.worn(Equipment.SHIELD),
+		loadout.worn(Equipment.HELMET))
 	if _autoplay and missions != _last_missions:
 		print(" · ".join(missions))
 	_last_missions = missions

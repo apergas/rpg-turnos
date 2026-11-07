@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "golem_pequeno"
+display_name = "Golem pequeño"
+max_hp = 70
+hp = 70
+attack = 26
+defense = 30
+speed = 4

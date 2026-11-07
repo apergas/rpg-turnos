@@ -7,7 +7,7 @@ script = ExtResource("1_cutscene")
 id = "castillo"
 steps = [
 ["wait", 0.3],
-["approach", "Soldado", "hero", 1.8],
+["approach", "Soldado", "hero", 2.4],
 ["face", "hero", "Soldado"],
 ["say", "Soldado", ["¡Por fin refuerzos! ...¿Solo tú? Bueno, algo es algo."]],
 ["camera_to", Vector3(0, 0, 2), 20.0],

@@ -63,7 +63,7 @@ func show_defeat(gold_lost := 0) -> void:
 	_clear_detail()
 	if gold_lost > 0:
 		_add_line("Pierdes %d G." % gold_lost, StatBar.GOLD)
-	_add_line("Volverás al pueblo.", Color.WHITE)
+	_add_line("Volverás al último lugar seguro.", Color.WHITE)
 	_exp_bar.hide()
 	_open()
 

@@ -17,6 +17,7 @@ var _buttons := {}
 var _message: Label
 ## The action waiting for its new key ("" for none).
 var _waiting := ""
+var _swallow_release := false
 
 
 func setup(options: GameOptions, audio: AudioDirector) -> void:
@@ -57,9 +58,15 @@ func focus_first() -> void:
 
 ## Before the buttons and the menus see it, the next key press or click belongs to the row.
 func _input(event: InputEvent) -> void:
+	if _swallow_release and event is InputEventMouseButton and not event.pressed:
+		# The release of the click that cancelled the wait must not reach a backdrop and close the page.
+		_swallow_release = false
+		get_viewport().set_input_as_handled()
+		return
 	if _waiting == "":
 		return
 	var click: bool = event is InputEventMouseButton and event.pressed
+	_swallow_release = click
 	var key := event as InputEventKey
 	if not click and (key == null or not key.pressed or key.echo):
 		return
@@ -73,6 +80,11 @@ func _input(event: InputEvent) -> void:
 	_refresh()
 	if _audio:
 		_audio.play_sfx(SfxLibrary.ACCEPT)
+
+
+## Whether a row is waiting for its key, when nothing else may close the page.
+func is_waiting() -> bool:
+	return _waiting != ""
 
 
 func _listen(action: String) -> void:

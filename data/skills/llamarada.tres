@@ -14,3 +14,4 @@ kind = "damage"
 targets = "all"
 status = ""
 status_chance = 0.0
+replaces = "llama"

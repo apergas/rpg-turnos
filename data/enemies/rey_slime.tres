@@ -9,11 +9,11 @@
 script = ExtResource("1_combatant")
 id = "rey_slime"
 display_name = "Rey Slime"
-max_hp = 128
-hp = 128
+max_hp = 115
+hp = 115
 max_mp = 12
 mp = 12
-attack = 17
+attack = 16
 defense = 8
 speed = 7
 skills = Array[ExtResource("2_skill")]([ExtResource("3_aplastar")])

@@ -20,6 +20,14 @@ static func add_description(parent: Node, id: String) -> void:
 		TOUCH_DESCRIPTION_WIDTH if Device.is_touch() else DESCRIPTION_WIDTH)
 
 
+## A finger or the left button lifted on a backdrop. The release only reaches the control
+## the press began on, so a drag that started in a list never closes anything. A press swallowed before the GUI (Teclas waiting
+## for a key) leaves its release to the swallower, so it never gets here.
+static func is_outside_tap(event: InputEvent) -> bool:
+	var mouse := event as InputEventMouseButton
+	return mouse != null and not mouse.pressed and mouse.button_index == MOUSE_BUTTON_LEFT
+
+
 ## Least width of a button on a phone, so "Sí" or "Usar" are not a sliver.
 const TOUCH_BUTTON_WIDTH := 120.0
 

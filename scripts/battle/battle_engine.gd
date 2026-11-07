@@ -7,8 +7,8 @@ class_name BattleEngine extends RefCounted
 ## Commands are dictionaries built with cmd_attack(target), cmd_skill(skill, target),
 ## cmd_item(id), cmd_defend(), cmd_flee() and cmd_none() (the hero is asleep). Each enemy
 ## picks its own command when its turn comes, from its ai_weights. Fighters are ints:
-## BattleEvent.HERO or an index into `enemies`. An enemy that picks "charge" spends its
-## turn gathering strength and its next turn is a blow of CHARGE_MULT times the damage
+## BattleEvent.HERO, BattleEvent.ALLY or an index into `enemies`. An enemy that picks
+## "charge" spends its turn gathering strength and its next turn is a blow of CHARGE_MULT times the damage
 ## that never misses or crits (Defender still halves it). A boss with a next_phase that
 ## reaches 0 HP rises once with that phase's stats (a PHASE event) instead of falling. An
 ## enemy that picks "escape" runs away and the battle ends as FLED (the Slime de Metal,
@@ -54,6 +54,8 @@ const HELP_HP_RATIO := 0.5
 const MAX_ENEMIES := 2
 ## Damage of the blow that follows a charge.
 const CHARGE_MULT := 2.0
+## An enemy's one-target blow or spell goes to the creature this often, while it stands.
+const ALLY_TARGET_CHANCE := 0.3
 
 var hero: Combatant
 var enemies: Array[Combatant] = []
@@ -67,6 +69,9 @@ var drops_won: Array[String] = []
 ## The difficulty: what the hero's damage and the EXP won are multiplied by.
 var damage_mult := 1.0
 var exp_mult := 1.0
+## The creature fighting beside the hero (null: none). Set it before the first round. It
+## acts by itself, takes no status, wins no EXP and its fall doesn't end the battle.
+var ally: Combatant
 
 var _rng: RandomNumberGenerator
 var _defending := false
@@ -182,7 +187,14 @@ func resolve_round(hero_cmd: Dictionary) -> Array[Dictionary]:
 		if fighter.status.has(SLEEP):
 			events.append(BattleEvent.asleep(who))
 			continue
-		var cmd := hero_cmd if who == BattleEvent.HERO else _enemy_command(who)
+		var cmd: Dictionary
+		match who:
+			BattleEvent.HERO:
+				cmd = hero_cmd
+			BattleEvent.ALLY:
+				cmd = cmd_attack(_weakest_enemy())
+			_:
+				cmd = _enemy_command(who)
 		_act(who, cmd, events)
 		_update_state()
 	if state == State.ONGOING:
@@ -220,7 +232,7 @@ func _enemy_command(who: int) -> Dictionary:
 		return {"type": CMD_CALL}
 	var weights: Dictionary = enemy.ai_weights
 	if weights.is_empty():
-		return cmd_attack(BattleEvent.HERO)
+		return cmd_attack(_enemy_target())
 	var total := 0.0
 	for weight in weights.values():
 		total += weight
@@ -233,7 +245,7 @@ func _enemy_command(who: int) -> Dictionary:
 			break
 	match choice:
 		CMD_ATTACK:
-			return cmd_attack(BattleEvent.HERO)
+			return cmd_attack(_enemy_target())
 		CMD_STAGGER:
 			return {"type": CMD_STAGGER}
 		CMD_CHARGE:
@@ -242,8 +254,9 @@ func _enemy_command(who: int) -> Dictionary:
 			return {"type": CMD_ESCAPE}
 	var skill := enemy.find_skill(choice)
 	if skill != null and enemy.mp >= skill.mp_cost and not enemy.status.has(SILENCE):
-		return cmd_skill(skill, BattleEvent.HERO)
-	return cmd_attack(BattleEvent.HERO)
+		var aim := BattleEvent.HERO if skill.kind == Skill.STATUS else _enemy_target()
+		return cmd_skill(skill, aim)
+	return cmd_attack(_enemy_target())
 
 
 ## Everyone standing, fastest roll first (the hero wins ties). Defending or fleeing,
@@ -253,6 +266,8 @@ func _turn_order(hero_cmd: Dictionary) -> Array[int]:
 	rolls.append([_initiative(hero), BattleEvent.HERO])
 	for i in alive_enemies():
 		rolls.append([_initiative(enemies[i]), i])
+	if _ally_stands():
+		rolls.append([_initiative(ally), BattleEvent.ALLY])
 	rolls.sort_custom(func(a: Array, b: Array) -> bool:
 		return a[0] > b[0] or (a[0] == b[0] and a[1] == BattleEvent.HERO))
 	var order: Array[int] = []
@@ -300,9 +315,11 @@ func _act(who: int, cmd: Dictionary, events: Array[Dictionary]) -> void:
 
 ## The hero, or the enemy if it still stands, or else the first enemy standing.
 func _living_target(target: int) -> int:
-	if target == BattleEvent.HERO or _fighter(target).is_alive():
+	if target == BattleEvent.HERO:
 		return target
-	return alive_enemies()[0]
+	if target == BattleEvent.ALLY:
+		return target if _ally_stands() else BattleEvent.HERO
+	return target if enemies[target].is_alive() else alive_enemies()[0]
 
 
 ## A charged blow (after a charge) never misses or crits and does CHARGE_MULT damage.
@@ -357,7 +374,12 @@ func _skill_targets(who: int, skill: Skill, target: int) -> Array[int]:
 	if skill.kind == Skill.HEAL:
 		targets.append(who)
 	elif who != BattleEvent.HERO:
-		targets.append(BattleEvent.HERO)
+		if skill.targets == Skill.ALL:
+			targets.append(BattleEvent.HERO)
+			if _ally_stands():
+				targets.append(BattleEvent.ALLY)
+		else:
+			targets.append(_living_target(target))
 	elif skill.targets == Skill.ALL:
 		targets = alive_enemies()
 	else:
@@ -393,7 +415,7 @@ func _use_item(who: int, id: String, events: Array[Dictionary]) -> void:
 func _hurt(target: int, amount: int, crit: bool, magic: bool, affinity: String, \
 		events: Array[Dictionary]) -> void:
 	var fighter := _fighter(target)
-	if target == BattleEvent.HERO:
+	if target < 0:
 		amount = _taken(amount)
 	if target == BattleEvent.HERO and _defending:
 		amount = maxi(1, ceili(amount / 2.0))
@@ -430,6 +452,8 @@ func _fall(who: int, events: Array[Dictionary]) -> void:
 
 
 func _add_status(target: int, status: String, events: Array[Dictionary]) -> void:
+	if target == BattleEvent.ALLY:
+		return
 	var fighter := _fighter(target)
 	if not fighter.is_alive() or fighter.status.has(status) or fighter.is_immune(status):
 		return
@@ -510,4 +534,29 @@ func _roll_damage(attacker: Combatant, defender: Combatant, crit: bool) -> int:
 
 
 func _fighter(who: int) -> Combatant:
-	return hero if who == BattleEvent.HERO else enemies[who]
+	match who:
+		BattleEvent.HERO:
+			return hero
+		BattleEvent.ALLY:
+			return ally
+	return enemies[who]
+
+
+func _ally_stands() -> bool:
+	return ally != null and ally.is_alive()
+
+
+## Whom an enemy aims a one-target blow or spell at.
+func _enemy_target() -> int:
+	if _ally_stands() and _rng.randf() < ALLY_TARGET_CHANCE:
+		return BattleEvent.ALLY
+	return BattleEvent.HERO
+
+
+## The enemy standing with the least HP.
+func _weakest_enemy() -> int:
+	var best := -1
+	for i in alive_enemies():
+		if best < 0 or enemies[i].hp < enemies[best].hp:
+			best = i
+	return best

@@ -14,15 +14,20 @@ const INNS := {
 	MINA: "Posadero",
 	CASTILLO: "Posadera",
 }
-const OFFER := "Aquí descansar no cuesta nada. ¿Te quedas a pasar la noche?"
-const MORNING := "¡Buenos días! PV y PM recuperados."
+const REST := "Descansa un poco."
+## What the keeper says to someone with full HP and MP (no fade, nothing to heal). Neutral:
+## the hero has no set gender.
+const FULL := "Se te ve en forma."
 
 
 static func keeper(inn_id: String) -> String:
 	return INNS[inn_id]
 
 
-## Heals the hero. Returns what the keeper says.
-static func stay(state: GameState) -> String:
+static func is_rested(state: GameState) -> bool:
+	return state.hero.hp >= state.hero.max_hp and state.hero.mp >= state.hero.max_mp
+
+
+## Heals the hero.
+static func stay(state: GameState) -> void:
 	state.heal_full()
-	return MORNING

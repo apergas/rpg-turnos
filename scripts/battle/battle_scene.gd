@@ -20,6 +20,8 @@ const RESULT_SCENE := preload("res://scenes/ui/battle_result.tscn")
 
 const HERO_POS := Vector3(-1.0, 0, 1.8)
 const ENEMY_POS := Vector3(0.6, 0, -2.4)
+## Where the creature stands, beside the hero.
+const ALLY_POS := Vector3(0.7, 0, 1.4)
 ## With two enemies, each stands this far to one side of ENEMY_POS.
 const PAIR_OFFSET := Vector3(1.5, 0, 0)
 const CAMERA_POS := Vector3(0.8, 2.6, 6.0)
@@ -68,6 +70,9 @@ var difficulty := Difficulty.NORMAL
 ## Zone the battle is fought in: its sky, light and backdrop (null: the meadow's). Set
 ## before adding it to the tree.
 var zone: ZoneData
+## The creature at the hero's side (null: none). Set it before adding the scene; it is
+## already a copy with its life full.
+var ally: Combatant
 
 var _rng := RandomNumberGenerator.new()
 var _autoplay := false
@@ -79,6 +84,7 @@ var _new_level := 0
 ## Color of the last spell cast, used for the hit that follows it.
 var _spell_color := BattleActor.FIRE_COLOR
 var _hero_actor: BattleActor
+var _ally_actor: BattleActor
 var _enemy_actors: Array[BattleActor] = []
 var _arrow: MeshInstance3D
 var _arrow_tween: Tween
@@ -92,6 +98,7 @@ var _audio: AudioDirector
 ## Equipment ids the hero's figure shows (set_equipment()).
 var _weapon_id := Equipment.STICK
 var _shield_id := ""
+var _helmet_id := ""
 
 
 ## The hero and the inventory are used as is, so HP, MP, EXP and items stay with the
@@ -113,11 +120,12 @@ func set_audio(audio: AudioDirector) -> void:
 	_audio = audio
 
 
-## The weapon and shield the hero's figure holds (Equipment ids, "" for none). Call
-## before adding it to the tree; without it the hero holds the starting Palo.
-func set_equipment(weapon_id: String, shield_id: String) -> void:
+## The weapon, shield and helmet the hero's figure shows (Equipment ids, "" for none).
+## Call before adding it to the tree; without it the hero holds the starting Palo.
+func set_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> void:
 	_weapon_id = weapon_id
 	_shield_id = shield_id
+	_helmet_id = helmet_id
 
 
 func _ready() -> void:
@@ -130,7 +138,9 @@ func _ready() -> void:
 	Engine.time_scale = time_scale
 	BattleStage.build(self, zone)
 	_hero_actor = _spawn_actor(BattleActor.Look.HERO, HERO_POS, ENEMY_POS)
-	_hero_actor.set_equipment(_weapon_id, _shield_id)
+	_hero_actor.set_equipment(_weapon_id, _shield_id, _helmet_id)
+	if ally != null:
+		_ally_actor = _spawn_actor(EnemyLibrary.look(ally.id), ALLY_POS, ENEMY_POS)
 	for i in enemies.size():
 		_enemy_actors.append(_spawn_actor(EnemyLibrary.look(enemies[i].id),
 			_slot(i, enemies.size()), HERO_POS))
@@ -151,7 +161,10 @@ func _ready() -> void:
 	engine = BattleEngine.new(hero, enemies, _rng, inventory)
 	engine.damage_mult = Difficulty.damage_mult(difficulty)
 	engine.exp_mult = Difficulty.exp_mult(difficulty)
+	engine.ally = ally
 	_hud.set_engine(engine)
+	if ally != null:
+		_hud.show_ally(ally)
 	for i in _enemy_actors.size():
 		_hud.add_enemy_bar()
 	if _autoplay and not engine.has_boss():
@@ -194,7 +207,7 @@ func _intro_text() -> String:
 		return "¡%s te cierra el paso!" % _cap(_the(first))
 	if enemies.size() == 2:
 		return "¡Aparecen %s y %s!" % [first.display_name, enemies[1].display_name]
-	return "¡%s %s salvaje aparece!" % ["Una" if first.female else "Un", first.display_name]
+	return "¡Aparece %s %s!" % ["una" if first.female else "un", first.display_name]
 
 
 ## Asleep, the hero does nothing; on autoplay the bot picks; otherwise the menu opens.
@@ -359,17 +372,19 @@ func _play_event(event: Dictionary) -> void:
 			await _say("¡%s se levanta con %d PV!" % [_cap(_the(boss)), event.hp_left])
 		BattleEvent.DEFEATED:
 			_show_arrow(-1)
-			if event.target != BattleEvent.HERO:
+			if event.target >= 0:
 				_hud.hide_enemy_bar(event.target)
 			await _actor(event.target).play_defeat()
 			if event.target == BattleEvent.HERO:
 				_music(MusicLibrary.DEFEAT)
-				await _say("¡Has caído...!")
+				await _say("Has caído...")
 			else:
 				var foe := _fighter(event.target)
 				await _say("¡%s ha sido derrotad%s!" % [foe.display_name, _ending(foe)])
 		BattleEvent.VICTORY:
 			_hero_actor.play_cheer()
+			if ally != null and ally.hp > 0:
+				_ally_actor.play_cheer()
 			_music(MusicLibrary.VICTORY)
 			await _say("¡Has ganado! Obtienes %d EXP." % event.exp)
 		BattleEvent.GOLD:
@@ -384,7 +399,10 @@ func _play_event(event: Dictionary) -> void:
 			await _say(_gains_text(event.gains))
 		BattleEvent.LEARN:
 			_sfx(SfxLibrary.LEVEL_UP)
-			await _say("¡%s aprende %s!" % [hero.display_name, event.name])
+			var learned := "¡%s aprende %s!" % [hero.display_name, event.name]
+			if event.replaced != "":
+				learned += " Sustituye a %s." % event.replaced
+			await _say(learned)
 		BattleEvent.DROP:
 			await _say("¡%s ha dejado %s %s!" % [_cap(_the(_fighter(event.owner))),
 				Inventory.article(event.item), Inventory.display_name(event.item)])
@@ -411,7 +429,7 @@ func _play_damage(event: Dictionary) -> void:
 	var target := _fighter(event.target)
 	match event.affinity:
 		BattleEvent.WEAK:
-			await _say("¡Es muy eficaz contra %s!" % _the(target))
+			await _say("¡%s es débil a esto!" % _cap(_the(target)))
 		BattleEvent.RESIST:
 			await _say("¡%s lo resiste!" % _cap(_the(target)))
 	await _say("¡%s recibe %d de daño!" % [target.display_name, event.amount])
@@ -421,10 +439,13 @@ func _play_damage(event: Dictionary) -> void:
 ## enemy's thin bar (the engine has already resolved the whole round, so its HP can't be
 ## read directly).
 func _show_life(who: int, hp_left: int) -> void:
-	if who == BattleEvent.HERO:
-		_hud.update_hp(hp_left, hero.max_hp)
-	else:
-		_hud.set_enemy_life(who, float(hp_left) / maxf(1.0, engine.enemies[who].max_hp))
+	match who:
+		BattleEvent.HERO:
+			_hud.update_hp(hp_left, hero.max_hp)
+		BattleEvent.ALLY:
+			_hud.update_ally_hp(hp_left, ally.max_hp)
+		_:
+			_hud.set_enemy_life(who, float(hp_left) / maxf(1.0, engine.enemies[who].max_hp))
 
 
 func _play_status_on(event: Dictionary) -> void:
@@ -621,8 +642,18 @@ func _new_cam_tween() -> Tween:
 
 
 func _actor(who: int) -> BattleActor:
-	return _hero_actor if who == BattleEvent.HERO else _enemy_actors[who]
+	match who:
+		BattleEvent.HERO:
+			return _hero_actor
+		BattleEvent.ALLY:
+			return _ally_actor
+	return _enemy_actors[who]
 
 
 func _fighter(who: int) -> Combatant:
-	return hero if who == BattleEvent.HERO else engine.enemies[who]
+	match who:
+		BattleEvent.HERO:
+			return hero
+		BattleEvent.ALLY:
+			return ally
+	return engine.enemies[who]
