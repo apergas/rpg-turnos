@@ -26,6 +26,9 @@ const SUBTITLE_SIZE := 36
 const VERSION_SIZE := 18
 const FONT_SIZE := 28
 const FADE_TIME := 0.4
+const UPDATE_CHECK_TIME := 1.0
+const UPDATE_WIDTH := 300
+const UPDATE_TEXT := "Hay una versión nueva. Recargar"
 ## Where the menu's room starts under the title.
 const MENU_TOP := 160
 ## On a phone the title moves up, so the menu fits under its subtitle.
@@ -63,6 +66,8 @@ var _starting := false
 var _autoplay := false
 var _autoplay_save := false
 var _quiet_focus := false
+var _update_wait := 0.0
+var _update_window: PanelContainer
 
 
 func _ready() -> void:
@@ -81,6 +86,7 @@ func _ready() -> void:
 	_audio = AudioDirector.new()
 	add_child(_audio)
 	_audio.set_volumes(_options.music_volume, _options.sfx_volume)
+	WebUpdate.watch()
 	_build_fade()
 	new_game.connect(_on_new_game)
 	continue_game.connect(func() -> void: _start_game(_load_save()))
@@ -92,6 +98,11 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if _camera == null:
 		return
+	_update_wait -= delta
+	if _update_wait <= 0.0 and _update_window == null:
+		_update_wait = UPDATE_CHECK_TIME
+		if WebUpdate.is_ready():
+			_show_update_notice()
 	_drift += delta * DRIFT_SPEED
 	var focus := DRIFT_CENTER + Vector3(sin(_drift) * DRIFT_RADIUS.x, 0.0,
 		cos(_drift * 0.7) * DRIFT_RADIUS.y)
@@ -134,6 +145,7 @@ func _close_title() -> void:
 	remove_child(_ui)
 	_ui.queue_free()
 	_ui = null
+	_update_window = null
 	_options_window = null
 	_options_backdrop = null
 	_options_panel = null
@@ -290,6 +302,23 @@ func _on_quit_to_title() -> void:
 		return
 	_open_title()
 	await _fade_to(0.0)
+
+
+## In the corner away from the version: it never moves the menu.
+func _show_update_notice() -> void:
+	_update_window = BattleHud.make_window()
+	var button := _button(UPDATE_TEXT)
+	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	button.custom_minimum_size.x = UPDATE_WIDTH
+	button.pressed.connect(WebUpdate.apply)
+	_update_window.add_child(button)
+	_ui.add_child(_update_window)
+	# Grows upward from the corner, so the wrapped text never runs off the screen.
+	_update_window.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	_update_window.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_update_window.offset_left = 12.0
+	_update_window.offset_top = -12.0
+	_update_window.offset_bottom = -12.0
 
 
 func _build_menu() -> void:
