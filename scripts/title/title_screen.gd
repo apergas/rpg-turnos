@@ -103,6 +103,8 @@ func _process(delta: float) -> void:
 		_update_wait = UPDATE_CHECK_TIME
 		if WebUpdate.is_ready():
 			_show_update_notice()
+	if _update_window != null:
+		_update_window.visible = _menu_window.visible
 	_drift += delta * DRIFT_SPEED
 	var focus := DRIFT_CENTER + Vector3(sin(_drift) * DRIFT_RADIUS.x, 0.0,
 		cos(_drift * 0.7) * DRIFT_RADIUS.y)

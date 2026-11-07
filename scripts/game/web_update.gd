@@ -10,10 +10,12 @@ if ('serviceWorker' in navigator) {
 	navigator.serviceWorker.getRegistration().then(function (reg) {
 		if (!reg) { return; }
 		var mark = function () { if (reg.waiting) { window.villaclaroUpdate = true; } };
-		mark();
-		reg.addEventListener('updatefound', function () {
+		var follow = function () {
 			if (reg.installing) { reg.installing.addEventListener('statechange', mark); }
-		});
+		};
+		mark();
+		follow();
+		reg.addEventListener('updatefound', follow);
 		reg.update();
 	});
 }
@@ -30,8 +32,9 @@ static func watch() -> void:
 		JavaScriptBridge.eval(WATCH_JS, true)
 
 
+## eval() hands a JavaScript boolean back as 1 or 0, which can't be compared with a bool.
 static func is_ready() -> bool:
-	return OS.has_feature("web") and JavaScriptBridge.eval(FLAG + " === true", true) == true
+	return OS.has_feature("web") and int(JavaScriptBridge.eval(FLAG + " ? 1 : 0", true)) == 1
 
 
 static func apply() -> void:
