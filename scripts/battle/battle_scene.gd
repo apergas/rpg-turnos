@@ -166,7 +166,7 @@ func _ready() -> void:
 	if ally != null:
 		_hud.show_ally(ally)
 	for i in _enemy_actors.size():
-		_hud.add_enemy_bar()
+		_hud.add_enemy_bar(engine.enemies[i].display_name)
 	if _autoplay and not engine.has_boss():
 		_autoplay_battles += 1
 		_autoplay_flee = _autoplay_battles % AUTOPLAY_EVERY == 0
@@ -490,7 +490,7 @@ func _play_call_help(event: Dictionary) -> void:
 	var helper := engine.enemies[event.helper]
 	var actor := _spawn_actor(EnemyLibrary.look(helper.id), _slot(1, 2), HERO_POS)
 	_enemy_actors.append(actor)
-	_hud.add_enemy_bar()
+	_hud.add_enemy_bar(helper.display_name)
 	await actor.play_appear()
 	await _say("¡Aparece %s %s!" % ["una" if helper.female else "un", helper.display_name])
 
@@ -568,6 +568,9 @@ func _build_arrow() -> void:
 
 
 func _show_arrow(index: int) -> void:
+	for i in _enemy_actors.size():
+		_enemy_actors[i].set_highlight(i == index)
+	_hud.show_target_name(index)
 	if _arrow_tween:
 		_arrow_tween.kill()
 		_arrow_tween = null

@@ -39,6 +39,9 @@ const EDGE := 24.0
 const GAP := 16.0
 ## The thin bar over an enemy: its life left, no number.
 const ENEMY_BAR_SIZE := Vector2(96, 8)
+## The name over the bar of the enemy being aimed at.
+const TARGET_NAME_COLOR := Color(1.0, 0.9, 0.3)
+const ENEMY_NAME_GAP := 2.0
 const ENEMY_BAR_BACK := Color(0.0, 0.0, 0.0, 0.7)
 ## Inner margins of every window: modest, the window hugs what it holds.
 const WINDOW_MARGIN := Vector2(14, 10)
@@ -78,6 +81,7 @@ var _message: Label
 var _audio: AudioDirector
 ## The enemies' bars, by enemy index: [background ColorRect, its red fill ColorRect].
 var _enemy_bars: Array = []
+var _enemy_names: Array[Label] = []
 var _page := Page.NONE
 ## Buttons of the open list and the one under the cursor.
 var _rows: Array[Button] = []
@@ -151,8 +155,9 @@ func update_ally_hp(hp: int, max_hp: int) -> void:
 
 
 ## Adds the bar of the next enemy, full. BattleScene places it every frame (it follows the
-## figure on screen) and sets its life as the events play back.
-func add_enemy_bar() -> void:
+## figure on screen) and sets its life as the events play back; enemy_name shows over it
+## while it is aimed at (show_target_name()).
+func add_enemy_bar(enemy_name := "") -> void:
 	var back := ColorRect.new()
 	back.color = ENEMY_BAR_BACK
 	back.size = ENEMY_BAR_SIZE
@@ -166,6 +171,25 @@ func add_enemy_bar() -> void:
 	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	back.add_child(fill)
 	_enemy_bars.append([back, fill])
+	var label := Label.new()
+	label.text = enemy_name
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.add_theme_font_size_override("font_size", UiStyle.TEXT_SIZE)
+	label.add_theme_color_override("font_color", TARGET_NAME_COLOR)
+	label.add_theme_color_override("font_outline_color", Color.BLACK)
+	label.add_theme_constant_override("outline_size", 6)
+	label.hide()
+	back.add_child(label)
+	label.size = label.get_combined_minimum_size()
+	label.position = Vector2((ENEMY_BAR_SIZE.x - label.size.x) / 2.0,
+		-label.size.y - ENEMY_NAME_GAP).round()
+	_enemy_names.append(label)
+
+
+## Shows the name of enemy index over its bar, and only that one (-1: none).
+func show_target_name(index: int) -> void:
+	for i in _enemy_names.size():
+		_enemy_names[i].visible = i == index
 
 
 ## Centers enemy i's bar on a screen point.
