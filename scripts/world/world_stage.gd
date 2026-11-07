@@ -275,7 +275,10 @@ static func _add_bushes(root: Node3D, zone: ZoneData) -> void:
 				or _near_building(zone, pos, GRASS_BUILDING_MARGIN):
 			continue
 		bushes.append(Transform3D(Basis(Vector3.UP, yaw).scaled(Vector3.ONE * scl), pos))
-	LowPoly.add_multimesh(root, LowPoly.bush_mesh(), bushes)
+	var material := ShaderMaterial.new()
+	material.shader = TREE_SHADER
+	material.set_shader_parameter("albedo_color", LowPoly.BUSH_COLOR)
+	LowPoly.add_multimesh(root, LowPoly.bush_mesh(), bushes, material)
 
 
 ## True within margin of a rock's footprint.

@@ -20,6 +20,14 @@ const NAMES := {MOVE_UP: "Arriba", MOVE_DOWN: "Abajo", MOVE_LEFT: "Izquierda",
 ## The built-in action that follows each one.
 const UI_ACTIONS := {MOVE_UP: "ui_up", MOVE_DOWN: "ui_down", MOVE_LEFT: "ui_left",
 	MOVE_RIGHT: "ui_right", ACCEPT: "ui_accept", CANCEL: "ui_cancel"}
+## Spanish names for the keys Godot would spell in English.
+const KEY_NAMES := {
+	KEY_UP: "Arriba", KEY_DOWN: "Abajo", KEY_LEFT: "Izquierda", KEY_RIGHT: "Derecha",
+	KEY_SPACE: "Espacio", KEY_ESCAPE: "Esc", KEY_BACKSPACE: "Retroceso", KEY_ENTER: "Intro",
+	KEY_KP_ENTER: "Intro numérico", KEY_SHIFT: "Mayús", KEY_CTRL: "Ctrl", KEY_ALT: "Alt",
+	KEY_TAB: "Tab", KEY_DELETE: "Supr", KEY_INSERT: "Insert", KEY_HOME: "Inicio", KEY_END: "Fin",
+	KEY_PAGEUP: "Re Pág", KEY_PAGEDOWN: "Av Pág", KEY_CAPSLOCK: "Bloq Mayús",
+}
 const ONLY_KEY := "Esa tecla es la única de «%s»."
 
 
@@ -75,8 +83,9 @@ static func keys_text(action: String) -> String:
 ## What the key at that physical position says on the player's keyboard layout.
 static func _key_name(code: int) -> String:
 	if OS.has_feature("web") or DisplayServer.get_name() == "headless":
-		return OS.get_keycode_string(code)  # the web and headless runs can't tell
-	return OS.get_keycode_string(DisplayServer.keyboard_get_keycode_from_physical(code as Key))
+		return KEY_NAMES.get(code, OS.get_keycode_string(code))  # the web and headless runs can't tell
+	var key := DisplayServer.keyboard_get_keycode_from_physical(code as Key)
+	return KEY_NAMES.get(key, OS.get_keycode_string(key))
 
 
 static func _set_keys(action: String, codes: Array) -> void:

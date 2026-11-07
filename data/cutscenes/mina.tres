@@ -7,7 +7,7 @@ script = ExtResource("1_cutscene")
 id = "mina"
 steps = [
 ["wait", 0.3],
-["approach", "Minera", "hero", 1.8],
+["approach", "Minera", "hero", 2.4],
 ["face", "hero", "Minera"],
 ["say", "Minera", ["¡Alto ahí! Ah, no eres un espectro. Perdona, aquí abajo se ve poco.", "Esto es lo que queda de la vieja mina: un herrero, una posada y yo.", "En la tercera planta despertó un golem de piedra, y lleva encima algo que brilla.", "Si bajas, {nombre}, busca la palanca de la segunda planta y la llave de la tercera."]],
 ["move", "Minera", Vector3(-10, 0, 19)]
