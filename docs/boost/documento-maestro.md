@@ -126,6 +126,52 @@ Vienen de `2026-11-03-ideas-juego-completo.md`. Las dejo ordenadas por lo que cr
 | Soporte de mando | Útil en escritorio; en la web depende del navegador |
 | Menú de depuración | Solo para desarrollo; `--autoplay-zone` ya cubre lo principal |
 
+### I-01. Monstruos visibles en el mapa
+
+Idea tuya (2026-11-07). Sustituye a los encuentros aleatorios.
+
+- **Visibles:** los monstruos están en la hierba, a la vista. La pelea empieza en cuanto el héroe se acerca a uno.
+- **Paso libre:** entre ellos queda sitio para cruzar la zona e ir a la siguiente sin combatir.
+- **Movimiento según el monstruo:**
+  - Los que andan se mueven alrededor de su sitio. Por ejemplo, el lobo en unos 2 m.
+  - Las setas y las plantas carnívoras se quedan quietas.
+- **Slime de Metal:** mientras su misión está en curso, recorre toda la zona andando o corriendo. Si huye tras recibir daño, la próxima vez que lo encuentres conserva los PV que le quitaste, como los perros legendarios de Pokémon Oro y Plata.
+- **Reaparición:** los monstruos vencidos vuelven al cambiar de zona.
+
+Notas para cuando se diseñe:
+- Cambia una decisión de la base del juego: el documento de ideas de 2026-11-03 dejaba fuera los enemigos visibles. Hay que repasar el ritmo de EXP y oro, la partida automática (que hoy anda por la hierba buscando combates) y `EncounterMeter` / `EncounterTable`.
+- Deja sin sentido M-12 (encuentros a la mitad e Incienso), que está en el plan de la 1.2.0. Si esta idea entra antes, M-12 se quita.
+- Las mazmorras no tienen sendero seguro: los pasillos deben dejar hueco para esquivar.
+- Con dos enemigos por combate: lo más sencillo es que cada figura del mapa sea un grupo, ya decidido, y que se vea solo el primero.
+
+### I-02. Grupos en el bestiario con premio
+
+Idea tuya (2026-11-07).
+
+- **Grupos:** el bestiario se ordena por tipos, con 4 o 5 enemigos cada uno, y se añaden enemigos nuevos para llenarlos.
+- **Premio por grupo completo**, nunca oro:
+  - dos grupos dan un anillo;
+  - otros dos dan un amuleto;
+  - el de jefes da una espada muy buena.
+- **Equipo:** la casilla de Accesorio se parte en **Anillo** y **Amuleto**, así que se pueden llevar los dos a la vez.
+- **Jefe extra:** el jefe de después de los créditos queda fuera del bestiario.
+
+Propuesta de grupos, con los 17 de hoy (en cursiva los que habría que crear):
+
+| Grupo | Enemigos | Premio |
+|---|---|---|
+| Plantas | Seta saltarina, Planta carnívora, *2-3 nuevos* | Anillo |
+| Bestias | Murciélago, Lobo, Araña, *1-2 nuevos* | Amuleto |
+| Criaturas mágicas | Slime, Slime de Metal, Duende, Golem de barro, *1 nuevo* | Anillo |
+| Muertos vivientes | Espectro, Esqueleto guerrero, Esqueleto pícaro, Esqueleto mago, *1 nuevo* | Amuleto |
+| Jefes | Rey Slime, Bruja del bosque, Golem de piedra, Señor de la Niebla | Espada |
+
+Notas para cuando se diseñe:
+- Hacen falta unos 6 enemigos nuevos, con figura, retrato y sitio en las zonas.
+- Hoy hay dos accesorios: el Anillo antiveneno va a Anillo y el Amuleto de velocidad a Amuleto. Un guardado antiguo pasa su accesorio a la casilla que le toque.
+- Choca con el plan de la 1.4.0: mete al Eco de la Niebla en el bestiario como enemigo 18 y su premio, la Corona de bruma, es un accesorio.
+- Encaja con las fichas del bestiario (M-19, plan de la 1.3.0): el grupo puede salir en la ficha.
+
 ---
 
 ## 5. Descartado
