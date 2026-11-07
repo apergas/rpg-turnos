@@ -6,6 +6,7 @@
 script = ExtResource("1_skill")
 id = "llamarada"
 display_name = "Llamarada"
+description = "Daño de fuego a todos."
 mp_cost = 6
 power = 28
 color = Color(1, 0.3, 0.05, 1)

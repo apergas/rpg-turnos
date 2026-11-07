@@ -50,6 +50,7 @@ var _ui: CanvasLayer
 var _menu_window: PanelContainer
 var _continue_button: Button
 var _options_button: Button
+var _fullscreen_button: Button
 var _options_window: PanelContainer
 var _options_backdrop: Control
 var _options_panel: OptionsPanel
@@ -95,9 +96,23 @@ func _ready() -> void:
 		_open_name_entry()
 
 
+## The fullscreen row shows only while the window is not fullscreen; the focus leaves it
+## before it hides.
+func _sync_fullscreen_row() -> void:
+	if _fullscreen_button == null:
+		return
+	var wanted := get_window().mode != Window.MODE_FULLSCREEN
+	if _fullscreen_button.visible == wanted:
+		return
+	if not wanted and _fullscreen_button.has_focus():
+		_focus(_options_button)
+	_fullscreen_button.visible = wanted
+
+
 func _process(delta: float) -> void:
 	if _camera == null:
 		return
+	_sync_fullscreen_row()
 	_update_wait -= delta
 	if _update_wait <= 0.0 and _update_window == null:
 		_update_wait = UPDATE_CHECK_TIME
@@ -159,6 +174,7 @@ func _close_title() -> void:
 	_menu_window = null
 	_continue_button = null
 	_options_button = null
+	_fullscreen_button = null
 
 
 ## The saved game; if the file exists but can't be read, a marker Dictionary that Game
@@ -392,13 +408,15 @@ func _build_menu() -> void:
 	_options_button = _button("Opciones")
 	_options_button.pressed.connect(_open_options)
 	menu.add_child(_options_button)
-	if Device.is_touch() and not Device.is_ios() and get_window().mode != Window.MODE_FULLSCREEN:
+	if Device.is_touch() and not Device.is_ios():
 		# The browser's bar takes a quarter of the height, and fullscreen needs a press.
-		var fullscreen := _button("Pantalla completa")
-		fullscreen.pressed.connect(func() -> void:
-			get_window().mode = Window.MODE_FULLSCREEN
-			fullscreen.hide())
-		menu.add_child(fullscreen)
+		# _process() shows the row whenever the window is not fullscreen: the browser can
+		# leave it at any time (the back gesture).
+		_fullscreen_button = _button("Pantalla completa")
+		_fullscreen_button.pressed.connect(func() -> void:
+			get_window().mode = Window.MODE_FULLSCREEN)
+		menu.add_child(_fullscreen_button)
+		_sync_fullscreen_row()
 	# A tap outside the options window goes back; under the centred windows, shown only while open.
 	_options_backdrop = Control.new()
 	_options_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)

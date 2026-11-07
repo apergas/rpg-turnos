@@ -336,8 +336,6 @@ func _play_event(event: Dictionary) -> void:
 			await _say("¡Has huido!")
 		BattleEvent.FLEE_FAIL:
 			await _say("¡No has podido huir!")
-		BattleEvent.NO_ESCAPE:
-			await _say("¡No puedes huir!")
 		BattleEvent.ENEMY_FLEE:
 			_sfx(SfxLibrary.CANCEL)
 			_show_arrow(-1)

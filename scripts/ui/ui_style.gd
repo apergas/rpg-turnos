@@ -12,11 +12,16 @@ const TOUCH_DESCRIPTION_WIDTH := 240.0
 
 ## Adds what an item or a key item does, small and grey, to parent.
 static func add_description(parent: Node, id: String) -> void:
+	add_small_text(parent, Inventory.description(id))
+
+
+## A line of small grey text under a row, wrapped so it never outgrows a narrow window.
+static func add_small_text(parent: Node, text: String) -> void:
 	var label := Label.new()
 	label.add_theme_font_size_override("font_size", TEXT_SIZE)
 	label.add_theme_color_override("font_color", GREY)
 	parent.add_child(label)
-	BattleHud.fit_label(label, Inventory.description(id),
+	BattleHud.fit_label(label, text,
 		TOUCH_DESCRIPTION_WIDTH if Device.is_touch() else DESCRIPTION_WIDTH)
 
 

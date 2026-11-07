@@ -90,6 +90,15 @@ func wanted_enemies() -> Array[String]:
 	return wanted
 
 
+## The enemies a finished hunt was after: a rare one still comes for them, though seldom.
+func hunted_enemies() -> Array[String]:
+	var hunted: Array[String] = []
+	for id: String in QUESTS:
+		if stage(id) == Stage.DONE and data(id).kind == QuestData.Kind.HUNT:
+			hunted.append(data(id).target)
+	return hunted
+
+
 ## What this figure says about a quest now, and what that does: a report it was waiting for
 ## (paid at once), a sought figure found, a new offer (taken), else its waiting lines.
 ## Returns {"lines": Array[String], "done": title of the quest finished or ""}, or {} when

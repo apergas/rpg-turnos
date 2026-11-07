@@ -15,7 +15,7 @@ func _ready() -> void:
 	back.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(back)
 	var label := Label.new()
-	label.text = "Gira el móvil"
+	label.text = "Gira la pantalla"
 	label.add_theme_font_size_override("font_size", FONT_SIZE)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER

@@ -26,6 +26,8 @@ const CMD_STAGGER := "stagger"
 const CMD_CALL := "call"
 const CMD_CHARGE := "charge"
 const CMD_ESCAPE := "escape"
+## Why Huir is grey against a boss.
+const NO_ESCAPE_REASON := "No puedes huir"
 
 const POISON := "poison"
 const SLEEP := "sleep"
@@ -150,6 +152,9 @@ func problem(cmd: Dictionary) -> String:
 				return "PV al máximo"
 		CMD_ITEM:
 			return inventory.problem(cmd.item, hero, true)
+		CMD_FLEE:
+			if has_boss():
+				return NO_ESCAPE_REASON
 	return ""
 
 
@@ -167,14 +172,11 @@ func flee_chance() -> float:
 
 
 ## Resolves a full round with the hero's command and the enemies' own choices. Returns
-## an empty array once the battle is over. Fleeing from a boss only returns NO_ESCAPE:
-## no turn passes.
+## an empty array once the battle is over. The command must be usable (can_use()): fleeing
+## from a boss never is.
 func resolve_round(hero_cmd: Dictionary) -> Array[Dictionary]:
 	var events: Array[Dictionary] = []
 	if state != State.ONGOING:
-		return events
-	if hero_cmd.type == CMD_FLEE and has_boss():
-		events.append(BattleEvent.no_escape())
 		return events
 	assert(can_use(hero_cmd), "Hero can't use command: %s" % hero_cmd)
 	_defending = hero_cmd.type == CMD_DEFEND

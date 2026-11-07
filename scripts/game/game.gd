@@ -336,7 +336,7 @@ func _on_encounter(boss: bool) -> void:
 		enemies.append(EnemyLibrary.data(_zone.boss_id))
 	else:
 		enemies = EncounterTable.pick(_zone, _world.player_position(), _rng,
-			state.quests.wanted_enemies())
+			state.quests.wanted_enemies(), state.quests.hunted_enemies())
 	for enemy in enemies:
 		state.see_enemy(enemy.id)
 	await _fade_to(1.0)
@@ -808,20 +808,24 @@ func _on_well(id: String, kind: String) -> void:
 	_set_busy(false)
 
 
-## A closed chest: gives what it holds, opens the lid and saves without a notice (the
-## notice shows what was found).
+## A closed chest: gives what it holds, opens the lid, saves without a notice and says what
+## was found in the dialogue window, which waits for Enter or a tap (on autoplay it goes on
+## by itself).
 func _on_chest(chest_id: String) -> void:
 	if _busy:
 		return
 	var result := Chests.open(state, chest_id)
 	if not result.opened:
 		return
+	_set_busy(true)
 	state.gold_earned += Chests.CHESTS[chest_id].get("gold", 0)
 	_world.set_chest_open(chest_id, true)
 	_audio.play_sfx(SfxLibrary.LEVEL_UP)
 	_refresh_status()
-	_world.show_notice(result.text)
 	_autosave(false)
+	var lines: Array[String] = [result.text]
+	await _world.show_dialogue("", lines)
+	_set_busy(false)
 
 
 ## The dungeon floor's lever: sets its flag, which opens the gates it works.

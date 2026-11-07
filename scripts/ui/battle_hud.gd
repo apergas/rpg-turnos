@@ -23,6 +23,8 @@ enum Page { NONE, MAIN, SPELLS, ITEMS, TARGET }
 const CHAR_TIME := 0.025
 const AUTO_ADVANCE := 0.6
 const MENU_GUARD := 0.3
+## Seconds of each half of the cursor's blink when the menu starts taking orders.
+const READY_BLINK := 0.08
 const FONT_SIZE := 24
 const BADGE_FONT_SIZE := 16
 ## Least width of the command window (a longer row widens it).
@@ -90,6 +92,11 @@ var _target_back_cursor := 0
 var _targets: Array[int] = []
 var _target_i := 0
 var _menu_opened_ms := 0
+## True from show_menu() to the first new key press: until then, repeats of a key held from
+## before are ignored, so the cursor never moves on its own.
+var _hold_echo := false
+## Counts show_menu() calls, so a late "menu ready" from an older turn does nothing.
+var _menu_serial := 0
 var _advance_requested := false
 ## True while the code moves the cursor itself, so that move makes no sound.
 var _quiet_focus := false
@@ -188,12 +195,30 @@ func update_status(status: Dictionary) -> void:
 
 
 ## Opens the main menu. The menu keeps its layout slot while hidden (it only fades out),
-## so the message window never resizes.
+## so the message window never resizes. Once MENU_GUARD is over, a sound and a blink of
+## the cursor say it takes orders.
 func show_menu() -> void:
 	_menu_opened_ms = Time.get_ticks_msec()
+	_hold_echo = true
+	_menu_serial += 1
 	_menu.modulate.a = 1.0
 	_main_cursor = 0
 	_open(Page.MAIN, 0)
+	# Real time, like the guard: a faster combat speed scales the engine's time.
+	get_tree().create_timer(MENU_GUARD, true, false, true).timeout.connect(
+		_on_menu_ready.bind(_menu_serial))
+
+
+func _on_menu_ready(serial: int) -> void:
+	if serial != _menu_serial or _page == Page.NONE or _rows.is_empty():
+		return
+	_sfx(SfxLibrary.CURSOR)
+	var row := _rows[_cursor]
+	var blink := row.create_tween()
+	blink.set_ignore_time_scale(true)
+	for i in 2:
+		blink.tween_property(row, "modulate:a", 0.3, READY_BLINK)
+		blink.tween_property(row, "modulate:a", 1.0, READY_BLINK)
 
 
 func hide_menu() -> void:
@@ -292,6 +317,11 @@ func _input(event: InputEvent) -> void:
 	var key := event as InputEventKey
 	if _page == Page.NONE or key == null or not key.pressed:
 		return
+	if key.echo and _hold_echo:
+		get_viewport().set_input_as_handled()
+		return
+	if not key.echo:
+		_hold_echo = false
 	if key.is_action(KeyMap.MOVE_UP):
 		_move(-1)
 	elif key.is_action(KeyMap.MOVE_DOWN):
@@ -347,14 +377,17 @@ func _open(page: Page, cursor: int) -> void:
 	_cursor = 0
 	match page:
 		Page.MAIN:
-			for text in MAIN_ROWS:
-				_add_row(text, true)
+			for i in MAIN_ROWS.size():
+				var why := ""
+				if i == MAIN_ROW_OF[BattleEngine.CMD_FLEE]:
+					why = _engine.problem(BattleEngine.cmd_flee())
+				_add_row(_with_reason(MAIN_ROWS[i], why), why == "")
 			_set_message("¿Qué hará %s?" % _engine.hero.display_name)
 		Page.SPELLS:
 			for skill in _engine.hero.skills:
 				var why := _engine.problem(BattleEngine.cmd_skill(skill))
-				_add_row(_with_reason("%s  %d PM" % [skill.display_name, skill.mp_cost], why),
-					why == "")
+				_add_row(_with_reason("%s  %d PM  %s" % [skill.display_name, skill.mp_cost,
+					skill.description], why), why == "")
 			_add_back_row()
 			_set_message("¿Qué hechizo?")
 		Page.ITEMS:
