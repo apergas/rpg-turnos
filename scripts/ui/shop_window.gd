@@ -23,6 +23,8 @@ const NAME_WIDTH := 300.0
 const TOUCH_NAME_WIDTH := 240.0
 const PRICE_WIDTH := 90.0
 const BULK_WIDTH := 72.0
+## Room kept for the reason a row can't be bought ("Falta oro"), so the width never changes.
+const WHY_WIDTH := 120.0
 ## Messages under the list wrap past this width.
 const MESSAGE_WIDTH := 640.0
 ## What the header, the title, a two-line message and the margins leave for the rows.
@@ -43,6 +45,8 @@ var _gold: Label
 var _title: Label
 var _rows: VBoxContainer
 var _scroll: ScrollBox
+## The Volver button of the lists, outside the part that scrolls.
+var _footer: VBoxContainer
 var _message: Label
 
 
@@ -105,9 +109,11 @@ func _ready() -> void:
 	_scroll = ScrollBox.new(ROWS_RESERVED)
 	box.add_child(_scroll)
 	_rows = _scroll.content
+	_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_rows.add_theme_constant_override("separation", 6)
+	_footer = VBoxContainer.new()
+	box.add_child(_footer)
 	_message = _label("", Color.WHITE)
-	_message.visible = Device.is_touch()
 	box.add_child(_message)
 	hide()
 
@@ -164,6 +170,9 @@ func _show_page(page: String, focus_id := "") -> void:
 	for child in _rows.get_children():
 		_rows.remove_child(child)
 		child.queue_free()
+	for child in _footer.get_children():
+		_footer.remove_child(child)
+		child.queue_free()
 	match page:
 		"menu":
 			_title.text = "¿Comprar o vender?"
@@ -174,7 +183,7 @@ func _show_page(page: String, focus_id := "") -> void:
 			_title.text = "Criaturas" if Shop.sells_ally(_shop_id) else "Comprar"
 			for id in Shop.stock(_shop_id):
 				_add_buy_row(id)
-			_add_button("Volver", _back)
+			_add_footer_button("Volver", _back)
 		"sell":
 			_title.text = "Vender (pago la mitad)"
 			var ids := Shop.sell_list(_state)
@@ -182,7 +191,7 @@ func _show_page(page: String, focus_id := "") -> void:
 				_add_sell_row(id)
 			if ids.is_empty():
 				_rows.add_child(_label("No llevas nada que vender.", Color.WHITE))
-			_add_button("Volver", _back)
+			_add_footer_button("Volver", _back)
 		"ask":
 			_title.text = "¿Te %s equipas ahora?" % Equipment.pronoun(_asking)
 			_add_button("Sí", func() -> void: _answer(true))
@@ -241,8 +250,10 @@ func _add_buy_row(id: String) -> void:
 		bulk.pressed.connect(_buy_bulk.bind(id))
 		row.add_child(bulk)
 		UiStyle.add_description(row, id)
-	if why != "":
-		row.add_child(_label(why, GREY))
+	# The reason always takes its place, so the window keeps its width after a purchase.
+	var why_label := _label(why, GREY)
+	why_label.custom_minimum_size.x = WHY_WIDTH
+	row.add_child(why_label)
 
 
 func _buy_bulk(id: String) -> void:
@@ -362,11 +373,9 @@ func _say(text: String) -> void:
 		print(text)
 
 
-## The line under the list. Off a phone an empty one takes no room, so the window hugs the
-## rows; on a phone it keeps its place, so a message never moves the rows under the finger.
+## The line under the list always keeps its place, so a message never moves the rows.
 func _set_message(text: String) -> void:
 	BattleHud.fit_label(_message, text, MESSAGE_WIDTH)
-	_message.visible = text != "" or Device.is_touch()
 
 
 func _row() -> HBoxContainer:
@@ -378,13 +387,27 @@ func _row() -> HBoxContainer:
 
 func _add_button(text: String, action: Callable) -> void:
 	var button := _button(text)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.pressed.connect(action)
 	_rows.add_child(button)
 
 
+func _add_footer_button(text: String, pressed: Callable) -> void:
+	var button := _button(text)
+	button.pressed.connect(pressed)
+	_footer.add_child(button)
+
+
+## The buttons of the page: the rows first, then the footer.
+func _page_buttons() -> Array[Node]:
+	var buttons := _rows.find_children("*", "Button", true, false)
+	buttons.append_array(_footer.find_children("*", "Button", true, false))
+	return buttons
+
+
 func _focus_first() -> void:
 	_quiet_focus = true
-	for button in _rows.find_children("*", "Button", true, false):
+	for button in _page_buttons():
 		if not (button as Button).disabled:
 			(button as Button).grab_focus()
 			break
@@ -393,7 +416,7 @@ func _focus_first() -> void:
 
 func _focus_row(text: String) -> void:
 	_quiet_focus = true
-	for button in _rows.find_children("*", "Button", true, false):
+	for button in _page_buttons():
 		if (button as Button).text == text:
 			(button as Button).grab_focus()
 			break

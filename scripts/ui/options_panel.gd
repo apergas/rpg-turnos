@@ -200,6 +200,7 @@ func _named_row(title: String) -> HBoxContainer:
 func _button(text: String) -> Button:
 	var button := Button.new()
 	button.text = text
+	UiStyle.fit_finger(button)
 	button.add_theme_font_size_override("font_size", FONT_SIZE)
 	return button
 

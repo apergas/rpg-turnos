@@ -30,9 +30,9 @@ const HERO_PAGES := [["Estado", "status"], ["Objetos", "items"], ["Equipo", "equ
 ## Long texts wrap past this width.
 const TEXT_WIDTH := 480.0
 const MISSION_WIDTH := 420.0
-const TOUCH_MESSAGE_WIDTH := 240.0
+const MESSAGE_WIDTH := 240.0
 ## What the title, the message, Volver and the margins leave out of a page's scrolling list.
-const LIST_RESERVED := 200.0
+const LIST_RESERVED := 245.0
 const STATUS_BAR_WIDTH := 300.0
 const MENU_BUTTON_SIZE := Vector2(64, 64)
 const MENU_BUTTON_MARGIN := 24.0
@@ -71,6 +71,8 @@ var _ally_label: Label
 var _items_box: VBoxContainer
 var _items_message: Label
 var _equip_box: VBoxContainer
+## ATK / DEF / VEL under the list of slots, outside the part that scrolls.
+var _equip_stats: Label
 var _equip_message: Label
 ## Slot whose pieces the Equipo page lists ("" for the list of the three slots).
 var _equip_slot := ""
@@ -269,11 +271,9 @@ func _fill_status() -> void:
 			TEXT_WIDTH)
 
 
-## An empty line takes no room off a phone; on a phone it keeps its place, so a message never
-## moves the buttons from under the finger.
+## The message lines always keep their place, so a message never moves the buttons.
 func _set_line(label: Label, text: String) -> void:
 	label.text = text
-	label.visible = text != "" or Device.is_touch()
 
 
 ## One row per item carried: name, count and "Usar" (disabled, with the reason, when it
@@ -370,10 +370,12 @@ func _fill_equipment() -> void:
 			var button := _button(text)
 			button.pressed.connect(_choose_slot.bind(slot))
 			_equip_box.add_child(button)
-		_equip_box.add_child(_label("ATK %d   DEF %d   VEL %d" % [hero.total_attack(),
-			hero.total_defense(), hero.total_speed()], Color.WHITE))
+		_equip_stats.text = "ATK %d   DEF %d   VEL %d" % [hero.total_attack(),
+			hero.total_defense(), hero.total_speed()]
+		_equip_stats.show()
 		_focus_first_in(_equip_box)
 		return
+	_equip_stats.hide()
 	_equip_box.add_child(_label("%s:" % Equipment.SLOT_NAMES[_equip_slot], TITLE_COLOR))
 	var listed: Array[String] = []
 	for id in _state.bag_equipment:
@@ -509,9 +511,7 @@ func _build_main(center: CenterContainer) -> void:
 		button.pressed.connect(entry[1])
 		system_box.add_child(button)
 	_main_message = _label("", Color.WHITE)
-	_main_message.visible = Device.is_touch()
-	if Device.is_touch():
-		_main_message.custom_minimum_size.x = TOUCH_MESSAGE_WIDTH
+	_main_message.custom_minimum_size.x = MESSAGE_WIDTH
 	system_box.add_child(_main_message)
 
 
@@ -565,6 +565,8 @@ func _build_equipment(stack: VBoxContainer) -> void:
 	else:
 		_equip_box = VBoxContainer.new()
 		page.add_child(_equip_box)
+	_equip_stats = _label("", Color.WHITE)
+	page.add_child(_equip_stats)
 	_equip_message = _label("", Color.WHITE)
 	page.add_child(_equip_message)
 	page.add_child(_back_button())
