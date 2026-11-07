@@ -5,7 +5,9 @@
 [resource]
 script = ExtResource("1_zone")
 id = "castillo_patio"
-display_name = "el castillo"
+display_name = "Castillo de la Niebla"
+short_name = "Castillo"
+floor_name = "Patio"
 number = 4
 half_size = Vector2(34, 30)
 ground_color = Color(0.3, 0.29, 0.32, 1)

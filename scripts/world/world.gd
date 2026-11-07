@@ -67,6 +67,15 @@ const TOUCH_MISSION_WIDTH := 300.0
 ## The use button of the phone interface.
 const USE_BUTTON_FONT := 28
 const USE_BUTTON_SIZE := Vector2(180, 72)
+## The place's line by the map square.
+const PLACE_OUTLINE := 6
+## The place's name, big, the first time the map is the player's (World.freeze(false)).
+const BANNER_TOP := 110.0
+const BANNER_NAME_FONT := 48
+const BANNER_FLOOR_FONT := 30
+const BANNER_COLOR := Color(1.0, 0.9, 0.45)
+const BANNER_FADE := 0.5
+const BANNER_TIME := 2.5
 const FONT_SIZE := 24
 ## How close the player must be to talk to a figure / to open a chest / to run into the
 ## boss / to take an exit.
@@ -216,6 +225,10 @@ var _has_explored := false
 var _dry_wells: Array[String] = []
 var _notice: Label
 var _notice_window: PanelContainer
+var _place_label: Label
+var _banner: VBoxContainer
+var _banner_tween: Tween
+var _banner_shown := false
 var _notice_serial := 0
 var _prompt: Label
 ## Phones: the button that replaces the prompt, and the pad that reads the fingers.
@@ -286,6 +299,7 @@ func _ready() -> void:
 	_camera.target = _player
 	_marker = _build_marker()
 	_build_ui()
+	_place_label.text = zone.map_label()
 	set_explored(ExploredMap.new(zone))
 	place_at_entry(zone.start_entry)
 	_camera.current = true
@@ -585,7 +599,11 @@ func begin_cutscene() -> void:
 	_use_on_arrival = {}
 	_status_column.hide()
 	_map_square.hide()
+	_place_label.hide()
 	_notice_window.hide()
+	if _banner_tween:
+		_banner_tween.kill()
+	_banner.hide()
 	_show_quest_marks()
 	for label in _figure_signs:
 		label.hide()
@@ -599,6 +617,7 @@ func end_cutscene() -> void:
 	_player.scripted = false
 	_status_column.show()
 	_map_square.show()
+	_place_label.show()
 	_show_quest_marks()
 	for label in _figure_signs:
 		label.show()
@@ -678,6 +697,9 @@ func freeze(on: bool) -> void:
 	_player.input_enabled = true
 	_talking = false
 	_taps_from_ms = Time.get_ticks_msec() + TAP_GUARD_MS
+	if not _banner_shown and not _player.scripted:
+		_banner_shown = true
+		_show_banner()
 
 
 ## What the quests show on this map (Game passes GameState.quests' answers): marks is figure
@@ -781,6 +803,7 @@ func set_status_shown(on: bool) -> void:
 	_reset_pad()  # a finger's release is lost while the tree is paused
 	_status_column.visible = on
 	_map_square.visible = on
+	_place_label.visible = on
 
 
 func refresh_status(hero: Combatant, potions: int, gold: int, missions: Array[String] = []) -> void:
@@ -1244,6 +1267,11 @@ func _build_ui() -> void:
 	var panel := BattleHud.make_window()
 	column.add_child(panel)
 	_map_square = MapSquare.new(MapSquare.TOUCH_SIDE if Device.is_touch() else MapSquare.SIDE)
+	_place_label = _label()
+	_place_label.add_theme_font_size_override("font_size", UiStyle.TEXT_SIZE)
+	_place_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	_place_label.add_theme_constant_override("outline_size", PLACE_OUTLINE)
+	_place_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if Device.is_touch():
 		# Under the menu button, top right.
 		_ui.add_child(_map_square)
@@ -1253,7 +1281,16 @@ func _build_ui() -> void:
 		_map_square.offset_left = _map_square.offset_right - MapSquare.TOUCH_SIDE
 		_map_square.offset_top = PauseMenu.MENU_BUTTON_MARGIN + PauseMenu.MENU_BUTTON_SIZE.y + 8.0
 		_map_square.offset_bottom = _map_square.offset_top + MapSquare.TOUCH_SIDE
+		_ui.add_child(_place_label)
+		_place_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		_place_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+		_place_label.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+		_place_label.offset_right = _map_square.offset_right
+		_place_label.offset_left = _map_square.offset_right
+		_place_label.offset_top = _map_square.offset_bottom + 4.0
+		_place_label.offset_bottom = _place_label.offset_top
 	else:
+		column.add_child(_place_label)
 		column.add_child(_map_square)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
@@ -1289,6 +1326,7 @@ func _build_ui() -> void:
 	_ui.add_child(_notice_window)
 	_notice = _label()
 	_notice_window.add_child(_notice)
+	_build_banner()
 	_prompt = _label()
 	_prompt.text = PROMPTS[TALK]
 	_prompt.add_theme_color_override("font_outline_color", Color.BLACK)
@@ -1324,6 +1362,47 @@ func _build_touch_controls() -> void:
 	_use_button.offset_left = -UI_EDGE - USE_BUTTON_SIZE.x
 	_use_button.offset_top = -UI_EDGE - USE_BUTTON_SIZE.y
 	_use_button.pressed.connect(func() -> void: _use(_nearest_use(_player.global_position)))
+
+
+## Two lines centred near the top: the place and, under it, its floor.
+func _build_banner() -> void:
+	_banner = VBoxContainer.new()
+	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_banner.add_theme_constant_override("separation", 0)
+	_ui.add_child(_banner)
+	_banner.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	_banner.offset_top = BANNER_TOP
+	_banner.offset_bottom = BANNER_TOP
+	for font_size in [BANNER_NAME_FONT, BANNER_FLOOR_FONT]:
+		var label := Label.new()
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		label.add_theme_font_size_override("font_size", font_size)
+		label.add_theme_color_override("font_color", BANNER_COLOR)
+		label.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.0))
+		label.add_theme_constant_override("outline_size", 12)
+		_banner.add_child(label)
+	_banner.hide()
+
+
+## Fades the place's name in, holds it and fades it out.
+func _show_banner() -> void:
+	var name_label := _banner.get_child(0) as Label
+	var floor_label := _banner.get_child(1) as Label
+	name_label.text = zone.display_name
+	floor_label.text = zone.floor_name
+	floor_label.visible = zone.floor_name != ""
+	if _autoplay:
+		print("Lugar: %s" % zone.banner_text())
+	if _banner_tween:
+		_banner_tween.kill()
+	_banner.modulate.a = 0.0
+	_banner.show()
+	_banner_tween = create_tween()
+	_banner_tween.tween_property(_banner, "modulate:a", 1.0, BANNER_FADE)
+	_banner_tween.tween_interval(BANNER_TIME)
+	_banner_tween.tween_property(_banner, "modulate:a", 0.0, BANNER_FADE)
+	_banner_tween.tween_callback(_banner.hide)
 
 
 func _label() -> Label:

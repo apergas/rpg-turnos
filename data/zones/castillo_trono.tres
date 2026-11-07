@@ -14,7 +14,9 @@ wells = [{
 "pos": Vector3(16, 0, 8)
 }]
 id = "castillo_trono"
-display_name = "el castillo"
+display_name = "Castillo de la Niebla"
+short_name = "Castillo"
+floor_name = "Sala del trono"
 number = 4
 half_size = Vector2(26, 26)
 ground_color = Color(0.2, 0.18, 0.22, 1)

@@ -14,7 +14,9 @@ wells = [{
 "pos": Vector3(24, 0, -12)
 }]
 id = "mina_3"
-display_name = "la mina"
+display_name = "Mina abandonada"
+short_name = "Mina"
+floor_name = "Planta 3"
 number = 3
 half_size = Vector2(30, 26)
 ground_color = Color(0.24, 0.21, 0.19, 1)

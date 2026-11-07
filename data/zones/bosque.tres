@@ -5,7 +5,8 @@
 [resource]
 script = ExtResource("1_zone")
 id = "bosque"
-display_name = "el bosque"
+display_name = "Bosque del Norte"
+short_name = "Bosque"
 number = 2
 half_size = Vector2(30, 40)
 outer_margin = 6.0
