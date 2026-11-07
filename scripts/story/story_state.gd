@@ -29,13 +29,25 @@ const ON_VILLAGE := {
 }
 ## The boss whose flag ends each chapter, from the meadow on.
 const CHAPTER_BOSSES: Array[String] = ["rey_slime", "bruja", "golem_piedra", "senor_niebla"]
+## The mine's flags (ZoneData lever_flag, floor_key, door_flag of its floors).
+const MINE_LEVER := "mina_palanca"
+const MINE_KEY := "llave_mina"
+const MINE_DOOR := "mina_puerta"
+## The mine chapter's goal, step by step: what goal_text() says there.
+const MINE_GOALS := {
+	"enter": "Objetivo: entra en la mina, al norte del bosque",
+	"floor_2": "Objetivo: baja a la segunda planta",
+	"lever": "Objetivo: busca la palanca",
+	"floor_3": "Objetivo: baja a la tercera planta",
+	"key": "Objetivo: busca la llave de la reja",
+	"golem": "Objetivo: vence al Golem de piedra",
+}
 ## The next step of the story, by chapter: GameState.main_goal() once the village quest
-## is done.
+## is done. The mine chapter is answered by MINE_GOALS.
 const GOALS := {
 	Chapter.PROLOGUE: "Objetivo: habla con la Abuela Rosa",
 	Chapter.MEADOW: "Objetivo: ayuda a la Abuela Rosa",
 	Chapter.FOREST: "Objetivo: vence a la Bruja del bosque",
-	Chapter.MINE: "Objetivo: vence al Golem de la mina",
 	Chapter.CASTLE: "Objetivo: vence al Señor de la Niebla",
 	Chapter.END: "Villaclaro está en paz",
 }
@@ -94,9 +106,23 @@ func mark_seen_for_flags(flags: Dictionary) -> void:
 	finished = flags.get("senor_niebla", false)
 
 
-## The next step of the story in one line.
-func goal_text(flags: Dictionary) -> String:
-	return GOALS[chapter(flags)]
+## The next step of the story in one line. In the mine chapter it follows the floor the hero
+## is on (zone_id) and the mine's flags.
+func goal_text(flags: Dictionary, zone_id := "") -> String:
+	var now := chapter(flags)
+	if now == Chapter.MINE:
+		return MINE_GOALS[_mine_step(flags, zone_id)]
+	return GOALS[now]
+
+
+static func _mine_step(flags: Dictionary, zone_id: String) -> String:
+	if flags.get(MINE_KEY, false) or flags.get(MINE_DOOR, false):
+		return "golem"
+	if not zone_id.begins_with("mina_"):
+		return "enter"
+	if not flags.get(MINE_LEVER, false):
+		return "lever" if zone_id == "mina_2" else "floor_2"
+	return "key" if zone_id == "mina_3" else "floor_3"
 
 
 func to_dict() -> Dictionary:

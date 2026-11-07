@@ -839,6 +839,7 @@ func _on_lever() -> void:
 	_world.set_world_flags(state.world_flags)
 	_world.show_notice(LEVER_NOTICE)
 	_autosave(false)
+	_refresh_status()
 
 
 ## The key lying on the floor: into the key items; its flag keeps it taken.
@@ -851,6 +852,7 @@ func _on_key() -> void:
 	_world.set_world_flags(state.world_flags)
 	_world.show_notice(KEY_NOTICE % Inventory.KEY_ITEMS[_zone.floor_key])
 	_autosave(false)
+	_refresh_status()
 
 
 ## A closed gate: the key of the floor opens it (and is used up); otherwise its text.
@@ -867,6 +869,7 @@ func _on_door() -> void:
 	_world.set_world_flags(state.world_flags)
 	_world.show_notice(DOOR_NOTICE % Inventory.KEY_ITEMS[key])
 	_autosave(false)
+	_refresh_status()
 
 
 ## Writes the save file; shows SAVED_NOTICE if notice. Returns the saved data, or an

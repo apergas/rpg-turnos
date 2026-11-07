@@ -16,6 +16,8 @@ const QUESTS := {
 	"explorador": preload("res://data/quests/explorador.tres"),
 }
 const VILLAGE_ZONE := "pradera"
+## Ends the waiting lines of a HUNT or GATHER of several, so the progress is said aloud.
+const PROGRESS_LINE := "Llevas %d de %d."
 const STATUS_PREFIX := "Misión: "
 ## Most mission lines shown at once; the rest are in the Diario.
 const MAX_STATUS_LINES := 3
@@ -127,7 +129,10 @@ func talk(state: GameState, zone_id: String, figure: String) -> Dictionary:
 		var quest := data(id)
 		if quest.turn_in_zone == zone_id and quest.turn_in == figure and is_active(id) \
 				and not quest.wait_lines.is_empty():
-			return {"lines": quest.wait_lines.duplicate(), "done": ""}
+			var lines: Array[String] = quest.wait_lines.duplicate()
+			if quest.goal > 1 and quest.kind in [QuestData.Kind.HUNT, QuestData.Kind.GATHER]:
+				lines.append(PROGRESS_LINE % [_progress(quest, state.inventory), quest.goal])
+			return {"lines": lines, "done": ""}
 	return {}
 
 

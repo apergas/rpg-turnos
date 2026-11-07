@@ -75,7 +75,7 @@ func heal_full() -> void:
 ## The next thing the story asks: the village quest while it lasts, then the chapter's goal.
 func main_goal() -> String:
 	var line := quest.status_text()
-	return line if line != "" else story.goal_text(world_flags)
+	return line if line != "" else story.goal_text(world_flags, zone_id)
 
 
 ## The lines of the mission lists (status window, pause menu): the main goal first, then
