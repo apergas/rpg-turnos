@@ -66,6 +66,7 @@ const CUTSCENE_PATH := "res://data/cutscenes/%s.tres"
 ## The author shown in the credits.
 const AUTHOR := "apergas"
 const FADE_TIME := 0.3
+const REPEL_END_NOTICE := "El incienso se ha consumido."
 const HEAL_LINE := "Descansas un momento. PV y PM recuperados."
 const SAVED_NOTICE := "Partida guardada."
 const LOAD_FAILED_NOTICE := "No se pudo cargar la partida. Empiezas de nuevo."
@@ -309,7 +310,7 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 	_world.key_taken.connect(_on_key)
 	_world.door_used.connect(_on_door)
 	_world.village_changed.connect(_on_village_changed)
-	_world.stepped.connect(func() -> void: state.steps += 2)
+	_world.stepped.connect(_on_stepped)
 	_world.set_dry_wells(Wells.dry_ids(state))
 	if entry_id != "":
 		_world.place_at_entry(entry_id)
@@ -927,10 +928,23 @@ func _set_busy(busy: bool) -> void:
 ## Updates the map's status window, the quests' marks and sought figures and the hero's
 ## weapon and shield; on autoplay also prints each new quest line and each change of gold
 ## or equipment.
+## Every STEP_DISTANCE metres walked: two steps for the credits, and the Incienso burns.
+func _on_stepped() -> void:
+	state.steps += 2
+	if state.repel_m <= 0.0:
+		return
+	state.repel_m = maxf(0.0, state.repel_m - World.STEP_DISTANCE)
+	if state.repel_m == 0.0:
+		_world.set_repel(false)
+		_world.show_notice(REPEL_END_NOTICE)
+
+
 func _refresh_status() -> void:
 	var missions := state.current_missions()
 	_world.refresh_status(state.hero, state.inventory.count(Inventory.POTION), state.gold,
 		missions)
+	_world.set_encounter_rate(EncounterMeter.level_rate(state.hero.level, _zone.exit_level))
+	_world.set_repel(state.repel_m > 0.0)
 	_world.set_quest_view(state.quests.markers(_zone.id, state.inventory),
 		state.quests.hidden_figures(_zone.id))
 	var loadout := state.loadout

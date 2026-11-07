@@ -135,6 +135,7 @@ start_pos = Vector3(0, 0, 35)
 start_radius = 18.0
 encounter_grace = 5.0
 encounter_chance = 0.025
+exit_level = 9
 music = "forest"
 village_music = "village"
 sky_top = Color(0.28, 0.45, 0.75, 1)

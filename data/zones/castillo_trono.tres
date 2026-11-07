@@ -26,6 +26,7 @@ boss_pos = Vector3(0, 0, -16.5)
 formations = [["esqueleto_guerrero"], ["esqueleto_picaro"], ["esqueleto_mago"], ["esqueleto_picaro"], ["esqueleto_guerrero", "esqueleto_mago"], ["esqueleto_picaro", "esqueleto_mago"]]
 encounter_grace = 4.0
 encounter_chance = 0.04
+exit_level = 17
 music = "castle"
 village_music = "village"
 haze = Color(0.16, 0.1, 0.22, 1)

@@ -387,6 +387,8 @@ func _use_text(id: String, result: Dictionary) -> String:
 			return "Recuperas %d PM." % result.amount
 		"seed":
 			return "¡%s +%d para siempre!" % [Inventory.seed_stat(id), result.amount]
+		"repel":
+			return "Los monstruos se apartan durante %d m." % Inventory.ITEMS[id].value
 	return "Recuperas %d PV." % result.amount
 
 

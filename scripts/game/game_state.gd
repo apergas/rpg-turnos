@@ -86,9 +86,17 @@ func current_missions() -> Array[String]:
 	return missions
 
 
-## Uses an item outside battle, from the pause menu; see Inventory.use().
+## Metres an Incienso still keeps the monsters away (not saved: it ends with the session).
+var repel_m := 0.0
+
+
+## Uses an item outside battle, from the pause menu; see Inventory.use(). An Incienso
+## starts its metres again.
 func use_item(id: String) -> Dictionary:
-	return inventory.use(id, hero, false)
+	var result := inventory.use(id, hero, false)
+	if result.used and result.effect == "repel":
+		repel_m = float(Inventory.ITEMS[id].value)
+	return result
 
 
 ## Copies the loadout's bonuses into the hero (battles read total_attack/defense()).

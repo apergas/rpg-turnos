@@ -138,6 +138,9 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## EncounterMeter: free meters after each battle, then this chance per meter on grass.
 @export var encounter_grace := 5.0
 @export var encounter_chance := 0.025
+## The level a hero usually has on leaving this zone (about its boss's): from
+## EncounterMeter.LEVEL_GAP levels past it, its monsters come half as often. 0: never.
+@export var exit_level := 0
 
 @export_group("Look and sound")
 @export var music := "map"

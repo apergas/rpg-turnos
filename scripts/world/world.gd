@@ -222,6 +222,8 @@ var _mission_done_serial := 0
 var _mission_done := false
 var _map_square: MapSquare
 var _has_explored := false
+## True while an Incienso keeps the monsters away (Game counts its metres).
+var _repelled := false
 var _dry_wells: Array[String] = []
 var _notice: Label
 var _notice_window: PanelContainer
@@ -335,7 +337,7 @@ func _physics_process(_delta: float) -> void:
 		_trigger(true)
 		return
 	var in_grass := not WorldStage.is_on_path(zone, pos)
-	if _meter.advance(_player.last_step_m, in_grass):
+	if not _repelled and _meter.advance(_player.last_step_m, in_grass):
 		_trigger(false)
 		return
 	var near := _nearest_use(pos)
@@ -538,6 +540,16 @@ func _refresh_map_marks() -> void:
 	if not _has_explored:
 		return
 	_map_square.set_marks(MapMarks.of_zone(zone, _flags, _dry_wells))
+
+
+## The share of the zone's encounters that come now (EncounterMeter.level_rate()).
+func set_encounter_rate(rate: float) -> void:
+	_meter.rate = rate
+
+
+## An Incienso burning: no random encounters (the boss still waits where it is).
+func set_repel(on: bool) -> void:
+	_repelled = on
 
 
 ## Shows or removes the return portal at the zone's portal_pos.
