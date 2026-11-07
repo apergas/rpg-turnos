@@ -1,5 +1,18 @@
 # Registro de cambios
 
+## 1.1.1 (2026)
+
+- En la web, si el navegador corta los gráficos, un aviso pide recargar: la partida está guardada.
+- El bestiario se puede completar: una partida antigua cuenta los monstruos de las zonas superadas.
+- El Slime de Metal sigue saliendo en la mina, aunque raro, después de su misión.
+- Contra un jefe, "Huir" sale en gris: no se puede huir.
+- Los hechizos dicen qué hacen, en combate y en la página Estado.
+- Lo que hay en un cofre sale en la ventana de diálogo y espera a que sigas.
+- Combate: una tecla mantenida ya no mueve el cursor, y un sonido avisa cuando el menú ya acepta órdenes.
+- Móvil: la fila "Pantalla completa" del título vuelve al salir de pantalla completa.
+- Web de escritorio: "Pantalla completa" en Opciones.
+- El aviso de girar dice "Gira la pantalla".
+
 ## 1.1.0 (2026)
 
 - Móvil: en vertical aparece "Gira el móvil" en lugar de una pantalla negra.

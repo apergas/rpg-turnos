@@ -58,12 +58,12 @@ Tallas: **S** menos de un día, **M** unos días, **L** una semana o más.
 
 | ID | Qué | Por qué | Propuesta | Talla |
 |---|---|---|---|---|
-| M-01 | Pantalla blanca o congelada en la web (B02) | Si pasa, el jugador no sabe que su partida está guardada | En `html/head_include`, escuchar `webglcontextlost` en el canvas y mostrar encima un aviso en HTML: "El navegador ha cortado los gráficos. Recarga la página: tu partida está guardada." con un botón Recargar. Es defensivo: no arregla la causa, pero quita el bloqueo | S |
-| M-02 | Bestiario que no se puede completar (B01, E02) | Una partida migrada o con la misión del Slime de Metal entregada no llega a 17/17 | 1) Al migrar un guardado anterior al bestiario, marcar como vistos los enemigos comunes de cada zona cuyo jefe está vencido, y el Slime de Metal si su misión está cumplida. 2) Con la misión ya cumplida, el Slime de Metal sigue saliendo en la mina, pero raro (un 5 % en lugar del 25 %) | S |
-| M-03 | Huir de un jefe (B04) | El jugador no sabe si está prohibido o si ha fallado | Contra un jefe, la fila "Huir" sale en gris con el motivo "No puedes huir", como las demás filas que no se pueden usar. Desaparece el caso NO_ESCAPE | S |
-| M-04 | Qué hace cada hechizo (B03) | Los objetos lo dicen y los hechizos no | Añadir a `Skill` una descripción corta ("Cura 30 PV.", "Daño de fuego a todos.") y mostrarla en la fila, como hace `ITEMS`. También en la página Estado de la pausa | S |
-| M-05 | Botín de los cofres (I02) | El aviso de 2 s se pierde | El contenido del cofre sale en la ventana de diálogo y espera a Enter o a un toque, como en Dragon Quest: "¡Encuentras 120 monedas de oro!". En la partida automática avanza solo | S |
-| M-06 | Teclas mantenidas y confirmaciones rápidas en combate (B05) | Movimientos y elecciones que el jugador no quería | 1) Ignorar las repeticiones (`echo`) del menú hasta la primera pulsación nueva tras abrirse. 2) Un sonido y un parpadeo del cursor cuando el menú ya acepta órdenes | S |
+| M-01 | Pantalla blanca o congelada en la web (B02) — **hecho en 1.1.1** | Si pasa, el jugador no sabe que su partida está guardada | En `html/head_include`, escuchar `webglcontextlost` en el canvas y mostrar encima un aviso en HTML: "El navegador ha cortado los gráficos. Recarga la página: tu partida está guardada." con un botón Recargar. Es defensivo: no arregla la causa, pero quita el bloqueo | S |
+| M-02 | Bestiario que no se puede completar (B01, E02) — **hecho en 1.1.1** | Una partida migrada o con la misión del Slime de Metal entregada no llega a 17/17 | 1) Al migrar un guardado anterior al bestiario, marcar como vistos los enemigos comunes de cada zona cuyo jefe está vencido, y el Slime de Metal si su misión está cumplida. 2) Con la misión ya cumplida, el Slime de Metal sigue saliendo en la mina, pero raro (un 5 % en lugar del 25 %) | S |
+| M-03 | Huir de un jefe (B04) — **hecho en 1.1.1** | El jugador no sabe si está prohibido o si ha fallado | Contra un jefe, la fila "Huir" sale en gris con el motivo "No puedes huir", como las demás filas que no se pueden usar. Desaparece el caso NO_ESCAPE | S |
+| M-04 | Qué hace cada hechizo (B03) — **hecho en 1.1.1** | Los objetos lo dicen y los hechizos no | Añadir a `Skill` una descripción corta ("Cura 30 PV.", "Daño de fuego a todos.") y mostrarla en la fila, como hace `ITEMS`. También en la página Estado de la pausa | S |
+| M-05 | Botín de los cofres (I02) — **hecho en 1.1.1** | El aviso de 2 s se pierde | El contenido del cofre sale en la ventana de diálogo y espera a Enter o a un toque, como en Dragon Quest: "¡Encuentras 120 monedas de oro!". En la partida automática avanza solo | S |
+| M-06 | Teclas mantenidas y confirmaciones rápidas en combate (B05) — **hecho en 1.1.1** | Movimientos y elecciones que el jugador no quería | 1) Ignorar las repeticiones (`echo`) del menú hasta la primera pulsación nueva tras abrirse. 2) Un sonido y un parpadeo del cursor cuando el menú ya acepta órdenes | S |
 
 ### Prioridad 2: orientación
 
@@ -105,9 +105,9 @@ Lo que queda de los informes anteriores y se puede hacer desde aquí, sin un mó
 
 | ID | Qué | Propuesta | Talla |
 |---|---|---|---|
-| M-23 | En Android, la fila "Pantalla completa" del título no vuelve tras salir de pantalla completa (QAM-21) | Que la fila mire el modo de la ventana cada vez que se enseña el menú, y no solo al construirlo | S |
-| M-24 | Pantalla completa en la web de escritorio | Hoy solo existe en Android. La misma fila en Opciones también en el navegador de escritorio | S |
-| M-25 | En el iPad, el aviso dice "Gira el móvil" | "Gira la pantalla" en todos los dispositivos | S |
+| M-23 | En Android, la fila "Pantalla completa" del título no vuelve tras salir de pantalla completa (QAM-21) — **hecho en 1.1.1** | Que la fila mire el modo de la ventana cada vez que se enseña el menú, y no solo al construirlo | S |
+| M-24 | Pantalla completa en la web de escritorio — **hecho en 1.1.1** | Hoy solo existe en Android. La misma fila en Opciones también en el navegador de escritorio | S |
+| M-25 | En el iPad, el aviso dice "Gira el móvil" — **hecho en 1.1.1** | "Gira la pantalla" en todos los dispositivos | S |
 
 ---
 
