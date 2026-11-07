@@ -12,7 +12,7 @@ class_name World extends Node3D
 ## shows its fog and its notice. With set_portal(true) the zone's portal_pos holds the
 ## return portal of an Ala de viaje, used like a figure (portal_used); set_return_mark()
 ## shows on the ground the spot it leads back to. Under the status window a MapSquare shows
-## what has been seen of the zone (set_explored()). A dungeon floor (ZoneData.layout) is a
+## what has been seen of the zone (set_explored()); a tap on it emits map_requested. A dungeon floor (ZoneData.layout) is a
 ## DungeonMap: its
 ## rock blocks turn see-through between the camera and the hero, the hero carries a
 ## lantern underground, and next to the lever, the key or a locked gate Enter / Space
@@ -49,6 +49,8 @@ signal key_taken
 signal door_used
 ## Every STEP_DISTANCE metres walked (two steps of the hero; the game's step count).
 signal stepped
+## The player tapped the map square: Game opens the pause menu's Mapa page.
+signal map_requested
 
 const PLAYER_SCENE := preload("res://scenes/world/player.tscn")
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
@@ -145,10 +147,6 @@ const WATER_MP := Color(0.25, 0.5, 1.0)
 const WATER_RADIUS := 0.95
 const WATER_HEIGHT := 1.2
 ## Marks on the map square.
-const MARK_SHOP := Color(1.0, 0.8, 0.2)
-const MARK_INN := Color(1.0, 0.6, 0.85)
-const MARK_EXIT := Color(0.35, 1.0, 0.45)
-const MARK_DRY := Color(0.55, 0.55, 0.55)
 ## Exit arch: two posts and a beam of dark wood, a sign board with the exit's label
 ## (always facing the camera, south) and, while closed, a bank of fog.
 const ARCH_WOOD := Color(0.36, 0.22, 0.1)
@@ -513,6 +511,7 @@ func set_world_flags(flags: Dictionary) -> void:
 		(_fogs[exit.id] as Node3D).visible = not _is_open(exit)
 	if _dungeon:
 		_dungeon.set_flags(flags)
+	_refresh_map_marks()
 
 
 ## What has been seen of this zone, for the map square (Game passes GameState's; run on
@@ -523,22 +522,12 @@ func set_explored(map: ExploredMap) -> void:
 	_refresh_map_marks()
 
 
-## The map square's points of interest: shops, inns, wells (grey while dry) and exits.
+## The map square's points of interest (MapMarks): they follow the dry wells and, on a
+## dungeon floor, the lever, the gates and the key.
 func _refresh_map_marks() -> void:
 	if not _has_explored:
 		return
-	var marks: Array[Dictionary] = []
-	for npc: Dictionary in zone.npcs:
-		if npc.kind == "shop":
-			marks.append({"pos": npc.pos, "color": MARK_SHOP})
-		elif npc.kind == "inn":
-			marks.append({"pos": npc.pos, "color": MARK_INN})
-	for well: Dictionary in zone.wells:
-		var color := WATER_HP if well.kind == Wells.HP else WATER_MP
-		marks.append({"pos": well.pos, "color": MARK_DRY if _dry_wells.has(well.id) else color})
-	for exit: Dictionary in zone.all_exits():
-		marks.append({"pos": exit.pos, "color": MARK_EXIT})
-	_map_square.set_marks(marks)
+	_map_square.set_marks(MapMarks.of_zone(zone, _flags, _dry_wells))
 
 
 ## Shows or removes the return portal at the zone's portal_pos.
@@ -1267,6 +1256,10 @@ func _build_ui() -> void:
 	var panel := BattleHud.make_window()
 	column.add_child(panel)
 	_map_square = MapSquare.new(MapSquare.TOUCH_SIDE if Device.is_touch() else MapSquare.SIDE)
+	_map_square.clickable = true
+	_map_square.pressed.connect(func() -> void:
+		if not _talking and not _waiting:
+			map_requested.emit())
 	_place_label = _label()
 	_place_label.add_theme_font_size_override("font_size", UiStyle.TEXT_SIZE)
 	_place_label.add_theme_color_override("font_outline_color", Color.BLACK)

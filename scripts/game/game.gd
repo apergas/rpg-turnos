@@ -303,6 +303,7 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 	_world.chest_opened.connect(_on_chest)
 	_world.well_requested.connect(_on_well)
 	_world.exit_requested.connect(_on_exit)
+	_world.map_requested.connect(_pause.open_map)
 	_world.portal_used.connect(_on_portal)
 	_world.lever_pulled.connect(_on_lever)
 	_world.key_taken.connect(_on_key)
@@ -1006,6 +1007,7 @@ func _build_pause() -> void:
 	_pause.title_requested.connect(_on_title_requested)
 	_pause.travel_requested.connect(_on_travel_requested)
 	_pause.in_village = func() -> bool: return _world.in_village()
+	_pause.hero_position = func() -> Vector3: return _world.player_position()
 	_pause.state_changed.connect(_refresh_status)
 	_pause.open_changed.connect(func(is_open: bool) -> void:
 		_world.set_status_shown(not is_open))

@@ -26,7 +26,14 @@ const TITLE_COLOR := UiStyle.TITLE_COLOR
 const GREY := UiStyle.GREY
 ## Rows of the hero's window: text and page. A new page only needs its row here.
 const HERO_PAGES := [["Estado", "status"], ["Objetos", "items"], ["Equipo", "equipment"],
-	["Diario", "journal"], ["Bestiario", "bestiary"]]
+	["Mapa", "map"], ["Diario", "journal"], ["Bestiario", "bestiary"]]
+## The Mapa page: the side of its map, and what its title, Volver and the margins leave
+## out of the screen's height.
+const MAP_PAGE_SIDE := 360.0
+const MAP_PAGE_RESERVED := 150.0
+const MAP_LEGEND_SWATCH := 12.0
+## On a phone the hero's rows go in this many columns: one per row doesn't fit the height.
+const TOUCH_HERO_COLUMNS := 3
 ## Long texts wrap past this width.
 const TEXT_WIDTH := 480.0
 const MISSION_WIDTH := 420.0
@@ -80,6 +87,12 @@ var _equip_slot := ""
 var _journal: JournalPage
 var _bestiary: BestiaryPage
 var _bestiary_button: Button
+## Where the hero stands on the map now. Set by Game.
+var hero_position: Callable
+var _map_title: Label
+var _map_holder: HBoxContainer
+## The menu was opened on the Mapa page (a tap on the map square): Volver closes it.
+var _map_only := false
 var _options_panel: OptionsPanel
 var _page := ""
 ## True while the code moves the focus itself, so that move makes no sound.
@@ -118,6 +131,7 @@ func _ready() -> void:
 	_build_status(stack)
 	_build_items(stack)
 	_build_equipment(stack)
+	_build_map(stack)
 	_build_journal(stack)
 	_build_bestiary(stack)
 	_build_options(stack)
@@ -132,6 +146,7 @@ func is_open() -> bool:
 func open() -> void:
 	if is_open() or not available:
 		return
+	_map_only = false
 	get_tree().paused = true
 	_shade.show()
 	_menu_button.hide()
@@ -139,6 +154,15 @@ func open() -> void:
 	_sfx(SfxLibrary.ACCEPT)
 	_show_page("main")
 	open_changed.emit(true)
+
+
+## Opens the menu straight on its Mapa page (a tap on the map square); Volver closes it.
+func open_map() -> void:
+	if is_open() or not available:
+		return
+	open()
+	_map_only = true
+	_show_page("map")
 
 
 func close() -> void:
@@ -168,7 +192,7 @@ func tour() -> void:
 	available = true
 	await get_tree().create_timer(TOUR_STEP, true).timeout
 	open()
-	for page in ["main", "status", "items", "equipment", "journal", "bestiary", "options"]:
+	for page in ["main", "status", "items", "equipment", "map", "journal", "bestiary", "options"]:
 		_show_page(page)
 		print("Menú: %s" % page)
 		await get_tree().create_timer(TOUR_STEP, true).timeout
@@ -201,6 +225,11 @@ func _go_back() -> void:
 				_choose_slot("")
 			else:
 				_back_to_main()
+		"map":
+			if _map_only:
+				close()
+			else:
+				_back_to_main()
 		_:
 			_back_to_main()
 
@@ -222,6 +251,8 @@ func _show_page(page: String) -> void:
 			_equip_slot = ""
 			_set_line(_equip_message, "")
 			_fill_equipment()
+		"map":
+			_fill_map()
 		"journal":
 			_journal.fill(_state)
 		"bestiary":
@@ -494,10 +525,18 @@ func _build_main(center: CenterContainer) -> void:
 	var hero_box := _main_window()
 	_hero_label = _label("", TITLE_COLOR)
 	hero_box.add_child(_hero_label)
+	var rows: Container = hero_box
+	if Device.is_touch():
+		var grid := GridContainer.new()
+		grid.columns = TOUCH_HERO_COLUMNS
+		grid.add_theme_constant_override("h_separation", 8)
+		grid.add_theme_constant_override("v_separation", 6)
+		hero_box.add_child(grid)
+		rows = grid
 	for entry: Array in HERO_PAGES:
 		var button := _button(entry[0])
 		button.pressed.connect(_open_page.bind(entry[1]))
-		hero_box.add_child(button)
+		rows.add_child(button)
 		if entry[1] == "bestiary":
 			_bestiary_button = button
 	hero_box.add_child(_label("Misiones", TITLE_COLOR))
@@ -555,6 +594,57 @@ func _build_status(stack: VBoxContainer) -> void:
 	_spells_box.add_theme_constant_override("separation", 2)
 	columns.add_child(_spells_box)
 	page.add_child(_back_button())
+
+
+func _build_map(stack: VBoxContainer) -> void:
+	var page := _page_box(stack, "map", "Mapa")
+	_map_title = page.get_child(0) as Label
+	_map_holder = HBoxContainer.new()
+	_map_holder.add_theme_constant_override("separation", 16)
+	page.add_child(_map_holder)
+	var back := _button("Volver")
+	back.pressed.connect(_go_back)
+	page.add_child(back)
+
+
+## What has been seen of this zone, as big as the screen lets it, with the hero, the marks
+## seen so far and their legend.
+func _fill_map() -> void:
+	for child in _map_holder.get_children():
+		_map_holder.remove_child(child)
+		child.queue_free()
+	var zone := ZoneData.by_id(_state.zone_id)
+	_map_title.text = "Mapa · %s" % zone.map_label()
+	var side := minf(MAP_PAGE_SIDE,
+		get_viewport().get_visible_rect().size.y - MAP_PAGE_RESERVED)
+	var square := MapSquare.new(side)
+	_map_holder.add_child(square)
+	var map := _state.explored_map(_state.zone_id)
+	square.set_map(map)
+	var marks := MapMarks.of_zone(zone, _state.world_flags, Wells.dry_ids(_state))
+	square.set_marks(marks)
+	if hero_position.is_valid():
+		square.show_hero(hero_position.call())
+	var legend := VBoxContainer.new()
+	legend.add_theme_constant_override("separation", 4)
+	_map_holder.add_child(legend)
+	_add_legend_row(legend, MapSquare.MARKER_COLOR, "Tú")
+	for kind in MapMarks.kinds_in(MapMarks.seen(marks, map)):
+		_add_legend_row(legend, MapMarks.COLORS[kind], MapMarks.NAMES[kind])
+
+
+func _add_legend_row(legend: VBoxContainer, color: Color, text: String) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	legend.add_child(row)
+	var swatch := ColorRect.new()
+	swatch.color = color
+	swatch.custom_minimum_size = Vector2.ONE * MAP_LEGEND_SWATCH
+	swatch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(swatch)
+	var label := _label(text, Color.WHITE)
+	label.add_theme_font_size_override("font_size", UiStyle.TEXT_SIZE)
+	row.add_child(label)
 
 
 func _build_items(stack: VBoxContainer) -> void:
