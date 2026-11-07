@@ -188,21 +188,33 @@ static func is_valid(data: Dictionary) -> bool:
 	for field in HERO_FIELDS:
 		if not (hero as Dictionary).get(field) is float:
 			return false
+	if not _valid_hero_ranges(hero):
+		return false
 	var inventory: Variant = data.get("inventory")
 	if not inventory is Dictionary:
 		return false
 	for count: Variant in (inventory as Dictionary).values():
-		if not count is float:
+		if not (count is float and count >= 0.0):
 			return false
 	var quest: Variant = data.get("quest")
-	if not (quest is Dictionary and quest.get("stage") is float and quest.get("kills") is float):
+	if not (quest is Dictionary and quest.get("stage") is float and quest.get("kills") is float
+			and quest.kills >= 0.0):
 		return false
-	if not data.get("gold") is float:
+	if not (data.get("gold") is float and data.gold >= 0.0):
 		return false
 	var pos: Variant = data.get("position")
 	if not (pos is Array and pos.size() == 2 and pos[0] is float and pos[1] is float):
 		return false
-	return data.get("play_time") is float
+	return data.get("play_time") is float and data.play_time >= 0.0
+
+
+## Numbers a played game can't reach: below zero, a level off the table, a dead hero.
+static func _valid_hero_ranges(hero: Dictionary) -> bool:
+	for field in HERO_FIELDS:
+		if hero[field] < 0.0:
+			return false
+	return hero.level >= 1.0 and hero.level <= Leveling.MAX_LEVEL \
+		and hero.hp >= 1.0 and hero.hp <= hero.max_hp and hero.mp <= hero.max_mp
 
 
 ## EVOLUTION_VERSION field: an Array of EnemyLibrary ids.
@@ -228,7 +240,7 @@ static func _valid_wells(data: Dictionary) -> bool:
 	if not wells is Dictionary:
 		return false
 	for id: Variant in wells:
-		if not (id is String and wells[id] is float):
+		if not (id is String and wells[id] is float and wells[id] >= 0.0):
 			return false
 	return true
 
@@ -305,7 +317,7 @@ static func _valid_quests(data: Dictionary) -> bool:
 			return false
 		var entry: Variant = quests[id]
 		if not (entry is Dictionary and entry.get("stage") is float \
-				and entry.get("count") is float):
+				and entry.get("count") is float and entry.count >= 0.0):
 			return false
 	return true
 
@@ -324,7 +336,8 @@ static func _valid_story(data: Dictionary) -> bool:
 	if not stats is Dictionary:
 		return false
 	for key in ["battles", "steps", "gold"]:
-		if not (stats as Dictionary).get(key) is float:
+		var value: Variant = (stats as Dictionary).get(key)
+		if not (value is float and value >= 0.0):
 			return false
 	return true
 

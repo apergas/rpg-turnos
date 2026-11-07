@@ -5,7 +5,9 @@ class_name TitleScreen extends Node
 ## and creates a Game for the new or loaded session (new_game / continue_game); a new
 ## game first asks the hero's name (NameEntry, over the meadow). When the Game emits
 ## quit_to_title it frees it and shows the title again. A finished save shows
-## "Continuar (partida terminada)".
+## "Continuar (partida terminada)"; a save that can't be used shows
+## "Continuar (partida dañada)" disabled, and a new game asks before replacing a save
+## that still works.
 ## With `-- --autoplay` the name entry types AUTOPLAY_NAME by itself and the new game
 ## starts at once, without the menu. With `--autoplay-save` too, going back to the title
 ## loads the save straight away.
@@ -14,6 +16,7 @@ signal new_game
 signal continue_game
 
 const GAME_SCENE := preload("res://scenes/game/game.tscn")
+const DAMAGED_TEXT := "Continuar (partida dañada)"
 ## The name the autoplay types (an accent, to try the grid's last row).
 const AUTOPLAY_NAME := "Rocío"
 const TITLE_TEXT := "Villaclaro"
@@ -47,6 +50,8 @@ var _options_button: Button
 var _options_window: PanelContainer
 var _options_backdrop: Control
 var _options_panel: OptionsPanel
+var _confirm_window: PanelContainer
+var _confirm_no: Button
 var _name_entry: NameEntry
 var _difficulty_window: DifficultyWindow
 var _title_label: Label
@@ -77,7 +82,7 @@ func _ready() -> void:
 	add_child(_audio)
 	_audio.set_volumes(_options.music_volume, _options.sfx_volume)
 	_build_fade()
-	new_game.connect(_open_name_entry)
+	new_game.connect(_on_new_game)
 	continue_game.connect(func() -> void: _start_game(_load_save()))
 	_open_title()
 	if _autoplay:
@@ -96,6 +101,10 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _confirm_window and _confirm_window.visible and event.is_action_pressed("ui_cancel"):
+		get_viewport().set_input_as_handled()
+		_cancel_new_game_confirm()
+		return
 	if _options_window and _options_window.visible and event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
 		_options_panel.back()
@@ -128,6 +137,8 @@ func _close_title() -> void:
 	_options_window = null
 	_options_backdrop = null
 	_options_panel = null
+	_confirm_window = null
+	_confirm_no = null
 	_name_entry = null
 	_difficulty_window = null
 	_title_label = null
@@ -143,6 +154,46 @@ func _load_save() -> Dictionary:
 	if save.is_empty() and SaveStore.has_save():
 		return {"unreadable": true}
 	return save
+
+
+## The save Continuar would load: {} when there is none or it can't be used.
+func _usable_save() -> Dictionary:
+	var save := SaveStore.load_game()
+	return save if SaveData.is_valid(save) else {}
+
+
+## Nueva partida: asks first when it would replace a save that still works.
+func _on_new_game() -> void:
+	if _starting or _name_entry != null:
+		return
+	if _continue_button.disabled:
+		_open_name_entry()
+	else:
+		_open_new_game_confirm()
+
+
+func _open_new_game_confirm() -> void:
+	_audio.play_sfx(SfxLibrary.ACCEPT)
+	_menu_window.hide()
+	_title_label.hide()
+	_menu_center.offset_top = 0
+	_confirm_window.show()
+	_options_backdrop.show()
+	_focus(_confirm_no)
+
+
+func _close_new_game_confirm() -> void:
+	_confirm_window.hide()
+	_options_backdrop.hide()
+	_menu_center.offset_top = _menu_top()
+
+
+func _cancel_new_game_confirm() -> void:
+	_audio.play_sfx(SfxLibrary.CANCEL)
+	_close_new_game_confirm()
+	_title_label.show()
+	_menu_window.show()
+	_focus(_continue_button)
 
 
 ## The menu gives way to the NameEntry; its name starts a new game, Volver brings the
@@ -290,8 +341,11 @@ func _build_menu() -> void:
 	start.pressed.connect(func() -> void: new_game.emit())
 	menu.add_child(start)
 	_continue_button = _button("Continuar")
-	_continue_button.disabled = not SaveStore.has_save()
-	var story: Variant = SaveStore.load_game().get("story")
+	var saved := _usable_save()
+	_continue_button.disabled = saved.is_empty()
+	if saved.is_empty() and SaveStore.has_save():
+		_continue_button.text = DAMAGED_TEXT
+	var story: Variant = saved.get("story")
 	if story is Dictionary and story.get("finished", false) == true:
 		_continue_button.text = "Continuar (partida terminada)"
 	_continue_button.pressed.connect(func() -> void: continue_game.emit())
@@ -310,7 +364,11 @@ func _build_menu() -> void:
 	_options_backdrop = Control.new()
 	_options_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_options_backdrop.gui_input.connect(func(event: InputEvent) -> void:
-		if UiStyle.is_outside_tap(event):
+		if not UiStyle.is_outside_tap(event):
+			return
+		if _confirm_window.visible:
+			_cancel_new_game_confirm()
+		else:
 			_options_panel.back())
 	_options_backdrop.hide()
 	root.add_child(_options_backdrop)
@@ -322,6 +380,25 @@ func _build_menu() -> void:
 	_options_panel.setup(_options, _audio)
 	_options_panel.closed.connect(_close_options)
 	_options_window.add_child(_options_panel)
+	_confirm_window = BattleHud.make_window()
+	_confirm_window.hide()
+	center.add_child(_confirm_window)
+	var confirm_box := VBoxContainer.new()
+	confirm_box.add_theme_constant_override("separation", 8)
+	_confirm_window.add_child(confirm_box)
+	var confirm_text := Label.new()
+	confirm_text.text = "La partida guardada se borrará.
+¿Empezar una nueva?"
+	confirm_text.add_theme_font_size_override("font_size", FONT_SIZE)
+	confirm_box.add_child(confirm_text)
+	var yes := _button("Sí, empezar de nuevo")
+	yes.pressed.connect(func() -> void:
+		_close_new_game_confirm()
+		_open_name_entry())
+	confirm_box.add_child(yes)
+	_confirm_no = _button("No")
+	_confirm_no.pressed.connect(_cancel_new_game_confirm)
+	confirm_box.add_child(_confirm_no)
 	_focus(_continue_button if not _continue_button.disabled else start)
 
 
