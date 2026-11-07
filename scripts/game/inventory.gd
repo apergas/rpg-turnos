@@ -7,6 +7,7 @@ const POTION := "potion"
 const ETHER := "ether"
 const ANTIDOTE := "antidote"
 const WING := "wing"
+const INCENSE := "incienso"
 const SETA := "seta"
 const SEED_ATTACK := "semilla_fuerza"
 const SEED_DEFENSE := "semilla_defensa"
@@ -18,7 +19,8 @@ const SEEDS: Array[String] = [SEED_ATTACK, SEED_DEFENSE, SEED_SPEED]
 ## name and article (for "una Poción"); effect "hp" (heals value HP), "mp" (restores
 ## value MP), "cure" (removes the status named by value), "travel" (the Ala de viaje:
 ## Game takes the hero to the last village visited and leaves a portal there that leads
-## back once), "seed" (adds SEED_BONUS to the Combatant field named by value) or "quest"
+## back once), "repel" (the Incienso: no random encounters for value metres; GameState
+## counts them), "seed" (adds SEED_BONUS to the Combatant field named by value) or "quest"
 ## (of no use: someone is asking for it); price in gold (Shop sells at it and
 ## buys back at half); battle / field: usable in battle / from the pause menu; text: what
 ## it does, shown in the shop, in Objetos and in battle.
@@ -32,6 +34,9 @@ const ITEMS := {
 	WING: {"name": "Ala de viaje", "article": "un", "effect": "travel", "value": 0,
 		"price": 25, "battle": false, "field": true,
 		"text": "Te lleva al último lugar seguro y deja un portal para volver una vez."},
+	INCENSE: {"name": "Incienso", "article": "un", "effect": "repel", "value": 200,
+		"price": 20, "battle": false, "field": true,
+		"text": "Sin combates durante 200 m."},
 	SETA: {"name": "Seta", "article": "una", "effect": "quest", "value": 0, "price": 0,
 		"battle": false, "field": false,
 		"text": "De las que saltan. Alguien de Villaclaro las anda buscando."},
@@ -46,7 +51,7 @@ const ITEMS := {
 		"text": "Sube la VEL en 2 para siempre."},
 }
 ## Order of the item lists.
-const IDS: Array[String] = [POTION, ETHER, ANTIDOTE, WING, SEED_ATTACK, SEED_DEFENSE,
+const IDS: Array[String] = [POTION, ETHER, ANTIDOTE, WING, INCENSE, SEED_ATTACK, SEED_DEFENSE,
 	SEED_SPEED, SETA]
 ## Why an Ala de viaje can't be used in a village.
 const IN_TOWN := "Ya estás en un lugar seguro"

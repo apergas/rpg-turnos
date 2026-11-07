@@ -16,6 +16,7 @@ signal new_game
 signal continue_game
 
 const GAME_SCENE := preload("res://scenes/game/game.tscn")
+const SAVE_INFO_COLOR := Color(0.85, 0.85, 0.9)
 const DAMAGED_TEXT := "Continuar (partida dañada)"
 ## The name the autoplay types (an accent, to try the grid's last row).
 const AUTOPLAY_NAME := "Rocío"
@@ -405,6 +406,13 @@ func _build_menu() -> void:
 		_continue_button.text = "Continuar (partida terminada)"
 	_continue_button.pressed.connect(func() -> void: continue_game.emit())
 	menu.add_child(_continue_button)
+	if not saved.is_empty():
+		var info := Label.new()
+		info.text = SaveData.summary_line(saved)
+		info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		info.add_theme_font_size_override("font_size", UiStyle.TEXT_SIZE)
+		info.add_theme_color_override("font_color", SAVE_INFO_COLOR)
+		menu.add_child(info)
 	_options_button = _button("Opciones")
 	_options_button.pressed.connect(_open_options)
 	menu.add_child(_options_button)

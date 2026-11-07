@@ -5,7 +5,9 @@
 [resource]
 script = ExtResource("1_zone")
 id = "castillo_patio"
-display_name = "el castillo"
+display_name = "Castillo de la Niebla"
+short_name = "Castillo"
+floor_name = "Patio"
 number = 4
 half_size = Vector2(34, 30)
 ground_color = Color(0.3, 0.29, 0.32, 1)
@@ -92,6 +94,7 @@ start_pos = Vector3(0, 0, 20)
 start_radius = 26.0
 encounter_grace = 4.0
 encounter_chance = 0.04
+exit_level = 17
 music = "castle"
 village_music = "village"
 sky_top = Color(0.26, 0.24, 0.36, 1)

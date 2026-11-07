@@ -14,7 +14,9 @@ wells = [{
 "pos": Vector3(-16, 0, -12)
 }]
 id = "mina_2"
-display_name = "la mina"
+display_name = "Mina abandonada"
+short_name = "Mina"
+floor_name = "Planta 2"
 number = 3
 half_size = Vector2(30, 26)
 ground_color = Color(0.24, 0.21, 0.19, 1)
@@ -24,6 +26,7 @@ rare_enemy = "slime_metal"
 rare_chance = 0.25
 encounter_grace = 4.0
 encounter_chance = 0.04
+exit_level = 13
 music = "mine"
 village_music = "village"
 haze = Color(0.03, 0.03, 0.05, 1)

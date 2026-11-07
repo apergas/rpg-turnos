@@ -5,7 +5,8 @@
 [resource]
 script = ExtResource("1_zone")
 id = "bosque"
-display_name = "el bosque"
+display_name = "Bosque del Norte"
+short_name = "Bosque"
 number = 2
 half_size = Vector2(30, 40)
 outer_margin = 6.0
@@ -134,6 +135,7 @@ start_pos = Vector3(0, 0, 35)
 start_radius = 18.0
 encounter_grace = 5.0
 encounter_chance = 0.025
+exit_level = 9
 music = "forest"
 village_music = "village"
 sky_top = Color(0.28, 0.45, 0.75, 1)

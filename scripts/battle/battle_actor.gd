@@ -48,6 +48,9 @@ const ACTION_SPEED := 1.3
 const WALK_SPEED := 1.8
 ## Strength of the additive flash on hits, spells and heals.
 const FLASH_ALPHA := 0.6
+## The soft glow over a figure being aimed at (set_highlight()).
+const HIGHLIGHT_COLOR := Color(1.0, 0.95, 0.6)
+const HIGHLIGHT_ALPHA := 0.22
 ## Animation played for each role, the same for both KayKit characters.
 const CHARACTER_ANIMS := {
 	"idle": "Idle",
@@ -434,6 +437,8 @@ var _meshes: Array[MeshInstance3D] = []
 ## Slime materials only (faded on defeat); the KayKit materials are left as imported.
 var _materials: Array[StandardMaterial3D] = []
 var _flash: StandardMaterial3D
+var _highlight: StandardMaterial3D
+var _highlighted := false
 ## Characters only; null for slimes.
 var _anim: AnimationPlayer
 var _anims: Dictionary = {}
@@ -490,6 +495,8 @@ func _ready() -> void:
 	_flash.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	_flash.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	_flash.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	_highlight = _flash.duplicate() as StandardMaterial3D
+	_highlight.albedo_color = Color(HIGHLIGHT_COLOR, HIGHLIGHT_ALPHA)
 	reset()
 
 
@@ -1155,11 +1162,20 @@ static func _tint_mesh(mi: MeshInstance3D, color: Color) -> void:
 		mi.set_surface_override_material(i, tinted)
 
 
-## Additive overlay on every mesh, so it works on the imported materials too.
+## Additive overlay on every mesh, so it works on the imported materials too. Off, the
+## figure keeps its highlight if it is being aimed at.
 func _set_flash(on: bool, color := Color.WHITE) -> void:
 	_flash.albedo_color = Color(color, FLASH_ALPHA)
 	for mi in _meshes:
-		mi.material_overlay = _flash if on else null
+		mi.material_overlay = _flash if on else (_highlight if _highlighted else null)
+
+
+## A soft glow over the figure while the player aims at it; a flash still shows over it.
+func set_highlight(on: bool) -> void:
+	_highlighted = on
+	for mi in _meshes:
+		if mi.material_overlay != _flash:
+			mi.material_overlay = _highlight if on else null
 
 
 func _set_alpha(alpha: float) -> void:

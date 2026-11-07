@@ -32,8 +32,13 @@ const THRONE := "R"
 const STAIRS_SAFE_RADIUS := 6.0
 
 @export var id := ""
-## Name shown on the exit signs that lead here and in notices ("la pradera").
+## The place's name, shown big on arriving (World): "Mina abandonada".
 @export var display_name := ""
+## Short name: the line over the map square ("Mina · Planta 2") and the save's line on the
+## title ("Rocío · Nv 12 · Mina · 1:05").
+@export var short_name := ""
+## The floor of a place with several maps ("Planta 2", "Patio"), "" for none.
+@export var floor_name := ""
 ## Zone number of the "Equilibrio" tables (1 meadow, 2 forest...).
 @export var number := 1
 
@@ -133,6 +138,9 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## EncounterMeter: free meters after each battle, then this chance per meter on grass.
 @export var encounter_grace := 5.0
 @export var encounter_chance := 0.025
+## The level a hero usually has on leaving this zone (about its boss's): from
+## EncounterMeter.LEVEL_GAP levels past it, its monsters come half as often. 0: never.
+@export var exit_level := 0
 
 @export_group("Look and sound")
 @export var music := "map"
@@ -295,3 +303,13 @@ func exit_by_id(exit_id: String) -> Dictionary:
 		if exit.id == exit_id:
 			return exit
 	return {}
+
+
+## The banner on arriving, in one line: "Mina abandonada · Planta 2".
+func banner_text() -> String:
+	return display_name if floor_name == "" else "%s · %s" % [display_name, floor_name]
+
+
+## The line over the map square and the Mapa page's title: "Mina · Planta 2".
+func map_label() -> String:
+	return short_name if floor_name == "" else "%s · %s" % [short_name, floor_name]

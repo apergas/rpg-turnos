@@ -1,5 +1,20 @@
 # Registro de cambios
 
+## 1.2.0 (2026)
+
+- Al llegar a cada lugar aparece su nombre, y una línea junto al mapa pequeño dice dónde estás: "Mina · Planta 2".
+- Página "Mapa" en el menú, que también se abre tocando el mapa pequeño, con su leyenda.
+- En el mapa se ven las escaleras de subida y de bajada, la palanca, las rejas y la llave.
+- La acción dice con quién: "Hablar · Granjero", "Comprar · Mercader".
+- En la mina, el objetivo dice el siguiente paso: bajar, la palanca, la llave o el Golem.
+- Quien te pidió cazar o recoger algo te dice cuánto llevas.
+- Con cuatro niveles más que los de una zona, sus monstruos salen la mitad de veces.
+- Nuevo objeto, el Incienso: 20 G en todas las tiendas, sin combates durante 200 m.
+- Curar y Curar+ se pueden usar desde el menú, en la página Hechizos.
+- En combate, el enemigo apuntado brilla y enseña su nombre.
+- Móvil: la primera vez, una línea explica cómo andar con el dedo.
+- Bajo "Continuar" se ve qué partida se carga: nombre, nivel, lugar y tiempo.
+
 ## 1.1.1 (2026)
 
 - En la web, si el navegador corta los gráficos, un aviso pide recargar: la partida está guardada.

@@ -75,7 +75,7 @@ func heal_full() -> void:
 ## The next thing the story asks: the village quest while it lasts, then the chapter's goal.
 func main_goal() -> String:
 	var line := quest.status_text()
-	return line if line != "" else story.goal_text(world_flags)
+	return line if line != "" else story.goal_text(world_flags, zone_id)
 
 
 ## The lines of the mission lists (status window, pause menu): the main goal first, then
@@ -86,9 +86,46 @@ func current_missions() -> Array[String]:
 	return missions
 
 
-## Uses an item outside battle, from the pause menu; see Inventory.use().
+## The spells the hero can cast from the pause menu: the heals (Curar, Curar+).
+func field_spells() -> Array[Skill]:
+	var spells: Array[Skill] = []
+	for skill in hero.skills:
+		if skill.kind == Skill.HEAL:
+			spells.append(skill)
+	return spells
+
+
+## Why skill can't be cast from the menu now ("" if it can).
+func spell_problem(skill: Skill) -> String:
+	if hero.mp < skill.mp_cost:
+		return "Faltan PM"
+	if hero.hp >= hero.max_hp:
+		return "PV al máximo"
+	return ""
+
+
+## Casts a heal outside battle, as in battle: pays its MP and recovers up to its power.
+## Returns the HP recovered (0: it could not be cast).
+func cast_spell(skill: Skill) -> int:
+	if spell_problem(skill) != "":
+		return 0
+	hero.mp -= skill.mp_cost
+	var amount := mini(skill.power, hero.max_hp - hero.hp)
+	hero.hp += amount
+	return amount
+
+
+## Metres an Incienso still keeps the monsters away (not saved: it ends with the session).
+var repel_m := 0.0
+
+
+## Uses an item outside battle, from the pause menu; see Inventory.use(). An Incienso
+## starts its metres again.
 func use_item(id: String) -> Dictionary:
-	return inventory.use(id, hero, false)
+	var result := inventory.use(id, hero, false)
+	if result.used and result.effect == "repel":
+		repel_m = float(Inventory.ITEMS[id].value)
+	return result
 
 
 ## Copies the loadout's bonuses into the hero (battles read total_attack/defense()).

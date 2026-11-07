@@ -5,7 +5,8 @@
 [resource]
 script = ExtResource("1_zone")
 id = "pradera"
-display_name = "la pradera"
+display_name = "Pradera de Villaclaro"
+short_name = "Pradera"
 number = 1
 half_size = Vector2(30, 30)
 outer_margin = 6.0
@@ -124,6 +125,7 @@ start_pos = Vector3(0, 0, 26)
 start_radius = 20.0
 encounter_grace = 5.0
 encounter_chance = 0.025
+exit_level = 5
 music = "map"
 village_music = "village"
 sky_top = Color(0.32, 0.52, 0.88, 1)

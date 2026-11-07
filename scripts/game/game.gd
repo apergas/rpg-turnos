@@ -66,6 +66,8 @@ const CUTSCENE_PATH := "res://data/cutscenes/%s.tres"
 ## The author shown in the credits.
 const AUTHOR := "apergas"
 const FADE_TIME := 0.3
+const TOUCH_HINT := "Toca el suelo para ir allí, o arrastra el dedo para andar."
+const REPEL_END_NOTICE := "El incienso se ha consumido."
 const HEAL_LINE := "Descansas un momento. PV y PM recuperados."
 const SAVED_NOTICE := "Partida guardada."
 const LOAD_FAILED_NOTICE := "No se pudo cargar la partida. Empiezas de nuevo."
@@ -241,7 +243,17 @@ func _ready() -> void:
 	if not prologue:
 		await _world.freeze(false)
 		_set_busy(false)
+		_show_touch_hint()
 		_check_village_scene()
+
+
+## The first time a phone reaches the map (never on autoplay): how to walk, once for good.
+func _show_touch_hint() -> void:
+	if not Device.is_touch() or _autoplay or _options.touch_hint_seen:
+		return
+	_options.touch_hint_seen = true
+	SaveStore.save_options(_options)
+	_world.show_touch_hint(TOUCH_HINT)
 
 
 func _process(delta: float) -> void:
@@ -303,12 +315,13 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 	_world.chest_opened.connect(_on_chest)
 	_world.well_requested.connect(_on_well)
 	_world.exit_requested.connect(_on_exit)
+	_world.map_requested.connect(_pause.open_map)
 	_world.portal_used.connect(_on_portal)
 	_world.lever_pulled.connect(_on_lever)
 	_world.key_taken.connect(_on_key)
 	_world.door_used.connect(_on_door)
 	_world.village_changed.connect(_on_village_changed)
-	_world.stepped.connect(func() -> void: state.steps += 2)
+	_world.stepped.connect(_on_stepped)
 	_world.set_dry_wells(Wells.dry_ids(state))
 	if entry_id != "":
 		_world.place_at_entry(entry_id)
@@ -617,6 +630,7 @@ func _play_prologue() -> void:
 	_refresh_status()
 	_autosave(false)
 	_set_busy(false)
+	_show_touch_hint()
 	if not _save.is_empty():
 		_world.show_notice(LOAD_FAILED_NOTICE)
 
@@ -838,6 +852,7 @@ func _on_lever() -> void:
 	_world.set_world_flags(state.world_flags)
 	_world.show_notice(LEVER_NOTICE)
 	_autosave(false)
+	_refresh_status()
 
 
 ## The key lying on the floor: into the key items; its flag keeps it taken.
@@ -850,6 +865,7 @@ func _on_key() -> void:
 	_world.set_world_flags(state.world_flags)
 	_world.show_notice(KEY_NOTICE % Inventory.KEY_ITEMS[_zone.floor_key])
 	_autosave(false)
+	_refresh_status()
 
 
 ## A closed gate: the key of the floor opens it (and is used up); otherwise its text.
@@ -866,6 +882,7 @@ func _on_door() -> void:
 	_world.set_world_flags(state.world_flags)
 	_world.show_notice(DOOR_NOTICE % Inventory.KEY_ITEMS[key])
 	_autosave(false)
+	_refresh_status()
 
 
 ## Writes the save file; shows SAVED_NOTICE if notice. Returns the saved data, or an
@@ -923,10 +940,23 @@ func _set_busy(busy: bool) -> void:
 ## Updates the map's status window, the quests' marks and sought figures and the hero's
 ## weapon and shield; on autoplay also prints each new quest line and each change of gold
 ## or equipment.
+## Every STEP_DISTANCE metres walked: two steps for the credits, and the Incienso burns.
+func _on_stepped() -> void:
+	state.steps += 2
+	if state.repel_m <= 0.0:
+		return
+	state.repel_m = maxf(0.0, state.repel_m - World.STEP_DISTANCE)
+	if state.repel_m == 0.0:
+		_world.set_repel(false)
+		_world.show_notice(REPEL_END_NOTICE)
+
+
 func _refresh_status() -> void:
 	var missions := state.current_missions()
 	_world.refresh_status(state.hero, state.inventory.count(Inventory.POTION), state.gold,
 		missions)
+	_world.set_encounter_rate(EncounterMeter.level_rate(state.hero.level, _zone.exit_level))
+	_world.set_repel(state.repel_m > 0.0)
 	_world.set_quest_view(state.quests.markers(_zone.id, state.inventory),
 		state.quests.hidden_figures(_zone.id))
 	var loadout := state.loadout
@@ -1006,6 +1036,7 @@ func _build_pause() -> void:
 	_pause.title_requested.connect(_on_title_requested)
 	_pause.travel_requested.connect(_on_travel_requested)
 	_pause.in_village = func() -> bool: return _world.in_village()
+	_pause.hero_position = func() -> Vector3: return _world.player_position()
 	_pause.state_changed.connect(_refresh_status)
 	_pause.open_changed.connect(func(is_open: bool) -> void:
 		_world.set_status_shown(not is_open))
