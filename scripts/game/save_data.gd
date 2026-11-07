@@ -376,3 +376,15 @@ static func _valid_world(data: Dictionary) -> bool:
 		if not (id is String and Inventory.KEY_ITEMS.has(id)):
 			return false
 	return true
+
+
+## One line about a valid save for the title: "Rocío · Nv 12 · Mina · 1:05" (the hero's
+## name, level, the zone's short name and the play time as h:mm). Older saves without a
+## name or a zone say the default name and the meadow, as apply() would load them.
+static func summary_line(data: Dictionary) -> String:
+	var version := int(data.version)
+	var hero_name: String = data.name if version >= STORY_VERSION else StoryState.DEFAULT_NAME
+	var zone_id: String = data.zone if version >= 4 else "pradera"
+	var minutes := floori(float(data.play_time) / 60.0)
+	return "%s · Nv %d · %s · %d:%02d" % [hero_name, int(data.hero.level),
+		ZoneData.by_id(zone_id).short_name, floori(minutes / 60.0), minutes % 60]
