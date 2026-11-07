@@ -86,6 +86,35 @@ func current_missions() -> Array[String]:
 	return missions
 
 
+## The spells the hero can cast from the pause menu: the heals (Curar, Curar+).
+func field_spells() -> Array[Skill]:
+	var spells: Array[Skill] = []
+	for skill in hero.skills:
+		if skill.kind == Skill.HEAL:
+			spells.append(skill)
+	return spells
+
+
+## Why skill can't be cast from the menu now ("" if it can).
+func spell_problem(skill: Skill) -> String:
+	if hero.mp < skill.mp_cost:
+		return "Faltan PM"
+	if hero.hp >= hero.max_hp:
+		return "PV al máximo"
+	return ""
+
+
+## Casts a heal outside battle, as in battle: pays its MP and recovers up to its power.
+## Returns the HP recovered (0: it could not be cast).
+func cast_spell(skill: Skill) -> int:
+	if spell_problem(skill) != "":
+		return 0
+	hero.mp -= skill.mp_cost
+	var amount := mini(skill.power, hero.max_hp - hero.hp)
+	hero.hp += amount
+	return amount
+
+
 ## Metres an Incienso still keeps the monsters away (not saved: it ends with the session).
 var repel_m := 0.0
 

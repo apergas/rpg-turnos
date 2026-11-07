@@ -25,7 +25,7 @@ const FONT_SIZE := 24
 const TITLE_COLOR := UiStyle.TITLE_COLOR
 const GREY := UiStyle.GREY
 ## Rows of the hero's window: text and page. A new page only needs its row here.
-const HERO_PAGES := [["Estado", "status"], ["Objetos", "items"], ["Equipo", "equipment"],
+const HERO_PAGES := [["Estado", "status"], ["Hechizos", "spells"], ["Objetos", "items"], ["Equipo", "equipment"],
 	["Mapa", "map"], ["Diario", "journal"], ["Bestiario", "bestiary"]]
 ## The Mapa page: the side of its map, and what its title, Volver and the margins leave
 ## out of the screen's height.
@@ -87,6 +87,10 @@ var _equip_slot := ""
 var _journal: JournalPage
 var _bestiary: BestiaryPage
 var _bestiary_button: Button
+var _spell_hp: StatBar
+var _spell_mp: StatBar
+var _cast_box: VBoxContainer
+var _spells_message: Label
 ## Where the hero stands on the map now. Set by Game.
 var hero_position: Callable
 var _map_title: Label
@@ -129,6 +133,7 @@ func _ready() -> void:
 	_window.add_child(stack)
 	_build_main(center)
 	_build_status(stack)
+	_build_spells(stack)
 	_build_items(stack)
 	_build_equipment(stack)
 	_build_map(stack)
@@ -192,7 +197,7 @@ func tour() -> void:
 	available = true
 	await get_tree().create_timer(TOUR_STEP, true).timeout
 	open()
-	for page in ["main", "status", "items", "equipment", "map", "journal", "bestiary", "options"]:
+	for page in ["main", "status", "spells", "items", "equipment", "map", "journal", "bestiary", "options"]:
 		_show_page(page)
 		print("Menú: %s" % page)
 		await get_tree().create_timer(TOUR_STEP, true).timeout
@@ -244,6 +249,9 @@ func _show_page(page: String) -> void:
 			_fill_main()
 		"status":
 			_fill_status()
+		"spells":
+			_set_line(_spells_message, "")
+			_fill_spells()
 		"items":
 			_set_line(_items_message, "")
 			_fill_items()
@@ -647,6 +655,65 @@ func _add_legend_row(legend: VBoxContainer, color: Color, text: String) -> void:
 	var label := _label(text, Color.WHITE)
 	label.add_theme_font_size_override("font_size", UiStyle.TEXT_SIZE)
 	row.add_child(label)
+
+
+const NO_SPELLS := "Aún no conoces hechizos que se puedan usar aquí."
+
+
+func _build_spells(stack: VBoxContainer) -> void:
+	var page := _page_box(stack, "spells", "Hechizos")
+	_spell_hp = StatBar.new(StatBar.HP, STATUS_BAR_WIDTH)
+	page.add_child(_spell_hp)
+	_spell_mp = StatBar.new(StatBar.MP, STATUS_BAR_WIDTH)
+	page.add_child(_spell_mp)
+	_cast_box = VBoxContainer.new()
+	_cast_box.add_theme_constant_override("separation", 8)
+	page.add_child(_cast_box)
+	_spells_message = _label("", Color.WHITE)
+	_spells_message.custom_minimum_size.x = MESSAGE_WIDTH
+	page.add_child(_spells_message)
+	page.add_child(_back_button())
+
+
+## The PV and PM bars and one row per heal the hero knows: name, cost and "Usar" (grey,
+## with the reason, when it can't be cast now).
+func _fill_spells() -> void:
+	for child in _cast_box.get_children():
+		_cast_box.remove_child(child)
+		child.queue_free()
+	var hero := _state.hero
+	_spell_hp.show_hp(hero.hp, hero.max_hp)
+	_spell_mp.show_mp(hero.mp, hero.max_mp)
+	var spells := _state.field_spells()
+	if spells.is_empty():
+		_cast_box.add_child(_label(NO_SPELLS, Color.WHITE))
+		return
+	for skill in spells:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 16)
+		_cast_box.add_child(row)
+		var label := _label("%s  %d PM" % [skill.display_name, skill.mp_cost], Color.WHITE)
+		label.custom_minimum_size = Vector2(260, 0)
+		row.add_child(label)
+		var cast := _button("Usar")
+		var why := _state.spell_problem(skill)
+		cast.disabled = why != ""
+		cast.pressed.connect(_on_cast.bind(skill))
+		row.add_child(cast)
+		if why != "":
+			row.add_child(_label(why, GREY))
+		UiStyle.add_small_text(_cast_box, skill.description)
+
+
+func _on_cast(skill: Skill) -> void:
+	var healed := _state.cast_spell(skill)
+	if healed <= 0:
+		return
+	_sfx(SfxLibrary.HEAL)
+	_fill_spells()
+	_set_line(_spells_message, "Recuperas %d PV." % healed)
+	state_changed.emit()
+	_focus_first_in(_pages["spells"])
 
 
 func _build_items(stack: VBoxContainer) -> void:
