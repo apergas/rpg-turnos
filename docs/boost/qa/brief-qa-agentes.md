@@ -19,7 +19,7 @@ Si este documento contradice el código o los datos del juego, mandan el código
 
 *Villaclaro: la Niebla del Norte* es un RPG por turnos en 3D de un solo jugador, con aire de los Dragon Quest clásicos. Está hecho con Godot 4.7.2 (renderer Compatibility) y solo está en español. Se juega con teclado, ratón o el dedo.
 
-- **Público:** cualquiera con un navegador. Tras la versión 1.0.0, la prioridad del proyecto es el **móvil en apaisado**.
+- **Público:** cualquiera con un navegador. Desde la versión 1.0.0, la prioridad del proyecto es el **móvil en apaisado**.
 - **Plataformas:** web (PWA de un solo hilo en GitHub Pages), Windows y Linux. La vertical del móvil no se admite: debe salir "Gira el móvil".
 - **Duración:** la página del juego promete "unas dos horas". Las partidas automáticas tardan entre 1:00 y 1:16 de tiempo de juego, en Normal. Comprobar esa promesa forma parte del análisis.
 
@@ -43,6 +43,24 @@ Los niveles son aquellos desde los que la partida automática acepta el combate,
 ## 3. Mecánicas básicas
 
 Los valores salen de `data/` y `scripts/` en `develop`.
+
+### Novedades de la 1.1.0
+
+Si algo de abajo lo contradice, manda esto.
+
+- **Casco:** una casilla nueva de equipo, con uno en cada tienda (DEF +2, +3, +5, +7).
+- **Bestiario:** página de la pausa con los 17 enemigos: retrato y nombre los vistos, silueta y "???" el resto.
+- **Hechizos:** Llama se llama Ascuas. Llamarada sustituye a Ascuas y Curar+ a Curar.
+- **Pozos:** cada mapa tiene uno de vida y otro de maná. Llenan y se secan durante 10 combates, ganados o perdidos.
+- **Marcas del mapa:** tiendas amarillas, posadas rosas, pozos rojos o azules (grises si están secos), salidas verdes.
+- **Criaturas:** la Domadora de cada aldea vende una, que combate sola a tu lado y vuelve curada al combate siguiente: Gallina de combate 55 G, Lobezno 190 G, Golem pequeño 490 G, Esqueleto leal 750 G. Solo se lleva una, y la nueva sustituye a la anterior sin devolver dinero.
+- **Tienda:** botón ×5 para objetos. Palo y Ropa se venden por 1 G.
+- **Menús:** tocar fuera de una ventana la cierra o retrocede.
+- **Nueva partida:** pide confirmación si hay una partida guardada que funciona. Una dañada sale como "Continuar (partida dañada)", desactivado.
+- **Objetivo:** el principal va siempre primero. En el móvil, el mapa solo enseña esa línea; las secundarias están en la pausa.
+- **Rótulos:** "Tienda", "Posada" y "Criaturas" sobre esas figuras.
+- **Web:** el título avisa si hay una versión nueva esperando.
+- **Equilibrio:** ATK de Golem de barro 32, Araña 29, Espectro 26, Esqueleto guerrero 43, pícaro 40, mago 32, Golem de piedra 50, Señor de la Niebla 52 y 56 en su segunda fase. Prevalece sobre la tabla de enemigos.
 
 ### Mapa
 
@@ -82,7 +100,7 @@ Por turnos: el héroe contra uno o dos enemigos.
 
 | Hechizo | Nivel | PM | Poder | Tipo |
 |---|---|---|---|---|
-| Llama | 1 | 3 | 16 | Fuego, un objetivo |
+| Ascuas | 1 | 3 | 16 | Fuego, un objetivo |
 | Curar | 3 | 3 | 30 | Curación |
 | Llamarada | 7 | 6 | 28 | Fuego, todos |
 | Rayo | 10 | 8 | 70 | Rayo, un objetivo |
@@ -108,11 +126,11 @@ Los accesorios solo vienen de misiones: Anillo antiveneno y Amuleto de velocidad
 | | Murciélago | 22 | 8 | 2 | 12 | 5 | 4 | Débil a rayo, veneno 20 % |
 | | Seta saltarina | 30 | 9 | 5 | 4 | 6 | 5 | Débil a fuego, esporas de sueño |
 | | Slime de Metal | 40 | 28 | 300 | 30 | 300 | 150 | Raro, solo con su misión |
-| | **Rey Slime** | 128 | 17 | 8 | 7 | 40 | 60 | Jefe, débil a rayo |
+| | **Rey Slime** | 115 | 16 | 8 | 7 | 40 | 60 | Jefe, débil a rayo |
 | Bosque | Lobo | 52 | 16 | 10 | 14 | 12 | 10 | Débil a fuego |
 | | Duende | 45 | 13 | 9 | 10 | 13 | 14 | Débil a rayo, resiste fuego |
 | | Planta carnívora | 70 | 18 | 13 | 5 | 15 | 12 | Débil a fuego, veneno 15 % |
-| | **Bruja del bosque** | 170 | 23 | 14 | 12 | 120 | 200 | Jefa, resiste fuego, se cura 1 vez |
+| | **Bruja del bosque** | 150 | 21 | 14 | 12 | 120 | 200 | Jefa, resiste fuego, se cura 1 vez |
 | Mina | Golem de barro | 69 | 27 | 26 | 4 | 26 | 24 | Resiste rayo |
 | | Araña | 47 | 26 | 18 | 16 | 24 | 22 | Débil a fuego, veneno 15 % |
 | | Espectro | 43 | 23 | 30 | 12 | 28 | 30 | Débil a fuego, resiste hielo |
@@ -132,7 +150,7 @@ No bloquean nada ni dan EXP.
 | Setas para el guiso | Tablón de Villaclaro | 3 setas: la Seta saltarina las suelta al 50 % | Granjero | 40 G, Semilla de fuerza |
 | Lobos hambrientos | Tablón del bosque | 5 lobos | Leñadora | 120 G, Anillo antiveneno |
 | El gato perdido | Niña | Encontrar al gato en el claro oeste | Niña | 80 G, Semilla de agilidad |
-| El Slime de Metal | Tablón del refugio | Vencerlo: 25 % de los encuentros de la pradera mientras dure la misión | Al vencer | Amuleto de velocidad |
+| El Slime de Metal | Tablón del refugio | Vencerlo: 25 % de los encuentros de la mina mientras dure la misión | Al vencer | Amuleto de velocidad |
 | El explorador perdido | Tablón del campamento | Encontrarlo en el patio | Soldado | 250 G, 2 Éter, Semilla de defensa |
 
 ### Guardado
@@ -156,7 +174,7 @@ No lo reportes como defecto, aunque puedes opinar en la sección de diseño:
 
 ### 4.1. Qué versión pruebas
 
-**Anota siempre el commit o la URL en tu informe.** El título dice "1.0.0" tanto antes como después de los arreglos de la sección 5, así que el número no distingue las versiones.
+**Anota siempre el commit o la URL en tu informe.** Los informes anteriores de esta carpeta probaron la 1.0.0; esta guía describe la 1.1.0, la que dice el título. Con versiones iguales, el número no distingue las versiones.
 
 | Vía | Contenido |
 |---|---|
@@ -251,6 +269,10 @@ Para no repetir lo que ya se sabe. El detalle está en `docs/boost/qa/2026-11-06
 | QA-09 | Al elegir objetivo solo queda "Volver" | Emulador |
 | QA-10 | Se ignoran los toques 0,4 s tras cerrar un diálogo | Emulador |
 
+### Arreglado en la 1.1.0, tras el informe multiplataforma
+
+QAM-01, 02, 03, 04, 05, 07, 09, 10, 11, 12, 13 (solo el nombre del icono), 14, 15, 16, 17, 18 y 19, de `2026-11-06-qa-multiplataforma.md`. Compruébalos.
+
 ### Abierto
 
 Si aportas datos nuevos, repórtalo citando el problema conocido.
@@ -290,7 +312,7 @@ Marca cada prueba: **OK**, **Falla** (con el ID del hallazgo), **Parcial** o **N
 |---|---|---|
 | T-01 | Abrir el juego sin datos | Título con versión. Continuar desactivado. Sin errores en la consola |
 | T-02 | Con partida guardada | Continuar activo y carga donde estaba |
-| T-03 | Partida terminada | "Continuar (terminada)": carga en Villaclaro y se puede pasear |
+| T-03 | Partida terminada | "Continuar (partida terminada)": carga en Villaclaro y se puede pasear |
 | T-04 | 📱 Android fuera de pantalla completa | Fila "Pantalla completa". Al pulsarla, se activa y la fila desaparece |
 | T-05 | 📱 Cargar o girar a vertical en cualquier pantalla | "Gira el móvil". Al volver a apaisado, sigue donde estaba |
 
@@ -340,7 +362,7 @@ Marca cada prueba: **OK**, **Falla** (con el ID del hallazgo), **Parcial** o **N
 | T-40 | Comprar sin oro | Fila gris, "Falta oro" |
 | T-41 | Comprar equipo y equipárselo | Comparación correcta con lo puesto. ATK y DEF cambian |
 | T-42 | Vender | Mitad del precio. No deja vender lo puesto ni lo que no vale nada |
-| T-43 | Posada | Gratis, cura PV y PM, guarda |
+| T-43 | Posada | Sin preguntar: "Descansa un poco.", gratis, cura PV y PM, guarda. Descansado: "Se te ve en forma." |
 | T-44 | Abrir cada cofre | Da su contenido una vez, también tras recargar |
 | T-45 | Ala de viaje, portal y vuelta | Viaje y vuelta correctos. Dentro de una aldea, gris. Una segunda Ala cierra el portal anterior |
 | T-46 | Morir con un portal abierto | El portal sigue abierto |
@@ -391,6 +413,21 @@ Marca cada prueba: **OK**, **Falla** (con el ID del hallazgo), **Parcial** o **N
 | T-85 | Sonido tras el primer toque | Suena música y efectos |
 | T-86 | Desplegar una versión nueva con una pestaña vieja abierta | La actualización llega al cerrar todo, y la partida se conserva |
 | T-87 | Partida larga, 30 min o más | Sin caída de FPS, memoria creciente ni cuelgue |
+
+### Novedades de la 1.1.0
+
+| ID | Prueba | Esperado |
+|---|---|---|
+| T-90 | "Nueva partida" con una partida guardada | Pregunta con el foco en "No". "No", Esc y tocar fuera no borran nada |
+| T-91 | Guardado roto o con oro negativo | "Continuar (partida dañada)" desactivado, y "Nueva partida" pasa por nombre y dificultad |
+| T-92 | Volver desde la dificultad | Regresa al nombre con lo escrito |
+| T-93 | Equipar y quitar un casco | Cambia la DEF y se ve en el héroe, en el mapa y en combate |
+| T-94 | Bestiario tras varios combates | Los vistos con retrato, el resto en silueta. Cuenta n/17 |
+| T-95 | Beber de un pozo con PV o PM a medias | Llena y se seca; vuelve tras 10 combates. Con todo lleno no se gasta |
+| T-96 | Comprar dos criaturas | La segunda avisa de "Sustituye a...". Una inferior sale como "Ya tienes una mejor" |
+| T-97 | Criatura en combate hasta que caiga | Ataca sola, recibe golpes, caer no acaba el combate, vuelve curada al siguiente |
+| T-98 | 📱 Combate con textos grandes y criatura | Estado y menú no se montan |
+| T-99 | Web: publicar otra versión con el juego ya abierto y recargar | Aviso "Hay una versión nueva. Recargar"; al pulsarlo carga la nueva |
 
 ## 8. Pruebas exploratorias
 

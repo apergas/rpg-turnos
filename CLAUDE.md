@@ -69,6 +69,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `scripts/audio/sfx_library.gd` (`SfxLibrary`) — sfxr-style effects as parameter dictionaries (`SOUNDS`: wave, pitch slide or notes, time, volume, decay; `DOOR` is the rumble of the lever and the gates); `build(id)` cached; `clear_cache()`.
 - `scripts/audio/audio_director.gd` (`AudioDirector`, `Node`, `PROCESS_MODE_ALWAYS`) — not an autoload; two music players with a 0.5 s cross-fade (`play_music(id)`, `stop_music()`), 6 effect players (`play_sfx(id)`), `set_volumes(music, sfx)`. Muted on autoplay (prints `Música: <id>`); headless and `--write-movie` runs never call `play()` (their audio drivers would leak the playbacks at exit). Empties the caches when it leaves the tree.
 - `docs/boost/specs/`, `docs/boost/plans/` — design specs and implementation plans.
+- `docs/boost/qa/` — QA reports, their screenshots and `brief-qa-agentes.md`, the brief to hand a QA agent; keep it in step with the game's mechanics.
 
 ## Conventions
 
