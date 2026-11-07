@@ -89,6 +89,8 @@ const MECHANISM_RADIUS := 2.2
 const NPC_TAP_RADIUS := 1.2
 ## A tap on a figure is measured at this height, so its feet and its head both count.
 const TAP_HEIGHT := 0.9
+## Height of a figure's head and hat, the other height a tap on one is measured at.
+const FIGURE_TOP_TAP_HEIGHT := 2.2
 ## Taps on the map are ignored this long after a dialogue or a window closes.
 const TAP_GUARD_MS := 400
 ## Kinds of the things the player can use on the map, and their prompts.
@@ -155,6 +157,8 @@ const LANTERN_HEIGHT := 2.4
 const QUEST_MARK_COLOR := Color(1.0, 0.85, 0.2)
 const QUEST_MARK_GAP := 0.35
 const QUEST_MARK_BOB := 0.12
+const FIGURE_SIGN_GAP := 0.25
+const FIGURE_SIGN_COLOR := Color(1.0, 0.95, 0.8)
 ## Mission lines wrap past this width, so the status window stays at the side of the screen.
 const MISSION_WIDTH := 420.0
 
@@ -232,6 +236,7 @@ var _step_m := 0.0
 var _quest_marks := {}
 var _hidden_figures: Array[String] = []
 var _mark_labels := {}
+var _figure_signs: Array[Label3D] = []
 
 
 func _ready() -> void:
@@ -248,6 +253,7 @@ func _ready() -> void:
 	for npc: Dictionary in zone.npcs:
 		_figures[npc.name] = _add_figure(BattleActor.Look[npc.look], npc.pos, npc.yaw, 0.4,
 			1.8)
+		_add_figure_sign(npc)
 	if zone.boss_id != "":
 		_boss = _add_figure(EnemyLibrary.look(zone.boss_id), zone.boss_pos, 180.0, 1.0, 2.0)
 	for id in Chests.of_zone(zone.id):
@@ -576,6 +582,8 @@ func begin_cutscene() -> void:
 	_map_square.hide()
 	_notice_window.hide()
 	_show_quest_marks()
+	for label in _figure_signs:
+		label.hide()
 
 
 ## Puts every figure back on its spot, gives the camera back to the hero and the
@@ -587,6 +595,8 @@ func end_cutscene() -> void:
 	_status_column.show()
 	_map_square.show()
 	_show_quest_marks()
+	for label in _figure_signs:
+		label.show()
 	_meter.reset()
 	_was_near = {}
 	await freeze(false)
@@ -690,6 +700,33 @@ func _show_quest_marks() -> void:
 			label = _build_mark(npc.name)
 		label.text = text
 		label.visible = text != "" and not _player.scripted
+
+
+## What a figure offers, over its head: its model alone doesn't tell.
+static func _figure_sign_text(npc: Dictionary) -> String:
+	match npc.kind:
+		"shop":
+			return "Criaturas" if Shop.sells_ally(npc.id) else "Tienda"
+		"inn":
+			return "Posada"
+	return ""
+
+
+func _add_figure_sign(npc: Dictionary) -> void:
+	var text := _figure_sign_text(npc)
+	if text == "":
+		return
+	var label := Label3D.new()
+	label.text = text
+	label.font_size = 40
+	label.pixel_size = 0.01
+	label.outline_size = 10
+	label.modulate = FIGURE_SIGN_COLOR
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	label.position.y = figure_actor(npc.name).top_height() + FIGURE_SIGN_GAP
+	(_figures[npc.name] as Node3D).add_child(label)
+	_figure_signs.append(label)
 
 
 func _build_mark(figure_name: String) -> Label3D:
@@ -854,14 +891,18 @@ func _nearest_use(pos: Vector3) -> Dictionary:
 
 
 ## The thing a click or tap at a screen point means ({} if none): within NPC_TAP_RADIUS of it
-## at TAP_HEIGHT.
+## at TAP_HEIGHT, or, for a figure, at FIGURE_TOP_TAP_HEIGHT too.
 func _tapped_use(screen: Vector2) -> Dictionary:
-	var point: Variant = Plane(Vector3.UP, TAP_HEIGHT).intersects_ray(
-		_camera.project_ray_origin(screen), _camera.project_ray_normal(screen))
-	if point == null:
+	var origin := _camera.project_ray_origin(screen)
+	var normal := _camera.project_ray_normal(screen)
+	var low: Variant = Plane(Vector3.UP, TAP_HEIGHT).intersects_ray(origin, normal)
+	var high: Variant = Plane(Vector3.UP, FIGURE_TOP_TAP_HEIGHT).intersects_ray(origin, normal)
+	if low == null or high == null:
 		return {}
 	for use in _uses():
-		if _flat_distance(point, use.pos) <= NPC_TAP_RADIUS:
+		var on_top: bool = use.kind in NPC_KINDS.values() \
+			and _flat_distance(high, use.pos) <= NPC_TAP_RADIUS
+		if on_top or _flat_distance(low, use.pos) <= NPC_TAP_RADIUS:
 			return {"kind": use.kind, "id": use.id, "index": use.index}
 	return {}
 
