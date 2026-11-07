@@ -91,6 +91,8 @@ const NPC_TAP_RADIUS := 1.2
 const TAP_HEIGHT := 0.9
 ## Height of a figure's head and hat, the other height a tap on one is measured at.
 const FIGURE_TOP_TAP_HEIGHT := 2.2
+## Narrow: the head is slim, and a wider circle up there takes taps on the ground behind it.
+const FIGURE_TOP_TAP_RADIUS := 0.7
 ## Taps on the map are ignored this long after a dialogue or a window closes.
 const TAP_GUARD_MS := 400
 ## Kinds of the things the player can use on the map, and their prompts.
@@ -158,6 +160,9 @@ const QUEST_MARK_COLOR := Color(1.0, 0.85, 0.2)
 const QUEST_MARK_GAP := 0.35
 const QUEST_MARK_BOB := 0.12
 const FIGURE_SIGN_GAP := 0.25
+const FIGURE_SIGN_FONT := 48
+const FIGURE_SIGN_PIXEL := 0.012
+const FIGURE_SIGN_OUTLINE := 14
 const FIGURE_SIGN_COLOR := Color(1.0, 0.95, 0.8)
 ## Mission lines wrap past this width, so the status window stays at the side of the screen.
 const MISSION_WIDTH := 420.0
@@ -718,9 +723,9 @@ func _add_figure_sign(npc: Dictionary) -> void:
 		return
 	var label := Label3D.new()
 	label.text = text
-	label.font_size = 40
-	label.pixel_size = 0.01
-	label.outline_size = 10
+	label.font_size = FIGURE_SIGN_FONT
+	label.pixel_size = FIGURE_SIGN_PIXEL
+	label.outline_size = FIGURE_SIGN_OUTLINE
 	label.modulate = FIGURE_SIGN_COLOR
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.no_depth_test = true
@@ -901,7 +906,7 @@ func _tapped_use(screen: Vector2) -> Dictionary:
 		return {}
 	for use in _uses():
 		var on_top: bool = use.kind in NPC_KINDS.values() \
-			and _flat_distance(high, use.pos) <= NPC_TAP_RADIUS
+			and _flat_distance(high, use.pos) <= FIGURE_TOP_TAP_RADIUS
 		if on_top or _flat_distance(low, use.pos) <= NPC_TAP_RADIUS:
 			return {"kind": use.kind, "id": use.id, "index": use.index}
 	return {}
