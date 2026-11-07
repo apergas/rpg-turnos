@@ -2,6 +2,8 @@
 
 Fecha: 2026-11-07. Solo quedan `main` (`9a7f8be`) y `develop` (`9ebd279`), en local y en `RPG`; `develop` solo lleva por delante de `main` la limpieza de `docs/boost/qa`. La versión 1.1.0 está publicada en Pages y probada a mano por el usuario, sin tag y sin subir a itch.io, que quedan aparcados.
 
+**Lo que queda por hacer está en `docs/boost/documento-maestro.md`**, que reúne las conclusiones de las pasadas de QA sobre la 1.0.0 y la 1.1.0 y los pendientes de este documento. Si algo de aquí lo contradice, manda aquel.
+
 El estado sale del historial de git y de los planes en `docs/boost/plans/`. "Publicado" significa que está en `main`, que se despliega en GitHub Pages.
 
 ## Resumen
