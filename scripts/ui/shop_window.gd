@@ -239,7 +239,6 @@ func _add_buy_row(id: String) -> void:
 		bulk.alignment = HORIZONTAL_ALIGNMENT_CENTER
 		bulk.disabled = not Shop.can_buy_bulk(_state, id)
 		bulk.pressed.connect(_buy_bulk.bind(id))
-		bulk.set_meta("bulk", id)
 		row.add_child(bulk)
 		UiStyle.add_description(row, id)
 	if why != "":

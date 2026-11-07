@@ -3,8 +3,8 @@ class_name BattleActor extends Node3D
 ## skeletons are KayKit models with their own animations (the skeletons get their
 ## weapons from KayKit too, and the Señor de la Niebla a purple aura); the slimes, the
 ## bat, the mushroom, the wolf,
-## the goblin, the carnivorous plant, the golems, the spider and the specter are
-## low-poly figures built in code (see LOOKS).
+## the goblin, the carnivorous plant, the golems, the spider, the specter and the
+## creatures that fight beside the hero are low-poly figures built in code (see LOOKS).
 ## Set look before add_child. The figure faces -Z, so look_at() the opponent. Every
 ## play_* can be awaited: it returns when its animation and its tween are done.
 

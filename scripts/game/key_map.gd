@@ -72,12 +72,6 @@ static func keys_text(action: String) -> String:
 	return ", ".join(names)
 
 
-## The name of the first key of action, for the map's prompts.
-static func first_key_name(action: String) -> String:
-	var codes := keys_of(action)
-	return _key_name(codes[0]) if not codes.is_empty() else ""
-
-
 ## What the key at that physical position says on the player's keyboard layout.
 static func _key_name(code: int) -> String:
 	if OS.has_feature("web") or DisplayServer.get_name() == "headless":

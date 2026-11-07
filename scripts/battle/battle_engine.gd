@@ -7,8 +7,8 @@ class_name BattleEngine extends RefCounted
 ## Commands are dictionaries built with cmd_attack(target), cmd_skill(skill, target),
 ## cmd_item(id), cmd_defend(), cmd_flee() and cmd_none() (the hero is asleep). Each enemy
 ## picks its own command when its turn comes, from its ai_weights. Fighters are ints:
-## BattleEvent.HERO, BattleEvent.ALLY or an index into `enemies`. An enemy that picks "charge" spends its
-## turn gathering strength and its next turn is a blow of CHARGE_MULT times the damage
+## BattleEvent.HERO, BattleEvent.ALLY or an index into `enemies`. An enemy that picks
+## "charge" spends its turn gathering strength and its next turn is a blow of CHARGE_MULT times the damage
 ## that never misses or crits (Defender still halves it). A boss with a next_phase that
 ## reaches 0 HP rises once with that phase's stats (a PHASE event) instead of falling. An
 ## enemy that picks "escape" runs away and the battle ends as FLED (the Slime de Metal,

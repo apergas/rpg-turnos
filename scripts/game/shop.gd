@@ -175,7 +175,7 @@ static func sell_count(state: GameState, id: String) -> int:
 	return state.inventory.count(id)
 
 
-## Why id can't be sold ("" if it can): worn and none in the bag, or worth nothing.
+## Why id can't be sold ("" if it can): worn and none in the bag, or not for sale.
 static func sell_problem(state: GameState, id: String) -> String:
 	if sell_count(state, id) <= 0:
 		return WORN if state.loadout.is_worn(id) else NOT_CARRIED

@@ -149,10 +149,10 @@ Una Domadora nueva en cada aldea vende una criatura con la ventana de la tienda.
 
 | Zona | Criatura | PV | ATK | DEF | VEL | Precio | Figura |
 |---|---|---|---|---|---|---|---|
-| Pradera | Gallina de combate | 25 | 9 | 3 | 12 | 70 G | Nueva, low-poly en código |
-| Bosque | Lobezno | 45 | 17 | 10 | 14 | 250 G | `WOLF`, más pequeño |
-| Mina | Golem pequeño | 70 | 26 | 30 | 4 | 650 G | `MUD_GOLEM`, más pequeño |
-| Castillo | Esqueleto leal | 90 | 38 | 28 | 12 | 1000 G | `SKELETON_WARRIOR`, teñido |
+| Pradera | Gallina de combate | 25 | 9 | 3 | 12 | 55 G | Nueva, low-poly en código |
+| Bosque | Lobezno | 45 | 17 | 10 | 14 | 190 G | `WOLF`, más pequeño |
+| Mina | Golem pequeño | 70 | 26 | 30 | 4 | 490 G | `MUD_GOLEM`, más pequeño |
+| Castillo | Esqueleto leal | 90 | 38 | 28 | 12 | 750 G | `SKELETON_WARRIOR`, teñido |
 
 Con esos valores hace alrededor del 40 % del daño del héroe. Son orientativos: se ajustan en el bloque 4.
 

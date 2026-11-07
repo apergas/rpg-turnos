@@ -56,7 +56,7 @@ const EQUIPMENT := {
 	"escudo_platino": {"name": "Escudo de platino", "article": "un", "slot": SHIELD,
 		"bonus": 10, "price": 300, "zone": 4, "mesh": "Spike_Shield"},
 	"casco_cobre": {"name": "Casco de cobre", "article": "un", "slot": HELMET, "bonus": 2,
-		"price": 20, "zone": 1, "mesh": "", "tint": Color(0.85, 0.5, 0.3)},
+		"price": 20, "zone": 1, "mesh": "", "tint": Color(1.4, 0.58, 0.18)},
 	"casco_hierro": {"name": "Casco de hierro", "article": "un", "slot": HELMET, "bonus": 3,
 		"price": 70, "zone": 2, "mesh": "", "tint": Color(0.7, 0.7, 0.72)},
 	"casco_acero": {"name": "Casco de acero", "article": "un", "slot": HELMET, "bonus": 5,

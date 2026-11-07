@@ -21,7 +21,7 @@ const RESULT_SCENE := preload("res://scenes/ui/battle_result.tscn")
 const HERO_POS := Vector3(-1.0, 0, 1.8)
 const ENEMY_POS := Vector3(0.6, 0, -2.4)
 ## Where the creature stands, beside the hero.
-const ALLY_POS := Vector3(-2.3, 0, 0.8)
+const ALLY_POS := Vector3(0.7, 0, 1.4)
 ## With two enemies, each stands this far to one side of ENEMY_POS.
 const PAIR_OFFSET := Vector3(1.5, 0, 0)
 const CAMERA_POS := Vector3(0.8, 2.6, 6.0)
