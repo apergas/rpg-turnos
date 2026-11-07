@@ -118,6 +118,8 @@ const KEY := "key"
 const DOOR := "door"
 const PORTAL := "portal"
 const BOARD := "board"
+## Between the verb and who it is done with: "Hablar · Granjero".
+const PROMPT_JOIN := " · "
 const PROMPTS := {
 	TALK: "Hablar",
 	NPC: "Hablar",
@@ -416,8 +418,16 @@ func _on_tapped(screen: Vector2) -> void:
 
 
 ## Shows what is in reach: the prompt, or on phones the use button.
+## What the prompt (or the phone's use button) says: the verb and, for a figure, its name.
+func _prompt_text(use: Dictionary) -> String:
+	var text: String = PROMPTS[use.kind]
+	if use.index >= 0:
+		text += PROMPT_JOIN + String(zone.npcs[use.index].name)
+	return text
+
+
 func _show_prompt(near: Dictionary) -> void:
-	var text: String = PROMPTS[near.kind]
+	var text := _prompt_text(near)
 	if _use_button:
 		_use_button.text = text
 		_use_button.show()
