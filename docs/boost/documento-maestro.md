@@ -95,7 +95,7 @@ La mina fue lo que más costó a los dos QA.
 | M-19 | Fichas del bestiario (E02) | El álbum solo enseña la figura | Tocar un cromo abre su ficha: zona donde vive, debilidades y resistencias, y si lo has vencido. Pide guardar también los vencidos, con versión nueva de guardado; en un guardado anterior, los vistos cuentan como vencidos | M |
 | M-20 | Varias partidas (Héctor) | Una sola ranura: probar otra dificultad borra la partida | Tres ranuras, con los datos de M-16 en cada una. "Continuar" abre la lista de ranuras; "Nueva partida" pide ranura y pregunta antes de sobrescribir una ocupada. El autoguardado escribe en la ranura en curso. Un guardado antiguo pasa a la ranura 1. Cambia `SaveStore` y el título | M |
 | M-21 | Exportar e importar la partida (QAM-08) | En iOS, la app instalada no ve la partida jugada en Safari | Con un archivo: en la web se descarga y se sube con el selector del navegador; en escritorio, con una ventana de archivo. Se exporta e importa una ranura, y lo importado pasa por `SaveData.is_valid()` | M |
-| M-22 | Reto tras el final (E03) | El equipo final no tiene uso después de los créditos | Tras los créditos, en el salón del trono aparece el **Eco de la Niebla**: una fase, pensado para nivel 20 con el equipo de platino, más duro que el Señor, con un golpe cargado como el del Golem. Premio, una sola vez: la **Corona de bruma**, accesorio único con ATK +5 y DEF +5. Se puede repetir el combate. No cambia los créditos | L |
+| M-22 | Reto tras el final (E03) | El equipo final no tiene uso después de los créditos | Tras los créditos, en el salón del trono aparece el **Eco de la Niebla**: una fase, pensado para nivel 20 con el equipo de platino, más duro que el Señor, con un golpe cargado como el del Golem. Premio, una sola vez: el **Yelmo de bruma**, un casco con cuernos de estilo vikingo, DEF +8 y ATK +5, que se pone en el acto en lugar del casco que lleves. Se puede repetir el combate. No cambia los créditos y no entra en el bestiario | L |
 
 ---
 
@@ -169,7 +169,7 @@ Propuesta de grupos, con los 17 de hoy (en cursiva los que habría que crear):
 Notas para cuando se diseñe:
 - Hacen falta unos 6 enemigos nuevos, con figura, retrato y sitio en las zonas.
 - Hoy hay dos accesorios: el Anillo antiveneno va a Anillo y el Amuleto de velocidad a Amuleto. Un guardado antiguo pasa su accesorio a la casilla que le toque.
-- Choca con el plan de la 1.4.0: mete al Eco de la Niebla en el bestiario como enemigo 18 y su premio, la Corona de bruma, es un accesorio.
+- El Eco de la Niebla (1.4.0) ya queda fuera del bestiario, y su premio es un casco: no choca con la partición en Anillo y Amuleto.
 - Encaja con las fichas del bestiario (M-19, plan de la 1.3.0): el grupo puede salir en la ficha.
 
 ---
