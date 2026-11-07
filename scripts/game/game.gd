@@ -66,6 +66,7 @@ const CUTSCENE_PATH := "res://data/cutscenes/%s.tres"
 ## The author shown in the credits.
 const AUTHOR := "apergas"
 const FADE_TIME := 0.3
+const TOUCH_HINT := "Toca el suelo para ir allí, o arrastra el dedo para andar."
 const REPEL_END_NOTICE := "El incienso se ha consumido."
 const HEAL_LINE := "Descansas un momento. PV y PM recuperados."
 const SAVED_NOTICE := "Partida guardada."
@@ -242,7 +243,17 @@ func _ready() -> void:
 	if not prologue:
 		await _world.freeze(false)
 		_set_busy(false)
+		_show_touch_hint()
 		_check_village_scene()
+
+
+## The first time a phone reaches the map (never on autoplay): how to walk, once for good.
+func _show_touch_hint() -> void:
+	if not Device.is_touch() or _autoplay or _options.touch_hint_seen:
+		return
+	_options.touch_hint_seen = true
+	SaveStore.save_options(_options)
+	_world.show_touch_hint(TOUCH_HINT)
 
 
 func _process(delta: float) -> void:
@@ -619,6 +630,7 @@ func _play_prologue() -> void:
 	_refresh_status()
 	_autosave(false)
 	_set_busy(false)
+	_show_touch_hint()
 	if not _save.is_empty():
 		_world.show_notice(LOAD_FAILED_NOTICE)
 

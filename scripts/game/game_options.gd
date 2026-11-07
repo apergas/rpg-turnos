@@ -1,7 +1,7 @@
 class_name GameOptions extends RefCounted
 ## Player options, kept apart from the save game (SaveStore.save_options()): music and
 ## effects volume (0..1), text speed, combat speed, graphics quality, camera shake,
-## fullscreen and large text. Pure: converts to and from a Dictionary; anything missing from
+## fullscreen, large text and whether the phone's walking hint was shown. Pure: converts to and from a Dictionary; anything missing from
 ## an older file keeps its default.
 
 enum TextSpeed { SLOW, NORMAL, FAST }
@@ -28,6 +28,8 @@ var quality := Quality.HIGH
 var camera_shake := true
 var fullscreen := false
 var large_text := false
+## The phone's line on how to walk was shown once (World.show_touch_hint()).
+var touch_hint_seen := false
 ## What the player reassigned: KeyMap action -> key codes.
 var keys := {}
 
@@ -46,7 +48,8 @@ func combat_scale() -> float:
 func to_dict() -> Dictionary:
 	return {"music": music_volume, "sfx": sfx_volume, "text_speed": text_speed,
 		"combat_speed": combat_speed, "quality": quality, "camera_shake": camera_shake,
-		"fullscreen": fullscreen, "large_text": large_text, "keys": keys}
+		"fullscreen": fullscreen, "large_text": large_text, "touch_hint_seen": touch_hint_seen,
+		"keys": keys}
 
 
 ## Options from a Dictionary read from disk; missing or wrong values keep the default.
@@ -70,6 +73,8 @@ static func from_dict(data: Dictionary) -> GameOptions:
 		options.fullscreen = data.fullscreen
 	if data.get("large_text") is bool:
 		options.large_text = data.large_text
+	if data.get("touch_hint_seen") is bool:
+		options.touch_hint_seen = data.touch_hint_seen
 	options.keys = _valid_keys(data.get("keys"))
 	return options
 

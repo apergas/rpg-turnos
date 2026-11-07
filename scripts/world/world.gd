@@ -71,6 +71,8 @@ const USE_BUTTON_FONT := 28
 const USE_BUTTON_SIZE := Vector2(180, 72)
 ## The place's line by the map square.
 const PLACE_OUTLINE := 6
+## The phone's walking hint: wraps here and sits over the use button's row.
+const TOUCH_HINT_WIDTH := 480.0
 ## The place's name, big, the first time the map is the player's (World.freeze(false)).
 const BANNER_TOP := 110.0
 const BANNER_NAME_FONT := 48
@@ -228,6 +230,8 @@ var _dry_wells: Array[String] = []
 var _notice: Label
 var _notice_window: PanelContainer
 var _place_label: Label
+var _hint_window: PanelContainer
+var _hint: Label
 var _banner: VBoxContainer
 var _banner_tween: Tween
 var _banner_shown := false
@@ -318,6 +322,8 @@ func _physics_process(_delta: float) -> void:
 		Vegetation.set_pusher(_grass, _player.global_position)
 	RenderingServer.global_shader_parameter_set(HERO_POS_PARAM, _player.global_position)
 	_map_square.follow(_player.global_position)
+	if _hint_window and _hint_window.visible and _player.last_step_m > 0.0:
+		_hint_window.hide()
 	_marker.visible = _player.move_target != null
 	if _marker.visible:
 		_marker.position = _player.move_target
@@ -611,6 +617,8 @@ func begin_cutscene() -> void:
 	_status_column.hide()
 	_map_square.hide()
 	_place_label.hide()
+	if _hint_window:
+		_hint_window.hide()
 	_notice_window.hide()
 	if _banner_tween:
 		_banner_tween.kill()
@@ -1377,6 +1385,25 @@ func _build_touch_controls() -> void:
 	_use_button.offset_left = -UI_EDGE - USE_BUTTON_SIZE.x
 	_use_button.offset_top = -UI_EDGE - USE_BUTTON_SIZE.y
 	_use_button.pressed.connect(func() -> void: _use(_nearest_use(_player.global_position)))
+
+
+## A line at the bottom until the hero first walks (phones, once: Game decides).
+func show_touch_hint(text: String) -> void:
+	if _hint_window == null:
+		_hint_window = BattleHud.make_window()
+		_hint_window.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_ui.add_child(_hint_window)
+		_hint_window.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+		_hint_window.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		_hint_window.grow_vertical = Control.GROW_DIRECTION_BEGIN
+		_hint_window.offset_left = 0.0
+		_hint_window.offset_right = 0.0
+		_hint_window.offset_bottom = -(UI_EDGE + USE_BUTTON_SIZE.y + 12.0)
+		_hint_window.offset_top = _hint_window.offset_bottom
+		_hint = _label()
+		_hint_window.add_child(_hint)
+	BattleHud.fit_label(_hint, text, TOUCH_HINT_WIDTH)
+	_hint_window.show()
 
 
 ## Two lines centred near the top: the place and, under it, its floor.
