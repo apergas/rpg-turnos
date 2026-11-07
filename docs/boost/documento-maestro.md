@@ -71,21 +71,21 @@ La mina fue lo que más costó a los dos QA.
 
 | ID | Qué | Por qué | Propuesta | Talla |
 |---|---|---|---|---|
-| M-07 | Nombre del lugar | En la mina no se sabe en qué planta estás | 1) Al entrar en una zona, un rótulo grande unos segundos: "Mina abandonada · Planta 2". 2) Encima del mapa pequeño, una línea fija con el nombre corto. Cada `ZoneData` gana un `display_name` | S |
-| M-08 | Mapa grande y marcas de la mazmorra | Ver una escalera en el mapa pequeño no dice cómo llegar a ella | 1) Página "Mapa" en la pausa (fila nueva en la ventana del héroe), y tocar el mapa pequeño la abre: el mapa explorado de la zona a pantalla casi completa, con la posición del héroe. 2) Marcas nuevas: escalera de subida y de bajada con colores distintos, palanca (otro color cuando ya está bajada), reja (otro color cuando ya está abierta) y llave | M |
-| M-09 | Progreso en las frases de espera (I07) | Una misión de recoger o cazar no dice si avanza | Las frases de espera de una misión `GATHER` o `HUNT` terminan con "Llevas 1 de 3." Así no hace falta abrir el Diario | S |
-| M-10 | Nombre en la acción (I03) | Con dos figuras cerca, no se sabe con quién vas a hablar | La acción dice con quién: "Hablar · Granjero", "Comprar · Mercader". En el móvil, el nombre va en el botón de usar | S |
-| M-11 | Objetivo más claro en la mina | "Vence al Golem de piedra" no dice cómo llegar | Que el objetivo principal cambie según la planta y las banderas: "Baja a la segunda planta", "Busca la palanca", "Busca la llave de la reja", "Vence al Golem de piedra". Sale de `StoryState.goal_text()` con las banderas de la mina | S |
+| M-07 | Nombre del lugar — **hecho en 1.2.0** | En la mina no se sabe en qué planta estás | 1) Al entrar en una zona, un rótulo grande unos segundos: "Mina abandonada · Planta 2". 2) Encima del mapa pequeño, una línea fija con el nombre corto. Cada `ZoneData` gana un `display_name` | S |
+| M-08 | Mapa grande y marcas de la mazmorra — **hecho en 1.2.0** | Ver una escalera en el mapa pequeño no dice cómo llegar a ella | 1) Página "Mapa" en la pausa (fila nueva en la ventana del héroe), y tocar el mapa pequeño la abre: el mapa explorado de la zona a pantalla casi completa, con la posición del héroe. 2) Marcas nuevas: escalera de subida y de bajada con colores distintos, palanca (otro color cuando ya está bajada), reja (otro color cuando ya está abierta) y llave | M |
+| M-09 | Progreso en las frases de espera (I07) — **hecho en 1.2.0** | Una misión de recoger o cazar no dice si avanza | Las frases de espera de una misión `GATHER` o `HUNT` terminan con "Llevas 1 de 3." Así no hace falta abrir el Diario | S |
+| M-10 | Nombre en la acción (I03) — **hecho en 1.2.0** | Con dos figuras cerca, no se sabe con quién vas a hablar | La acción dice con quién: "Hablar · Granjero", "Comprar · Mercader". En el móvil, el nombre va en el botón de usar | S |
+| M-11 | Objetivo más claro en la mina — **hecho en 1.2.0** | "Vence al Golem de piedra" no dice cómo llegar | Que el objetivo principal cambie según la planta y las banderas: "Baja a la segunda planta", "Busca la palanca", "Busca la llave de la reja", "Vence al Golem de piedra". Sale de `StoryState.goal_text()` con las banderas de la mina | S |
 
 ### Prioridad 3: comodidad
 
 | ID | Qué | Por qué | Propuesta | Talla |
 |---|---|---|---|---|
-| M-12 | Menos combates por zonas ya superadas (Héctor, I08) | Volver a curarse o a comprar se hace pesado | 1) Si el héroe supera en 4 niveles el nivel de salida de la zona, los encuentros salen a la mitad. Es la regla de Dragon Quest: los débiles no se acercan. 2) Un objeto nuevo, **Incienso** (20 G, en todas las tiendas): sin encuentros durante 200 m. La partida automática no lo compra | S |
-| M-13 | Curar fuera de combate (I10) | Para curarse con PM hay que entrar en una pelea | En la ventana del héroe de la pausa, una fila nueva "Hechizos" con Curar y Curar+ y su coste en PM. Se gasta igual que en combate | S |
-| M-14 | Objetivo más visible en combate (Héctor) | La flecha amarilla se pierde en algunos fondos | Además de la flecha, el enemigo apuntado se ilumina un poco y su nombre sale encima de su barra | S |
-| M-15 | Primeros pasos en el móvil (Héctor) | No queda claro cómo moverse con el dedo | La primera vez que se entra al mapa en un móvil, una línea: "Toca el suelo para ir allí, o arrastra el dedo para andar." Desaparece al andar. Se guarda en las opciones | S |
-| M-16 | Datos de la partida en el título (Héctor) | "Continuar" no dice qué partida vas a cargar | Bajo "Continuar", una línea pequeña: "Rocío · Nv 12 · Mina · 1:05". Sale del propio guardado. En la 1.3.0 pasa a cada ranura (M-20) | S |
+| M-12 | Menos combates por zonas ya superadas (Héctor, I08) — **hecho en 1.2.0** | Volver a curarse o a comprar se hace pesado | 1) Si el héroe supera en 4 niveles el nivel de salida de la zona, los encuentros salen a la mitad. Es la regla de Dragon Quest: los débiles no se acercan. 2) Un objeto nuevo, **Incienso** (20 G, en todas las tiendas): sin encuentros durante 200 m. La partida automática no lo compra | S |
+| M-13 | Curar fuera de combate (I10) — **hecho en 1.2.0** | Para curarse con PM hay que entrar en una pelea | En la ventana del héroe de la pausa, una fila nueva "Hechizos" con Curar y Curar+ y su coste en PM. Se gasta igual que en combate | S |
+| M-14 | Objetivo más visible en combate (Héctor) — **hecho en 1.2.0** | La flecha amarilla se pierde en algunos fondos | Además de la flecha, el enemigo apuntado se ilumina un poco y su nombre sale encima de su barra | S |
+| M-15 | Primeros pasos en el móvil (Héctor) — **hecho en 1.2.0** | No queda claro cómo moverse con el dedo | La primera vez que se entra al mapa en un móvil, una línea: "Toca el suelo para ir allí, o arrastra el dedo para andar." Desaparece al andar. Se guarda en las opciones | S |
+| M-16 | Datos de la partida en el título (Héctor) — **hecho en 1.2.0** | "Continuar" no dice qué partida vas a cargar | Bajo "Continuar", una línea pequeña: "Rocío · Nv 12 · Mina · 1:05". Sale del propio guardado. En la 1.3.0 pasa a cada ranura (M-20) | S |
 
 ### Prioridad 4: cierre y contenido
 
