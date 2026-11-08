@@ -12,7 +12,7 @@ Solo recoge lo que tiene sentido hacer. Lo descartado va al final, con el motivo
 **Cómo se usa:**
 
 - Cada punto tiene un ID (`M-nn`). Cuando un punto entra en un diseño o en un plan, se enlaza aquí. Cuando se publica, se marca como hecho con su versión.
-- Los demás documentos se quedan como registro histórico. Si contradicen a este, manda este.
+- Los demás documentos están en `docs/legacy/` como registro histórico. Si contradicen a este, manda este.
 
 ---
 
@@ -192,9 +192,9 @@ Notas para cuando se diseñe:
 
 | Versión | Contenido | Plan | Estado |
 |---|---|---|---|
-| **1.1.1** | M-01 a M-06 y M-23 a M-25: errores, confusiones y lo heredado | [plan](plans/2026-11-07-version-1-1-1.md) | Hecha |
-| **1.2.0** | M-07 a M-16: orientación y comodidad | [plan](plans/2026-11-07-version-1-2-0.md) | Hecha |
-| **1.3.0** | M-18 a M-21: colección y partidas | [plan](plans/2026-11-07-version-1-3-0.md) | Hecha |
-| **1.4.0** | M-22: el Eco de la Niebla | [plan](plans/2026-11-07-version-1-4-0.md) | Hecha |
+| **1.1.1** | M-01 a M-06 y M-23 a M-25: errores, confusiones y lo heredado | [plan](../legacy/plans/2026-11-07-version-1-1-1.md) | Hecha |
+| **1.2.0** | M-07 a M-16: orientación y comodidad | [plan](../legacy/plans/2026-11-07-version-1-2-0.md) | Hecha |
+| **1.3.0** | M-18 a M-21: colección y partidas | [plan](../legacy/plans/2026-11-07-version-1-3-0.md) | Hecha |
+| **1.4.0** | M-22: el Eco de la Niebla | [plan](../legacy/plans/2026-11-07-version-1-4-0.md) | Hecha |
 
 Las cuatro versiones están implementadas y publicadas. Las pruebas a mano y en móvil real que quedaron pendientes están en los informes de cada versión. Las ideas de la sección 4 no tienen plan hasta que se elija alguna; I-01 dejaría sin sentido M-12.
