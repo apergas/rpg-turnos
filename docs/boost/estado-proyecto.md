@@ -2,7 +2,7 @@
 
 Fecha: 2026-11-08. `develop` (`916819b`) lleva implementadas las versiones 1.1.1, 1.2.0, 1.3.0 y 1.4.0 de `docs/boost/documento-maestro.md` (M-01 a M-16 y M-18 a M-25; M-17 descartado). Nada de eso está subido: `main` y la web siguen en la 1.1.0. Sin tag ni itch.io. Las pruebas que piden un móvil real o una mano están en los informes de cada versión y en el resumen de abajo.
 
-Incidente: el 2026-11-07, durante la 1.2.0, el subagente implementador borró por error `save.json` y `options.json` de la carpeta real de escritorio (`%APPDATA%\Godotpp_userdatapg-turnos\`), sin copia. Desde entonces las reglas obligan a poner `APPDATA` en el mismo comando y a borrar solo con rutas literales del scratchpad.
+Incidente: el 2026-11-07, durante la 1.2.0, el subagente implementador borró por error `save.json` y `options.json` de la carpeta real de escritorio (`%APPDATA%/Godot/app_userdata/rpg-turnos/`), sin copia. Desde entonces las reglas obligan a poner `APPDATA` en el mismo comando y a borrar solo con rutas literales del scratchpad.
 
 **Lo que queda por hacer está en `docs/boost/documento-maestro.md`**, que reúne las conclusiones de las pasadas de QA sobre la 1.0.0 y la 1.1.0 y los pendientes de este documento. Si algo de aquí lo contradice, manda aquel.
 
