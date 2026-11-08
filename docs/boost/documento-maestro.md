@@ -1,6 +1,6 @@
 # Documento maestro
 
-Fecha: 2026-11-07. Versión publicada: **1.1.0**.
+Fecha: 2026-11-08. Versión publicada: **1.4.0**. Todos los puntos M-nn están hechos (M-17, descartado); lo que queda son las ideas de la sección 4.
 
 Este documento es la base de trabajo a partir de ahora. Reúne:
 
@@ -190,11 +190,11 @@ Notas para cuando se diseñe:
 
 ## 6. Orden y planes
 
-| Versión | Contenido | Plan |
-|---|---|---|
-| **1.1.1** | M-01 a M-06 y M-23 a M-25: errores, confusiones y lo heredado | [plan](plans/2026-11-07-version-1-1-1.md) |
-| **1.2.0** | M-07 a M-16: orientación y comodidad | [plan](plans/2026-11-07-version-1-2-0.md) |
-| **1.3.0** | M-18 a M-21: colección y partidas | [plan](plans/2026-11-07-version-1-3-0.md) |
-| **1.4.0** | M-22: el Eco de la Niebla | [plan](plans/2026-11-07-version-1-4-0.md) |
+| Versión | Contenido | Plan | Estado |
+|---|---|---|---|
+| **1.1.1** | M-01 a M-06 y M-23 a M-25: errores, confusiones y lo heredado | [plan](plans/2026-11-07-version-1-1-1.md) | Hecha |
+| **1.2.0** | M-07 a M-16: orientación y comodidad | [plan](plans/2026-11-07-version-1-2-0.md) | Hecha |
+| **1.3.0** | M-18 a M-21: colección y partidas | [plan](plans/2026-11-07-version-1-3-0.md) | Hecha |
+| **1.4.0** | M-22: el Eco de la Niebla | [plan](plans/2026-11-07-version-1-4-0.md) | Hecha |
 
-Cada plan da por hecho el anterior. Las ideas de la sección 4 no tienen plan hasta que se elija alguna.
+Las cuatro versiones están implementadas y publicadas. Las pruebas a mano y en móvil real que quedaron pendientes están en los informes de cada versión. Las ideas de la sección 4 no tienen plan hasta que se elija alguna; I-01 dejaría sin sentido M-12.
