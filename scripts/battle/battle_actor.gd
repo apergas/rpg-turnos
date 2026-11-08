@@ -1,7 +1,7 @@
 class_name BattleActor extends Node3D
 ## 3D figure of a fighter or a villager. The hero, the villagers, the witch and the
 ## skeletons are KayKit models with their own animations (the skeletons get their
-## weapons from KayKit too, and the Señor de la Niebla a purple aura); the slimes, the
+## weapons from KayKit too, and the Señor de la Niebla a purple aura and the Eco de la Niebla a pale cyan one); the slimes, the
 ## bat, the mushroom, the wolf,
 ## the goblin, the carnivorous plant, the golems, the spider, the specter and the
 ## creatures that fight beside the hero are low-poly figures built in code (see LOOKS).
@@ -11,7 +11,7 @@ class_name BattleActor extends Node3D
 enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPER, WOLF,
 	GOBLIN, PLANT, WITCH, MUD_GOLEM, STONE_GOLEM, SPIDER, SPECTER, SKELETON_WARRIOR,
 	SKELETON_ROGUE, SKELETON_MAGE, FOG_LORD, FARMER, METAL_SLIME, BOARD, CAT, CHILD,
-	CHICKEN, WOLF_CUB, MINI_GOLEM, LOYAL_SKELETON, TAMER }
+	CHICKEN, WOLF_CUB, MINI_GOLEM, LOYAL_SKELETON, TAMER, FOG_ECHO }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -34,6 +34,8 @@ const LEFT_HAND_BONE := "handslot.l"
 ## The Señor de la Niebla's aura: a see-through purple ball around him; in his second
 ## phase (play_phase()) it grows and thickens.
 const FOG_AURA_COLOR := Color(0.55, 0.25, 0.85)
+## The Eco de la Niebla's aura: pale cyan, what is left of the Señor's fog.
+const ECHO_AURA_COLOR := Color(0.45, 0.85, 0.9)
 const FOG_AURA_ALPHA := 0.2
 const FOG_AURA_PHASE_ALPHA := 0.38
 ## KayKit characters are 2.47 units tall (helmet included); 0.65 makes the hero 1.6 m.
@@ -436,6 +438,18 @@ const LOOKS := {
 		"tint": Color(0.78, 0.7, 0.95),
 		"aura": FOG_AURA_COLOR,
 	},
+	# The boss after the ending: the skeleton warrior at 1.6 times the size, ash grey with
+	# a blue cast, in a pale cyan aura.
+	Look.FOG_ECHO: {
+		"scene": SKELETON_WARRIOR,
+		"scale": CHARACTER_SCALE * 1.6,
+		"top": 3.1,
+		"hide": [],
+		"anims": SKELETON_ANIMS,
+		"props": {RIGHT_HAND_BONE: SKELETON_BLADE, LEFT_HAND_BONE: SKELETON_SHIELD},
+		"tint": Color(0.62, 0.72, 0.82),
+		"aura": ECHO_AURA_COLOR,
+	},
 }
 
 @export var look := Look.HERO
@@ -468,7 +482,7 @@ var _sway: Node3D
 ## materials with their resting opacity ([material, alpha]).
 var _hover: Node3D
 var _ghosts: Array = []
-## Señor de la Niebla only: his aura ball (null for the rest).
+## Figures with an aura (the Señor de la Niebla, the Eco): its ball (null for the rest).
 var _aura: MeshInstance3D
 
 
