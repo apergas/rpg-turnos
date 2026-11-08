@@ -388,6 +388,7 @@ func _on_encounter(boss: bool) -> void:
 		state.gold_earned += battle.engine.gold_won
 		var quest_was_on := state.quest.stage != Quest.Stage.DONE
 		for enemy in battle.engine.enemies:
+			state.defeat_enemy(enemy.id)
 			state.quest.on_victory(enemy.id)
 			if enemy.is_boss:
 				notice = _boss_notice(enemy)

@@ -49,6 +49,26 @@ const LOOKS := {
 
 
 ## The data of enemy id (not duplicated: BattleScene does it), or null.
+## Where enemy_id lives: the names of the zones whose encounters, rare enemy or boss bring
+## it, each once, in ZoneData.IDS order ("Mina abandonada" once for its three floors).
+static func zone_names(enemy_id: String) -> Array[String]:
+	var names: Array[String] = []
+	for zone_id in ZoneData.IDS:
+		var zone := ZoneData.by_id(zone_id)
+		if _lives_in(zone, enemy_id) and not names.has(zone.display_name):
+			names.append(zone.display_name)
+	return names
+
+
+static func _lives_in(zone: ZoneData, enemy_id: String) -> bool:
+	if zone.boss_id == enemy_id or zone.rare_enemy == enemy_id:
+		return true
+	for formation: Array in zone.formations + zone.start_formations:
+		if formation.has(enemy_id):
+			return true
+	return false
+
+
 static func data(enemy_id: String) -> Combatant:
 	return ENEMIES.get(enemy_id) as Combatant
 

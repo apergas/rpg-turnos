@@ -29,6 +29,8 @@ const HERO_PAGES := [["Estado", "status"], ["Hechizos", "spells"], ["Objetos", "
 	["Mapa", "map"], ["Diario", "journal"], ["Bestiario", "bestiary"]]
 ## The Mapa page: the side of its map, and what its title, Volver and the margins leave
 ## out of the screen's height.
+## Side of the portrait on a bestiary card's page (the PNGs are 128 px).
+const ENTRY_PICTURE := 128.0
 const MAP_PAGE_SIDE := 360.0
 const MAP_PAGE_RESERVED := 150.0
 const MAP_LEGEND_SWATCH := 12.0
@@ -87,6 +89,10 @@ var _equip_slot := ""
 var _journal: JournalPage
 var _bestiary: BestiaryPage
 var _bestiary_button: Button
+var _entry_picture: TextureRect
+var _entry_name: Label
+var _entry_lines: VBoxContainer
+var _entry_id := ""
 var _spell_hp: StatBar
 var _spell_mp: StatBar
 var _cast_box: VBoxContainer
@@ -139,6 +145,7 @@ func _ready() -> void:
 	_build_map(stack)
 	_build_journal(stack)
 	_build_bestiary(stack)
+	_build_bestiary_entry(stack)
 	_build_options(stack)
 	_build_confirm(stack)
 	available = available
@@ -230,6 +237,8 @@ func _go_back() -> void:
 				_choose_slot("")
 			else:
 				_back_to_main()
+		"bestiary_entry":
+			_back_to_bestiary()
 		"map":
 			if _map_only:
 				close()
@@ -752,9 +761,52 @@ func _build_journal(stack: VBoxContainer) -> void:
 	page.add_child(_back_button())
 
 
+## A bestiary card: portrait, name and BestiaryPage.entry_lines(); Volver goes back to the album.
+func _build_bestiary_entry(stack: VBoxContainer) -> void:
+	var page := _page_box(stack, "bestiary_entry", "Bestiario")
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 16)
+	page.add_child(row)
+	_entry_picture = TextureRect.new()
+	_entry_picture.custom_minimum_size = Vector2(ENTRY_PICTURE, ENTRY_PICTURE)
+	_entry_picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_entry_picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	row.add_child(_entry_picture)
+	var text := VBoxContainer.new()
+	row.add_child(text)
+	_entry_name = _label("", Color.WHITE)
+	text.add_child(_entry_name)
+	_entry_lines = VBoxContainer.new()
+	text.add_child(_entry_lines)
+	var back := _button("Volver")
+	back.pressed.connect(_back_to_bestiary)
+	page.add_child(back)
+
+
+func _open_bestiary_entry(id: String) -> void:
+	_entry_id = id
+	_entry_picture.texture = load("res://assets/bestiary/%s.png" % id)
+	_entry_name.text = EnemyLibrary.data(id).display_name
+	for child in _entry_lines.get_children():
+		_entry_lines.remove_child(child)
+		child.queue_free()
+	for line in BestiaryPage.entry_lines(id, _state):
+		var label := _label(line, Color.WHITE)
+		label.add_theme_font_size_override("font_size", UiStyle.TEXT_SIZE)
+		_entry_lines.add_child(label)
+	_open_page("bestiary_entry")
+
+
+func _back_to_bestiary() -> void:
+	_sfx(SfxLibrary.CANCEL)
+	_show_page("bestiary")
+	_bestiary.focus_card(_entry_id)
+
+
 func _build_bestiary(stack: VBoxContainer) -> void:
 	var page := _page_box(stack, "bestiary", "Bestiario")
 	_bestiary = BestiaryPage.new()
+	_bestiary.card_chosen.connect(_open_bestiary_entry)
 	page.add_child(_bestiary)
 	page.add_child(_back_button())
 
