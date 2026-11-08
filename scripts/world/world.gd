@@ -87,6 +87,9 @@ const TALK_RADIUS := 2.5
 const CHEST_RADIUS := 1.8
 const WELL_RADIUS := 2.2
 const BOSS_RADIUS := 2.5
+## After a boss battle the boss waits until the hero has been this far from it (a boss
+## fought again and again, the Eco de la Niebla, must not start over at once).
+const BOSS_REARM_RADIUS := 5.0
 const EXIT_RADIUS := 1.2
 ## After arriving (or after a closed exit's notice) exits wait until the player is this
 ## much farther than EXIT_RADIUS from all of them.
@@ -180,6 +183,9 @@ const MISSION_WIDTH := 420.0
 
 ## The map to build; set before add_child.
 var zone: ZoneData
+## The boss to stand at zone.boss_pos (EnemyLibrary id); set before add_child. "" takes
+## zone.boss_id. Game passes the Eco de la Niebla once the game is finished.
+var boss_id := ""
 
 var _rng := RandomNumberGenerator.new()
 var _meter: EncounterMeter
@@ -210,6 +216,8 @@ var _exits_armed := false
 var _portal: Node3D
 var _return_mark: Node3D
 var _boss_present := false
+## False from a boss battle until the hero walks BOSS_REARM_RADIUS away from the boss.
+var _boss_armed := true
 var _ui: CanvasLayer
 var _name_label: Label
 var _hp_bar: StatBar
@@ -278,8 +286,10 @@ func _ready() -> void:
 		_figures[npc.name] = _add_figure(BattleActor.Look[npc.look], npc.pos, npc.yaw, 0.4,
 			1.8)
 		_add_figure_sign(npc)
-	if zone.boss_id != "":
-		_boss = _add_figure(EnemyLibrary.look(zone.boss_id), zone.boss_pos, 180.0, 1.0, 2.0)
+	if boss_id == "":
+		boss_id = zone.boss_id
+	if boss_id != "":
+		_boss = _add_figure(EnemyLibrary.look(boss_id), zone.boss_pos, 180.0, 1.0, 2.0)
 	for id in Chests.of_zone(zone.id):
 		_chest_lids[id] = build_chest(self, Chests.CHESTS[id])
 	for well: Dictionary in zone.wells:
@@ -339,9 +349,13 @@ func _physics_process(_delta: float) -> void:
 	_play_steps()
 	if _check_exits(pos):
 		return
-	if _boss_present and _flat_distance(pos, zone.boss_pos) <= BOSS_RADIUS:
-		_trigger(true)
-		return
+	if _boss_present:
+		var boss_distance := _flat_distance(pos, zone.boss_pos)
+		if not _boss_armed:
+			_boss_armed = boss_distance > BOSS_REARM_RADIUS
+		elif boss_distance <= BOSS_RADIUS:
+			_trigger(true)
+			return
 	var in_grass := not WorldStage.is_on_path(zone, pos)
 	if not _repelled and _meter.advance(_player.last_step_m, in_grass):
 		_trigger(false)
@@ -880,6 +894,8 @@ func show_notice(text: String) -> void:
 
 
 func _trigger(boss: bool) -> void:
+	if boss:
+		_boss_armed = false
 	if _audio:
 		_audio.play_sfx(SfxLibrary.ENCOUNTER)
 	_waiting = true

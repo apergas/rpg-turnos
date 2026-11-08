@@ -1,5 +1,13 @@
 # Registro de cambios
 
+## 1.4.0 (2026)
+
+- Tras el final, el Eco de la Niebla espera en el salón del trono: el reto más duro del juego.
+- La primera vez que lo vences te da el Yelmo de bruma, un casco con cuernos: DEF +8 y ATK +5.
+- Te lo pones en el acto, y el casco que llevabas va a la bolsa.
+- Puedes volver a luchar contra él cuantas veces quieras.
+- El Soldado del campamento ha oído hablar del eco.
+
 ## 1.3.0 (2026)
 
 - Tres ranuras de partida: "Continuar" enseña el nombre, el nivel, el lugar y el tiempo de cada una.

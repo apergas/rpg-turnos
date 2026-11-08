@@ -122,6 +122,9 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## The zone's boss (EnemyLibrary id, "" for none) and where it waits.
 @export var boss_id := ""
 @export var boss_pos := Vector3.ZERO
+## Once the game is finished (GameState.is_finished()) this boss stands at boss_pos instead
+## of boss_id, and it can be fought again and again (the Eco de la Niebla; "" for none).
+@export var postgame_boss_id := ""
 
 @export_group("Encounters")
 ## Formations of a random encounter (each a list of EnemyLibrary ids, left to right),

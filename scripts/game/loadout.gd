@@ -37,7 +37,8 @@ func unequip(slot: String) -> String:
 
 
 func attack_bonus() -> int:
-	return Equipment.bonus(worn(Equipment.WEAPON))
+	return Equipment.bonus(worn(Equipment.WEAPON)) \
+		+ Equipment.extra_attack(worn(Equipment.HELMET))
 
 
 func defense_bonus() -> int:
