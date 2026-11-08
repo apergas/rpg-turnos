@@ -184,6 +184,17 @@ Notas para cuando se diseñe:
 - La página Hechizos del menú de pausa (M-14, 1.2.0), donde se lanzan las curas fuera de combate, también la muestra (`pause_menu.gd:714`). Para que quede solo en Estado, se quita también de ahí.
 - La fila en gris con su motivo ("Faltan PM", "Silencio") se mantiene.
 
+### I-04. Enemigos iguales sin letra
+
+Idea tuya (2026-11-08).
+
+- **Combate contra dos enemigos iguales:** los dos se llaman igual, por ejemplo "Slime" y "Slime", en vez de "Slime A" y "Slime B".
+
+Notas para cuando se diseñe:
+- Hoy la letra se añade en `battle_scene.gd:114-115`; basta con quitarla.
+- Los mensajes ("El Slime recibe 5 de daño") ya no dicen a cuál le ha tocado. Lo distinguen la flecha amarilla, el brillo del enemigo apuntado y su barra de vida.
+- Al apuntar con "¿A quién?" los dos nombres son iguales, pero la flecha marca cuál se elige.
+
 ---
 
 ## 5. Descartado
