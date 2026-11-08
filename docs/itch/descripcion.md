@@ -29,4 +29,4 @@ Otra mañana gris en Villaclaro. La niebla del norte ha vuelto a tapar el cielo 
 
 Una partida dura unas dos horas. Se juega con teclado, ratón o el dedo.
 
-En el móvil se juega en el navegador, en apaisado. Para instalarlo: abre la página, y en el menú del navegador elige «Añadir a la pantalla de inicio» (en Safari, el botón de compartir). Se abre a pantalla completa, como una aplicación. En iPhone, la app instalada guarda su partida aparte de la del navegador.
+En el móvil se juega en el navegador, en apaisado. Para instalarlo: abre la página, y en el menú del navegador elige «Añadir a la pantalla de inicio» (en Safari, el botón de compartir). Se abre a pantalla completa, como una aplicación. En iPhone, la app instalada guarda su partida aparte de la del navegador: para llevarla de uno a otro, usa «Exportar o importar partida» en Opciones del título.

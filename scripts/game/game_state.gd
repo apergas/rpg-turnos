@@ -24,6 +24,8 @@ var bag_equipment: Array[String] = []
 var opened_chests: Array[String] = []
 ## Enemy ids met in battle (EnemyLibrary ids), for the bestiary.
 var seen_enemies: Array[String] = []
+## Enemy ids beaten in a won battle (EnemyLibrary ids), for the bestiary's cards.
+var defeated_enemies: Array[String] = []
 ## Dry wells: well id -> battles left until it is full again (absent: full).
 var well_charge := {}
 ## The creature fighting beside the hero (Allies id, "" for none).
@@ -231,6 +233,13 @@ func quests_done() -> int:
 ## Gold lost on a defeat: half of what is carried, rounded down (gold - lost remains).
 func defeat_gold_loss() -> int:
 	return floori(gold / 2.0)
+
+
+## An enemy beaten in a won battle: seen too.
+func defeat_enemy(id: String) -> void:
+	see_enemy(id)
+	if not defeated_enemies.has(id):
+		defeated_enemies.append(id)
 
 
 func see_enemy(id: String) -> void:

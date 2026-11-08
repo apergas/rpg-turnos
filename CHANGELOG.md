@@ -1,5 +1,15 @@
 # Registro de cambios
 
+## 1.3.0 (2026)
+
+- Tres ranuras de partida: "Continuar" enseña el nombre, el nivel, el lugar y el tiempo de cada una.
+- "Nueva partida" pide ranura y pregunta antes de borrar una ocupada.
+- La partida que ya tenías pasa a la ranura 1.
+- Opciones, en el título: exporta una partida a un archivo o impórtala, también entre el navegador y la app instalada.
+- Bestiario: cada monstruo tiene su ficha, con dónde vive, sus debilidades y si ya lo has vencido.
+- El Diario tiene un apartado "Colección": historia, misiones, bestiario y cofres.
+- Móvil: el título es más compacto y el menú cabe entero, también con textos grandes.
+
 ## 1.2.0 (2026)
 
 - Al llegar a cada lugar aparece su nombre, y una línea junto al mapa pequeño dice dónde estás: "Mina · Planta 2".

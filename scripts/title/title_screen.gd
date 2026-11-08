@@ -4,10 +4,11 @@ class_name TitleScreen extends Node
 ## "Opciones" (keyboard, mouse and touch). Owns the only AudioDirector and the options,
 ## and creates a Game for the new or loaded session (new_game / continue_game); a new
 ## game first asks the hero's name (NameEntry, over the meadow). When the Game emits
-## quit_to_title it frees it and shows the title again. A finished save shows
-## "Continuar (partida terminada)"; a save that can't be used shows
-## "Continuar (partida dañada)" disabled, and a new game asks before replacing a save
-## that still works.
+## quit_to_title it frees it and shows the title again. There are three save slots
+## (SaveStore, SlotList): "Continuar" opens the list and only lets usable saves be picked
+## (it is disabled when none is); "Nueva partida" goes straight to the name when every slot is
+## empty (slot 1), else asks for a slot and asks again before replacing a save that works.
+## The old single save.json moves to slot 1 the first time (SaveStore.migrate_legacy()).
 ## With `-- --autoplay` the name entry types AUTOPLAY_NAME by itself and the new game
 ## starts at once, without the menu. With `--autoplay-save` too, going back to the title
 ## loads the save straight away.
@@ -16,8 +17,6 @@ signal new_game
 signal continue_game
 
 const GAME_SCENE := preload("res://scenes/game/game.tscn")
-const SAVE_INFO_COLOR := Color(0.85, 0.85, 0.9)
-const DAMAGED_TEXT := "Continuar (partida dañada)"
 ## The name the autoplay types (an accent, to try the grid's last row).
 const AUTOPLAY_NAME := "Rocío"
 const TITLE_TEXT := "Villaclaro"
@@ -33,8 +32,12 @@ const UPDATE_TEXT := "Hay una versión nueva. Recargar"
 ## Where the menu's room starts under the title.
 const MENU_TOP := 160
 ## On a phone the title moves up, so the menu fits under its subtitle.
-const TOUCH_MENU_TOP := 205
-const TOUCH_TITLE_TOP := 24
+const TOUCH_MENU_TOP := 135
+const TOUCH_TITLE_TOP := 8
+## A phone held sideways is short: the title is smaller there so the menu, with the fullscreen
+## row and large text, fits under it.
+const TOUCH_TITLE_SIZE := 64
+const TOUCH_SUBTITLE_SIZE := 26
 ## Drifting camera: looks down PITCH_DEG from DISTANCE m at a point that wanders over
 ## the field at DRIFT_SPEED (radians per second of its slow loop).
 const PITCH_DEG := 55.0
@@ -55,8 +58,11 @@ var _fullscreen_button: Button
 var _options_window: PanelContainer
 var _options_backdrop: Control
 var _options_panel: OptionsPanel
-var _confirm_window: PanelContainer
-var _confirm_no: Button
+var _transfer: SaveTransfer
+var _slot_window: PanelContainer
+var _slot_list: SlotList
+## The slot of the game being started or played.
+var _game_slot := 1
 var _name_entry: NameEntry
 var _difficulty_window: DifficultyWindow
 var _title_label: Label
@@ -87,11 +93,14 @@ func _ready() -> void:
 	KeyMap.apply(_options.keys)
 	_audio = AudioDirector.new()
 	add_child(_audio)
+	_transfer = SaveTransfer.new()
+	add_child(_transfer)
 	_audio.set_volumes(_options.music_volume, _options.sfx_volume)
 	WebUpdate.watch()
 	_build_fade()
 	new_game.connect(_on_new_game)
-	continue_game.connect(func() -> void: _start_game(_load_save()))
+	continue_game.connect(func() -> void: _open_slots(SlotList.Mode.LOAD))
+	SaveStore.migrate_legacy()
 	_open_title()
 	if _autoplay:
 		_open_name_entry()
@@ -130,9 +139,9 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _confirm_window and _confirm_window.visible and event.is_action_pressed("ui_cancel"):
+	if _slot_window and _slot_window.visible and event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
-		_cancel_new_game_confirm()
+		_slot_list.back()
 		return
 	if _options_window and _options_window.visible and event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
@@ -167,8 +176,8 @@ func _close_title() -> void:
 	_options_window = null
 	_options_backdrop = null
 	_options_panel = null
-	_confirm_window = null
-	_confirm_no = null
+	_slot_window = null
+	_slot_list = null
 	_name_entry = null
 	_difficulty_window = null
 	_title_label = null
@@ -178,53 +187,61 @@ func _close_title() -> void:
 	_fullscreen_button = null
 
 
-## The saved game; if the file exists but can't be read, a marker Dictionary that Game
-## rejects, so it starts a new game with the "could not load" notice.
-func _load_save() -> Dictionary:
-	var save := SaveStore.load_game()
-	if save.is_empty() and SaveStore.has_save():
+## The saved game of slot; if the file exists but can't be read, a marker Dictionary that
+## Game rejects, so it starts a new game with the "could not load" notice.
+func _load_save(slot: int) -> Dictionary:
+	var save := SaveStore.load_game(slot)
+	if save.is_empty() and SaveStore.has_save(slot):
 		return {"unreadable": true}
 	return save
 
 
-## The save Continuar would load: {} when there is none or it can't be used.
-func _usable_save() -> Dictionary:
-	var save := SaveStore.load_game()
-	return save if SaveData.is_valid(save) else {}
-
-
-## Nueva partida: asks first when it would replace a save that still works.
+## Nueva partida: straight to the name in slot 1 when every slot is empty, else the slots.
 func _on_new_game() -> void:
 	if _starting or _name_entry != null:
 		return
-	if _continue_button.disabled:
+	if SaveStore.all_empty():
+		_game_slot = 1
 		_open_name_entry()
 	else:
-		_open_new_game_confirm()
+		_open_slots(SlotList.Mode.NEW)
 
 
-func _open_new_game_confirm() -> void:
+func _open_slots(mode: SlotList.Mode) -> void:
+	if _starting or _name_entry != null:
+		return
 	_audio.play_sfx(SfxLibrary.ACCEPT)
 	_menu_window.hide()
 	_title_label.hide()
+	_options_window.hide()
 	_menu_center.offset_top = 0
-	_confirm_window.show()
+	_slot_window.show()
 	_options_backdrop.show()
-	_focus(_confirm_no)
+	_slot_list.open(mode)
 
 
-func _close_new_game_confirm() -> void:
-	_confirm_window.hide()
+func _hide_slots() -> void:
+	_slot_window.hide()
 	_options_backdrop.hide()
 	_menu_center.offset_top = _menu_top()
 
 
-func _cancel_new_game_confirm() -> void:
-	_audio.play_sfx(SfxLibrary.CANCEL)
-	_close_new_game_confirm()
+## Volver from the slots: the menu again (Continuar may have changed).
+func _close_slots() -> void:
+	_hide_slots()
+	_continue_button.disabled = not SaveStore.any_usable()
 	_title_label.show()
 	_menu_window.show()
-	_focus(_continue_button)
+	_focus(_continue_button if not _continue_button.disabled else _options_button)
+
+
+func _on_slot_chosen(slot: int) -> void:
+	_game_slot = slot
+	if _slot_list.mode == SlotList.Mode.LOAD:
+		_start_game(_load_save(slot), "", Difficulty.NORMAL, slot)
+		return
+	_hide_slots()
+	_open_name_entry()
 
 
 ## The menu gives way to the NameEntry; its name starts a new game, Volver brings the
@@ -254,7 +271,7 @@ func _on_name_accepted(hero_name: String) -> void:
 	_difficulty_window = DifficultyWindow.new()
 	_difficulty_window.setup(_audio)
 	_ui.add_child(_difficulty_window)
-	_difficulty_window.chosen.connect(func(id: String) -> void: _start_game({}, hero_name, id))
+	_difficulty_window.chosen.connect(func(id: String) -> void: _start_game({}, hero_name, id, _game_slot))
 	_difficulty_window.cancelled.connect(_back_to_name.bind(hero_name))
 
 
@@ -284,16 +301,18 @@ func _close_name_entry() -> void:
 
 ## Fades out, swaps the title for a Game (save empty = new game with hero_name and
 ## difficulty) and fades in.
-func _start_game(save: Dictionary, hero_name := "", difficulty := Difficulty.NORMAL) -> void:
+func _start_game(save: Dictionary, hero_name := "", difficulty := Difficulty.NORMAL,
+		slot := 1) -> void:
 	if _starting:
 		return
 	_starting = true
+	_game_slot = slot
 	if _ui:
 		_audio.play_sfx(SfxLibrary.ACCEPT)
 		await _fade_to(1.0)
 		_close_title()
 	_game = GAME_SCENE.instantiate()
-	_game.setup(_audio, _options, save, hero_name, difficulty)
+	_game.setup(_audio, _options, save, hero_name, difficulty, slot)
 	_game.quit_to_title.connect(_on_quit_to_title)
 	add_child(_game)
 	await _fade_to(0.0)
@@ -314,7 +333,7 @@ func _on_quit_to_title() -> void:
 	if _autoplay_save:
 		_autoplay_save = false
 		_starting = false
-		_start_game(_load_save())
+		_start_game(_load_save(_game_slot), "", Difficulty.NORMAL, _game_slot)
 		return
 	if _autoplay:
 		get_tree().quit()
@@ -350,7 +369,7 @@ func _build_menu() -> void:
 	var title := Label.new()
 	title.text = TITLE_TEXT
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", TITLE_SIZE)
+	title.add_theme_font_size_override("font_size", TOUCH_TITLE_SIZE if Device.is_touch() else TITLE_SIZE)
 	title.add_theme_color_override("font_color", Color(1.0, 0.9, 0.45))
 	title.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.0))
 	title.add_theme_constant_override("outline_size", 18)
@@ -361,7 +380,7 @@ func _build_menu() -> void:
 	var subtitle := Label.new()
 	subtitle.text = SUBTITLE_TEXT
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	subtitle.add_theme_font_size_override("font_size", SUBTITLE_SIZE)
+	subtitle.add_theme_font_size_override("font_size", TOUCH_SUBTITLE_SIZE if Device.is_touch() else SUBTITLE_SIZE)
 	subtitle.add_theme_color_override("font_color", Color(1.0, 0.95, 0.8))
 	subtitle.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.0))
 	subtitle.add_theme_constant_override("outline_size", 10)
@@ -397,22 +416,9 @@ func _build_menu() -> void:
 	start.pressed.connect(func() -> void: new_game.emit())
 	menu.add_child(start)
 	_continue_button = _button("Continuar")
-	var saved := _usable_save()
-	_continue_button.disabled = saved.is_empty()
-	if saved.is_empty() and SaveStore.has_save():
-		_continue_button.text = DAMAGED_TEXT
-	var story: Variant = saved.get("story")
-	if story is Dictionary and story.get("finished", false) == true:
-		_continue_button.text = "Continuar (partida terminada)"
+	_continue_button.disabled = not SaveStore.any_usable()
 	_continue_button.pressed.connect(func() -> void: continue_game.emit())
 	menu.add_child(_continue_button)
-	if not saved.is_empty():
-		var info := Label.new()
-		info.text = SaveData.summary_line(saved)
-		info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		info.add_theme_font_size_override("font_size", UiStyle.TEXT_SIZE)
-		info.add_theme_color_override("font_color", SAVE_INFO_COLOR)
-		menu.add_child(info)
 	_options_button = _button("Opciones")
 	_options_button.pressed.connect(_open_options)
 	menu.add_child(_options_button)
@@ -431,8 +437,8 @@ func _build_menu() -> void:
 	_options_backdrop.gui_input.connect(func(event: InputEvent) -> void:
 		if not UiStyle.is_outside_tap(event):
 			return
-		if _confirm_window.visible:
-			_cancel_new_game_confirm()
+		if _slot_window.visible:
+			_slot_list.back()
 		else:
 			_options_panel.back())
 	_options_backdrop.hide()
@@ -445,25 +451,18 @@ func _build_menu() -> void:
 	_options_panel.setup(_options, _audio)
 	_options_panel.closed.connect(_close_options)
 	_options_window.add_child(_options_panel)
-	_confirm_window = BattleHud.make_window()
-	_confirm_window.hide()
-	center.add_child(_confirm_window)
-	var confirm_box := VBoxContainer.new()
-	confirm_box.add_theme_constant_override("separation", 8)
-	_confirm_window.add_child(confirm_box)
-	var confirm_text := Label.new()
-	confirm_text.text = "La partida guardada se borrará.
-¿Empezar una nueva?"
-	confirm_text.add_theme_font_size_override("font_size", FONT_SIZE)
-	confirm_box.add_child(confirm_text)
-	var yes := _button("Sí, empezar de nuevo")
-	yes.pressed.connect(func() -> void:
-		_close_new_game_confirm()
-		_open_name_entry())
-	confirm_box.add_child(yes)
-	_confirm_no = _button("No")
-	_confirm_no.pressed.connect(_cancel_new_game_confirm)
-	confirm_box.add_child(_confirm_no)
+	_slot_window = BattleHud.make_window()
+	_slot_window.hide()
+	center.add_child(_slot_window)
+	_slot_list = SlotList.new()
+	_slot_list.setup(_audio, _transfer)
+	_slot_list.chosen.connect(_on_slot_chosen)
+	_slot_list.closed.connect(_close_slots)
+	_slot_list.changed.connect(func() -> void:
+		_continue_button.disabled = not SaveStore.any_usable())
+	_options_panel.transfer_requested.connect(func() -> void:
+		_open_slots(SlotList.Mode.MANAGE))
+	_slot_window.add_child(_slot_list)
 	_focus(_continue_button if not _continue_button.disabled else start)
 
 

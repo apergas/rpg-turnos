@@ -20,9 +20,9 @@ class_name SaveData extends RefCounted
 ## the slot empty and no side quest taken. DIFFICULTY_VERSION (phase 7) adds the difficulty;
 ## an older save plays on Normal. EVOLUTION_VERSION (1.1.0) adds the helmet slot, the
 ## enemies seen, the wells' charge and the creature; an older save gets the slot empty,
-## the bosses it has beaten and the common enemies of their zones seen (and the Slime de Metal if its quest is done), every well full and no creature.
+## the bosses it has beaten and the common enemies of their zones seen (and the Slime de Metal if its quest is done), every well full and no creature. DEFEATED_VERSION (1.3.0) adds the enemies beaten; in an older save every enemy seen counts as beaten.
 
-const VERSION := 9
+const VERSION := 10
 ## First version with the story's fields.
 const STORY_VERSION := 6
 ## First version with the accessory slot and the side quests.
@@ -32,6 +32,8 @@ const DIFFICULTY_VERSION := 8
 ## First version with the helmet slot, the bestiary, the wells and the creature.
 const EVOLUTION_VERSION := 9
 ## Oldest version apply() still reads.
+## First version with the enemies beaten.
+const DEFEATED_VERSION := 10
 const OLDEST_VERSION := 2
 ## Combatant fields of the hero that change while playing (the rest come from hero.tres).
 const HERO_FIELDS: Array[String] = ["level", "experience", "hp", "max_hp", "mp", "max_mp",
@@ -74,6 +76,7 @@ static func from_state(state: GameState, player_pos: Vector3, play_time: float) 
 		"quests": state.quests.to_dict(),
 		"difficulty": state.difficulty,
 		"bestiary": state.seen_enemies.duplicate(),
+		"defeated": state.defeated_enemies.duplicate(),
 		"wells": state.well_charge.duplicate(),
 		"ally": state.ally_id,
 		"position": [player_pos.x, player_pos.z],
@@ -149,6 +152,14 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 		state.seen_enemies.assign(data.bestiary)
 	else:
 		_see_before_bestiary(state)
+	state.defeated_enemies.clear()
+	if int(data.version) >= DEFEATED_VERSION:
+		state.defeated_enemies.assign(data.defeated)
+	else:
+		# Before the cards: every enemy seen counts as beaten.
+		state.defeated_enemies.assign(state.seen_enemies)
+	for id in state.defeated_enemies:
+		state.see_enemy(id)
 	state.well_charge = {}
 	var wells: Dictionary = data.get("wells", {})
 	for id: String in wells:
@@ -193,8 +204,10 @@ static func is_valid(data: Dictionary) -> bool:
 		return false
 	if int(data.version) >= DIFFICULTY_VERSION and not _valid_difficulty(data):
 		return false
-	if int(data.version) >= EVOLUTION_VERSION and not (_valid_bestiary(data) and _valid_wells(data)
+	if int(data.version) >= EVOLUTION_VERSION and not (_valid_enemy_ids(data.get("bestiary")) and _valid_wells(data)
 			and _valid_ally(data)):
+		return false
+	if int(data.version) >= DEFEATED_VERSION and not _valid_enemy_ids(data.get("defeated")):
 		return false
 	var hero: Variant = data.get("hero")
 	if not hero is Dictionary:
@@ -231,12 +244,11 @@ static func _valid_hero_ranges(hero: Dictionary) -> bool:
 		and hero.hp >= 1.0 and hero.hp <= hero.max_hp and hero.mp <= hero.max_mp
 
 
-## EVOLUTION_VERSION field: an Array of EnemyLibrary ids.
-static func _valid_bestiary(data: Dictionary) -> bool:
-	var seen: Variant = data.get("bestiary")
-	if not seen is Array:
+## An Array of EnemyLibrary ids (the bestiary's seen and beaten lists).
+static func _valid_enemy_ids(value: Variant) -> bool:
+	if not value is Array:
 		return false
-	for id: Variant in seen:
+	for id: Variant in value:
 		if not (id is String and EnemyLibrary.ENEMIES.has(id)):
 			return false
 	return true
@@ -388,3 +400,21 @@ static func summary_line(data: Dictionary) -> String:
 	var minutes := floori(float(data.play_time) / 60.0)
 	return "%s · Nv %d · %s · %d:%02d" % [hero_name, int(data.hero.level),
 		ZoneData.by_id(zone_id).short_name, floori(minutes / 60.0), minutes % 60]
+
+
+const IMPORT_NOT_SAVE := "Ese archivo no es una partida de Villaclaro."
+const IMPORT_NEWER := "Esa partida es de una versión más nueva del juego."
+
+
+## An imported file's text: {"ok": bool, "save": Dictionary, "text": why not}. Only what
+## is_valid() accepts gets through.
+static func from_json(text: String) -> Dictionary:
+	var json := JSON.new()
+	if json.parse(text) != OK or not json.data is Dictionary:
+		return {"ok": false, "save": {}, "text": IMPORT_NOT_SAVE}
+	var data: Dictionary = json.data
+	if data.get("version") is float and int(data.version) > VERSION:
+		return {"ok": false, "save": {}, "text": IMPORT_NEWER}
+	if not is_valid(data):
+		return {"ok": false, "save": {}, "text": IMPORT_NOT_SAVE}
+	return {"ok": true, "save": data, "text": ""}
