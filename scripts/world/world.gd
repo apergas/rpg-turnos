@@ -12,7 +12,7 @@ class_name World extends Node3D
 ## shows its fog and its notice. With set_portal(true) the zone's portal_pos holds the
 ## return portal of an Ala de viaje, used like a figure (portal_used); set_return_mark()
 ## shows on the ground the spot it leads back to. Under the status window a MapSquare shows
-## what has been seen of the zone (set_explored()). A dungeon floor (ZoneData.layout) is a
+## what has been seen of the zone (set_explored()); a tap on it emits map_requested. A dungeon floor (ZoneData.layout) is a
 ## DungeonMap: its
 ## rock blocks turn see-through between the camera and the hero, the hero carries a
 ## lantern underground, and next to the lever, the key or a locked gate Enter / Space
@@ -49,6 +49,8 @@ signal key_taken
 signal door_used
 ## Every STEP_DISTANCE metres walked (two steps of the hero; the game's step count).
 signal stepped
+## The player tapped the map square: Game opens the pause menu's Mapa page.
+signal map_requested
 
 const PLAYER_SCENE := preload("res://scenes/world/player.tscn")
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
@@ -67,6 +69,17 @@ const TOUCH_MISSION_WIDTH := 300.0
 ## The use button of the phone interface.
 const USE_BUTTON_FONT := 28
 const USE_BUTTON_SIZE := Vector2(180, 72)
+## The place's line by the map square.
+const PLACE_OUTLINE := 6
+## The phone's walking hint: wraps here and sits over the use button's row.
+const TOUCH_HINT_WIDTH := 480.0
+## The place's name, big, the first time the map is the player's (World.freeze(false)).
+const BANNER_TOP := 110.0
+const BANNER_NAME_FONT := 48
+const BANNER_FLOOR_FONT := 30
+const BANNER_COLOR := Color(1.0, 0.9, 0.45)
+const BANNER_FADE := 0.5
+const BANNER_TIME := 2.5
 const FONT_SIZE := 24
 ## How close the player must be to talk to a figure / to open a chest / to run into the
 ## boss / to take an exit.
@@ -74,6 +87,9 @@ const TALK_RADIUS := 2.5
 const CHEST_RADIUS := 1.8
 const WELL_RADIUS := 2.2
 const BOSS_RADIUS := 2.5
+## After a boss battle the boss waits until the hero has been this far from it (a boss
+## fought again and again, the Eco de la Niebla, must not start over at once).
+const BOSS_REARM_RADIUS := 5.0
 const EXIT_RADIUS := 1.2
 ## After arriving (or after a closed exit's notice) exits wait until the player is this
 ## much farther than EXIT_RADIUS from all of them.
@@ -107,6 +123,8 @@ const KEY := "key"
 const DOOR := "door"
 const PORTAL := "portal"
 const BOARD := "board"
+## Between the verb and who it is done with: "Hablar · Granjero".
+const PROMPT_JOIN := " · "
 const PROMPTS := {
 	TALK: "Hablar",
 	NPC: "Hablar",
@@ -136,10 +154,6 @@ const WATER_MP := Color(0.25, 0.5, 1.0)
 const WATER_RADIUS := 0.95
 const WATER_HEIGHT := 1.2
 ## Marks on the map square.
-const MARK_SHOP := Color(1.0, 0.8, 0.2)
-const MARK_INN := Color(1.0, 0.6, 0.85)
-const MARK_EXIT := Color(0.35, 1.0, 0.45)
-const MARK_DRY := Color(0.55, 0.55, 0.55)
 ## Exit arch: two posts and a beam of dark wood, a sign board with the exit's label
 ## (always facing the camera, south) and, while closed, a bank of fog.
 const ARCH_WOOD := Color(0.36, 0.22, 0.1)
@@ -169,6 +183,9 @@ const MISSION_WIDTH := 420.0
 
 ## The map to build; set before add_child.
 var zone: ZoneData
+## The boss to stand at zone.boss_pos (EnemyLibrary id); set before add_child. "" takes
+## zone.boss_id. Game passes the Eco de la Niebla once the game is finished.
+var boss_id := ""
 
 var _rng := RandomNumberGenerator.new()
 var _meter: EncounterMeter
@@ -199,6 +216,8 @@ var _exits_armed := false
 var _portal: Node3D
 var _return_mark: Node3D
 var _boss_present := false
+## False from a boss battle until the hero walks BOSS_REARM_RADIUS away from the boss.
+var _boss_armed := true
 var _ui: CanvasLayer
 var _name_label: Label
 var _hp_bar: StatBar
@@ -213,9 +232,17 @@ var _mission_done_serial := 0
 var _mission_done := false
 var _map_square: MapSquare
 var _has_explored := false
+## True while an Incienso keeps the monsters away (Game counts its metres).
+var _repelled := false
 var _dry_wells: Array[String] = []
 var _notice: Label
 var _notice_window: PanelContainer
+var _place_label: Label
+var _hint_window: PanelContainer
+var _hint: Label
+var _banner: VBoxContainer
+var _banner_tween: Tween
+var _banner_shown := false
 var _notice_serial := 0
 var _prompt: Label
 ## Phones: the button that replaces the prompt, and the pad that reads the fingers.
@@ -259,8 +286,10 @@ func _ready() -> void:
 		_figures[npc.name] = _add_figure(BattleActor.Look[npc.look], npc.pos, npc.yaw, 0.4,
 			1.8)
 		_add_figure_sign(npc)
-	if zone.boss_id != "":
-		_boss = _add_figure(EnemyLibrary.look(zone.boss_id), zone.boss_pos, 180.0, 1.0, 2.0)
+	if boss_id == "":
+		boss_id = zone.boss_id
+	if boss_id != "":
+		_boss = _add_figure(EnemyLibrary.look(boss_id), zone.boss_pos, 180.0, 1.0, 2.0)
 	for id in Chests.of_zone(zone.id):
 		_chest_lids[id] = build_chest(self, Chests.CHESTS[id])
 	for well: Dictionary in zone.wells:
@@ -286,6 +315,7 @@ func _ready() -> void:
 	_camera.target = _player
 	_marker = _build_marker()
 	_build_ui()
+	_place_label.text = zone.map_label()
 	set_explored(ExploredMap.new(zone))
 	place_at_entry(zone.start_entry)
 	_camera.current = true
@@ -302,6 +332,8 @@ func _physics_process(_delta: float) -> void:
 		Vegetation.set_pusher(_grass, _player.global_position)
 	RenderingServer.global_shader_parameter_set(HERO_POS_PARAM, _player.global_position)
 	_map_square.follow(_player.global_position)
+	if _hint_window and _hint_window.visible and _player.last_step_m > 0.0:
+		_hint_window.hide()
 	_marker.visible = _player.move_target != null
 	if _marker.visible:
 		_marker.position = _player.move_target
@@ -317,11 +349,15 @@ func _physics_process(_delta: float) -> void:
 	_play_steps()
 	if _check_exits(pos):
 		return
-	if _boss_present and _flat_distance(pos, zone.boss_pos) <= BOSS_RADIUS:
-		_trigger(true)
-		return
+	if _boss_present:
+		var boss_distance := _flat_distance(pos, zone.boss_pos)
+		if not _boss_armed:
+			_boss_armed = boss_distance > BOSS_REARM_RADIUS
+		elif boss_distance <= BOSS_RADIUS:
+			_trigger(true)
+			return
 	var in_grass := not WorldStage.is_on_path(zone, pos)
-	if _meter.advance(_player.last_step_m, in_grass):
+	if not _repelled and _meter.advance(_player.last_step_m, in_grass):
 		_trigger(false)
 		return
 	var near := _nearest_use(pos)
@@ -404,8 +440,16 @@ func _on_tapped(screen: Vector2) -> void:
 
 
 ## Shows what is in reach: the prompt, or on phones the use button.
+## What the prompt (or the phone's use button) says: the verb and, for a figure, its name.
+func _prompt_text(use: Dictionary) -> String:
+	var text: String = PROMPTS[use.kind]
+	if use.index >= 0:
+		text += PROMPT_JOIN + String(zone.npcs[use.index].name)
+	return text
+
+
 func _show_prompt(near: Dictionary) -> void:
-	var text: String = PROMPTS[near.kind]
+	var text := _prompt_text(near)
 	if _use_button:
 		_use_button.text = text
 		_use_button.show()
@@ -499,6 +543,7 @@ func set_world_flags(flags: Dictionary) -> void:
 		(_fogs[exit.id] as Node3D).visible = not _is_open(exit)
 	if _dungeon:
 		_dungeon.set_flags(flags)
+	_refresh_map_marks()
 
 
 ## What has been seen of this zone, for the map square (Game passes GameState's; run on
@@ -509,22 +554,22 @@ func set_explored(map: ExploredMap) -> void:
 	_refresh_map_marks()
 
 
-## The map square's points of interest: shops, inns, wells (grey while dry) and exits.
+## The map square's points of interest (MapMarks): they follow the dry wells and, on a
+## dungeon floor, the lever, the gates and the key.
 func _refresh_map_marks() -> void:
 	if not _has_explored:
 		return
-	var marks: Array[Dictionary] = []
-	for npc: Dictionary in zone.npcs:
-		if npc.kind == "shop":
-			marks.append({"pos": npc.pos, "color": MARK_SHOP})
-		elif npc.kind == "inn":
-			marks.append({"pos": npc.pos, "color": MARK_INN})
-	for well: Dictionary in zone.wells:
-		var color := WATER_HP if well.kind == Wells.HP else WATER_MP
-		marks.append({"pos": well.pos, "color": MARK_DRY if _dry_wells.has(well.id) else color})
-	for exit: Dictionary in zone.all_exits():
-		marks.append({"pos": exit.pos, "color": MARK_EXIT})
-	_map_square.set_marks(marks)
+	_map_square.set_marks(MapMarks.of_zone(zone, _flags, _dry_wells))
+
+
+## The share of the zone's encounters that come now (EncounterMeter.level_rate()).
+func set_encounter_rate(rate: float) -> void:
+	_meter.rate = rate
+
+
+## An Incienso burning: no random encounters (the boss still waits where it is).
+func set_repel(on: bool) -> void:
+	_repelled = on
 
 
 ## Shows or removes the return portal at the zone's portal_pos.
@@ -585,7 +630,13 @@ func begin_cutscene() -> void:
 	_use_on_arrival = {}
 	_status_column.hide()
 	_map_square.hide()
+	_place_label.hide()
+	if _hint_window:
+		_hint_window.hide()
 	_notice_window.hide()
+	if _banner_tween:
+		_banner_tween.kill()
+	_banner.hide()
 	_show_quest_marks()
 	for label in _figure_signs:
 		label.hide()
@@ -599,6 +650,7 @@ func end_cutscene() -> void:
 	_player.scripted = false
 	_status_column.show()
 	_map_square.show()
+	_place_label.show()
 	_show_quest_marks()
 	for label in _figure_signs:
 		label.show()
@@ -678,6 +730,9 @@ func freeze(on: bool) -> void:
 	_player.input_enabled = true
 	_talking = false
 	_taps_from_ms = Time.get_ticks_msec() + TAP_GUARD_MS
+	if not _banner_shown and not _player.scripted:
+		_banner_shown = true
+		_show_banner()
 
 
 ## What the quests show on this map (Game passes GameState.quests' answers): marks is figure
@@ -781,6 +836,7 @@ func set_status_shown(on: bool) -> void:
 	_reset_pad()  # a finger's release is lost while the tree is paused
 	_status_column.visible = on
 	_map_square.visible = on
+	_place_label.visible = on
 
 
 func refresh_status(hero: Combatant, potions: int, gold: int, missions: Array[String] = []) -> void:
@@ -838,6 +894,8 @@ func show_notice(text: String) -> void:
 
 
 func _trigger(boss: bool) -> void:
+	if boss:
+		_boss_armed = false
 	if _audio:
 		_audio.play_sfx(SfxLibrary.ENCOUNTER)
 	_waiting = true
@@ -1244,6 +1302,15 @@ func _build_ui() -> void:
 	var panel := BattleHud.make_window()
 	column.add_child(panel)
 	_map_square = MapSquare.new(MapSquare.TOUCH_SIDE if Device.is_touch() else MapSquare.SIDE)
+	_map_square.clickable = true
+	_map_square.pressed.connect(func() -> void:
+		if not _talking and not _waiting:
+			map_requested.emit())
+	_place_label = _label()
+	_place_label.add_theme_font_size_override("font_size", UiStyle.TEXT_SIZE)
+	_place_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	_place_label.add_theme_constant_override("outline_size", PLACE_OUTLINE)
+	_place_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if Device.is_touch():
 		# Under the menu button, top right.
 		_ui.add_child(_map_square)
@@ -1253,7 +1320,16 @@ func _build_ui() -> void:
 		_map_square.offset_left = _map_square.offset_right - MapSquare.TOUCH_SIDE
 		_map_square.offset_top = PauseMenu.MENU_BUTTON_MARGIN + PauseMenu.MENU_BUTTON_SIZE.y + 8.0
 		_map_square.offset_bottom = _map_square.offset_top + MapSquare.TOUCH_SIDE
+		_ui.add_child(_place_label)
+		_place_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		_place_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+		_place_label.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+		_place_label.offset_right = _map_square.offset_right
+		_place_label.offset_left = _map_square.offset_right
+		_place_label.offset_top = _map_square.offset_bottom + 4.0
+		_place_label.offset_bottom = _place_label.offset_top
 	else:
+		column.add_child(_place_label)
 		column.add_child(_map_square)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
@@ -1289,6 +1365,7 @@ func _build_ui() -> void:
 	_ui.add_child(_notice_window)
 	_notice = _label()
 	_notice_window.add_child(_notice)
+	_build_banner()
 	_prompt = _label()
 	_prompt.text = PROMPTS[TALK]
 	_prompt.add_theme_color_override("font_outline_color", Color.BLACK)
@@ -1324,6 +1401,66 @@ func _build_touch_controls() -> void:
 	_use_button.offset_left = -UI_EDGE - USE_BUTTON_SIZE.x
 	_use_button.offset_top = -UI_EDGE - USE_BUTTON_SIZE.y
 	_use_button.pressed.connect(func() -> void: _use(_nearest_use(_player.global_position)))
+
+
+## A line at the bottom until the hero first walks (phones, once: Game decides).
+func show_touch_hint(text: String) -> void:
+	if _hint_window == null:
+		_hint_window = BattleHud.make_window()
+		_hint_window.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_ui.add_child(_hint_window)
+		_hint_window.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+		_hint_window.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		_hint_window.grow_vertical = Control.GROW_DIRECTION_BEGIN
+		_hint_window.offset_left = 0.0
+		_hint_window.offset_right = 0.0
+		_hint_window.offset_bottom = -(UI_EDGE + USE_BUTTON_SIZE.y + 12.0)
+		_hint_window.offset_top = _hint_window.offset_bottom
+		_hint = _label()
+		_hint_window.add_child(_hint)
+	BattleHud.fit_label(_hint, text, TOUCH_HINT_WIDTH)
+	_hint_window.show()
+
+
+## Two lines centred near the top: the place and, under it, its floor.
+func _build_banner() -> void:
+	_banner = VBoxContainer.new()
+	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_banner.add_theme_constant_override("separation", 0)
+	_ui.add_child(_banner)
+	_banner.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	_banner.offset_top = BANNER_TOP
+	_banner.offset_bottom = BANNER_TOP
+	for font_size in [BANNER_NAME_FONT, BANNER_FLOOR_FONT]:
+		var label := Label.new()
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		label.add_theme_font_size_override("font_size", font_size)
+		label.add_theme_color_override("font_color", BANNER_COLOR)
+		label.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.0))
+		label.add_theme_constant_override("outline_size", 12)
+		_banner.add_child(label)
+	_banner.hide()
+
+
+## Fades the place's name in, holds it and fades it out.
+func _show_banner() -> void:
+	var name_label := _banner.get_child(0) as Label
+	var floor_label := _banner.get_child(1) as Label
+	name_label.text = zone.display_name
+	floor_label.text = zone.floor_name
+	floor_label.visible = zone.floor_name != ""
+	if _autoplay:
+		print("Lugar: %s" % zone.banner_text())
+	if _banner_tween:
+		_banner_tween.kill()
+	_banner.modulate.a = 0.0
+	_banner.show()
+	_banner_tween = create_tween()
+	_banner_tween.tween_property(_banner, "modulate:a", 1.0, BANNER_FADE)
+	_banner_tween.tween_interval(BANNER_TIME)
+	_banner_tween.tween_property(_banner, "modulate:a", 0.0, BANNER_FADE)
+	_banner_tween.tween_callback(_banner.hide)
 
 
 func _label() -> Label:

@@ -23,6 +23,8 @@ enum Page { NONE, MAIN, SPELLS, ITEMS, TARGET }
 const CHAR_TIME := 0.025
 const AUTO_ADVANCE := 0.6
 const MENU_GUARD := 0.3
+## Seconds of each half of the cursor's blink when the menu starts taking orders.
+const READY_BLINK := 0.08
 const FONT_SIZE := 24
 const BADGE_FONT_SIZE := 16
 ## Least width of the command window (a longer row widens it).
@@ -37,6 +39,9 @@ const EDGE := 24.0
 const GAP := 16.0
 ## The thin bar over an enemy: its life left, no number.
 const ENEMY_BAR_SIZE := Vector2(96, 8)
+## The name over the bar of the enemy being aimed at.
+const TARGET_NAME_COLOR := Color(1.0, 0.9, 0.3)
+const ENEMY_NAME_GAP := 2.0
 const ENEMY_BAR_BACK := Color(0.0, 0.0, 0.0, 0.7)
 ## Inner margins of every window: modest, the window hugs what it holds.
 const WINDOW_MARGIN := Vector2(14, 10)
@@ -76,6 +81,7 @@ var _message: Label
 var _audio: AudioDirector
 ## The enemies' bars, by enemy index: [background ColorRect, its red fill ColorRect].
 var _enemy_bars: Array = []
+var _enemy_names: Array[Label] = []
 var _page := Page.NONE
 ## Buttons of the open list and the one under the cursor.
 var _rows: Array[Button] = []
@@ -90,6 +96,11 @@ var _target_back_cursor := 0
 var _targets: Array[int] = []
 var _target_i := 0
 var _menu_opened_ms := 0
+## True from show_menu() to the first new key press: until then, repeats of a key held from
+## before are ignored, so the cursor never moves on its own.
+var _hold_echo := false
+## Counts show_menu() calls, so a late "menu ready" from an older turn does nothing.
+var _menu_serial := 0
 var _advance_requested := false
 ## True while the code moves the cursor itself, so that move makes no sound.
 var _quiet_focus := false
@@ -144,8 +155,9 @@ func update_ally_hp(hp: int, max_hp: int) -> void:
 
 
 ## Adds the bar of the next enemy, full. BattleScene places it every frame (it follows the
-## figure on screen) and sets its life as the events play back.
-func add_enemy_bar() -> void:
+## figure on screen) and sets its life as the events play back; enemy_name shows over it
+## while it is aimed at (show_target_name()).
+func add_enemy_bar(enemy_name := "") -> void:
 	var back := ColorRect.new()
 	back.color = ENEMY_BAR_BACK
 	back.size = ENEMY_BAR_SIZE
@@ -159,6 +171,25 @@ func add_enemy_bar() -> void:
 	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	back.add_child(fill)
 	_enemy_bars.append([back, fill])
+	var label := Label.new()
+	label.text = enemy_name
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.add_theme_font_size_override("font_size", UiStyle.TEXT_SIZE)
+	label.add_theme_color_override("font_color", TARGET_NAME_COLOR)
+	label.add_theme_color_override("font_outline_color", Color.BLACK)
+	label.add_theme_constant_override("outline_size", 6)
+	label.hide()
+	back.add_child(label)
+	label.size = label.get_combined_minimum_size()
+	label.position = Vector2((ENEMY_BAR_SIZE.x - label.size.x) / 2.0,
+		-label.size.y - ENEMY_NAME_GAP).round()
+	_enemy_names.append(label)
+
+
+## Shows the name of enemy index over its bar, and only that one (-1: none).
+func show_target_name(index: int) -> void:
+	for i in _enemy_names.size():
+		_enemy_names[i].visible = i == index
 
 
 ## Centers enemy i's bar on a screen point.
@@ -188,12 +219,30 @@ func update_status(status: Dictionary) -> void:
 
 
 ## Opens the main menu. The menu keeps its layout slot while hidden (it only fades out),
-## so the message window never resizes.
+## so the message window never resizes. Once MENU_GUARD is over, a sound and a blink of
+## the cursor say it takes orders.
 func show_menu() -> void:
 	_menu_opened_ms = Time.get_ticks_msec()
+	_hold_echo = true
+	_menu_serial += 1
 	_menu.modulate.a = 1.0
 	_main_cursor = 0
 	_open(Page.MAIN, 0)
+	# Real time, like the guard: a faster combat speed scales the engine's time.
+	get_tree().create_timer(MENU_GUARD, true, false, true).timeout.connect(
+		_on_menu_ready.bind(_menu_serial))
+
+
+func _on_menu_ready(serial: int) -> void:
+	if serial != _menu_serial or _page == Page.NONE or _rows.is_empty():
+		return
+	_sfx(SfxLibrary.CURSOR)
+	var row := _rows[_cursor]
+	var blink := row.create_tween()
+	blink.set_ignore_time_scale(true)
+	for i in 2:
+		blink.tween_property(row, "modulate:a", 0.3, READY_BLINK)
+		blink.tween_property(row, "modulate:a", 1.0, READY_BLINK)
 
 
 func hide_menu() -> void:
@@ -292,6 +341,11 @@ func _input(event: InputEvent) -> void:
 	var key := event as InputEventKey
 	if _page == Page.NONE or key == null or not key.pressed:
 		return
+	if key.echo and _hold_echo:
+		get_viewport().set_input_as_handled()
+		return
+	if not key.echo:
+		_hold_echo = false
 	if key.is_action(KeyMap.MOVE_UP):
 		_move(-1)
 	elif key.is_action(KeyMap.MOVE_DOWN):
@@ -347,14 +401,17 @@ func _open(page: Page, cursor: int) -> void:
 	_cursor = 0
 	match page:
 		Page.MAIN:
-			for text in MAIN_ROWS:
-				_add_row(text, true)
+			for i in MAIN_ROWS.size():
+				var why := ""
+				if i == MAIN_ROW_OF[BattleEngine.CMD_FLEE]:
+					why = _engine.problem(BattleEngine.cmd_flee())
+				_add_row(_with_reason(MAIN_ROWS[i], why), why == "")
 			_set_message("¿Qué hará %s?" % _engine.hero.display_name)
 		Page.SPELLS:
 			for skill in _engine.hero.skills:
 				var why := _engine.problem(BattleEngine.cmd_skill(skill))
-				_add_row(_with_reason("%s  %d PM" % [skill.display_name, skill.mp_cost], why),
-					why == "")
+				_add_row(_with_reason("%s  %d PM  %s" % [skill.display_name, skill.mp_cost,
+					skill.description], why), why == "")
 			_add_back_row()
 			_set_message("¿Qué hechizo?")
 		Page.ITEMS:

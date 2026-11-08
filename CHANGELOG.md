@@ -1,5 +1,51 @@
 # Registro de cambios
 
+## 1.4.0 (2026)
+
+- Tras el final, el Eco de la Niebla espera en el salón del trono: el reto más duro del juego.
+- La primera vez que lo vences te da el Yelmo de bruma, un casco con cuernos: DEF +8 y ATK +5.
+- Te lo pones en el acto, y el casco que llevabas va a la bolsa.
+- Puedes volver a luchar contra él cuantas veces quieras.
+- El Soldado del campamento ha oído hablar del eco.
+
+## 1.3.0 (2026)
+
+- Tres ranuras de partida: "Continuar" enseña el nombre, el nivel, el lugar y el tiempo de cada una.
+- "Nueva partida" pide ranura y pregunta antes de borrar una ocupada.
+- La partida que ya tenías pasa a la ranura 1.
+- Opciones, en el título: exporta una partida a un archivo o impórtala, también entre el navegador y la app instalada.
+- Bestiario: cada monstruo tiene su ficha, con dónde vive, sus debilidades y si ya lo has vencido.
+- El Diario tiene un apartado "Colección": historia, misiones, bestiario y cofres.
+- Móvil: el título es más compacto y el menú cabe entero, también con textos grandes.
+
+## 1.2.0 (2026)
+
+- Al llegar a cada lugar aparece su nombre, y una línea junto al mapa pequeño dice dónde estás: "Mina · Planta 2".
+- Página "Mapa" en el menú, que también se abre tocando el mapa pequeño, con su leyenda.
+- En el mapa se ven las escaleras de subida y de bajada, la palanca, las rejas y la llave.
+- La acción dice con quién: "Hablar · Granjero", "Comprar · Mercader".
+- En la mina, el objetivo dice el siguiente paso: bajar, la palanca, la llave o el Golem.
+- Quien te pidió cazar o recoger algo te dice cuánto llevas.
+- Con cuatro niveles más que los de una zona, sus monstruos salen la mitad de veces.
+- Nuevo objeto, el Incienso: 20 G en todas las tiendas, sin combates durante 200 m.
+- Curar y Curar+ se pueden usar desde el menú, en la página Hechizos.
+- En combate, el enemigo apuntado brilla y enseña su nombre.
+- Móvil: la primera vez, una línea explica cómo andar con el dedo.
+- Bajo "Continuar" se ve qué partida se carga: nombre, nivel, lugar y tiempo.
+
+## 1.1.1 (2026)
+
+- En la web, si el navegador corta los gráficos, un aviso pide recargar: la partida está guardada.
+- El bestiario se puede completar: una partida antigua cuenta los monstruos de las zonas superadas.
+- El Slime de Metal sigue saliendo en la mina, aunque raro, después de su misión.
+- Contra un jefe, "Huir" sale en gris: no se puede huir.
+- Los hechizos dicen qué hacen, en combate y en la página Estado.
+- Lo que hay en un cofre sale en la ventana de diálogo y espera a que sigas.
+- Combate: una tecla mantenida ya no mueve el cursor, y un sonido avisa cuando el menú ya acepta órdenes.
+- Móvil: la fila "Pantalla completa" del título vuelve al salir de pantalla completa.
+- Web de escritorio: "Pantalla completa" en Opciones.
+- El aviso de girar dice "Gira la pantalla".
+
 ## 1.1.0 (2026)
 
 - Móvil: en vertical aparece "Gira el móvil" en lugar de una pantalla negra.

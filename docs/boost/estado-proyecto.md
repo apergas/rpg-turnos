@@ -1,6 +1,10 @@
 # Estado del proyecto
 
-Fecha: 2026-11-07. Solo quedan `main` (`9a7f8be`) y `develop` (`9ebd279`), en local y en `RPG`; `develop` solo lleva por delante de `main` la limpieza de `docs/boost/qa`. La versión 1.1.0 está publicada en Pages y probada a mano por el usuario, sin tag y sin subir a itch.io, que quedan aparcados.
+Fecha: 2026-11-08. `develop` (`916819b`) lleva implementadas las versiones 1.1.1, 1.2.0, 1.3.0 y 1.4.0 de `docs/boost/documento-maestro.md` (M-01 a M-16 y M-18 a M-25; M-17 descartado). Publicado en `main` y en la web. Sin tag ni itch.io. Las pruebas que piden un móvil real o una mano están en los informes de cada versión y en el resumen de abajo.
+
+Incidente: el 2026-11-07, durante la 1.2.0, el subagente implementador borró por error `save.json` y `options.json` de la carpeta real de escritorio (`%APPDATA%/Godot/app_userdata/rpg-turnos/`), sin copia. Desde entonces las reglas obligan a poner `APPDATA` en el mismo comando y a borrar solo con rutas literales del scratchpad.
+
+**Lo que queda por hacer está en `docs/boost/documento-maestro.md`**, que reúne las conclusiones de las pasadas de QA sobre la 1.0.0 y la 1.1.0 y los pendientes de este documento. Si algo de aquí lo contradice, manda aquel.
 
 El estado sale del historial de git y de los planes en `docs/boost/plans/`. "Publicado" significa que está en `main`, que se despliega en GitHub Pages.
 

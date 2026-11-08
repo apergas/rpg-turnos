@@ -24,6 +24,8 @@ var bag_equipment: Array[String] = []
 var opened_chests: Array[String] = []
 ## Enemy ids met in battle (EnemyLibrary ids), for the bestiary.
 var seen_enemies: Array[String] = []
+## Enemy ids beaten in a won battle (EnemyLibrary ids), for the bestiary's cards.
+var defeated_enemies: Array[String] = []
 ## Dry wells: well id -> battles left until it is full again (absent: full).
 var well_charge := {}
 ## The creature fighting beside the hero (Allies id, "" for none).
@@ -75,7 +77,7 @@ func heal_full() -> void:
 ## The next thing the story asks: the village quest while it lasts, then the chapter's goal.
 func main_goal() -> String:
 	var line := quest.status_text()
-	return line if line != "" else story.goal_text(world_flags)
+	return line if line != "" else story.goal_text(world_flags, zone_id)
 
 
 ## The lines of the mission lists (status window, pause menu): the main goal first, then
@@ -86,9 +88,46 @@ func current_missions() -> Array[String]:
 	return missions
 
 
-## Uses an item outside battle, from the pause menu; see Inventory.use().
+## The spells the hero can cast from the pause menu: the heals (Curar, Curar+).
+func field_spells() -> Array[Skill]:
+	var spells: Array[Skill] = []
+	for skill in hero.skills:
+		if skill.kind == Skill.HEAL:
+			spells.append(skill)
+	return spells
+
+
+## Why skill can't be cast from the menu now ("" if it can).
+func spell_problem(skill: Skill) -> String:
+	if hero.mp < skill.mp_cost:
+		return "Faltan PM"
+	if hero.hp >= hero.max_hp:
+		return "PV al máximo"
+	return ""
+
+
+## Casts a heal outside battle, as in battle: pays its MP and recovers up to its power.
+## Returns the HP recovered (0: it could not be cast).
+func cast_spell(skill: Skill) -> int:
+	if spell_problem(skill) != "":
+		return 0
+	hero.mp -= skill.mp_cost
+	var amount := mini(skill.power, hero.max_hp - hero.hp)
+	hero.hp += amount
+	return amount
+
+
+## Metres an Incienso still keeps the monsters away (not saved: it ends with the session).
+var repel_m := 0.0
+
+
+## Uses an item outside battle, from the pause menu; see Inventory.use(). An Incienso
+## starts its metres again.
 func use_item(id: String) -> Dictionary:
-	return inventory.use(id, hero, false)
+	var result := inventory.use(id, hero, false)
+	if result.used and result.effect == "repel":
+		repel_m = float(Inventory.ITEMS[id].value)
+	return result
 
 
 ## Copies the loadout's bonuses into the hero (battles read total_attack/defense()).
@@ -194,6 +233,13 @@ func quests_done() -> int:
 ## Gold lost on a defeat: half of what is carried, rounded down (gold - lost remains).
 func defeat_gold_loss() -> int:
 	return floori(gold / 2.0)
+
+
+## An enemy beaten in a won battle: seen too.
+func defeat_enemy(id: String) -> void:
+	see_enemy(id)
+	if not defeated_enemies.has(id):
+		defeated_enemies.append(id)
 
 
 func see_enemy(id: String) -> void:

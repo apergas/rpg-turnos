@@ -6,6 +6,7 @@
 script = ExtResource("1_skill")
 id = "llama"
 display_name = "Ascuas"
+description = "Daño de fuego a un enemigo."
 mp_cost = 3
 power = 16
 color = Color(1, 0.45, 0.1, 1)

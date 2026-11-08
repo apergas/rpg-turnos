@@ -1,12 +1,15 @@
 class_name OptionsPanel extends VBoxContainer
 ## Options page shared by the title screen and the pause menu: music and effects volume
 ## (sliders, 0-100 % in steps of 10), text speed, combat speed, graphics quality, camera
-## shake, large text, on desktop fullscreen, and Teclas (KeysPanel). Changes apply at once;
+## shake, large text, fullscreen (on desktop through the options; in a browser, except on iPhone
+## and iPad, it sets the window's mode directly) and Teclas (KeysPanel). Changes apply at once;
 ## "Volver" (or back()) saves them with SaveStore and emits closed. The rows scroll when the
 ## screen is short. From the pause menu (with state) it also changes the game's difficulty.
 ## Call setup() before adding it to the tree.
 
 signal closed
+## Title only: the player wants to copy a slot to or from a file.
+signal transfer_requested
 
 const FONT_SIZE := 24
 const VOLUME_STEP := 10.0
@@ -18,6 +21,9 @@ const YES_NO := ["Sí", "No"]
 var _options: GameOptions
 var _audio: AudioDirector
 var _state: GameState
+## On the web, the Sí / No of the fullscreen row (empty elsewhere): the browser can leave
+## fullscreen on its own, so the row is set again each time the page shows.
+var _web_fullscreen: Array[Button] = []
 var _main: VBoxContainer
 var _rows: VBoxContainer
 var _music_slider: HSlider
@@ -68,9 +74,9 @@ func _ready() -> void:
 			func(i: int) -> void:
 				_options.fullscreen = i == 0
 				_apply_display())
-	elif Device.is_touch() and not Device.is_ios():
+	elif not (Device.is_touch() and Device.is_ios()):
 		# The browser only allows fullscreen from a press, so it is set here, not by apply().
-		_choice_row("Pantalla completa", YES_NO,
+		_web_fullscreen = _choice_row("Pantalla completa", YES_NO,
 			0 if get_window().mode == Window.MODE_FULLSCREEN else 1, func(i: int) -> void:
 				get_window().mode = Window.MODE_FULLSCREEN if i == 0 else Window.MODE_WINDOWED)
 	if _state != null:
@@ -78,6 +84,12 @@ func _ready() -> void:
 			return Difficulty.NAMES[id])
 		_choice_row("Dificultad", names, Difficulty.IDS.find(_state.difficulty),
 			func(i: int) -> void: _state.difficulty = Difficulty.IDS[i])
+	if _state == null:
+		var transfer := _button("Exportar o importar partida")
+		transfer.pressed.connect(func() -> void:
+			SaveStore.save_options(_options)
+			transfer_requested.emit())
+		_rows.add_child(transfer)
 	if not Device.is_touch():
 		_keys_button = _button("Teclas")
 		_keys_button.pressed.connect(_open_keys)
@@ -91,6 +103,7 @@ func _ready() -> void:
 	_keys_panel.hide()
 	add_child(_keys_panel)
 	_update_values()
+	visibility_changed.connect(_sync_web_fullscreen)
 
 
 func focus_first() -> void:
@@ -171,10 +184,11 @@ func _volume_row(text: String, volume: float, value_label: Label) -> HSlider:
 
 
 ## A row "name [choice] [choice]...": one choice pressed at a time; chosen.call(index) at
-## each press.
-func _choice_row(title: String, names: Array, current: int, chosen: Callable) -> void:
+## each press. Returns the choices' buttons.
+func _choice_row(title: String, names: Array, current: int, chosen: Callable) -> Array[Button]:
 	var row := _named_row(title)
 	var group := ButtonGroup.new()
+	var buttons: Array[Button] = []
 	for i in names.size():
 		var button := _button(names[i])
 		button.toggle_mode = true
@@ -185,6 +199,18 @@ func _choice_row(title: String, names: Array, current: int, chosen: Callable) ->
 			if _audio:
 				_audio.play_sfx(SfxLibrary.CURSOR))
 		row.add_child(button)
+		buttons.append(button)
+	return buttons
+
+
+## Sí or No as the window is now (set_pressed_no_signal doesn't unpress the group's other
+## button, so both are set).
+func _sync_web_fullscreen() -> void:
+	if _web_fullscreen.is_empty() or not is_visible_in_tree():
+		return
+	var full := get_window().mode == Window.MODE_FULLSCREEN
+	_web_fullscreen[0].set_pressed_no_signal(full)
+	_web_fullscreen[1].set_pressed_no_signal(not full)
 
 
 func _named_row(title: String) -> HBoxContainer:

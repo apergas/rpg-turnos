@@ -55,6 +55,9 @@ class_name Combatant extends Resource
 @export var rescue_heal_ratio := 0.4
 ## Boss only: the key item (Inventory.KEY_ITEMS id) the hero gets for defeating it.
 @export var key_item := ""
+## Boss only: an Equipment id given the first time it is beaten, never again (the Eco de
+## la Niebla's Yelmo de bruma; "" for none). Game puts it on (QuestRewards.wear_prize()).
+@export var reward_equipment := ""
 ## Boss only: the stats it rises with the first time its HP reaches 0 (the Señor de la
 ## Niebla's second phase; null: none). BattleEngine copies its HP, MP, attack, defense,
 ## speed, skills and ai_weights into the fighter, which stays the same enemy.
