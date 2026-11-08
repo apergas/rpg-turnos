@@ -8,6 +8,8 @@ class_name OptionsPanel extends VBoxContainer
 ## Call setup() before adding it to the tree.
 
 signal closed
+## Title only: the player wants to copy a slot to or from a file.
+signal transfer_requested
 
 const FONT_SIZE := 24
 const VOLUME_STEP := 10.0
@@ -82,6 +84,12 @@ func _ready() -> void:
 			return Difficulty.NAMES[id])
 		_choice_row("Dificultad", names, Difficulty.IDS.find(_state.difficulty),
 			func(i: int) -> void: _state.difficulty = Difficulty.IDS[i])
+	if _state == null:
+		var transfer := _button("Exportar o importar partida")
+		transfer.pressed.connect(func() -> void:
+			SaveStore.save_options(_options)
+			transfer_requested.emit())
+		_rows.add_child(transfer)
 	if not Device.is_touch():
 		_keys_button = _button("Teclas")
 		_keys_button.pressed.connect(_open_keys)

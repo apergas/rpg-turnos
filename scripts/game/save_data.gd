@@ -400,3 +400,21 @@ static func summary_line(data: Dictionary) -> String:
 	var minutes := floori(float(data.play_time) / 60.0)
 	return "%s · Nv %d · %s · %d:%02d" % [hero_name, int(data.hero.level),
 		ZoneData.by_id(zone_id).short_name, floori(minutes / 60.0), minutes % 60]
+
+
+const IMPORT_NOT_SAVE := "Ese archivo no es una partida de Villaclaro."
+const IMPORT_NEWER := "Esa partida es de una versión más nueva del juego."
+
+
+## An imported file's text: {"ok": bool, "save": Dictionary, "text": why not}. Only what
+## is_valid() accepts gets through.
+static func from_json(text: String) -> Dictionary:
+	var json := JSON.new()
+	if json.parse(text) != OK or not json.data is Dictionary:
+		return {"ok": false, "save": {}, "text": IMPORT_NOT_SAVE}
+	var data: Dictionary = json.data
+	if data.get("version") is float and int(data.version) > VERSION:
+		return {"ok": false, "save": {}, "text": IMPORT_NEWER}
+	if not is_valid(data):
+		return {"ok": false, "save": {}, "text": IMPORT_NOT_SAVE}
+	return {"ok": true, "save": data, "text": ""}

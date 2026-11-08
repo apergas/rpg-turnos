@@ -58,6 +58,7 @@ var _fullscreen_button: Button
 var _options_window: PanelContainer
 var _options_backdrop: Control
 var _options_panel: OptionsPanel
+var _transfer: SaveTransfer
 var _slot_window: PanelContainer
 var _slot_list: SlotList
 ## The slot of the game being started or played.
@@ -92,6 +93,8 @@ func _ready() -> void:
 	KeyMap.apply(_options.keys)
 	_audio = AudioDirector.new()
 	add_child(_audio)
+	_transfer = SaveTransfer.new()
+	add_child(_transfer)
 	_audio.set_volumes(_options.music_volume, _options.sfx_volume)
 	WebUpdate.watch()
 	_build_fade()
@@ -452,9 +455,13 @@ func _build_menu() -> void:
 	_slot_window.hide()
 	center.add_child(_slot_window)
 	_slot_list = SlotList.new()
-	_slot_list.setup(_audio)
+	_slot_list.setup(_audio, _transfer)
 	_slot_list.chosen.connect(_on_slot_chosen)
 	_slot_list.closed.connect(_close_slots)
+	_slot_list.changed.connect(func() -> void:
+		_continue_button.disabled = not SaveStore.any_usable())
+	_options_panel.transfer_requested.connect(func() -> void:
+		_open_slots(SlotList.Mode.MANAGE))
 	_slot_window.add_child(_slot_list)
 	_focus(_continue_button if not _continue_button.disabled else start)
 
