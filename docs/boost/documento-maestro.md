@@ -172,6 +172,18 @@ Notas para cuando se diseñe:
 - El Eco de la Niebla (1.4.0) ya queda fuera del bestiario, y su premio es un casco: no choca con la partición en Anillo y Amuleto.
 - Encaja con las fichas del bestiario (M-19, plan de la 1.3.0): el grupo puede salir en la ficha.
 
+### I-03. Hechizos sin descripción en combate
+
+Idea tuya (2026-11-08).
+
+- **En combate:** la página de Hechizos solo dice el nombre del hechizo y los PM que gasta, por ejemplo "Curar  4 PM".
+- **En Estado:** la descripción de lo que hace cada hechizo se queda solo en la página Estado del menú de pausa.
+
+Notas para cuando se diseñe:
+- Deshace parte de M-04 (1.1.1), que puso la descripción en las filas de hechizos del combate (`BattleHud`, página `SPELLS`). Estado ya la muestra (`Skill.description`).
+- La página Hechizos del menú de pausa (M-14, 1.2.0), donde se lanzan las curas fuera de combate, también la muestra (`pause_menu.gd:714`). Para que quede solo en Estado, se quita también de ahí.
+- La fila en gris con su motivo ("Faltan PM", "Silencio") se mantiene.
+
 ---
 
 ## 5. Descartado
