@@ -167,6 +167,8 @@ var _autoplay_save := false
 var _autoplay_menu := false
 var _last_missions: Array[String] = []
 var _last_gear_text := ""
+## The save slot this game writes to (SaveStore; ignored on autoplay runs).
+var _slot := 1
 var _shop: ShopWindow
 ## Something was bought, sold or equipped since the shop opened.
 var _shop_changed := false
@@ -174,9 +176,11 @@ var _rng := RandomNumberGenerator.new()
 
 
 ## audio and options come from the title screen; save is the Dictionary read by
-## SaveStore.load_game(), empty for a new game, which gets hero_name and difficulty.
+## SaveStore.load_game(), empty for a new game, which gets hero_name and difficulty; slot is
+## the save slot it writes to.
 func setup(audio: AudioDirector, options: GameOptions, save: Dictionary,
-		hero_name := "", difficulty := Difficulty.NORMAL) -> void:
+		hero_name := "", difficulty := Difficulty.NORMAL, slot := 1) -> void:
+	_slot = slot
 	_audio = audio
 	_options = options
 	_save = save
@@ -890,7 +894,7 @@ func _on_door() -> void:
 ## empty Dictionary if the file could not be written.
 func _autosave(notice: bool) -> Dictionary:
 	var data := SaveData.from_state(state, _world.player_position(), play_time)
-	if not SaveStore.save_game(data):
+	if not SaveStore.save_game(_slot, data):
 		return {}
 	if notice:
 		_audio.play_sfx(SfxLibrary.SAVE)
@@ -900,7 +904,7 @@ func _autosave(notice: bool) -> Dictionary:
 
 func _on_save_requested() -> void:
 	var data := SaveData.from_state(state, _world.player_position(), play_time)
-	_pause.show_save_result(SaveStore.save_game(data))
+	_pause.show_save_result(SaveStore.save_game(_slot, data))
 
 
 ## The tree stays paused (TitleScreen unpauses when it frees this game), so the map can't
