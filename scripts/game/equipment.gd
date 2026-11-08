@@ -4,6 +4,7 @@ class_name Equipment extends RefCounted
 ## zone whose shop sells it (0: no shop, the starting gear; -1: never sold, a quest's
 ## reward), the mesh the hero shows for it (a handslot mesh of Knight.glb, STICK_MESH built
 ## in code, or "" for none) and, on some accessories, the status it keeps away ("immune").
+## A helmet may also add "attack" (extra_attack()) and show "horns" (has_horns()).
 ## Pure: no nodes.
 
 const WEAPON := "weapon"
@@ -23,6 +24,8 @@ const LEATHER_MAIL := "cota_cuero"
 const WOODEN_SHIELD := "escudo_madera"
 const POISON_RING := "anillo_antiveneno"
 const SPEED_AMULET := "amuleto_velocidad"
+## The Eco de la Niebla's prize: the one helmet that adds ATK too, with horns.
+const MIST_HELM := "yelmo_bruma"
 ## Not a Knight.glb mesh: BattleActor builds a plain wooden stick for it.
 const STICK_MESH := "stick"
 
@@ -63,6 +66,11 @@ const EQUIPMENT := {
 		"price": 180, "zone": 3, "mesh": "", "tint": Color(0.95, 0.97, 1.0)},
 	"casco_platino": {"name": "Casco de platino", "article": "un", "slot": HELMET, "bonus": 7,
 		"price": 260, "zone": 4, "mesh": "", "tint": Color(0.85, 0.9, 1.2)},
+	# The Eco de la Niebla's prize (the first time only): DEF like any helmet, plus ATK,
+	# dark grey with a blue cast and two bone horns (BattleActor builds them).
+	MIST_HELM: {"name": "Yelmo de bruma", "article": "un", "slot": HELMET, "bonus": 8,
+		"price": 0, "zone": -1, "mesh": "", "tint": Color(0.42, 0.47, 0.6), "attack": 5,
+		"horns": true},
 	POISON_RING: {"name": "Anillo antiveneno", "article": "un", "slot": ACCESSORY,
 		"bonus": 0, "price": 0, "zone": -1, "mesh": "", "immune": "poison"},
 	SPEED_AMULET: {"name": "Amuleto de velocidad", "article": "un", "slot": ACCESSORY,
@@ -124,11 +132,25 @@ static func immunity(id: String) -> String:
 	return EQUIPMENT[id].get("immune", "") if EQUIPMENT.has(id) else ""
 
 
+## The ATK a piece that is not a weapon adds besides its bonus (the Yelmo de bruma); 0 for
+## the rest.
+static func extra_attack(id: String) -> int:
+	return EQUIPMENT[id].get("attack", 0) if EQUIPMENT.has(id) else 0
+
+
+## True for a helmet the hero wears with horns (the Yelmo de bruma).
+static func has_horns(id: String) -> bool:
+	return EQUIPMENT[id].get("horns", false) if EQUIPMENT.has(id) else false
+
+
 ## What a piece gives, for the Equipo page: "ATK +6", "VEL +3", "Inmune al veneno".
 static func effect_text(id: String) -> String:
 	if immunity(id) == "poison":
 		return "Inmune al veneno"
-	return "%s +%d" % [stat_name(id), bonus(id)]
+	var text := "%s +%d" % [stat_name(id), bonus(id)]
+	if extra_attack(id) > 0:
+		text += " · ATK +%d" % extra_attack(id)
+	return text
 
 
 ## The ids sold in a zone, in catalog order.

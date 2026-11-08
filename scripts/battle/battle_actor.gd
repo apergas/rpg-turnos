@@ -141,6 +141,18 @@ const HAND_L := "Rig/Skeleton3D/handslot_l"
 const STICK_COLOR := Color(0.45, 0.3, 0.16)
 const STICK_RADIUS := 0.07
 const STICK_LENGTH := 1.3
+## The Yelmo de bruma's horns (Equipment.has_horns()), built in code under the Knight's
+## helmet mesh, in its own space (about 1.14 wide, brim at y -0.1, top at 1.25): bone
+## colored, each from the side of the helmet out and then up, in HORN_SEGMENTS tapering
+## pieces, every one bent HORN_BEND degrees more toward the top.
+const HORN_COLOR := Color(0.9, 0.84, 0.68)
+const HORN_ROOT := Vector3(0.5, 0.75, 0.05)
+const HORN_SEGMENTS := 3
+const HORN_SEGMENT_LENGTH := 0.22
+const HORN_RADIUS := 0.11
+## Degrees about Z of the first piece: almost flat, pointing out of the helmet.
+const HORN_START_ANGLE := 75.0
+const HORN_BEND := 35.0
 const STICK_CENTER := 0.45
 ## Everything that changes between looks. Characters: scene, scale, top (height of the
 ## damage numbers), hide (prop nodes of the model to hide), anims and, optional, tint
@@ -447,6 +459,8 @@ var _idle_tween: Tween
 var _wings: Array[Node3D] = []
 ## Characters only: the imported model (its hand slots hold the equipment meshes).
 var _model: Node3D
+## The Yelmo de bruma's horns, under the helmet mesh (null until a horned helmet is worn).
+var _horns: Node3D
 ## Plant only: the upper jaw's pivot (opens to bite) and the node its idle sway turns.
 var _jaw: Node3D
 var _sway: Node3D
@@ -528,7 +542,7 @@ func set_walking(on: bool) -> void:
 
 ## Hero only: shows the hand meshes of the weapon and shield worn (Equipment ids, ""
 ## for none) and hides the rest. A helmet shows the model's helmet mesh tinted with its
-## color. Armor does not change the model. Others ignore it.
+## color, with horns for the Yelmo de bruma. Armor does not change the model. Others ignore it.
 func set_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> void:
 	if look != Look.HERO or _model == null:
 		return
@@ -538,11 +552,54 @@ func set_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> voi
 			(child as Node3D).visible = child.name == shown[hand] and shown[hand] != ""
 	var helmet := _model.get_node(HELMET_PATH) as MeshInstance3D
 	helmet.visible = helmet_id != ""
+	if Equipment.has_horns(helmet_id) and _horns == null:
+		_horns = _build_horns(helmet)
+	if _horns:
+		_horns.visible = Equipment.has_horns(helmet_id)
 	if helmet_id != "":
 		# Drop the previous tint first, or _tint_mesh() would multiply onto it.
 		for i in helmet.mesh.get_surface_count():
 			helmet.set_surface_override_material(i, null)
 		_tint_mesh(helmet, Equipment.helmet_tint(helmet_id))
+
+
+## The two horns of the Yelmo de bruma, built once under the helmet mesh. Their meshes
+## join _meshes, so a hit flashes them with the rest of the hero.
+func _build_horns(helmet: MeshInstance3D) -> Node3D:
+	var horns := Node3D.new()
+	horns.name = "Horns"
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = HORN_COLOR
+	mat.roughness = 0.6
+	for side: float in [1.0, -1.0]:
+		# A turn of -angle about Z points +Y toward +X: the right horn goes out to +X.
+		var joint := Node3D.new()
+		joint.position = Vector3(HORN_ROOT.x * side, HORN_ROOT.y, HORN_ROOT.z)
+		joint.rotation_degrees.z = -HORN_START_ANGLE * side
+		horns.add_child(joint)
+		var radius := HORN_RADIUS
+		for i in HORN_SEGMENTS:
+			var next_radius := HORN_RADIUS * (HORN_SEGMENTS - 1 - i) / HORN_SEGMENTS
+			var mesh := CylinderMesh.new()
+			mesh.bottom_radius = radius
+			mesh.top_radius = next_radius
+			mesh.height = HORN_SEGMENT_LENGTH
+			mesh.radial_segments = 6
+			mesh.rings = 1
+			var mi := MeshInstance3D.new()
+			mi.mesh = mesh
+			mi.material_override = mat
+			mi.position.y = HORN_SEGMENT_LENGTH / 2.0
+			joint.add_child(mi)
+			_meshes.append(mi)
+			var next := Node3D.new()
+			next.position.y = HORN_SEGMENT_LENGTH
+			next.rotation_degrees.z = HORN_BEND * side
+			joint.add_child(next)
+			joint = next
+			radius = next_radius
+	helmet.add_child(horns)
+	return horns
 
 
 ## Swings (characters) and lunges toward the target and steps back; the plant opens
