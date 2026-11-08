@@ -68,7 +68,7 @@ npcs = [{
 "kind": "npc",
 "lines": ["Este campamento es lo último antes del castillo.", "La niebla sale de la sala del trono, arriba del todo.", "Los esqueletos del patio no duermen nunca. Ve con cuidado."],
 "lines_by_chapter": {
-5: ["¡La niebla se ha ido! Se ve el cielo por primera vez en años.", "Por fin podré escribir a casa algo más que el parte del tiempo."]
+5: ["¡La niebla se ha ido! Se ve el cielo por primera vez en años.", "Por fin podré escribir a casa algo más que el parte del tiempo.", "Aunque dicen que en el salón del trono aún queda un eco de la niebla. Yo no subiría."]
 },
 "look": "VILLAGER",
 "name": "Soldado",

@@ -55,6 +55,8 @@ class_name Game extends Node
 ## record frames of it.
 ## `-- --autoplay --autoplay-zone=<id>`: a new game that starts in that zone with the
 ## level, gold, gear and progress AUTOPLAY_ZONES gives it.
+## `-- --autoplay --autoplay-zone=eco`: a finished game in the throne room at Lv 20 that
+## fights the Eco de la Niebla again and again, printing each result.
 ## `-- --autoplay --autoplay-easy`: a new game on Fácil.
 
 signal quit_to_title
@@ -75,7 +77,10 @@ const LOAD_FAILED_NOTICE := "No se pudo cargar la partida. Empiezas de nuevo."
 const BOSS_NOTICES := {
 	"rey_slime": "¡Villaclaro está a salvo! La niebla deja libre el camino del norte.",
 	"senor_niebla": "¡Consigues el último Fragmento del amuleto! La niebla se levanta.",
+	"eco_niebla": "El Eco de la Niebla se deshace en la bruma... por ahora.",
 }
+## Said before a boss's first-victory prize (Combatant.reward_equipment).
+const REWARD_LINE := "Entre la bruma brilla algo."
 const KEY_ITEM_NOTICE := "¡Consigues un %s!"
 const LEVER_NOTICE := "¡Tiras de la palanca! Se oye cómo se abre una reja."
 const KEY_NOTICE := "¡Encuentras la %s!"
@@ -91,6 +96,8 @@ const AUTOPLAY_INN_RATIO := 0.5
 ## On autoplay the boss only comes out while the hero has these shares of max HP and MP.
 const AUTOPLAY_BOSS_HP := 0.7
 const AUTOPLAY_BOSS_MP := 0.4
+## --autoplay-zone=eco: a finished game in the throne room, ready for the Eco de la Niebla.
+const ECHO_START := "eco"
 ## --autoplay-zone=<id>: what a new game starting in each zone gets, as planned when
 ## arriving there (zone 1 done: Lv 5, its shop's gear, the Rey Slime beaten).
 const AUTOPLAY_ZONES := {
@@ -131,6 +138,21 @@ const AUTOPLAY_ZONES := {
 		"quest_done": true,
 		"town": "mina_1",
 	},
+	# After the ending (--autoplay-zone=eco): Lv 20, the platinum gear with its helmet, the
+	# Esqueleto leal, every boss beaten and the story finished, in the throne room.
+	ECHO_START: {
+		"zone": "castillo_trono",
+		"experience": 3600,
+		"gold": 1000,
+		"gear": ["espada_platino", "armadura_platino", "escudo_platino", "casco_platino"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra", "senor_niebla"],
+		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo"],
+		"quest_done": true,
+		"town": "castillo_patio",
+		"ally": "esqueleto_leal",
+		"items": {Inventory.POTION: 2, Inventory.ETHER: 3, Inventory.WING: 3},
+	},
 	# Ready for the Señor de la Niebla: Lv 17 with the castle's gear.
 	"castillo_trono": {
 		"experience": 2244,
@@ -169,6 +191,11 @@ var _last_missions: Array[String] = []
 var _last_gear_text := ""
 ## The save slot this game writes to (SaveStore; ignored on autoplay runs).
 var _slot := 1
+## --autoplay-zone=eco: autoplay goes for the Eco de la Niebla (never on any other run).
+var _autoplay_echo := false
+## --autoplay-zone=eco: fights with the Eco and how many were won, printed after each.
+var _echo_fights := 0
+var _echo_wins := 0
 var _shop: ShopWindow
 ## Something was bought, sold or equipped since the shop opened.
 var _shop_changed := false
@@ -269,12 +296,13 @@ func _apply_autoplay_zone(args: PackedStringArray) -> void:
 	for arg in args:
 		if not arg.begins_with("--autoplay-zone="):
 			continue
-		var zone_id := arg.trim_prefix("--autoplay-zone=")
+		var start_id := arg.trim_prefix("--autoplay-zone=")
+		var start: Dictionary = AUTOPLAY_ZONES.get(start_id, {})
+		var zone_id: String = start.get("zone", start_id)
 		if not zone_id in ZoneData.IDS:
-			push_error("Unknown zone for --autoplay-zone: %s" % zone_id)
+			push_error("Unknown zone for --autoplay-zone: %s" % start_id)
 			return
 		state.zone_id = zone_id
-		var start: Dictionary = AUTOPLAY_ZONES.get(zone_id, {})
 		if start.is_empty():
 			return
 		state.hero.experience = start.experience
@@ -291,6 +319,11 @@ func _apply_autoplay_zone(args: PackedStringArray) -> void:
 		state.town_zone = start.get("town", state.town_zone)
 		if start.quest_done:
 			state.quest.stage = Quest.Stage.DONE
+		state.ally_id = start.get("ally", "")
+		var items: Dictionary = start.get("items", {})
+		for id: String in items:
+			state.inventory.add(id, items[id])
+		_autoplay_echo = start_id == ECHO_START
 		state.story.mark_seen_for_flags(state.world_flags)
 		print("Zona de inicio: %s (Nv %d)" % [zone_id, state.hero.level])
 
@@ -307,6 +340,7 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 	state.zone_id = zone_id
 	_world = WORLD_SCENE.instantiate()
 	_world.zone = _zone
+	_world.boss_id = _boss_id()
 	add_child(_world)
 	move_child(_world, 0)
 	_world.freeze(true)
@@ -350,12 +384,12 @@ func _on_encounter(boss: bool) -> void:
 	state.battles += 1
 	var enemies: Array[Combatant] = []
 	if boss:
-		enemies.append(EnemyLibrary.data(_zone.boss_id))
+		enemies.append(EnemyLibrary.data(_boss_id()))
 	else:
 		enemies = EncounterTable.pick(_zone, _world.player_position(), _rng,
 			state.quests.wanted_enemies(), state.quests.hunted_enemies())
-	for enemy in enemies:
-		state.see_enemy(enemy.id)
+	_note_enemies(enemies, false)
+	var echo := boss and _boss_id() == _zone.postgame_boss_id
 	await _fade_to(1.0)
 	_world.set_active(false)
 	_audio.play_music(MusicLibrary.BOSS if boss else MusicLibrary.BATTLE)
@@ -376,14 +410,19 @@ func _on_encounter(boss: bool) -> void:
 	await _fade_to(0.0)
 	var outcome: int = await battle.finished
 	# A call for help adds enemies during the fight.
-	for enemy in battle.engine.enemies:
-		state.see_enemy(enemy.id)
+	_note_enemies(battle.engine.enemies, false)
 	var won := outcome == BattleEngine.State.WON
+	if _autoplay and echo:
+		_echo_fights += 1
+		_echo_wins += 1 if won else 0
+		print("Eco de la Niebla: %s (%d de %d ganados)" % ["victoria" if won else "derrota",
+			_echo_wins, _echo_fights])
 	if won or outcome == BattleEngine.State.LOST:
 		Wells.on_battle(state)
 		_world.set_dry_wells(Wells.dry_ids(state))
 	await _fade_to(1.0)
 	var notice := ""
+	var reward_lines: Array[String] = []
 	var scene := ""
 	var mission_done := false
 	var finished_quests: Array[Dictionary] = []
@@ -391,12 +430,17 @@ func _on_encounter(boss: bool) -> void:
 		state.gold += battle.engine.gold_won
 		state.gold_earned += battle.engine.gold_won
 		var quest_was_on := state.quest.stage != Quest.Stage.DONE
+		_note_enemies(battle.engine.enemies, true)
 		for enemy in battle.engine.enemies:
-			state.defeat_enemy(enemy.id)
 			state.quest.on_victory(enemy.id)
 			if enemy.is_boss:
+				var first := not state.has_flag(enemy.id)
 				notice = _boss_notice(enemy)
 				scene = state.story.scene_after_boss(enemy.id)
+				if first and enemy.reward_equipment != "":
+					reward_lines.append(REWARD_LINE)
+					reward_lines.append_array(QuestRewards.wear_prize(state,
+						enemy.reward_equipment))
 		mission_done = quest_was_on and state.quest.stage == Quest.Stage.DONE
 		for enemy in battle.engine.enemies:
 			finished_quests.append_array(state.quests.on_victory(state, enemy.id))
@@ -423,7 +467,9 @@ func _on_encounter(boss: bool) -> void:
 		await _play_scene(scene)
 	else:
 		await _world.freeze(false)
-		if notice != "":
+		if not reward_lines.is_empty():
+			await _world.show_dialogue("", reward_lines)
+		elif notice != "":
 			_world.show_notice(notice)
 	if mission_done:
 		_world.show_mission_done(QuestLog.done_text(Quest.TITLE))
@@ -475,11 +521,22 @@ func _rested_for_boss() -> bool:
 		and hero.mp >= hero.max_mp * AUTOPLAY_BOSS_MP
 
 
+## The boss of the current map: the zone's, or its postgame boss (ZoneData.postgame_boss_id)
+## once the game is finished.
+func _boss_id() -> String:
+	if _zone.postgame_boss_id != "" and state.is_finished():
+		return _zone.postgame_boss_id
+	return _zone.boss_id
+
+
 func _boss_wanted() -> bool:
-	if _zone.boss_id == "":
+	var boss := _boss_id()
+	if boss == "":
 		return false
-	return state.quest.boss_available() if _zone.boss_id == Quest.BOSS_ID \
-		else not state.has_flag(_zone.boss_id)
+	if boss == _zone.postgame_boss_id:
+		# It can always be fought again; autoplay only meets it on --autoplay-zone=eco.
+		return not _autoplay or _autoplay_echo
+	return state.quest.boss_available() if boss == Quest.BOSS_ID else not state.has_flag(boss)
 
 
 ## Autoplay, in the village: a night at its inn and the shop's picks, as if the hero had
@@ -494,6 +551,18 @@ func _autoplay_restock() -> void:
 	for i in _zone.npcs.size():
 		if _zone.npcs[i].name in state.quests.reports_here(_zone.id, state.inventory):
 			await _on_npc(i)
+
+
+## Notes enemies in the bestiary: seen, or beaten too after a won battle. Only those of
+## BestiaryPage.ORDER: the Eco de la Niebla has no card and never counts.
+func _note_enemies(enemies: Array[Combatant], beaten: bool) -> void:
+	for enemy in enemies:
+		if not enemy.id in BestiaryPage.ORDER:
+			continue
+		if beaten:
+			state.defeat_enemy(enemy.id)
+		else:
+			state.see_enemy(enemy.id)
 
 
 ## Sets the boss's world flag, gives its key item and says so.
@@ -924,7 +993,7 @@ func _on_title_requested() -> void:
 ## hero has AUTOPLAY_BOSS_HP of his max HP and AUTOPLAY_BOSS_MP of his max MP (a worn-out
 ## hero fights on, or rests, first).
 func _update_boss() -> void:
-	if _zone.boss_id == "":
+	if _boss_id() == "":
 		return
 	var strong_enough := not _autoplay or (state.hero.level >= _zone.autoplay_boss_level \
 		and _rested_for_boss())

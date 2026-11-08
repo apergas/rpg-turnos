@@ -23,6 +23,7 @@ ground_color = Color(0.2, 0.18, 0.22, 1)
 has_grass = false
 boss_id = "senor_niebla"
 boss_pos = Vector3(0, 0, -16.5)
+postgame_boss_id = "eco_niebla"
 formations = [["esqueleto_guerrero"], ["esqueleto_picaro"], ["esqueleto_mago"], ["esqueleto_picaro"], ["esqueleto_guerrero", "esqueleto_mago"], ["esqueleto_picaro", "esqueleto_mago"]]
 encounter_grace = 4.0
 encounter_chance = 0.04
