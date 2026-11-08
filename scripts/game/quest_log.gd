@@ -194,6 +194,11 @@ func status_lines(inventory: Inventory) -> Array[String]:
 	return lines
 
 
+## Every mission of the game, the village quest included (the Colección's "n/7").
+static func total_count() -> int:
+	return QUESTS.size() + 1
+
+
 ## Missions finished, the village quest included: what the credits count.
 func done_count() -> int:
 	var done := 1 if village.stage == Quest.Stage.DONE else 0
