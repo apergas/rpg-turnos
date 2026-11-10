@@ -165,11 +165,11 @@ func has_boss() -> bool:
 
 ## Rolls the surprise once, before the first round: AMBUSH_CHANCE for the hero, as much
 ## for the enemies, nothing otherwise. Never against a boss (the Eco de la Niebla is one
-## too). A battle that must never have one (a Slime de Metal that keeps its HP, from
-## 1.7.0) goes here as well.
+## too). Nor against the Slime de Metal, who keeps its HP between battles
+## (_has_metal_slime()).
 func roll_ambush() -> Ambush:
 	ambush = Ambush.NONE
-	if has_boss():
+	if has_boss() or _has_metal_slime():
 		return ambush
 	var roll := _rng.randf()
 	if roll < AMBUSH_CHANCE:
@@ -177,6 +177,14 @@ func roll_ambush() -> Ambush:
 	elif roll < AMBUSH_CHANCE * 2.0:
 		ambush = Ambush.ENEMY
 	return ambush
+
+
+## True if the Slime de Metal is in this battle.
+func _has_metal_slime() -> bool:
+	for enemy in enemies:
+		if enemy.id == EnemyLibrary.METAL_SLIME:
+			return true
+	return false
 
 
 ## Why the hero can't use cmd right now ("" if he can).

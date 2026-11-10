@@ -1,7 +1,7 @@
 class_name World extends Node3D
 ## One map of the world, built from `zone` (a ZoneData, set before add_child; the
 ## meadow if none): field, village, figures, boss, chests, exits, player, follow camera,
-## status window and random encounters. A click or tap on the ground (held and dragged
+## status window and the groups of monsters walking on it (MonsterGroups, MonsterRoam): touching one starts its battle (encounter_triggered(false), contact_enemies(), end_contact()). A click or tap on the ground (held and dragged
 ## too) walks the player there, with a marker on the spot. Next to a figure or a closed
 ## chest (the nearest one in reach) Enter / Space talks to the old woman
 ## (talk_requested) or to a villager (npc_requested), opens the shop (shop_requested),
@@ -17,10 +17,10 @@ class_name World extends Node3D
 ## rock blocks turn see-through between the camera and the hero, the hero carries a
 ## lantern underground, and next to the lever, the key or a locked gate Enter / Space
 ## pulls it (lever_pulled), takes it (key_taken) or tries the gate (door_used).
-## Encounters and exits freeze the player until set_active(true) (or until Game frees
+## Battles and exits freeze the player until set_active(true) (or until Game frees
 ## the map). A "!" or "?" floats over a figure with something about a quest, and a figure a
 ## quest has not brought out is not on the map (set_quest_view()). Run on its own
-## (res://scenes/world/world.tscn) it prints each encounter, talk, shop, inn, chest and exit
+## (res://scenes/world/world.tscn) it prints each group touched (and takes it off), each talk, shop, inn, chest and exit
 ## and goes on.
 
 signal encounter_triggered(boss: bool)
@@ -180,6 +180,18 @@ const FIGURE_SIGN_OUTLINE := 14
 const FIGURE_SIGN_COLOR := Color(1.0, 0.95, 0.8)
 ## Mission lines wrap past this width, so the status window stays at the side of the screen.
 const MISSION_WIDTH := 420.0
+## Groups of monsters farther than this from the hero neither move nor animate.
+const GROUP_ANIMATE_RADIUS := 30.0
+## Seconds between two hops of a slime walking on the map.
+const HOP_TIME := 0.45
+## Autoplay: below the zone's autoplay_boss_level the hero leaves the route for the
+## nearest group this close that can start a battle, gives up after AUTOPLAY_HUNT_MS (or
+## stuck on the way, Player.take_failed_hunt()) and leaves that one alone for
+## AUTOPLAY_HUNT_RETRY_MS.
+const AUTOPLAY_HUNT_RADIUS := 60.0
+const AUTOPLAY_HUNT_RADIUS_CAVE := 12.0  # walls: a straight line to a far group fails
+const AUTOPLAY_HUNT_MS := 15000
+const AUTOPLAY_HUNT_RETRY_MS := 20000
 
 ## The map to build; set before add_child.
 var zone: ZoneData
@@ -188,7 +200,6 @@ var zone: ZoneData
 var boss_id := ""
 
 var _rng := RandomNumberGenerator.new()
-var _meter: EncounterMeter
 var _grass: ShaderMaterial
 var _player: Player
 var _camera: FollowCamera
@@ -269,14 +280,32 @@ var _quest_marks := {}
 var _hidden_figures: Array[String] = []
 var _mark_labels := {}
 var _figure_signs: Array[Label3D] = []
+## The groups of monsters on the map (MonsterGroups), each {"node": Node3D (no collider),
+## "actor": BattleActor (its first enemy's figure), "roam": MonsterRoam, "enemies":
+## Array[Combatant] (the formation, data), "armed": bool (false: fled from, it starts no
+## battle yet), "rare": bool (the Slime de Metal), "hop": seconds to its next hop}.
+var _groups: Array[Dictionary] = []
+## The hero is EncounterMeter.LEVEL_GAP levels past the zone: the moving groups keep away.
+var _shy := false
+## Index in _groups of the group whose battle is on (-1: none, or the boss's).
+var _contact := -1
+## No group starts a battle before this time (_sim_ms; _calm()).
+var _calm_until_ms := 0
+## Autoplay: hunt groups (Game: below the zone's autoplay_boss_level), until when the one
+## hunted now is followed, and group instance id -> the time until which it is left alone.
+var _hunt_on := false
+var _hunt_until_ms := 0
+## Time of the simulation in ms (the hunt's timers count it, so a run with --fixed-fps keeps them).
+var _sim_ms := 0.0
+var _hunt_skip := {}
 
 
 func _ready() -> void:
 	if zone == null:
 		zone = ZoneData.by_id("pradera")
-	_rng.randomize()
+	# The groups are placed with the zone and the clock: never twice the same.
+	_rng.seed = hash(zone.id) ^ Time.get_ticks_usec()
 	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
-	_meter = EncounterMeter.new(_rng, zone.encounter_grace, zone.encounter_chance)
 	_grass = WorldStage.build(self, zone)
 	if zone.is_dungeon():
 		_dungeon = DungeonMap.new()
@@ -318,12 +347,14 @@ func _ready() -> void:
 	_place_label.text = zone.map_label()
 	set_explored(ExploredMap.new(zone))
 	place_at_entry(zone.start_entry)
+	respawn_groups()
 	_camera.current = true
 	if get_parent() == get_tree().root:
 		_connect_standalone()
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
+	_sim_ms += delta * 1000.0
 	if _pad:
 		_player.stick_direction = _pad.direction
 		if _pad.direction != Vector2.ZERO:
@@ -339,6 +370,7 @@ func _physics_process(_delta: float) -> void:
 		_marker.position = _player.move_target
 	if _dungeon:
 		_dungeon.see_through(_camera.global_position, _player.global_position)
+	_move_groups(delta)
 	if _waiting or _talking:
 		return
 	var pos := _player.global_position
@@ -356,10 +388,10 @@ func _physics_process(_delta: float) -> void:
 		elif boss_distance <= BOSS_RADIUS:
 			_trigger(true)
 			return
-	var in_grass := not WorldStage.is_on_path(zone, pos)
-	if not _repelled and _meter.advance(_player.last_step_m, in_grass):
-		_trigger(false)
+	if _check_groups(pos):
 		return
+	if _autoplay and _hunt_on and not _repelled:
+		_update_hunt(pos)
 	var near := _nearest_use(pos)
 	if near.is_empty():
 		_hide_prompt()
@@ -474,7 +506,7 @@ func _reset_pad() -> void:
 		_pad.reset()
 
 
-## Hidden and frozen while a battle is on top; back on, the encounter grace restarts.
+## Hidden and frozen while a battle is on top; back on, no group starts a battle for MonsterGroups.CALM_MS.
 func set_active(active: bool) -> void:
 	process_mode = Node.PROCESS_MODE_INHERIT if active else Node.PROCESS_MODE_DISABLED
 	visible = active
@@ -482,7 +514,7 @@ func set_active(active: bool) -> void:
 	_camera.current = active
 	_reset_pad()
 	if active:
-		_meter.reset()
+		_calm()
 		_waiting = false
 		_player.input_enabled = true
 
@@ -494,7 +526,7 @@ func place_at_entry(entry_id: String) -> void:
 
 
 ## Puts the player at pos facing yaw_deg (0 faces north; a loaded game faces north),
-## with the encounter grace restarted and the exits waiting until the player steps
+## with the groups calm for a moment (_calm()) and the exits waiting until the player steps
 ## away from them. in_village() is right at once; village_changed is not emitted.
 ## After a return through the portal on autoplay: lets the player skip a blocked route point.
 func arm_blocked_point_skip() -> void:
@@ -504,7 +536,7 @@ func arm_blocked_point_skip() -> void:
 func place_player(pos: Vector3, yaw_deg := 0.0) -> void:
 	_player.place(pos, deg_to_rad(yaw_deg))
 	_camera.snap()
-	_meter.reset()
+	_calm()
 	_was_near = {}
 	_use_on_arrival = {}
 	_step_m = 0.0
@@ -539,6 +571,8 @@ func set_boss_present(present: bool) -> void:
 ## what the villagers say and, on a dungeon floor, the gates, the lever and the key.
 func set_world_flags(flags: Dictionary) -> void:
 	_flags = flags
+	for group in _groups:
+		(group.roam as MonsterRoam).set_flags(flags)
 	for exit: Dictionary in zone.exits:
 		(_fogs[exit.id] as Node3D).visible = not _is_open(exit)
 	if _dungeon:
@@ -562,14 +596,226 @@ func _refresh_map_marks() -> void:
 	_map_square.set_marks(MapMarks.of_zone(zone, _flags, _dry_wells))
 
 
-## The share of the zone's encounters that come now (EncounterMeter.level_rate()).
-func set_encounter_rate(rate: float) -> void:
-	_meter.rate = rate
+## The hero is EncounterMeter.LEVEL_GAP levels past the zone (EncounterMeter.is_shy()): the
+## groups that move keep away from him; the still ones stay. They can still be touched.
+func set_monsters_shy(on: bool) -> void:
+	_shy = on
 
 
-## An Incienso burning: no random encounters (the boss still waits where it is).
+## An Incienso burning: touching a group starts no battle and every group shows half
+## see-through (the boss still waits where it is).
 func set_repel(on: bool) -> void:
+	if _repelled == on:
+		return
 	_repelled = on
+	if on:
+		_player.stop_hunt()
+	for group in _groups:
+		_fade_group(group)
+	if not on:
+		_calm()
+
+
+## Autoplay: hunt the groups (Game: while the hero is below the zone's autoplay_boss_level).
+func set_autoplay_hunt(on: bool) -> void:
+	_hunt_on = on
+	if not on:
+		_player.stop_hunt()
+
+
+## Every group of the zone again (MonsterGroups.groups()), in new places, none within
+## MonsterGroups.ENTRY_GAP of avoid (where the hero stands). On autoplay prints "Grupos: n".
+func respawn_groups(avoid: Array[Vector3] = []) -> void:
+	for group in _groups:
+		(group.node as Node3D).queue_free()
+	_groups.clear()
+	_contact = -1
+	_hunt_skip.clear()
+	_player.stop_hunt()
+	for spot: Dictionary in MonsterGroups.groups(zone, _rng, avoid):
+		_add_group(spot.pos, spot.enemies, false)
+	if _autoplay:
+		print("Grupos: %d" % group_count())
+
+
+## How many groups are on the map (the rare enemy apart).
+func group_count() -> int:
+	var count := 0
+	for group in _groups:
+		if not group.rare:
+			count += 1
+	return count
+
+
+## Puts the zone's rare enemy (the Slime de Metal) on this dungeon floor, away from the hero
+## (MonsterGroups.rare_spot()), unless one is here already. It wanders the whole floor
+## (MonsterRoam WANDER) and is touched like a group.
+func add_rare(enemy_id: String) -> void:
+	if has_rare() or not zone.is_dungeon():
+		return
+	var spot: Variant = MonsterGroups.rare_spot(zone, _rng, _player.global_position)
+	if spot == null:
+		return
+	_add_group(spot, EnemyLibrary.formation([enemy_id]), true)
+	if _autoplay:
+		print("%s en el mapa" % EnemyLibrary.data(enemy_id).display_name)
+
+
+func has_rare() -> bool:
+	for group in _groups:
+		if group.rare:
+			return true
+	return false
+
+
+## A group at pos: the figure of its first enemy (no collider: nothing bumps into it),
+## facing the camera, and its MonsterRoam.
+func _add_group(pos: Vector3, enemies: Array[Combatant], rare: bool) -> void:
+	var node := Node3D.new()
+	node.position = pos
+	node.rotation_degrees.y = 180.0
+	add_child(node)
+	var actor: BattleActor = ACTOR_SCENE.instantiate()
+	actor.look = EnemyLibrary.look(enemies[0].id)
+	node.add_child(actor)
+	var roam := MonsterRoam.for_leader(enemies[0], pos, _rng,
+		zone if zone.is_dungeon() else null)
+	roam.set_flags(_flags)
+	var group := {"node": node, "actor": actor, "roam": roam, "enemies": enemies,
+		"armed": true, "rare": rare, "hop": 0.0}
+	_groups.append(group)
+	_fade_group(group)
+
+
+## Moves every group near the hero one physics tick (MonsterRoam), turned the way it walks,
+## with the walk animation and, for a slime, a hop now and then. Groups past
+## GROUP_ANIMATE_RADIUS stop moving and animating (their node stops processing).
+func _move_groups(delta: float) -> void:
+	var hero := _player.global_position
+	for group in _groups:
+		var node: Node3D = group.node
+		var near := _flat_distance(hero, node.position) <= GROUP_ANIMATE_RADIUS
+		var mode := Node.PROCESS_MODE_INHERIT if near else Node.PROCESS_MODE_DISABLED
+		if node.process_mode != mode:
+			node.process_mode = mode
+		if not near:
+			continue
+		var roam: MonsterRoam = group.roam
+		var actor: BattleActor = group.actor
+		var before := node.position
+		node.position = roam.step(before, delta, hero, _shy)
+		actor.set_walking(roam.moving)
+		if not roam.moving:
+			continue
+		var dir := node.position - before
+		node.rotation.y = lerp_angle(node.rotation.y, atan2(-dir.x, -dir.z),
+			minf(1.0, Player.TURN_SPEED * delta))
+		if actor.hops():
+			group["hop"] = float(group.hop) - delta
+			if group.hop <= 0.0:
+				group["hop"] = HOP_TIME
+				actor.play_hop()
+
+
+## A group shows half see-through while it can't start a battle: fled from, or an Incienso
+## burning.
+func _fade_group(group: Dictionary) -> void:
+	(group.actor as BattleActor).set_faded(_repelled or not group.armed)
+
+
+## The enemies of the group whose battle is starting (its formation, data: BattleScene
+## duplicates them); empty for the boss's battle.
+func contact_enemies() -> Array[Combatant]:
+	var enemies: Array[Combatant] = []
+	if _contact >= 0:
+		enemies.assign(_groups[_contact].enemies)
+	return enemies
+
+
+## After the battle of the group touched (outcome: BattleEngine.State): WON takes it off the
+## map until the map is built again ("Grupo vencido (quedan n)" on autoplay), FLED leaves it
+## half see-through, starting no battle until the hero is MonsterGroups.REARM_RADIUS away;
+## LOST changes nothing (Game sends the hero back and the groups come back with the map).
+func end_contact(outcome: int) -> void:
+	if _contact < 0:
+		return
+	var index := _contact
+	_contact = -1
+	var group: Dictionary = _groups[index]
+	if outcome == BattleEngine.State.WON:
+		_groups.remove_at(index)
+		(group.node as Node3D).queue_free()
+		if _autoplay:
+			print("Grupo vencido (quedan %d)" % group_count())
+	elif outcome == BattleEngine.State.FLED:
+		group.armed = false
+		_fade_group(group)
+
+
+## No group starts a battle for MonsterGroups.CALM_MS from now.
+func _calm() -> void:
+	_calm_until_ms = int(_sim_ms) + MonsterGroups.CALM_MS
+
+
+## The hero within MonsterGroups.CONTACT_RADIUS of a group starts its battle (true: the
+## map waits for Game), unless it is calm (_calm()) or an Incienso burns. A group fled from
+## starts none until the hero is MonsterGroups.REARM_RADIUS away from it.
+func _check_groups(pos: Vector3) -> bool:
+	var calm := int(_sim_ms) < _calm_until_ms
+	for i in _groups.size():
+		var group: Dictionary = _groups[i]
+		var d := _flat_distance(pos, (group.node as Node3D).position)
+		if not group.armed:
+			if d > MonsterGroups.REARM_RADIUS:
+				group.armed = true
+				_fade_group(group)
+			continue
+		if d <= MonsterGroups.CONTACT_RADIUS and not calm and not _repelled:
+			_contact = i
+			_trigger(false)
+			return true
+	return false
+
+
+## Autoplay: leaves the route for the nearest group within AUTOPLAY_HUNT_RADIUS that can
+## start a battle, and goes back to it once that one is gone or fled from, after
+## AUTOPLAY_HUNT_MS, or when the hero got stuck on the way (that one is then left alone for
+## AUTOPLAY_HUNT_RETRY_MS).
+func _update_hunt(pos: Vector3) -> void:
+	var now := int(_sim_ms)
+	var failed := _player.take_failed_hunt()
+	if failed != 0:
+		_hunt_skip[failed] = now + AUTOPLAY_HUNT_RETRY_MS
+	if _player.is_hunting():
+		var current := _player.hunting()
+		var index := _group_index(current) if current != null else -1
+		if index < 0 or not _groups[index].armed:
+			_player.stop_hunt()
+		elif now > _hunt_until_ms:
+			_hunt_skip[current.get_instance_id()] = now + AUTOPLAY_HUNT_RETRY_MS
+			_player.stop_hunt()
+		return
+	var best: Node3D = null
+	var best_d := AUTOPLAY_HUNT_RADIUS_CAVE if zone.is_dungeon() else AUTOPLAY_HUNT_RADIUS
+	for group in _groups:
+		var node: Node3D = group.node
+		if not group.armed or now < int(_hunt_skip.get(node.get_instance_id(), 0)):
+			continue
+		var d := _flat_distance(pos, node.position)
+		if d < best_d:
+			best = node
+			best_d = d
+	if best != null:
+		_player.hunt(best)
+		_hunt_until_ms = now + AUTOPLAY_HUNT_MS
+
+
+## The index in _groups of the group on node (-1 if none).
+func _group_index(node: Node3D) -> int:
+	for i in _groups.size():
+		if _groups[i].node == node:
+			return i
+	return -1
 
 
 ## Shows or removes the return portal at the zone's portal_pos.
@@ -643,7 +889,7 @@ func begin_cutscene() -> void:
 
 
 ## Puts every figure back on its spot, gives the camera back to the hero and the
-## controls back to the player (with the encounter grace restarted).
+## controls back to the player (the groups calm for a moment).
 func end_cutscene() -> void:
 	reset_figures()
 	_camera.follow(_player)
@@ -654,7 +900,7 @@ func end_cutscene() -> void:
 	_show_quest_marks()
 	for label in _figure_signs:
 		label.show()
-	_meter.reset()
+	_calm()
 	_was_near = {}
 	await freeze(false)
 
@@ -1038,8 +1284,9 @@ func _use(use: Dictionary) -> void:
 func _connect_standalone() -> void:
 	refresh_status(HERO_DATA, Inventory.START_POTIONS, GameState.START_GOLD)
 	encounter_triggered.connect(func(boss: bool) -> void:
-		print("Encuentro en %s (jefe: %s, en el camino: %s)" % [_player.global_position, boss,
-			WorldStage.is_on_path(zone, _player.global_position)])
+		var ids := contact_enemies().map(func(enemy: Combatant) -> String: return enemy.id)
+		print("Encuentro en %s (jefe: %s, grupo: %s)" % [_player.global_position, boss, ids])
+		end_contact(BattleEngine.State.WON)
 		set_active(true))
 	talk_requested.connect(func() -> void:
 		var lines: Array[String] = ["Hola, viajero."]
@@ -1068,6 +1315,7 @@ func _connect_standalone() -> void:
 		_flags[zone.floor_key] = true
 		set_world_flags(_flags))
 	door_used.connect(func() -> void: print("Puerta"))
+	set_autoplay_hunt(true)
 
 
 ## Flat ring on the spot the player walks to. Drawn on top of everything, so the tall

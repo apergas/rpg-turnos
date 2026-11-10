@@ -5,7 +5,7 @@ class_name Player extends CharacterBody3D
 ## the walk animation while moving, the idle one when stopped. Its model is a
 ## BattleActor.
 ## With `-- --autoplay` it walks `route` (the zone's autoplay route) in a loop instead
-## of reading keys.
+## of reading keys. World may send it to a group of monsters instead (hunt()); it goes back to the nearest point of the route when the hunt ends or when it gets stuck on the way (take_failed_hunt()).
 
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
 const SPEED := 5.0
@@ -30,6 +30,11 @@ var last_step_m := 0.0
 var move_target: Variant = null
 ## Where the touch stick points (screen axes, set by World); keys win over it.
 var stick_direction := Vector2.ZERO
+## Autoplay: the group of monsters it walks to instead of its route (World picks it with
+## hunt()), and the id of one it gave up on (stuck on the way) until World takes it.
+var _hunt: Node3D = null
+var _hunting := false
+var _failed_hunt_id := 0
 
 var _model: BattleActor
 var _autoplay := false
@@ -73,6 +78,8 @@ func place(pos: Vector3, facing_yaw: float) -> void:
 	last_step_m = 0.0
 	move_target = null
 	_skip_blocked_point = false
+	_hunting = false
+	_hunt = null
 	_route_index = _nearest_route_point(pos)
 
 
@@ -105,6 +112,13 @@ func _physics_process(delta: float) -> void:
 		_stuck_frames = _stuck_frames + 1 if last_step_m < SPEED * delta * 0.25 else 0
 		if _stuck_frames > STUCK_FRAMES:
 			move_target = null
+	elif _autoplay and _hunting and dir != Vector3.ZERO:
+		# A rock, a tree or a wall between the hero and the group: give it up.
+		_stuck_frames = _stuck_frames + 1 if last_step_m < SPEED * delta * 0.25 else 0
+		if _stuck_frames > STUCK_FRAMES:
+			_stuck_frames = 0
+			_failed_hunt_id = _hunt.get_instance_id() if is_instance_valid(_hunt) else 0
+			stop_hunt()
 	elif _autoplay and _skip_blocked_point and dir != Vector3.ZERO:
 		# Placed back by the portal, the nearest route point can be behind a wall.
 		_stuck_frames = _stuck_frames + 1 if last_step_m < SPEED * delta * 0.25 else 0
@@ -119,6 +133,9 @@ func _physics_process(delta: float) -> void:
 
 func _wanted_direction() -> Vector3:
 	if _autoplay:
+		var target := hunting()
+		if target != null:
+			return _hunt_direction(target)
 		return _route_direction()
 	var keys := Input.get_vector(KeyMap.MOVE_LEFT, KeyMap.MOVE_RIGHT, KeyMap.MOVE_UP,
 		KeyMap.MOVE_DOWN)
@@ -157,6 +174,44 @@ func _route_direction() -> Vector3:
 ## Arms the skip of a route point the hero can't reach (see _skip_blocked_point).
 func arm_blocked_point_skip() -> void:
 	_skip_blocked_point = true
+
+
+## Autoplay: walks to target (a group of monsters) instead of its route.
+func hunt(target: Node3D) -> void:
+	_hunt = target
+	_hunting = true
+	_stuck_frames = 0
+
+
+## Autoplay: back to the route, at its nearest point.
+func stop_hunt() -> void:
+	if not _hunting:
+		return
+	_hunting = false
+	_hunt = null
+	_route_index = _nearest_route_point(global_position)
+
+
+func is_hunting() -> bool:
+	return _hunting
+
+
+## The group being hunted, or null (none, or freed: beaten).
+func hunting() -> Node3D:
+	return _hunt if _hunting and is_instance_valid(_hunt) else null
+
+
+## The instance id of the group it last gave up on (0: none), once.
+func take_failed_hunt() -> int:
+	var id := _failed_hunt_id
+	_failed_hunt_id = 0
+	return id
+
+
+func _hunt_direction(target: Node3D) -> Vector3:
+	var to_goal := target.global_position - global_position
+	to_goal.y = 0.0
+	return to_goal.normalized() if to_goal.length() > 0.1 else Vector3.ZERO
 
 
 ## The route point to walk to first after being placed at pos: the nearest one.

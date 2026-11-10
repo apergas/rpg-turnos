@@ -1,11 +1,11 @@
 class_name Game extends Node
 ## One play session, created by TitleScreen (setup() before add_child). Owns the
 ## GameState and the map of the current zone (a World built from its ZoneData), and puts
-## a battle on top of the map when an encounter starts (the enemies come from
-## EncounterTable with the zone's formations, or the zone's boss). The map stays while
-## battles come and go, so the hero's position, the camera and the encounter grace
-## survive them; walking into an open exit fades to black, frees the map and builds the
-## next zone at the exit's entry (GameState.zone_id). A victory adds the gold and counts
+## a battle on top of the map when the hero touches a group of monsters on it (its
+## formation, World.contact_enemies()) or the zone's boss. The map stays while battles
+## come and go, so the hero's position, the camera and the groups survive them; walking
+## into an open exit fades to black, frees the map and builds the next zone at the exit's
+## entry (GameState.zone_id), every group back. A victory adds the gold and counts
 ## every enemy defeated for the quest; a boss also sets its world flag (the Rey Slime
 ## lifts the fog of the meadow's north exit) and gives its key item. Fleeing just goes
 ## back to the map; a defeat takes half the gold (GameState.defeat_gold_loss()), heals the
@@ -42,17 +42,18 @@ class_name Game extends Node
 ## On autoplay it prints the gold and the equipment each time they change, the level and
 ## the play time on every change of zone and, after the credits, the play time of the
 ## whole run (TitleScreen then quits). After a won battle, when the hero needs rest
-## (GameState.needs_rest()) away from a village, it flies back with an Ala de viaje, sleeps
-## at the inn, restocks at the shop and goes back through the portal; after a defeat it
-## sleeps and restocks too.
+## (GameState.needs_rest()) or the map has no group left (_needs_groups()) away from a
+## village, it flies back with an Ala de viaje, sleeps at the inn, restocks at the shop
+## and goes back through the portal; after a defeat it
+## sleeps and restocks too. With no Ala de viaje an empty map gets its groups back at once.
 ## Run on its own (res://scenes/game/game.tscn) it starts a new game with its own
 ## AudioDirector and default options.
 ##
 ## `-- --autoplay --autoplay-save`: after the first autosave that follows a won battle
 ## it prints the saved values ("Guardado: ...") and goes back to the title, which loads
 ## the save at once; the loaded game prints the same values ("Cargado: ...").
-## `-- --autoplay --autoplay-menu`: MENU_TOUR_DELAY seconds into the map (still inside
-## the encounter grace) it shows every page of the pause menu (PauseMenu.tour()), to
+## `-- --autoplay --autoplay-menu`: MENU_TOUR_DELAY seconds into the map (before any group
+## is in reach) it shows every page of the pause menu (PauseMenu.tour()), to
 ## record frames of it.
 ## `-- --autoplay --autoplay-zone=<id>`: a new game that starts in that zone with the
 ## level, gold, gear and progress AUTOPLAY_ZONES gives it.
@@ -94,6 +95,9 @@ const MENU_TOUR_DELAY := 1.0
 const INN_NIGHT_TIME := 0.8
 ## On autoplay the hero only stops at an inn below this share of max HP or MP.
 const AUTOPLAY_INN_RATIO := 0.5
+## Autoplay: seconds on a map without a battle, below the zone's autoplay_boss_level, after
+## which its groups are put back (the ones left may be out of reach of the route).
+const AUTOPLAY_STALL_S := 90.0
 ## On autoplay the boss only comes out while the hero has these shares of max HP and MP.
 const AUTOPLAY_BOSS_HP := 0.7
 const AUTOPLAY_BOSS_MP := 0.4
@@ -184,6 +188,8 @@ var _hero_name := ""
 var _difficulty := Difficulty.NORMAL
 var _cutscenes: CutscenePlayer
 var _busy := false
+## Autoplay: seconds since the last battle or change of map (AUTOPLAY_STALL_S).
+var _quiet_s := 0.0
 var _leaving := false
 var _autoplay := false
 var _autoplay_save := false
@@ -265,6 +271,7 @@ func _ready() -> void:
 	_switch_zone(state.zone_id, "")
 	if start_pos != null:
 		_world.place_player(start_pos)
+		_respawn_groups()
 	var prologue := state.chapter() == StoryState.Chapter.PROLOGUE
 	if prologue:
 		# Under black: the prologue fades in by itself.
@@ -298,6 +305,12 @@ func _show_touch_hint() -> void:
 
 func _process(delta: float) -> void:
 	play_time += delta / Engine.time_scale  # a fast battle takes less play time, not more
+	if _autoplay and not _busy and _world != null and not _world.in_village():
+		_quiet_s += delta
+		if _quiet_s > AUTOPLAY_STALL_S and state.hero.level < _zone.autoplay_boss_level:
+			_quiet_s = 0.0
+			print("Grupos repuestos (partida automática, sin combates)")
+			_respawn_groups()
 
 
 ## --autoplay-zone=<id>: starts the new game in that zone with AUTOPLAY_ZONES' state.
@@ -350,6 +363,7 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 		_world.queue_free()
 	_zone = ZoneData.by_id(zone_id)
 	state.zone_id = zone_id
+	_quiet_s = 0.0
 	_world = WORLD_SCENE.instantiate()
 	_world.zone = _zone
 	_world.boss_id = _boss_id()
@@ -381,6 +395,7 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 	_world.set_world_flags(state.world_flags)
 	_show_portal()
 	_update_boss()
+	_spawn_rare()
 	_refresh_status()
 	MusicLibrary.build(_zone.music)
 	if _world.in_village():
@@ -393,13 +408,16 @@ func _on_encounter(boss: bool) -> void:
 	if _busy:
 		return
 	_set_busy(true)
+	_quiet_s = 0.0
 	state.battles += 1
 	var enemies: Array[Combatant] = []
 	if boss:
 		enemies.append(EnemyLibrary.data(_boss_id()))
 	else:
-		enemies = EncounterTable.pick(_zone, _world.player_position(), _rng,
-			state.quests.wanted_enemies(), state.quests.hunted_enemies())
+		enemies = _world.contact_enemies()
+		var kept := state.give_metal_slime_hp(enemies)
+		if _autoplay and kept > 0:
+			print("Slime de Metal con PV %d" % kept)
 	_note_enemies(enemies, false)
 	var echo := boss and _boss_id() == _zone.postgame_boss_id
 	await _fade_to(1.0)
@@ -433,6 +451,13 @@ func _on_encounter(boss: bool) -> void:
 		Wells.on_battle(state)
 		_world.set_dry_wells(Wells.dry_ids(state))
 	await _fade_to(1.0)
+	if not boss:
+		# Under black: a beaten group leaves the map, one fled from stays half see-through.
+		_world.end_contact(outcome)
+	if state.keep_metal_slime_hp(battle.engine.enemies, outcome) > 0:
+		if _autoplay:
+			print("Slime de Metal: PV %d guardados" % state.metal_slime_hp)
+		_autosave(false)  # a fled battle saves nothing else: quitting now must not lose them
 	var notice := ""
 	var reward_lines: Array[String] = []
 	var scene := ""
@@ -513,17 +538,29 @@ func _on_encounter(boss: bool) -> void:
 		await _on_travel_requested()
 		await _autoplay_restock()
 		await _on_portal()
+	elif _autoplay and won and _needs_groups():
+		# No Ala de viaje (or in a village): the groups come back as if it had flown away
+		# and back. Only the autoplay does this.
+		print("Grupos repuestos (partida automática)")
+		_respawn_groups()
 	elif _autoplay and outcome == BattleEngine.State.LOST:
 		await _autoplay_restock()
 
 
 ## Autoplay: needs rest (GameState.needs_rest()), is only kept from the zone's boss by its
-## HP or MP, or has a report waiting in the last village, away from a village, with an Ala
-## de viaje (the night at the inn is free). The route may never pass the one who waits.
+## HP or MP, has a report waiting in the last village or has no group left to fight
+## (_needs_groups(): the portal back brings them), away from a village, with an Ala de
+## viaje (the night at the inn is free). The route may never pass the one who waits.
 func _wants_retreat() -> bool:
 	var report := not state.quests.reports_here(state.town_zone, state.inventory).is_empty()
-	return (state.needs_rest() or _boss_needs_rest() or report) and not _world.in_village() \
-		and state.inventory.count(Inventory.WING) > 0
+	return (state.needs_rest() or _boss_needs_rest() or report or _needs_groups()) \
+		and not _world.in_village() and state.inventory.count(Inventory.WING) > 0
+
+
+## Autoplay: no group left on this map while the hero still has levels to win before its
+## boss (they only come back when the map is built again).
+func _needs_groups() -> bool:
+	return _world.group_count() == 0 and state.hero.level < _zone.autoplay_boss_level
 
 
 ## Autoplay: the zone's boss is due at this level but the hero is too worn for it. MP
@@ -603,14 +640,34 @@ func _boss_notice(boss: Combatant) -> String:
 
 
 ## Puts the player at the town entry of the last village visited, switching zones if
-## needed (no fade: the caller is already under black).
+## needed (no fade: the caller is already under black). The groups of the map come back
+## either way.
 func _go_to_town() -> void:
 	var town := ZoneData.by_id(state.town_zone)
 	if state.town_zone != state.zone_id:
 		_switch_zone(state.town_zone, town.town_entry)
 	else:
 		_world.place_at_entry(town.town_entry)
+		_respawn_groups()
 		_on_village_changed(_world.in_village())
+
+
+## Every group of this map comes back (the map counts as built again: a defeat, the portal,
+## a game loaded), clear of where the hero stands.
+func _respawn_groups() -> void:
+	var avoid: Array[Vector3] = [_world.player_position()]
+	_world.respawn_groups(avoid)
+	_spawn_rare()
+
+
+## The zone's rare enemy on this map (the Slime de Metal on the mine floors): always while
+## its quest is on, now and then once it is done (EncounterTable.rare_on_map()).
+func _spawn_rare() -> void:
+	if _zone.rare_enemy == "" or _world.has_rare():
+		return
+	if EncounterTable.rare_on_map(_zone, state.quests.wanted_enemies(),
+			state.quests.hunted_enemies(), _rng):
+		_world.add_rare(_zone.rare_enemy)
 
 
 ## An open exit: fades to black, builds the next zone at the exit's entry, autosaves.
@@ -659,6 +716,7 @@ func _on_portal() -> void:
 	if _busy or not state.has_portal():
 		return
 	_set_busy(true)
+	_quiet_s = 0.0
 	_world.freeze(true)
 	await _fade_to(1.0)
 	var zone_id := state.portal_zone
@@ -669,6 +727,7 @@ func _on_portal() -> void:
 	else:
 		_show_portal()
 	_world.place_player(pos)
+	_respawn_groups()
 	_world.arm_blocked_point_skip()
 	_on_village_changed(_world.in_village())
 	_refresh_status()
@@ -848,6 +907,8 @@ func _on_npc(index: int) -> void:
 
 ## The map shows what changed; a finished quest says so; the game is saved.
 func _after_quest_talk(done_title: String) -> void:
+	if _zone.rare_enemy in state.quests.wanted_enemies():
+		_spawn_rare()  # its hunt was just taken: it is on this floor at once
 	if _autoplay:
 		for id in Inventory.SEEDS:
 			while state.inventory.count(id) > 0:
@@ -896,6 +957,7 @@ func _on_inn(inn_id: String) -> void:
 	_world.freeze(true)
 	Inn.stay(state)
 	await _fade_to(1.0)
+	_respawn_groups()
 	_refresh_status()
 	_audio.play_sfx(SfxLibrary.HEAL)
 	await get_tree().create_timer(INN_NIGHT_TIME).timeout
@@ -1058,8 +1120,9 @@ func _refresh_status() -> void:
 	var missions := state.current_missions()
 	_world.refresh_status(state.hero, state.inventory.count(Inventory.POTION), state.gold,
 		missions)
-	_world.set_encounter_rate(EncounterMeter.level_rate(state.hero.level, _zone.exit_level))
+	_world.set_monsters_shy(EncounterMeter.is_shy(state.hero.level, _zone.exit_level))
 	_world.set_repel(state.repel_m > 0.0)
+	_world.set_autoplay_hunt(_autoplay and state.hero.level < _zone.autoplay_boss_level)
 	_world.set_quest_view(state.quests.markers(_zone.id, state.inventory),
 		state.quests.hidden_figures(_zone.id))
 	var loadout := state.loadout

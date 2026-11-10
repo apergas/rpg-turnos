@@ -1,8 +1,8 @@
 class_name ZoneData extends Resource
 ## Everything one map of the world is built from (data/zones/<id>.tres): the field and
 ## its walls, ground and grass, the dirt path and the safe discs, the village, buildings,
-## rocks, trees and bushes, the entries and exits, the figures, the boss, the encounter
-## formations and pace, the music, the light and the battle backdrop. WorldStage builds
+## rocks, trees and bushes, the entries and exits, the figures, the boss, the
+## formations of its groups of monsters, the music, the light and the battle backdrop. WorldStage builds
 ## the map from it, World runs it and Game switches between zones. A dungeon floor (the
 ## mine, the castle) is drawn instead as a grid of CELL metres (layout, see "Dungeon"):
 ## DungeonMap builds it and the lookups below answer about its cells. Pure data plus a few lookups:
@@ -28,7 +28,9 @@ const DOOR := "D"
 const KEY := "K"
 const TORCH := "T"
 const THRONE := "R"
-## Within this distance of a stair cell's centre the stair room is safe (no encounters).
+## Plain floor (no torch, no chest...): what a group or the Slime de Metal stands on.
+const FLOOR := "."
+## Within this distance of a stair cell's centre the stair room is safe (no monster groups).
 const STAIRS_SAFE_RADIUS := 6.0
 
 @export var id := ""
@@ -56,10 +58,10 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var hills: Array = []
 
 @export_group("Path and safe ground")
-## Corners of the dirt path (no grass, no encounters).
+## Corners of the dirt path (no grass, no monster groups).
 @export var path_points: Array[Vector3] = []
 @export var path_half_width := 1.5
-## [centre, radius] of each round patch of bare dirt (no grass, no encounters): the
+## [centre, radius] of each round patch of bare dirt (no grass, no monster groups): the
 ## spawn area, the village clearing, the boss's clearing...
 @export var safe_discs: Array = []
 ## The village: inside this circle World emits village_changed(true) and the village
@@ -92,7 +94,7 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## the clump.
 @export var tree_models: Array[String] = ["tree_A", "tree_B"]
 @export var clump_model := "trees_A"
-## [centre, radius] of each glade: no trees, but grass and encounters.
+## [centre, radius] of each glade: no trees, but grass and monster groups.
 @export var glades: Array = []
 @export var bush_seed := 31
 @export var bush_tries := 220
@@ -127,22 +129,21 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var postgame_boss_id := ""
 
 @export_group("Encounters")
-## Formations of a random encounter (each a list of EnemyLibrary ids, left to right),
-## every one with the same weight; within start_radius of start_pos only
-## start_formations come.
+## Formations of the groups of monsters on the map (each a list of EnemyLibrary ids, left
+## to right; EncounterTable.pick_group()), every one with the same weight; within
+## start_radius of start_pos only start_formations.
 @export var formations: Array = []
 @export var start_formations: Array = []
 @export var start_pos := Vector3.ZERO
 @export var start_radius := 0.0
-## An enemy that only comes while a quest hunts it, alone, with this chance per encounter
-## (EnemyLibrary id, "" for none).
+## How many groups of monsters stand on the map (MonsterGroups; fewer if there is no room).
+@export var monster_count := 0
+## An enemy that walks the map alone, not as one of its groups: always while a quest hunts
+## it, now and then once it is done (EncounterTable.rare_on_map(); EnemyLibrary id, "" for
+## none).
 @export var rare_enemy := ""
-@export var rare_chance := 0.0
-## EncounterMeter: free meters after each battle, then this chance per meter on grass.
-@export var encounter_grace := 5.0
-@export var encounter_chance := 0.025
 ## The level a hero usually has on leaving this zone (about its boss's): from
-## EncounterMeter.LEVEL_GAP levels past it, its monsters come half as often. 0: never.
+## EncounterMeter.LEVEL_GAP levels past it, its moving groups keep away from the hero (EncounterMeter.is_shy()). 0: never.
 @export var exit_level := 0
 
 @export_group("Look and sound")
@@ -280,7 +281,7 @@ func find_cells(ch: String) -> Array[Vector2i]:
 	return cells
 
 
-## True within STAIRS_SAFE_RADIUS of a stair cell (the stair rooms have no encounters).
+## True within STAIRS_SAFE_RADIUS of a stair cell (the stair rooms have no monster groups).
 func near_stairs(pos: Vector3) -> bool:
 	for kind in [STAIRS_UP, STAIRS_DOWN]:
 		for cell in find_cells(kind):
