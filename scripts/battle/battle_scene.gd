@@ -102,17 +102,14 @@ var _helmet_id := ""
 
 
 ## The hero and the inventory are used as is, so HP, MP, EXP and items stay with the
-## caller; the enemy data is duplicated so the .tres files never change. Two enemies
-## with the same name become "Slime A" and "Slime B".
+## caller; the enemy data is duplicated so the .tres files never change. Two enemies of
+## the same kind keep the same name: the arrow, the glow and the bar tell them apart.
 func setup(hero_ref: Combatant, enemy_data: Array[Combatant], inv: Inventory) -> void:
 	hero = hero_ref
 	inventory = inv
 	enemies.clear()
 	for data in enemy_data:
 		enemies.append(data.duplicate() as Combatant)
-	if enemies.size() == 2 and enemies[0].display_name == enemies[1].display_name:
-		enemies[0].display_name += " A"
-		enemies[1].display_name += " B"
 
 
 ## Call before adding it to the tree, like setup().
