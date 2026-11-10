@@ -488,6 +488,9 @@ const LOOKS := {
 	},
 }
 
+## Map only: how see-through a group's figure is while it can't start a battle.
+const FADED_TRANSPARENCY := 0.5
+
 @export var look := Look.HERO
 
 ## Height of the floating damage numbers.
@@ -588,6 +591,23 @@ func set_walking(on: bool) -> void:
 	var anim_name: String = _anims.walk if on else _anims.idle
 	if _anim.current_animation != anim_name:
 		_anim.play(anim_name, BLEND_TIME, WALK_SPEED if on else 1.0)
+
+
+## Map only: half see-through (a group that can't start a battle now: fled from, or an
+## Incienso burning), or whole again. Every mesh of the figure.
+func set_faded(on: bool) -> void:
+	for mi in _meshes:
+		mi.transparency = FADED_TRANSPARENCY if on else 0.0
+
+
+## Map only: true for the figures that hop as they walk (the slimes).
+func hops() -> bool:
+	return look in [Look.SLIME, Look.RED_SLIME, Look.METAL_SLIME]
+
+
+## Map only: one small hop (a slime walking); not awaited.
+func play_hop() -> void:
+	_hop()
 
 
 ## Hero only: shows the hand meshes of the weapon and shield worn (Equipment ids, ""

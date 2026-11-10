@@ -180,6 +180,10 @@ const FIGURE_SIGN_OUTLINE := 14
 const FIGURE_SIGN_COLOR := Color(1.0, 0.95, 0.8)
 ## Mission lines wrap past this width, so the status window stays at the side of the screen.
 const MISSION_WIDTH := 420.0
+## Groups of monsters farther than this from the hero neither move nor animate.
+const GROUP_ANIMATE_RADIUS := 30.0
+## Seconds between two hops of a slime walking on the map.
+const HOP_TIME := 0.45
 
 ## The map to build; set before add_child.
 var zone: ZoneData
@@ -269,12 +273,20 @@ var _quest_marks := {}
 var _hidden_figures: Array[String] = []
 var _mark_labels := {}
 var _figure_signs: Array[Label3D] = []
+## The groups of monsters on the map (MonsterGroups), each {"node": Node3D (no collider),
+## "actor": BattleActor (its first enemy's figure), "roam": MonsterRoam, "enemies":
+## Array[Combatant] (the formation, data), "armed": bool (false: fled from, it starts no
+## battle yet), "rare": bool (the Slime de Metal), "hop": seconds to its next hop}.
+var _groups: Array[Dictionary] = []
+## The hero is EncounterMeter.LEVEL_GAP levels past the zone: the moving groups keep away.
+var _shy := false
 
 
 func _ready() -> void:
 	if zone == null:
 		zone = ZoneData.by_id("pradera")
-	_rng.randomize()
+	# The groups are placed with the zone and the clock: never twice the same.
+	_rng.seed = hash(zone.id) ^ Time.get_ticks_usec()
 	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
 	_meter = EncounterMeter.new(_rng, zone.encounter_grace, zone.encounter_chance)
 	_grass = WorldStage.build(self, zone)
@@ -318,12 +330,13 @@ func _ready() -> void:
 	_place_label.text = zone.map_label()
 	set_explored(ExploredMap.new(zone))
 	place_at_entry(zone.start_entry)
+	respawn_groups()
 	_camera.current = true
 	if get_parent() == get_tree().root:
 		_connect_standalone()
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if _pad:
 		_player.stick_direction = _pad.direction
 		if _pad.direction != Vector2.ZERO:
@@ -339,6 +352,7 @@ func _physics_process(_delta: float) -> void:
 		_marker.position = _player.move_target
 	if _dungeon:
 		_dungeon.see_through(_camera.global_position, _player.global_position)
+	_move_groups(delta)
 	if _waiting or _talking:
 		return
 	var pos := _player.global_position
@@ -539,6 +553,8 @@ func set_boss_present(present: bool) -> void:
 ## what the villagers say and, on a dungeon floor, the gates, the lever and the key.
 func set_world_flags(flags: Dictionary) -> void:
 	_flags = flags
+	for group in _groups:
+		(group.roam as MonsterRoam).set_flags(flags)
 	for exit: Dictionary in zone.exits:
 		(_fogs[exit.id] as Node3D).visible = not _is_open(exit)
 	if _dungeon:
@@ -570,6 +586,82 @@ func set_encounter_rate(rate: float) -> void:
 ## An Incienso burning: no random encounters (the boss still waits where it is).
 func set_repel(on: bool) -> void:
 	_repelled = on
+
+
+## Every group of the zone again (MonsterGroups.groups()), in new places, none within
+## MonsterGroups.ENTRY_GAP of avoid (where the hero stands). On autoplay prints "Grupos: n".
+func respawn_groups(avoid: Array[Vector3] = []) -> void:
+	for group in _groups:
+		(group.node as Node3D).queue_free()
+	_groups.clear()
+	for spot: Dictionary in MonsterGroups.groups(zone, _rng, avoid):
+		_add_group(spot.pos, spot.enemies, false)
+	if _autoplay:
+		print("Grupos: %d" % group_count())
+
+
+## How many groups are on the map (the rare enemy apart).
+func group_count() -> int:
+	var count := 0
+	for group in _groups:
+		if not group.rare:
+			count += 1
+	return count
+
+
+## A group at pos: the figure of its first enemy (no collider: nothing bumps into it),
+## facing the camera, and its MonsterRoam.
+func _add_group(pos: Vector3, enemies: Array[Combatant], rare: bool) -> void:
+	var node := Node3D.new()
+	node.position = pos
+	node.rotation_degrees.y = 180.0
+	add_child(node)
+	var actor: BattleActor = ACTOR_SCENE.instantiate()
+	actor.look = EnemyLibrary.look(enemies[0].id)
+	node.add_child(actor)
+	var roam := MonsterRoam.for_leader(enemies[0], pos, _rng,
+		zone if zone.is_dungeon() else null)
+	roam.set_flags(_flags)
+	var group := {"node": node, "actor": actor, "roam": roam, "enemies": enemies,
+		"armed": true, "rare": rare, "hop": 0.0}
+	_groups.append(group)
+	_fade_group(group)
+
+
+## Moves every group near the hero one physics tick (MonsterRoam), turned the way it walks,
+## with the walk animation and, for a slime, a hop now and then. Groups past
+## GROUP_ANIMATE_RADIUS stop moving and animating (their node stops processing).
+func _move_groups(delta: float) -> void:
+	var hero := _player.global_position
+	for group in _groups:
+		var node: Node3D = group.node
+		var near := _flat_distance(hero, node.position) <= GROUP_ANIMATE_RADIUS
+		var mode := Node.PROCESS_MODE_INHERIT if near else Node.PROCESS_MODE_DISABLED
+		if node.process_mode != mode:
+			node.process_mode = mode
+		if not near:
+			continue
+		var roam: MonsterRoam = group.roam
+		var actor: BattleActor = group.actor
+		var before := node.position
+		node.position = roam.step(before, delta, hero, _shy)
+		actor.set_walking(roam.moving)
+		if not roam.moving:
+			continue
+		var dir := node.position - before
+		node.rotation.y = lerp_angle(node.rotation.y, atan2(-dir.x, -dir.z),
+			minf(1.0, Player.TURN_SPEED * delta))
+		if actor.hops():
+			group["hop"] = float(group.hop) - delta
+			if group.hop <= 0.0:
+				group["hop"] = HOP_TIME
+				actor.play_hop()
+
+
+## A group shows half see-through while it can't start a battle: fled from, or an Incienso
+## burning.
+func _fade_group(group: Dictionary) -> void:
+	(group.actor as BattleActor).set_faded(_repelled or not group.armed)
 
 
 ## Shows or removes the return portal at the zone's portal_pos.
