@@ -1,7 +1,7 @@
 class_name JournalPage extends VBoxContainer
 ## The Diario of the pause menu: "Qué hacer ahora" (the story's next step), the missions in
 ## progress with what each one asks, the missions finished and the Colección (story, missions,
-## bestiary and chests, each count on its own line). Only reads a GameState: call
+## bestiary, families and chests, each count on its own line). Only reads a GameState: call
 ## fill() each time it opens.
 
 ## A little smaller than the other pages: seven missions must fit a 720 p window.
@@ -46,7 +46,8 @@ static func collection_lines(state: GameState) -> Array[String]:
 	return [
 		"Historia: %s" % ("terminada" if state.is_finished() else "sin terminar"),
 		"Misiones: %d/%d" % [state.quests_done(), QuestLog.total_count()],
-		"Bestiario: %d/%d" % [BestiaryPage.seen_count(state), BestiaryPage.ORDER.size()],
+		"Bestiario: %d/%d" % [Bestiary.seen_count(state), Bestiary.all_ids().size()],
+		"Familias: %d/%d" % [Bestiary.complete_count(state), Bestiary.FAMILIES.size()],
 		"Cofres: %d/%d" % [state.opened_chests.size(), Chests.CHESTS.size()],
 	]
 

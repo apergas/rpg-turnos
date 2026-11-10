@@ -1,59 +1,78 @@
 class_name BestiaryPage extends VBoxContainer
-## The album of enemies, a card per EnemyLibrary id: portrait and name once met in battle,
-## a dark silhouette and "???" until then. fill() rebuilds it from GameState.seen_enemies.
+## The album of enemies by family (Bestiary.FAMILIES): each family's title with how many of
+## its enemies have been beaten ("Plantas 3/4"; complete, in gold and with its prize:
+## "Plantas 4/4 · Anillo de savia"), and under it its cards: portrait and name once met in
+## battle, a dark silhouette and "???" until then. fill() rebuilds it from the GameState.
 ## A card of an enemy seen is pressed (tap, or arrows and Enter) and emits card_chosen(id).
 
 signal card_chosen(id: String)
 
 const ELEMENT_NAMES := {Skill.FIRE: "Fuego", Skill.ICE: "Hielo", Skill.THUNDER: "Rayo"}
 
-const ORDER: Array[String] = ["slime", "bat", "mushroom", "rey_slime", "lobo", "duende",
-	"planta", "bruja", "golem_barro", "arana", "espectro", "slime_metal", "golem_piedra",
-	"esqueleto_guerrero", "esqueleto_picaro", "esqueleto_mago", "senor_niebla", "slime_rojo",
-	"seta_venenosa", "hongo_cueva", "murcielago_cripta", "espectro_escarcha"]
+## Cards per row: every family fits in one (the longest has five).
 const COLUMNS := 6
 const CARD_SIDE := 96.0
 const TOUCH_CARD_SIDE := 84.0
 const UNKNOWN := "???"
 const SILHOUETTE := Color(0.05, 0.05, 0.1)
+## Size of a family's title.
+const TITLE_SIZE := 20
 ## What the title, the Volver row and the margins leave for the grid.
 const RESERVED := 160.0
 
-var _grid: GridContainer
+## The families, each a title and a grid of cards, rebuilt by fill().
+var _box: VBoxContainer
 ## id -> the Button over its card, rebuilt by fill().
 var _cards := {}
+## family id -> the Label of its title, rebuilt by fill().
+var _titles := {}
 
 
 func _ready() -> void:
 	var scroll := ScrollBox.new(RESERVED)
 	add_child(scroll)
-	_grid = GridContainer.new()
-	_grid.columns = COLUMNS
-	_grid.add_theme_constant_override("h_separation", 8)
-	_grid.add_theme_constant_override("v_separation", 8)
-	scroll.content.add_child(_grid)
+	_box = VBoxContainer.new()
+	_box.add_theme_constant_override("separation", 8)
+	scroll.content.add_child(_box)
 
 
 func fill(state: GameState) -> void:
 	_cards.clear()
-	for child in _grid.get_children():
-		_grid.remove_child(child)
+	_titles.clear()
+	for child in _box.get_children():
+		_box.remove_child(child)
 		child.queue_free()
-	for id in ORDER:
-		_grid.add_child(_card(id, state.seen_enemies.has(id)))
+	for family in Bestiary.FAMILIES:
+		var title := Label.new()
+		title.text = title_text(state, family.id)
+		title.add_theme_font_size_override("font_size", TITLE_SIZE)
+		title.add_theme_color_override("font_color", StatBar.GOLD
+			if Bestiary.is_complete(state, family.id) else UiStyle.TITLE_COLOR)
+		_box.add_child(title)
+		_titles[family.id] = title
+		var grid := GridContainer.new()
+		grid.columns = COLUMNS
+		grid.add_theme_constant_override("h_separation", 8)
+		grid.add_theme_constant_override("v_separation", 8)
+		_box.add_child(grid)
+		for id: String in family.enemies:
+			grid.add_child(_card(id, state.seen_enemies.has(id)))
 
 
-## How many enemies of ORDER have been seen.
-static func seen_count(state: GameState) -> int:
-	var seen := 0
-	for id in ORDER:
-		if state.seen_enemies.has(id):
-			seen += 1
-	return seen
+## "Plantas 3/4" (the enemies beaten), and the prize once complete: "Plantas 4/4 · Anillo
+## de savia".
+static func title_text(state: GameState, family_id: String) -> String:
+	var family := Bestiary.family(family_id)
+	var text := "%s %d/%d" % [family.name, Bestiary.beaten_count(state, family_id),
+		family.enemies.size()]
+	if Bestiary.is_complete(state, family_id):
+		text += " · %s" % Equipment.display_name(family.reward)
+	return text
 
 
+## "Bestiario 14/22": the enemies seen.
 static func count_text(state: GameState) -> String:
-	return "Bestiario %d/%d" % [seen_count(state), ORDER.size()]
+	return "Bestiario %d/%d" % [Bestiary.seen_count(state), Bestiary.all_ids().size()]
 
 
 ## Back from a card: the focus goes to it again.
@@ -63,12 +82,13 @@ func focus_card(id: String) -> void:
 		card.grab_focus()
 
 
-## The lines of enemy id's card: where it lives, what hurts it more or less, and whether it
-## has been beaten. Only reads state.
+## The lines of enemy id's card: its family, where it lives, what hurts it more or less, and
+## whether it has been beaten. Only reads state.
 static func entry_lines(id: String, state: GameState) -> Array[String]:
 	var enemy := EnemyLibrary.data(id)
 	var places := EnemyLibrary.zone_names(id)
 	return [
+		"Familia: %s" % Bestiary.family(Bestiary.family_of(id)).get("name", "?"),
 		"Vive en: %s" % (", ".join(places) if not places.is_empty() else "?"),
 		"Débil a: %s" % _elements(enemy.weak),
 		"Resiste: %s" % _elements(enemy.resist),

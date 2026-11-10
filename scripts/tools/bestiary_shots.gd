@@ -19,7 +19,7 @@ func _run() -> void:
 	var ids: Array[String] = []
 	ids.assign(OS.get_cmdline_user_args())
 	if ids.is_empty():
-		ids = BestiaryPage.ORDER
+		ids = Bestiary.all_ids()
 	for id: String in ids:
 		var view := SubViewport.new()
 		view.size = SIZE
