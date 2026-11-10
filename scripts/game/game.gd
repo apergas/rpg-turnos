@@ -363,6 +363,7 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 		_world.queue_free()
 	_zone = ZoneData.by_id(zone_id)
 	state.zone_id = zone_id
+	_quiet_s = 0.0
 	_world = WORLD_SCENE.instantiate()
 	_world.zone = _zone
 	_world.boss_id = _boss_id()

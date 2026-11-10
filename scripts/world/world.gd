@@ -608,6 +608,8 @@ func set_repel(on: bool) -> void:
 	if _repelled == on:
 		return
 	_repelled = on
+	if on:
+		_player.stop_hunt()
 	for group in _groups:
 		_fade_group(group)
 
