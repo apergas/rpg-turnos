@@ -306,11 +306,14 @@ static func _valid_ally(data: Dictionary) -> bool:
 	return ally is String and (ally == "" or Allies.exists(ally))
 
 
-## METAL_SLIME_VERSION field: the Slime de Metal's HP, from 0 (none) to its max HP.
+## METAL_SLIME_VERSION field: the Slime de Metal's HP, from 0 (none) to its max HP, which a
+## Partida nueva + raises (NgPlus, on the mine floors; ng_plus is checked before this).
 static func _valid_metal_slime(data: Dictionary) -> bool:
 	var hp: Variant = data.get("metal_slime_hp")
-	return hp is float and hp >= 0.0 \
-		and hp <= EnemyLibrary.data(EnemyLibrary.METAL_SLIME).max_hp
+	var cycle := int(data.ng_plus) if int(data.version) >= MEDALS_VERSION else 0
+	var top := NgPlus.scale_value(EnemyLibrary.data(EnemyLibrary.METAL_SLIME).max_hp,
+		NgPlus.stat_mult(cycle, ZoneData.by_id("mina_1").number))
+	return hp is float and hp >= 0.0 and hp <= top
 
 
 ## MEDALS_VERSION fields: the medals taken (Medals ids, each once), the Coleccionista's
@@ -469,15 +472,25 @@ static func _valid_world(data: Dictionary) -> bool:
 
 
 ## One line about a valid save for the title: "Rocío · Nv 12 · Mina · 1:05" (the hero's
-## name, level, the zone's short name and the play time as h:mm). Older saves without a
-## name or a zone say the default name and the meadow, as apply() would load them.
+## name, level, the zone's short name and the play time as h:mm), and " · +1" in a Partida
+## nueva +. Older saves without a name or a zone say the default name and the meadow, as apply() would load them.
 static func summary_line(data: Dictionary) -> String:
 	var version := int(data.version)
 	var hero_name: String = data.name if version >= STORY_VERSION else StoryState.DEFAULT_NAME
 	var zone_id: String = data.zone if version >= 4 else "pradera"
 	var minutes := floori(float(data.play_time) / 60.0)
-	return "%s · Nv %d · %s · %d:%02d" % [hero_name, int(data.hero.level),
+	var text := "%s · Nv %d · %s · %d:%02d" % [hero_name, int(data.hero.level),
 		ZoneData.by_id(zone_id).short_name, floori(minutes / 60.0), minutes % 60]
+	var cycle := int(data.ng_plus) if version >= MEDALS_VERSION else 0
+	if cycle > 0:
+		text += " · +%d" % cycle
+	return text
+
+
+## True if the save's game is finished (the Señor de la Niebla beaten: GameState.is_finished()):
+## the title then offers the Partida nueva +.
+static func is_finished(data: Dictionary) -> bool:
+	return int(data.version) >= 4 and (data.get("flags", []) as Array).has(GameState.FINAL_BOSS)
 
 
 const IMPORT_NOT_SAVE := "Ese archivo no es una partida de Villaclaro."

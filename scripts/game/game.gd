@@ -32,7 +32,7 @@ class_name Game extends Node
 ## chapter. Beating the Señor de la Niebla (GameState.FINAL_BOSS) plays the ending (back
 ## to Villaclaro), marks the save as finished (story.finished) and rolls the credits with
 ## the numbers of the game (CreditsScreen); then it goes back to the title. A finished
-## save loads in Villaclaro and the world can still be walked.
+## save loads in Villaclaro and the world can still be walked. On a finished save the title may start a Partida nueva + (setup(..., new_cycle)): NgPlus.begin() keeps the hero and starts the story again, and every enemy of every battle is a stronger copy (NgPlus.scaled(), by the zone's number); the credits add its round.
 ## Each bestiary family beaten whole (Bestiary) gives its prize once, after the battle that completes it or when a game is loaded, in the dialogue window.
 ## The side quests (GameState.quests): a villager or a board asks the QuestLog first (a
 ## report, a figure found, a new offer) and says its chapter lines if it has nothing about
@@ -199,6 +199,12 @@ var _last_missions: Array[String] = []
 var _last_gear_text := ""
 ## The save slot this game writes to (SaveStore; ignored on autoplay runs).
 var _slot := 1
+## A Partida nueva + on the save given (TitleScreen): NgPlus.begin() once it is loaded.
+var _new_cycle := false
+## The save could not be read: the new game says so after the prologue.
+var _load_failed := false
+## Autoplay: defeats so far (each prints "Derrota en <zone> (n)"; the credits say the total).
+var _defeats := 0
 ## --autoplay-zone=eco: autoplay goes for the Eco de la Niebla (never on any other run).
 var _autoplay_echo := false
 ## --autoplay-zone=eco: fights with the Eco and how many were won, printed after each.
@@ -212,15 +218,16 @@ var _rng := RandomNumberGenerator.new()
 
 ## audio and options come from the title screen; save is the Dictionary read by
 ## SaveStore.load_game(), empty for a new game, which gets hero_name and difficulty; slot is
-## the save slot it writes to.
+## the save slot it writes to; new_cycle starts a Partida nueva + on that (finished) save.
 func setup(audio: AudioDirector, options: GameOptions, save: Dictionary,
-		hero_name := "", difficulty := Difficulty.NORMAL, slot := 1) -> void:
+		hero_name := "", difficulty := Difficulty.NORMAL, slot := 1, new_cycle := false) -> void:
 	_slot = slot
 	_audio = audio
 	_options = options
 	_save = save
 	_hero_name = hero_name
 	_difficulty = difficulty
+	_new_cycle = new_cycle
 
 
 func _ready() -> void:
@@ -246,8 +253,15 @@ func _ready() -> void:
 			if _autoplay_save:
 				print("Cargado: %s" % _summary(SaveData.from_state(state, info.position,
 					info.play_time)))
+			if _new_cycle:
+				# Partida nueva +: the hero as he is, the story from the prologue again, in the
+				# hero's house, with the clock at 0.
+				NgPlus.begin(state)
+				start_pos = null
+				play_time = 0.0
 		else:
 			load_failed = true
+	_load_failed = load_failed
 	if _save.is_empty() or load_failed:
 		state.hero.display_name = StoryState.clean_name(_hero_name)
 		state.difficulty = _difficulty
@@ -419,9 +433,19 @@ func _on_encounter(boss: bool) -> void:
 		enemies.append(EnemyLibrary.data(_boss_id()))
 	else:
 		enemies = _world.contact_enemies()
+	# Partida nueva +: stronger copies of every enemy, the boss too (a first game: as is).
+	enemies = NgPlus.scaled(enemies, state.ng_plus, _zone.number)
+	if not boss:
 		var kept := state.give_metal_slime_hp(enemies)
 		if _autoplay and kept > 0:
 			print("Slime de Metal con PV %d" % kept)
+	if _autoplay and state.ng_plus > 0:
+		var shown := PackedStringArray()
+		for enemy in enemies:
+			shown.append("%s PV %d ATK %d DEF %d" % [enemy.display_name, enemy.max_hp,
+				enemy.attack, enemy.defense])
+		print("Partida nueva + %d (×%.1f): %s" % [state.ng_plus,
+			NgPlus.stat_mult(state.ng_plus, _zone.number), ", ".join(shown)])
 	_note_enemies(enemies, false)
 	var echo := boss and _boss_id() == _zone.postgame_boss_id
 	await _fade_to(1.0)
@@ -489,6 +513,9 @@ func _on_encounter(boss: bool) -> void:
 		# The enemies are noted as beaten above: a family may be complete now.
 		family_lines = _give_family_rewards()
 	elif outcome == BattleEngine.State.LOST:
+		if _autoplay:
+			_defeats += 1
+			print("Derrota en %s (%d)" % [_zone.id, _defeats])
 		state.gold -= battle.gold_lost
 		state.heal_full()
 		_go_to_town()
@@ -795,7 +822,7 @@ func _play_prologue() -> void:
 	_autosave(false)
 	_set_busy(false)
 	_show_touch_hint()
-	if not _save.is_empty():
+	if _load_failed:
 		_world.show_notice(LOAD_FAILED_NOTICE)
 
 
@@ -820,25 +847,30 @@ func _finish_game() -> void:
 			time_text, state.quests_done()])
 		print("Familias completas: %d/%d" % [Bestiary.complete_count(state),
 			Bestiary.FAMILIES.size()])
+		print("Derrotas: %d" % _defeats)
 	quit_to_title.emit()
 
 
-## The credits: who made the game, with what, and the numbers of this game.
+## The credits: who made the game, with what, and the numbers of this game (and its round,
+## in a Partida nueva +).
 func _credits_sections(time_text: String) -> Array:
+	var numbers: Array[String] = [
+		"Tiempo de juego: %s" % time_text,
+		"Combates: %d" % state.battles,
+		"Pasos: %d" % state.steps,
+		"Oro ganado: %d G" % state.gold_earned,
+		"Misiones cumplidas: %d" % state.quests_done(),
+		"Nivel: %d" % state.hero.level,
+	]
+	if state.ng_plus > 0:
+		numbers.append("Partida nueva + %d" % state.ng_plus)
 	return [
 		["Villaclaro", ["La historia de %s" % state.hero.display_name]],
 		["Creado por", [AUTHOR]],
 		["Motor", ["Godot Engine 4.7"]],
 		["Modelos 3D", ["KayKit, de Kay Lousberg (CC0)"]],
 		["Música y sonido", ["Generados por el propio juego"]],
-		["Tu partida", [
-			"Tiempo de juego: %s" % time_text,
-			"Combates: %d" % state.battles,
-			"Pasos: %d" % state.steps,
-			"Oro ganado: %d G" % state.gold_earned,
-			"Misiones cumplidas: %d" % state.quests_done(),
-			"Nivel: %d" % state.hero.level,
-		]],
+		["Tu partida", numbers],
 		["Gracias por jugar", []],
 	]
 

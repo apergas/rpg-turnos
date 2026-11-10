@@ -6,7 +6,7 @@ class_name TitleScreen extends Node
 ## game first asks the hero's name (NameEntry, over the meadow). When the Game emits
 ## quit_to_title it frees it and shows the title again. There are three save slots
 ## (SaveStore, SlotList): "Continuar" opens the list and only lets usable saves be picked
-## (it is disabled when none is); "Nueva partida" goes straight to the name when every slot is
+## (it is disabled when none is; a finished one offers "Continuar" or a Partida nueva + on the same slot); "Nueva partida" goes straight to the name when every slot is
 ## empty (slot 1), else asks for a slot and asks again before replacing a save that works.
 ## The old single save.json moves to slot 1 the first time (SaveStore.migrate_legacy()).
 ## With `-- --autoplay` the name entry types AUTOPLAY_NAME by itself and the new game
@@ -300,9 +300,9 @@ func _close_name_entry() -> void:
 
 
 ## Fades out, swaps the title for a Game (save empty = new game with hero_name and
-## difficulty) and fades in.
+## difficulty; new_cycle: a Partida nueva + on that save) and fades in.
 func _start_game(save: Dictionary, hero_name := "", difficulty := Difficulty.NORMAL,
-		slot := 1) -> void:
+		slot := 1, new_cycle := false) -> void:
 	if _starting:
 		return
 	_starting = true
@@ -312,10 +312,16 @@ func _start_game(save: Dictionary, hero_name := "", difficulty := Difficulty.NOR
 		await _fade_to(1.0)
 		_close_title()
 	_game = GAME_SCENE.instantiate()
-	_game.setup(_audio, _options, save, hero_name, difficulty, slot)
+	_game.setup(_audio, _options, save, hero_name, difficulty, slot, new_cycle)
 	_game.quit_to_title.connect(_on_quit_to_title)
 	add_child(_game)
 	await _fade_to(0.0)
+
+
+## Partida nueva + on a finished save: the same slot, the hero kept, the story again.
+func _on_ng_plus_chosen(slot: int) -> void:
+	_game_slot = slot
+	_start_game(_load_save(slot), "", Difficulty.NORMAL, slot, true)
 
 
 func _on_quit_to_title() -> void:
@@ -457,6 +463,7 @@ func _build_menu() -> void:
 	_slot_list = SlotList.new()
 	_slot_list.setup(_audio, _transfer)
 	_slot_list.chosen.connect(_on_slot_chosen)
+	_slot_list.ng_plus_chosen.connect(_on_ng_plus_chosen)
 	_slot_list.closed.connect(_close_slots)
 	_slot_list.changed.connect(func() -> void:
 		_continue_button.disabled = not SaveStore.any_usable())
