@@ -6,7 +6,7 @@ class_name BattleScene extends Node3D
 ## With `-- --autoplay` BattleAutoplay picks the commands (shown on the HUD with
 ## BattleHud.demo()); to show Huir and Defender it flees from one normal battle out of
 ## AUTOPLAY_EVERY and defends in the first round of another one. It prints every battle
-## message and continues on its own. With set_audio() it plays the sound effects and
+## message and continues on its own. After the enemies appear the engine rolls the surprise (BattleEngine.roll_ambush()): it is said before the first menu, and an enemy surprise plays its round first. With set_audio() it plays the sound effects and
 ## the victory or defeat music; without it the battle is silent.
 ## Run on its own (res://scenes/battle/battle_scene.tscn) it sets up a test battle: a
 ## poisoned hero of STANDALONE_LEVEL with potions and an antidote against a Slime and a
@@ -169,7 +169,7 @@ func _ready() -> void:
 		_autoplay_flee = _autoplay_battles % AUTOPLAY_EVERY == 0
 		_autoplay_defend = _autoplay_battles % AUTOPLAY_EVERY == AUTOPLAY_DEFEND_AT
 	await _say(_intro_text())
-	_ask_command()
+	await _play_ambush()
 
 
 func _exit_tree() -> void:
@@ -207,6 +207,39 @@ func _intro_text() -> String:
 	return "¡Aparece %s %s!" % ["una" if first.female else "un", first.display_name]
 
 
+## The surprise roll, after the enemies appear: said, then the first menu, or the
+## enemies' round first. Autoplay also prints "Sorpresa: héroe" / "Sorpresa: monstruos".
+func _play_ambush() -> void:
+	match engine.roll_ambush():
+		BattleEngine.Ambush.HERO:
+			if _autoplay:
+				print("Sorpresa: héroe")
+			_sfx(SfxLibrary.ACCEPT)
+			await _say(_ambush_text(true))
+			_ask_command()
+		BattleEngine.Ambush.ENEMY:
+			if _autoplay:
+				print("Sorpresa: monstruos")
+			_sfx(SfxLibrary.ENCOUNTER)
+			_shake_camera()
+			await _say(_ambush_text(false))
+			await _play_round(engine.resolve_ambush_round())
+		_:
+			_ask_command()
+
+
+## "¡Pillas desprevenido al Lobo!" / "¡El Lobo te ataca por sorpresa!", or "los
+## monstruos" with two.
+func _ambush_text(hero_side: bool) -> String:
+	var alive := engine.alive_enemies()
+	if alive.size() > 1:
+		return "¡Pillas desprevenidos a los monstruos!" if hero_side 			else "¡Los monstruos te atacan por sorpresa!"
+	var foe := engine.enemies[alive[0]]
+	if hero_side:
+		return "¡Pillas desprevenid%s %s!" % [_ending(foe), _to(foe)]
+	return "¡%s te ataca por sorpresa!" % _cap(_the(foe))
+
+
 ## Asleep, the hero does nothing; on autoplay the bot picks; otherwise the menu opens.
 func _ask_command() -> void:
 	if hero.status.has(BattleEngine.SLEEP):
@@ -231,7 +264,12 @@ func _autoplay_command() -> Dictionary:
 
 func _on_command_chosen(cmd: Dictionary) -> void:
 	_hud.hide_menu()
-	for event in engine.resolve_round(cmd):
+	await _play_round(engine.resolve_round(cmd))
+
+
+## Plays a round's events back, then asks for the next command or shows the result.
+func _play_round(events: Array[Dictionary]) -> void:
+	for event in events:
 		await _play_event(event)
 	match engine.state:
 		BattleEngine.State.ONGOING:
