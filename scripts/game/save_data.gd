@@ -21,8 +21,9 @@ class_name SaveData extends RefCounted
 ## an older save plays on Normal. EVOLUTION_VERSION (1.1.0) adds the helmet slot, the
 ## enemies seen, the wells' charge and the creature; an older save gets the slot empty,
 ## the bosses it has beaten and the common enemies of their zones seen (and the Slime de Metal if its quest is done), every well full and no creature. DEFEATED_VERSION (1.3.0) adds the enemies beaten; in an older save every enemy seen counts as beaten.
+## RING_VERSION (1.6.0) splits the accessory slot into the ring and the amulet; in an older save the accessory worn goes to the slot its piece belongs to, the other one empty.
 
-const VERSION := 10
+const VERSION := 11
 ## First version with the story's fields.
 const STORY_VERSION := 6
 ## First version with the accessory slot and the side quests.
@@ -31,9 +32,13 @@ const QUESTS_VERSION := 7
 const DIFFICULTY_VERSION := 8
 ## First version with the helmet slot, the bestiary, the wells and the creature.
 const EVOLUTION_VERSION := 9
-## Oldest version apply() still reads.
 ## First version with the enemies beaten.
 const DEFEATED_VERSION := 10
+## First version with the ring and the amulet slots instead of the accessory one.
+const RING_VERSION := 11
+## The one accessory slot of the saves from QUESTS_VERSION to before RING_VERSION.
+const OLD_ACCESSORY := "accessory"
+## Oldest version apply() still reads.
 const OLDEST_VERSION := 2
 ## Combatant fields of the hero that change while playing (the rest come from hero.tres).
 const HERO_FIELDS: Array[String] = ["level", "experience", "hp", "max_hp", "mp", "max_mp",
@@ -95,7 +100,7 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 	Leveling.sync_skills(state.hero)
 	state.gold = int(data.gold)
 	state.loadout = Loadout.new()
-	state.loadout.set_slots(data.get("loadout", state.loadout.to_dict()))
+	state.loadout.set_slots(_loadout_slots(data))
 	state.bag_equipment.assign(data.get("bag", []))
 	state.opened_chests.assign(data.get("chests", []))
 	state.refresh_equipment()
@@ -168,6 +173,19 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 	var pos: Array = data.position
 	return {"valid": true, "position": Vector3(pos[0], 0.0, pos[1]),
 		"play_time": float(data.play_time)}
+
+
+## The loadout of data, slot -> id. Before RING_VERSION the one accessory goes to the slot
+## its piece belongs to (the Anillo antiveneno to the ring, the Amuleto de velocidad to the
+## amulet) and the other slot stays empty. A save without a loadout gets the starting gear.
+static func _loadout_slots(data: Dictionary) -> Dictionary:
+	var slots: Dictionary = (data.get("loadout", Loadout.new().to_dict()) as Dictionary).duplicate()
+	if int(data.version) < RING_VERSION:
+		var piece: String = slots.get(OLD_ACCESSORY, "")
+		slots.erase(OLD_ACCESSORY)
+		if piece != "":
+			slots[Equipment.slot(piece)] = piece
+	return slots
 
 
 ## Before the bestiary: every boss beaten, the common enemies of the zone it guarded and the
@@ -311,12 +329,18 @@ static func _valid_equipment(data: Dictionary) -> bool:
 	if not loadout is Dictionary:
 		return false
 	for slot in Equipment.SLOTS:
-		if slot == Equipment.ACCESSORY and int(data.version) < QUESTS_VERSION:
+		if slot in Equipment.ACCESSORY_SLOTS and int(data.version) < RING_VERSION:
 			continue
 		if slot == Equipment.HELMET and int(data.version) < EVOLUTION_VERSION:
 			continue
 		var id: Variant = (loadout as Dictionary).get(slot)
 		if not id is String or (id != "" and Equipment.slot(id) != slot):
+			return false
+	if int(data.version) >= QUESTS_VERSION and int(data.version) < RING_VERSION:
+		# The one accessory slot: a ring or an amulet, or nothing.
+		var piece: Variant = (loadout as Dictionary).get(OLD_ACCESSORY)
+		if not piece is String or (piece != "" \
+				and not Equipment.slot(piece) in Equipment.ACCESSORY_SLOTS):
 			return false
 	var bag: Variant = data.get("bag")
 	if not bag is Array:

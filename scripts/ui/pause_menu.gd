@@ -5,7 +5,7 @@ class_name PauseMenu extends Control
 ## HERO_PAGES and the missions under way) and the system's (Guardar, Opciones, Volver al
 ## título, Cerrar). Other pages: Estado (hero stats, gold, spells), Objetos (items usable
 ## outside battle, the Ala de viaje too, and the key items, each with what it does),
-## Equipo (the four slots; choosing one lists the pieces of that slot in the bag, with
+## Equipo (the six slots; choosing one lists the pieces of that slot in the bag, with
 ## the comparison, and Quitar), Diario (JournalPage: what to do now, the missions in progress
 ## and the finished ones), Opciones (OptionsPanel) and a confirmation before going
 ## back to the title. Esc goes back one page. Keeps running while paused. Call setup()
@@ -409,7 +409,7 @@ func _use_text(id: String, result: Dictionary) -> String:
 	return "Recuperas %d PV." % result.amount
 
 
-## The four slots with what is worn ("Arma: Palo  ATK +2") and the totals; with a slot
+## The six slots with what is worn ("Arma: Palo  ATK +2") and the totals; with a slot
 ## chosen, the pieces of that slot in the bag (bonus and comparison), Quitar and Volver.
 func _fill_equipment() -> void:
 	for child in _equip_box.get_children():
@@ -445,7 +445,7 @@ func _fill_equipment() -> void:
 		button.pressed.connect(_on_equip.bind(id))
 		row.add_child(button)
 		row.add_child(_label(Equipment.effect_text(id), Color.WHITE))
-		if _equip_slot != Equipment.ACCESSORY:
+		if not _equip_slot in Equipment.ACCESSORY_SLOTS:
 			row.add_child(ShopWindow.comparison(
 				Equipment.bonus(id) - Equipment.bonus(loadout.worn(_equip_slot))))
 	if listed.is_empty():
