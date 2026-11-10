@@ -105,9 +105,9 @@ Las ideas de la sección 4 pasan a puntos con diseño propio. Las decisiones de 
 |---|---|---|---|---|
 | M-26 | Hechizos sin descripción en combate y en la página Hechizos de la pausa — **hecho en 1.4.1** | I-03 | 1.4.1 | S |
 | M-27 | Enemigos iguales sin letra ("Slime" y "Slime") — **hecho en 1.4.1** | I-04 | 1.4.1 | S |
-| M-28 | Ataque sorpresa: 1/16 a favor de cada bando, nunca contra jefes | Ataque sorpresa | 1.5.0 | S |
-| M-29 | Pluma de fénix: te levanta sola con la mitad de PV, una por combate | Pluma de fénix | 1.5.0 | S |
-| M-30 | Despertador: evita el sueño hasta el final del combate | Despertador | 1.5.0 | S |
+| M-28 | Ataque sorpresa: 1/16 a favor de cada bando, nunca contra jefes — **hecho en 1.5.0** | Ataque sorpresa | 1.5.0 | S |
+| M-29 | Pluma de fénix: te levanta sola con la mitad de PV, una por combate — **hecho en 1.5.0** | Pluma de fénix | 1.5.0 | S |
+| M-30 | Despertador: evita el sueño hasta el final del combate — **hecho en 1.5.0** | Despertador | 1.5.0 | S |
 | M-31 | Cinco enemigos nuevos, variantes de color de figuras que ya existen | Variantes de color | 1.6.0 | M |
 | M-32 | Bestiario por familias con premio, y Accesorio partido en Anillo y Amuleto | I-02 | 1.6.0 | L |
 | M-33 | Monstruos visibles en el mapa en lugar de encuentros aleatorios | I-01 | 1.7.0 | L |
@@ -258,7 +258,7 @@ Notas para cuando se diseñe:
 | **1.4.0** | M-22: el Eco de la Niebla | [plan](../legacy/plans/2026-11-07-version-1-4-0.md) | Hecha |
 
 | **1.4.1** | M-26 y M-27: retoques del combate | [spec](specs/2026-11-09-version-1-4-1-design.md) · [plan](plans/2026-11-09-version-1-4-1.md) | Hecha |
-| **1.5.0** | M-28 a M-30: ataque sorpresa, Pluma de fénix y Despertador | [spec](specs/2026-11-09-version-1-5-0-design.md) · [plan](plans/2026-11-09-version-1-5-0.md) | Planificada |
+| **1.5.0** | M-28 a M-30: ataque sorpresa, Pluma de fénix y Despertador | [spec](specs/2026-11-09-version-1-5-0-design.md) · [plan](plans/2026-11-09-version-1-5-0.md) | Hecha |
 | **1.6.0** | M-31 y M-32: enemigos nuevos y familias del bestiario | [spec](specs/2026-11-09-version-1-6-0-design.md) · [plan](plans/2026-11-09-version-1-6-0.md) | Planificada |
 | **1.7.0** | M-33: monstruos a la vista | [spec](specs/2026-11-09-version-1-7-0-design.md) · [plan](plans/2026-11-09-version-1-7-0.md) | Planificada |
 | **1.8.0** | M-34 y M-35: medallas pequeñas y Partida nueva + | [spec](specs/2026-11-09-version-1-8-0-design.md) · [plan](plans/2026-11-09-version-1-8-0.md) | Planificada |
