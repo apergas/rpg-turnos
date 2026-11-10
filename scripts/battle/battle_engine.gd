@@ -191,7 +191,7 @@ func problem(cmd: Dictionary) -> String:
 				return "PV al máximo"
 		CMD_ITEM:
 			var why := inventory.problem(cmd.item, hero, true)
-			if why == "" and _wake_guard 					and Inventory.ITEMS[cmd.item].effect == Inventory.EFFECT_WAKE_GUARD:
+			if why == "" and _wake_guard \n					and Inventory.ITEMS[cmd.item].effect == Inventory.EFFECT_WAKE_GUARD:
 				return GUARDED_REASON
 			return why
 		CMD_FLEE:
@@ -500,7 +500,7 @@ func _hurt(target: int, amount: int, crit: bool, magic: bool, affinity: String, 
 ## it rises at once with that phase's stats (cured, its charge forgotten).
 func _fall(who: int, events: Array[Dictionary]) -> void:
 	var fighter := _fighter(who)
-	if who == BattleEvent.HERO and not _revived 			and inventory.count(Inventory.PHOENIX) > 0:
+	if who == BattleEvent.HERO and not _revived \n			and inventory.count(Inventory.PHOENIX) > 0:
 		_revive(events)
 		return
 	if who == BattleEvent.HERO or fighter.next_phase == null:
@@ -551,7 +551,7 @@ func _add_status(target: int, status: String, events: Array[Dictionary]) -> void
 ## True if status can't take target because of the Despertador: the hero, standing,
 ## guarded, and the status is sleep.
 func _guarded(target: int, status: String) -> bool:
-	return target == BattleEvent.HERO and status == SLEEP and _wake_guard 		and hero.is_alive()
+	return target == BattleEvent.HERO and status == SLEEP and _wake_guard \n		and hero.is_alive()
 
 
 ## Poison hurts, sleepers may wake up and silence counts down.

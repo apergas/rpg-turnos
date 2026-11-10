@@ -8,8 +8,8 @@ const BOSQUE := "bosque"
 const MINA := "mina"
 const CASTILLO := "castillo"
 ## shop id -> keeper's name, equipment and items (Inventory ids) on sale, in list order.
-## Zone 1 sells no Éter (it comes with the zone 2 shop); the Ala de viaje, the Incienso and the Despertador are sold
-## everywhere; the Pluma de fénix from the forest on.
+## Zone 1 sells no Éter (it comes with the zone 2 shop); the Ala de viaje, the Incienso and the
+## Despertador are sold everywhere; the Pluma de fénix from the forest on.
 const SHOPS := {
 	VILLACLARO: {
 		"keeper": "Mercader",

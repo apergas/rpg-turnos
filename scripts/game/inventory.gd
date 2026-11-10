@@ -32,7 +32,8 @@ const EFFECT_WAKE_GUARD := "wake_guard"
 ## back once), "repel" (the Incienso: no random encounters for value metres; GameState
 ## counts them), "seed" (adds SEED_BONUS to the Combatant field named by value),
 ## "revive" (EFFECT_REVIVE: the Pluma de fénix, used by itself when the hero falls in battle,
-## value is the share of max HP he rises with), "wake_guard" (EFFECT_WAKE_GUARD: the Despertador, no sleep for the rest of the battle) or "quest"
+## value is the share of max HP he rises with), "wake_guard" (EFFECT_WAKE_GUARD: the
+## Despertador, no sleep for the rest of the battle) or "quest"
 ## (of no use: someone is asking for it); price in gold (Shop sells at it and
 ## buys back at half); battle / field: usable in battle / from the pause menu; text: what
 ## it does, shown in the shop, in Objetos and in battle.
@@ -69,8 +70,8 @@ const ITEMS := {
 		"text": "Sube la VEL en 2 para siempre."},
 }
 ## Order of the item lists.
-const IDS: Array[String] = [POTION, ETHER, ANTIDOTE, ALARM, PHOENIX, WING, INCENSE, SEED_ATTACK,
-	SEED_DEFENSE, SEED_SPEED, SETA]
+const IDS: Array[String] = [POTION, ETHER, ANTIDOTE, ALARM, PHOENIX, WING, INCENSE,
+	SEED_ATTACK, SEED_DEFENSE, SEED_SPEED, SETA]
 ## Why an Ala de viaje can't be used in a village.
 const IN_TOWN := "Ya estás en un lugar seguro"
 ## Why a "quest" item can't be used.

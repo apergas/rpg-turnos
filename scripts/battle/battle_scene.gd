@@ -6,7 +6,9 @@ class_name BattleScene extends Node3D
 ## With `-- --autoplay` BattleAutoplay picks the commands (shown on the HUD with
 ## BattleHud.demo()); to show Huir and Defender it flees from one normal battle out of
 ## AUTOPLAY_EVERY and defends in the first round of another one. It prints every battle
-## message and continues on its own. After the enemies appear the engine rolls the surprise (BattleEngine.roll_ambush()): it is said before the first menu, and an enemy surprise plays its round first. With set_audio() it plays the sound effects and
+## message and continues on its own. After the enemies appear the engine rolls the
+## surprise (BattleEngine.roll_ambush()): it is said before the first menu, and an enemy
+## surprise plays its round first. With set_audio() it plays the sound effects and
 ## the victory or defeat music; without it the battle is silent.
 ## Run on its own (res://scenes/battle/battle_scene.tscn) it sets up a test battle: a
 ## poisoned hero of STANDALONE_LEVEL with potions and an antidote against a Slime and a
@@ -235,7 +237,7 @@ func _play_ambush() -> void:
 func _ambush_text(hero_side: bool) -> String:
 	var alive := engine.alive_enemies()
 	if alive.size() > 1:
-		return "¡Pillas desprevenidos a los monstruos!" if hero_side 			else "¡Los monstruos te atacan por sorpresa!"
+		return "¡Pillas desprevenidos a los monstruos!" if hero_side \n			else "¡Los monstruos te atacan por sorpresa!"
 	var foe := engine.enemies[alive[0]]
 	if hero_side:
 		return "¡Pillas desprevenid%s %s!" % [_ending(foe), _to(foe)]
