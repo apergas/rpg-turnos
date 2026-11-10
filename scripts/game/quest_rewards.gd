@@ -1,7 +1,7 @@
 class_name QuestRewards extends RefCounted
 ## Pays a finished quest. Pure: works on a GameState and returns the lines that say so.
 ## The gold counts as gold won for the credits; a piece of equipment goes on at once if its
-## slot is empty, else into the bag, like a chest's. A boss's prize is put on at once
+## slot is empty, else into the bag, like a chest's. A bestiary family's prize goes the same way (Bestiary.give()). A boss's prize is put on at once
 ## instead (wear_prize()).
 
 
@@ -19,7 +19,7 @@ static func give(state: GameState, quest: QuestData) -> Array[String]:
 		else:
 			lines.append("Recibes %s %s." % [Inventory.article(id), Inventory.display_name(id)])
 	if quest.reward_equipment != "":
-		lines.append(_give_piece(state, quest.reward_equipment))
+		lines.append(give_piece(state, quest.reward_equipment))
 	return lines
 
 
@@ -37,7 +37,8 @@ static func wear_prize(state: GameState, piece: String) -> Array[String]:
 	return lines
 
 
-static func _give_piece(state: GameState, piece: String) -> String:
+## Gives a piece: on at once if its slot is empty, else into the bag. Returns "Recibes un Anillo de savia. Te lo equipas." / "... Está en tu bolsa.". Also used by Bestiary.give().
+static func give_piece(state: GameState, piece: String) -> String:
 	var text := "Recibes %s %s." % [Equipment.article(piece), Equipment.display_name(piece)]
 	state.bag_equipment.append(piece)
 	if state.loadout.worn(Equipment.slot(piece)) == "":

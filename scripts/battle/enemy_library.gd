@@ -26,7 +26,7 @@ const ENEMIES := {
 	"hongo_cueva": preload("res://data/enemies/hongo_cueva.tres"),
 	"murcielago_cripta": preload("res://data/enemies/murcielago_cripta.tres"),
 	"espectro_escarcha": preload("res://data/enemies/espectro_escarcha.tres"),
-	# The boss after the ending, in the throne room. Not in the bestiary (BestiaryPage.ORDER).
+	# The boss after the ending, in the throne room. Not in the bestiary (Bestiary.FAMILIES).
 	"eco_niebla": preload("res://data/enemies/eco_niebla.tres"),
 }
 ## Figure of each enemy id; any other id is a slime.

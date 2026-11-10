@@ -32,6 +32,7 @@ class_name Game extends Node
 ## to Villaclaro), marks the save as finished (story.finished) and rolls the credits with
 ## the numbers of the game (CreditsScreen); then it goes back to the title. A finished
 ## save loads in Villaclaro and the world can still be walked.
+## Each bestiary family beaten whole (Bestiary) gives its prize once, after the battle that completes it or when a game is loaded, in the dialogue window.
 ## The side quests (GameState.quests): a villager or a board asks the QuestLog first (a
 ## report, a figure found, a new offer) and says its chapter lines if it has nothing about
 ## any; the map shows the marks and the sought figures it says. Each finished quest shows
@@ -247,6 +248,10 @@ func _ready() -> void:
 			state.difficulty = Difficulty.EASY
 	if _save.is_empty() and _autoplay:
 		_apply_autoplay_zone(args)
+	# A loaded game (or an --autoplay-zone start) may have a family complete already: a
+	# finished game gets the Espada del alba now. After the "Cargado:" line, so the save
+	# round trip still compares what was saved.
+	var family_lines := _give_family_rewards()
 	_build_shop()
 	_build_fade()
 	_build_pause()
@@ -273,6 +278,10 @@ func _ready() -> void:
 		get_tree().create_timer(MENU_TOUR_DELAY).timeout.connect(_pause.tour)
 	if not prologue:
 		await _world.freeze(false)
+		if not family_lines.is_empty():
+			_audio.play_sfx(SfxLibrary.LEVEL_UP)
+			await _world.show_dialogue("", family_lines)
+			_autosave(false)
 		_set_busy(false)
 		_show_touch_hint()
 		_check_village_scene()
@@ -314,6 +323,9 @@ func _apply_autoplay_zone(args: PackedStringArray) -> void:
 			state.equip(id)
 		for flag: String in start.flags:
 			state.world_flags[flag] = true
+			if Bestiary.has(flag):
+				# A boss of the flags was beaten on the way: the bestiary says so too.
+				state.defeat_enemy(flag)
 		for id: String in start.get("key_items", []):
 			state.key_items.append(id)
 		state.town_zone = start.get("town", state.town_zone)
@@ -426,6 +438,7 @@ func _on_encounter(boss: bool) -> void:
 	var scene := ""
 	var mission_done := false
 	var finished_quests: Array[Dictionary] = []
+	var family_lines: Array[String] = []
 	if won:
 		state.gold += battle.engine.gold_won
 		state.gold_earned += battle.engine.gold_won
@@ -444,6 +457,8 @@ func _on_encounter(boss: bool) -> void:
 		mission_done = quest_was_on and state.quest.stage == Quest.Stage.DONE
 		for enemy in battle.engine.enemies:
 			finished_quests.append_array(state.quests.on_victory(state, enemy.id))
+		# The enemies are noted as beaten above: a family may be complete now.
+		family_lines = _give_family_rewards()
 	elif outcome == BattleEngine.State.LOST:
 		state.gold -= battle.gold_lost
 		state.heal_full()
@@ -471,6 +486,9 @@ func _on_encounter(boss: bool) -> void:
 			await _world.show_dialogue("", reward_lines)
 		elif notice != "":
 			_world.show_notice(notice)
+	if not family_lines.is_empty():
+		_audio.play_sfx(SfxLibrary.LEVEL_UP)
+		await _world.show_dialogue("", family_lines)
 	if mission_done:
 		_world.show_mission_done(QuestLog.done_text(Quest.TITLE))
 	for finished: Dictionary in finished_quests:
@@ -553,16 +571,25 @@ func _autoplay_restock() -> void:
 			await _on_npc(i)
 
 
-## Notes enemies in the bestiary: seen, or beaten too after a won battle. Only those of
-## BestiaryPage.ORDER: the Eco de la Niebla has no card and never counts.
+## Notes enemies in the bestiary: seen, or beaten too after a won battle. Only those with a
+## card (Bestiary.has()): the Eco de la Niebla never counts.
 func _note_enemies(enemies: Array[Combatant], beaten: bool) -> void:
 	for enemy in enemies:
-		if not enemy.id in BestiaryPage.ORDER:
+		if not Bestiary.has(enemy.id):
 			continue
 		if beaten:
 			state.defeat_enemy(enemy.id)
 		else:
 			state.see_enemy(enemy.id)
+
+
+## Gives the prize of every bestiary family completed and not paid yet (Bestiary): its
+## flag and its piece. Returns the lines that say so, for the dialogue window.
+func _give_family_rewards() -> Array[String]:
+	var lines: Array[String] = []
+	for family_id in Bestiary.new_rewards(state):
+		lines.append(Bestiary.give(state, family_id))
+	return lines
 
 
 ## Sets the boss's world flag, gives its key item and says so.
@@ -728,6 +755,8 @@ func _finish_game() -> void:
 	if _autoplay:
 		print("Juego completado: Nv %d, tiempo de juego %s, misiones %d" % [state.hero.level,
 			time_text, state.quests_done()])
+		print("Familias completas: %d/%d" % [Bestiary.complete_count(state),
+			Bestiary.FAMILIES.size()])
 	quit_to_title.emit()
 
 
