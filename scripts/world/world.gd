@@ -188,7 +188,8 @@ const HOP_TIME := 0.45
 ## nearest group this close that can start a battle, gives up after AUTOPLAY_HUNT_MS (or
 ## stuck on the way, Player.take_failed_hunt()) and leaves that one alone for
 ## AUTOPLAY_HUNT_RETRY_MS.
-const AUTOPLAY_HUNT_RADIUS := 12.0
+const AUTOPLAY_HUNT_RADIUS := 60.0
+const AUTOPLAY_HUNT_RADIUS_CAVE := 12.0  # walls: a straight line to a far group fails
 const AUTOPLAY_HUNT_MS := 15000
 const AUTOPLAY_HUNT_RETRY_MS := 20000
 
@@ -288,12 +289,14 @@ var _groups: Array[Dictionary] = []
 var _shy := false
 ## Index in _groups of the group whose battle is on (-1: none, or the boss's).
 var _contact := -1
-## No group starts a battle before this time (Time.get_ticks_msec(); _calm()).
+## No group starts a battle before this time (_sim_ms; _calm()).
 var _calm_until_ms := 0
 ## Autoplay: hunt groups (Game: below the zone's autoplay_boss_level), until when the one
 ## hunted now is followed, and group instance id -> the time until which it is left alone.
 var _hunt_on := false
 var _hunt_until_ms := 0
+## Time of the simulation in ms (the hunt's timers count it, so a run with --fixed-fps keeps them).
+var _sim_ms := 0.0
 var _hunt_skip := {}
 
 
@@ -351,6 +354,7 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_sim_ms += delta * 1000.0
 	if _pad:
 		_player.stick_direction = _pad.direction
 		if _pad.direction != Vector2.ZERO:
@@ -746,14 +750,14 @@ func end_contact(outcome: int) -> void:
 
 ## No group starts a battle for MonsterGroups.CALM_MS from now.
 func _calm() -> void:
-	_calm_until_ms = Time.get_ticks_msec() + MonsterGroups.CALM_MS
+	_calm_until_ms = int(_sim_ms) + MonsterGroups.CALM_MS
 
 
 ## The hero within MonsterGroups.CONTACT_RADIUS of a group starts its battle (true: the
 ## map waits for Game), unless it is calm (_calm()) or an Incienso burns. A group fled from
 ## starts none until the hero is MonsterGroups.REARM_RADIUS away from it.
 func _check_groups(pos: Vector3) -> bool:
-	var calm := Time.get_ticks_msec() < _calm_until_ms
+	var calm := int(_sim_ms) < _calm_until_ms
 	for i in _groups.size():
 		var group: Dictionary = _groups[i]
 		var d := _flat_distance(pos, (group.node as Node3D).position)
@@ -774,7 +778,7 @@ func _check_groups(pos: Vector3) -> bool:
 ## AUTOPLAY_HUNT_MS, or when the hero got stuck on the way (that one is then left alone for
 ## AUTOPLAY_HUNT_RETRY_MS).
 func _update_hunt(pos: Vector3) -> void:
-	var now := Time.get_ticks_msec()
+	var now := int(_sim_ms)
 	var failed := _player.take_failed_hunt()
 	if failed != 0:
 		_hunt_skip[failed] = now + AUTOPLAY_HUNT_RETRY_MS
@@ -788,7 +792,7 @@ func _update_hunt(pos: Vector3) -> void:
 			_player.stop_hunt()
 		return
 	var best: Node3D = null
-	var best_d := AUTOPLAY_HUNT_RADIUS
+	var best_d := AUTOPLAY_HUNT_RADIUS_CAVE if zone.is_dungeon() else AUTOPLAY_HUNT_RADIUS
 	for group in _groups:
 		var node: Node3D = group.node
 		if not group.armed or now < int(_hunt_skip.get(node.get_instance_id(), 0)):

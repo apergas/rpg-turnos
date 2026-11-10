@@ -42,9 +42,10 @@ class_name Game extends Node
 ## On autoplay it prints the gold and the equipment each time they change, the level and
 ## the play time on every change of zone and, after the credits, the play time of the
 ## whole run (TitleScreen then quits). After a won battle, when the hero needs rest
-## (GameState.needs_rest()) away from a village, it flies back with an Ala de viaje, sleeps
-## at the inn, restocks at the shop and goes back through the portal; after a defeat it
-## sleeps and restocks too.
+## (GameState.needs_rest()) or the map has no group left (_needs_groups()) away from a
+## village, it flies back with an Ala de viaje, sleeps at the inn, restocks at the shop
+## and goes back through the portal; after a defeat it
+## sleeps and restocks too. With no Ala de viaje an empty map gets its groups back at once.
 ## Run on its own (res://scenes/game/game.tscn) it starts a new game with its own
 ## AudioDirector and default options.
 ##
@@ -94,6 +95,9 @@ const MENU_TOUR_DELAY := 1.0
 const INN_NIGHT_TIME := 0.8
 ## On autoplay the hero only stops at an inn below this share of max HP or MP.
 const AUTOPLAY_INN_RATIO := 0.5
+## Autoplay: seconds on a map without a battle, below the zone's autoplay_boss_level, after
+## which its groups are put back (the ones left may be out of reach of the route).
+const AUTOPLAY_STALL_S := 90.0
 ## On autoplay the boss only comes out while the hero has these shares of max HP and MP.
 const AUTOPLAY_BOSS_HP := 0.7
 const AUTOPLAY_BOSS_MP := 0.4
@@ -184,6 +188,8 @@ var _hero_name := ""
 var _difficulty := Difficulty.NORMAL
 var _cutscenes: CutscenePlayer
 var _busy := false
+## Autoplay: seconds since the last battle or change of map (AUTOPLAY_STALL_S).
+var _quiet_s := 0.0
 var _leaving := false
 var _autoplay := false
 var _autoplay_save := false
@@ -299,6 +305,12 @@ func _show_touch_hint() -> void:
 
 func _process(delta: float) -> void:
 	play_time += delta / Engine.time_scale  # a fast battle takes less play time, not more
+	if _autoplay and not _busy and _world != null and not _world.in_village():
+		_quiet_s += delta
+		if _quiet_s > AUTOPLAY_STALL_S and state.hero.level < _zone.autoplay_boss_level:
+			_quiet_s = 0.0
+			print("Grupos repuestos (partida automática, sin combates)")
+			_respawn_groups()
 
 
 ## --autoplay-zone=<id>: starts the new game in that zone with AUTOPLAY_ZONES' state.
@@ -395,6 +407,7 @@ func _on_encounter(boss: bool) -> void:
 	if _busy:
 		return
 	_set_busy(true)
+	_quiet_s = 0.0
 	state.battles += 1
 	var enemies: Array[Combatant] = []
 	if boss:
@@ -524,17 +537,29 @@ func _on_encounter(boss: bool) -> void:
 		await _on_travel_requested()
 		await _autoplay_restock()
 		await _on_portal()
+	elif _autoplay and won and _needs_groups():
+		# No Ala de viaje (or in a village): the groups come back as if it had flown away
+		# and back. Only the autoplay does this.
+		print("Grupos repuestos (partida automática)")
+		_respawn_groups()
 	elif _autoplay and outcome == BattleEngine.State.LOST:
 		await _autoplay_restock()
 
 
 ## Autoplay: needs rest (GameState.needs_rest()), is only kept from the zone's boss by its
-## HP or MP, or has a report waiting in the last village, away from a village, with an Ala
-## de viaje (the night at the inn is free). The route may never pass the one who waits.
+## HP or MP, has a report waiting in the last village or has no group left to fight
+## (_needs_groups(): the portal back brings them), away from a village, with an Ala de
+## viaje (the night at the inn is free). The route may never pass the one who waits.
 func _wants_retreat() -> bool:
 	var report := not state.quests.reports_here(state.town_zone, state.inventory).is_empty()
-	return (state.needs_rest() or _boss_needs_rest() or report) and not _world.in_village() \
-		and state.inventory.count(Inventory.WING) > 0
+	return (state.needs_rest() or _boss_needs_rest() or report or _needs_groups()) \
+		and not _world.in_village() and state.inventory.count(Inventory.WING) > 0
+
+
+## Autoplay: no group left on this map while the hero still has levels to win before its
+## boss (they only come back when the map is built again).
+func _needs_groups() -> bool:
+	return _world.group_count() == 0 and state.hero.level < _zone.autoplay_boss_level
 
 
 ## Autoplay: the zone's boss is due at this level but the hero is too worn for it. MP
