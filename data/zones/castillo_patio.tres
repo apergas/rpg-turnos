@@ -88,7 +88,7 @@ npcs = [{
 "pos": Vector3(-20.5, 0, 0.5),
 "yaw": 90.0
 }]
-formations = [["esqueleto_guerrero"], ["esqueleto_picaro"], ["esqueleto_mago"], ["esqueleto_picaro"], ["esqueleto_guerrero", "esqueleto_mago"], ["esqueleto_picaro", "esqueleto_mago"]]
+formations = [["esqueleto_guerrero"], ["esqueleto_picaro"], ["esqueleto_mago"], ["esqueleto_picaro"], ["esqueleto_guerrero", "esqueleto_mago"], ["esqueleto_picaro", "esqueleto_mago"], ["murcielago_cripta"], ["espectro_escarcha"]]
 start_formations = [["esqueleto_guerrero"], ["esqueleto_picaro"], ["esqueleto_mago"]]
 start_pos = Vector3(0, 0, 20)
 start_radius = 26.0

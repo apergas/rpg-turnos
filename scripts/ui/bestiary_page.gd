@@ -9,7 +9,8 @@ const ELEMENT_NAMES := {Skill.FIRE: "Fuego", Skill.ICE: "Hielo", Skill.THUNDER: 
 
 const ORDER: Array[String] = ["slime", "bat", "mushroom", "rey_slime", "lobo", "duende",
 	"planta", "bruja", "golem_barro", "arana", "espectro", "slime_metal", "golem_piedra",
-	"esqueleto_guerrero", "esqueleto_picaro", "esqueleto_mago", "senor_niebla"]
+	"esqueleto_guerrero", "esqueleto_picaro", "esqueleto_mago", "senor_niebla", "slime_rojo",
+	"seta_venenosa", "hongo_cueva", "murcielago_cripta", "espectro_escarcha"]
 const COLUMNS := 6
 const CARD_SIDE := 96.0
 const TOUCH_CARD_SIDE := 84.0

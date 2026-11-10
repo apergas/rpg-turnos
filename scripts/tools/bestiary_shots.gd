@@ -1,6 +1,7 @@
 extends SceneTree
-## Renders one portrait per enemy of the bestiary (BestiaryPage.ORDER) to assets/bestiary/<id>.png. Run once, not headless:
-## tools/godot.cmd --path . --script res://scripts/tools/bestiary_shots.gd
+## Renders one portrait per enemy of the bestiary to assets/bestiary/<id>.png: the ids given
+## after "--", or every one of the bestiary without any. Run it not headless:
+## tools/godot.cmd --path . --script res://scripts/tools/bestiary_shots.gd [-- id id ...]
 ## then --headless --path . --import. Excluded from the exports (scripts/tools/*).
 
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
@@ -15,7 +16,11 @@ func _run() -> void:
 	await process_frame
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://assets/bestiary"))
 	# Only the bestiary's enemies: the Eco de la Niebla has no card.
-	for id: String in BestiaryPage.ORDER:
+	var ids: Array[String] = []
+	ids.assign(OS.get_cmdline_user_args())
+	if ids.is_empty():
+		ids = BestiaryPage.ORDER
+	for id: String in ids:
 		var view := SubViewport.new()
 		view.size = SIZE
 		view.transparent_bg = true
