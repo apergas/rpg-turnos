@@ -5,7 +5,8 @@ class_name World extends Node3D
 ## too) walks the player there, with a marker on the spot. Next to a figure or a closed
 ## chest (the nearest one in reach) Enter / Space talks to the old woman
 ## (talk_requested) or to a villager (npc_requested), opens the shop (shop_requested),
-## asks for a room (inn_requested) or opens the chest (chest_opened); a small medal (Medals) shows only with the hero
+## asks for a room (inn_requested) or opens the chest (chest_opened); a small medal (Medals) shows
+## only with the hero
 ## close and is picked up ("Coger", medal_taken); a click or tap on
 ## one of them walks there and does it on arrival. With the boss present, walking into
 ## it starts the boss battle. Walking into an open exit (or onto the stairs of a dungeon
@@ -643,6 +644,15 @@ func set_autoplay_hunt(on: bool) -> void:
 		_player.stop_hunt()
 
 
+## Autoplay: walks these points, from the first, instead of the zone's autoplay_route
+## (--autoplay-zone=medallas: Medals.AUTOPLAY_ROUTE). A copy: the zone's route never changes.
+func set_autoplay_route(points: Array) -> void:
+	var route: Array[Vector3] = []
+	route.assign(points)
+	_player.route = route
+	_player.restart_route()
+
+
 ## Every group of the zone again (MonsterGroups.groups()), in new places, none within
 ## MonsterGroups.ENTRY_GAP of avoid (where the hero stands). On autoplay prints "Grupos: n".
 func respawn_groups(avoid: Array[Vector3] = []) -> void:
@@ -906,6 +916,7 @@ func begin_cutscene() -> void:
 	_show_quest_marks()
 	for label in _figure_signs:
 		label.hide()
+	_show_near_medals(_player.global_position)
 
 
 ## Puts every figure back on its spot, gives the camera back to the hero and the
@@ -920,6 +931,7 @@ func end_cutscene() -> void:
 	_show_quest_marks()
 	for label in _figure_signs:
 		label.show()
+	_show_near_medals(_player.global_position)
 	_calm()
 	_was_near = {}
 	await freeze(false)
@@ -1105,11 +1117,12 @@ func remove_medal(medal_id: String) -> void:
 	_medals.erase(medal_id)
 
 
-## A medal only shows with the hero close: it is there to be found by exploring.
+## A medal only shows with the hero close (and never in a cutscene): it is there to be found
+## by exploring.
 func _show_near_medals(hero: Vector3) -> void:
 	for id: String in _medals:
 		var glint: Node3D = _medals[id]
-		glint.visible = _flat_distance(hero, glint.position) <= MEDAL_SEEN_RADIUS
+		glint.visible = not _player.scripted 			and _flat_distance(hero, glint.position) <= MEDAL_SEEN_RADIUS
 
 
 ## The pause menu covers the middle of the screen and says the same as the status window,
@@ -1260,7 +1273,8 @@ func _in_reach(wanted: Dictionary) -> bool:
 	return false
 
 
-## Everything usable now: the zone's figures, its closed chests, the small medals still on it and, on a dungeon floor,
+## Everything usable now: the zone's figures, its closed chests, the small medals still on it and,
+## on a dungeon floor,
 ## the lever until pulled, the key until taken and the gates while closed.
 func _uses() -> Array[Dictionary]:
 	var uses: Array[Dictionary] = []

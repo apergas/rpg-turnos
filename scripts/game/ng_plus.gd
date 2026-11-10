@@ -11,9 +11,9 @@ class_name NgPlus extends RefCounted
 ## enemy data, no nodes.
 
 ## HP, ATK and DEF of the enemies of each zone (ZoneData.number: 1 meadow, 2 forest, 3 mine,
-## 4 castle) in the first Partida nueva +. Starting values 1 + (4 - zone) × 0.6, so the
-## meadow is a challenge for a hero who finished the game; tuned with the autoplay (1.8.0).
-const ZONE_MULT := {1: 2.8, 2: 2.2, 3: 1.6, 4: 1.0}
+## 4 castle) in the first Partida nueva +. Tuned in 1.8.0 with pure battles of the Lv 20
+## hero: every boss beats him in 5 % of the fights or less (the Señor, 28 of 300 at most).
+const ZONE_MULT := {1: 4.4, 2: 2.8, 3: 1.3, 4: 1.1}
 ## What each further round adds to every zone's multiplier.
 const CYCLE_STEP := 0.3
 ## EXP and gold of every enemy in a Partida nueva + (the EXP only helps below Lv 20).

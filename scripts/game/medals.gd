@@ -53,6 +53,31 @@ const PRIZES: Array[Dictionary] = [
 	{"medals": 12, "equipment": Equipment.MEDAL_AMULET},
 ]
 
+## --autoplay-zone=medallas only: the points walked from the zone's start entry through its
+## medals, the last one on the last medal (straight lines the hero can walk, clear of the
+## exits). The zone's own autoplay_route never passes them.
+const AUTOPLAY_ROUTE := {
+	"pradera": [Vector3(-3, 0, -19), Vector3(-8, 0, -24), Vector3(-8, 0, -25),
+		Vector3(-8, 0, -29), Vector3(-16, 0, -20), Vector3(-17, 0, 1), Vector3(-19, 0, 4),
+		Vector3(-19, 0, 15), Vector3(-26, 0, 24), Vector3(-28, 0, 26), Vector3(6, 0, 26),
+		Vector3(6, 0, 23), Vector3(18, 0, 18), Vector3(18, 0, 14), Vector3(25, 0, 10),
+		Vector3(25, 0, 6), Vector3(28, 0, 5), Vector3(29, 0, 6)],
+	"bosque": [Vector3(12, 0, 34), Vector3(21, 0, 21), Vector3(22, 0, 21), Vector3(-22, 0, 9),
+		Vector3(-24, 0, -19), Vector3(-26, 0, -25), Vector3(-22, 0, -12), Vector3(-22, 0, 7),
+		Vector3(-20, 0, 19), Vector3(-17, 0, 23), Vector3(-17, 0, 26), Vector3(-19, 0, 29),
+		Vector3(-25, 0, 35), Vector3(-25, 0, 36)],
+	"mina_1": [Vector3(-13, 0, 11), Vector3(-13, 0, 5), Vector3(-25, 0, 5)],
+	"mina_2": [Vector3(19, 0, -13), Vector3(19, 0, -9), Vector3(7, 0, -6), Vector3(7, 0, 3),
+		Vector3(-17, 0, 5), Vector3(-17, 0, 19), Vector3(-25, 0, 20)],
+	"mina_3": [Vector3(-19, 0, -15), Vector3(-19, 0, -9), Vector3(-11, 0, -6),
+		Vector3(-11, 0, 19), Vector3(9, 0, 20)],
+	"castillo_patio": [Vector3(-1, 0, 1), Vector3(-13, 0, 1), Vector3(-13, 0, 3),
+		Vector3(-19, 0, 3), Vector3(-21, 0, -11), Vector3(-28, 0, -22), Vector3(-28, 0, -24),
+		Vector3(-19, 0, -20), Vector3(-19, 0, 3), Vector3(-11, 0, 3), Vector3(-11, 0, 1),
+		Vector3(13, 0, 1), Vector3(13, 0, 3), Vector3(28, 0, 8)],
+	"castillo_trono": [Vector3(20, 0, 11), Vector3(20, 0, -17)],
+}
+
 
 ## The medal ids of zone_id, in MEDALS order.
 static func of_zone(zone_id: String) -> Array[String]:
