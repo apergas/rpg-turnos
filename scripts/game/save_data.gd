@@ -23,7 +23,9 @@ class_name SaveData extends RefCounted
 ## the bosses it has beaten and the common enemies of their zones seen (and the Slime de Metal if its quest is done), every well full and no creature. DEFEATED_VERSION (1.3.0) adds the enemies beaten; in an older save every enemy seen counts as beaten.
 ## RING_VERSION (1.6.0) splits the accessory slot into the ring and the amulet; in an older save the accessory worn goes to the slot its piece belongs to, the other one empty.
 ## METAL_SLIME_VERSION (1.7.0) adds the Slime de Metal's HP kept after it got away (metal_slime_hp, 0 for none); an older save gets 0.
-## MEDALS_VERSION (1.8.0) adds the small medals taken (medals, sorted), the Coleccionista's prizes given (medal_prizes), whether he was met (collector_met) and the rounds of the Partida nueva + (ng_plus); an older save gets none, 0, false and 0.
+## MEDALS_VERSION (1.8.0) adds the small medals taken (medals, sorted), the Coleccionista's prizes
+## given (medal_prizes), whether he was met (collector_met) and the rounds of the Partida nueva +
+## (ng_plus); an older save gets none, 0, false and 0.
 
 const VERSION := 13
 ## First version with the story's fields.
@@ -329,10 +331,12 @@ static func _valid_medals(data: Dictionary) -> bool:
 			return false
 		seen[id] = true
 	var prizes: Variant = data.get("medal_prizes")
-	if not (prizes is float and prizes >= 0.0 and prizes == floorf(prizes) 			and int(prizes) <= Medals.prizes_for((medals as Array).size())):
+	if not (prizes is float and prizes >= 0.0 and prizes == floorf(prizes) \
+		and int(prizes) <= Medals.prizes_for((medals as Array).size())):
 		return false
 	var cycle: Variant = data.get("ng_plus")
-	return data.get("collector_met") is bool and cycle is float and cycle >= 0.0 		and cycle == floorf(cycle)
+	return data.get("collector_met") is bool and cycle is float and cycle >= 0.0 \
+		and cycle == floorf(cycle)
 
 
 ## EVOLUTION_VERSION field: a Dictionary of well ids to the battles left.
@@ -473,7 +477,8 @@ static func _valid_world(data: Dictionary) -> bool:
 
 ## One line about a valid save for the title: "Rocío · Nv 12 · Mina · 1:05" (the hero's
 ## name, level, the zone's short name and the play time as h:mm), and " · +1" in a Partida
-## nueva +. Older saves without a name or a zone say the default name and the meadow, as apply() would load them.
+## nueva +. Older saves without a name or a zone say the default name and the meadow, as apply()
+## would load them.
 static func summary_line(data: Dictionary) -> String:
 	var version := int(data.version)
 	var hero_name: String = data.name if version >= STORY_VERSION else StoryState.DEFAULT_NAME

@@ -6,7 +6,8 @@ class_name MonsterGroups extends RefCounted
 ## never touched), out of the village, inside the walls and clear of the rocks, the
 ## buildings and the trees; on a dungeon floor, on a room cell (is_room_cell(): a corridor
 ## one cell wide never holds one), never in the stair rooms or the village (the refugio, the
-## camp). Everywhere clear of the exits, the chests, the small medals, the wells, the figures, the boss and the
+## camp). Everywhere clear of the exits, the chests, the small medals, the wells, the figures, the
+## boss and the
 ## entries, and MIN_GAP from each other. Pure: no nodes.
 
 ## Two groups stand at least this far apart.
@@ -25,7 +26,8 @@ const PATH_MARGIN := CONTACT_RADIUS + MAX_ROAM + 0.5
 const EDGE_MARGIN := 4.0
 const PROP_MARGIN := 1.5
 const TREE_MARGIN := 1.5
-## Clear of the exits, the chests, the small medals, the wells, the figures and, on a dungeon floor, the
+## Clear of the exits, the chests, the small medals, the wells, the figures and, on a dungeon floor,
+## the
 ## lever, the key and the gates; farther from the boss; farther still from the entries and
 ## from the spots to avoid (the hero).
 const CLEAR_MARGIN := 5.0

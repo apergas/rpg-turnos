@@ -2,7 +2,8 @@ class_name Equipment extends RefCounted
 ## The equipment catalog: every weapon, helmet, armor, shield, ring and amulet, with its
 ## slot, bonus (ATK for a weapon, VEL for a ring or an amulet, DEF for the rest), price in
 ## gold, the zone whose shop sells it (0: no shop, the starting gear; -1: never sold, a
-## quest's or a bestiary family's reward, a boss's prize or the Coleccionista's), the mesh the hero shows for it
+## quest's or a bestiary family's reward, a boss's prize or the Coleccionista's), the mesh the hero
+## shows for it
 ## (a handslot mesh of Knight.glb, STICK_MESH built in code, or "" for none) and, on some
 ## rings and amulets, the status it keeps away ("immune"). A piece that is not a weapon may
 ## also add "attack" (extra_attack()); a helmet may show "horns" (has_horns()); a helmet or a
