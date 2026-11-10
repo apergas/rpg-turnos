@@ -15,6 +15,7 @@ class_name BattleEngine extends RefCounted
 ## who fights alone).
 ## At the start roll_ambush() may give one side a surprise: the hero's side acts alone in
 ## the first round, or the enemies play resolve_ambush_round() before the first command.
+## A hero who falls with a Pluma de fénix rises once per battle with half his HP (_revive()).
 
 enum State { ONGOING, WON, LOST, FLED }
 ## Who won the surprise roll at the start of a battle (roll_ambush()).
@@ -96,6 +97,8 @@ var _rescued := {}
 var _charged := {}
 ## True once the first round (the surprise one or a normal one) has been played.
 var _ambush_done := false
+## True once the Pluma de fénix has burnt in this battle: a second fall is a defeat.
+var _revived := false
 
 
 func _init(p_hero: Combatant, p_enemies: Array[Combatant], rng: RandomNumberGenerator, \
@@ -478,10 +481,14 @@ func _hurt(target: int, amount: int, crit: bool, magic: bool, affinity: String, 
 		events.append(BattleEvent.status_off(target, SLEEP))
 
 
-## A fighter at 0 HP is defeated, unless it is an enemy with a next phase still to come:
-## then it rises at once with that phase's stats (cured, its charge forgotten).
+## A fighter at 0 HP is defeated, unless it is the hero with a Pluma de fénix and none
+## burnt yet in this battle (he rises), or an enemy with a next phase still to come: then
+## it rises at once with that phase's stats (cured, its charge forgotten).
 func _fall(who: int, events: Array[Dictionary]) -> void:
 	var fighter := _fighter(who)
+	if who == BattleEvent.HERO and not _revived 			and inventory.count(Inventory.PHOENIX) > 0:
+		_revive(events)
+		return
 	if who == BattleEvent.HERO or fighter.next_phase == null:
 		events.append(BattleEvent.defeated(who))
 		return
@@ -500,6 +507,16 @@ func _fall(who: int, events: Array[Dictionary]) -> void:
 	_charged.erase(who)
 	events.append(BattleEvent.phase(who, fighter.hp))
 
+
+## The Pluma de fénix burns by itself: one is used up and the hero rises with its share
+## of his max HP (rounded up), cured of every status. Once per battle. The creature is
+## never revived (only the hero's fall comes here).
+func _revive(events: Array[Dictionary]) -> void:
+	inventory.take(Inventory.PHOENIX)
+	_revived = true
+	hero.hp = ceili(hero.max_hp * float(Inventory.ITEMS[Inventory.PHOENIX].value))
+	hero.status.clear()
+	events.append(BattleEvent.revive(BattleEvent.HERO, hero.hp))
 
 
 func _add_status(target: int, status: String, events: Array[Dictionary]) -> void:

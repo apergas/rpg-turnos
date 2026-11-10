@@ -403,6 +403,13 @@ func _play_event(event: Dictionary) -> void:
 			_show_life(event.target, event.hp_left)
 			await _say("¡La niebla envuelve %s!" % _to(boss))
 			await _say("¡%s se levanta con %d PV!" % [_cap(_the(boss)), event.hp_left])
+		BattleEvent.REVIVE:
+			_sfx(SfxLibrary.HEAL)
+			_reset_camera()
+			await _actor(event.target).play_heal(event.hp_left)
+			_show_life(event.target, event.hp_left)
+			_hud.update_status(hero.status)
+			await _say("¡La Pluma de fénix arde! %s se levanta." % hero.display_name)
 		BattleEvent.DEFEATED:
 			_show_arrow(-1)
 			if event.target >= 0:

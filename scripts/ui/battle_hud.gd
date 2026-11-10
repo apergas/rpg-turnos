@@ -435,11 +435,12 @@ func _add_back_row() -> void:
 	_add_row("Volver", true)
 
 
-## Items in stock that can be used in battle, in Inventory.IDS order.
+## Items in stock the battle lists, in Inventory.IDS order: the ones usable in battle and
+## the Pluma de fénix (grey: it is used by itself).
 func _item_ids() -> Array[String]:
 	var ids: Array[String] = []
 	for id in Inventory.IDS:
-		if _engine.inventory.count(id) > 0 and Inventory.ITEMS[id].battle:
+		if _engine.inventory.count(id) > 0 and Inventory.listed_in_battle(id):
 			ids.append(id)
 	return ids
 
