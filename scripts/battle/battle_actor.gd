@@ -592,7 +592,8 @@ func set_walking(on: bool) -> void:
 
 ## Hero only: shows the hand meshes of the weapon and shield worn (Equipment ids, ""
 ## for none) and hides the rest. A helmet shows the model's helmet mesh tinted with its
-## color, with horns for the Yelmo de bruma. Armor does not change the model. Others ignore it.
+## color, with horns for the Yelmo de bruma. The weapon's mesh takes its Equipment.tint() (the
+## Espada del alba is pale gold). Armor does not change the model. Others ignore it.
 func set_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> void:
 	if look != Look.HERO or _model == null:
 		return
@@ -600,6 +601,21 @@ func set_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> voi
 	for hand: String in shown:
 		for child in _model.get_node(hand).get_children():
 			(child as Node3D).visible = child.name == shown[hand] and shown[hand] != ""
+	# The weapon's own tint (the Espada del alba): every hand mesh back to its imported
+	# materials first, so a tint never stays on the next weapon that uses the mesh.
+	var right := _model.get_node(HAND_R)
+	for node in right.find_children("*", "MeshInstance3D", true, false):
+		if node.name != Equipment.STICK_MESH:
+			for i in (node as MeshInstance3D).mesh.get_surface_count():
+				(node as MeshInstance3D).set_surface_override_material(i, null)
+	var weapon_tint := Equipment.tint(weapon_id)
+	var weapon_mesh := Equipment.mesh(weapon_id)
+	if weapon_tint != Color.WHITE and weapon_mesh != "" and right.has_node(weapon_mesh):
+		var weapon := right.get_node(weapon_mesh)
+		if weapon is MeshInstance3D:
+			_tint_mesh(weapon as MeshInstance3D, weapon_tint)
+		else:
+			_tint(weapon as Node3D, weapon_tint)
 	var helmet := _model.get_node(HELMET_PATH) as MeshInstance3D
 	helmet.visible = helmet_id != ""
 	if Equipment.has_horns(helmet_id) and _horns == null:

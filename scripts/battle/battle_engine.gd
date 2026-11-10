@@ -17,6 +17,7 @@ class_name BattleEngine extends RefCounted
 ## the first round, or the enemies play resolve_ambush_round() before the first command.
 ## A hero who falls with a Pluma de fénix rises once per battle with half his HP (_revive()).
 ## A Despertador used in battle keeps the hero awake until it ends (_wake_guard).
+## Equipment that keeps a status away says so (no_sleep() for sleep, immune() for poison and silence).
 
 enum State { ONGOING, WON, LOST, FLED }
 ## Who won the surprise roll at the start of a battle (roll_ambush()).
@@ -542,7 +543,13 @@ func _add_status(target: int, status: String, events: Array[Dictionary]) -> void
 	if _guarded(target, status):
 		events.append(BattleEvent.no_sleep(target))
 		return
-	if not fighter.is_alive() or fighter.status.has(status) or fighter.is_immune(status):
+	if not fighter.is_alive() or fighter.status.has(status):
+		return
+	if fighter.is_immune(status):
+		# What the hero wears keeps it away (the Anillo antiveneno, the Anillo de savia, the
+		# Amuleto de hueso): said, like the Despertador's sleep.
+		events.append(BattleEvent.no_sleep(target) if status == SLEEP
+			else BattleEvent.immune(target, status))
 		return
 	# Silence counts down at the end of every round, the one it starts in too, so it
 	# gets one extra round to last SILENCE_ROUNDS whole rounds.
