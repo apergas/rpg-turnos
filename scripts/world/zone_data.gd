@@ -1,8 +1,8 @@
 class_name ZoneData extends Resource
 ## Everything one map of the world is built from (data/zones/<id>.tres): the field and
 ## its walls, ground and grass, the dirt path and the safe discs, the village, buildings,
-## rocks, trees and bushes, the entries and exits, the figures, the boss, the encounter
-## formations and pace, the music, the light and the battle backdrop. WorldStage builds
+## rocks, trees and bushes, the entries and exits, the figures, the boss, the
+## formations of its groups of monsters, the music, the light and the battle backdrop. WorldStage builds
 ## the map from it, World runs it and Game switches between zones. A dungeon floor (the
 ## mine, the castle) is drawn instead as a grid of CELL metres (layout, see "Dungeon"):
 ## DungeonMap builds it and the lookups below answer about its cells. Pure data plus a few lookups:
@@ -129,9 +129,9 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var postgame_boss_id := ""
 
 @export_group("Encounters")
-## Formations of a random encounter (each a list of EnemyLibrary ids, left to right),
-## every one with the same weight; within start_radius of start_pos only
-## start_formations come.
+## Formations of the groups of monsters on the map (each a list of EnemyLibrary ids, left
+## to right; EncounterTable.pick_group()), every one with the same weight; within
+## start_radius of start_pos only start_formations.
 @export var formations: Array = []
 @export var start_formations: Array = []
 @export var start_pos := Vector3.ZERO
@@ -142,11 +142,8 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## (EnemyLibrary id, "" for none).
 @export var rare_enemy := ""
 @export var rare_chance := 0.0
-## EncounterMeter: free meters after each battle, then this chance per meter on grass.
-@export var encounter_grace := 5.0
-@export var encounter_chance := 0.025
 ## The level a hero usually has on leaving this zone (about its boss's): from
-## EncounterMeter.LEVEL_GAP levels past it, its monsters come half as often. 0: never.
+## EncounterMeter.LEVEL_GAP levels past it, its moving groups keep away from the hero (EncounterMeter.is_shy()). 0: never.
 @export var exit_level := 0
 
 @export_group("Look and sound")

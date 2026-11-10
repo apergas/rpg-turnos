@@ -1,11 +1,11 @@
 class_name Game extends Node
 ## One play session, created by TitleScreen (setup() before add_child). Owns the
 ## GameState and the map of the current zone (a World built from its ZoneData), and puts
-## a battle on top of the map when an encounter starts (the enemies come from
-## EncounterTable with the zone's formations, or the zone's boss). The map stays while
-## battles come and go, so the hero's position, the camera and the encounter grace
-## survive them; walking into an open exit fades to black, frees the map and builds the
-## next zone at the exit's entry (GameState.zone_id). A victory adds the gold and counts
+## a battle on top of the map when the hero touches a group of monsters on it (its
+## formation, World.contact_enemies()) or the zone's boss. The map stays while battles
+## come and go, so the hero's position, the camera and the groups survive them; walking
+## into an open exit fades to black, frees the map and builds the next zone at the exit's
+## entry (GameState.zone_id), every group back. A victory adds the gold and counts
 ## every enemy defeated for the quest; a boss also sets its world flag (the Rey Slime
 ## lifts the fog of the meadow's north exit) and gives its key item. Fleeing just goes
 ## back to the map; a defeat takes half the gold (GameState.defeat_gold_loss()), heals the
@@ -51,8 +51,8 @@ class_name Game extends Node
 ## `-- --autoplay --autoplay-save`: after the first autosave that follows a won battle
 ## it prints the saved values ("Guardado: ...") and goes back to the title, which loads
 ## the save at once; the loaded game prints the same values ("Cargado: ...").
-## `-- --autoplay --autoplay-menu`: MENU_TOUR_DELAY seconds into the map (still inside
-## the encounter grace) it shows every page of the pause menu (PauseMenu.tour()), to
+## `-- --autoplay --autoplay-menu`: MENU_TOUR_DELAY seconds into the map (before any group
+## is in reach) it shows every page of the pause menu (PauseMenu.tour()), to
 ## record frames of it.
 ## `-- --autoplay --autoplay-zone=<id>`: a new game that starts in that zone with the
 ## level, gold, gear and progress AUTOPLAY_ZONES gives it.
@@ -265,6 +265,7 @@ func _ready() -> void:
 	_switch_zone(state.zone_id, "")
 	if start_pos != null:
 		_world.place_player(start_pos)
+		_respawn_groups()
 	var prologue := state.chapter() == StoryState.Chapter.PROLOGUE
 	if prologue:
 		# Under black: the prologue fades in by itself.
@@ -398,8 +399,7 @@ func _on_encounter(boss: bool) -> void:
 	if boss:
 		enemies.append(EnemyLibrary.data(_boss_id()))
 	else:
-		enemies = EncounterTable.pick(_zone, _world.player_position(), _rng,
-			state.quests.wanted_enemies(), state.quests.hunted_enemies())
+		enemies = _world.contact_enemies()
 	_note_enemies(enemies, false)
 	var echo := boss and _boss_id() == _zone.postgame_boss_id
 	await _fade_to(1.0)
@@ -433,6 +433,9 @@ func _on_encounter(boss: bool) -> void:
 		Wells.on_battle(state)
 		_world.set_dry_wells(Wells.dry_ids(state))
 	await _fade_to(1.0)
+	if not boss:
+		# Under black: a beaten group leaves the map, one fled from stays half see-through.
+		_world.end_contact(outcome)
 	var notice := ""
 	var reward_lines: Array[String] = []
 	var scene := ""
@@ -603,14 +606,23 @@ func _boss_notice(boss: Combatant) -> String:
 
 
 ## Puts the player at the town entry of the last village visited, switching zones if
-## needed (no fade: the caller is already under black).
+## needed (no fade: the caller is already under black). The groups of the map come back
+## either way.
 func _go_to_town() -> void:
 	var town := ZoneData.by_id(state.town_zone)
 	if state.town_zone != state.zone_id:
 		_switch_zone(state.town_zone, town.town_entry)
 	else:
 		_world.place_at_entry(town.town_entry)
+		_respawn_groups()
 		_on_village_changed(_world.in_village())
+
+
+## Every group of this map comes back (the map counts as built again: a defeat, the portal,
+## a game loaded), clear of where the hero stands.
+func _respawn_groups() -> void:
+	var avoid: Array[Vector3] = [_world.player_position()]
+	_world.respawn_groups(avoid)
 
 
 ## An open exit: fades to black, builds the next zone at the exit's entry, autosaves.
@@ -669,6 +681,7 @@ func _on_portal() -> void:
 	else:
 		_show_portal()
 	_world.place_player(pos)
+	_respawn_groups()
 	_world.arm_blocked_point_skip()
 	_on_village_changed(_world.in_village())
 	_refresh_status()
@@ -1058,8 +1071,9 @@ func _refresh_status() -> void:
 	var missions := state.current_missions()
 	_world.refresh_status(state.hero, state.inventory.count(Inventory.POTION), state.gold,
 		missions)
-	_world.set_encounter_rate(EncounterMeter.level_rate(state.hero.level, _zone.exit_level))
+	_world.set_monsters_shy(EncounterMeter.is_shy(state.hero.level, _zone.exit_level))
 	_world.set_repel(state.repel_m > 0.0)
+	_world.set_autoplay_hunt(_autoplay and state.hero.level < _zone.autoplay_boss_level)
 	_world.set_quest_view(state.quests.markers(_zone.id, state.inventory),
 		state.quests.hidden_figures(_zone.id))
 	var loadout := state.loadout
