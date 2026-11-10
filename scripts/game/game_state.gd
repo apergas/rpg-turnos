@@ -22,6 +22,14 @@ var loadout := Loadout.new()
 var bag_equipment: Array[String] = []
 ## Ids of the chests already opened (Chests.CHESTS keys).
 var opened_chests: Array[String] = []
+## Small medals taken (Medals ids, in the order found), the Coleccionista's prizes given
+## so far (Medals.PRIZES in order) and whether he has spoken to the hero. A Partida nueva +
+## keeps them.
+var medals: Array[String] = []
+var medal_prizes := 0
+var collector_met := false
+## Rounds of the Partida nueva + (NgPlus): 0 in a first game, 1 in the first one, and so on.
+var ng_plus := 0
 ## Enemy ids met in battle (EnemyLibrary ids), for the bestiary.
 var seen_enemies: Array[String] = []
 ## Enemy ids beaten in a won battle (EnemyLibrary ids), for the bestiary's cards.

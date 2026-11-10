@@ -16,7 +16,8 @@ class_name Game extends Node
 ## quest on and, once the slimes are reported, brings out the Rey Slime; the other
 ## villagers say their ZoneData lines. The merchant opens the ShopWindow; the innkeeper
 ## offers a free night (Inn.stay(): fade to black, full HP and MP, autosave); a chest gives
-## what it holds (Chests.open()) and stays open. The hero's figure on the map and in
+## what it holds (Chests.open()) and stays open. A small medal (Medals) goes to
+## GameState.medals and leaves the map for good. The hero's figure on the map and in
 ## battle shows the weapon and shield worn. On a dungeon floor the lever sets its world
 ## flag (and opens the gates it works), the key goes to the key items (and its flag is
 ## set, so it stays taken) and a locked gate opens with the key, which is used up; all
@@ -377,6 +378,7 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 	_world.shop_requested.connect(_on_shop)
 	_world.inn_requested.connect(_on_inn)
 	_world.chest_opened.connect(_on_chest)
+	_world.medal_taken.connect(_on_medal)
 	_world.well_requested.connect(_on_well)
 	_world.exit_requested.connect(_on_exit)
 	_world.map_requested.connect(_pause.open_map)
@@ -391,6 +393,8 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 		_world.place_at_entry(entry_id)
 	for id in state.opened_chests:
 		_world.set_chest_open(id, true, true)
+	for id in state.medals:
+		_world.remove_medal(id)
 	_world.set_explored(state.explored_map(zone_id))
 	_world.set_world_flags(state.world_flags)
 	_show_portal()
@@ -1001,6 +1005,24 @@ func _on_chest(chest_id: String) -> void:
 	_refresh_status()
 	_autosave(false)
 	var lines: Array[String] = [result.text]
+	await _world.show_dialogue("", lines)
+	_set_busy(false)
+
+
+## A small medal: into GameState.medals, off the map, saved without a notice and said in the
+## dialogue window ("¡Encuentras una Medalla pequeña! (n/12)").
+func _on_medal(medal_id: String) -> void:
+	if _busy:
+		return
+	var text := Medals.take(state, medal_id)
+	if text == "":
+		return
+	_set_busy(true)
+	_world.remove_medal(medal_id)
+	_audio.play_sfx(SfxLibrary.LEVEL_UP)
+	_refresh_status()
+	_autosave(false)
+	var lines: Array[String] = [text]
 	await _world.show_dialogue("", lines)
 	_set_busy(false)
 
