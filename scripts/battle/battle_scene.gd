@@ -237,7 +237,8 @@ func _play_ambush() -> void:
 func _ambush_text(hero_side: bool) -> String:
 	var alive := engine.alive_enemies()
 	if alive.size() > 1:
-		return "¡Pillas desprevenidos a los monstruos!" if hero_side \n			else "¡Los monstruos te atacan por sorpresa!"
+		return "¡Pillas desprevenidos a los monstruos!" if hero_side \
+			else "¡Los monstruos te atacan por sorpresa!"
 	var foe := engine.enemies[alive[0]]
 	if hero_side:
 		return "¡Pillas desprevenid%s %s!" % [_ending(foe), _to(foe)]
