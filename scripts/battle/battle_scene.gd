@@ -167,7 +167,11 @@ func _ready() -> void:
 	if ally != null:
 		_hud.show_ally(ally)
 	for i in _enemy_actors.size():
-		_hud.add_enemy_bar(engine.enemies[i].display_name)
+		var foe := engine.enemies[i]
+		_hud.add_enemy_bar(foe.display_name)
+		if foe.hp < foe.max_hp:
+			# A Slime de Metal that kept its HP from the last battle.
+			_hud.set_enemy_life(i, float(foe.hp) / foe.max_hp)
 	if _autoplay and not engine.has_boss():
 		_autoplay_battles += 1
 		_autoplay_flee = _autoplay_battles % AUTOPLAY_EVERY == 0

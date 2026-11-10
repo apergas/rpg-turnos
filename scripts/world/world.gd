@@ -639,6 +639,27 @@ func group_count() -> int:
 	return count
 
 
+## Puts the zone's rare enemy (the Slime de Metal) on this dungeon floor, away from the hero
+## (MonsterGroups.rare_spot()), unless one is here already. It wanders the whole floor
+## (MonsterRoam WANDER) and is touched like a group.
+func add_rare(enemy_id: String) -> void:
+	if has_rare() or not zone.is_dungeon():
+		return
+	var spot: Variant = MonsterGroups.rare_spot(zone, _rng, _player.global_position)
+	if spot == null:
+		return
+	_add_group(spot, EnemyLibrary.formation([enemy_id]), true)
+	if _autoplay:
+		print("%s en el mapa" % EnemyLibrary.data(enemy_id).display_name)
+
+
+func has_rare() -> bool:
+	for group in _groups:
+		if group.rare:
+			return true
+	return false
+
+
 ## A group at pos: the figure of its first enemy (no collider: nothing bumps into it),
 ## facing the camera, and its MonsterRoam.
 func _add_group(pos: Vector3, enemies: Array[Combatant], rare: bool) -> void:

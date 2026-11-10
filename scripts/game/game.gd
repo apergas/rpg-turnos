@@ -382,6 +382,7 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 	_world.set_world_flags(state.world_flags)
 	_show_portal()
 	_update_boss()
+	_spawn_rare()
 	_refresh_status()
 	MusicLibrary.build(_zone.music)
 	if _world.in_village():
@@ -400,6 +401,9 @@ func _on_encounter(boss: bool) -> void:
 		enemies.append(EnemyLibrary.data(_boss_id()))
 	else:
 		enemies = _world.contact_enemies()
+		var kept := state.give_metal_slime_hp(enemies)
+		if _autoplay and kept > 0:
+			print("Slime de Metal con PV %d" % kept)
 	_note_enemies(enemies, false)
 	var echo := boss and _boss_id() == _zone.postgame_boss_id
 	await _fade_to(1.0)
@@ -436,6 +440,10 @@ func _on_encounter(boss: bool) -> void:
 	if not boss:
 		# Under black: a beaten group leaves the map, one fled from stays half see-through.
 		_world.end_contact(outcome)
+	if state.keep_metal_slime_hp(battle.engine.enemies, outcome) > 0:
+		if _autoplay:
+			print("Slime de Metal: PV %d guardados" % state.metal_slime_hp)
+		_autosave(false)  # a fled battle saves nothing else: quitting now must not lose them
 	var notice := ""
 	var reward_lines: Array[String] = []
 	var scene := ""
@@ -623,6 +631,17 @@ func _go_to_town() -> void:
 func _respawn_groups() -> void:
 	var avoid: Array[Vector3] = [_world.player_position()]
 	_world.respawn_groups(avoid)
+	_spawn_rare()
+
+
+## The zone's rare enemy on this map (the Slime de Metal on the mine floors): always while
+## its quest is on, now and then once it is done (EncounterTable.rare_on_map()).
+func _spawn_rare() -> void:
+	if _zone.rare_enemy == "" or _world.has_rare():
+		return
+	if EncounterTable.rare_on_map(_zone, state.quests.wanted_enemies(),
+			state.quests.hunted_enemies(), _rng):
+		_world.add_rare(_zone.rare_enemy)
 
 
 ## An open exit: fades to black, builds the next zone at the exit's entry, autosaves.
@@ -861,6 +880,8 @@ func _on_npc(index: int) -> void:
 
 ## The map shows what changed; a finished quest says so; the game is saved.
 func _after_quest_talk(done_title: String) -> void:
+	if _zone.rare_enemy in state.quests.wanted_enemies():
+		_spawn_rare()  # its hunt was just taken: it is on this floor at once
 	if _autoplay:
 		for id in Inventory.SEEDS:
 			while state.inventory.count(id) > 0:

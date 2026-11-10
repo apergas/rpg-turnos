@@ -133,14 +133,18 @@ func step(pos: Vector3, delta: float, hero_pos: Vector3, shy: bool) -> Vector3:
 
 
 ## The cells the Slime de Metal walks to: plain floor or torch cells, out of the stair rooms
-## and the village (the refugio).
+## and the village (the refugio), and only the ones a hero can reach from the stairs while
+## the floor's gates are closed (no pocket behind a gate).
 static func wander_cells(zone: ZoneData) -> Array[Vector2i]:
 	var cells: Array[Vector2i] = []
 	var size := zone.grid_size()
+	var reach := _reachable(zone)
 	for y in size.y:
 		for x in size.x:
 			var cell := Vector2i(x, y)
 			if not zone.cell_char(cell) in [ZoneData.FLOOR, ZoneData.TORCH]:
+				continue
+			if not reach.has(cell):
 				continue
 			var pos := zone.cell_center(cell)
 			if zone.near_stairs(pos):
@@ -149,6 +153,27 @@ static func wander_cells(zone: ZoneData) -> Array[Vector2i]:
 				continue
 			cells.append(cell)
 	return cells
+
+
+## The cells (as keys) reachable from the stair cells with every gate closed.
+static func _reachable(zone: ZoneData) -> Dictionary:
+	var seen := {}
+	var queue: Array[Vector2i] = []
+	for kind in [ZoneData.STAIRS_UP, ZoneData.STAIRS_DOWN]:
+		for cell in zone.find_cells(kind):
+			seen[cell] = true
+			queue.append(cell)
+	var head := 0
+	while head < queue.size():
+		var current := queue[head]
+		head += 1
+		for step_dir in STEPS:
+			var next: Vector2i = current + step_dir
+			if seen.has(next) or not walkable(zone, next, {}):
+				continue
+			seen[next] = true
+			queue.append(next)
+	return seen
 
 
 ## The cells from start (left out) to goal, one step at a time through walkable() cells

@@ -138,10 +138,10 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var start_radius := 0.0
 ## How many groups of monsters stand on the map (MonsterGroups; fewer if there is no room).
 @export var monster_count := 0
-## An enemy that only comes while a quest hunts it, alone, with this chance per encounter
-## (EnemyLibrary id, "" for none).
+## An enemy that walks the map alone, not as one of its groups: always while a quest hunts
+## it, now and then once it is done (EncounterTable.rare_on_map(); EnemyLibrary id, "" for
+## none).
 @export var rare_enemy := ""
-@export var rare_chance := 0.0
 ## The level a hero usually has on leaving this zone (about its boss's): from
 ## EncounterMeter.LEVEL_GAP levels past it, its moving groups keep away from the hero (EncounterMeter.is_shy()). 0: never.
 @export var exit_level := 0

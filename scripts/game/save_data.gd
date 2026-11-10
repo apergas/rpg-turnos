@@ -22,8 +22,9 @@ class_name SaveData extends RefCounted
 ## enemies seen, the wells' charge and the creature; an older save gets the slot empty,
 ## the bosses it has beaten and the common enemies of their zones seen (and the Slime de Metal if its quest is done), every well full and no creature. DEFEATED_VERSION (1.3.0) adds the enemies beaten; in an older save every enemy seen counts as beaten.
 ## RING_VERSION (1.6.0) splits the accessory slot into the ring and the amulet; in an older save the accessory worn goes to the slot its piece belongs to, the other one empty.
+## METAL_SLIME_VERSION (1.7.0) adds the Slime de Metal's HP kept after it got away (metal_slime_hp, 0 for none); an older save gets 0.
 
-const VERSION := 11
+const VERSION := 12
 ## First version with the story's fields.
 const STORY_VERSION := 6
 ## First version with the accessory slot and the side quests.
@@ -38,6 +39,8 @@ const DEFEATED_VERSION := 10
 const RING_VERSION := 11
 ## The one accessory slot of the saves from QUESTS_VERSION to before RING_VERSION.
 const OLD_ACCESSORY := "accessory"
+## First version with the Slime de Metal's HP.
+const METAL_SLIME_VERSION := 12
 ## Oldest version apply() still reads.
 const OLDEST_VERSION := 2
 ## Combatant fields of the hero that change while playing (the rest come from hero.tres).
@@ -84,6 +87,7 @@ static func from_state(state: GameState, player_pos: Vector3, play_time: float) 
 		"defeated": state.defeated_enemies.duplicate(),
 		"wells": state.well_charge.duplicate(),
 		"ally": state.ally_id,
+		"metal_slime_hp": state.metal_slime_hp,
 		"position": [player_pos.x, player_pos.z],
 		"play_time": play_time,
 	}
@@ -170,6 +174,8 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 	for id: String in wells:
 		state.well_charge[id] = int(wells[id])
 	state.ally_id = data.get("ally", "")
+	state.metal_slime_hp = int(data.get("metal_slime_hp", 0)) \
+		if int(data.version) >= METAL_SLIME_VERSION else 0
 	var pos: Array = data.position
 	return {"valid": true, "position": Vector3(pos[0], 0.0, pos[1]),
 		"play_time": float(data.play_time)}
@@ -227,6 +233,8 @@ static func is_valid(data: Dictionary) -> bool:
 		return false
 	if int(data.version) >= DEFEATED_VERSION and not _valid_enemy_ids(data.get("defeated")):
 		return false
+	if int(data.version) >= METAL_SLIME_VERSION and not _valid_metal_slime(data):
+		return false
 	var hero: Variant = data.get("hero")
 	if not hero is Dictionary:
 		return false
@@ -276,6 +284,13 @@ static func _valid_enemy_ids(value: Variant) -> bool:
 static func _valid_ally(data: Dictionary) -> bool:
 	var ally: Variant = data.get("ally")
 	return ally is String and (ally == "" or Allies.exists(ally))
+
+
+## METAL_SLIME_VERSION field: the Slime de Metal's HP, from 0 (none) to its max HP.
+static func _valid_metal_slime(data: Dictionary) -> bool:
+	var hp: Variant = data.get("metal_slime_hp")
+	return hp is float and hp >= 0.0 \
+		and hp <= EnemyLibrary.data(EnemyLibrary.METAL_SLIME).max_hp
 
 
 ## EVOLUTION_VERSION field: a Dictionary of well ids to the battles left.

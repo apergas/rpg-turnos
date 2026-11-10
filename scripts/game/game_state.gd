@@ -30,6 +30,9 @@ var defeated_enemies: Array[String] = []
 var well_charge := {}
 ## The creature fighting beside the hero (Allies id, "" for none).
 var ally_id := ""
+## The HP the Slime de Metal had when it last got away (it ran, or the hero fled): its next
+## battle starts with them. 0: none (it was beaten, or never fought). Saved.
+var metal_slime_hp := 0
 ## Progress through the world: flag -> true. A boss sets its enemy id when defeated
 ## ("rey_slime" lifts the fog of the meadow's north exit); ZoneData exits name the flag
 ## that opens them.
@@ -72,6 +75,36 @@ func _init(hero_data: Combatant) -> void:
 func heal_full() -> void:
 	hero.hp = hero.max_hp
 	hero.mp = hero.max_mp
+
+
+## The Slime de Metal of a battle about to start gets metal_slime_hp: enemies holds data,
+## so it is replaced by a copy. Returns the HP it starts with (0: none kept).
+func give_metal_slime_hp(enemies: Array[Combatant]) -> int:
+	if metal_slime_hp <= 0:
+		return 0
+	for i in enemies.size():
+		if enemies[i].id == EnemyLibrary.METAL_SLIME:
+			var metal := enemies[i].duplicate() as Combatant
+			metal.hp = mini(metal_slime_hp, metal.max_hp)
+			enemies[i] = metal
+			return metal.hp
+	return 0
+
+
+## After a battle (outcome: BattleEngine.State) with the Slime de Metal: beaten, it forgets
+## its HP; still standing after a FLED one (it ran, or the hero did), it keeps them for the
+## next (full HP: nothing to keep). Returns the HP kept now (0: none).
+func keep_metal_slime_hp(enemies: Array[Combatant], outcome: int) -> int:
+	for enemy in enemies:
+		if enemy.id != EnemyLibrary.METAL_SLIME:
+			continue
+		if outcome == BattleEngine.State.WON:
+			metal_slime_hp = 0
+		elif outcome == BattleEngine.State.FLED and enemy.is_alive():
+			metal_slime_hp = enemy.hp if enemy.hp < enemy.max_hp else 0
+			return metal_slime_hp
+		return 0
+	return 0
 
 
 ## The next thing the story asks: the village quest while it lasts, then the chapter's goal.
