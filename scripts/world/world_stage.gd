@@ -101,7 +101,7 @@ static func build(root: Node3D, zone: ZoneData) -> ShaderMaterial:
 
 
 ## True on the dirt path and the safe discs (and in the stair rooms of a dungeon floor):
-## no encounters there. margin widens every one of them (the grass keeps a little off the
+## no monster groups there. margin widens every one of them (the grass keeps a little off the
 ## path's edge).
 static func is_on_path(zone: ZoneData, pos: Vector3, margin := 0.0) -> bool:
 	if zone.is_dungeon() and zone.near_stairs(pos):
