@@ -30,7 +30,7 @@ const TORCH := "T"
 const THRONE := "R"
 ## Plain floor (no torch, no chest...): what a group or the Slime de Metal stands on.
 const FLOOR := "."
-## Within this distance of a stair cell's centre the stair room is safe (no encounters).
+## Within this distance of a stair cell's centre the stair room is safe (no monster groups).
 const STAIRS_SAFE_RADIUS := 6.0
 
 @export var id := ""
@@ -58,10 +58,10 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var hills: Array = []
 
 @export_group("Path and safe ground")
-## Corners of the dirt path (no grass, no encounters).
+## Corners of the dirt path (no grass, no monster groups).
 @export var path_points: Array[Vector3] = []
 @export var path_half_width := 1.5
-## [centre, radius] of each round patch of bare dirt (no grass, no encounters): the
+## [centre, radius] of each round patch of bare dirt (no grass, no monster groups): the
 ## spawn area, the village clearing, the boss's clearing...
 @export var safe_discs: Array = []
 ## The village: inside this circle World emits village_changed(true) and the village
@@ -94,7 +94,7 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## the clump.
 @export var tree_models: Array[String] = ["tree_A", "tree_B"]
 @export var clump_model := "trees_A"
-## [centre, radius] of each glade: no trees, but grass and encounters.
+## [centre, radius] of each glade: no trees, but grass and monster groups.
 @export var glades: Array = []
 @export var bush_seed := 31
 @export var bush_tries := 220
@@ -281,7 +281,7 @@ func find_cells(ch: String) -> Array[Vector2i]:
 	return cells
 
 
-## True within STAIRS_SAFE_RADIUS of a stair cell (the stair rooms have no encounters).
+## True within STAIRS_SAFE_RADIUS of a stair cell (the stair rooms have no monster groups).
 func near_stairs(pos: Vector3) -> bool:
 	for kind in [STAIRS_UP, STAIRS_DOWN]:
 		for cell in find_cells(kind):

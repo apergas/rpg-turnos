@@ -612,6 +612,8 @@ func set_repel(on: bool) -> void:
 		_player.stop_hunt()
 	for group in _groups:
 		_fade_group(group)
+	if not on:
+		_calm()
 
 
 ## Autoplay: hunt the groups (Game: while the hero is below the zone's autoplay_boss_level).

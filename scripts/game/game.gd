@@ -716,6 +716,7 @@ func _on_portal() -> void:
 	if _busy or not state.has_portal():
 		return
 	_set_busy(true)
+	_quiet_s = 0.0
 	_world.freeze(true)
 	await _fade_to(1.0)
 	var zone_id := state.portal_zone
@@ -956,6 +957,7 @@ func _on_inn(inn_id: String) -> void:
 	_world.freeze(true)
 	Inn.stay(state)
 	await _fade_to(1.0)
+	_respawn_groups()
 	_refresh_status()
 	_audio.play_sfx(SfxLibrary.HEAL)
 	await get_tree().create_timer(INN_NIGHT_TIME).timeout

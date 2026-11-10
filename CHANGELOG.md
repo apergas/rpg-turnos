@@ -7,7 +7,7 @@
 - Por el sendero puedes cruzar una zona sin pelear. En la mina y el castillo, los pasillos estrechos también están libres.
 - Unos monstruos están quietos y otros pasean cerca de su sitio. Nunca te persiguen.
 - Si huyes, el grupo se queda medio transparente y no te ataca hasta que te alejas un poco.
-- Los grupos vencidos vuelven cuando cambias de zona, vuelves por el portal o caes en combate.
+- Los grupos vencidos vuelven cuando cambias de zona, vuelves por el portal, caes en combate o duermes en la posada.
 - Si eres mucho más fuerte que la zona, los monstruos que se mueven se apartan de ti.
 - Incienso: los monstruos no te atacan durante 200 m.
 - Mientras buscas al Slime de Metal, anda suelto por cada planta de la mina y huye corriendo si te acercas. Si se escapa, conserva sus heridas para la próxima vez.

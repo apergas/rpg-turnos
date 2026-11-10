@@ -57,7 +57,7 @@ El guardado pasa a la **versión 12** (solo por los PV del Slime de Metal).
 
 ### Reaparición
 
-Todos los grupos vuelven al construir otra vez el mapa: al cambiar de zona, al volver por el portal o tras una derrota. No se guarda qué grupos estaban vencidos.
+Todos los grupos vuelven al construir otra vez el mapa: al cambiar de zona, al volver por el portal tras una derrota y al dormir en la posada (el héroe se queda donde está; los grupos salen lejos de él). No se guarda qué grupos estaban vencidos.
 
 ### Lo que pasa con M-12 (encuentros a la mitad e Incienso)
 
