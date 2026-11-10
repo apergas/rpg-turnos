@@ -410,8 +410,8 @@ func _open(page: Page, cursor: int) -> void:
 		Page.SPELLS:
 			for skill in _engine.hero.skills:
 				var why := _engine.problem(BattleEngine.cmd_skill(skill))
-				_add_row(_with_reason("%s  %d PM  %s" % [skill.display_name, skill.mp_cost,
-					skill.description], why), why == "")
+				_add_row(_with_reason("%s  %d PM" % [skill.display_name, skill.mp_cost],
+					why), why == "")
 			_add_back_row()
 			_set_message("¿Qué hechizo?")
 		Page.ITEMS:

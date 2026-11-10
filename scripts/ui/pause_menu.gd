@@ -711,7 +711,6 @@ func _fill_spells() -> void:
 		row.add_child(cast)
 		if why != "":
 			row.add_child(_label(why, GREY))
-		UiStyle.add_small_text(_cast_box, skill.description)
 
 
 func _on_cast(skill: Skill) -> void:
