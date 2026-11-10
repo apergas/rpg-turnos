@@ -5,13 +5,15 @@ class_name BattleActor extends Node3D
 ## bat, the mushroom, the wolf,
 ## the goblin, the carnivorous plant, the golems, the spider, the specter and the
 ## creatures that fight beside the hero are low-poly figures built in code (see LOOKS).
+## Five of them are color variants of those (RED_SLIME, POISON_MUSHROOM, CAVE_MUSHROOM, CRYPT_BAT, FROST_SPECTER), built by the same functions.
 ## Set look before add_child. The figure faces -Z, so look_at() the opponent. Every
 ## play_* can be awaited: it returns when its animation and its tween are done.
 
 enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPER, WOLF,
 	GOBLIN, PLANT, WITCH, MUD_GOLEM, STONE_GOLEM, SPIDER, SPECTER, SKELETON_WARRIOR,
 	SKELETON_ROGUE, SKELETON_MAGE, FOG_LORD, FARMER, METAL_SLIME, BOARD, CAT, CHILD,
-	CHICKEN, WOLF_CUB, MINI_GOLEM, LOYAL_SKELETON, TAMER, FOG_ECHO }
+	CHICKEN, WOLF_CUB, MINI_GOLEM, LOYAL_SKELETON, TAMER, FOG_ECHO, RED_SLIME,
+	POISON_MUSHROOM, CAVE_MUSHROOM, CRYPT_BAT, FROST_SPECTER }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -296,9 +298,23 @@ const LOOKS := {
 		"top": 1.1,
 		"crown": false,
 	},
+	# The color variants of 1.6.0: the same figures as the slime, the mushroom, the bat and
+	# the specter, in other colors.
+	Look.RED_SLIME: {
+		"color": Color(0.85, 0.2, 0.18),
+		"scale": 1.0,
+		"top": 1.3,
+		"crown": false,
+	},
 	Look.BAT: {
 		"color": Color(0.32, 0.22, 0.42),
 		"wing_color": Color(0.2, 0.13, 0.28),
+		"top": 2.0,
+		"fly": 1.1,
+	},
+	Look.CRYPT_BAT: {
+		"color": Color(0.45, 0.1, 0.12),
+		"wing_color": Color(0.3, 0.05, 0.08),
 		"top": 2.0,
 		"fly": 1.1,
 	},
@@ -307,6 +323,19 @@ const LOOKS := {
 		"stem_color": Color(0.95, 0.9, 0.78),
 		"scale": 1.4,
 		"top": 1.6,
+	},
+	Look.POISON_MUSHROOM: {
+		"cap_color": Color(0.55, 0.22, 0.72),
+		"stem_color": Color(0.9, 0.86, 0.8),
+		"scale": 1.4,
+		"top": 1.6,
+	},
+	# The cave mushroom: pale blue and 1.2 times the size of the Seta saltarina.
+	Look.CAVE_MUSHROOM: {
+		"cap_color": Color(0.62, 0.8, 0.98),
+		"stem_color": Color(0.85, 0.9, 0.95),
+		"scale": 1.4 * 1.2,
+		"top": 1.6 * 1.2,
 	},
 	Look.WOLF: {
 		"color": Color(0.45, 0.45, 0.52),
@@ -402,6 +431,13 @@ const LOOKS := {
 		"top": 2.3,
 		"fly": 0.5,
 	},
+	Look.FROST_SPECTER: {
+		"color": Color(0.82, 0.95, 1.0),
+		"aura_color": Color(0.55, 0.9, 1.0),
+		"scale": 1.0,
+		"top": 2.3,
+		"fly": 0.5,
+	},
 	Look.SKELETON_WARRIOR: {
 		"scene": SKELETON_WARRIOR,
 		"scale": CHARACTER_SCALE,
@@ -493,9 +529,9 @@ func _ready() -> void:
 	_top = data.top
 	if data.has("scene"):
 		_build_character(data)
-	elif look == Look.BAT:
+	elif look in [Look.BAT, Look.CRYPT_BAT]:
 		_build_bat(data)
-	elif look == Look.MUSHROOM:
+	elif look in [Look.MUSHROOM, Look.POISON_MUSHROOM, Look.CAVE_MUSHROOM]:
 		_build_mushroom(data)
 	elif look == Look.WOLF or look == Look.WOLF_CUB:
 		_build_wolf(data)
@@ -509,7 +545,7 @@ func _ready() -> void:
 		_build_golem(data)
 	elif look == Look.SPIDER:
 		_build_spider(data)
-	elif look == Look.SPECTER:
+	elif look in [Look.SPECTER, Look.FROST_SPECTER]:
 		_build_specter(data)
 	elif look == Look.BOARD:
 		_build_board(data)
@@ -556,7 +592,8 @@ func set_walking(on: bool) -> void:
 
 ## Hero only: shows the hand meshes of the weapon and shield worn (Equipment ids, ""
 ## for none) and hides the rest. A helmet shows the model's helmet mesh tinted with its
-## color, with horns for the Yelmo de bruma. Armor does not change the model. Others ignore it.
+## color, with horns for the Yelmo de bruma. The weapon's mesh takes its Equipment.tint() (the
+## Espada del alba is pale gold). Armor does not change the model. Others ignore it.
 func set_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> void:
 	if look != Look.HERO or _model == null:
 		return
@@ -564,6 +601,21 @@ func set_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> voi
 	for hand: String in shown:
 		for child in _model.get_node(hand).get_children():
 			(child as Node3D).visible = child.name == shown[hand] and shown[hand] != ""
+	# The weapon's own tint (the Espada del alba): every hand mesh back to its imported
+	# materials first, so a tint never stays on the next weapon that uses the mesh.
+	var right := _model.get_node(HAND_R)
+	for node in right.find_children("*", "MeshInstance3D", true, false):
+		if node.name != Equipment.STICK_MESH:
+			for i in (node as MeshInstance3D).mesh.get_surface_count():
+				(node as MeshInstance3D).set_surface_override_material(i, null)
+	var weapon_tint := Equipment.tint(weapon_id)
+	var weapon_mesh := Equipment.mesh(weapon_id)
+	if weapon_tint != Color.WHITE and weapon_mesh != "" and right.has_node(weapon_mesh):
+		var weapon := right.get_node(weapon_mesh)
+		if weapon is MeshInstance3D:
+			_tint_mesh(weapon as MeshInstance3D, weapon_tint)
+		else:
+			_tint(weapon as Node3D, weapon_tint)
 	var helmet := _model.get_node(HELMET_PATH) as MeshInstance3D
 	helmet.visible = helmet_id != ""
 	if Equipment.has_horns(helmet_id) and _horns == null:

@@ -422,6 +422,10 @@ func _play_event(event: Dictionary) -> void:
 			_sfx(SfxLibrary.MISS)
 			await _actor(event.target).play_status(WAKE_COLOR)
 			await _say("%s no se duerme." % _fighter(event.target).display_name)
+		BattleEvent.IMMUNE:
+			_sfx(SfxLibrary.MISS)
+			await _actor(event.target).play_status(STATUS_COLORS[event.status])
+			await _say(_immune_text(event))
 		BattleEvent.DEFEATED:
 			_show_arrow(-1)
 			if event.target >= 0:
@@ -529,6 +533,12 @@ func _play_status_off(event: Dictionary) -> void:
 			await _say("¡%s se despierta!" % target.display_name)
 		BattleEngine.SILENCE:
 			await _say("¡%s puede volver a lanzar hechizos!" % target.display_name)
+
+
+## "El veneno no afecta a Rocío." / "El silencio no afecta a Rocío.".
+func _immune_text(event: Dictionary) -> String:
+	var what := "El silencio" if event.status == BattleEngine.SILENCE else "El veneno"
+	return "%s no afecta a %s." % [what, _fighter(event.target).display_name]
 
 
 ## The caller steps to the left place and the helper appears on the right one.

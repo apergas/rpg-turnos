@@ -1,5 +1,14 @@
 # Registro de cambios
 
+## 1.6.0 (2026)
+
+- Cinco monstruos nuevos: el Slime rojo y la Seta venenosa en el bosque, el Hongo de cueva en la mina, y el Murciélago de la cripta y el Espectro de escarcha en el castillo.
+- El bestiario se ordena por familias: Criaturas mágicas, Plantas, Bestias, Muertos vivientes y Jefes.
+- Vence a todos los monstruos de una familia y recibirás una pieza de equipo única. La de los Jefes es la Espada del alba, la mejor del juego.
+- La casilla de Accesorio se parte en dos: Anillo y Amuleto. Puedes llevar uno de cada.
+- El Anillo de savia te protege del sueño y el Amuleto de hueso, del silencio. En combate se avisa cuando tu equipo te protege, también del veneno.
+- Tus partidas siguen cargando: el accesorio que llevabas pasa a su casilla. Si ya habías vencido a los cuatro jefes, la Espada del alba te espera al cargar.
+
 ## 1.5.0 (2026)
 
 - A veces pillas desprevenidos a los monstruos y atacas tú primero sin que respondan.

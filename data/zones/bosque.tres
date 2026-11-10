@@ -129,7 +129,7 @@ npcs = [{
 }]
 boss_id = "bruja"
 boss_pos = Vector3(0, 0, -34)
-formations = [["lobo"], ["duende"], ["planta"], ["lobo"], ["lobo", "duende"], ["duende", "planta"]]
+formations = [["lobo"], ["duende"], ["planta"], ["lobo"], ["lobo", "duende"], ["duende", "planta"], ["slime_rojo"], ["seta_venenosa"]]
 start_formations = [["lobo"], ["duende"], ["planta"]]
 start_pos = Vector3(0, 0, 35)
 start_radius = 18.0

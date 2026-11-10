@@ -32,6 +32,7 @@ const ENEMY_FLEE := "enemy_flee"
 const REVIVE := "revive"
 const WAKE_GUARD := "wake_guard"
 const NO_SLEEP := "no_sleep"
+const IMMUNE := "immune"
 
 const HERO := -1
 ## The creature fighting beside the hero.
@@ -178,3 +179,9 @@ static func wake_guard(target: int) -> Dictionary:
 ## A sleep spell or blow found the fighter guarded by the Despertador: it fails.
 static func no_sleep(target: int) -> Dictionary:
 	return {"type": NO_SLEEP, "target": target}
+
+
+## A status found the fighter immune through what it wears (poison or silence; sleep says
+## no_sleep()): it fails.
+static func immune(target: int, status: String) -> Dictionary:
+	return {"type": IMMUNE, "target": target, "status": status}

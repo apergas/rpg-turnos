@@ -20,7 +20,13 @@ const ENEMIES := {
 	"esqueleto_mago": preload("res://data/enemies/esqueleto_mago.tres"),
 	"senor_niebla": preload("res://data/enemies/senor_niebla.tres"),
 	"slime_metal": preload("res://data/enemies/slime_metal.tres"),
-	# The boss after the ending, in the throne room. Not in the bestiary (BestiaryPage.ORDER).
+	# The color variants of 1.6.0.
+	"slime_rojo": preload("res://data/enemies/slime_rojo.tres"),
+	"seta_venenosa": preload("res://data/enemies/seta_venenosa.tres"),
+	"hongo_cueva": preload("res://data/enemies/hongo_cueva.tres"),
+	"murcielago_cripta": preload("res://data/enemies/murcielago_cripta.tres"),
+	"espectro_escarcha": preload("res://data/enemies/espectro_escarcha.tres"),
+	# The boss after the ending, in the throne room. Not in the bestiary (Bestiary.FAMILIES).
 	"eco_niebla": preload("res://data/enemies/eco_niebla.tres"),
 }
 ## Figure of each enemy id; any other id is a slime.
@@ -42,6 +48,11 @@ const LOOKS := {
 	"esqueleto_mago": BattleActor.Look.SKELETON_MAGE,
 	"senor_niebla": BattleActor.Look.FOG_LORD,
 	"slime_metal": BattleActor.Look.METAL_SLIME,
+	"slime_rojo": BattleActor.Look.RED_SLIME,
+	"seta_venenosa": BattleActor.Look.POISON_MUSHROOM,
+	"hongo_cueva": BattleActor.Look.CAVE_MUSHROOM,
+	"murcielago_cripta": BattleActor.Look.CRYPT_BAT,
+	"espectro_escarcha": BattleActor.Look.FROST_SPECTER,
 	"eco_niebla": BattleActor.Look.FOG_ECHO,
 	# The creatures that fight beside the hero (data in Allies, not in ENEMIES).
 	"gallina": BattleActor.Look.CHICKEN,
