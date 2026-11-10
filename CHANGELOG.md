@@ -1,5 +1,13 @@
 # Registro de cambios
 
+## 1.5.0 (2026)
+
+- A veces pillas desprevenidos a los monstruos y atacas tú primero sin que respondan.
+- Otras veces son ellos los que te atacan por sorpresa antes de que puedas hacer nada.
+- Nunca pasa contra un jefe.
+- Pluma de fénix (150 G, desde la tienda del bosque): si caes en combate, te levanta con la mitad de PV. Una por combate.
+- Despertador (12 G, en todas las tiendas): úsalo en combate y ya no te dormirás hasta que acabe.
+
 ## 1.4.1 (2026)
 
 - En combate, los hechizos solo dicen su nombre y sus PM. Lo que hace cada uno está en la página Estado del menú.

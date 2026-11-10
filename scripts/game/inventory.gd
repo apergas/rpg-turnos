@@ -8,6 +8,8 @@ const ETHER := "ether"
 const ANTIDOTE := "antidote"
 const WING := "wing"
 const INCENSE := "incienso"
+const PHOENIX := "pluma_fenix"
+const ALARM := "despertador"
 const SETA := "seta"
 const SEED_ATTACK := "semilla_fuerza"
 const SEED_DEFENSE := "semilla_defensa"
@@ -16,11 +18,22 @@ const START_POTIONS := 3
 ## What a seed adds to its stat, for good.
 const SEED_BONUS := 2
 const SEEDS: Array[String] = [SEED_ATTACK, SEED_DEFENSE, SEED_SPEED]
+## Effect of the Pluma de fénix: if the hero falls in battle it burns by itself and he
+## rises with value of his max HP (BattleEngine), once per battle. Never used by hand.
+const EFFECT_REVIVE := "revive"
+## Why an item that works by itself can't be used by hand.
+const AUTO_USE := "Se usa sola"
+## Effect of the Despertador: in battle, the hero can't fall asleep until it ends
+## (BattleEngine keeps the guard; it is gone with the battle).
+const EFFECT_WAKE_GUARD := "wake_guard"
 ## name and article (for "una Poción"); effect "hp" (heals value HP), "mp" (restores
 ## value MP), "cure" (removes the status named by value), "travel" (the Ala de viaje:
 ## Game takes the hero to the last village visited and leaves a portal there that leads
 ## back once), "repel" (the Incienso: no random encounters for value metres; GameState
-## counts them), "seed" (adds SEED_BONUS to the Combatant field named by value) or "quest"
+## counts them), "seed" (adds SEED_BONUS to the Combatant field named by value),
+## "revive" (EFFECT_REVIVE: the Pluma de fénix, used by itself when the hero falls in battle,
+## value is the share of max HP he rises with), "wake_guard" (EFFECT_WAKE_GUARD: the
+## Despertador, no sleep for the rest of the battle) or "quest"
 ## (of no use: someone is asking for it); price in gold (Shop sells at it and
 ## buys back at half); battle / field: usable in battle / from the pause menu; text: what
 ## it does, shown in the shop, in Objetos and in battle.
@@ -31,6 +44,12 @@ const ITEMS := {
 		"battle": true, "field": true, "text": "Recupera 15 PM."},
 	ANTIDOTE: {"name": "Antídoto", "article": "un", "effect": "cure", "value": "poison",
 		"price": 10, "battle": true, "field": false, "text": "Cura el veneno."},
+	ALARM: {"name": "Despertador", "article": "un", "effect": EFFECT_WAKE_GUARD, "value": 0,
+		"price": 12, "battle": true, "field": false,
+		"text": "Evita el sueño hasta el final del combate."},
+	PHOENIX: {"name": "Pluma de fénix", "article": "una", "effect": EFFECT_REVIVE,
+		"value": 0.5, "price": 150, "battle": false, "field": false,
+		"text": "Si caes en combate, te levanta con la mitad de PV."},
 	WING: {"name": "Ala de viaje", "article": "un", "effect": "travel", "value": 0,
 		"price": 25, "battle": false, "field": true,
 		"text": "Te lleva al último lugar seguro y deja un portal para volver una vez."},
@@ -51,8 +70,8 @@ const ITEMS := {
 		"text": "Sube la VEL en 2 para siempre."},
 }
 ## Order of the item lists.
-const IDS: Array[String] = [POTION, ETHER, ANTIDOTE, WING, INCENSE, SEED_ATTACK, SEED_DEFENSE,
-	SEED_SPEED, SETA]
+const IDS: Array[String] = [POTION, ETHER, ANTIDOTE, ALARM, PHOENIX, WING, INCENSE,
+	SEED_ATTACK, SEED_DEFENSE, SEED_SPEED, SETA]
 ## Why an Ala de viaje can't be used in a village.
 const IN_TOWN := "Ya estás en un lugar seguro"
 ## Why a "quest" item can't be used.
@@ -97,6 +116,12 @@ static func description(id: String) -> String:
 	return ITEMS[id].text if ITEMS.has(id) else KEY_TEXTS.get(id, "")
 
 
+## True if the battle's Objetos page lists id: the items usable in battle and the
+## Pluma de fénix, shown grey ("Se usa sola").
+static func listed_in_battle(id: String) -> bool:
+	return ITEMS.has(id) and (ITEMS[id].battle or ITEMS[id].effect == EFFECT_REVIVE)
+
+
 func count(id: String) -> int:
 	return _items.get(id, 0)
 
@@ -120,6 +145,8 @@ func problem(id: String, c: Combatant, in_battle: bool) -> String:
 	var item: Dictionary = ITEMS[id]
 	if item.effect == "quest":
 		return QUEST_ITEM
+	if item.effect == EFFECT_REVIVE:
+		return AUTO_USE
 	if in_battle and not item.battle:
 		return "Solo fuera de combate"
 	if not in_battle and not item.field:

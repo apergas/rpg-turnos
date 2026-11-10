@@ -6,7 +6,9 @@ class_name BattleScene extends Node3D
 ## With `-- --autoplay` BattleAutoplay picks the commands (shown on the HUD with
 ## BattleHud.demo()); to show Huir and Defender it flees from one normal battle out of
 ## AUTOPLAY_EVERY and defends in the first round of another one. It prints every battle
-## message and continues on its own. With set_audio() it plays the sound effects and
+## message and continues on its own. After the enemies appear the engine rolls the
+## surprise (BattleEngine.roll_ambush()): it is said before the first menu, and an enemy
+## surprise plays its round first. With set_audio() it plays the sound effects and
 ## the victory or defeat music; without it the battle is silent.
 ## Run on its own (res://scenes/battle/battle_scene.tscn) it sets up a test battle: a
 ## poisoned hero of STANDALONE_LEVEL with potions and an antidote against a Slime and a
@@ -38,6 +40,8 @@ const MP_COLOR := StatBar.MP
 const DEFEND_COLOR := Color(0.6, 0.8, 1.0)
 ## Glow of an enemy gathering strength for a charged blow.
 const CHARGE_COLOR := Color(1.0, 0.55, 0.15)
+## Glow of the hero when the Despertador works.
+const WAKE_COLOR := Color(1.0, 0.85, 0.35)
 const STATUS_COLORS := {
 	BattleEngine.POISON: Color(0.6, 0.2, 0.8),
 	BattleEngine.SLEEP: Color(0.35, 0.45, 1.0),
@@ -169,7 +173,7 @@ func _ready() -> void:
 		_autoplay_flee = _autoplay_battles % AUTOPLAY_EVERY == 0
 		_autoplay_defend = _autoplay_battles % AUTOPLAY_EVERY == AUTOPLAY_DEFEND_AT
 	await _say(_intro_text())
-	_ask_command()
+	await _play_ambush()
 
 
 func _exit_tree() -> void:
@@ -207,6 +211,40 @@ func _intro_text() -> String:
 	return "¡Aparece %s %s!" % ["una" if first.female else "un", first.display_name]
 
 
+## The surprise roll, after the enemies appear: said, then the first menu, or the
+## enemies' round first. Autoplay also prints "Sorpresa: héroe" / "Sorpresa: monstruos".
+func _play_ambush() -> void:
+	match engine.roll_ambush():
+		BattleEngine.Ambush.HERO:
+			if _autoplay:
+				print("Sorpresa: héroe")
+			_sfx(SfxLibrary.ACCEPT)
+			await _say(_ambush_text(true))
+			_ask_command()
+		BattleEngine.Ambush.ENEMY:
+			if _autoplay:
+				print("Sorpresa: monstruos")
+			_sfx(SfxLibrary.ENCOUNTER)
+			_shake_camera()
+			await _say(_ambush_text(false))
+			await _play_round(engine.resolve_ambush_round())
+		_:
+			_ask_command()
+
+
+## "¡Pillas desprevenido al Lobo!" / "¡El Lobo te ataca por sorpresa!", or "los
+## monstruos" with two.
+func _ambush_text(hero_side: bool) -> String:
+	var alive := engine.alive_enemies()
+	if alive.size() > 1:
+		return "¡Pillas desprevenidos a los monstruos!" if hero_side \
+			else "¡Los monstruos te atacan por sorpresa!"
+	var foe := engine.enemies[alive[0]]
+	if hero_side:
+		return "¡Pillas desprevenid%s %s!" % [_ending(foe), _to(foe)]
+	return "¡%s te ataca por sorpresa!" % _cap(_the(foe))
+
+
 ## Asleep, the hero does nothing; on autoplay the bot picks; otherwise the menu opens.
 func _ask_command() -> void:
 	if hero.status.has(BattleEngine.SLEEP):
@@ -231,7 +269,12 @@ func _autoplay_command() -> Dictionary:
 
 func _on_command_chosen(cmd: Dictionary) -> void:
 	_hud.hide_menu()
-	for event in engine.resolve_round(cmd):
+	await _play_round(engine.resolve_round(cmd))
+
+
+## Plays a round's events back, then asks for the next command or shows the result.
+func _play_round(events: Array[Dictionary]) -> void:
+	for event in events:
 		await _play_event(event)
 	match engine.state:
 		BattleEngine.State.ONGOING:
@@ -365,6 +408,20 @@ func _play_event(event: Dictionary) -> void:
 			_show_life(event.target, event.hp_left)
 			await _say("¡La niebla envuelve %s!" % _to(boss))
 			await _say("¡%s se levanta con %d PV!" % [_cap(_the(boss)), event.hp_left])
+		BattleEvent.REVIVE:
+			_sfx(SfxLibrary.HEAL)
+			_reset_camera()
+			await _actor(event.target).play_heal(event.hp_left)
+			_show_life(event.target, event.hp_left)
+			_hud.update_status(hero.status)
+			await _say("¡La Pluma de fénix arde! %s se levanta." % hero.display_name)
+		BattleEvent.WAKE_GUARD:
+			await _actor(event.target).play_status(WAKE_COLOR)
+			await _say("%s no se dormirá en este combate." % _fighter(event.target).display_name)
+		BattleEvent.NO_SLEEP:
+			_sfx(SfxLibrary.MISS)
+			await _actor(event.target).play_status(WAKE_COLOR)
+			await _say("%s no se duerme." % _fighter(event.target).display_name)
 		BattleEvent.DEFEATED:
 			_show_arrow(-1)
 			if event.target >= 0:

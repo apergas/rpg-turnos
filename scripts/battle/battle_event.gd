@@ -29,6 +29,9 @@ const CALL_HELP := "call_help"
 const CHARGE := "charge"
 const PHASE := "phase"
 const ENEMY_FLEE := "enemy_flee"
+const REVIVE := "revive"
+const WAKE_GUARD := "wake_guard"
+const NO_SLEEP := "no_sleep"
 
 const HERO := -1
 ## The creature fighting beside the hero.
@@ -160,3 +163,18 @@ static func enemy_flee(actor: int) -> Dictionary:
 ## A boss reached 0 HP and rises in its next phase with hp_left HP.
 static func phase(target: int, hp_left: int) -> Dictionary:
 	return {"type": PHASE, "target": target, "hp_left": hp_left}
+
+
+## The Pluma de fénix burnt: the fighter (the hero) rises with hp_left HP, cured.
+static func revive(target: int, hp_left: int) -> Dictionary:
+	return {"type": REVIVE, "target": target, "hp_left": hp_left}
+
+
+## The Despertador worked: the fighter (the hero) can't fall asleep until the battle ends.
+static func wake_guard(target: int) -> Dictionary:
+	return {"type": WAKE_GUARD, "target": target}
+
+
+## A sleep spell or blow found the fighter guarded by the Despertador: it fails.
+static func no_sleep(target: int) -> Dictionary:
+	return {"type": NO_SLEEP, "target": target}
