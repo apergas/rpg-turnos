@@ -159,10 +159,13 @@ static func wander_cells(zone: ZoneData) -> Array[Vector2i]:
 static func _reachable(zone: ZoneData) -> Dictionary:
 	var seen := {}
 	var queue: Array[Vector2i] = []
-	for kind in [ZoneData.STAIRS_UP, ZoneData.STAIRS_DOWN]:
-		for cell in zone.find_cells(kind):
-			seen[cell] = true
-			queue.append(cell)
+	# The hero arrives by the stairs up; a floor with none (the first one: he comes by the
+	# refugio's arch, next to the stairs down) starts from the stairs down.
+	var kind := ZoneData.STAIRS_UP if not zone.find_cells(ZoneData.STAIRS_UP).is_empty() \
+		else ZoneData.STAIRS_DOWN
+	for cell in zone.find_cells(kind):
+		seen[cell] = true
+		queue.append(cell)
 	var head := 0
 	while head < queue.size():
 		var current := queue[head]
