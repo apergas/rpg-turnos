@@ -1,5 +1,11 @@
 # Registro de cambios
 
+## 1.4.1 (2026)
+
+- En combate, los hechizos solo dicen su nombre y sus PM. Lo que hace cada uno está en la página Estado del menú.
+- La página Hechizos del menú también es más sencilla: nombre, PM y "Usar".
+- Dos monstruos iguales se llaman igual: "Slime" y "Slime". La flecha amarilla marca a cuál apuntas.
+
 ## 1.4.0 (2026)
 
 - Tras el final, el Eco de la Niebla espera en el salón del trono: el reto más duro del juego.
