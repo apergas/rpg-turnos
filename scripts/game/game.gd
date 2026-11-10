@@ -14,7 +14,7 @@ class_name Game extends Node
 ## that leads back once (GameState.open_portal(); a second Ala replaces it, a defeat leaves
 ## it open). Talking to the old woman heals, moves the
 ## quest on and, once the slimes are reported, brings out the Rey Slime; the other
-## villagers say their ZoneData lines. The merchant opens the ShopWindow; the innkeeper
+## villagers say their ZoneData lines. The Coleccionista of Villaclaro trades the small medals for prizes (Medals.talk()). The merchant opens the ShopWindow; the innkeeper
 ## offers a free night (Inn.stay(): fade to black, full HP and MP, autosave); a chest gives
 ## what it holds (Chests.open()) and stays open. A small medal (Medals) goes to
 ## GameState.medals and leaves the map for good. The hero's figure on the map and in
@@ -898,6 +898,10 @@ func _on_npc(index: int) -> void:
 		return
 	_set_busy(true)
 	var figure: String = _zone.npcs[index].name
+	if figure == Medals.COLLECTOR:
+		await _talk_to_collector()
+		_set_busy(false)
+		return
 	var talk := state.quests.talk(state, _zone.id, figure)
 	var said: Array = talk.get("lines", _world.npc_lines(index, state.chapter()))
 	var lines: Array[String] = []
@@ -907,6 +911,20 @@ func _on_npc(index: int) -> void:
 	if not talk.is_empty():
 		_after_quest_talk(talk.done)
 	_set_busy(false)
+
+
+## The Coleccionista (Medals.talk()): every prize the medals reach, at once, with a sound;
+## then how many are carried. Saves silently (he has met the hero, maybe given something).
+func _talk_to_collector() -> void:
+	var talk := Medals.talk(state)
+	var lines: Array[String] = []
+	for line: String in talk.lines:
+		lines.append(StoryState.fill(line, state.hero.display_name))
+	if talk.given > 0:
+		_audio.play_sfx(SfxLibrary.LEVEL_UP)
+		_refresh_status()
+	await _world.show_dialogue(Medals.COLLECTOR, lines)
+	_autosave(false)
 
 
 ## The map shows what changed; a finished quest says so; the game is saved.

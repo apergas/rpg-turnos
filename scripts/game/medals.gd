@@ -31,6 +31,18 @@ const MEDALS := {
 }
 ## Said in the dialogue window when one is taken (taken so far / all of them).
 const FOUND_TEXT := "¡Encuentras una Medalla pequeña! (%d/%d)"
+## The figure that counts the medals (ZoneData.npcs of Villaclaro) and where he stands.
+const COLLECTOR := "Coleccionista"
+const COLLECTOR_ZONE := "pradera"
+## What he says: the first time; before each prize; how many are carried and how many the
+## next prize asks (none yet, one, several); once all five prizes are given ({nombre}: the
+## hero's name, Game fills it in).
+const INTRO := "Colecciono medallas pequeñas. Hay doce escondidas por el mundo. Tráemelas y te daré premios."
+const PRIZE_LINE := "¡%d medallas! Esto es para ti."
+const NONE_LINE := "Aún no llevas ninguna. Con %d te daré algo bueno."
+const ONE_LINE := "Llevas 1 medalla. Con %d te daré algo bueno."
+const NEXT_LINE := "Llevas %d medallas. Con %d te daré algo bueno."
+const ALL_LINE := "¡Las doce! Ya no me queda nada que darte, {nombre}. Gracias."
 ## What the Coleccionista gives, in order, once the hero carries "medals" of them: "items"
 ## (Inventory id -> amount) or "equipment" (an Equipment id, never sold).
 const PRIZES: Array[Dictionary] = [
@@ -76,3 +88,43 @@ static func prizes_for(count: int) -> int:
 		if count >= int(prize.medals):
 			reached += 1
 	return reached
+
+
+## The Coleccionista: INTRO the first time; then, at once, every prize the medals carried
+## reach and he has not given yet (they are counted, never spent); then how many medals are
+## carried and how many the next prize asks, or ALL_LINE once the five are given. Returns
+## {"lines": Array[String], "given": int (prizes given now)}.
+static func talk(state: GameState) -> Dictionary:
+	var lines: Array[String] = []
+	if not state.collector_met:
+		state.collector_met = true
+		lines.append(INTRO)
+	var given := 0
+	while state.medal_prizes < prizes_for(state.medals.size()):
+		var prize: Dictionary = PRIZES[state.medal_prizes]
+		state.medal_prizes += 1
+		given += 1
+		lines.append(PRIZE_LINE % prize.medals)
+		lines.append_array(give_prize(state, prize))
+	lines.append(ALL_LINE if state.medal_prizes >= PRIZES.size() else _next_line(state))
+	return {"lines": lines, "given": given}
+
+
+## Gives one prize of PRIZES: its items into the inventory, its piece on at once if its slot
+## is empty, else into the bag (QuestRewards). Returns the lines that say so.
+static func give_prize(state: GameState, prize: Dictionary) -> Array[String]:
+	var lines := QuestRewards.give_items(state, prize.get("items", {}))
+	if prize.has("equipment"):
+		lines.append(QuestRewards.give_piece(state, prize.equipment))
+	return lines
+
+
+## "Llevas 4 medallas. Con 6 te daré algo bueno." (the next prize not given yet).
+static func _next_line(state: GameState) -> String:
+	var count := state.medals.size()
+	var target: int = PRIZES[state.medal_prizes].medals
+	if count == 0:
+		return NONE_LINE % target
+	if count == 1:
+		return ONE_LINE % target
+	return NEXT_LINE % [count, target]
