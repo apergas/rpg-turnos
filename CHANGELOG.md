@@ -1,5 +1,17 @@
 # Registro de cambios
 
+## 1.7.0 (2026)
+
+- Ya no hay combates al azar al andar por la hierba: los monstruos están a la vista en el mapa, en grupos.
+- El combate empieza cuando tocas un grupo. Se ve su primer monstruo; al tocarlo salen todos.
+- Por el sendero puedes cruzar una zona sin pelear. En la mina y el castillo, los pasillos estrechos también están libres.
+- Unos monstruos están quietos y otros pasean cerca de su sitio. Nunca te persiguen.
+- Si huyes, el grupo se queda medio transparente y no te ataca hasta que te alejas un poco.
+- Los grupos vencidos vuelven cuando cambias de zona, vuelves por el portal o caes en combate.
+- Si eres mucho más fuerte que la zona, los monstruos que se mueven se apartan de ti.
+- Incienso: los monstruos no te atacan durante 200 m.
+- Mientras buscas al Slime de Metal, anda suelto por cada planta de la mina y huye corriendo si te acercas. Si se escapa, conserva sus heridas para la próxima vez.
+
 ## 1.6.0 (2026)
 
 - Cinco monstruos nuevos: el Slime rojo y la Seta venenosa en el bosque, el Hongo de cueva en la mina, y el Murciélago de la cripta y el Espectro de escarcha en el castillo.
