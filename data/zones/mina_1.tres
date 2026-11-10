@@ -90,6 +90,7 @@ start_pos = Vector3(0, 0, 17)
 start_radius = 24.0
 encounter_grace = 4.0
 encounter_chance = 0.04
+monster_count = 7
 exit_level = 13
 music = "mine"
 village_music = "village"

@@ -60,6 +60,9 @@ const LOOKS := {
 	"golem_pequeno": BattleActor.Look.MINI_GOLEM,
 	"esqueleto_leal": BattleActor.Look.LOYAL_SKELETON,
 }
+## The rare enemy of the mine floors: on the map while its quest is on, it keeps its HP
+## between battles (GameState.metal_slime_hp) and never brings a surprise.
+const METAL_SLIME := "slime_metal"
 
 
 ## The data of enemy id (not duplicated: BattleScene does it), or null.

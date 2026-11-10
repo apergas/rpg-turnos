@@ -28,6 +28,8 @@ const DOOR := "D"
 const KEY := "K"
 const TORCH := "T"
 const THRONE := "R"
+## Plain floor (no torch, no chest...): what a group or the Slime de Metal stands on.
+const FLOOR := "."
 ## Within this distance of a stair cell's centre the stair room is safe (no encounters).
 const STAIRS_SAFE_RADIUS := 6.0
 
@@ -134,6 +136,8 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var start_formations: Array = []
 @export var start_pos := Vector3.ZERO
 @export var start_radius := 0.0
+## How many groups of monsters stand on the map (MonsterGroups; fewer if there is no room).
+@export var monster_count := 0
 ## An enemy that only comes while a quest hunts it, alone, with this chance per encounter
 ## (EnemyLibrary id, "" for none).
 @export var rare_enemy := ""

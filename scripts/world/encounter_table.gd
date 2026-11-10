@@ -35,3 +35,11 @@ static func pick(zone: ZoneData, pos: Vector3, rng: RandomNumberGenerator,
 		return EnemyLibrary.formation([zone.rare_enemy])
 	var formations: Array = zone.start_formations if near_start(zone, pos) else zone.formations
 	return EnemyLibrary.formation(formations[rng.randi_range(0, formations.size() - 1)])
+
+
+## The enemy data of the group standing at pos on the map being built (not duplicated:
+## BattleScene does it): start_formations near the zone's start, else any formation of the
+## zone, every one with the same weight.
+static func pick_group(zone: ZoneData, pos: Vector3, rng: RandomNumberGenerator) -> Array[Combatant]:
+	var formations: Array = zone.start_formations if near_start(zone, pos) else zone.formations
+	return EnemyLibrary.formation(formations[rng.randi_range(0, formations.size() - 1)])

@@ -28,6 +28,7 @@ rare_enemy = "slime_metal"
 rare_chance = 0.25
 encounter_grace = 4.0
 encounter_chance = 0.04
+monster_count = 5
 exit_level = 13
 music = "mine"
 village_music = "village"

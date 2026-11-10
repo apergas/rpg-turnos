@@ -11,6 +11,7 @@ hp = 40
 attack = 28
 defense = 300
 speed = 30
+map_speed = 3.0
 exp_reward = 300
 gold_reward = 150
 ai_weights = {

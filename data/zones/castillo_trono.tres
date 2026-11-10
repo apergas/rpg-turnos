@@ -27,6 +27,7 @@ postgame_boss_id = "eco_niebla"
 formations = [["esqueleto_guerrero"], ["esqueleto_picaro"], ["esqueleto_mago"], ["esqueleto_picaro"], ["esqueleto_guerrero", "esqueleto_mago"], ["esqueleto_picaro", "esqueleto_mago"], ["murcielago_cripta"], ["espectro_escarcha"]]
 encounter_grace = 4.0
 encounter_chance = 0.04
+monster_count = 5
 exit_level = 17
 music = "castle"
 village_music = "village"

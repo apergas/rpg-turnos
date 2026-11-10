@@ -60,6 +60,12 @@ const TREE_COLLIDER_HEIGHT := 3.0
 ## _near_chest()'s cache: the zone id and its chests' spots on the ground.
 static var _chest_zone := ""
 static var _chest_spots: Array[Vector2] = []
+## _tree_layout()'s cache (the zone id and its trees) and near_tree()'s (x, z and the
+## collider radius of each tree inside the walls).
+static var _layout_zone := ""
+static var _layout: Array[Dictionary] = []
+static var _tree_zone := ""
+static var _tree_spots: Array[Vector3] = []
 
 
 ## Builds zone under root. Returns the tall grass material (null if the zone has no
@@ -117,6 +123,28 @@ static func is_grass_free(pos: Vector3, zone: ZoneData) -> bool:
 		return false
 	return not _near_rock(zone, pos, GRASS_ROCK_MARGIN) \
 		and not _near_building(zone, pos, GRASS_BUILDING_MARGIN)
+
+
+## True within margin of the trunk (or clump) of a tree inside the walls (MonsterGroups keeps
+## the groups off them).
+static func near_tree(zone: ZoneData, pos: Vector3, margin: float) -> bool:
+	if _tree_zone != zone.id:
+		_tree_zone = zone.id
+		_tree_spots.clear()
+		for tree in _tree_layout(zone):
+			if tree.inside:
+				_tree_spots.append(Vector3(tree.pos.x, tree.pos.z,
+					CLUMP_RADIUS if tree.clump else TRUNK_RADIUS))
+	var p := Vector2(pos.x, pos.z)
+	for spot in _tree_spots:
+		if p.distance_to(Vector2(spot.x, spot.y)) < spot.z + margin:
+			return true
+	return false
+
+
+## True if pos is clear by margin of every rock's and building's footprint.
+static func is_clear_of_props(zone: ZoneData, pos: Vector3, margin: float) -> bool:
+	return not _near_rock(zone, pos, margin) and not _near_building(zone, pos, margin)
 
 
 ## Upright cylinder collider standing on the ground, for village props and figures.
@@ -192,13 +220,40 @@ static func _add_solid_model(root: Node3D, scene: PackedScene, pos: Vector3, scl
 
 
 static func _add_trees(root: Node3D, zone: ZoneData) -> void:
+	var single_a: Array[Transform3D] = []
+	var single_b: Array[Transform3D] = []
+	var clumps: Array[Transform3D] = []
+	for tree in _tree_layout(zone):
+		var xform := Transform3D(Basis(Vector3.UP, tree.yaw).scaled(Vector3.ONE * tree.scale),
+			tree.pos)
+		if tree.clump:
+			clumps.append(xform)
+		elif tree.use_a:
+			single_a.append(xform)
+		else:
+			single_b.append(xform)
+		if tree.inside:
+			var body := StaticBody3D.new()
+			body.position = tree.pos
+			root.add_child(body)
+			add_cylinder_shape(body, CLUMP_RADIUS if tree.clump else TRUNK_RADIUS,
+				TREE_COLLIDER_HEIGHT)
+	_add_tree_kind(root, MODELS[zone.tree_models[0]], single_a)
+	_add_tree_kind(root, MODELS[zone.tree_models[1]], single_b)
+	_add_tree_kind(root, MODELS[zone.clump_model], clumps)
+
+
+## The trees of zone, in the order they are drawn: {"pos", "yaw", "scale", "use_a" (the
+## first single model), "clump", "inside" (inside the walls: it has a collider)}. The same
+## rolls every time (zone.tree_seed); the last zone asked about is kept.
+static func _tree_layout(zone: ZoneData) -> Array[Dictionary]:
+	if _layout_zone == zone.id:
+		return _layout
 	var rng := RandomNumberGenerator.new()
 	rng.seed = zone.tree_seed
 	var area := zone.half_size + Vector2.ONE * zone.outer_margin
 	var placed: Array[Vector2] = []
-	var single_a: Array[Transform3D] = []
-	var single_b: Array[Transform3D] = []
-	var clumps: Array[Transform3D] = []
+	var trees: Array[Dictionary] = []
 	for i in zone.tree_tries:
 		# Every roll is made even for spots left out, so the layout stays stable.
 		var pos := Vector3(rng.randf_range(-area.x, area.x), 0.0, rng.randf_range(-area.y, area.y))
@@ -212,23 +267,11 @@ static func _add_trees(root: Node3D, zone: ZoneData) -> void:
 		if roll > lerpf(zone.tree_center_chance, 1.0, rise) or not _tree_fits(zone, pos, placed):
 			continue
 		placed.append(Vector2(pos.x, pos.z))
-		var xform := Transform3D(Basis(Vector3.UP, yaw).scaled(Vector3.ONE * scl), pos)
-		var clump := inset < zone.tree_clump_inset
-		if clump:
-			clumps.append(xform)
-		elif use_a:
-			single_a.append(xform)
-		else:
-			single_b.append(xform)
-		if inset > 0.0:
-			var body := StaticBody3D.new()
-			body.position = pos
-			root.add_child(body)
-			add_cylinder_shape(body, CLUMP_RADIUS if clump else TRUNK_RADIUS,
-				TREE_COLLIDER_HEIGHT)
-	_add_tree_kind(root, MODELS[zone.tree_models[0]], single_a)
-	_add_tree_kind(root, MODELS[zone.tree_models[1]], single_b)
-	_add_tree_kind(root, MODELS[zone.clump_model], clumps)
+		trees.append({"pos": pos, "yaw": yaw, "scale": scl, "use_a": use_a,
+			"clump": inset < zone.tree_clump_inset, "inside": inset > 0.0})
+	_layout_zone = zone.id
+	_layout = trees
+	return trees
 
 
 ## One kind of tree, drawn with its model's texture through the shader that lets the hero

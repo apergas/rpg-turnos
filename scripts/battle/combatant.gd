@@ -64,6 +64,10 @@ class_name Combatant extends Resource
 @export var next_phase: Combatant
 ## Enemy only: a boss gets its own look and intro line, and the hero can't flee.
 @export var is_boss := false
+## Enemy only, on the map (MonsterRoam): how far from its spot the figure of a group it
+## leads walks (metres; 0: it stands still) and how fast (metres per second).
+@export var map_roam := 0.0
+@export var map_speed := 1.5
 
 ## Status effects during a battle: status -> rounds left (-1: until cured or the battle
 ## ends). Never saved; BattleEngine clears it when the battle ends.
