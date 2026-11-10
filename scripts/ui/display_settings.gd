@@ -1,7 +1,8 @@
 class_name DisplaySettings extends RefCounted
 ## Puts into effect the options that live outside the rules: the size of everything in the
 ## windows, fullscreen (desktop only) and the graphics quality the map and battle builders
-## read when they build their next scene. TitleScreen calls it at the start, OptionsPanel at
+## (and ZoneParticles: none on low quality, half on a phone) read when they build their
+## next scene. TitleScreen calls it at the start, OptionsPanel at
 ## each change.
 
 
@@ -28,6 +29,8 @@ static func apply(window: Window, options: GameOptions) -> void:
 	var low := options.quality == GameOptions.Quality.LOW
 	Vegetation.half_density = low
 	BattleStage.plain_light = low
+	ZoneParticles.enabled = not low
+	ZoneParticles.half = Device.is_touch()
 
 
 ## Phone: bigger windows, a lower 3D resolution and frame rate on low quality, taller buttons.

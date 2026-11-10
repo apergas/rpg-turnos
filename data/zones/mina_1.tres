@@ -94,6 +94,7 @@ village_music = "village"
 haze = Color(0.03, 0.03, 0.05, 1)
 fog_density = 0.012
 backdrop = "mina"
+particles = "dust"
 layout = PackedStringArray("###############", "#T..B#.....C..#", "#....#.#####..#", "#....#.#T..#..#", "###.##.#...#.##", "#.....T#...#..#", "#.###.##.###..#", "#..T......T...#", "####.##.#######", "####T.....T####", "####.......####", "####.T...T.####", "###############")
 underground = true
 ambient_color = Color(0.5, 0.48, 0.6, 1)
