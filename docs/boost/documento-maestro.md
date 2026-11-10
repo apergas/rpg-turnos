@@ -1,6 +1,6 @@
 # Documento maestro
 
-Fecha: 2026-11-08. Versión publicada: **1.4.0**. Todos los puntos M-nn están hechos (M-17, descartado); lo que queda son las ideas de la sección 4.
+Fecha: 2026-11-09. Versión publicada: **1.4.0**. M-01 a M-25 están hechos (M-17, descartado). M-26 a M-38 (las antiguas ideas de la sección 4) tienen diseño y plan para las versiones 1.4.1 a 1.9.0 (sección 6). M-39 a M-47 son la v2 (2.0.0 a 2.3.0), con diseño; la 2.0.0 ya tiene plan.
 
 Este documento es la base de trabajo a partir de ahora. Reúne:
 
@@ -97,6 +97,42 @@ La mina fue lo que más costó a los dos QA.
 | M-21 | Exportar e importar la partida (QAM-08) — **hecho en 1.3.0** | En iOS, la app instalada no ve la partida jugada en Safari | Con un archivo: en la web se descarga y se sube con el selector del navegador; en escritorio, con una ventana de archivo. Se exporta e importa una ranura, y lo importado pasa por `SaveData.is_valid()` | M |
 | M-22 | Reto tras el final (E03) — **hecho en 1.4.0** | El equipo final no tiene uso después de los créditos | Tras los créditos, en el salón del trono aparece el **Eco de la Niebla**: una fase, pensado para nivel 20 con el equipo de platino, más duro que el Señor, con un golpe cargado como el del Golem. Premio, una sola vez: el **Yelmo de bruma**, un casco con cuernos de estilo vikingo, DEF +8 y ATK +5, que se pone en el acto en lugar del casco que lleves. Se puede repetir el combate. No cambia los créditos y no entra en el bestiario | L |
 
+### Prioridad 5: ideas que pasan a versiones (2026-11-09)
+
+Las ideas de la sección 4 pasan a puntos con diseño propio. Las decisiones de cada uno están en su spec.
+
+| ID | Qué | Antes | Versión | Talla |
+|---|---|---|---|---|
+| M-26 | Hechizos sin descripción en combate y en la página Hechizos de la pausa | I-03 | 1.4.1 | S |
+| M-27 | Enemigos iguales sin letra ("Slime" y "Slime") | I-04 | 1.4.1 | S |
+| M-28 | Ataque sorpresa: 1/16 a favor de cada bando, nunca contra jefes | Ataque sorpresa | 1.5.0 | S |
+| M-29 | Pluma de fénix: te levanta sola con la mitad de PV, una por combate | Pluma de fénix | 1.5.0 | S |
+| M-30 | Despertador: evita el sueño hasta el final del combate | Despertador | 1.5.0 | S |
+| M-31 | Cinco enemigos nuevos, variantes de color de figuras que ya existen | Variantes de color | 1.6.0 | M |
+| M-32 | Bestiario por familias con premio, y Accesorio partido en Anillo y Amuleto | I-02 | 1.6.0 | L |
+| M-33 | Monstruos visibles en el mapa en lugar de encuentros aleatorios | I-01 | 1.7.0 | L |
+| M-34 | Doce medallas pequeñas y el Coleccionista de Villaclaro | Medallas pequeñas | 1.8.0 | M |
+| M-35 | Partida nueva + sobre una partida terminada | Partida nueva + | 1.8.0 | M |
+| M-36 | Sonido de ambiente y partículas por zona | Sonido de ambiente y partículas | 1.9.0 | M |
+| M-37 | Soporte de mando — **descartado** (2026-11-10) | Soporte de mando | — | M |
+| M-38 | Menú de depuración con `--debug` | Menú de depuración | 1.9.0 | S |
+
+### Prioridad 6: la v2, la caravana del portal (2026-11-10)
+
+Una segunda parte de unas dos horas sobre una partida terminada: una caravana, un compañero, cuatro tierras y un portal. Todo en un solo diseño, [spec de la v2](specs/2026-11-10-version-2-0-0-design.md), publicado en cuatro versiones.
+
+| ID | Qué | Versión | Talla |
+|---|---|---|---|
+| M-39 | La caravana llega a Villaclaro tras el final y el héroe parte con ella, sin vuelta al mundo de la v1 | 2.0.0 | M |
+| M-40 | El tramo, calculado de los jefes vencidos; capítulos y objetivos de la v2 | 2.0.0 | S |
+| M-41 | La Caravana: un mapa de base con mercader por tramo y salidas que existen según las banderas | 2.0.0 | M |
+| M-42 | El compañero: uno de tres, elegido una vez, un ALLY cuyos números suben con el tramo | 2.0.0 | M |
+| M-43 | Las cuatro zonas: jungla y desierto abiertas, montaña y ciudad de celdas | 2.0.0 a 2.3.0 | L |
+| M-44 | Veinte enemigos, cuatro jefes de zona, el Devorador del portal (dos fases) y cuatro familias del bestiario | 2.0.0 a 2.3.0 | L |
+| M-45 | Nivel máximo 40, Ventisca y Sanación, cuatro niveles de equipo, Poción y Éter grandes | 2.0.0 a 2.3.0 | M |
+| M-46 | Ocho misiones de datos, dos por tramo, con la bandera `needs` | 2.0.0 a 2.3.0 | M |
+| M-47 | El final: el cruce, la pantalla del más allá con el pueblo de la v3 y los créditos de la v2 | 2.3.0 | M |
+
 ---
 
 ## 3. Pendientes heredados
@@ -113,7 +149,7 @@ Lo que queda de los informes anteriores y se puede hacer desde aquí, sin un mó
 
 ## 4. Ideas sin plan
 
-Vienen de `2026-11-03-ideas-juego-completo.md`. Las dejo ordenadas por lo que creo que aportan. Ninguna es urgente.
+Vienen de `2026-11-03-ideas-juego-completo.md`. Desde el 2026-11-09 todas tienen diseño y plan: son M-26 a M-38 (sección 2, prioridad 5). Se dejan aquí como registro de la idea original.
 
 | Idea | Comentario |
 |---|---|
@@ -207,6 +243,7 @@ Notas para cuando se diseñe:
 | Fijar una misión en la pantalla (I04) | El objetivo principal ya va primero, y en el móvil no cabe más |
 | Pruebas de regresión automáticas (E04) | El proyecto no tiene tests, por decisión tuya |
 | Inglés | Descartado: el juego es solo en español |
+| Soporte de mando (M-37) | Descartado por ti el 2026-11-10 |
 | Criatura que sigue al héroe por el mapa | Quedó fuera de la 1.1.0. Se recupera si vuelve a pedirse |
 
 ---
@@ -220,4 +257,25 @@ Notas para cuando se diseñe:
 | **1.3.0** | M-18 a M-21: colección y partidas | [plan](../legacy/plans/2026-11-07-version-1-3-0.md) | Hecha |
 | **1.4.0** | M-22: el Eco de la Niebla | [plan](../legacy/plans/2026-11-07-version-1-4-0.md) | Hecha |
 
-Las cuatro versiones están implementadas y publicadas. Las pruebas a mano y en móvil real que quedaron pendientes están en los informes de cada versión. Las ideas de la sección 4 no tienen plan hasta que se elija alguna; I-01 dejaría sin sentido M-12.
+| **1.4.1** | M-26 y M-27: retoques del combate | [spec](specs/2026-11-09-version-1-4-1-design.md) · [plan](plans/2026-11-09-version-1-4-1.md) | Planificada |
+| **1.5.0** | M-28 a M-30: ataque sorpresa, Pluma de fénix y Despertador | [spec](specs/2026-11-09-version-1-5-0-design.md) · [plan](plans/2026-11-09-version-1-5-0.md) | Planificada |
+| **1.6.0** | M-31 y M-32: enemigos nuevos y familias del bestiario | [spec](specs/2026-11-09-version-1-6-0-design.md) · [plan](plans/2026-11-09-version-1-6-0.md) | Planificada |
+| **1.7.0** | M-33: monstruos a la vista | [spec](specs/2026-11-09-version-1-7-0-design.md) · [plan](plans/2026-11-09-version-1-7-0.md) | Planificada |
+| **1.8.0** | M-34 y M-35: medallas pequeñas y Partida nueva + | [spec](specs/2026-11-09-version-1-8-0-design.md) · [plan](plans/2026-11-09-version-1-8-0.md) | Planificada |
+| **1.9.0** | M-36 y M-38: ambiente y depuración | [spec](specs/2026-11-09-version-1-9-0-design.md) · [plan](plans/2026-11-09-version-1-9-0.md) | Planificada |
+| **2.0.0** | M-39 a M-42 y la jungla: la caravana, el compañero, el nivel 40 | [spec](specs/2026-11-10-version-2-0-0-design.md) · [plan](plans/2026-11-10-version-2-0-0.md) | Planificada |
+| **2.1.0** | El desierto | [spec](specs/2026-11-10-version-2-0-0-design.md) | Diseñada |
+| **2.2.0** | La montaña | [spec](specs/2026-11-10-version-2-0-0-design.md) | Diseñada |
+| **2.3.0** | La ciudad, el Devorador del portal y el final | [spec](specs/2026-11-10-version-2-0-0-design.md) | Diseñada |
+
+Las versiones 1.1.1 a 1.4.0 están implementadas y publicadas; las pruebas a mano y en móvil real que quedaron pendientes están en sus informes.
+
+Orden de las nuevas, y por qué:
+
+- **1.4.1** primero: dos retoques pequeños que el usuario ya pidió.
+- **1.5.0** antes de los monstruos visibles: el ataque sorpresa y los objetos nuevos se prueban con los encuentros de siempre.
+- **1.6.0** antes de la 1.7.0: los cinco enemigos nuevos ya existen cuando se reparten los grupos por el mapa y se fija cómo se mueve cada uno.
+- **1.7.0** es la más grande y cambia el ritmo del juego; va sola. Mantiene la idea de M-12 con otra forma: los grupos huyen de un héroe muy fuerte y el Incienso impide que te ataquen.
+- **1.8.0** después: las medallas se esconden en rincones que se recorren con los monstruos ya a la vista, y la Partida nueva + usa las familias y las medallas.
+- **1.9.0** al final: el ambiente y la herramienta de depuración no cambian reglas y conocen ya todo lo anterior.
+- **2.0.0 a 2.3.0** después de todas las 1.x: las zonas nuevas se diseñan con monstruos a la vista, familias del bestiario, Partida nueva + y ambiente ya hechos. Una zona por versión, cada una jugable hasta su jefe; los planes se escriben uno a uno al llegar a cada versión.
