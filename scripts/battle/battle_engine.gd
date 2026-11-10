@@ -16,6 +16,7 @@ class_name BattleEngine extends RefCounted
 ## At the start roll_ambush() may give one side a surprise: the hero's side acts alone in
 ## the first round, or the enemies play resolve_ambush_round() before the first command.
 ## A hero who falls with a Pluma de fénix rises once per battle with half his HP (_revive()).
+## A Despertador used in battle keeps the hero awake until it ends (_wake_guard).
 
 enum State { ONGOING, WON, LOST, FLED }
 ## Who won the surprise roll at the start of a battle (roll_ambush()).
@@ -35,6 +36,8 @@ const CMD_CHARGE := "charge"
 const CMD_ESCAPE := "escape"
 ## Why Huir is grey against a boss.
 const NO_ESCAPE_REASON := "No puedes huir"
+## Why the Despertador is grey once it has been used in this battle.
+const GUARDED_REASON := "Ya estás protegido"
 
 const POISON := "poison"
 const SLEEP := "sleep"
@@ -99,6 +102,9 @@ var _charged := {}
 var _ambush_done := false
 ## True once the Pluma de fénix has burnt in this battle: a second fall is a defeat.
 var _revived := false
+## True once the hero used a Despertador: he can't fall asleep until the battle ends. It
+## belongs to this engine, so it is gone with the battle.
+var _wake_guard := false
 
 
 func _init(p_hero: Combatant, p_enemies: Array[Combatant], rng: RandomNumberGenerator, \
@@ -184,7 +190,10 @@ func problem(cmd: Dictionary) -> String:
 			if skill.kind == Skill.HEAL and hero.hp >= hero.max_hp:
 				return "PV al máximo"
 		CMD_ITEM:
-			return inventory.problem(cmd.item, hero, true)
+			var why := inventory.problem(cmd.item, hero, true)
+			if why == "" and _wake_guard 					and Inventory.ITEMS[cmd.item].effect == Inventory.EFFECT_WAKE_GUARD:
+				return GUARDED_REASON
+			return why
 		CMD_FLEE:
 			if has_boss():
 				return NO_ESCAPE_REASON
@@ -416,7 +425,9 @@ func _cast(who: int, cmd: Dictionary, events: Array[Dictionary]) -> void:
 			var amount := maxi(1, roundi(skill.power * mult \
 				* _rng.randf_range(DAMAGE_SPREAD.x, DAMAGE_SPREAD.y)))
 			_hurt(target, amount, false, true, affinity, events)
-		if skill.status != "" and _rng.randf() < skill.status_chance:
+		if skill.status != "" and _guarded(target, skill.status):
+			events.append(BattleEvent.no_sleep(target))
+		elif skill.status != "" and _rng.randf() < skill.status_chance:
 			_add_status(target, skill.status, events)
 		elif skill.kind == Skill.STATUS:
 			events.append(BattleEvent.miss(who, target))
@@ -461,6 +472,9 @@ func _use_item(who: int, id: String, events: Array[Dictionary]) -> void:
 			events.append(BattleEvent.mp_heal(who, result.amount, user.mp))
 		"cure":
 			events.append(BattleEvent.status_off(who, result.status))
+		Inventory.EFFECT_WAKE_GUARD:
+			_wake_guard = true
+			events.append(BattleEvent.wake_guard(who))
 
 
 ## Defending halves the damage the hero takes (rounded up, at least 1). Damage wakes a
@@ -523,12 +537,21 @@ func _add_status(target: int, status: String, events: Array[Dictionary]) -> void
 	if target == BattleEvent.ALLY:
 		return
 	var fighter := _fighter(target)
+	if _guarded(target, status):
+		events.append(BattleEvent.no_sleep(target))
+		return
 	if not fighter.is_alive() or fighter.status.has(status) or fighter.is_immune(status):
 		return
 	# Silence counts down at the end of every round, the one it starts in too, so it
 	# gets one extra round to last SILENCE_ROUNDS whole rounds.
 	fighter.status[status] = SILENCE_ROUNDS + 1 if status == SILENCE else -1
 	events.append(BattleEvent.status_on(target, status))
+
+
+## True if status can't take target because of the Despertador: the hero, standing,
+## guarded, and the status is sleep.
+func _guarded(target: int, status: String) -> bool:
+	return target == BattleEvent.HERO and status == SLEEP and _wake_guard 		and hero.is_alive()
 
 
 ## Poison hurts, sleepers may wake up and silence counts down.

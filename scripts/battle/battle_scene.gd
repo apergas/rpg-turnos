@@ -38,6 +38,8 @@ const MP_COLOR := StatBar.MP
 const DEFEND_COLOR := Color(0.6, 0.8, 1.0)
 ## Glow of an enemy gathering strength for a charged blow.
 const CHARGE_COLOR := Color(1.0, 0.55, 0.15)
+## Glow of the hero when the Despertador works.
+const WAKE_COLOR := Color(1.0, 0.85, 0.35)
 const STATUS_COLORS := {
 	BattleEngine.POISON: Color(0.6, 0.2, 0.8),
 	BattleEngine.SLEEP: Color(0.35, 0.45, 1.0),
@@ -410,6 +412,13 @@ func _play_event(event: Dictionary) -> void:
 			_show_life(event.target, event.hp_left)
 			_hud.update_status(hero.status)
 			await _say("¡La Pluma de fénix arde! %s se levanta." % hero.display_name)
+		BattleEvent.WAKE_GUARD:
+			await _actor(event.target).play_status(WAKE_COLOR)
+			await _say("%s no se dormirá en este combate." % _fighter(event.target).display_name)
+		BattleEvent.NO_SLEEP:
+			_sfx(SfxLibrary.MISS)
+			await _actor(event.target).play_status(WAKE_COLOR)
+			await _say("%s no se duerme." % _fighter(event.target).display_name)
 		BattleEvent.DEFEATED:
 			_show_arrow(-1)
 			if event.target >= 0:

@@ -8,32 +8,33 @@ const BOSQUE := "bosque"
 const MINA := "mina"
 const CASTILLO := "castillo"
 ## shop id -> keeper's name, equipment and items (Inventory ids) on sale, in list order.
-## Zone 1 sells no Éter (it comes with the zone 2 shop); the Ala de viaje and the Incienso are sold
+## Zone 1 sells no Éter (it comes with the zone 2 shop); the Ala de viaje, the Incienso and the Despertador are sold
 ## everywhere; the Pluma de fénix from the forest on.
 const SHOPS := {
 	VILLACLARO: {
 		"keeper": "Mercader",
 		"equipment": [Equipment.COPPER_SWORD, Equipment.LEATHER_MAIL, Equipment.WOODEN_SHIELD,
 			"casco_cobre"],
-		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.WING, Inventory.INCENSE],
+		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ALARM, Inventory.WING,
+			Inventory.INCENSE],
 	},
 	BOSQUE: {
 		"keeper": "Mercader",
 		"equipment": ["espada_hierro", "cota_malla", "escudo_hierro", "casco_hierro"],
-		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.PHOENIX,
-			Inventory.WING, Inventory.INCENSE],
+		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.ALARM,
+			Inventory.PHOENIX, Inventory.WING, Inventory.INCENSE],
 	},
 	MINA: {
 		"keeper": "Herrero",
 		"equipment": ["espada_acero", "armadura_acero", "escudo_acero", "casco_acero"],
-		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.PHOENIX,
-			Inventory.WING, Inventory.INCENSE],
+		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.ALARM,
+			Inventory.PHOENIX, Inventory.WING, Inventory.INCENSE],
 	},
 	CASTILLO: {
 		"keeper": "Mercader",
 		"equipment": ["espada_platino", "armadura_platino", "escudo_platino", "casco_platino"],
-		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.PHOENIX,
-			Inventory.WING, Inventory.INCENSE],
+		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.ALARM,
+			Inventory.PHOENIX, Inventory.WING, Inventory.INCENSE],
 	},
 	# The tamers: they sell one creature each. gear_shop: the shop whose gear autoplay
 	# buys first.
