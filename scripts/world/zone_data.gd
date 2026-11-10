@@ -149,6 +149,8 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export_group("Look and sound")
 @export var music := "map"
 @export var village_music := "village"
+## AmbientLibrary id of the sound under the map's music ("" for none).
+@export var ambient := ""
 @export var sky_top := Color(0.32, 0.52, 0.88)
 @export var haze := Color(0.78, 0.84, 0.92)
 @export var fog_density := 0.008

@@ -137,6 +137,7 @@ monster_count = 12
 exit_level = 9
 music = "forest"
 village_music = "village"
+ambient = "forest"
 sky_top = Color(0.28, 0.45, 0.75, 1)
 haze = Color(0.66, 0.76, 0.66, 1)
 fog_density = 0.01

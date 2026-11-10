@@ -328,6 +328,13 @@ func _process(delta: float) -> void:
 			_respawn_groups()
 
 
+## Back to the title: the map's ambient stops with the game. A Game run on its own frees its
+## own AudioDirector first (it is a child), so there is nothing to stop.
+func _exit_tree() -> void:
+	if _audio and _audio.is_inside_tree():
+		_audio.stop_ambient()
+
+
 ## --autoplay-zone=<id>: starts the new game in that zone with AUTOPLAY_ZONES' state.
 func _apply_autoplay_zone(args: PackedStringArray) -> void:
 	for arg in args:
@@ -416,6 +423,7 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 	_spawn_rare()
 	_refresh_status()
 	MusicLibrary.build(_zone.music)
+	AmbientLibrary.prepare(_zone.ambient)  # under black, like the music
 	if _world.in_village():
 		_on_village_changed(true)
 	if _autoplay:
@@ -451,6 +459,7 @@ func _on_encounter(boss: bool) -> void:
 	await _fade_to(1.0)
 	_world.set_active(false)
 	_audio.play_music(MusicLibrary.BOSS if boss else MusicLibrary.BATTLE)
+	_audio.stop_ambient()
 	var battle: BattleScene = BATTLE_SCENE.instantiate()
 	battle.setup(state.hero, enemies, state.inventory)
 	battle.set_audio(_audio)
@@ -810,6 +819,7 @@ func _play_scene(scene_id: String) -> void:
 	_cutscenes.world = _world
 	_cutscenes.hero_name = state.hero.display_name
 	await _cutscenes.play(scene)
+	_audio.play_ambient(_zone.ambient)  # a "music" step silenced it
 	_refresh_status()
 
 
@@ -835,6 +845,7 @@ func _finish_game() -> void:
 	_autosave(false)
 	var time_text := _clock(play_time)
 	_audio.play_music(MusicLibrary.TITLE)
+	_audio.stop_ambient()
 	var layer := CanvasLayer.new()
 	layer.layer = 11
 	add_child(layer)
@@ -1163,9 +1174,11 @@ func _update_boss() -> void:
 	_world.set_boss_present(_boss_wanted() and strong_enough)
 
 
-## The zone's map music, or its village one inside the village.
+## The zone's map music, or its village one inside the village, and the zone's ambient
+## under it (after a battle or a cutscene that silenced it, it comes back here).
 func _play_map_music() -> void:
 	_audio.play_music(_zone.village_music if _world.in_village() else _zone.music)
+	_audio.play_ambient(_zone.ambient)
 
 
 ## The pause menu only opens on the map with nothing else going on.

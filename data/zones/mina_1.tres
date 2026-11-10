@@ -91,6 +91,7 @@ monster_count = 7
 exit_level = 13
 music = "mine"
 village_music = "village"
+ambient = "mine"
 haze = Color(0.03, 0.03, 0.05, 1)
 fog_density = 0.012
 backdrop = "mina"
