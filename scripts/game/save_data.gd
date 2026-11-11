@@ -329,7 +329,8 @@ static func _valid_v1_content(data: Dictionary) -> bool:
 				return false
 	var hero: Variant = data.get("hero")
 	if hero is Dictionary:
-		if hero.get("level", 1.0) > float(Leveling.V1_MAX_LEVEL) 				or hero.get("experience", 0.0) > float(Leveling.EXP_TABLE[Leveling.V1_MAX_LEVEL - 1]):
+		if hero.get("level", 1.0) > float(Leveling.V1_MAX_LEVEL) \
+				or hero.get("experience", 0.0) > float(Leveling.EXP_TABLE[Leveling.V1_MAX_LEVEL - 1]):
 			return false
 	return true
 
