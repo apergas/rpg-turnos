@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "slime_arena"
+display_name = "Slime de arena"
+max_hp = 120
+hp = 120
+attack = 52
+defense = 36
+speed = 20
+map_roam = 1.5
+map_speed = 1.2
+exp_reward = 66
+gold_reward = 34
+ai_weights = {
+"attack": 80,
+"stagger": 20
+}
+weak = Array[String](["ice"])
+resist = Array[String](["fire"])
+drops = {
+"pocion_grande": 0.08
+}

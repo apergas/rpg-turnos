@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "buitre"
+display_name = "Buitre"
+max_hp = 110
+hp = 110
+attack = 54
+defense = 32
+speed = 42
+map_roam = 2.5
+map_speed = 2.2
+exp_reward = 70
+gold_reward = 36
+weak = Array[String](["thunder"])
+drops = {
+"eter_grande": 0.05
+}

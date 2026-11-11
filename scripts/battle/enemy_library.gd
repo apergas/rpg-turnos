@@ -35,6 +35,13 @@ const ENEMIES := {
 	"planta_trampa": preload("res://data/enemies/planta_trampa.tres"),
 	"jaguar_sombrio": preload("res://data/enemies/jaguar_sombrio.tres"),
 	"seta_tropical": preload("res://data/enemies/seta_tropical.tres"),
+	# The desert (the v2, 2.1.0).
+	"escorpion": preload("res://data/enemies/escorpion.tres"),
+	"slime_arena": preload("res://data/enemies/slime_arena.tres"),
+	"buitre": preload("res://data/enemies/buitre.tres"),
+	"golem_arena": preload("res://data/enemies/golem_arena.tres"),
+	"momia": preload("res://data/enemies/momia.tres"),
+	"gusano_dunas": preload("res://data/enemies/gusano_dunas.tres"),
 }
 ## Figure of each enemy id; any other id is a slime.
 const LOOKS := {
@@ -67,6 +74,12 @@ const LOOKS := {
 	"planta_trampa": BattleActor.Look.TRAP_PLANT,
 	"jaguar_sombrio": BattleActor.Look.JAGUAR,
 	"seta_tropical": BattleActor.Look.TROPICAL_MUSHROOM,
+	"escorpion": BattleActor.Look.SCORPION,
+	"slime_arena": BattleActor.Look.SAND_SLIME,
+	"buitre": BattleActor.Look.VULTURE,
+	"golem_arena": BattleActor.Look.SAND_GOLEM,
+	"momia": BattleActor.Look.MUMMY,
+	"gusano_dunas": BattleActor.Look.SAND_WORM,
 	# The creatures that fight beside the hero (data in Allies, not in ENEMIES).
 	"gallina": BattleActor.Look.CHICKEN,
 	"lobezno": BattleActor.Look.WOLF_CUB,

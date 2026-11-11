@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "escorpion"
+display_name = "Escorpión"
+max_hp = 130
+hp = 130
+attack = 56
+defense = 48
+speed = 22
+map_roam = 2.0
+map_speed = 1.6
+exp_reward = 72
+gold_reward = 38
+ai_weights = {
+"attack": 80,
+"stagger": 20
+}
+weak = Array[String](["ice"])
+drops = {
+"antidote": 0.15
+}
+attack_status = "poison"
+attack_status_chance = 0.3

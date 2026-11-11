@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "momia"
+display_name = "Momia"
+female = true
+max_hp = 150
+hp = 150
+attack = 58
+defense = 40
+speed = 14
+map_roam = 2.0
+map_speed = 1.4
+exp_reward = 76
+gold_reward = 38
+ai_weights = {
+"attack": 85,
+"stagger": 15
+}
+weak = Array[String](["fire"])
+drops = {
+"pluma_fenix": 0.03
+}
