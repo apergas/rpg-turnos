@@ -1,6 +1,6 @@
 # Versión 2.4.0: lo que pide el usuario tras jugar la v2
 
-Fecha: 2026-11-11. Parte de la 2.3.0 (la v2 completa). Cubre M-49 a M-54, los seis puntos del usuario tras jugar la 2.3.0. Textos nuevos: [anexo de textos](2026-11-11-version-2-4-0-textos.md).
+Fecha: 2026-11-11. Parte de la 2.3.0 (la v2 completa). Cubre M-49 a M-55, los puntos del usuario tras jugar la 2.3.0 (M-55, el campamento vestido según el tramo, llegó después de la revisión del spec). Textos nuevos: [anexo de textos](2026-11-11-version-2-4-0-textos.md).
 
 ## Objetivo
 
@@ -183,6 +183,29 @@ Las frases de la v2 son correctas pero serias: el Jefe (por capítulo), la Viaje
 - **La Curandera** tiene sus propias frases de posada (`Inn.LINES`, solo la posada `caravana`); las posadas de la v1 siguen con `Inn.REST` / `Inn.FULL`.
 - Las preguntas de partir (`JOIN_QUESTION`, `LEAVE_QUESTION`), las escenas de los jefes y el final no cambian: son los momentos serios.
 
+## M-55. El campamento de la caravana, vestido según dónde acampa
+
+### Lo que pide el usuario
+
+"El campamento base del desierto con arena, cactus, etc.; el de la jungla con más vegetación; el de la montaña como el mapa de la montaña; aunque no sea con mucho detalle, que se vea que estás en un sitio diferente." Hoy la Caravana (`caravana.tres`) es siempre un claro de tierra con árboles de la pradera, en los cuatro tramos.
+
+### Decisión
+
+- **La planta no cambia:** las tiendas, las figuras, las salidas, las entradas, los pozos, la hoguera, la ruta de la partida automática y todas las posiciones son las de `caravana.tres`. Así nada más se rompe (misiones, marcas del mapa, `ExploredMap`, guardados).
+- **Cambia el aspecto, según `GameState.tramo()`:** colores del suelo, del camino y de las colinas; cielo, sol, niebla y bruma; `has_grass` y el color de la hierba; los árboles; la decoración de Kenney esparcida; las partículas y el ambiente (la música sigue siendo la de la caravana).
+
+| Tramo | Acampa junto a | Aspecto (tomado de esa zona) |
+|---|---|---|
+| 1 | la jungla | colores, cielo y niebla de `jungla`, hierba alta, palmeras en los bordes, helechos y arbustos (`fern`, `leafy`), luciérnagas, ambiente `jungle` |
+| 2 | el desierto | arena y cielo de `desierto`, sin hierba, unas pocas palmeras de oasis, cactus, matorral y piedras (`cactus`, `cactus_tall`, `scrub`), arena en el aire, ambiente `desert` |
+| 3 | la montaña | el suelo gris y el cielo frío de `montana_1`, sin hierba ni árboles de la pradera, pinos y piedras con nieve (`pine`, `pine_small`, `snow_stones`, `rock_tall`), nieve, ambiente `mountain` |
+| 4 | la ciudad | suelo oscuro, colinas y cielo rojizos de `ciudad_1`, tocones viejos (`stump_tall`) y restos de ruinas (`city_block`, `city_column_broken`, `rubble`), ceniza, ambiente `city` |
+| 5 | la ciudad, la v2 terminada | lo mismo que el tramo 4, pero en calma: el cielo y la bruma más suaves y claros, sin ceniza |
+
+- **Como datos:** una clase pura nueva, `CampLook`, con una tabla por tramo (los valores se copian de la zona de origen al construir, más lo propio de cada tramo) y `CampLook.dressed(zone, tramo)`, que devuelve una copia de la Caravana con ese aspecto. `Game._switch_zone()` la usa al entrar en la Caravana. `ZoneData` gana `look_key` (texto, "" por defecto): las cachés de `Decor` y `WorldStage` se guardan por `id` + `look_key`, para que la decoración de un tramo no se reutilice en otro.
+- **Límites:** la decoración de una vista cuesta como mucho **+18 llamadas de dibujo** (la regla de la 2.0.1). Nada se pone sobre las tiendas, las figuras, los pozos, las salidas, las entradas o la ruta: `Decor.problems()` no puede dar ningún `WARNING`.
+- **Verificación:** fotos de la Caravana en cada tramo al lado de su zona (la jungla, el desierto, la montaña, la ciudad), y del tramo 5.
+
 ## Qué cambia, por archivo
 
 | Archivo | Cambio |
@@ -201,6 +224,7 @@ Las frases de la v2 son correctas pero serias: el Jefe (por capítulo), la Viaje
 | `shaders/tree.gdshader`, `project.godot`, `scripts/world/world.gd`, `world_stage.gd` | fuera el agujero y `hero_pos` |
 | `shaders/hero_rim.gdshader` (nuevo), `scripts/world/player.gd`, `scripts/battle/battle_actor.gd` | el borde de luz del héroe del mapa (`set_map_readable()`, `material_overlay`, otra vez tras `set_equipment()`); los looks nuevos de la caravana, el pelo, la piel y los peinados |
 | `scripts/tools/head_textures.gd` (nuevo, fuera de la exportación) y `assets/characters/head_*.png` (nuevos, con su `.import`) | las cabezas con otro pelo y otra piel; `assets/CREDITS.md` lo dice |
+| `scripts/world/camp_look.gd` (nuevo), `scripts/world/zone_data.gd` (`look_key`), `scripts/world/decor.gd`, `scripts/world/world_stage.gd` | el aspecto de la Caravana por tramo (M-55) |
 | `CLAUDE.md`, `CHANGELOG.md`, `project.godot` (versión 2.4.0) | lo de siempre al cerrar la versión. En `CLAUDE.md`, además: la Seta no es "a 50 % drop" (siempre fue 1,0 en `mushroom.tres`): pasa a decir que cae siempre mientras `setas` la pide; fuera `hero_pos` y el agujero de los árboles (`tree.gdshader`, `World`, `WorldStage`); las misiones de la v2 entregadas al Jefe; los looks nuevos |
 
 ## Lo que no cambia
@@ -227,6 +251,7 @@ Sin pruebas automáticas de ningún tipo (decisión del usuario). Se comprueba a
 - Las partidas automáticas de arriba, leyendo la salida: ningún `ERROR` ni `WARNING` nuevo (el de Jolt es el ruido conocido) y ningún `WARNING` de `QuestLog.problems()`.
 - Ida y vuelta del guardado (`--autoplay-save`): las líneas `Guardado:` y `Cargado:` iguales.
 - Un guardado de la 2.3.0 con `pieles_mono` lista (4 pieles) y otro con `superviviente` en `REPORT`, hecho con `--debug`: al cargarlos, "?" sobre el Jefe y entrega al hablar con él.
+- Fotos de la Caravana en los cinco tramos, cada una junto a la de su zona (M-55), sin `WARNING` de `Decor.problems()` y con +18 llamadas de dibujo como mucho.
 - Fotogramas (`--write-movie`, no headless) de: la jungla con el héroe detrás de una palmera (tapado, sin trama) y sobre su sombra (sombra entera, el héroe con su borde de luz); el desierto, el bosque y la pradera igual; la mina con el farol; la Caravana con sus seis figuras de cerca y desde la cámara del mapa; Nara en la jungla y el Superviviente en la ciudad. Lo mismo a 740 × 360 con `--touch`.
 - Una partida a mano en la jungla: un mono con la planta da su piel "(1/4)", y otro que pide ayuda también; un mono vencido antes de leer el tablón también la da.
 - A mano en la Caravana: el Jefe con una misión en curso dice primero su frase del capítulo y luego la de espera; con dos entregas listas, las dos en una charla y un solo aviso ("Misiones cumplidas: 2" con `--touch`).

@@ -1,6 +1,6 @@
 # Documento maestro
 
-Fecha: 2026-11-11. Última versión hecha: **2.3.0** (en `develop`, sin publicar todavía; la v2 está terminada). M-01 a M-38 están hechos (M-17 y M-37, descartados). M-39 a M-47 son la v2 (2.0.0 a 2.3.0), con diseño: la 2.0.0, la 2.0.1, la 2.1.0, la 2.2.0 y la 2.3.0 están hechas: la v2 está completa. Lo siguiente es la v3 (el pueblo del más allá), una idea sin plan. M-48 (la 2.0.1, la decoración con Kenney) está hecho. M-49 a M-54 (la 2.4.0, lo que pide el usuario tras jugar la v2) están diseñados.
+Fecha: 2026-11-11. Última versión hecha: **2.3.0** (en `develop`, sin publicar todavía; la v2 está terminada). M-01 a M-38 están hechos (M-17 y M-37, descartados). M-39 a M-47 son la v2 (2.0.0 a 2.3.0), con diseño: la 2.0.0, la 2.0.1, la 2.1.0, la 2.2.0 y la 2.3.0 están hechas: la v2 está completa. Lo siguiente es la v3 (el pueblo del más allá), una idea sin plan. M-48 (la 2.0.1, la decoración con Kenney) está hecho. M-49 a M-55 (la 2.4.0, lo que pide el usuario tras jugar la v2) están diseñados.
 
 Este documento es la base de trabajo a partir de ahora. Reúne:
 
@@ -143,7 +143,7 @@ El usuario permitió el Kenney Nature Kit (CC0). Regla suya: la opción más bon
 
 ### Prioridad 8: lo que pide el usuario tras jugar la v2 (2026-11-11)
 
-Seis puntos del usuario tras jugar la 2.3.0. Diseño: [spec de la 2.4.0](specs/2026-11-11-version-2-4-0-design.md), con los textos en su [anexo](specs/2026-11-11-version-2-4-0-textos.md).
+Siete puntos del usuario tras jugar la 2.3.0. Diseño: [spec de la 2.4.0](specs/2026-11-11-version-2-4-0-design.md), con los textos en su [anexo](specs/2026-11-11-version-2-4-0-textos.md).
 
 | ID | Qué | Versión | Talla |
 |---|---|---|---|
@@ -153,6 +153,7 @@ Seis puntos del usuario tras jugar la 2.3.0. Diseño: [spec de la 2.4.0](specs/2
 | M-52 | Fuera el agujero tramado de árboles, arbustos y decoración en todos los mapas (también agujereaba la sombra sobre el héroe); un borde de luz suave para que el héroe se lea a la sombra | 2.4.0 | S |
 | M-53 | La gente de la caravana como el héroe: el Knight sin casco, con otro pelo, peinados hechos en código (barba, moño, coleta) y otra ropa, en lugar del mago | 2.4.0 | M |
 | M-54 | Los textos de la v2 con algo de gracia, de vez en cuando: el Jefe por capítulo, las misiones cumplidas, la Curandera y una frase del compañero al llegar a cada zona | 2.4.0 | S |
+| M-55 | El campamento de la caravana vestido según dónde acampa: jungla, desierto, montaña o ciudad (suelo, cielo, árboles, decoración, partículas y ambiente de esa zona), con la misma planta | 2.4.0 | M |
 
 ---
 
@@ -289,7 +290,7 @@ Notas para cuando se diseñe:
 | **2.1.0** | El desierto | [spec](specs/2026-11-11-version-2-1-0-design.md) · [plan](plans/2026-11-11-version-2-1-0.md) | Hecha |
 | **2.2.0** | La montaña | [spec](specs/2026-11-10-version-2-0-0-design.md) · [decisiones](specs/2026-11-11-version-2-2-0-design.md) · [plan](plans/2026-11-11-version-2-2-0.md) | Hecha |
 | **2.3.0** | La ciudad, el Devorador del portal y el final | [spec](specs/2026-11-10-version-2-0-0-design.md) · [decisiones](specs/2026-11-11-version-2-3-0-design.md) · [plan](plans/2026-11-11-version-2-3-0.md) | Hecha |
-| **2.4.0** | M-49 a M-54: lo que pide el usuario tras jugar la v2 | [spec](specs/2026-11-11-version-2-4-0-design.md) · [textos](specs/2026-11-11-version-2-4-0-textos.md) | Diseñada |
+| **2.4.0** | M-49 a M-55: lo que pide el usuario tras jugar la v2 | [spec](specs/2026-11-11-version-2-4-0-design.md) · [textos](specs/2026-11-11-version-2-4-0-textos.md) | Diseñada |
 
 Las versiones 1.1.1 a 1.4.0 están implementadas y publicadas; las pruebas a mano y en móvil real que quedaron pendientes están en sus informes. Las versiones 1.4.1 a 2.0.0 están implementadas en `develop` (2026-11-11) y sin publicar.
 
