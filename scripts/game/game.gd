@@ -1353,8 +1353,10 @@ func _refresh_status() -> void:
 	_world.set_monsters_shy(EncounterMeter.is_shy(state.hero.level, _zone.exit_level))
 	_world.set_repel(state.repel_m > 0.0)
 	_world.set_autoplay_hunt(_autoplay and _autoplay_hunts())
-	_world.set_quest_view(state.quests.markers(_zone.id, state.inventory),
-		state.quests.hidden_figures(_zone.id))
+	var hidden := state.quests.hidden_figures(_zone.id)
+	hidden.append_array(_zone.absent_figures(state.world_flags))
+	_world.set_quest_view(state.quests.markers(_zone.id, state.inventory, state.world_flags),
+		hidden)
 	var loadout := state.loadout
 	_world.set_hero_equipment(loadout.worn(Equipment.WEAPON), loadout.worn(Equipment.SHIELD),
 		loadout.worn(Equipment.HELMET))

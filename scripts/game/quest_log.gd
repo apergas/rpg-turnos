@@ -122,7 +122,7 @@ func talk(state: GameState, zone_id: String, figure: String) -> Dictionary:
 			return {"lines": quest.found_lines.duplicate(), "done": ""}
 	for id: String in QUESTS:
 		var quest := data(id)
-		if quest.zone == zone_id and quest.giver == figure and stage(id) == Stage.OPEN:
+		if quest.zone == zone_id and quest.giver == figure and _offered(quest, state.world_flags):
 			accept(state, id)
 			return {"lines": quest.offer_lines.duplicate(), "done": ""}
 	for id: String in QUESTS:
@@ -134,6 +134,11 @@ func talk(state: GameState, zone_id: String, figure: String) -> Dictionary:
 				lines.append(PROGRESS_LINE % [_progress(quest, state.inventory), quest.goal])
 			return {"lines": lines, "done": ""}
 	return {}
+
+
+## True if the quest may be offered now: still OPEN and its needs flag set.
+func _offered(quest: QuestData, flags: Dictionary) -> bool:
+	return stage(quest.id) == Stage.OPEN and (quest.needs == "" or flags.get(quest.needs, false))
 
 
 ## The figures of this zone with a report waiting for them.
@@ -148,11 +153,11 @@ func reports_here(zone_id: String, inventory: Inventory) -> Array[String]:
 
 ## Figure name -> mark, on this zone: "?" for a report waiting or a figure being sought, "!"
 ## for a new offer. "?" wins. The Abuela Rosa's are the village quest's.
-func markers(zone_id: String, inventory: Inventory) -> Dictionary:
+func markers(zone_id: String, inventory: Inventory, flags := {}) -> Dictionary:
 	var marks := {}
 	for id: String in QUESTS:
 		var quest := data(id)
-		if quest.zone == zone_id and stage(id) == Stage.OPEN:
+		if quest.zone == zone_id and _offered(quest, flags):
 			marks[quest.giver] = NEW_MARK
 	if zone_id == VILLAGE_ZONE:
 		if village.stage == Quest.Stage.OFFER:
