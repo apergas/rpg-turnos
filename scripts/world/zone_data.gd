@@ -131,6 +131,10 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var decor_seed := 41
 ## The green every green of the kit becomes (the kit's are teal).
 @export var decor_green := Color(0.3, 0.55, 0.18)
+## Set on a dressed copy of a zone (CampLook: the Caravana by tramo): the caches that key on
+## the zone (Decor, WorldStage) use cache_key(), so one look's trees and decoration never
+## stand in for another's. "" for the zones as they are.
+@export var look_key := ""
 
 @export_group("Entries, exits and figures")
 ## entry id -> [position, yaw]: where the player appears (arriving through an exit, a
@@ -287,6 +291,11 @@ func all_exits() -> Array:
 				"label": "Subir" if kind == STAIRS_UP else "Bajar", "lock": "",
 				"lock_text": "", "stairs": true})
 	return all
+
+
+## What the per-zone caches key on: the id, plus the look of a dressed copy.
+func cache_key() -> String:
+	return id if look_key == "" else "%s#%s" % [id, look_key]
 
 
 func is_dungeon() -> bool:
