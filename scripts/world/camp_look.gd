@@ -55,12 +55,17 @@ static func dressed(zone: ZoneData, tramo: int) -> ZoneData:
 	camp.has_grass = look.has_grass
 	if look.get("grass", false):
 		camp.grass_tips = land.grass_tips
-	for field: String in ["clump_model", "tree_scale", "tree_tries", "bush_tries",
-			"decor_scatter"]:
+	for field: String in ["clump_model", "tree_scale", "tree_tries", "bush_tries"]:
 		if look.has(field):
 			camp.set(field, look[field])
+	if look.has("decor_scatter"):
+		camp.decor_scatter = (look.decor_scatter as Dictionary).duplicate()
 	if look.has("tree_models"):
-		camp.tree_models.assign(look.tree_models)
+		# A fresh array: duplicate() is shallow, so assign() on the copy's would change the
+		# cached Caravana's own.
+		var models: Array[String] = []
+		models.assign(look.tree_models)
+		camp.tree_models = models
 	if look.get("calm", false):
 		for field: String in CALM:
 			camp.set(field, CALM[field])
