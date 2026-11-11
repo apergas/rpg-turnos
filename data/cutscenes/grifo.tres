@@ -14,5 +14,5 @@ steps = [
 ["fade_in"],
 ["approach", "Jefe de caravana", "hero", 1.8],
 ["face", "hero", "Jefe de caravana"],
-["say", "Jefe de caravana", ["¡Has bajado de la cumbre! Ese mapa marca el camino hasta la ciudad abandonada.", "Pero dicen que es un lugar maldito, y aún no podemos seguir. Montaremos el camino cuando la ruta sea segura."]]
+["say", "Jefe de caravana", ["¡Has bajado de la cumbre! Ese mapa marca el camino hasta la ciudad abandonada.", "Descansa, y cuando estés listo, sal por el norte: el camino de la ciudad ya está montado."]]
 ]

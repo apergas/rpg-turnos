@@ -1,0 +1,107 @@
+[gd_resource type="Resource" script_class="ZoneData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/zone_data.gd" id="1_zone"]
+
+[resource]
+script = ExtResource("1_zone")
+id = "ciudad_2"
+display_name = "Ciudad abandonada"
+short_name = "Ciudad"
+floor_name = "El barrio del portal"
+number = 9
+half_size = Vector2(26, 26)
+ground_color = Color(0.36, 0.32, 0.31, 1)
+has_grass = false
+hills = [[Vector3(-42, -6, -40), Vector3(26, 15, 22)], [Vector3(0, -6, -48), Vector3(34, 18, 18)], [Vector3(42, -6, -40), Vector3(26, 14, 22)], [Vector3(48, -6, 0), Vector3(18, 10, 30)], [Vector3(-48, -6, 0), Vector3(18, 10, 30)], [Vector3(40, -6, 40), Vector3(24, 9, 20)], [Vector3(-40, -6, 40), Vector3(24, 9, 20)], [Vector3(0, -6, 44), Vector3(30, 7, 16)]]
+hill_color = Color(0.22, 0.12, 0.11, 1)
+village_name = ""
+village_radius = 0.0
+wells = [{
+"id": "ciudad_2_vida",
+"kind": "hp",
+"pos": Vector3(-14, 0, 16)
+}, {
+"id": "ciudad_2_mana",
+"kind": "mp",
+"pos": Vector3(14, 0, 16)
+}]
+decor = [[Vector3(-14, 0, -17), 0.0, "city_column_broken"], [Vector3(14, 0, -17), 180.0, "city_column_broken"], [Vector3(-10, 0, 1), 60.0, "rubble"], [Vector3(18, 0, 3), 0.0, "fallen_head"], [Vector3(-18, 0, 13), 0.0, "stump_tall"]]
+decor_green = Color(0.28, 0.3, 0.18, 1)
+entries = {
+"ciudad_1": [Vector3(0, 0, 17), 0.0]
+}
+start_entry = "ciudad_1"
+town_entry = ""
+exits = [{
+"entry": "portal",
+"id": "sur",
+"label": "A las calles",
+"lock": "",
+"lock_text": "",
+"pos": Vector3(0, 0, 21.5),
+"to": "ciudad_1",
+"yaw": 0.0
+}]
+npcs = [{
+"kind": "npc",
+"lines": ["La caravana te esperará aquí."],
+"look": "CARAVAN_CHIEF",
+"name": "Jefe de caravana",
+"needs": "devorador_portal",
+"pos": Vector3(-3, 0, -8),
+"yaw": 0.0
+}, {
+"kind": "npc",
+"lines": ["Voy contigo."],
+"look": "BRENA",
+"name": "Brena",
+"needs": "devorador_portal",
+"pos": Vector3(3, 0, -8),
+"yaw": 0.0
+}, {
+"kind": "npc",
+"lines": ["Voy contigo."],
+"look": "TADEO",
+"name": "Tadeo",
+"needs": "devorador_portal",
+"pos": Vector3(3, 0, -8),
+"yaw": 0.0
+}, {
+"kind": "npc",
+"lines": ["Voy contigo."],
+"look": "ULMA",
+"name": "Ulma",
+"needs": "devorador_portal",
+"pos": Vector3(3, 0, -8),
+"yaw": 0.0
+}]
+boss_id = "devorador_portal"
+boss_pos = Vector3(0, 0, -13)
+formations = [["rata_ruinas", "rata_ruinas"], ["armadura_hueca"], ["gargola"], ["sombra"], ["esqueleto_centinela"], ["gargola", "sombra"], ["esqueleto_centinela", "armadura_hueca"]]
+start_formations = []
+start_radius = 0.0
+monster_count = 5
+exit_level = 40
+music = "city"
+village_music = ""
+ambient = "portal"
+sky_top = Color(0.34, 0.17, 0.17, 1)
+haze = Color(0.52, 0.36, 0.32, 1)
+fog_density = 0.024
+sun_color = Color(1, 0.8, 0.7, 1)
+sun_energy = 0.55
+backdrop = "ciudad"
+particles = "ash"
+layout = PackedStringArray("#############", "###...P...###", "##.........##", "##.........##", "###.......###", "######D######", "#....#.#....#", "#.C..#.#....#", "#...........#", "#....#.#....#", "#....#.#....#", "#....#.#....#", "#############")
+underground = false
+rock_color = Color(0.42, 0.38, 0.38, 1)
+floor_color = Color(0.34, 0.29, 0.28, 1)
+castle = true
+ruined = true
+mist_banks = 0
+door_flag = "ciudad_reja"
+door_key = "llave_portal"
+door_text = "Una reja de hierro negro cierra el barrio del portal. El Guardián de la ciudad guardaba su llave."
+portal_flag = "portal_calmo"
+autoplay_route = Array[Vector3]([Vector3(0, 0, 17), Vector3(0, 0, 8), Vector3(-12, 0, 8), Vector3(-15, 0, 4.4), Vector3(-12, 0, 8), Vector3(-14, 0, 14), Vector3(-12, 0, 8), Vector3(12, 0, 8), Vector3(14, 0, 14), Vector3(12, 0, 8), Vector3(12, 0, 2), Vector3(12, 0, 8), Vector3(0, 0, 8), Vector3(0, 0, 0), Vector3(0, 0, -6), Vector3(0, 0, -11), Vector3(-8, 0, -12), Vector3(-12, 0, -16), Vector3(-4, 0, -16), Vector3(4, 0, -16), Vector3(12, 0, -16), Vector3(8, 0, -12), Vector3(0, 0, -9), Vector3(0, 0, 0), Vector3(0, 0, 8)])
+autoplay_boss_level = 39
