@@ -14,6 +14,8 @@ const QUESTS := {
 	"gato": preload("res://data/quests/gato.tres"),
 	"slime_metal": preload("res://data/quests/slime_metal.tres"),
 	"explorador": preload("res://data/quests/explorador.tres"),
+	"pieles_mono": preload("res://data/quests/pieles_mono.tres"),
+	"explorador_perdido": preload("res://data/quests/explorador_perdido.tres"),
 }
 const VILLAGE_ZONE := "pradera"
 ## Ends the waiting lines of a HUNT or GATHER of several, so the progress is said aloud.
@@ -199,9 +201,33 @@ func status_lines(inventory: Inventory) -> Array[String]:
 	return lines
 
 
-## Every mission of the game, the village quest included (the Colección's "n/7").
+## Every mission of the game, the village quest included.
 static func total_count() -> int:
 	return QUESTS.size() + 1
+
+
+## The missions of the v2 (the caravan's zones), the rest are the v1's (the Colección's
+## "n/7" and "n/2").
+static func is_v2(id: String) -> bool:
+	return data(id).zone in ZoneData.V2_ZONES
+
+
+## How many missions the v1 has (the village quest included) or the v2 has.
+static func total_of(v2: bool) -> int:
+	var total := 0 if v2 else 1
+	for id: String in QUESTS:
+		if is_v2(id) == v2:
+			total += 1
+	return total
+
+
+## Missions finished of the v1 (the village quest included) or of the v2.
+func done_of(v2: bool) -> int:
+	var done := 1 if not v2 and village.stage == Quest.Stage.DONE else 0
+	for id: String in QUESTS:
+		if is_v2(id) == v2 and stage(id) == Stage.DONE:
+			done += 1
+	return done
 
 
 ## Missions finished, the village quest included: what the credits count.

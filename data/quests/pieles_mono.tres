@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="QuestData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/quest_data.gd" id="1_quest"]
+
+[resource]
+script = ExtResource("1_quest")
+id = "pieles_mono"
+title = "Pieles para el frío"
+kind = 1
+zone = "caravana"
+giver = "Tablón"
+needs = "companero"
+turn_in_zone = "caravana"
+turn_in = "Mercader"
+target = "piel_mono"
+goal = 4
+objective = "Reúne 4 Pieles de mono en la jungla y llévaselas al Mercader de la caravana."
+status = "pieles de mono %d / %d"
+report = "pieles al Mercader"
+offer_lines = Array[String](["SE BUSCAN: pieles de mono aullador, cuatro. Para el frío de las montañas. Pago bien. — El Mercader"])
+wait_lines = Array[String](["¿Pieles? Las de los monos aulladores, las de rayas. Cuatro."])
+done_lines = Array[String](["¡Cuatro pieles, y buenas! Con esto nadie se congela en la montaña.", "Toma, te lo has ganado."])
+reward_gold = 300
+reward_items = {
+"pocion_grande": 2
+}
