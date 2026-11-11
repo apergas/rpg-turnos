@@ -1,6 +1,6 @@
 # Documento maestro
 
-Fecha: 2026-11-11. Última versión hecha: **2.0.0** (en `develop`, sin publicar todavía). M-01 a M-38 están hechos (M-17 y M-37, descartados). M-39 a M-47 son la v2 (2.0.0 a 2.3.0), con diseño: la 2.0.0 está hecha; 2.1.0 a 2.3.0 esperan su plan. M-48 es la 2.0.1, la decoración con Kenney.
+Fecha: 2026-11-11. Última versión hecha: **2.0.1** (en `develop`, sin publicar todavía). M-01 a M-38 están hechos (M-17 y M-37, descartados). M-39 a M-47 son la v2 (2.0.0 a 2.3.0), con diseño: la 2.0.0 está hecha, y la 2.0.1 también; 2.1.0 a 2.3.0 esperan su plan. M-48 (la 2.0.1, la decoración con Kenney) está hecho.
 
 Este documento es la base de trabajo a partir de ahora. Reúne:
 
@@ -139,7 +139,7 @@ El usuario permitió el Kenney Nature Kit (CC0). Regla suya: la opción más bon
 
 | ID | Qué | Versión | Talla |
 |---|---|---|---|
-| M-48 | Decoración Kenney en los mapas que ya existen: arbustos, troncos, tocones, setas, flores, vallas, cultivos y hogueras, teñidos si hace falta para que casen con KayKit | 2.0.1 | M |
+| M-48 | Decoración Kenney en los mapas que ya existen: arbustos, troncos, tocones, setas, flores, vallas, cultivos y hogueras, teñidos si hace falta para que casen con KayKit — **hecho en 2.0.1** | 2.0.1 | M |
 
 ---
 
@@ -271,7 +271,7 @@ Notas para cuando se diseñe:
 | **1.8.0** | M-34 y M-35: medallas pequeñas y Partida nueva + | [spec](specs/2026-11-09-version-1-8-0-design.md) · [plan](plans/2026-11-09-version-1-8-0.md) | Hecha |
 | **1.9.0** | M-36 y M-38: ambiente y depuración | [spec](specs/2026-11-09-version-1-9-0-design.md) · [plan](plans/2026-11-09-version-1-9-0.md) | Hecha |
 | **2.0.0** | M-39 a M-42 y la jungla: la caravana, el compañero, el nivel 40 | [spec](specs/2026-11-10-version-2-0-0-design.md) · [plan](plans/2026-11-10-version-2-0-0.md) | Hecha |
-| **2.0.1** | M-48: decoración Kenney | por escribir | Pendiente |
+| **2.0.1** | M-48: decoración Kenney | [spec](specs/2026-11-11-version-2-0-1-design.md) · [plan](plans/2026-11-11-version-2-0-1.md) | Hecha |
 | **2.1.0** | El desierto | [spec](specs/2026-11-10-version-2-0-0-design.md) | Diseñada |
 | **2.2.0** | La montaña | [spec](specs/2026-11-10-version-2-0-0-design.md) | Diseñada |
 | **2.3.0** | La ciudad, el Devorador del portal y el final | [spec](specs/2026-11-10-version-2-0-0-design.md) | Diseñada |

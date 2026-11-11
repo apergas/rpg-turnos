@@ -44,6 +44,10 @@ clump_model = "trees_B"
 glades = [[Vector3(16, 0, 20), 6.0], [Vector3(17, 0, -14), 6.0], [Vector3(-19, 0, -22), 6.0]]
 bush_seed = 43
 bush_tries = 300
+decor = [[Vector3(-19.5, 0, 11.5), 35.0, "log_stack"]]
+decor_scatter = {"log": 24, "mushrooms_red": 60, "mushrooms_tan": 60, "stump": 36, "stump_tall": 40}
+decor_seed = 43
+decor_green = Color(0.2, 0.42, 0.12, 1)
 entries = {
 "aldea": [Vector3(-10.4, 0, 10.5), 0.0],
 "norte": [Vector3(0, 0, -35.5), 180.0],
