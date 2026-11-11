@@ -1,5 +1,12 @@
 # Registro de cambios
 
+## 2.4.1 (2026)
+
+- El sol de la pantalla del más allá ya no es un eclipse: es un sol rojo oscuro y apagado.
+- El menú Objetos solo muestra lo que se puede usar (pociones, éteres, plumas, semillas...): los objetos de misión, los objetos clave y las medallas ya no salen.
+- La ventana del mapa ya no muestra el número de pociones.
+- Los anillos y amuletos de premio (misiones, bestiario, Coleccionista) que no lleves puestos se pueden vender, por un precio que va con la tienda donde estás: poco en Villaclaro y bastante más en la caravana.
+
 ## 2.4.0 (2026)
 
 Lo que pediste tras jugar la caravana.

@@ -331,8 +331,9 @@ func _set_line(label: Label, text: String) -> void:
 	label.text = text
 
 
-## One row per item carried: name, count and "Usar" (disabled, with the reason, when it
-## can't be used now).
+## One row per item carried that can be used: name, count and "Usar" (disabled, with the
+## reason, when it can't be used now). Quest items, key items and the small medals are not
+## listed: the Diario follows them.
 func _fill_items() -> void:
 	# Removed at once (the pressed "Usar" may be one of them) and freed at the end of the frame.
 	for child in _items_box.get_children():
@@ -341,7 +342,7 @@ func _fill_items() -> void:
 	var inventory := _state.inventory
 	var any := false
 	for id in Inventory.IDS:
-		if inventory.count(id) <= 0:
+		if inventory.count(id) <= 0 or Inventory.is_quest_item(id):
 			continue
 		any = true
 		var row := HBoxContainer.new()
@@ -359,28 +360,6 @@ func _fill_items() -> void:
 		if why != "":
 			row.add_child(_label(why, GREY))
 		UiStyle.add_description(_items_box, id)
-	for id in _state.key_items:
-		any = true
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 16)
-		_items_box.add_child(row)
-		var label := _label(Inventory.KEY_ITEMS[id], TITLE_COLOR)
-		label.custom_minimum_size = Vector2(260, 0)
-		row.add_child(label)
-		row.add_child(_label("Objeto clave", GREY))
-		UiStyle.add_description(_items_box, id)
-	if not _state.medals.is_empty():
-		# The small medals: counted, never used (the Coleccionista only counts them).
-		any = true
-		var medal_row := HBoxContainer.new()
-		medal_row.add_theme_constant_override("separation", 16)
-		_items_box.add_child(medal_row)
-		var medal_label := _label("%s ×%d" % [Inventory.MEDAL_NAME, _state.medals.size()],
-			TITLE_COLOR)
-		medal_label.custom_minimum_size = Vector2(260, 0)
-		medal_row.add_child(medal_label)
-		medal_row.add_child(_label("Objeto clave", GREY))
-		UiStyle.add_description(_items_box, Inventory.MEDAL)
 	if not any:
 		_items_box.add_child(_label("No llevas objetos.", Color.WHITE))
 
