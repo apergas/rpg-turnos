@@ -85,6 +85,9 @@ var state := State.ONGOING
 var exp_won := 0
 var gold_won := 0
 var drops_won: Array[String] = []
+## Quest item -> how many its quest asks for (QuestLog.wanted_items(), set before the first
+## round): such an item always drops while the bag holds fewer, and never otherwise.
+var quest_items := {}
 ## The difficulty: what the hero's damage and the EXP won are multiplied by.
 var damage_mult := 1.0
 var exp_mult := 1.0
@@ -631,10 +634,17 @@ func _win(events: Array[Dictionary]) -> void:
 	events.append_array(Leveling.apply(hero))
 	for i in enemies.size():
 		for id: String in enemies[i].drops:
-			if _rng.randf() < enemies[i].drops[id]:
+			var chance: float = enemies[i].drops[id]
+			var goal := 0
+			if Inventory.is_quest_item(id):
+				goal = int(quest_items.get(id, 0))
+				# Wanted: always, each monkey its own skin while the quest still asks for more.
+				chance = 1.0 if inventory.count(id) < goal else 0.0
+			if chance > 0.0 and _rng.randf() < chance:
 				inventory.add(id)
 				drops_won.append(id)
-				events.append(BattleEvent.drop(id, i))
+				var progress := "(%d/%d)" % [inventory.count(id), goal] if goal > 0 else ""
+				events.append(BattleEvent.drop(id, i, progress))
 
 
 ## What the difficulty leaves of damage to the hero, at least 1.

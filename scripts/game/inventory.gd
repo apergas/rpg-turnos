@@ -126,6 +126,12 @@ const KEY_TEXTS := {
 var _items := {}
 
 
+## True for an item only a quest asks for (effect "quest": the Seta, the Piel de mono, the
+## Cristal de hielo): it drops in battle only while a quest wants it (BattleEngine).
+static func is_quest_item(id: String) -> bool:
+	return ITEMS.has(id) and ITEMS[id].effect == "quest"
+
+
 static func display_name(id: String) -> String:
 	return ITEMS[id].name if ITEMS.has(id) else id
 
