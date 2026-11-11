@@ -1,5 +1,14 @@
 # Registro de cambios
 
+## 1.8.0 (2026)
+
+- Hay doce medallas pequeñas escondidas por el mundo, tres en cada región. Brillan en el suelo y solo se ven de cerca.
+- El Coleccionista de Villaclaro, detrás de la posada, te da premios por ellas: Plumas de fénix, semillas y tres piezas de equipo únicas.
+- Las medallas no se gastan: cuantas más lleves, mejores premios. El Diario y la página Objetos dicen cuántas tienes.
+- Partida nueva +: con una partida terminada, "Continuar" te deja empezar la historia otra vez con tu héroe, su equipo y su oro.
+- En la Partida nueva + los monstruos y los jefes son más fuertes y dan más experiencia y oro.
+- De una vuelta a otra se quedan el bestiario, sus premios, las medallas y los premios del Coleccionista.
+
 ## 1.7.0 (2026)
 
 - Ya no hay combates al azar al andar por la hierba: los monstruos están a la vista en el mapa, en grupos.

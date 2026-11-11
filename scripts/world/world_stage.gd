@@ -60,6 +60,11 @@ const TREE_COLLIDER_HEIGHT := 3.0
 ## _near_chest()'s cache: the zone id and its chests' spots on the ground.
 static var _chest_zone := ""
 static var _chest_spots: Array[Vector2] = []
+## Tall grass keeps this far from a small medal (Medals), so the glint shows on the ground;
+## _near_medal()'s cache, like _near_chest()'s.
+const MEDAL_GRASS_MARGIN := 0.8
+static var _medal_zone := ""
+static var _medal_spots: Array[Vector2] = []
 ## _tree_layout()'s cache (the zone id and its trees) and near_tree()'s (x, z and the
 ## collider radius of each tree inside the walls).
 static var _layout_zone := ""
@@ -116,10 +121,10 @@ static func is_on_path(zone: ZoneData, pos: Vector3, margin := 0.0) -> bool:
 
 
 ## Where tall grass may grow: off the path and the safe discs (the village is inside one),
-## the rocks, the buildings, the chests and the figures.
+## the rocks, the buildings, the chests, the figures and the small medals.
 static func is_grass_free(pos: Vector3, zone: ZoneData) -> bool:
 	if is_on_path(zone, pos, GRASS_PATH_MARGIN) or _near_chest(zone, pos, CHEST_GRASS_MARGIN) \
-			or _near_figure(zone, pos):
+			or _near_figure(zone, pos) or _near_medal(zone, pos):
 		return false
 	return not _near_rock(zone, pos, GRASS_ROCK_MARGIN) \
 		and not _near_building(zone, pos, GRASS_BUILDING_MARGIN)
@@ -368,6 +373,22 @@ static func _near_chest(zone: ZoneData, pos: Vector3, margin: float) -> bool:
 	var p := Vector2(pos.x, pos.z)
 	for spot in _chest_spots:
 		if p.distance_to(spot) < margin:
+			return true
+	return false
+
+
+## True within MEDAL_GRASS_MARGIN of one of the zone's small medals (taken or not: the map
+## is built from the zone alone). Only the grass asks: the trees and bushes don't change.
+static func _near_medal(zone: ZoneData, pos: Vector3) -> bool:
+	if _medal_zone != zone.id:
+		_medal_zone = zone.id
+		_medal_spots.clear()
+		for id in Medals.of_zone(zone.id):
+			var spot: Vector3 = Medals.MEDALS[id].pos
+			_medal_spots.append(Vector2(spot.x, spot.z))
+	var p := Vector2(pos.x, pos.z)
+	for spot in _medal_spots:
+		if p.distance_to(spot) < MEDAL_GRASS_MARGIN:
 			return true
 	return false
 

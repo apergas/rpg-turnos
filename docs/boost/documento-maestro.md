@@ -111,8 +111,8 @@ Las ideas de la sección 4 pasan a puntos con diseño propio. Las decisiones de 
 | M-31 | Cinco enemigos nuevos, variantes de color de figuras que ya existen — **hecho en 1.6.0** | Variantes de color | 1.6.0 | M |
 | M-32 | Bestiario por familias con premio, y Accesorio partido en Anillo y Amuleto — **hecho en 1.6.0** | I-02 | 1.6.0 | L |
 | M-33 | Monstruos visibles en el mapa en lugar de encuentros aleatorios — **hecho en 1.7.0** | I-01 | 1.7.0 | L |
-| M-34 | Doce medallas pequeñas y el Coleccionista de Villaclaro | Medallas pequeñas | 1.8.0 | M |
-| M-35 | Partida nueva + sobre una partida terminada | Partida nueva + | 1.8.0 | M |
+| M-34 | Doce medallas pequeñas y el Coleccionista de Villaclaro — **hecho en 1.8.0** | Medallas pequeñas | 1.8.0 | M |
+| M-35 | Partida nueva + sobre una partida terminada — **hecho en 1.8.0** | Partida nueva + | 1.8.0 | M |
 | M-36 | Sonido de ambiente y partículas por zona | Sonido de ambiente y partículas | 1.9.0 | M |
 | M-37 | Soporte de mando — **descartado** (2026-11-10) | Soporte de mando | — | M |
 | M-38 | Menú de depuración con `--debug` | Menú de depuración | 1.9.0 | S |
@@ -261,7 +261,7 @@ Notas para cuando se diseñe:
 | **1.5.0** | M-28 a M-30: ataque sorpresa, Pluma de fénix y Despertador | [spec](specs/2026-11-09-version-1-5-0-design.md) · [plan](plans/2026-11-09-version-1-5-0.md) | Hecha |
 | **1.6.0** | M-31 y M-32: enemigos nuevos y familias del bestiario | [spec](specs/2026-11-09-version-1-6-0-design.md) · [plan](plans/2026-11-09-version-1-6-0.md) | Hecha |
 | **1.7.0** | M-33: monstruos a la vista | [spec](specs/2026-11-09-version-1-7-0-design.md) · [plan](plans/2026-11-09-version-1-7-0.md) | Hecha |
-| **1.8.0** | M-34 y M-35: medallas pequeñas y Partida nueva + | [spec](specs/2026-11-09-version-1-8-0-design.md) · [plan](plans/2026-11-09-version-1-8-0.md) | Planificada |
+| **1.8.0** | M-34 y M-35: medallas pequeñas y Partida nueva + | [spec](specs/2026-11-09-version-1-8-0-design.md) · [plan](plans/2026-11-09-version-1-8-0.md) | Hecha |
 | **1.9.0** | M-36 y M-38: ambiente y depuración | [spec](specs/2026-11-09-version-1-9-0-design.md) · [plan](plans/2026-11-09-version-1-9-0.md) | Planificada |
 | **2.0.0** | M-39 a M-42 y la jungla: la caravana, el compañero, el nivel 40 | [spec](specs/2026-11-10-version-2-0-0-design.md) · [plan](plans/2026-11-10-version-2-0-0.md) | Planificada |
 | **2.1.0** | El desierto | [spec](specs/2026-11-10-version-2-0-0-design.md) | Diseñada |

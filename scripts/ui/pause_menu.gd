@@ -4,7 +4,8 @@ class_name PauseMenu extends Control
 ## Main page: two windows side by side. The hero's ("Héroe Nv X", the pages of
 ## HERO_PAGES and the missions under way) and the system's (Guardar, Opciones, Volver al
 ## título, Cerrar). Other pages: Estado (hero stats, gold, spells), Objetos (items usable
-## outside battle, the Ala de viaje too, and the key items, each with what it does),
+## outside battle, the Ala de viaje too, and the key items, each with what it does, and the
+## small medals, "Medalla pequeña ×n"),
 ## Equipo (the six slots; choosing one lists the pieces of that slot in the bag, with
 ## the comparison, and Quitar), Diario (JournalPage: what to do now, the missions in progress
 ## and the finished ones), Opciones (OptionsPanel) and a confirmation before going
@@ -367,6 +368,18 @@ func _fill_items() -> void:
 		row.add_child(label)
 		row.add_child(_label("Objeto clave", GREY))
 		UiStyle.add_description(_items_box, id)
+	if not _state.medals.is_empty():
+		# The small medals: counted, never used (the Coleccionista only counts them).
+		any = true
+		var medal_row := HBoxContainer.new()
+		medal_row.add_theme_constant_override("separation", 16)
+		_items_box.add_child(medal_row)
+		var medal_label := _label("%s ×%d" % [Inventory.MEDAL_NAME, _state.medals.size()],
+			TITLE_COLOR)
+		medal_label.custom_minimum_size = Vector2(260, 0)
+		medal_row.add_child(medal_label)
+		medal_row.add_child(_label("Objeto clave", GREY))
+		UiStyle.add_description(_items_box, Inventory.MEDAL)
 	if not any:
 		_items_box.add_child(_label("No llevas objetos.", Color.WHITE))
 

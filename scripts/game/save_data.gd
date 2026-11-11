@@ -23,8 +23,11 @@ class_name SaveData extends RefCounted
 ## the bosses it has beaten and the common enemies of their zones seen (and the Slime de Metal if its quest is done), every well full and no creature. DEFEATED_VERSION (1.3.0) adds the enemies beaten; in an older save every enemy seen counts as beaten.
 ## RING_VERSION (1.6.0) splits the accessory slot into the ring and the amulet; in an older save the accessory worn goes to the slot its piece belongs to, the other one empty.
 ## METAL_SLIME_VERSION (1.7.0) adds the Slime de Metal's HP kept after it got away (metal_slime_hp, 0 for none); an older save gets 0.
+## MEDALS_VERSION (1.8.0) adds the small medals taken (medals, sorted), the Coleccionista's prizes
+## given (medal_prizes), whether he was met (collector_met) and the rounds of the Partida nueva +
+## (ng_plus); an older save gets none, 0, false and 0.
 
-const VERSION := 12
+const VERSION := 13
 ## First version with the story's fields.
 const STORY_VERSION := 6
 ## First version with the accessory slot and the side quests.
@@ -41,6 +44,8 @@ const RING_VERSION := 11
 const OLD_ACCESSORY := "accessory"
 ## First version with the Slime de Metal's HP.
 const METAL_SLIME_VERSION := 12
+## First version with the small medals and the Partida nueva +.
+const MEDALS_VERSION := 13
 ## Oldest version apply() still reads.
 const OLDEST_VERSION := 2
 ## Combatant fields of the hero that change while playing (the rest come from hero.tres).
@@ -50,6 +55,8 @@ const HERO_FIELDS: Array[String] = ["level", "experience", "hp", "max_hp", "mp",
 
 static func from_state(state: GameState, player_pos: Vector3, play_time: float) -> Dictionary:
 	var hero := {}
+	var medals := state.medals.duplicate()
+	medals.sort()
 	for field in HERO_FIELDS:
 		hero[field] = state.hero.get(field)
 	var flags: Array[String] = []
@@ -88,6 +95,10 @@ static func from_state(state: GameState, player_pos: Vector3, play_time: float) 
 		"wells": state.well_charge.duplicate(),
 		"ally": state.ally_id,
 		"metal_slime_hp": state.metal_slime_hp,
+		"medals": medals,
+		"medal_prizes": state.medal_prizes,
+		"collector_met": state.collector_met,
+		"ng_plus": state.ng_plus,
 		"position": [player_pos.x, player_pos.z],
 		"play_time": play_time,
 	}
@@ -176,6 +187,15 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 	state.ally_id = data.get("ally", "")
 	state.metal_slime_hp = int(data.get("metal_slime_hp", 0)) \
 		if int(data.version) >= METAL_SLIME_VERSION else 0
+	state.medals.clear()
+	state.medal_prizes = 0
+	state.collector_met = false
+	state.ng_plus = 0
+	if int(data.version) >= MEDALS_VERSION:
+		state.medals.assign(data.medals)
+		state.medal_prizes = int(data.medal_prizes)
+		state.collector_met = data.collector_met
+		state.ng_plus = int(data.ng_plus)
 	var pos: Array = data.position
 	return {"valid": true, "position": Vector3(pos[0], 0.0, pos[1]),
 		"play_time": float(data.play_time)}
@@ -233,6 +253,8 @@ static func is_valid(data: Dictionary) -> bool:
 		return false
 	if int(data.version) >= DEFEATED_VERSION and not _valid_enemy_ids(data.get("defeated")):
 		return false
+	if int(data.version) >= MEDALS_VERSION and not _valid_medals(data):
+		return false
 	if int(data.version) >= METAL_SLIME_VERSION and not _valid_metal_slime(data):
 		return false
 	var hero: Variant = data.get("hero")
@@ -286,11 +308,35 @@ static func _valid_ally(data: Dictionary) -> bool:
 	return ally is String and (ally == "" or Allies.exists(ally))
 
 
-## METAL_SLIME_VERSION field: the Slime de Metal's HP, from 0 (none) to its max HP.
+## METAL_SLIME_VERSION field: the Slime de Metal's HP, from 0 (none) to its max HP, which a
+## Partida nueva + raises (NgPlus, on the mine floors; ng_plus is checked before this).
 static func _valid_metal_slime(data: Dictionary) -> bool:
 	var hp: Variant = data.get("metal_slime_hp")
-	return hp is float and hp >= 0.0 \
-		and hp <= EnemyLibrary.data(EnemyLibrary.METAL_SLIME).max_hp
+	var cycle := int(data.ng_plus) if int(data.version) >= MEDALS_VERSION else 0
+	var top := NgPlus.scale_value(EnemyLibrary.data(EnemyLibrary.METAL_SLIME).max_hp,
+		NgPlus.stat_mult(cycle, ZoneData.by_id("mina_1").number))
+	return hp is float and hp >= 0.0 and hp <= top
+
+
+## MEDALS_VERSION fields: the medals taken (Medals ids, each once), the Coleccionista's
+## prizes given (a whole number, no more than those medals reach: Medals.prizes_for()),
+## whether he was met, and the rounds of the Partida nueva + (a whole number, 0 or more).
+static func _valid_medals(data: Dictionary) -> bool:
+	var medals: Variant = data.get("medals")
+	if not medals is Array:
+		return false
+	var seen := {}
+	for id: Variant in medals:
+		if not (id is String and Medals.MEDALS.has(id)) or seen.has(id):
+			return false
+		seen[id] = true
+	var prizes: Variant = data.get("medal_prizes")
+	if not (prizes is float and prizes >= 0.0 and prizes == floorf(prizes) \
+		and int(prizes) <= Medals.prizes_for((medals as Array).size())):
+		return false
+	var cycle: Variant = data.get("ng_plus")
+	return data.get("collector_met") is bool and cycle is float and cycle >= 0.0 \
+		and cycle == floorf(cycle)
 
 
 ## EVOLUTION_VERSION field: a Dictionary of well ids to the battles left.
@@ -430,15 +476,26 @@ static func _valid_world(data: Dictionary) -> bool:
 
 
 ## One line about a valid save for the title: "Rocío · Nv 12 · Mina · 1:05" (the hero's
-## name, level, the zone's short name and the play time as h:mm). Older saves without a
-## name or a zone say the default name and the meadow, as apply() would load them.
+## name, level, the zone's short name and the play time as h:mm), and " · +1" in a Partida
+## nueva +. Older saves without a name or a zone say the default name and the meadow, as apply()
+## would load them.
 static func summary_line(data: Dictionary) -> String:
 	var version := int(data.version)
 	var hero_name: String = data.name if version >= STORY_VERSION else StoryState.DEFAULT_NAME
 	var zone_id: String = data.zone if version >= 4 else "pradera"
 	var minutes := floori(float(data.play_time) / 60.0)
-	return "%s · Nv %d · %s · %d:%02d" % [hero_name, int(data.hero.level),
+	var text := "%s · Nv %d · %s · %d:%02d" % [hero_name, int(data.hero.level),
 		ZoneData.by_id(zone_id).short_name, floori(minutes / 60.0), minutes % 60]
+	var cycle := int(data.ng_plus) if version >= MEDALS_VERSION else 0
+	if cycle > 0:
+		text += " · +%d" % cycle
+	return text
+
+
+## True if the save's game is finished (the Señor de la Niebla beaten: GameState.is_finished()):
+## the title then offers the Partida nueva +.
+static func is_finished(data: Dictionary) -> bool:
+	return int(data.version) >= 4 and (data.get("flags", []) as Array).has(GameState.FINAL_BOSS)
 
 
 const IMPORT_NOT_SAVE := "Ese archivo no es una partida de Villaclaro."

@@ -2,7 +2,8 @@ class_name Equipment extends RefCounted
 ## The equipment catalog: every weapon, helmet, armor, shield, ring and amulet, with its
 ## slot, bonus (ATK for a weapon, VEL for a ring or an amulet, DEF for the rest), price in
 ## gold, the zone whose shop sells it (0: no shop, the starting gear; -1: never sold, a
-## quest's or a bestiary family's reward or a boss's prize), the mesh the hero shows for it
+## quest's or a bestiary family's reward, a boss's prize or the Coleccionista's), the mesh the hero
+## shows for it
 ## (a handslot mesh of Knight.glb, STICK_MESH built in code, or "" for none) and, on some
 ## rings and amulets, the status it keeps away ("immune"). A piece that is not a weapon may
 ## also add "attack" (extra_attack()); a helmet may show "horns" (has_horns()); a helmet or a
@@ -38,6 +39,10 @@ const SAP_RING := "anillo_savia"
 const FANG_AMULET := "amuleto_colmillo"
 const BONE_AMULET := "amuleto_hueso"
 const DAWN_SWORD := "espada_alba"
+## The Coleccionista's prizes (Medals.PRIZES): never sold.
+const MEDAL_SHIELD := "escudo_medallas"
+const MEDAL_MAIL := "cota_medallas"
+const MEDAL_AMULET := "amuleto_medallas"
 ## What effect_text() says of each status a piece keeps away.
 const IMMUNE_TEXTS := {"poison": "Inmune al veneno", "sleep": "Inmune al sueño",
 	"silence": "Inmune al silencio"}
@@ -102,6 +107,14 @@ const EQUIPMENT := {
 	# The Jefes family's prize: the best sword, a two-handed one tinted pale gold.
 	DAWN_SWORD: {"name": "Espada del alba", "article": "una", "slot": WEAPON, "bonus": 34,
 		"price": 0, "zone": -1, "mesh": "2H_Sword", "tint": Color(1.35, 1.15, 0.6)},
+	# The Coleccionista's prizes (Medals): the platinum shield's mesh in gold, a mail no
+	# figure shows (no armor has a mesh) and an amulet that adds ATK too.
+	MEDAL_SHIELD: {"name": "Escudo de medallas", "article": "un", "slot": SHIELD, "bonus": 12,
+		"price": 0, "zone": -1, "mesh": "Spike_Shield", "tint": Color(1.4, 1.1, 0.45)},
+	MEDAL_MAIL: {"name": "Cota de medallas", "article": "una", "slot": ARMOR, "bonus": 25,
+		"price": 0, "zone": -1, "mesh": ""},
+	MEDAL_AMULET: {"name": "Amuleto de medallas", "article": "un", "slot": AMULET, "bonus": 4,
+		"price": 0, "zone": -1, "mesh": "", "attack": 3},
 }
 
 

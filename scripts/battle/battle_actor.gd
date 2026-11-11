@@ -13,7 +13,7 @@ enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPE
 	GOBLIN, PLANT, WITCH, MUD_GOLEM, STONE_GOLEM, SPIDER, SPECTER, SKELETON_WARRIOR,
 	SKELETON_ROGUE, SKELETON_MAGE, FOG_LORD, FARMER, METAL_SLIME, BOARD, CAT, CHILD,
 	CHICKEN, WOLF_CUB, MINI_GOLEM, LOYAL_SKELETON, TAMER, FOG_ECHO, RED_SLIME,
-	POISON_MUSHROOM, CAVE_MUSHROOM, CRYPT_BAT, FROST_SPECTER }
+	POISON_MUSHROOM, CAVE_MUSHROOM, CRYPT_BAT, FROST_SPECTER, COLLECTOR }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -228,6 +228,19 @@ const LOOKS := {
 		],
 		"anims": CHARACTER_ANIMS,
 		"tint": Color(0.35, 0.75, 0.65),
+	},
+	# The Coleccionista of Villaclaro: the Mage tinted purple.
+	Look.COLLECTOR: {
+		"scene": MAGE,
+		"scale": CHARACTER_SCALE,
+		"top": 2.2,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/Spellbook",
+			"Rig/Skeleton3D/handslot_l/Spellbook_open",
+			"Rig/Skeleton3D/handslot_r/1H_Wand",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(0.75, 0.55, 1.0),
 	},
 	Look.INNKEEPER: {
 		"scene": MAGE,
@@ -613,7 +626,8 @@ func play_hop() -> void:
 ## Hero only: shows the hand meshes of the weapon and shield worn (Equipment ids, ""
 ## for none) and hides the rest. A helmet shows the model's helmet mesh tinted with its
 ## color, with horns for the Yelmo de bruma. The weapon's mesh takes its Equipment.tint() (the
-## Espada del alba is pale gold). Armor does not change the model. Others ignore it.
+## Espada del alba is pale gold); the shield's mesh takes its Equipment.tint() too (the Escudo
+## de medallas is gold). Armor does not change the model. Others ignore it.
 func set_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> void:
 	if look != Look.HERO or _model == null:
 		return
@@ -636,6 +650,19 @@ func set_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> voi
 			_tint_mesh(weapon as MeshInstance3D, weapon_tint)
 		else:
 			_tint(weapon as Node3D, weapon_tint)
+	# The shield's own tint (the Escudo de medallas is gold), the same way.
+	var left := _model.get_node(HAND_L)
+	for node in left.find_children("*", "MeshInstance3D", true, false):
+		for i in (node as MeshInstance3D).mesh.get_surface_count():
+			(node as MeshInstance3D).set_surface_override_material(i, null)
+	var shield_tint := Equipment.tint(shield_id)
+	var shield_mesh := Equipment.mesh(shield_id)
+	if shield_tint != Color.WHITE and shield_mesh != "" and left.has_node(shield_mesh):
+		var shield := left.get_node(shield_mesh)
+		if shield is MeshInstance3D:
+			_tint_mesh(shield as MeshInstance3D, shield_tint)
+		else:
+			_tint(shield as Node3D, shield_tint)
 	var helmet := _model.get_node(HELMET_PATH) as MeshInstance3D
 	helmet.visible = helmet_id != ""
 	if Equipment.has_horns(helmet_id) and _horns == null:

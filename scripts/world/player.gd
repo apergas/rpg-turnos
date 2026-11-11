@@ -176,6 +176,13 @@ func arm_blocked_point_skip() -> void:
 	_skip_blocked_point = true
 
 
+## Autoplay: walks its route from the first point again (World gave it a new one).
+func restart_route() -> void:
+	_route_index = 0
+	_skip_blocked_point = false
+	stop_hunt()
+
+
 ## Autoplay: walks to target (a group of monsters) instead of its route.
 func hunt(target: Node3D) -> void:
 	_hunt = target

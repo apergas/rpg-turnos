@@ -14,6 +14,10 @@ const SETA := "seta"
 const SEED_ATTACK := "semilla_fuerza"
 const SEED_DEFENSE := "semilla_defensa"
 const SEED_SPEED := "semilla_agilidad"
+## The small medals are not an item: GameState.medals counts them. These are the name and
+## the key text (KEY_TEXTS) the pause menu's Objetos shows for them.
+const MEDAL := "medalla_pequena"
+const MEDAL_NAME := "Medalla pequeña"
 const START_POTIONS := 3
 ## What a seed adds to its stat, for good.
 const SEED_BONUS := 2
@@ -93,6 +97,7 @@ const KEY_TEXTS := {
 	"fragmento_castillo": "El último trozo del Amuleto del Alba. Lo guardaba el Señor de la Niebla.",
 	"llave_mina": "Abre la reja de la tercera planta de la mina.",
 	"carta_granjero": "Para la Leñadora, en la aldea del bosque. Huele un poco a gallina.",
+	MEDAL: "El Coleccionista de Villaclaro las colecciona.",
 }
 
 var _items := {}
