@@ -127,6 +127,9 @@ const MEDAL_ZONE_TIME := 300.0
 ## --autoplay-zone=ngplus: the hero of ECHO_START with the Yelmo de bruma, and a first
 ## Partida nueva + from the prologue.
 const NG_PLUS_START := "ngplus"
+## The autoplay starts that play the v2: only they answer the Jefe de caravana's questions
+## with Sí (every other run, the finished-game ones included, stays in the v1).
+const V2_STARTS := ["caravana", "jungla"]
 ## --autoplay-zone=<id>: what a new game starting in each zone gets, as planned when
 ## arriving there (zone 1 done: Lv 5, its shop's gear, the Rey Slime beaten).
 const AUTOPLAY_ZONES := {
@@ -212,17 +215,37 @@ const AUTOPLAY_ZONES := {
 		"items": {Inventory.POTION: 2, Inventory.ETHER: 3, Inventory.WING: 3},
 		"new_cycle": true,
 	},
-	# --autoplay-zone=caravana: the hero of ECHO_START leaving Villaclaro with the caravan.
+	# --autoplay-zone=caravana: the v1 finished, in Villaclaro: Lv 20, the platinum gear, the
+	# Esqueleto leal, every boss beaten and the credits seen. The caravan comes on arrival,
+	# the hero leaves with it (V2_STARTS answers the Jefe's questions) and plays the v2 on.
 	"caravana": {
+		"zone": "pradera",
 		"experience": 3600,
-		"gold": 600,
+		"gold": 1200,
 		"gear": ["espada_platino", "armadura_platino", "escudo_platino", "casco_platino"],
 		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
-			"golem_piedra", "senor_niebla", "caravana"],
+			"golem_piedra", "senor_niebla"],
+		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo"],
+		"quest_done": true,
+		"town": "pradera",
+		"ally": "esqueleto_leal",
+		"items": {Inventory.POTION: 3, Inventory.ETHER: 3, Inventory.WING: 2},
+		"finished": true,
+	},
+	# --autoplay-zone=jungla: ready for the jungle: the caravan joined, Brena chosen, Lv 20 with
+	# the platinum gear, at the jungle's entrance.
+	"jungla": {
+		"experience": 3600,
+		"gold": 1500,
+		"gear": ["espada_platino", "armadura_platino", "escudo_platino", "casco_platino"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra", "senor_niebla", "caravana_vista", "caravana", "companero"],
 		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo"],
 		"quest_done": true,
 		"town": "caravana",
-		"items": {Inventory.POTION: 3, Inventory.ETHER: 2, Inventory.WING: 1},
+		"ally": "brena",
+		"items": {Inventory.BIG_POTION: 3, Inventory.ETHER: 3, Inventory.WING: 2},
+		"finished": true,
 	},
 	# Ready for the Señor de la Niebla: Lv 17 with the castle's gear.
 	"castillo_trono": {
@@ -262,6 +285,8 @@ var _autoplay_save := false
 var _autoplay_menu := false
 ## --autoplay-companion=<id>: the companion autoplay chooses at the Caravana (Brena if none).
 var _autoplay_companion := "brena"
+## --autoplay-zone=caravana / jungla: autoplay leaves with the caravan and plays the v2.
+var _autoplay_v2 := false
 var _last_missions: Array[String] = []
 var _last_gear_text := ""
 ## The save slot this game writes to (SaveStore; ignored on autoplay runs).
@@ -457,8 +482,12 @@ func _apply_autoplay_zone(args: PackedStringArray) -> void:
 		for id: String in items:
 			state.inventory.add(id, items[id])
 		_autoplay_echo = start_id == ECHO_START
+		_autoplay_v2 = start_id in V2_STARTS
 		_medal_tour = start_id == MEDAL_TOUR
 		state.story.mark_seen_for_flags(state.world_flags)
+		if start.get("finished", false):
+			state.story.finished = true
+		state.sync_level_cap()
 		if start.get("new_cycle", false):
 			NgPlus.begin(state)
 			print("Partida nueva + %d" % state.ng_plus)
@@ -1080,6 +1109,8 @@ func _on_npc(index: int) -> void:
 ## The Jefe de caravana in Villaclaro: two questions (focus on the answer that changes
 ## nothing), then the farewell, the v1 left behind and the Caravana built under black.
 func _ask_departure() -> void:
+	if _autoplay and not _autoplay_v2:
+		return  # the v1 runs never leave with the caravan
 	if await _world.ask(JOIN_QUESTION, ["Sí", "No"], 1) != 0:
 		return
 	if await _world.ask(LEAVE_QUESTION, ["Partir", "Aún no"], 1) != 0:
