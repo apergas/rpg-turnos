@@ -100,12 +100,12 @@ exits = [{
 }]
 npcs = [{
 "kind": "npc",
-"lines": ["La jungla está al norte. Cuando estés listo, sal por allí."],
+"lines": ["La jungla está al norte. Cuando estés listo, sal por allí.", "Y si un mono te roba algo, no lo persigas. Llevo veinte años persiguiendo a uno."],
 "lines_by_chapter": {
-7: ["El desierto está al norte. Busca la ruina: dicen que algo enorme vive bajo la arena.", "Lleva agua... bueno, pociones. Muchas pociones."],
-8: ["La montaña está al norte. En la cumbre anida un grifo enorme.", "Abrígate. Y busca la palanca de los viejos pastores: abre la reja de la subida."],
+7: ["El desierto está al norte. Busca la ruina: dicen que algo enorme vive bajo la arena.", "Lleva agua... bueno, pociones. En el desierto el agua se evapora antes de llegar a la boca."],
+8: ["La montaña está al norte. En la cumbre anida un grifo enorme.", "Busca la palanca de los viejos pastores: abre la reja de la subida.", "Y abrígate. La última vez se me congeló la barba y tardó tres días en volver a rizarse."],
 9: ["La ciudad abandonada está al norte. Dicen que un guardián de bronce vigila su plaza mayor.", "Detrás de la ciudad está el portal. Llega hasta él, y la caravana irá detrás."],
-10: ["Cruzaste el portal y volviste para contarlo. Lo que hay al otro lado... ya habrá tiempo.", "La caravana se queda aquí una temporada. Descansa, {nombre}."]
+10: ["Cruzaste el portal y volviste para contarlo. Lo que hay al otro lado... ya habrá tiempo.", "La caravana se queda aquí una temporada. Descansa, {nombre}. Te lo has ganado, y yo también."]
 },
 "look": "CARAVAN_CHIEF",
 "name": "Jefe de caravana",
@@ -114,7 +114,7 @@ npcs = [{
 }, {
 "id": "caravana",
 "kind": "shop",
-"look": "MERCHANT",
+"look": "CARAVAN_MERCHANT",
 "name": "Mercader",
 "pos": Vector3(-5, 0, -2),
 "yaw": -90.0
@@ -127,33 +127,49 @@ npcs = [{
 "yaw": 90.0
 }, {
 "kind": "board",
-"lines": ["Nada nuevo en el tablón."],
+"lines": ["Nada nuevo en el tablón. Alguien ha dibujado un camello con sombrero."],
 "look": "BOARD",
 "name": "Tablón",
 "pos": Vector3(-3, 0, 6),
 "yaw": 0.0
 }, {
 "kind": "npc",
-"lines": ["Llevo tres caravanas encima. Esta es la primera que va hacia el portal."],
+"lines": ["Llevo tres caravanas encima. Esta es la primera que va hacia el portal.", "Las otras dos iban a por queso. Esta me gusta más."],
 "lines_by_chapter": {
-10: ["Dicen que al otro lado del portal hay un pueblo bajo un sol negro. Yo no pienso ir a verlo."]
+10: ["Dicen que al otro lado del portal hay un pueblo bajo un sol negro. Yo no pienso ir a verlo.", "Con un sol negro no hay manera de secar la ropa."]
 },
-"look": "VILLAGER",
+"look": "TRAVELLER_F",
 "name": "Viajera",
 "pos": Vector3(3, 0, 7),
 "yaw": 0.0
 }, {
 "kind": "npc",
-"lines": ["Crucé ese desierto de joven. De día quema y de noche hiela."],
+"lines": ["Crucé ese desierto de joven. De día quema y de noche hiela.", "Por eso tengo esta cara."],
 "lines_by_chapter": {
 9: ["De niño oí que en esa ciudad vivía un rey. Ahora solo quedan piedras y esqueletos."],
-10: ["Si vuelves a cruzar ese portal, tráeme algo de recuerdo."]
+10: ["Si vuelves a cruzar ese portal, tráeme algo de recuerdo. Algo pequeño. Que no muerda."]
 },
-"look": "FARMER",
+"look": "TRAVELLER_M",
 "name": "Viajero",
 "needs": "jaguar_sombrio",
 "pos": Vector3(-5.5, 0, 3),
 "yaw": 90.0
+}, {
+"kind": "npc",
+"lines": ["Gracias otra vez. El mono no me deja: dice mi hermana que ahora tengo mascota.", "Si ves a uno que chilla mucho, salúdalo de mi parte."],
+"look": "EXPLORER",
+"name": "Nara",
+"needs": "nara_vuelve",
+"pos": Vector3(4.1, 0, 7.5),
+"yaw": -20.0
+}, {
+"kind": "npc",
+"lines": ["Gracias por sacarme de aquí. Ya voy por el tercer plato de sopa.", "¿Crees que me darán un cuarto?"],
+"look": "SURVIVOR",
+"name": "Superviviente",
+"needs": "superviviente_vuelve",
+"pos": Vector3(8.4, 0, 3.0),
+"yaw": -120.0
 }]
 boss_id = ""
 boss_pos = Vector3(0, 0, 0)
