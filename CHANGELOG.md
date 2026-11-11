@@ -3,6 +3,8 @@
 ## 2.4.1 (2026)
 
 - El sol de la pantalla del más allá ya no es un eclipse: es un sol rojo oscuro y apagado.
+- El menú Objetos solo muestra lo que se puede usar (pociones, éteres, plumas, semillas...): los objetos de misión, los objetos clave y las medallas ya no salen.
+- La ventana del mapa ya no muestra el número de pociones.
 
 ## 2.4.0 (2026)
 
