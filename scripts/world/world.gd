@@ -255,7 +255,6 @@ var _name_label: Label
 var _hp_bar: StatBar
 var _mp_bar: StatBar
 var _exp_bar: StatBar
-var _potion_label: Label
 var _gold_label: Label
 var _mission_box: VBoxContainer
 ## The lines of the status window, and the serial that lets "Misión cumplida" put them back.
@@ -1168,12 +1167,11 @@ func set_status_shown(on: bool) -> void:
 	_place_label.visible = on
 
 
-func refresh_status(hero: Combatant, potions: int, gold: int, missions: Array[String] = []) -> void:
+func refresh_status(hero: Combatant, _potions: int, gold: int, missions: Array[String] = []) -> void:
 	_name_label.text = StatBar.hero_title(hero)
 	_hp_bar.show_hp(hero.hp, hero.max_hp)
 	_mp_bar.show_mp(hero.mp, hero.max_mp)
 	_exp_bar.show_exp(hero)
-	_potion_label.text = "%s ×%d" % [Inventory.display_name(Inventory.POTION), potions]
 	_gold_label.text = "%d G" % gold
 	_missions = missions
 	if not _mission_done:
@@ -1719,12 +1717,9 @@ func _build_ui() -> void:
 	box.add_child(_mp_bar)
 	_exp_bar = StatBar.new(StatBar.EXP)
 	box.add_child(_exp_bar)
-	_potion_label = _label()
-	box.add_child(_potion_label)
 	if Device.is_touch():
-		# Estado and Objetos in the pause menu say the same.
+		# Estado in the pause menu says the same.
 		_exp_bar.hide()
-		_potion_label.hide()
 	_gold_label = _label()
 	_gold_label.add_theme_color_override("font_color", StatBar.GOLD)
 	box.add_child(_gold_label)
