@@ -16,8 +16,6 @@ const KINDS := {
 	"mushrooms_tan": {"radius": 0.4, "collider": ""},
 	"fern": {"radius": 0.5, "collider": ""},
 	"leafy": {"radius": 0.7, "collider": ""},
-	"bush": {"radius": 0.9, "collider": ""},
-	"bush_large": {"radius": 0.7, "collider": ""},
 	"row_wheat": {"radius": 1.6, "collider": "", "length": 3.0},
 	"row_corn": {"radius": 1.6, "collider": "", "length": 3.0},
 	"row_pumpkin": {"radius": 1.6, "collider": "", "length": 3.0},

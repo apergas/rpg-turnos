@@ -155,6 +155,21 @@ const CASTLE_TORCHES := [Vector3(-4.0, 2.0, -10.0), Vector3(4.0, 2.0, -10.0)]
 static var plain_light := false
 
 
+## The Kenney pieces of each battle backdrop: [Decor id, position, yaw_deg, scale], out of
+## the cleared ground where the fighters stand (CLEAR_CENTER, CLEAR_RADII) and in sight.
+const BACKDROP_DECOR := {
+	"pradera": [["flowers", Vector3(-3.7, 0, -3.4), 20.0, 1.7],
+		["flowers", Vector3(4.3, 0, -2.4), 140.0, 1.8],
+		["flowers", Vector3(-4.2, 0, 0.8), 260.0, 1.5]],
+	"bosque": [["mushrooms_red", Vector3(-3.7, 0, -3.4), 0.0, 1.5],
+		["mushrooms_red", Vector3(4.3, 0, -1.2), 90.0, 1.4],
+		["log", Vector3(-5.3, 0, -3.6), 100.0, 0.6]],
+	"jungla": [["fern", Vector3(-3.7, 0, -3.4), 0.0, 1.8],
+		["fern", Vector3(4.2, 0, -2.4), 70.0, 1.6],
+		["fern", Vector3(-4.2, 0, 0.8), 150.0, 1.5],
+		["mushrooms_red", Vector3(4.6, 0, 1.6), 200.0, 1.4]],
+}
+
 ## zone: whose sky, light and backdrop to use (null: the meadow's).
 static func build(root: Node3D, zone: ZoneData = null) -> void:
 	build_environment(root, zone)
@@ -194,6 +209,21 @@ static func build(root: Node3D, zone: ZoneData = null) -> void:
 		add_mesh(root, unit_sphere(), HILL, hill[0], hill[1])
 	Vegetation.build(root, GRASS_AREA, _is_grass_free, GRASS_SEED,
 		PackedColorArray(JUNGLE_TIPS if jungle else FOREST_TIPS) if forest else PackedColorArray())
+	_add_backdrop_decor(root, zone)
+
+
+## The Kenney pieces of BACKDROP_DECOR for this backdrop, one MultiMesh per id, no collision.
+static func _add_backdrop_decor(root: Node3D, zone: ZoneData) -> void:
+	var backdrop := zone.backdrop if zone != null else "pradera"
+	var green := zone.decor_green if zone != null else NatureModels.MEADOW_GREEN
+	var by_id := {}
+	for piece: Array in BACKDROP_DECOR.get(backdrop, []):
+		if not by_id.has(piece[0]):
+			by_id[piece[0]] = [] as Array[Transform3D]
+		by_id[piece[0]].append(Transform3D(
+			Basis(Vector3.UP, deg_to_rad(piece[2])).scaled(Vector3.ONE * piece[3]), piece[1]))
+	for id: String in by_id:
+		LowPoly.add_multimesh(root, NatureModels.mesh(id, green), by_id[id])
 
 
 ## The jungle's ring of trees: the forest's entries as palms.

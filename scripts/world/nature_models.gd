@@ -60,8 +60,6 @@ const PIECES := {
 		["crop_carrot", 2.4, Vector3(0.9, 0, 0), 2.3]],
 	"campfire": [["campfire_stones", 3.0, Vector3.ZERO, 0.0],
 		["campfire_logs", 3.0, Vector3(0, 0.03, 0), 0.5]],
-	"bush": [["plant_bushDetailed", 2.6, Vector3.ZERO, 0.0]],
-	"bush_large": [["plant_bushLarge", 3.4, Vector3.ZERO, 0.0]],
 }
 
 static var _cache: Dictionary = {}
