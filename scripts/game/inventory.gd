@@ -15,6 +15,7 @@ const ALARM := "despertador"
 const SETA := "seta"
 ## The jungle's quest item (pieles_mono), dropped by the Mono aullador.
 const PIEL_MONO := "piel_mono"
+const CRISTAL_HIELO := "cristal_hielo"
 const SEED_ATTACK := "semilla_fuerza"
 const SEED_DEFENSE := "semilla_defensa"
 const SEED_SPEED := "semilla_agilidad"
@@ -74,6 +75,9 @@ const ITEMS := {
 	PIEL_MONO: {"name": "Piel de mono", "article": "una", "effect": "quest", "value": 0,
 		"price": 0, "battle": false, "field": false,
 		"text": "Suave y con rayas. Alguien de la caravana las anda buscando."},
+	CRISTAL_HIELO: {"name": "Cristal de hielo", "article": "un", "effect": "quest", "value": 0,
+		"price": 0, "battle": false, "field": false,
+		"text": "Frío y transparente: no se derrite. Alguien de la caravana los anda buscando."},
 	SEED_ATTACK: {"name": "Semilla de fuerza", "article": "una", "effect": "seed",
 		"value": "attack", "price": 0, "battle": false, "field": true,
 		"text": "Sube el ATK en 2 para siempre."},
@@ -86,7 +90,7 @@ const ITEMS := {
 }
 ## Order of the item lists.
 const IDS: Array[String] = [POTION, ETHER, BIG_POTION, BIG_ETHER, ANTIDOTE, ALARM, PHOENIX, WING,
-	INCENSE, SEED_ATTACK, SEED_DEFENSE, SEED_SPEED, SETA, PIEL_MONO]
+	INCENSE, SEED_ATTACK, SEED_DEFENSE, SEED_SPEED, SETA, PIEL_MONO, CRISTAL_HIELO]
 ## Why an Ala de viaje can't be used in a village.
 const IN_TOWN := "Ya estás en un lugar seguro"
 ## Why a "quest" item can't be used.
@@ -102,6 +106,7 @@ const KEY_ITEMS := {
 	"carta_granjero": "Carta del Granjero",
 	"insignia_jungla": "Insignia de la jungla",
 	"sello_desierto": "Sello del desierto",
+	"mapa_montana": "Mapa de la montaña",
 }
 ## What each key item is, for Objetos.
 const KEY_TEXTS := {
@@ -112,6 +117,7 @@ const KEY_TEXTS := {
 	"carta_granjero": "Para la Leñadora, en la aldea del bosque. Huele un poco a gallina.",
 	"insignia_jungla": "La llevaba el Jaguar sombrío. Abre el camino hacia el desierto.",
 	"sello_desierto": "Lo guardaba el Gusano de las dunas. Los guardas de la montaña lo reconocerán.",
+	"mapa_montana": "Lo guardaba el Grifo de la cumbre. Marca el camino hasta la ciudad abandonada.",
 	MEDAL: "El Coleccionista de Villaclaro las colecciona.",
 }
 
