@@ -31,7 +31,7 @@ const FAMILIES: Array[Dictionary] = [
 const V2_ENEMIES: Array[String] = ["rana_dardo", "serpiente_liana", "mono_aullador",
 	"planta_trampa", "seta_tropical", "jaguar_sombrio", "escorpion", "slime_arena", "buitre",
 	"golem_arena", "momia", "gusano_dunas", "lobo_nieves", "golem_hielo", "espiritu_cumbre",
-	"murcielago_hielo", "cabra_montesa"]
+	"murcielago_hielo", "cabra_montesa", "grifo_cumbre"]
 
 
 ## Every enemy with a card, family by family (22).

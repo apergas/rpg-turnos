@@ -47,6 +47,7 @@ const ENEMIES := {
 	"espiritu_cumbre": preload("res://data/enemies/espiritu_cumbre.tres"),
 	"murcielago_hielo": preload("res://data/enemies/murcielago_hielo.tres"),
 	"cabra_montesa": preload("res://data/enemies/cabra_montesa.tres"),
+	"grifo_cumbre": preload("res://data/enemies/grifo_cumbre.tres"),
 }
 ## Figure of each enemy id; any other id is a slime.
 const LOOKS := {
@@ -90,6 +91,7 @@ const LOOKS := {
 	"espiritu_cumbre": BattleActor.Look.SUMMIT_SPIRIT,
 	"murcielago_hielo": BattleActor.Look.ICE_BAT,
 	"cabra_montesa": BattleActor.Look.GOAT,
+	"grifo_cumbre": BattleActor.Look.GRIFFIN,
 	# The creatures that fight beside the hero (data in Allies, not in ENEMIES).
 	"gallina": BattleActor.Look.CHICKEN,
 	"lobezno": BattleActor.Look.WOLF_CUB,
