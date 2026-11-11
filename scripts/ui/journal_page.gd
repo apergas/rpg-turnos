@@ -47,7 +47,7 @@ static func collection_lines(state: GameState) -> Array[String]:
 	return [
 		"Historia: %s" % ("terminada" if state.is_finished() else "sin terminar"),
 		"Misiones: %d/%d" % [state.quests_done(), QuestLog.total_count()],
-		"Bestiario: %d/%d" % [Bestiary.seen_count(state), Bestiary.all_ids().size()],
+		"Bestiario: %d/%d" % [Bestiary.seen_count(state), Bestiary.total_count()],
 		"Familias: %d/%d" % [Bestiary.complete_count(state), Bestiary.FAMILIES.size()],
 		"Cofres: %d/%d" % [state.opened_chests.size(), Chests.CHESTS.size()],
 		"Medallas: %d/%d" % [state.medals.size(), Medals.MEDALS.size()],

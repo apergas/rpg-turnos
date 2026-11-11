@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+[ext_resource type="Script" path="res://scripts/battle/skill.gd" id="2_skill"]
+[ext_resource type="Resource" path="res://data/skills/esporas.tres" id="3_esporas"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "planta_trampa"
+display_name = "Planta trampa"
+female = true
+max_hp = 170
+hp = 170
+max_mp = 30
+mp = 30
+attack = 50
+defense = 40
+speed = 12
+skills = Array[ExtResource("2_skill")]([ExtResource("3_esporas")])
+exp_reward = 48
+gold_reward = 24
+ai_weights = {
+"attack": 60,
+"esporas": 40
+}
+weak = Array[String](["fire"])
