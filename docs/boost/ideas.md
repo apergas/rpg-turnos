@@ -20,3 +20,7 @@ Estado: Pendiente
 ## 2026-11-11 · Más enemigos en el mapa
 Que haya más enemigos en el mapa. Hay muy pocos, y para las misiones es un rollo tener que estar entrando y saliendo del pueblo para que vuelvan a salir.
 Estado: Pendiente
+
+## 2026-11-11 · Slime de Metal más lento
+El Slime de Metal va muy rápido por el mapa: que vaya a la mitad de velocidad.
+Estado: Pendiente
