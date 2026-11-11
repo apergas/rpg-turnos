@@ -984,6 +984,9 @@ func set_faded(on: bool) -> void:
 ## (RIM_SHADER through material_overlay, so the Knight's shared materials never change), so
 ## he reads on a tree's shadow. Never in battle, never on the companions or the figures.
 func set_map_readable(on: bool) -> void:
+	# The dummy renderer of --headless runs errors on shader overlays: no rim there.
+	if DisplayServer.get_name() == "headless":
+		return
 	if on and _map_overlay == null:
 		_map_overlay = ShaderMaterial.new()
 		_map_overlay.shader = RIM_SHADER
