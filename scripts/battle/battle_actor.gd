@@ -147,11 +147,11 @@ const AURA_ALPHA := 0.22
 ## Angle (radians about X) of the plant's upper jaw: resting, and wide open to bite.
 const JAW_REST := 0.3
 const JAW_OPEN := 0.95
+## The map hero's rim of light (set_map_readable()): one material for him, as an overlay.
+const RIM_SHADER := preload("res://shaders/hero_rim.gdshader")
 ## The hero as a person, not a suit of steel: the KayKit Knight's helmet is hidden and its
 ## armor meshes (one grey palette cell) are tinted bare arms, a blue tunic and leather
 ## legs. Multiplied over a grey that peaks near 0.42 linear, hence the values above 1.
-## The map hero's rim of light (set_map_readable()): one material for him, as an overlay.
-const RIM_SHADER := preload("res://shaders/hero_rim.gdshader")
 const HERO_SKIN := Color(1.75, 1.28, 1.02)
 ## The Knight's atlas with the hair cell brown: the head's hair and skin share one mesh.
 const HERO_HEAD_TEXTURE := preload("res://assets/characters/hero_head_texture.png")
@@ -168,7 +168,6 @@ const HEAD_BROWN_DARK := preload("res://assets/characters/head_castano_morena.pn
 const HEAD_BROWN_PALE := preload("res://assets/characters/head_castano_palida.png")
 ## Each hair's mean colour, as head_textures.gd prints it (the flat hair pieces match it).
 const HAIR_GREY := Color(0.618, 0.618, 0.598)
-const HAIR_BLACK := Color(0.128, 0.108, 0.098)
 const HAIR_BLOND := Color(0.858, 0.698, 0.378)
 const HAIR_RED := Color(0.718, 0.298, 0.128)
 const HAIR_BROWN := Color(0.298, 0.188, 0.108)
