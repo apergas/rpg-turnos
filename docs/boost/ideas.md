@@ -24,3 +24,7 @@ Estado: Pendiente
 ## 2026-11-11 · Slime de Metal más lento
 El Slime de Metal va muy rápido por el mapa: que vaya a la mitad de velocidad.
 Estado: Pendiente
+
+## 2026-11-11 · Portal más bonito
+El portal se ve un poco raro, un círculo azul extraño. Hacerlo con un poco más de detalle, más bonito.
+Estado: Pendiente
