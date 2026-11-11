@@ -77,7 +77,7 @@ static func radius(piece: Dictionary) -> float:
 
 ## The pieces zone places by hand, runs laid out one piece after another.
 static func placed(zone: ZoneData) -> Array[Dictionary]:
-	if _placed_zone == zone.id:
+	if _placed_zone == zone.cache_key():
 		return _placed
 	var pieces: Array[Dictionary] = []
 	for entry: Array in zone.decor:
@@ -88,7 +88,7 @@ static func placed(zone: ZoneData) -> Array[Dictionary]:
 		for i in count:
 			pieces.append({"id": id, "pos": entry[0] + step * i, "yaw": yaw, "scale": 1.0,
 				"scattered": false})
-	_placed_zone = zone.id
+	_placed_zone = zone.cache_key()
 	_placed = pieces
 	return pieces
 
@@ -97,10 +97,10 @@ static func placed(zone: ZoneData) -> Array[Dictionary]:
 ## many spots rolled with decor_seed; every roll is made even for spots left out, so the
 ## layout stays the same whatever changes elsewhere.
 static func scattered(zone: ZoneData) -> Array[Dictionary]:
-	if _scatter_zone == zone.id:
+	if _scatter_zone == zone.cache_key():
 		return _scatter
 	var pieces: Array[Dictionary] = []
-	_scatter_zone = zone.id
+	_scatter_zone = zone.cache_key()
 	_scatter = pieces
 	if zone.is_dungeon():
 		return pieces
@@ -126,7 +126,7 @@ static func scattered(zone: ZoneData) -> Array[Dictionary]:
 ## True within margin of a placed piece or of a scattered one with a collider: the trees,
 ## the bushes, the tall grass and the monster groups keep off them.
 static func near_solid(zone: ZoneData, pos: Vector3, margin: float) -> bool:
-	if _solid_grid_zone != zone.id:
+	if _solid_grid_zone != zone.cache_key():
 		var pieces: Array[Dictionary] = []
 		pieces.append_array(placed(zone))
 		for piece in scattered(zone):
@@ -134,18 +134,18 @@ static func near_solid(zone: ZoneData, pos: Vector3, margin: float) -> bool:
 				pieces.append(piece)
 		_solid_grid = _make_grid(pieces)
 		_solid_reach = _reach(pieces)
-		_solid_grid_zone = zone.id
+		_solid_grid_zone = zone.cache_key()
 	return _grid_near(_solid_grid, _solid_reach, pos, margin)
 
 
 ## True within margin of a placed piece (the trees ask only this: the scattered pieces
 ## already keep off the trees).
 static func near_placed(zone: ZoneData, pos: Vector3, margin: float) -> bool:
-	if _placed_grid_zone != zone.id:
+	if _placed_grid_zone != zone.cache_key():
 		var pieces := placed(zone)
 		_placed_grid = _make_grid(pieces)
 		_placed_reach = _reach(pieces)
-		_placed_grid_zone = zone.id
+		_placed_grid_zone = zone.cache_key()
 	return _grid_near(_placed_grid, _placed_reach, pos, margin)
 
 
