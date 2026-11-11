@@ -395,7 +395,7 @@ static func problems() -> Array[String]:
 			found.append("Misión %s: se entrega a %s, que no está en %s" % [id, quest.turn_in,
 				quest.turn_in_zone])
 			continue
-		if not figure.kind in ["npc", "quest"]:
+		if not figure.get("kind", "npc") in ["npc", "quest"]:
 			found.append("Misión %s: se entrega a %s, que no es una figura con quien hablar" \
 				% [id, quest.turn_in])
 			continue
