@@ -35,7 +35,15 @@ static func apply(hero: Combatant) -> Array[Dictionary]:
 			var replaced := _replace(hero, skill)
 			hero.skills.append(skill)
 			events.append(BattleEvent.learn(skill.display_name, replaced))
+	clamp_exp(hero)
 	return events
+
+
+## At the level cap the hero stores no EXP past that level's threshold, so lifting the cap
+## (joining the caravan) starts from the threshold and nothing is kept in reserve.
+static func clamp_exp(hero: Combatant) -> void:
+	if hero.level >= hero.level_cap:
+		hero.experience = mini(hero.experience, EXP_TABLE[hero.level - 1])
 
 
 ## Gives the hero every spell of `learn` up to their level (after loading a game).

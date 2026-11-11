@@ -168,6 +168,7 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 	state.quests.set_from(data.get("quests", {}))
 	state.difficulty = data.get("difficulty", Difficulty.NORMAL)
 	state.sync_level_cap()
+	Leveling.clamp_exp(state.hero)
 	state.seen_enemies.clear()
 	if int(data.version) >= EVOLUTION_VERSION:
 		state.seen_enemies.assign(data.bestiary)
