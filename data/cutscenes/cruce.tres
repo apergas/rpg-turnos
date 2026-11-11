@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="Cutscene" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/cutscene.gd" id="1_cutscene"]
+
+[resource]
+script = ExtResource("1_cutscene")
+id = "cruce"
+steps = [
+["wait", 0.6],
+["camera_to", Vector3(0, 0, -19), 10.0],
+["say", "", ["El Devorador del portal se deshace en jirones de sombra, y el portal se los traga."]],
+["flag", "portal_calmo"],
+["sfx", "door"],
+["wait", 2.5],
+["say", "", ["El remolino rojo se frena poco a poco. La luz del portal se vuelve quieta y tibia."]],
+["camera_back"],
+["approach", "Jefe de caravana", "hero", 1.8],
+["approach", "{compañero}", "hero", 1.8],
+["face", "hero", "Jefe de caravana"],
+["face", "Jefe de caravana", "hero"],
+["face", "{compañero}", "hero"],
+["say", "Jefe de caravana", ["¡{nombre}! Lo hemos visto todo desde la reja.", "Dicen que nadie ha cruzado nunca ese portal. Bueno... nadie que haya vuelto para contarlo."]],
+["say", "{compañero}", ["Hemos llegado juntos hasta aquí. Pase lo que pase al otro lado, voy contigo."]],
+["say", "Jefe de caravana", ["La caravana te esperará aquí. Ve, y vuelve para contárnoslo."]],
+["cheer", ["hero", "{compañero}", "Jefe de caravana"]],
+["face", "hero", Vector3(0, 0, -20)],
+["move", "{compañero}", Vector3(1.4, 0, -17.5), true],
+["move", "hero", Vector3(0, 0, -18.5)],
+["sfx", "level_up"],
+["say", "", ["{nombre} cruza el portal."]],
+["fade_out"]
+]
