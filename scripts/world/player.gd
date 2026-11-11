@@ -39,9 +39,6 @@ var _failed_hunt_id := 0
 var _model: BattleActor
 var _autoplay := false
 var _route_index := 0
-## Set after a return through the portal: until the first route point is reached, a hero
-## stuck on the way to it (a wall in between) skips to the next one.
-var _skip_blocked_point := false
 var _stuck_frames := 0
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 
@@ -77,7 +74,6 @@ func place(pos: Vector3, facing_yaw: float) -> void:
 	_model.rotation.y = facing_yaw
 	last_step_m = 0.0
 	move_target = null
-	_skip_blocked_point = false
 	_hunting = false
 	_hunt = null
 	_route_index = _nearest_route_point(pos)
@@ -167,20 +163,13 @@ func _route_direction() -> Vector3:
 	to_goal.y = 0.0
 	if to_goal.length() < ROUTE_REACHED:
 		_route_index = (_route_index + 1) % route.size()
-		_skip_blocked_point = false
 		return Vector3.ZERO
 	return to_goal.normalized()
-
-
-## Arms the skip of a route point the hero can't reach (see _skip_blocked_point).
-func arm_blocked_point_skip() -> void:
-	_skip_blocked_point = true
 
 
 ## Autoplay: walks its route from the first point again (World gave it a new one).
 func restart_route() -> void:
 	_route_index = 0
-	_skip_blocked_point = false
 	stop_hunt()
 
 
@@ -191,15 +180,13 @@ func hunt(target: Node3D) -> void:
 	_stuck_frames = 0
 
 
-## Autoplay: back to the route, at its nearest point (skipped if a wall is in the way).
+## Autoplay: back to the route, at its nearest point (skipped if the hero gets stuck on the way).
 func stop_hunt() -> void:
 	if not _hunting:
 		return
 	_hunting = false
 	_hunt = null
 	_route_index = _nearest_route_point(global_position)
-	# The nearest point can be behind a wall of the other corridor: let it be skipped.
-	_skip_blocked_point = true
 
 
 func is_hunting() -> bool:

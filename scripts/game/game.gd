@@ -114,8 +114,6 @@ const AUTOPLAY_INN_RATIO := 0.5
 ## Autoplay: seconds on a map without a battle, below the zone's autoplay_boss_level, after
 ## which its groups are put back (the ones left may be out of reach of the route).
 const AUTOPLAY_STALL_S := 90.0
-## Autoplay: seconds after a closed gate says no before the route may skip the points behind it.
-const AUTOPLAY_GATE_WAIT_S := 1.0
 ## On autoplay the boss only comes out while the hero has these shares of max HP and MP.
 const AUTOPLAY_BOSS_HP := 0.7
 const AUTOPLAY_BOSS_MP := 0.4
@@ -915,7 +913,6 @@ func _on_portal() -> void:
 		_show_portal()
 	_world.place_player(pos)
 	_respawn_groups()
-	_world.arm_blocked_point_skip()
 	_on_village_changed(_world.in_village())
 	_refresh_status()
 	_update_boss()
@@ -1391,11 +1388,6 @@ func _on_door() -> void:
 	var key := _zone.door_key
 	if key == "" or not key in state.key_items:
 		_world.show_notice(_zone.door_text)
-		if _autoplay:
-			# The route went past the key: skip the points behind the gate and go round
-			# again, once the hero is at it (arming at once is cleared by the point before it).
-			await get_tree().create_timer(AUTOPLAY_GATE_WAIT_S).timeout
-			_world.arm_blocked_point_skip()
 		return
 	state.key_items.erase(key)
 	state.world_flags[_zone.door_flag] = true

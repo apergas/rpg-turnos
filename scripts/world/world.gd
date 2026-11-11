@@ -563,11 +563,6 @@ func place_at_entry(entry_id: String) -> void:
 ## Puts the player at pos facing yaw_deg (0 faces north; a loaded game faces north),
 ## with the groups calm for a moment (_calm()) and the exits waiting until the player steps
 ## away from them. in_village() is right at once; village_changed is not emitted.
-## After a return through the portal on autoplay: lets the player skip a blocked route point.
-func arm_blocked_point_skip() -> void:
-	_player.arm_blocked_point_skip()
-
-
 func place_player(pos: Vector3, yaw_deg := 0.0) -> void:
 	_player.place(pos, deg_to_rad(yaw_deg))
 	_camera.snap()
