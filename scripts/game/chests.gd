@@ -4,7 +4,8 @@ class_name Chests extends RefCounted
 ## autoplay route and two off it; the three of the forest stand in its glades, next to
 ## its route. All away from the paths. In the mine each stands on the C cell of its floor
 ## (ZoneData.cell_center()), next to the floor's route; so do the castle's (two in the
-## courtyard, one in the throne room). Pure: open() changes a GameState and returns the
+## courtyard, one in the throne room). The jungle's three stand in its glades and the
+## desert's three behind the western dune, in the oasis and in the ruin. Pure: open() changes a GameState and returns the
 ## message.
 
 ## id -> {"zone": ZoneData id, "pos": Vector3, "yaw": degrees (the lid opens toward -Z
@@ -39,6 +40,13 @@ const CHESTS := {
 		"item": Inventory.BIG_POTION},
 	"jungla_claro_oeste": {"zone": "jungla", "pos": Vector3(-23.5, 0, -18.5), "yaw": -60.0,
 		"item": Inventory.BIG_ETHER},
+	# The desert: behind the western dune, in the oasis and in the ruin, next to its route.
+	"desierto_dunas": {"zone": "desierto", "pos": Vector3(-31, 0, -5.5), "yaw": -90.0,
+		"gold": 400},
+	"desierto_oasis": {"zone": "desierto", "pos": Vector3(26.8, 0, 2.2), "yaw": 120.0,
+		"item": Inventory.BIG_ETHER},
+	"desierto_ruina": {"zone": "desierto", "pos": Vector3(-5, 0, -28.2), "yaw": -60.0,
+		"item": Inventory.PHOENIX},
 }
 
 
