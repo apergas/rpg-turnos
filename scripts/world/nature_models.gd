@@ -29,8 +29,8 @@ const PALETTE := {
 ## How deep the kit sinks every model in its node, in kit units.
 const KIT_SINK := 0.05
 ## The desert ruin's stone (a warm sandstone instead of PALETTE's grey).
-const SANDSTONE := Color(0.82, 0.68, 0.48)
-const SANDSTONE_DARK := Color(0.66, 0.53, 0.36)
+const SANDSTONE := Color(0.74, 0.66, 0.54)
+const SANDSTONE_DARK := Color(0.58, 0.51, 0.41)
 ## id → [[kit model, scale, position, yaw, overrides]] (the models the mesh holds); overrides
 ## is optional: a material → colour that wins over GREENS and PALETTE in that piece only.
 const PIECES := {
