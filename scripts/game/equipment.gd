@@ -96,6 +96,17 @@ const EQUIPMENT := {
 		"tint": Color(0.55, 1.0, 0.65)},
 	"casco_jade": {"name": "Casco de jade", "article": "un", "slot": HELMET, "bonus": 9,
 		"price": 330, "zone": 5, "mesh": "", "tint": Color(0.5, 1.05, 0.62)},
+	# The caravan, tramo 2 (the desert): orichalcum, the platinum meshes tinted reddish gold.
+	"espada_oricalco": {"name": "Espada de oricalco", "article": "una", "slot": WEAPON,
+		"bonus": 48, "price": 1300, "zone": 6, "mesh": "2H_Sword",
+		"tint": Color(1.15, 0.72, 0.42)},
+	"armadura_oricalco": {"name": "Armadura de oricalco", "article": "una", "slot": ARMOR,
+		"bonus": 35, "price": 1100, "zone": 6, "mesh": ""},
+	"escudo_oricalco": {"name": "Escudo de oricalco", "article": "un", "slot": SHIELD,
+		"bonus": 16, "price": 600, "zone": 6, "mesh": "Spike_Shield",
+		"tint": Color(1.15, 0.72, 0.42)},
+	"casco_oricalco": {"name": "Casco de oricalco", "article": "un", "slot": HELMET,
+		"bonus": 11, "price": 480, "zone": 6, "mesh": "", "tint": Color(1.15, 0.74, 0.45)},
 	# The Eco de la Niebla's prize (the first time only): DEF like any helmet, plus ATK,
 	# dark grey with a blue cast and two bone horns (BattleActor builds them).
 	MIST_HELM: {"name": "Yelmo de bruma", "article": "un", "slot": HELMET, "bonus": 8,

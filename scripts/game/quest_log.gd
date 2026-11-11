@@ -16,6 +16,8 @@ const QUESTS := {
 	"explorador": preload("res://data/quests/explorador.tres"),
 	"pieles_mono": preload("res://data/quests/pieles_mono.tres"),
 	"explorador_perdido": preload("res://data/quests/explorador_perdido.tres"),
+	"escorpiones": preload("res://data/quests/escorpiones.tres"),
+	"cantimplora": preload("res://data/quests/cantimplora.tres"),
 }
 const VILLAGE_ZONE := "pradera"
 ## Ends the waiting lines of a HUNT or GATHER of several, so the progress is said aloud.
