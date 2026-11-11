@@ -6,8 +6,9 @@ class_name Chests extends RefCounted
 ## (ZoneData.cell_center()), next to the floor's route; so do the castle's (two in the
 ## courtyard, one in the throne room). The jungle's three stand in its glades and the
 ## desert's three behind the western dune, in the oasis and in the ruin; the mountain's three
-## (two on the climb, one on the summit) make 22 chests in a game with the caravan. Pure: open() changes a GameState and returns the
-## message.
+## (two on the climb, one on the summit) and the city's three (the north-west and north-east
+## rooms of the streets, the west room of the portal quarter) make 25 chests in a game with
+## the caravan. Pure: open() changes a GameState and returns the message.
 
 ## id -> {"zone": ZoneData id, "pos": Vector3, "yaw": degrees (the lid opens toward -Z
 ## turned by yaw), and one of "gold": int, "item": Inventory id, "equipment": Equipment
@@ -56,6 +57,14 @@ const CHESTS := {
 		"item": Inventory.PHOENIX},
 	"montana_2_cofre": {"zone": "montana_2", "pos": Vector3(-20, 0, -4), "yaw": -90.0,
 		"item": Inventory.BIG_ETHER},
+	# The city: the north-west and north-east rooms of the streets, the west room of the
+	# portal quarter (each on its C cell, next to the route).
+	"ciudad_1_noroeste": {"zone": "ciudad_1", "pos": Vector3(-28, 0, -20), "yaw": -90.0,
+		"gold": 900},
+	"ciudad_1_noreste": {"zone": "ciudad_1", "pos": Vector3(28, 0, -20), "yaw": 90.0,
+		"item": Inventory.BIG_ETHER},
+	"ciudad_2_cofre": {"zone": "ciudad_2", "pos": Vector3(-16, 0, 4), "yaw": -90.0,
+		"item": Inventory.PHOENIX},
 }
 
 
