@@ -96,7 +96,7 @@ const FOREST_TREES := [
 ]
 
 ## The jungle backdrop: dark wet ground, tall bright grass and the same close ring of trees
-## as palms (PalmMeshes, the map's), scaled by the jungle's tree_scale over the forest's
+## as palms (PalmModels, the map's), scaled by the jungle's tree_scale over the forest's
 ## (about 1.0 / 4.1, since a KayKit tree is a quarter of a palm's size in the table above),
 ## with the bushes doubled.
 const JUNGLE_GROUND := Color(0.12, 0.24, 0.07)
@@ -201,7 +201,7 @@ static func _add_jungle_palms(root: Node3D) -> void:
 	for i in FOREST_TREES.size():
 		var tree: Array = FOREST_TREES[i]
 		var palm := MeshInstance3D.new()
-		palm.mesh = PalmMeshes.mesh(JUNGLE_PALMS[i % JUNGLE_PALMS.size()])
+		palm.mesh = PalmModels.mesh(JUNGLE_PALMS[i % JUNGLE_PALMS.size()])
 		palm.position = tree[0]
 		palm.scale = Vector3.ONE * tree[2] * JUNGLE_PALM_RATIO
 		palm.rotation_degrees = Vector3(0, tree[3], 0)

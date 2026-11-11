@@ -8,7 +8,6 @@ uniform sampler2D albedo_texture : source_color, filter_linear_mipmap, repeat_en
 uniform vec4 albedo_color : source_color = vec4(1.0);
 uniform float roughness_value = 1.0;
 uniform bool use_texture = true;
-uniform bool use_vertex_color = false;
 
 const float CHEST_HEIGHT = 0.9;
 const float HOLE_RADIUS = 1.4;
@@ -39,9 +38,6 @@ void fragment() {
 		}
 	}
 	vec4 color = (use_texture ? texture(albedo_texture, UV) : vec4(1.0)) * albedo_color;
-	if (use_vertex_color) {
-		color.rgb *= COLOR.rgb;
-	}
 	ALBEDO = color.rgb;
 	ROUGHNESS = roughness_value;
 }

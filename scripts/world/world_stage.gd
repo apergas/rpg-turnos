@@ -279,18 +279,17 @@ static func _tree_layout(zone: ZoneData) -> Array[Dictionary]:
 	return trees
 
 
-## The mesh of a tree model: a palm built in code (PalmMeshes: palm_A, palm_B,
-## palms_clump) or the one mesh of a MODELS scene.
+## The mesh of a tree model: a jungle palm (PalmModels: palm_A, palm_B, palms_clump) or
+## the one mesh of a MODELS scene.
 static func _tree_mesh(id: String) -> Mesh:
-	if PalmMeshes.has(id):
-		return PalmMeshes.mesh(id)
+	if PalmModels.has(id):
+		return PalmModels.mesh(id)
 	return BattleStage.scene_mesh(MODELS[id])
 
 
 ## One kind of tree as a MultiMesh through TREE_SHADER (the dithered hole that keeps the
-## hero in sight). Every surface keeps its own colour, its texture when it has one and its
-## vertex colour when it uses it: the KayKit trees have one textured surface, the palms two
-## plain vertex-coloured ones.
+## hero in sight). Every surface keeps its own colour and its texture when it has one: the
+## KayKit trees have one textured surface, the palms two plain coloured ones.
 static func _add_tree_kind(root: Node3D, source_mesh: Mesh, transforms: Array[Transform3D]) -> void:
 	var mesh := source_mesh.duplicate() as Mesh
 	for i in mesh.get_surface_count():
@@ -298,8 +297,6 @@ static func _add_tree_kind(root: Node3D, source_mesh: Mesh, transforms: Array[Tr
 		var material := ShaderMaterial.new()
 		material.shader = TREE_SHADER
 		material.set_shader_parameter("use_texture", source != null and source.albedo_texture != null)
-		material.set_shader_parameter("use_vertex_color",
-			source != null and source.vertex_color_use_as_albedo)
 		if source != null:
 			material.set_shader_parameter("albedo_texture", source.albedo_texture)
 			material.set_shader_parameter("albedo_color", source.albedo_color)
