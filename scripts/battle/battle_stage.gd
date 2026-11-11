@@ -224,7 +224,12 @@ static func _add_backdrop_decor(root: Node3D, zone: ZoneData) -> void:
 		return
 	var instance := MeshInstance3D.new()
 	instance.mesh = NatureModels.merged(items, green)
-	instance.mesh.surface_set_material(0, NatureModels.mesh(items[0].id, green).surface_get_material(0))
+	var material := StandardMaterial3D.new()
+	material.vertex_color_use_as_albedo = true
+	material.vertex_color_is_srgb = true
+	material.roughness = 1.0
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	instance.mesh.surface_set_material(0, material)
 	root.add_child(instance)
 
 

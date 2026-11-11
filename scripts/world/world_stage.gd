@@ -434,8 +434,10 @@ const DECOR_KEEP_CELLS := {"L": "la palanca", "K": "la llave", "D": "una reja",
 ## What a piece of decoration of this radius at pos would be on that it must not ("" if the
 ## spot is fine): the path, the autoplay route, exits and stairs, entries, the portal,
 ## chests and wells, small medals, figures, the boss, rocks, buildings, trees, and on a
-## dungeon floor rock cells, the stair rooms and DECOR_KEEP_CELLS. Decor asks it; it never asks Decor (so
-## is_clear_of_props() is not used here).
+## dungeon floor rock cells, the stair rooms and DECOR_KEEP_CELLS. Decor asks it for the
+## scattered pieces; it only asks Decor for the placed ones (near_tree() through
+## _tree_fits() and near_placed()), never for the scattered ones, so is_clear_of_props()
+## is not used here.
 static func decor_blocker(zone: ZoneData, pos: Vector3, radius: float, solid: bool) -> String:
 	if zone.is_dungeon():
 		var cell := zone.cell_at(pos)

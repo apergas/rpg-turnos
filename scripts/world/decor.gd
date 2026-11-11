@@ -11,7 +11,6 @@ class_name Decor extends RefCounted
 ## flame burns on it.
 const KINDS := {
 	"flowers": {"radius": 0.5, "collider": ""},
-	"mushroom": {"radius": 0.3, "collider": ""},
 	"mushrooms_red": {"radius": 0.4, "collider": ""},
 	"mushrooms_tan": {"radius": 0.4, "collider": ""},
 	"fern": {"radius": 0.5, "collider": ""},
@@ -19,7 +18,6 @@ const KINDS := {
 	"row_wheat": {"radius": 1.6, "collider": "", "length": 3.0},
 	"row_corn": {"radius": 1.6, "collider": "", "length": 3.0},
 	"row_pumpkin": {"radius": 1.6, "collider": "", "length": 3.0},
-	"row_carrot": {"radius": 1.6, "collider": "", "length": 3.0},
 	"fence_gate": {"radius": 1.5, "collider": "", "length": 3.0},
 	"stump": {"radius": 0.55, "collider": "cylinder"},
 	"stump_tall": {"radius": 0.6, "collider": "cylinder"},
@@ -39,6 +37,15 @@ static var _placed_zone := ""
 static var _placed: Array[Dictionary] = []
 static var _scatter_zone := ""
 static var _scatter: Array[Dictionary] = []
+## Coarse grids (GRID_CELL metres) of the placed pieces and of the solid ones (placed and
+## scattered), built once per zone: cell → [Vector3(x, z, radius)].
+const GRID_CELL := 4.0
+static var _placed_grid_zone := ""
+static var _placed_grid: Dictionary = {}
+static var _placed_reach := 0.0
+static var _solid_grid_zone := ""
+static var _solid_grid: Dictionary = {}
+static var _solid_reach := 0.0
 
 
 static func is_solid(id: String) -> bool:
@@ -100,20 +107,27 @@ static func scattered(zone: ZoneData) -> Array[Dictionary]:
 ## True within margin of a placed piece or of a scattered one with a collider: the trees,
 ## the bushes, the tall grass and the monster groups keep off them.
 static func near_solid(zone: ZoneData, pos: Vector3, margin: float) -> bool:
-	if _near(placed(zone), pos, margin):
-		return true
-	var p := Vector2(pos.x, pos.z)
-	for piece in scattered(zone):
-		if is_solid(piece.id) and p.distance_to(Vector2(piece.pos.x, piece.pos.z)) \
-				< radius(piece) + margin:
-			return true
-	return false
+	if _solid_grid_zone != zone.id:
+		var pieces: Array[Dictionary] = []
+		pieces.append_array(placed(zone))
+		for piece in scattered(zone):
+			if is_solid(piece.id):
+				pieces.append(piece)
+		_solid_grid = _make_grid(pieces)
+		_solid_reach = _reach(pieces)
+		_solid_grid_zone = zone.id
+	return _grid_near(_solid_grid, _solid_reach, pos, margin)
 
 
 ## True within margin of a placed piece (the trees ask only this: the scattered pieces
 ## already keep off the trees).
 static func near_placed(zone: ZoneData, pos: Vector3, margin: float) -> bool:
-	return _near(placed(zone), pos, margin)
+	if _placed_grid_zone != zone.id:
+		var pieces := placed(zone)
+		_placed_grid = _make_grid(pieces)
+		_placed_reach = _reach(pieces)
+		_placed_grid_zone = zone.id
+	return _grid_near(_placed_grid, _placed_reach, pos, margin)
 
 
 ## One line for every placed piece of zone that is somewhere it should not be.
@@ -132,4 +146,39 @@ static func _near(pieces: Array[Dictionary], pos: Vector3, margin: float) -> boo
 	for piece in pieces:
 		if p.distance_to(Vector2(piece.pos.x, piece.pos.z)) < radius(piece) + margin:
 			return true
+	return false
+
+
+static func _make_grid(pieces: Array[Dictionary]) -> Dictionary:
+	var grid := {}
+	for piece in pieces:
+		var key := Vector2i(floori(piece.pos.x / GRID_CELL), floori(piece.pos.z / GRID_CELL))
+		if not grid.has(key):
+			grid[key] = []
+		(grid[key] as Array).append(Vector3(piece.pos.x, piece.pos.z, radius(piece)))
+	return grid
+
+
+static func _reach(pieces: Array[Dictionary]) -> float:
+	var reach := 0.0
+	for piece in pieces:
+		reach = maxf(reach, radius(piece))
+	return reach
+
+
+static func _grid_near(grid: Dictionary, reach: float, pos: Vector3, margin: float) -> bool:
+	if grid.is_empty():
+		return false
+	var span := reach + margin
+	var low := Vector2i(floori((pos.x - span) / GRID_CELL), floori((pos.z - span) / GRID_CELL))
+	var high := Vector2i(floori((pos.x + span) / GRID_CELL), floori((pos.z + span) / GRID_CELL))
+	var p := Vector2(pos.x, pos.z)
+	for x in range(low.x, high.x + 1):
+		for z in range(low.y, high.y + 1):
+			var cell: Variant = grid.get(Vector2i(x, z))
+			if cell == null:
+				continue
+			for spot: Vector3 in cell:
+				if p.distance_to(Vector2(spot.x, spot.y)) < spot.z + margin:
+					return true
 	return false

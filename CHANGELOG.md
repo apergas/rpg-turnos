@@ -3,7 +3,7 @@
 ## 2.0.1 (2026)
 
 - Los mapas están más vivos: flores, setas, tocones y troncos caídos en la pradera y el bosque, y helechos bajo las palmeras de la jungla.
-- Villaclaro tiene un huerto vallado con trigo, maíz, calabazas y zanahorias.
+- Villaclaro tiene un huerto vallado con trigo, maíz y calabazas.
 - Hay hogueras en el campamento del castillo y en la Caravana, y leña y vasijas en el refugio de la mina.
 - Los fondos de combate de la pradera, el bosque y la jungla también ganan algún detalle.
 
