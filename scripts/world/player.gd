@@ -190,13 +190,15 @@ func hunt(target: Node3D) -> void:
 	_stuck_frames = 0
 
 
-## Autoplay: back to the route, at its nearest point.
+## Autoplay: back to the route, at its nearest point (skipped if a wall is in the way).
 func stop_hunt() -> void:
 	if not _hunting:
 		return
 	_hunting = false
 	_hunt = null
 	_route_index = _nearest_route_point(global_position)
+	# The nearest point can be behind a wall of the other corridor: let it be skipped.
+	_skip_blocked_point = true
 
 
 func is_hunting() -> bool:

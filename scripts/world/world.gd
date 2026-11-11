@@ -19,6 +19,7 @@ class_name World extends Node3D
 ## rock blocks turn see-through between the camera and the hero, the hero carries a
 ## lantern underground, and next to the lever, the key or a locked gate Enter / Space
 ## pulls it (lever_pulled), takes it (key_taken) or tries the gate (door_used).
+## The zone's particles (ZoneParticles) float around the hero.
 ## Battles and exits freeze the player until set_active(true) (or until Game frees
 ## the map). A "!" or "?" floats over a figure with something about a quest, and a figure a
 ## quest has not brought out is not on the map (set_quest_view()). Run on its own
@@ -298,6 +299,8 @@ var _quest_marks := {}
 var _hidden_figures: Array[String] = []
 var _mark_labels := {}
 var _figure_signs: Array[Label3D] = []
+## The zone's ZoneParticles (null: none, or low quality), carried with the hero.
+var _particles: Node3D
 ## The groups of monsters on the map (MonsterGroups), each {"node": Node3D (no collider),
 ## "actor": BattleActor (its first enemy's figure), "roam": MonsterRoam, "enemies":
 ## Array[Combatant] (the formation, data), "armed": bool (false: fled from, it starts no
@@ -316,6 +319,9 @@ var _hunt_until_ms := 0
 ## Time of the simulation in ms (the hunt's timers count it, so a run with --fixed-fps keeps them).
 var _sim_ms := 0.0
 var _hunt_skip := {}
+## DebugPanel's Monstruos: while set, no map puts any group of monsters or rare enemy
+## (_add_group(), add_rare()). It lasts for the run; only DebugPanel changes it.
+static var debug_no_groups := false
 
 
 func _ready() -> void:
@@ -359,6 +365,9 @@ func _ready() -> void:
 		lantern.omni_range = LANTERN_RANGE
 		lantern.position.y = LANTERN_HEIGHT
 		_player.add_child(lantern)
+	_particles = ZoneParticles.build(zone.particles)
+	if _particles:
+		add_child(_particles)
 	_camera = FollowCamera.new()
 	add_child(_camera)
 	_camera.target = _player
@@ -382,6 +391,8 @@ func _physics_process(delta: float) -> void:
 	if _grass:
 		Vegetation.set_pusher(_grass, _player.global_position)
 	RenderingServer.global_shader_parameter_set(HERO_POS_PARAM, _player.global_position)
+	if _particles:
+		ZoneParticles.follow(_particles, _player.global_position)
 	_map_square.follow(_player.global_position)
 	_show_near_medals(_player.global_position)
 	if _hint_window and _hint_window.visible and _player.last_step_m > 0.0:
@@ -557,6 +568,8 @@ func arm_blocked_point_skip() -> void:
 func place_player(pos: Vector3, yaw_deg := 0.0) -> void:
 	_player.place(pos, deg_to_rad(yaw_deg))
 	_camera.snap()
+	if _particles:
+		ZoneParticles.follow(_particles, _player.global_position, true)
 	_calm()
 	_was_near = {}
 	_use_on_arrival = {}
@@ -677,11 +690,22 @@ func group_count() -> int:
 	return count
 
 
+## Debug only (DebugPanel's Monstruos): every group off the map, the rare one too. While
+## debug_no_groups is set none comes back.
+func clear_groups() -> void:
+	for group in _groups:
+		(group.node as Node3D).queue_free()
+	_groups.clear()
+	_contact = -1
+	_hunt_skip.clear()
+	_player.stop_hunt()
+
+
 ## Puts the zone's rare enemy (the Slime de Metal) on this dungeon floor, away from the hero
 ## (MonsterGroups.rare_spot()), unless one is here already. It wanders the whole floor
 ## (MonsterRoam WANDER) and is touched like a group.
 func add_rare(enemy_id: String) -> void:
-	if has_rare() or not zone.is_dungeon():
+	if debug_no_groups or has_rare() or not zone.is_dungeon():
 		return
 	var spot: Variant = MonsterGroups.rare_spot(zone, _rng, _player.global_position)
 	if spot == null:
@@ -701,6 +725,8 @@ func has_rare() -> bool:
 ## A group at pos: the figure of its first enemy (no collider: nothing bumps into it),
 ## facing the camera, and its MonsterRoam.
 func _add_group(pos: Vector3, enemies: Array[Combatant], rare: bool) -> void:
+	if debug_no_groups:
+		return
 	var node := Node3D.new()
 	node.position = pos
 	node.rotation_degrees.y = 180.0
@@ -1122,7 +1148,8 @@ func remove_medal(medal_id: String) -> void:
 func _show_near_medals(hero: Vector3) -> void:
 	for id: String in _medals:
 		var glint: Node3D = _medals[id]
-		glint.visible = not _player.scripted 			and _flat_distance(hero, glint.position) <= MEDAL_SEEN_RADIUS
+		glint.visible = not _player.scripted \
+			and _flat_distance(hero, glint.position) <= MEDAL_SEEN_RADIUS
 
 
 ## The pause menu covers the middle of the screen and says the same as the status window,

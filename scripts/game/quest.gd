@@ -27,6 +27,21 @@ func start() -> void:
 		stage = Stage.HUNT
 
 
+## Debug only (DebugPanel): the next stage at once, as if its step were done (the hunt
+## counts its GOAL slimes; the report gives no potions). Nothing once DONE.
+func skip_stage() -> void:
+	match stage:
+		Stage.OFFER:
+			stage = Stage.HUNT
+		Stage.HUNT:
+			kills = GOAL
+			stage = Stage.REPORT
+		Stage.REPORT:
+			stage = Stage.BOSS
+		Stage.BOSS:
+			stage = Stage.DONE
+
+
 ## Counts one enemy with this data id defeated in a won battle (Game calls it for every
 ## enemy of the battle).
 func on_victory(enemy_id: String) -> void:

@@ -43,6 +43,30 @@ static func sync_skills(hero: Combatant) -> void:
 			hero.skills.append(skill)
 
 
+## Debug only (DebugPanel): puts the hero at level (clamped to 1..MAX_LEVEL) with that
+## level's EXP, one level of GAINS up or down at a time (current HP and MP go along, as on a
+## level up, and then stay within 1..max and 0..max), and with that level's spells:
+## base_skills (hero.tres's) and those of `learn` up to it, replacing in order
+## (sync_skills()). Seeds and equipment stay.
+static func set_level(hero: Combatant, level: int, base_skills: Array[Skill]) -> void:
+	level = clampi(level, 1, MAX_LEVEL)
+	while hero.level != level:
+		var step := 1 if level > hero.level else -1
+		hero.level += step
+		hero.max_hp += GAINS.max_hp * step
+		hero.hp += GAINS.max_hp * step
+		hero.max_mp += GAINS.max_mp * step
+		hero.mp += GAINS.max_mp * step
+		hero.attack += GAINS.attack * step
+		hero.defense += GAINS.defense * step
+		hero.speed += GAINS.speed * step
+	hero.hp = clampi(hero.hp, 1, hero.max_hp)
+	hero.mp = clampi(hero.mp, 0, hero.max_mp)
+	hero.experience = EXP_TABLE[level - 1]
+	hero.skills = base_skills.duplicate()
+	sync_skills(hero)
+
+
 ## Removes the spell skill replaces from the hero; returns its name ("" if none).
 static func _replace(hero: Combatant, skill: Skill) -> String:
 	var old: Skill = hero.find_skill(skill.replaces) if skill.replaces != "" else null
