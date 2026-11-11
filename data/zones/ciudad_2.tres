@@ -44,7 +44,7 @@ exits = [{
 }]
 npcs = [{
 "kind": "npc",
-"lines": ["La caravana te esperará aquí."],
+"lines": ["La caravana te esperará aquí. He traído sillas."],
 "look": "CARAVAN_CHIEF",
 "name": "Jefe de caravana",
 "needs": "devorador_portal",
@@ -80,7 +80,7 @@ boss_pos = Vector3(0, 0, -13)
 formations = [["rata_ruinas", "rata_ruinas"], ["armadura_hueca"], ["gargola"], ["sombra"], ["esqueleto_centinela"], ["gargola", "sombra"], ["esqueleto_centinela", "armadura_hueca"]]
 start_formations = []
 start_radius = 0.0
-monster_count = 5
+monster_count = 9
 exit_level = 40
 music = "city"
 village_music = ""

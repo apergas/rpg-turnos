@@ -55,7 +55,7 @@ exits = [{
 npcs = [{
 "kind": "npc",
 "lines": ["Gracias por sacarme de aquí. Vuelvo a la caravana."],
-"look": "VILLAGER",
+"look": "SURVIVOR",
 "name": "Superviviente",
 "pos": Vector3(0, 0, 11.2),
 "yaw": 180.0
@@ -66,7 +66,7 @@ formations = [["rata_ruinas", "rata_ruinas"], ["armadura_hueca"], ["gargola"], [
 start_formations = [["rata_ruinas", "rata_ruinas"], ["esqueleto_centinela"]]
 start_pos = Vector3(0, 0, 21)
 start_radius = 14.0
-monster_count = 7
+monster_count = 12
 exit_level = 40
 music = "city"
 village_music = ""
