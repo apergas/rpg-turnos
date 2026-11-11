@@ -15,7 +15,8 @@ enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPE
 	SKELETON_ROGUE, SKELETON_MAGE, FOG_LORD, FARMER, METAL_SLIME, BOARD, CAT, CHILD,
 	CHICKEN, WOLF_CUB, MINI_GOLEM, LOYAL_SKELETON, TAMER, FOG_ECHO, RED_SLIME,
 	POISON_MUSHROOM, CAVE_MUSHROOM, CRYPT_BAT, FROST_SPECTER, COLLECTOR, BRENA, TADEO, ULMA, FROG,
-	SNAKE, MONKEY, TRAP_PLANT, TROPICAL_MUSHROOM, CARAVAN_CHIEF, HEALER, JAGUAR }
+	SNAKE, MONKEY, TRAP_PLANT, TROPICAL_MUSHROOM, CARAVAN_CHIEF, HEALER, JAGUAR,
+	SCORPION, SAND_SLIME, VULTURE, SAND_GOLEM, MUMMY, CANTEEN }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -602,6 +603,57 @@ const LOOKS := {
 		"scale": 1.75,
 		"top": 2.4,
 	},
+	# The desert (the v2, 2.1.0).
+	Look.SCORPION: {
+		"color": Color(0.55, 0.3, 0.14),
+		"dark_color": Color(0.38, 0.2, 0.09),
+		"eye_color": Color(0.08, 0.06, 0.05),
+		"sting_color": Color(0.95, 0.85, 0.45),
+		"scale": 1.2,
+		"top": 1.3,
+	},
+	Look.SAND_SLIME: {
+		"color": Color(0.86, 0.68, 0.38),
+		"scale": 1.0,
+		"top": 1.3,
+		"crown": false,
+	},
+	# The Buitre: the bat's builder with a bald head, a hooked beak, a ruff and broad wings.
+	Look.VULTURE: {
+		"color": Color(0.42, 0.3, 0.2),
+		"wing_color": Color(0.3, 0.2, 0.13),
+		"head_color": Color(0.85, 0.6, 0.55),
+		"ruff_color": Color(0.9, 0.86, 0.78),
+		"beak_color": Color(0.95, 0.8, 0.4),
+		"wing_size": Vector3(1.05, 0.04, 0.5),
+		"top": 2.4,
+		"fly": 1.3,
+	},
+	Look.SAND_GOLEM: {
+		"color": Color(0.82, 0.68, 0.44),
+		"dark_color": Color(0.64, 0.5, 0.3),
+		"eye_color": Color(1.0, 0.55, 0.15),
+		"scale": 1.15,
+		"top": 2.3,
+	},
+	# The Momia: the skeleton warrior in dirty-white bandages, bare-handed.
+	Look.MUMMY: {
+		"scene": SKELETON_WARRIOR,
+		"scale": CHARACTER_SCALE,
+		"top": 1.9,
+		"hide": [],
+		"anims": SKELETON_ANIMS,
+		"props": {},
+		"tint": Color(0.92, 0.86, 0.7),
+	},
+	# The Jefe de caravana's canteen (the cantimplora quest's figure): it stands still.
+	Look.CANTEEN: {
+		"color": Color(0.5, 0.32, 0.18),
+		"cork_color": Color(0.78, 0.62, 0.4),
+		"strap_color": Color(0.3, 0.2, 0.12),
+		"sand_color": Color(0.8, 0.66, 0.43),
+		"top": 0.8,
+	},
 	Look.TRAP_PLANT: {
 		"stem_color": Color(0.1, 0.42, 0.12),
 		"leaf_color": Color(0.12, 0.6, 0.18),
@@ -662,7 +714,7 @@ func _ready() -> void:
 	_top = data.top
 	if data.has("scene"):
 		_build_character(data)
-	elif look in [Look.BAT, Look.CRYPT_BAT]:
+	elif look in [Look.BAT, Look.CRYPT_BAT, Look.VULTURE]:
 		_build_bat(data)
 	elif look in [Look.MUSHROOM, Look.POISON_MUSHROOM, Look.CAVE_MUSHROOM,
 			Look.TROPICAL_MUSHROOM]:
@@ -681,12 +733,16 @@ func _ready() -> void:
 		_build_snake(data)
 	elif look == Look.MONKEY:
 		_build_monkey(data)
-	elif look in [Look.MUD_GOLEM, Look.STONE_GOLEM, Look.MINI_GOLEM]:
+	elif look in [Look.MUD_GOLEM, Look.STONE_GOLEM, Look.MINI_GOLEM, Look.SAND_GOLEM]:
 		_build_golem(data)
 	elif look == Look.SPIDER:
 		_build_spider(data)
 	elif look in [Look.SPECTER, Look.FROST_SPECTER]:
 		_build_specter(data)
+	elif look == Look.SCORPION:
+		_build_scorpion(data)
+	elif look == Look.CANTEEN:
+		_build_canteen(data)
 	elif look == Look.BOARD:
 		_build_board(data)
 	elif look == Look.CAT:
@@ -739,7 +795,7 @@ func set_faded(on: bool) -> void:
 
 ## Map only: true for the figures that hop as they walk (the slimes).
 func hops() -> bool:
-	return look in [Look.SLIME, Look.RED_SLIME, Look.METAL_SLIME]
+	return look in [Look.SLIME, Look.RED_SLIME, Look.METAL_SLIME, Look.SAND_SLIME]
 
 
 ## Map only: one small hop (a slime walking); not awaited.
@@ -1121,18 +1177,27 @@ func _build_bat(data: Dictionary) -> void:
 	root.position.y = data.fly
 	_body.add_child(root)
 	_add_mesh(root, _sphere(0.32), color, Vector3.ZERO, 0.7)
-	for x in [-0.14, 0.14]:
-		_add_mesh(root, _cone(0.08, 0.22), color, Vector3(x, 0.36, 0))  # ear
-		_add_mesh(root, _sphere(0.08), Color(1.0, 0.85, 0.3), Vector3(x * 0.9, 0.08, -0.27))  # eye
-		_add_mesh(root, _sphere(0.035), Color(0.05, 0.05, 0.05),
-			Vector3(x * 0.9, 0.08, -0.34))  # pupil
+	if data.has("beak_color"):  # the Buitre: a ruff, a bald head on it and a hooked beak
+		_add_mesh(root, _sphere(0.2), data.ruff_color, Vector3(0, 0.2, -0.16))
+		_add_mesh(root, _sphere(0.12), data.head_color, Vector3(0, 0.36, -0.34))
+		_add_mesh(root, _cone(0.05, 0.16), data.beak_color, Vector3(0, 0.33, -0.48))
+		(root.get_child(-1) as Node3D).rotation_degrees.x = -100.0
+		for x in [-0.06, 0.06]:
+			_add_mesh(root, _sphere(0.025), Color(0.05, 0.05, 0.05), Vector3(x, 0.4, -0.43))
+	else:
+		for x in [-0.14, 0.14]:
+			_add_mesh(root, _cone(0.08, 0.22), color, Vector3(x, 0.36, 0))  # ear
+			_add_mesh(root, _sphere(0.08), Color(1.0, 0.85, 0.3),
+				Vector3(x * 0.9, 0.08, -0.27))  # eye
+			_add_mesh(root, _sphere(0.035), Color(0.05, 0.05, 0.05),
+				Vector3(x * 0.9, 0.08, -0.34))  # pupil
 	for side in [-1.0, 1.0]:
 		var pivot := Node3D.new()
 		pivot.position = Vector3(0.22 * side, 0.05, 0)
 		root.add_child(pivot)
 		var wing := BoxMesh.new()
-		wing.size = Vector3(0.75, 0.04, 0.42)
-		_add_mesh(pivot, wing, data.wing_color, Vector3(0.38 * side, 0, 0.05))
+		wing.size = data.get("wing_size", Vector3(0.75, 0.04, 0.42))
+		_add_mesh(pivot, wing, data.wing_color, Vector3(wing.size.x / 2.0 * side, 0, 0.05))
 		_wings.append(pivot)
 
 
@@ -1351,6 +1416,56 @@ func _build_golem(data: Dictionary) -> void:
 			Vector3(0, 20, 0), Vector3(0.22, 0.16, 0.22))  # loose stone
 
 
+## A desert scorpion: a flat body of four plates low on eight short legs, two arms with big
+## pincers in front and a tail of shrinking segments curling up over its back to a pale
+## stinger, facing -Z. About 1 m tall at its scale.
+func _build_scorpion(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	for i in 4:  # the body plates, front to back
+		var color: Color = data.color if i % 2 == 0 else data.dark_color
+		_add_mesh(root, _sphere(0.2 - i * 0.015), color, Vector3(0, 0.2, -0.18 + i * 0.17))
+		(root.get_child(-1) as Node3D).scale = Vector3(1.25, 0.55, 1.0)
+	for x in [-0.07, 0.07]:
+		_add_mesh(root, _sphere(0.03), data.eye_color, Vector3(x, 0.29, -0.36))
+	for side in [-1.0, 1.0]:
+		for i in 4:  # legs: thin sticks going out and down from the body
+			_add_mesh(root, _cylinder(0.022, 0.3), data.dark_color,
+				Vector3(side * 0.34, 0.1, -0.12 + i * 0.15))
+			(root.get_child(-1) as Node3D).rotation_degrees = Vector3(0, 0, side * 60.0)
+		_add_mesh(root, _sphere(0.06), data.color, Vector3(side * 0.22, 0.2, -0.5))  # arm
+		_add_mesh(root, _sphere(0.06), data.color, Vector3(side * 0.24, 0.2, -0.6))
+		_add_mesh(root, _sphere(0.11), data.dark_color, Vector3(side * 0.27, 0.2, -0.74))
+		(root.get_child(-1) as Node3D).scale = Vector3(0.8, 0.6, 1.3)  # pincer
+	var segments := 10
+	var tip := Vector3.ZERO
+	for i in segments:  # the tail rises from the back and curls forward over it
+		var a := PI * 0.9 * i / (segments - 1)
+		tip = Vector3(0, 0.25 + sin(a) * 0.55, 0.42 + cos(a) * 0.3)
+		var color: Color = data.color if i % 2 == 0 else data.dark_color
+		_add_mesh(root, _sphere(0.1 - i * 0.006), color, tip)
+	_add_mesh(root, _cone(0.04, 0.16), data.sting_color, tip + Vector3(0, -0.02, -0.08))
+	(root.get_child(-1) as Node3D).rotation_degrees.x = -120.0
+
+
+## The Jefe de caravana's canteen, half buried in the sand: a flat leather flask lying on
+## its side with a cork and a strap, on a low mound. It stands still.
+func _build_canteen(data: Dictionary) -> void:
+	_add_blob(_body, SLIME_PROFILE, SLIME_SEGMENTS, data.sand_color, Vector3.ZERO,
+		Vector3.ZERO, Vector3(0.6, 0.12, 0.6))  # the mound
+	var flask := Node3D.new()
+	flask.position = Vector3(0, 0.16, 0)
+	flask.rotation_degrees = Vector3(0, 30, 70)
+	_body.add_child(flask)
+	_add_mesh(flask, _sphere(0.2), data.color, Vector3.ZERO)
+	(flask.get_child(-1) as Node3D).scale = Vector3(1.0, 1.0, 0.45)
+	_add_mesh(flask, _cylinder(0.05, 0.1), data.cork_color, Vector3(0, 0.22, 0))
+	var strap := BoxMesh.new()
+	strap.size = Vector3(0.44, 0.03, 0.1)
+	_add_mesh(flask, strap, data.strap_color, Vector3(0, 0.0, 0.0))
+
+
 ## A spider: a round abdomen behind a small head with red eyes, on eight bent legs
 ## (four a side, each a thigh going up and out and a shin going down to the ground).
 func _build_spider(data: Dictionary) -> void:
@@ -1396,7 +1511,7 @@ func _build_specter(data: Dictionary) -> void:
 ## specter floats, the rest squash and stretch (the wolf, the golems and the spider only
 ## breathe).
 func _start_idle() -> void:
-	if look == Look.BOARD:
+	if look in [Look.BOARD, Look.CANTEEN]:
 		return
 	if not _wings.is_empty():
 		_start_flap()
@@ -1406,7 +1521,8 @@ func _start_idle() -> void:
 		_start_float()
 	else:
 		var gentle := look in [Look.WOLF, Look.MUD_GOLEM, Look.STONE_GOLEM, Look.SPIDER,
-			Look.CAT, Look.WOLF_CUB, Look.MINI_GOLEM, Look.SNAKE, Look.MONKEY, Look.JAGUAR]
+			Look.CAT, Look.WOLF_CUB, Look.MINI_GOLEM, Look.SNAKE, Look.MONKEY, Look.JAGUAR,
+			Look.SAND_GOLEM, Look.SCORPION]
 		_start_bounce(0.4 if gentle else 1.0)
 
 
