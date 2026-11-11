@@ -8,7 +8,8 @@ class_name BattleStage extends RefCounted
 ## castle yard: flagstones, KayKit wall pieces with towers behind and beside the
 ## fighters, banks of mist and two torches (and the hero's lantern indoors). "desierto" is
 ## sand with a darker track, palms far behind, dunes and the Kenney cacti, scrub and a
-## broken column. The environment, the mesh and model helpers and the rock and tree models
+## broken column. "montana" is snow with a grey track, white peaks and the Kenney pines, tall
+## stones and snowy cliffs. The environment, the mesh and model helpers and the rock and tree models
 ## are shared with WorldStage.
 
 const GRASS := Color(0.32, 0.55, 0.22)
@@ -119,6 +120,13 @@ const DESERT_PALMS := [
 ]
 
 
+## The mountain backdrop: snow, a trodden track of grey stone, the KayKit rocks, white peaks
+## for hills, and the Kenney pines, tall stones and snowy cliffs (the map's rock block) of
+## BACKDROP_DECOR; no tall grass and no bushes.
+const MOUNTAIN_GROUND := Color(0.8, 0.83, 0.88)
+const MOUNTAIN_PATH := Color(0.5, 0.51, 0.54)
+const MOUNTAIN_HILL := Color(0.84, 0.87, 0.92)
+
 ## The mine backdrop: rock floor, the blocks of the cave wall ([position, size]), the
 ## boulders (same entries as ROCKS), the stalagmites ([position, radius, height]) and
 ## the two torches ([position of the flame]).
@@ -187,6 +195,18 @@ const BACKDROP_DECOR := {
 		["cactus", Vector3(-4.6, 0, 0.9), 260.0, 0.8],
 		["scrub", Vector3(4.4, 0, 1.6), 0.0, 1.0],
 		["column_broken", Vector3(5.6, 0, -6.5), 15.0, 1.0]],
+	"montana": [["pine", Vector3(-7.5, 0, -6), 20.0, 1.0],
+		["pine", Vector3(7.5, 0, -7), 160.0, 1.1],
+		["pine_small", Vector3(-9, 0, -1), 70.0, 1.0],
+		["pine_small", Vector3(9.5, 0, -1.5), 240.0, 1.0],
+		["pine", Vector3(-4, 0, -11), 200.0, 1.2],
+		["pine", Vector3(3.5, 0, -12), 300.0, 1.1],
+		["rock_tall", Vector3(4.4, 0, -2.6), 140.0, 0.9],
+		["snow_stones", Vector3(-4.2, 0, 0.8), 0.0, 1.0],
+		["snow_rock", Vector3(-12, 2.5, -16), 0.0, 5.0],
+		["snow_rock", Vector3(-7, 2.0, -18), 0.0, 4.0],
+		["snow_rock", Vector3(10, 2.5, -17), 0.0, 5.0],
+		["snow_rock", Vector3(15, 2.0, -12), 0.0, 4.0]],
 }
 
 ## zone: whose sky, light and backdrop to use (null: the meadow's).
@@ -200,6 +220,9 @@ static func build(root: Node3D, zone: ZoneData = null) -> void:
 		return
 	if zone != null and zone.backdrop == "desierto":
 		_build_desert(root, zone)
+		return
+	if zone != null and zone.backdrop == "montana":
+		_build_mountain(root, zone)
 		return
 	var jungle := zone != null and zone.backdrop == "jungla"
 	var forest := jungle or (zone != null and zone.backdrop == "bosque")
@@ -326,6 +349,21 @@ static func unit_sphere() -> SphereMesh:
 	mesh.radius = 1.0
 	mesh.height = 2.0
 	return mesh
+
+
+static func _build_mountain(root: Node3D, zone: ZoneData) -> void:
+	var ground := PlaneMesh.new()
+	ground.size = Vector2(160, 160)
+	add_mesh(root, ground, MOUNTAIN_GROUND, Vector3.ZERO)
+	var path := PlaneMesh.new()
+	path.size = PATH_SIZE
+	add_mesh(root, path, MOUNTAIN_PATH, PATH_CENTER + Vector3(0, 0.01, 0), Vector3.ONE,
+		Vector3(0, PATH_YAW_DEG, 0))
+	for rock in ROCKS:
+		add_model(root, ROCK_SCENES[rock[1]], rock[0], rock[2], rock[3])
+	for hill in HILLS:
+		add_mesh(root, unit_sphere(), MOUNTAIN_HILL, hill[0], hill[1])
+	_add_backdrop_decor(root, zone)
 
 
 static func _build_desert(root: Node3D, zone: ZoneData) -> void:

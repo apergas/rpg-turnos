@@ -1,0 +1,59 @@
+[gd_resource type="Resource" script_class="ZoneData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/zone_data.gd" id="1_zone"]
+
+[resource]
+script = ExtResource("1_zone")
+id = "montana_2"
+display_name = "Montaña Helada"
+short_name = "Montaña"
+floor_name = "La cumbre"
+number = 8
+half_size = Vector2(30, 26)
+ground_color = Color(0.56, 0.57, 0.6, 1)
+has_grass = false
+hills = [[Vector3(-46, -6, -42), Vector3(26, 18, 22)], [Vector3(0, -6, -50), Vector3(34, 20, 18)], [Vector3(46, -6, -42), Vector3(26, 17, 22)], [Vector3(52, -6, 0), Vector3(18, 12, 30)], [Vector3(-52, -6, 0), Vector3(18, 12, 30)], [Vector3(46, -6, 40), Vector3(24, 10, 20)], [Vector3(-46, -6, 40), Vector3(24, 10, 20)], [Vector3(0, -6, 46), Vector3(30, 8, 16)]]
+hill_color = Color(0.7, 0.72, 0.76, 1)
+village_name = ""
+village_radius = 0.0
+wells = [{
+"id": "montana_2_vida",
+"kind": "hp",
+"pos": Vector3(19, 0, 13.5)
+}, {
+"id": "montana_2_mana",
+"kind": "mp",
+"pos": Vector3(-8, 0, -4)
+}]
+decor = [[Vector3(-25, 0, 1.5), 0.0, "pine"], [Vector3(17, 0, -9), 70.0, "pine"], [Vector3(13, 0, -13.5), 0.0, "pine_small"], [Vector3(-25, 0, 13.5), 200.0, "pine_small"], [Vector3(-13.5, 0, -21.5), 0.0, "rock_tall"], [Vector3(13.5, 0, -21.5), 60.0, "rock_tall"], [Vector3(-0.5, 0, 1.5), 0.0, "snow_stones"]]
+decor_green = Color(0.2, 0.44, 0.3, 1)
+entries = {}
+start_entry = "B"
+town_entry = ""
+exits = []
+npcs = []
+boss_id = "grifo_cumbre"
+boss_pos = Vector3(0, 0, -18)
+formations = [["lobo_nieves", "lobo_nieves"], ["cabra_montesa"], ["golem_hielo"], ["espiritu_cumbre"], ["golem_hielo", "espiritu_cumbre"], ["murcielago_hielo", "espiritu_cumbre"], ["cabra_montesa", "murcielago_hielo"]]
+start_formations = []
+start_radius = 0.0
+monster_count = 7
+exit_level = 35
+music = "mountain"
+village_music = ""
+ambient = "mountain"
+sky_top = Color(0.7, 0.76, 0.84, 1)
+haze = Color(0.86, 0.87, 0.9, 1)
+fog_density = 0.014
+sun_color = Color(1, 0.95, 0.88, 1)
+sun_energy = 0.4
+backdrop = "montana"
+particles = "snow"
+layout = PackedStringArray("###############", "####.......####", "####.......####", "####.......####", "#.....##.##...#", "#.C...#...#...#", "#.....#...#...#", "###.###...###.#", "#.....#.#.....#", "#.....#.#.....#", "#.###.....###.#", "#...#..B..#...#", "###############")
+underground = false
+rock_color = Color(0.5, 0.52, 0.56, 1)
+floor_color = Color(0.56, 0.57, 0.6, 1)
+rock_piece = "snow_rock"
+stairs_down = "montana_1"
+autoplay_route = Array[Vector3]([Vector3(0, 0, 16), Vector3(-8, 0, 16), Vector3(-8, 0, 8), Vector3(-16, 0, 8), Vector3(-16, 0, -4), Vector3(-18.5, 0, -4.5), Vector3(-12, 0, -8), Vector3(-12, 0, -14), Vector3(0, 0, -17), Vector3(4, 0, -12), Vector3(4, 0, -8), Vector3(4, 0, 4), Vector3(8, 0, 4), Vector3(8, 0, 8), Vector3(20, 0, 8), Vector3(24, 0, 8), Vector3(24, 0, -8), Vector3(24, 0, 8), Vector3(12, 0, 12), Vector3(8, 0, 12), Vector3(8, 0, 16)])
+autoplay_boss_level = 34

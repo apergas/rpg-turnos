@@ -7,8 +7,9 @@ class_name WorldStage extends RefCounted
 ## everything keeps off). A zone may colour its path and safe discs (path_color), lay patches
 ## of other ground under the path (ground_patches) and grow its trees only inside discs
 ## (tree_areas). Exits, figures and chests are World's. A dungeon floor only gets its sky and
-## light and its buildings (the castle camp's tents) here: its cells are a DungeonMap,
-## which World adds. Every query takes the zone.
+## light and its buildings (the castle camp's tents) and, when it is open to the sky, its
+## hills (the mountain's peaks) here: its cells are a DungeonMap, which World adds. Every
+## query takes the zone.
 
 ## The Medieval Hexagon buildings are miniatures (a house is 0.8 m wide, 0.9 m tall).
 const BUILDING_SCALE := 3.5
@@ -113,6 +114,8 @@ static func build(root: Node3D, zone: ZoneData) -> ShaderMaterial:
 			_add_solid_model(root, MODELS[building[2]], building[0],
 				MODEL_SCALES.get(building[2], BUILDING_SCALE), building[1])
 		_add_decor(root, zone)
+		for hill in zone.hills:  # the peaks round a floor open to the sky (the mountain)
+			BattleStage.add_mesh(root, BattleStage.unit_sphere(), zone.hill_color, hill[0], hill[1])
 		return null
 	_add_ground(root, zone)
 	for patch in zone.ground_patches:

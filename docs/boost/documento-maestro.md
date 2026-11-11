@@ -1,6 +1,6 @@
 # Documento maestro
 
-Fecha: 2026-11-11. Última versión hecha: **2.1.0** (en `develop`, sin publicar todavía). M-01 a M-38 están hechos (M-17 y M-37, descartados). M-39 a M-47 son la v2 (2.0.0 a 2.3.0), con diseño: la 2.0.0, la 2.0.1 y la 2.1.0 están hechas; 2.2.0 y 2.3.0 esperan su plan. M-48 (la 2.0.1, la decoración con Kenney) está hecho.
+Fecha: 2026-11-11. Última versión hecha: **2.2.0** (en `develop`, sin publicar todavía). M-01 a M-38 están hechos (M-17 y M-37, descartados). M-39 a M-47 son la v2 (2.0.0 a 2.3.0), con diseño: la 2.0.0, la 2.0.1, la 2.1.0 y la 2.2.0 están hechas; 2.3.0 espera su plan. M-48 (la 2.0.1, la decoración con Kenney) está hecho.
 
 Este documento es la base de trabajo a partir de ahora. Reúne:
 
@@ -127,10 +127,10 @@ Una segunda parte de unas dos horas sobre una partida terminada: una caravana, u
 | M-40 | El tramo, calculado de los jefes vencidos; capítulos y objetivos de la v2 — **hecho en 2.0.0** | 2.0.0 | S |
 | M-41 | La Caravana: un mapa de base con mercader por tramo y salidas que existen según las banderas — **hecho en 2.0.0** | 2.0.0 | M |
 | M-42 | El compañero: uno de tres, elegido una vez, un ALLY cuyos números suben con el tramo — **hecho en 2.0.0** | 2.0.0 | M |
-| M-43 | Las cuatro zonas: jungla y desierto abiertas, montaña y ciudad de celdas — jungla hecha en 2.0.0, desierto hecho en 2.1.0 | 2.0.0 a 2.3.0 | L |
-| M-44 | Veinte enemigos, cuatro jefes de zona, el Devorador del portal (dos fases) y cuatro familias del bestiario — jungla hecha en 2.0.0, desierto hecho en 2.1.0 | 2.0.0 a 2.3.0 | L |
-| M-45 | Nivel máximo 40, Ventisca y Sanación, cuatro niveles de equipo, Poción y Éter grandes — jungla hecha en 2.0.0, desierto hecho en 2.1.0 | 2.0.0 a 2.3.0 | M |
-| M-46 | Ocho misiones de datos, dos por tramo, con la bandera `needs` — jungla hecha en 2.0.0, desierto hecho en 2.1.0 | 2.0.0 a 2.3.0 | M |
+| M-43 | Las cuatro zonas: jungla y desierto abiertas, montaña y ciudad de celdas — jungla hecha en 2.0.0, desierto hecho en 2.1.0, montaña hecha en 2.2.0 | 2.0.0 a 2.3.0 | L |
+| M-44 | Veinte enemigos, cuatro jefes de zona, el Devorador del portal (dos fases) y cuatro familias del bestiario — jungla hecha en 2.0.0, desierto hecho en 2.1.0, montaña hecha en 2.2.0 | 2.0.0 a 2.3.0 | L |
+| M-45 | Nivel máximo 40, Ventisca y Sanación, cuatro niveles de equipo, Poción y Éter grandes — jungla hecha en 2.0.0, desierto hecho en 2.1.0, montaña hecha en 2.2.0 | 2.0.0 a 2.3.0 | M |
+| M-46 | Ocho misiones de datos, dos por tramo, con la bandera `needs` — jungla hecha en 2.0.0, desierto hecho en 2.1.0, montaña hecha en 2.2.0 | 2.0.0 a 2.3.0 | M |
 | M-47 | El final: el cruce, la pantalla del más allá con el pueblo de la v3 y los créditos de la v2 | 2.3.0 | M |
 
 ### Prioridad 7: decoración con modelos reales (2026-11-11)
@@ -273,7 +273,7 @@ Notas para cuando se diseñe:
 | **2.0.0** | M-39 a M-42 y la jungla: la caravana, el compañero, el nivel 40 | [spec](specs/2026-11-10-version-2-0-0-design.md) · [plan](plans/2026-11-10-version-2-0-0.md) | Hecha |
 | **2.0.1** | M-48: decoración Kenney | [spec](specs/2026-11-11-version-2-0-1-design.md) · [plan](plans/2026-11-11-version-2-0-1.md) | Hecha |
 | **2.1.0** | El desierto | [spec](specs/2026-11-11-version-2-1-0-design.md) · [plan](plans/2026-11-11-version-2-1-0.md) | Hecha |
-| **2.2.0** | La montaña | [spec](specs/2026-11-10-version-2-0-0-design.md) | Diseñada |
+| **2.2.0** | La montaña | [spec](specs/2026-11-10-version-2-0-0-design.md) · [decisiones](specs/2026-11-11-version-2-2-0-design.md) · [plan](plans/2026-11-11-version-2-2-0.md) | Hecha |
 | **2.3.0** | La ciudad, el Devorador del portal y el final | [spec](specs/2026-11-10-version-2-0-0-design.md) | Diseñada |
 
 Las versiones 1.1.1 a 1.4.0 están implementadas y publicadas; las pruebas a mano y en móvil real que quedaron pendientes están en sus informes. Las versiones 1.4.1 a 2.0.0 están implementadas en `develop` (2026-11-11) y sin publicar.

@@ -23,7 +23,7 @@ func choose(engine: BattleEngine) -> Dictionary:
 
 func _pick(engine: BattleEngine) -> Dictionary:
 	var hero := engine.hero
-	if hero.status.has(BattleEngine.SLEEP):
+	if hero.status.has(BattleEngine.SLEEP) or hero.status.has(BattleEngine.STUN):
 		return BattleEngine.cmd_none()
 	var heal_skill := _heal_skill(hero)
 	if hero.hp < hero.max_hp * HEAL_RATIO:

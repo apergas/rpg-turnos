@@ -31,6 +31,9 @@ const KIT_SINK := 0.05
 ## The desert ruin's stone (a warm sandstone instead of PALETTE's grey).
 const SANDSTONE := Color(0.74, 0.66, 0.54)
 const SANDSTONE_DARK := Color(0.58, 0.51, 0.41)
+## The mountain (2.2.0): the snow on its cliffs and stones, and their grey stone.
+const SNOW := Color(0.6, 0.6, 0.6)
+const MOUNTAIN_STONE := Color(0.5, 0.52, 0.56)
 ## id → [[kit model, scale, position, yaw, overrides]] (the models the mesh holds); overrides
 ## is optional: a material → colour that wins over GREENS and PALETTE in that piece only.
 const PIECES := {
@@ -68,6 +71,17 @@ const PIECES := {
 		{"stone": SANDSTONE, "stoneDark": SANDSTONE_DARK}]],
 	"ruin_block": [["statue_block", 2.25, Vector3.ZERO, 0.0,
 		{"stone": SANDSTONE, "stoneDark": SANDSTONE_DARK}]],
+	# The mountain (2.2.0). snow_rock is DungeonMap's rock block (zone.rock_piece): the kit's
+	# cliff cube, its grass turned to snow, centred on its middle (it is scaled to a whole
+	# cell); the rest is Decor.
+	"snow_rock": [["cliff_block_stone", 1.0, Vector3(0, -0.5, 0), 0.0,
+		{"grass": SNOW, "stone": MOUNTAIN_STONE}]],
+	"pine": [["tree_pineTallA", 4.0, Vector3.ZERO, 0.0]],
+	"pine_small": [["tree_pineSmallA", 3.2, Vector3.ZERO, 0.0]],
+	"rock_tall": [["stone_tallA", 2.6, Vector3.ZERO, 0.0,
+		{"stone": MOUNTAIN_STONE, "_defaultMat": SNOW}]],
+	"snow_stones": [["stone_smallFlatA", 3.0, Vector3.ZERO, 0.0, {"stone": MOUNTAIN_STONE}],
+		["stone_smallFlatB", 2.6, Vector3(0.7, 0, 0.4), 1.2, {"stone": MOUNTAIN_STONE}]],
 }
 
 static var _cache: Dictionary = {}

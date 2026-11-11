@@ -15,7 +15,7 @@ const NAME_TAG := "{nombre}"
 ## Every cutscene, in story order.
 const SCENES: Array[String] = ["prologo", "rey_slime", "aldea_bosque", "bruja", "mina",
 	"golem", "castillo", "final", "caravana_llega", "caravana_parte", "caravana_campamento",
-	"jaguar", "gusano"]
+	"jaguar", "gusano", "grifo"]
 ## The zone each chapter of the v2 is played in: while it is not built yet (not in
 ## ZoneData.IDS) the goal says to wait in the caravan (NOT_YET_GOAL).
 const CHAPTER_ZONES := {
@@ -31,6 +31,7 @@ const AFTER_BOSS := {
 	"senor_niebla": "final",
 	"jaguar_sombrio": "jaguar",
 	"gusano_dunas": "gusano",
+	"grifo_cumbre": "grifo",
 }
 ## The cutscene of the first visit to each zone's village.
 const ON_VILLAGE := {
@@ -53,6 +54,14 @@ const V2_FINAL_BOSS := "devorador_portal"
 const MINE_LEVER := "mina_palanca"
 const MINE_KEY := "llave_mina"
 const MINE_DOOR := "mina_puerta"
+## The mountain's flag (ZoneData lever_flag and door_flag of its first floor).
+const MOUNTAIN_LEVER := "montana_palanca"
+## The mountain chapter's goal, step by step: what goal_text() says there.
+const MOUNTAIN_GOALS := {
+	"climb": "Objetivo: sube a la cumbre",
+	"lever": "Objetivo: busca la palanca que abre la reja",
+	"summit": "Objetivo: vence al Grifo de la cumbre",
+}
 ## The mine chapter's goal, step by step: what goal_text() says there.
 const MINE_GOALS := {
 	"enter": "Objetivo: entra en la mina, al norte del bosque",
@@ -164,6 +173,8 @@ func goal_text(flags: Dictionary, zone_id := "") -> String:
 	var now := chapter(flags)
 	if now == Chapter.MINE:
 		return MINE_GOALS[_mine_step(flags, zone_id)]
+	if now == Chapter.MOUNTAIN:
+		return MOUNTAIN_GOALS[_mountain_step(flags, zone_id)]
 	if now == Chapter.CARAVAN and not flags.get(COMPANION_FLAG, false):
 		return "Objetivo: habla con el Jefe de caravana"
 	if CHAPTER_ZONES.has(now) and not CHAPTER_ZONES[now] in ZoneData.IDS:
@@ -179,6 +190,14 @@ static func _mine_step(flags: Dictionary, zone_id: String) -> String:
 	if not flags.get(MINE_LEVER, false):
 		return "lever" if zone_id == "mina_2" else "floor_2"
 	return "key" if zone_id == "mina_3" else "floor_3"
+
+
+static func _mountain_step(flags: Dictionary, zone_id: String) -> String:
+	if zone_id == "montana_2":
+		return "summit"
+	if zone_id == "montana_1" and not flags.get(MOUNTAIN_LEVER, false):
+		return "lever"
+	return "climb"
 
 
 func to_dict() -> Dictionary:

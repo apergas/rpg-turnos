@@ -1,5 +1,16 @@
 # Registro de cambios
 
+## 2.2.0 (2026)
+
+La caravana del portal, tercera parte.
+
+- La montaña: dos plantas de roca y nieve, con una palanca que abre el paso y una cumbre donde anida el Grifo.
+- Cinco monstruos nuevos: el Lobo de las nieves, el Golem de hielo, el Espíritu de la cumbre, el Murciélago de la cueva helada y la Cabra montesa, cuyo golpe te deja sin aliento un turno.
+- El equipo de adamantita, en la tienda de la Caravana.
+- Un hechizo nuevo al nivel 32: Sanación, que cura 150 PV.
+- Dos misiones más en la Caravana.
+- En la montaña sopla el viento y cae la nieve.
+
 ## 2.1.0 (2026)
 
 La caravana del portal, segunda parte.

@@ -4,7 +4,8 @@ class_name AmbientLibrary extends RefCounted
 ## seconds, its end cross-faded into its start so the loop has no seam) and short sounds that
 ## AudioDirector drops on it every gap() seconds (shot(): a trill in the meadow, a bird in
 ## the forest, a drop with its echo in the mine, a gust whistling in the castle, a gust of sand
-## in the desert, whose bed is a low wind with the hiss of sand). Streams
+## in the desert, whose bed is a low wind with the hiss of sand, a howl over the peaks on
+## the mountain, whose bed is a strong wind that never stops). Streams
 ## are 22050 Hz, 16-bit mono (MusicLibrary.to_stream()) and cached.
 
 const MEADOW := "meadow"
@@ -13,7 +14,8 @@ const MINE := "mine"
 const CASTLE := "castle"
 const JUNGLE := "jungle"
 const DESERT := "desert"
-const IDS: Array[String] = [MEADOW, FOREST, MINE, CASTLE, JUNGLE, DESERT]
+const MOUNTAIN := "mountain"
+const IDS: Array[String] = [MEADOW, FOREST, MINE, CASTLE, JUNGLE, DESERT, MOUNTAIN]
 
 ## Seconds of each bed, and of the cross-fade that closes its loop.
 const LOOP := 8.0
@@ -22,10 +24,10 @@ const SEAM := 0.5
 const VARIANTS := 4
 ## Seconds between two short sounds: [least, most].
 const GAPS := {MEADOW: [2.0, 6.0], FOREST: [3.0, 7.0], MINE: [1.0, 4.0], CASTLE: [4.0, 9.0],
-	JUNGLE: [1.5, 4.0], DESERT: [3.0, 8.0]}
+	JUNGLE: [1.5, 4.0], DESERT: [3.0, 8.0], MOUNTAIN: [2.5, 6.0]}
 ## Peak of each bed and of every short sound (AudioDirector plays them at the effects volume
 ## × its AMBIENT_SHARE).
-const BED_PEAK := {MEADOW: 0.35, FOREST: 0.4, MINE: 0.5, CASTLE: 0.35, JUNGLE: 0.35, DESERT: 0.4}
+const BED_PEAK := {MEADOW: 0.35, FOREST: 0.4, MINE: 0.5, CASTLE: 0.35, JUNGLE: 0.35, DESERT: 0.4, MOUNTAIN: 0.45}
 const SHOT_PEAK := 0.55
 ## The echoes of a drop in the mine: [delay in seconds, gain].
 const ECHOES := [[0.17, 0.45], [0.34, 0.2], [0.51, 0.08]]
@@ -81,6 +83,8 @@ static func bed(id: String) -> AudioStreamWAV:
 			raw = _insects(count + seam, rng)
 		DESERT:
 			raw = _sand_wind(count + seam, rng)
+		MOUNTAIN:
+			raw = _mountain_wind(count + seam, rng)
 		_:
 			raw = _wind(count + seam, rng)
 	var samples := raw.slice(0, count)
@@ -116,6 +120,8 @@ static func shot(id: String, variant: int) -> AudioStreamWAV:
 			samples = _jungle_bird(rng)
 		DESERT:
 			samples = _sand_gust(rng)
+		MOUNTAIN:
+			samples = _howl(rng)
 		_:
 			samples = _gust(rng)
 	_normalize(samples, SHOT_PEAK)
@@ -248,6 +254,64 @@ static func _sand_gust(rng: RandomNumberGenerator) -> PackedFloat32Array:
 		y2 = y1
 		y1 = y
 		out[i] = y * pow(sin(PI * u), 1.5)
+	return out
+
+
+## The mountain: a strong wind that never stops. A low roar (noise low-passed twice at
+## 250 Hz) under a howling band that wanders between 350 and 800 Hz, both swelling in long
+## gusts that never fall below a third.
+static func _mountain_wind(count: int, rng: RandomNumberGenerator) -> PackedFloat32Array:
+	var out := PackedFloat32Array()
+	out.resize(count)
+	var low_a := _pole(250.0)
+	var l1 := 0.0
+	var l2 := 0.0
+	var band := PackedFloat32Array()
+	var x1 := 0.0
+	var x2 := 0.0
+	var y1 := 0.0
+	var y2 := 0.0
+	for i in count:
+		var t := float(i) / MusicLibrary.RATE
+		if i % 32 == 0:
+			band = _band(560.0 + 220.0 * sin(TAU * 0.07 * t) + 90.0 * sin(TAU * 0.31 * t + 1.0),
+				10.0)
+		var x := rng.randf_range(-1.0, 1.0)
+		var y := band[0] * x + band[1] * x2 - band[2] * y1 - band[3] * y2
+		x2 = x1
+		x1 = x
+		y2 = y1
+		y1 = y
+		l1 += low_a * (x - l1)
+		l2 += low_a * (l1 - l2)
+		var gust := 0.35 + 0.65 * pow(0.5 + 0.5 * sin(TAU * 0.125 * t), 1.5)
+		out[i] = (2.5 * y + 2.0 * l2) * gust
+	return out
+
+
+## A howl of the wind over the peaks: 2 to 3.5 s of noise through a narrow band that rises
+## from 500 Hz to its top and falls back, swelling and dying away.
+static func _howl(rng: RandomNumberGenerator) -> PackedFloat32Array:
+	var count := int(rng.randf_range(2.0, 3.5) * MusicLibrary.RATE)
+	var top := rng.randf_range(950.0, 1300.0)
+	var out := PackedFloat32Array()
+	out.resize(count)
+	var band := PackedFloat32Array()
+	var x1 := 0.0
+	var x2 := 0.0
+	var y1 := 0.0
+	var y2 := 0.0
+	for i in count:
+		var u := float(i) / count
+		if i % 32 == 0:
+			band = _band(lerpf(500.0, top, sin(PI * u)), 20.0)
+		var x := rng.randf_range(-1.0, 1.0)
+		var y := band[0] * x + band[1] * x2 - band[2] * y1 - band[3] * y2
+		x2 = x1
+		x1 = x
+		y2 = y1
+		y1 = y
+		out[i] = y * pow(sin(PI * u), 1.2)
 	return out
 
 
