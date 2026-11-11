@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "seta_tropical"
+display_name = "Seta tropical"
+female = true
+max_hp = 130
+hp = 130
+attack = 54
+defense = 36
+speed = 18
+exp_reward = 42
+gold_reward = 24
+weak = Array[String](["fire"])
+resist = Array[String](["ice"])
+drops = {
+"pocion_grande": 0.1
+}

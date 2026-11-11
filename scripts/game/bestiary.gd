@@ -26,6 +26,11 @@ const FAMILIES: Array[Dictionary] = [
 		"reward": Equipment.DAWN_SWORD},
 ]
 
+## The v2's enemies (the caravan), in album order, with no family until 2.3.0: the album
+## shows them under "La caravana" and they give no prize yet.
+const V2_ENEMIES: Array[String] = ["rana_dardo", "serpiente_liana", "mono_aullador",
+	"planta_trampa", "seta_tropical"]
+
 
 ## Every enemy with a card, family by family (22).
 static func all_ids() -> Array[String]:
@@ -38,7 +43,12 @@ static func all_ids() -> Array[String]:
 
 ## True if enemy_id has a card (and so counts as seen and beaten).
 static func has(enemy_id: String) -> bool:
-	return family_of(enemy_id) != ""
+	return family_of(enemy_id) != "" or V2_ENEMIES.has(enemy_id)
+
+
+## How many enemies the bestiary counts: the families' and the v2's.
+static func total_count() -> int:
+	return all_ids().size() + V2_ENEMIES.size()
 
 
 ## The family with family_id ({} if none).
@@ -107,7 +117,7 @@ static func complete_count(state: GameState) -> int:
 ## How many enemies with a card have been seen.
 static func seen_count(state: GameState) -> int:
 	var seen := 0
-	for id in all_ids():
+	for id in all_ids() + V2_ENEMIES:
 		if state.seen_enemies.has(id):
 			seen += 1
 	return seen

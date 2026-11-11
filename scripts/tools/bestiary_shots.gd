@@ -1,6 +1,6 @@
 extends SceneTree
 ## Renders one portrait per enemy of the bestiary to assets/bestiary/<id>.png: the ids given
-## after "--", or every one of the bestiary without any. Run it not headless:
+## after "--", or every one of the bestiary (the v2 enemies too) without any. Run it not headless:
 ## tools/godot.cmd --path . --script res://scripts/tools/bestiary_shots.gd [-- id id ...]
 ## then --headless --path . --import. Excluded from the exports (scripts/tools/*).
 
@@ -19,7 +19,7 @@ func _run() -> void:
 	var ids: Array[String] = []
 	ids.assign(OS.get_cmdline_user_args())
 	if ids.is_empty():
-		ids = Bestiary.all_ids()
+		ids = Bestiary.all_ids() + Bestiary.V2_ENEMIES
 	for id: String in ids:
 		var view := SubViewport.new()
 		view.size = SIZE

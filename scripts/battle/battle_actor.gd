@@ -5,6 +5,7 @@ class_name BattleActor extends Node3D
 ## bat, the mushroom, the wolf,
 ## the goblin, the carnivorous plant, the golems, the spider, the specter and the
 ## creatures that fight beside the hero are low-poly figures built in code (see LOOKS).
+## The jungle's frog, snake, monkey, trap plant and tropical mushroom (the v2) come after.
 ## Five of them are color variants of those (RED_SLIME, POISON_MUSHROOM, CAVE_MUSHROOM, CRYPT_BAT, FROST_SPECTER), built by the same functions.
 ## Set look before add_child. The figure faces -Z, so look_at() the opponent. Every
 ## play_* can be awaited: it returns when its animation and its tween are done.
@@ -13,7 +14,8 @@ enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPE
 	GOBLIN, PLANT, WITCH, MUD_GOLEM, STONE_GOLEM, SPIDER, SPECTER, SKELETON_WARRIOR,
 	SKELETON_ROGUE, SKELETON_MAGE, FOG_LORD, FARMER, METAL_SLIME, BOARD, CAT, CHILD,
 	CHICKEN, WOLF_CUB, MINI_GOLEM, LOYAL_SKELETON, TAMER, FOG_ECHO, RED_SLIME,
-	POISON_MUSHROOM, CAVE_MUSHROOM, CRYPT_BAT, FROST_SPECTER, COLLECTOR, BRENA, TADEO, ULMA }
+	POISON_MUSHROOM, CAVE_MUSHROOM, CRYPT_BAT, FROST_SPECTER, COLLECTOR, BRENA, TADEO, ULMA, FROG,
+	SNAKE, MONKEY, TRAP_PLANT, TROPICAL_MUSHROOM }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -544,6 +546,41 @@ const LOOKS := {
 		"anims": CHARACTER_ANIMS,
 		"tint": Color(0.78, 0.8, 0.86),
 	},
+	# The jungle (the v2).
+	Look.FROG: {
+		"color": Color(0.15, 0.55, 0.95),
+		"spot_color": Color(0.08, 0.08, 0.1),
+		"belly_color": Color(1.0, 0.8, 0.15),
+		"scale": 1.4,
+		"top": 1.1,
+	},
+	Look.SNAKE: {
+		"color": Color(0.3, 0.6, 0.15),
+		"dark_color": Color(0.16, 0.36, 0.08),
+		"eye_color": Color(1.0, 0.85, 0.1),
+		"scale": 1.0,
+		"top": 1.3,
+	},
+	Look.MONKEY: {
+		"color": Color(0.42, 0.28, 0.16),
+		"face_color": Color(0.85, 0.68, 0.5),
+		"scale": 1.0,
+		"top": 1.5,
+	},
+	Look.TRAP_PLANT: {
+		"stem_color": Color(0.1, 0.42, 0.12),
+		"leaf_color": Color(0.12, 0.6, 0.18),
+		"head_color": Color(0.85, 0.15, 0.35),
+		"inner_color": Color(0.35, 0.05, 0.1),
+		"scale": 1.3,
+		"top": 1.9,
+	},
+	Look.TROPICAL_MUSHROOM: {
+		"cap_color": Color(1.0, 0.5, 0.1),
+		"stem_color": Color(0.98, 0.92, 0.8),
+		"scale": 1.4,
+		"top": 1.6,
+	},
 }
 
 ## Map only: how see-through a group's figure is while it can't start a battle.
@@ -592,7 +629,8 @@ func _ready() -> void:
 		_build_character(data)
 	elif look in [Look.BAT, Look.CRYPT_BAT]:
 		_build_bat(data)
-	elif look in [Look.MUSHROOM, Look.POISON_MUSHROOM, Look.CAVE_MUSHROOM]:
+	elif look in [Look.MUSHROOM, Look.POISON_MUSHROOM, Look.CAVE_MUSHROOM,
+			Look.TROPICAL_MUSHROOM]:
 		_build_mushroom(data)
 	elif look == Look.WOLF or look == Look.WOLF_CUB:
 		_build_wolf(data)
@@ -600,8 +638,14 @@ func _ready() -> void:
 		_build_chicken(data)
 	elif look == Look.GOBLIN:
 		_build_goblin(data)
-	elif look == Look.PLANT:
+	elif look == Look.PLANT or look == Look.TRAP_PLANT:
 		_build_plant(data)
+	elif look == Look.FROG:
+		_build_frog(data)
+	elif look == Look.SNAKE:
+		_build_snake(data)
+	elif look == Look.MONKEY:
+		_build_monkey(data)
 	elif look in [Look.MUD_GOLEM, Look.STONE_GOLEM, Look.MINI_GOLEM]:
 		_build_golem(data)
 	elif look == Look.SPIDER:
@@ -1104,6 +1148,71 @@ func _build_wolf(data: Dictionary) -> void:
 	(root.get_child(-1) as Node3D).rotation_degrees.x = 55.0
 
 
+## A poison dart frog: a squat faceted body, a yellow belly, black spots, two big eyes on
+## top and four bent legs, facing -Z. About 0.6 m tall; it hops like the slimes.
+func _build_frog(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	_add_blob(root, SLIME_PROFILE, SLIME_SEGMENTS, data.color, Vector3(0, 0.08, 0),
+		Vector3.ZERO, Vector3(0.55, 0.38, 0.62))  # body
+	_add_blob(root, SLIME_PROFILE, SLIME_SEGMENTS, data.belly_color, Vector3(0, 0.04, -0.12),
+		Vector3.ZERO, Vector3(0.42, 0.22, 0.42))  # belly
+	for spot in [Vector3(-0.14, 0.33, 0.1), Vector3(0.16, 0.3, 0.02), Vector3(0.0, 0.36, 0.22)]:
+		_add_mesh(root, _sphere(0.06), data.spot_color, spot)
+	for x in [-0.15, 0.15]:
+		_add_mesh(root, _sphere(0.1), data.color, Vector3(x, 0.42, -0.2))  # eye bump
+		_add_mesh(root, _sphere(0.065), Color(0.05, 0.05, 0.05), Vector3(x, 0.45, -0.27))
+		_add_blob(root, LEG_PROFILE, 4, data.color, Vector3(x * 2.0, 0.0, 0.18),
+			Vector3(0, 0, 40.0 if x > 0 else -40.0), Vector3(1.2, 0.6, 1.2))  # back leg
+		_add_blob(root, LEG_PROFILE, 4, data.color, Vector3(x * 1.6, 0.0, -0.2),
+			Vector3.ZERO, Vector3(0.8, 0.5, 0.8))  # front leg
+
+
+## A vine snake: a chain of shrinking green spheres coiled on the ground that rises into a
+## raised neck and a wedge head with yellow eyes, facing -Z. About 1 m tall.
+func _build_snake(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	var coil := 10
+	for i in coil:
+		var angle := TAU * i / coil * 1.3
+		var radius := 0.32 - i * 0.012
+		var color: Color = data.color if i % 2 == 0 else data.dark_color
+		_add_mesh(root, _sphere(0.13 - i * 0.004),
+			color, Vector3(cos(angle) * radius, 0.12, sin(angle) * radius + 0.15))
+	for i in 4:  # the neck rises toward the front
+		_add_mesh(root, _sphere(0.12 - i * 0.008), data.color,
+			Vector3(0, 0.25 + i * 0.18, -0.05 - i * 0.07))
+	_add_blob(root, WOLF_HEAD_PROFILE, 5, data.color, Vector3(0, 0.98, -0.32),
+		Vector3(-100, 0, 0), Vector3(0.85, 0.85, 0.85))  # head
+	for x in [-0.07, 0.07]:
+		_add_mesh(root, _sphere(0.05), data.eye_color, Vector3(x * 1.5, 1.08, -0.55))
+	_add_mesh(root, _cone(0.015, 0.12), Color(0.9, 0.1, 0.15), Vector3(0, 0.95, -0.6))  # tongue
+	(root.get_child(-1) as Node3D).rotation_degrees.x = -90.0
+
+
+## A howler monkey: a round brown body, a light face with dark eyes, long arms and a curled
+## tail, sitting up, facing -Z. About 1.2 m tall.
+func _build_monkey(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	_add_blob(root, SLIME_PROFILE, SLIME_SEGMENTS, data.color, Vector3(0, 0.25, 0),
+		Vector3.ZERO, Vector3(0.42, 0.62, 0.4))  # body
+	_add_mesh(root, _sphere(0.26), data.color, Vector3(0, 1.0, -0.02))  # head
+	_add_mesh(root, _sphere(0.17), data.face_color, Vector3(0, 0.97, -0.17))  # face
+	for x in [-0.07, 0.07]:
+		_add_mesh(root, _sphere(0.035), Color(0.05, 0.05, 0.05), Vector3(x, 1.03, -0.3))
+		_add_mesh(root, _sphere(0.07), data.color, Vector3(x * 3.4, 1.1, -0.02))  # ear
+	for x in [-0.25, 0.25]:
+		_add_mesh(root, _cylinder(0.06, 0.7), data.color, Vector3(x, 0.52, -0.08))  # arm
+		_add_mesh(root, _sphere(0.08), data.face_color, Vector3(x, 0.15, -0.08))  # hand
+	_add_mesh(root, _cylinder(0.045, 0.7), data.color, Vector3(0, 0.45, 0.42))  # tail
+	(root.get_child(-1) as Node3D).rotation_degrees.x = 60.0
+
+
 ## A chicken: a white round body with a red comb and wattle, an orange beak, two thin
 ## legs and black eyes, facing -Z. About 0.7 m tall.
 func _build_chicken(data: Dictionary) -> void:
@@ -1255,7 +1364,7 @@ func _start_idle() -> void:
 		_start_float()
 	else:
 		var gentle := look in [Look.WOLF, Look.MUD_GOLEM, Look.STONE_GOLEM, Look.SPIDER,
-			Look.CAT, Look.WOLF_CUB, Look.MINI_GOLEM]
+			Look.CAT, Look.WOLF_CUB, Look.MINI_GOLEM, Look.SNAKE, Look.MONKEY]
 		_start_bounce(0.4 if gentle else 1.0)
 
 
