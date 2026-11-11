@@ -1,6 +1,6 @@
 # Documento maestro
 
-Fecha: 2026-11-11. Última versión hecha: **2.2.0** (en `develop`, sin publicar todavía). M-01 a M-38 están hechos (M-17 y M-37, descartados). M-39 a M-47 son la v2 (2.0.0 a 2.3.0), con diseño: la 2.0.0, la 2.0.1, la 2.1.0 y la 2.2.0 están hechas; 2.3.0 espera su plan. M-48 (la 2.0.1, la decoración con Kenney) está hecho.
+Fecha: 2026-11-11. Última versión hecha: **2.3.0** (en `develop`, sin publicar todavía; la v2 está terminada). M-01 a M-38 están hechos (M-17 y M-37, descartados). M-39 a M-47 son la v2 (2.0.0 a 2.3.0), con diseño: la 2.0.0, la 2.0.1, la 2.1.0, la 2.2.0 y la 2.3.0 están hechas: la v2 está completa. Lo siguiente es la v3 (el pueblo del más allá), una idea sin plan. M-48 (la 2.0.1, la decoración con Kenney) está hecho.
 
 Este documento es la base de trabajo a partir de ahora. Reúne:
 
@@ -127,11 +127,11 @@ Una segunda parte de unas dos horas sobre una partida terminada: una caravana, u
 | M-40 | El tramo, calculado de los jefes vencidos; capítulos y objetivos de la v2 — **hecho en 2.0.0** | 2.0.0 | S |
 | M-41 | La Caravana: un mapa de base con mercader por tramo y salidas que existen según las banderas — **hecho en 2.0.0** | 2.0.0 | M |
 | M-42 | El compañero: uno de tres, elegido una vez, un ALLY cuyos números suben con el tramo — **hecho en 2.0.0** | 2.0.0 | M |
-| M-43 | Las cuatro zonas: jungla y desierto abiertas, montaña y ciudad de celdas — jungla hecha en 2.0.0, desierto hecho en 2.1.0, montaña hecha en 2.2.0 | 2.0.0 a 2.3.0 | L |
-| M-44 | Veinte enemigos, cuatro jefes de zona, el Devorador del portal (dos fases) y cuatro familias del bestiario — jungla hecha en 2.0.0, desierto hecho en 2.1.0, montaña hecha en 2.2.0 | 2.0.0 a 2.3.0 | L |
-| M-45 | Nivel máximo 40, Ventisca y Sanación, cuatro niveles de equipo, Poción y Éter grandes — jungla hecha en 2.0.0, desierto hecho en 2.1.0, montaña hecha en 2.2.0 | 2.0.0 a 2.3.0 | M |
-| M-46 | Ocho misiones de datos, dos por tramo, con la bandera `needs` — jungla hecha en 2.0.0, desierto hecho en 2.1.0, montaña hecha en 2.2.0 | 2.0.0 a 2.3.0 | M |
-| M-47 | El final: el cruce, la pantalla del más allá con el pueblo de la v3 y los créditos de la v2 | 2.3.0 | M |
+| M-43 | Las cuatro zonas: jungla y desierto abiertas, montaña y ciudad de celdas — jungla hecha en 2.0.0, desierto hecho en 2.1.0, montaña hecha en 2.2.0, ciudad y final hechos en 2.3.0 | 2.0.0 a 2.3.0 | L |
+| M-44 | Veinte enemigos, cuatro jefes de zona, el Devorador del portal (dos fases) y cuatro familias del bestiario — jungla hecha en 2.0.0, desierto hecho en 2.1.0, montaña hecha en 2.2.0, ciudad y final hechos en 2.3.0 | 2.0.0 a 2.3.0 | L |
+| M-45 | Nivel máximo 40, Ventisca y Sanación, cuatro niveles de equipo, Poción y Éter grandes — jungla hecha en 2.0.0, desierto hecho en 2.1.0, montaña hecha en 2.2.0, ciudad y final hechos en 2.3.0 | 2.0.0 a 2.3.0 | M |
+| M-46 | Ocho misiones de datos, dos por tramo, con la bandera `needs` — jungla hecha en 2.0.0, desierto hecho en 2.1.0, montaña hecha en 2.2.0, ciudad y final hechos en 2.3.0 | 2.0.0 a 2.3.0 | M |
+| M-47 | El final: el cruce, la pantalla del más allá con el pueblo de la v3 y los créditos de la v2 — hecho en 2.3.0 | 2.3.0 | M |
 
 ### Prioridad 7: decoración con modelos reales (2026-11-11)
 
@@ -169,6 +169,7 @@ Vienen de `2026-11-03-ideas-juego-completo.md`. Desde el 2026-11-09 todas tienen
 | Sonido de ambiente y partículas | Ambientación |
 | Soporte de mando | Útil en escritorio; en la web depende del navegador |
 | Menú de depuración | Solo para desarrollo; `--autoplay-zone` ya cubre lo principal |
+| La v3: el pueblo del más allá | Es lo que muestra la pantalla final de la 2.3.0 («Continuará»); sin diseño ni plan |
 
 ### I-01. Monstruos visibles en el mapa
 
@@ -274,11 +275,11 @@ Notas para cuando se diseñe:
 | **2.0.1** | M-48: decoración Kenney | [spec](specs/2026-11-11-version-2-0-1-design.md) · [plan](plans/2026-11-11-version-2-0-1.md) | Hecha |
 | **2.1.0** | El desierto | [spec](specs/2026-11-11-version-2-1-0-design.md) · [plan](plans/2026-11-11-version-2-1-0.md) | Hecha |
 | **2.2.0** | La montaña | [spec](specs/2026-11-10-version-2-0-0-design.md) · [decisiones](specs/2026-11-11-version-2-2-0-design.md) · [plan](plans/2026-11-11-version-2-2-0.md) | Hecha |
-| **2.3.0** | La ciudad, el Devorador del portal y el final | [spec](specs/2026-11-10-version-2-0-0-design.md) | Diseñada |
+| **2.3.0** | La ciudad, el Devorador del portal y el final | [spec](specs/2026-11-10-version-2-0-0-design.md) · [decisiones](specs/2026-11-11-version-2-3-0-design.md) · [plan](plans/2026-11-11-version-2-3-0.md) | Hecha |
 
 Las versiones 1.1.1 a 1.4.0 están implementadas y publicadas; las pruebas a mano y en móvil real que quedaron pendientes están en sus informes. Las versiones 1.4.1 a 2.0.0 están implementadas en `develop` (2026-11-11) y sin publicar.
 
-Pendiente a mano de 1.4.1 a 2.0.0: escuchar las músicas nuevas (`caravan`, `jungle`) y los ambientes (los WAV de prueba están en `build/ambient/`); jugar en un móvil real los grupos del mapa, la pregunta de partir con la caravana y la lista de compañeros; jugar a mano una partida con los monstruos a la vista; probar F1 con `--debug`; mirar la dificultad de la Partida nueva + con un héroe de Nv 17-18.
+Pendiente a mano de 1.4.1 a 2.0.0: escuchar las músicas nuevas (`caravan`, `jungle`) y los ambientes (los WAV de prueba están en `build/ambient/`); jugar en un móvil real los grupos del mapa, la pregunta de partir con la caravana y la lista de compañeros; jugar a mano una partida con los monstruos a la vista; probar F1 con `--debug`; mirar la dificultad de la Partida nueva + con un héroe de Nv 17-18. Pendiente a mano de la 2.3.0: escuchar las músicas `city` y `beyond` y los ambientes de la ciudad y del portal; jugar en un móvil real la ciudad (la reja, la tienda de la estelar), el Devorador y el final, y mirar los fotogramas con la ceniza y la pantalla del más allá.
 
 Decisiones tomadas al implementar 1.4.1 a 2.0.0, que no estaban en los diseños:
 
@@ -300,3 +301,4 @@ Orden de las nuevas, y por qué:
 - **1.9.0** al final: el ambiente y la herramienta de depuración no cambian reglas y conocen ya todo lo anterior.
 - **2.0.0 a 2.3.0** después de todas las 1.x: las zonas nuevas se diseñan con monstruos a la vista, familias del bestiario, Partida nueva + y ambiente ya hechos. Una zona por versión, cada una jugable hasta su jefe; los planes se escriben uno a uno al llegar a cada versión.
 - **2.0.1** justo después de la 2.0.0: decorar los mapas que ya existen con Kenney no cambia reglas, y deja el estilo fijado antes de construir el desierto y la montaña.
+- **2.3.0** cierra la v2: la ciudad, el Devorador del portal y el final. La v2 está completa; lo que sigue (la v3) no tiene plan todavía.
