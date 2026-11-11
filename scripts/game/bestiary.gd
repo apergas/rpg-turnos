@@ -46,9 +46,9 @@ static func has(enemy_id: String) -> bool:
 	return family_of(enemy_id) != "" or V2_ENEMIES.has(enemy_id)
 
 
-## How many enemies the bestiary counts: the families' and the v2's.
-static func total_count() -> int:
-	return all_ids().size() + V2_ENEMIES.size()
+## How many enemies the bestiary counts: the families' (22) and, on a caravan game, the v2's.
+static func total_count(state: GameState) -> int:
+	return all_ids().size() + (V2_ENEMIES.size() if state.in_caravan() else 0)
 
 
 ## The family with family_id ({} if none).
@@ -114,10 +114,13 @@ static func complete_count(state: GameState) -> int:
 	return complete
 
 
-## How many enemies with a card have been seen.
+## How many enemies with a card have been seen (the v2's only on a caravan game).
 static func seen_count(state: GameState) -> int:
 	var seen := 0
-	for id in all_ids() + V2_ENEMIES:
+	var ids := all_ids()
+	if state.in_caravan():
+		ids.append_array(V2_ENEMIES)
+	for id in ids:
 		if state.seen_enemies.has(id):
 			seen += 1
 	return seen

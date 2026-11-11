@@ -1149,7 +1149,7 @@ func _build_wolf(data: Dictionary) -> void:
 
 
 ## A poison dart frog: a squat faceted body, a yellow belly, black spots, two big eyes on
-## top and four bent legs, facing -Z. About 0.6 m tall; it hops like the slimes.
+## top and four bent legs, facing -Z. About 0.55 m tall before the look's scale (1.4); it hops like the slimes.
 func _build_frog(data: Dictionary) -> void:
 	var root := Node3D.new()
 	root.scale = Vector3.ONE * data.scale
@@ -1170,7 +1170,7 @@ func _build_frog(data: Dictionary) -> void:
 
 
 ## A vine snake: a chain of shrinking green spheres coiled on the ground that rises into a
-## raised neck and a wedge head with yellow eyes, facing -Z. About 1 m tall.
+## raised neck and a wedge head with yellow eyes, facing -Z. About 1.1 m tall.
 func _build_snake(data: Dictionary) -> void:
 	var root := Node3D.new()
 	root.scale = Vector3.ONE * data.scale
@@ -1194,7 +1194,7 @@ func _build_snake(data: Dictionary) -> void:
 
 
 ## A howler monkey: a round brown body, a light face with dark eyes, long arms and a curled
-## tail, sitting up, facing -Z. About 1.2 m tall.
+## tail, sitting up, facing -Z. About 1.3 m tall.
 func _build_monkey(data: Dictionary) -> void:
 	var root := Node3D.new()
 	root.scale = Vector3.ONE * data.scale

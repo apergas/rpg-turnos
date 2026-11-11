@@ -92,7 +92,8 @@ static func _palm(trunk: SurfaceTool, fronds: SurfaceTool, base: Vector3, height
 
 ## One drooping frond from origin outward: a folded strip (spine raised, edges lower), with
 ## both faces, so it reads from above and from below.
-static func _frond(st: SurfaceTool, origin: Vector3, angle: float, length: float, index: int) -> void:
+static func _frond(st: SurfaceTool, origin: Vector3, angle: float, length: float,
+		index: int) -> void:
 	var out := Vector3(sin(angle), 0, cos(angle))
 	var side := Vector3(out.z, 0, -out.x)
 	var spine: Array[Vector3] = []
