@@ -44,6 +44,7 @@ bush_seed = 43
 bush_tries = 60
 entries = {
 "inicio": [Vector3(0, 0, 8), 0.0],
+"desierto": [Vector3(0, 0, -13), 180.0],
 "jungla": [Vector3(0, 0, -13), 180.0],
 "pueblo": [Vector3(0, 0, 4), 0.0]
 }
@@ -61,12 +62,24 @@ exits = [{
 "pos": Vector3(0, 0, -17),
 "to": "jungla",
 "yaw": 0.0
+}, {
+"entry": "caravana",
+"gone": "gusano_dunas",
+"id": "desierto",
+"label": "Al desierto",
+"lock": "",
+"lock_text": "",
+"needs": "jaguar_sombrio",
+"pos": Vector3(0, 0, -17),
+"to": "desierto",
+"yaw": 0.0
 }]
 npcs = [{
 "kind": "npc",
 "lines": ["La jungla está al norte. Cuando estés listo, sal por allí."],
 "lines_by_chapter": {
-7: ["Has vencido al guardián de la jungla. Bien hecho.", "Aún no podemos seguir. Montaremos el camino cuando la ruta sea segura."]
+7: ["El desierto está al norte. Busca la ruina: dicen que algo enorme vive bajo la arena.", "Lleva agua... bueno, pociones. Muchas pociones."],
+8: ["Has cruzado el desierto. Bien hecho.", "Aún no podemos seguir. Montaremos el camino cuando la ruta sea segura."]
 },
 "look": "CARAVAN_CHIEF",
 "name": "Jefe de caravana",
@@ -100,6 +113,14 @@ npcs = [{
 "name": "Viajera",
 "pos": Vector3(3, 0, 7),
 "yaw": 0.0
+}, {
+"kind": "npc",
+"lines": ["Crucé ese desierto de joven. De día quema y de noche hiela."],
+"look": "FARMER",
+"name": "Viajero",
+"needs": "jaguar_sombrio",
+"pos": Vector3(-5.5, 0, 3),
+"yaw": 90.0
 }]
 boss_id = ""
 boss_pos = Vector3(0, 0, 0)

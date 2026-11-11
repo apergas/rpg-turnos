@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="QuestData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/quest_data.gd" id="1_quest"]
+
+[resource]
+script = ExtResource("1_quest")
+id = "escorpiones"
+title = "Escorpiones en las dunas"
+zone = "caravana"
+giver = "Tablón"
+needs = "jaguar_sombrio"
+turn_in_zone = "caravana"
+turn_in = "Jefe de caravana"
+target = "escorpion"
+goal = 6
+objective = "Derrota 6 escorpiones en el desierto y avisa al Jefe de caravana."
+status = "escorpiones %d / %d"
+report = "vuelve con el Jefe de caravana"
+offer_lines = Array[String](["AVISO: los escorpiones de las dunas pican a los camellos. Se paga a quien derrote a seis. — El Jefe de caravana"])
+wait_lines = Array[String](["¿Seis escorpiones? Los verás entre las dunas, con la cola en alto."])
+done_lines = Array[String](["¡Seis escorpiones! Los camellos ya duermen tranquilos.", "Toma tu paga, y esta pluma: en el desierto nunca sobra."])
+reward_gold = 450
+reward_items = {
+"pluma_fenix": 1
+}

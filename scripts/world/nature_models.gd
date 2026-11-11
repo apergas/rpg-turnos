@@ -28,7 +28,11 @@ const PALETTE := {
 }
 ## How deep the kit sinks every model in its node, in kit units.
 const KIT_SINK := 0.05
-## id → [[kit model, scale, position, yaw]] (the models the mesh holds).
+## The desert ruin's stone (a warm sandstone instead of PALETTE's grey).
+const SANDSTONE := Color(0.74, 0.66, 0.54)
+const SANDSTONE_DARK := Color(0.58, 0.51, 0.41)
+## id → [[kit model, scale, position, yaw, overrides]] (the models the mesh holds); overrides
+## is optional: a material → colour that wins over GREENS and PALETTE in that piece only.
 const PIECES := {
 	"flowers": [["flower_redA", 2.0, Vector3.ZERO, 0.0],
 		["flower_yellowB", 2.0, Vector3(0.45, 0, 0.25), 1.3],
@@ -55,6 +59,15 @@ const PIECES := {
 		["crop_pumpkin", 2.4, Vector3(0.7, 0, 0), 1.7]],
 	"campfire": [["campfire_stones", 3.0, Vector3.ZERO, 0.0],
 		["campfire_logs", 3.0, Vector3(0, 0.03, 0), 0.5]],
+	"cactus": [["cactus_short", 2.15, Vector3.ZERO, 0.0]],
+	"cactus_tall": [["cactus_tall", 3.5, Vector3.ZERO, 0.0]],
+	"scrub": [["plant_bushSmall", 2.6, Vector3.ZERO, 0.0]],
+	"column": [["statue_column", 3.75, Vector3.ZERO, 0.0,
+		{"stone": SANDSTONE, "stoneDark": SANDSTONE_DARK}]],
+	"column_broken": [["statue_columnDamaged", 3.0, Vector3.ZERO, 0.0,
+		{"stone": SANDSTONE, "stoneDark": SANDSTONE_DARK}]],
+	"ruin_block": [["statue_block", 2.25, Vector3.ZERO, 0.0,
+		{"stone": SANDSTONE, "stoneDark": SANDSTONE_DARK}]],
 }
 
 static var _cache: Dictionary = {}
@@ -74,7 +87,8 @@ static func mesh(id: String, green: Color) -> ArrayMesh:
 			var center := _footprint_center(model)
 			var placing := Transform3D(Basis(Vector3.UP, piece[3]).scaled(Vector3.ONE * piece[1]),
 				piece[2]) * Transform3D(Basis.IDENTITY, Vector3(-center.x, KIT_SINK, -center.z))
-			_append(model, Transform3D.IDENTITY, placing, green, data)
+			var overrides: Dictionary = piece[4] if piece.size() > 4 else {}
+			_append(model, Transform3D.IDENTITY, placing, green, data, overrides)
 			model.free()
 		var arrays := []
 		arrays.resize(Mesh.ARRAY_MAX)
@@ -141,7 +155,7 @@ static func _footprint_center(model: Node) -> Vector3:
 ## Adds every surface of node's meshes (and its children's) to data with node's transform,
 ## coloured by its kit material (the zone's green, or the PALETTE).
 static func _append(node: Node, parent: Transform3D, placing: Transform3D, green: Color,
-		data: Dictionary) -> void:
+		data: Dictionary, overrides := {}) -> void:
 	var here := parent
 	if node is Node3D and node.get_parent() != null:
 		here = parent * (node as Node3D).transform
@@ -153,7 +167,9 @@ static func _append(node: Node, parent: Transform3D, placing: Transform3D, green
 			var material := source.surface_get_material(i)
 			var name := material.resource_name if material != null else "_defaultMat"
 			var color: Color = green
-			if not GREENS.has(name):
+			if overrides.has(name):
+				color = overrides[name]
+			elif not GREENS.has(name):
 				if not PALETTE.has(name):
 					push_warning("Decoración: el material «%s» del kit no tiene color en PALETTE" % name)
 				color = PALETTE.get(name, Color.WHITE)
@@ -173,5 +189,5 @@ static func _append(node: Node, parent: Transform3D, placing: Transform3D, green
 				for index in vertices.size():
 					data.indices.append(base + index)
 	for child in node.get_children():
-		_append(child, here, placing, green, data)
+		_append(child, here, placing, green, data, overrides)
 

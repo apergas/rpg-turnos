@@ -129,7 +129,7 @@ const MEDAL_ZONE_TIME := 300.0
 const NG_PLUS_START := "ngplus"
 ## The autoplay starts that play the v2: only they answer the Jefe de caravana's questions
 ## with Sí (every other run, the finished-game ones included, stays in the v1).
-const V2_STARTS := ["caravana", "jungla"]
+const V2_STARTS := ["caravana", "jungla", "desierto"]
 ## --autoplay-zone=<id>: what a new game starting in each zone gets, as planned when
 ## arriving there (zone 1 done: Lv 5, its shop's gear, the Rey Slime beaten).
 const AUTOPLAY_ZONES := {
@@ -245,6 +245,23 @@ const AUTOPLAY_ZONES := {
 		"town": "caravana",
 		"ally": "brena",
 		"items": {Inventory.BIG_POTION: 3, Inventory.ETHER: 3, Inventory.WING: 2},
+		"finished": true,
+	},
+	# --autoplay-zone=desierto: the jungle done: Lv 25 with the jade gear, Brena, the Jaguar
+	# beaten and its insignia, at the desert's entrance.
+	"desierto": {
+		"experience": 6850,
+		"gold": 900,
+		"gear": ["espada_jade", "armadura_jade", "escudo_jade", "casco_jade"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra", "senor_niebla", "caravana_vista", "caravana", "companero",
+			"jaguar_sombrio"],
+		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo",
+			"insignia_jungla"],
+		"quest_done": true,
+		"town": "caravana",
+		"ally": "brena",
+		"items": {Inventory.BIG_POTION: 3, Inventory.BIG_ETHER: 2, Inventory.WING: 2},
 		"finished": true,
 	},
 	# Ready for the Señor de la Niebla: Lv 17 with the castle's gear.
@@ -483,8 +500,14 @@ func _apply_autoplay_zone(args: PackedStringArray) -> void:
 		state.town_zone = start.get("town", state.town_zone)
 		if start.quest_done:
 			state.quest.stage = Quest.Stage.DONE
+		# The v2's level cap needs the "caravana" flag, set just above: levels again.
+		# (the first pass at the v1 cap clamped the EXP: give it back).
+		state.sync_level_cap()
+		state.hero.experience = start.experience
+		Leveling.apply(state.hero)
+		state.heal_full()
 		state.ally_id = start.get("ally", "")
-		if _autoplay_companion != "" and start_id == "jungla":
+		if Allies.is_companion(state.ally_id):
 			state.ally_id = _autoplay_companion
 		var items: Dictionary = start.get("items", {})
 		for id: String in items:
@@ -780,6 +803,17 @@ func _boss_wanted() -> bool:
 		# It can always be fought again; autoplay only meets it on --autoplay-zone=eco.
 		return not _autoplay or _autoplay_echo
 	return state.quest.boss_available() if boss == Quest.BOSS_ID else not state.has_flag(boss)
+
+
+## The index of the figure of this kind and id (a shop's) with a quest report waiting
+## (QuestLog.reports_here()), -1 if none.
+func _figure_with_report(kind: String, id: String) -> int:
+	var waiting := state.quests.reports_here(_zone.id, state.inventory)
+	for i in _zone.npcs.size():
+		var npc: Dictionary = _zone.npcs[i]
+		if npc.kind == kind and npc.get("id", "") == id and npc.name in waiting:
+			return i
+	return -1
 
 
 ## Autoplay, in the village: a night at its inn and the shop's picks, as if the hero had
@@ -1113,7 +1147,9 @@ func _on_npc(index: int) -> void:
 	var lines: Array[String] = []
 	for line: String in said:
 		lines.append(StoryState.fill(line, state.hero.display_name))
-	await _world.show_dialogue(figure, lines)
+	# A thing picked up (kind "item", the cantimplora) has no voice: the narrator says it.
+	var speaker := "" if _zone.npcs[index].kind == "item" else figure
+	await _world.show_dialogue(speaker, lines)
 	if not talk.is_empty():
 		_after_quest_talk(talk.done)
 	_set_busy(false)
@@ -1191,6 +1227,11 @@ func _after_quest_talk(done_title: String) -> void:
 ## The merchant: the ShopWindow until the player leaves; autosaves if anything changed.
 ## On autoplay it only opens when there is something to buy.
 func _on_shop(shop_id: String) -> void:
+	if _busy:
+		return
+	var waiting := _figure_with_report("shop", shop_id)
+	if waiting >= 0:
+		await _on_npc(waiting)  # a report waiting at the merchant goes first (pieles_mono)
 	if shop_id == Shop.CARAVAN_SHOP:
 		shop_id = Shop.caravan_shop(state.tramo())
 	if _busy or (_autoplay and Shop.autoplay_picks(state, shop_id).is_empty()):

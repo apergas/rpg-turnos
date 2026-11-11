@@ -6,9 +6,10 @@ class_name BattleStage extends RefCounted
 ## cave: rock floor, a wall of rock blocks and boulders behind and beside the fighters,
 ## stalagmites and two torches, in the dark of an underground zone. "castillo" is a
 ## castle yard: flagstones, KayKit wall pieces with towers behind and beside the
-## fighters, banks of mist and two torches (and the hero's lantern indoors). The
-## environment, the mesh and model helpers and the rock and tree models are shared with
-## WorldStage.
+## fighters, banks of mist and two torches (and the hero's lantern indoors). "desierto" is
+## sand with a darker track, palms far behind, dunes and the Kenney cacti, scrub and a
+## broken column. The environment, the mesh and model helpers and the rock and tree models
+## are shared with WorldStage.
 
 const GRASS := Color(0.32, 0.55, 0.22)
 const DIRT := Color(0.62, 0.5, 0.34)
@@ -104,6 +105,19 @@ const JUNGLE_TIPS := [Color(0.1, 0.45, 0.08), Color(0.26, 0.6, 0.12)]
 const JUNGLE_PALM_RATIO := 0.354
 const JUNGLE_PALMS := ["palm_A", "palm_B"]
 
+## The desert backdrop: sand, a darker trodden track, the rocks, two palms and a clump far
+## behind (PalmModels, the map's), dunes for hills and the Kenney cacti, scrub and a broken
+## column of BACKDROP_DECOR; no tall grass and no bushes.
+const DESERT_GROUND := Color(0.56, 0.44, 0.28)
+const DESERT_PATH := Color(0.42, 0.32, 0.2)
+const DESERT_HILL := Color(0.58, 0.45, 0.29)
+## [position, PalmModels id, scale, yaw in degrees].
+const DESERT_PALMS := [
+	[Vector3(-11, 0, -16), "palm_A", 1.4, 20.0],
+	[Vector3(12, 0, -19), "palm_B", 1.45, 200.0],
+	[Vector3(-17, 0, -10), "palms_clump", 1.4, 90.0],
+]
+
 
 ## The mine backdrop: rock floor, the blocks of the cave wall ([position, size]), the
 ## boulders (same entries as ROCKS), the stalagmites ([position, radius, height]) and
@@ -168,6 +182,11 @@ const BACKDROP_DECOR := {
 		["fern", Vector3(4.2, 0, -2.4), 70.0, 1.6],
 		["fern", Vector3(-4.2, 0, 0.8), 150.0, 1.5],
 		["mushrooms_red", Vector3(4.6, 0, 1.6), 200.0, 1.4]],
+	"desierto": [["cactus_tall", Vector3(-4.2, 0, -3.6), 20.0, 1.0],
+		["cactus", Vector3(4.4, 0, -2.2), 140.0, 1.0],
+		["cactus", Vector3(-4.6, 0, 0.9), 260.0, 0.8],
+		["scrub", Vector3(4.4, 0, 1.6), 0.0, 1.0],
+		["column_broken", Vector3(5.6, 0, -6.5), 15.0, 1.0]],
 }
 
 ## zone: whose sky, light and backdrop to use (null: the meadow's).
@@ -178,6 +197,9 @@ static func build(root: Node3D, zone: ZoneData = null) -> void:
 		return
 	if zone != null and zone.backdrop == "castillo":
 		_build_castle(root, zone)
+		return
+	if zone != null and zone.backdrop == "desierto":
+		_build_desert(root, zone)
 		return
 	var jungle := zone != null and zone.backdrop == "jungla"
 	var forest := jungle or (zone != null and zone.backdrop == "bosque")
@@ -304,6 +326,28 @@ static func unit_sphere() -> SphereMesh:
 	mesh.radius = 1.0
 	mesh.height = 2.0
 	return mesh
+
+
+static func _build_desert(root: Node3D, zone: ZoneData) -> void:
+	var ground := PlaneMesh.new()
+	ground.size = Vector2(160, 160)
+	add_mesh(root, ground, DESERT_GROUND, Vector3.ZERO)
+	var path := PlaneMesh.new()
+	path.size = PATH_SIZE
+	add_mesh(root, path, DESERT_PATH, PATH_CENTER + Vector3(0, 0.01, 0), Vector3.ONE,
+		Vector3(0, PATH_YAW_DEG, 0))
+	for rock in ROCKS:
+		add_model(root, ROCK_SCENES[rock[1]], rock[0], rock[2], rock[3])
+	for palm: Array in DESERT_PALMS:
+		var instance := MeshInstance3D.new()
+		instance.mesh = PalmModels.mesh(palm[1])
+		instance.position = palm[0]
+		instance.scale = Vector3.ONE * float(palm[2])
+		instance.rotation_degrees = Vector3(0, palm[3], 0)
+		root.add_child(instance)
+	for hill in HILLS:
+		add_mesh(root, unit_sphere(), DESERT_HILL, hill[0], hill[1])
+	_add_backdrop_decor(root, zone)
 
 
 static func _build_cave(root: Node3D) -> void:

@@ -1,5 +1,16 @@
 # Registro de cambios
 
+## 2.1.0 (2026)
+
+La caravana del portal, segunda parte.
+
+- El desierto: dunas, cactus, un oasis con palmeras y una ruina donde espera el Gusano de las dunas.
+- Cinco monstruos nuevos: el Escorpión, el Slime de arena, el Buitre, el Golem de arena y la Momia.
+- El equipo de oricalco, en la tienda de la Caravana.
+- Un viajero nuevo en la Caravana y dos misiones más.
+- El desierto suena a viento, y la arena vuela a ráfagas.
+- Ya se pueden entregar las pieles de mono al Mercader de la Caravana: antes solo se abría su tienda.
+
 ## 2.0.1 (2026)
 
 - Los mapas están más vivos: flores, setas, tocones y troncos caídos en la pradera y el bosque, y helechos bajo las palmeras de la jungla.

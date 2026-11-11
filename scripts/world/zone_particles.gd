@@ -1,7 +1,7 @@
 class_name ZoneParticles extends RefCounted
 ## The particles that float around the hero on a map (ZoneData.particles): pollen and
 ## dandelion seeds in the meadow, leaves falling slowly in the forest, dust motes that the
-## lantern lights in the mine, flakes of violet mist in the castle. A CPUParticles3D (the
+## lantern lights in the mine, flakes of violet mist in the castle, grains of sand blown in gusts in the desert. A CPUParticles3D (the
 ## same on the Compatibility renderer and on the web) in world space: World carries its
 ## box (BOX, 30 × 20 m around the hero; the mine's is smaller, the lantern's reach) along
 ## every physics tick with follow(), and what is already floating stays where it is. Never
@@ -14,6 +14,7 @@ const LEAVES := "leaves"
 const DUST := "dust"
 const MIST := "mist"
 const FIREFLIES := "fireflies"
+const SAND := "sand"
 ## Half extents, along X and Z, of the box the particles are born in around the hero.
 const BOX := Vector3(15.0, 0.0, 10.0)
 ## Share of a particle's life spent fading in, and again fading out.
@@ -23,7 +24,8 @@ const FADE := 0.15
 ## as wide), [least, most] speed, the way they drift ("direction", "spread" degrees around
 ## it), spin in degrees a second (leaves), the two colours they are picked between, lit
 ## (shaded: only the light of the scene shows them) and round (a soft dot instead of a flat
-## quad); "box" replaces BOX.
+## quad); "box" replaces BOX; "burst" (optional, 0 by default) is the particles' explosiveness:
+## near 1 they are all born at once each life, a gust every "lifetime" seconds.
 const KINDS := {
 	POLLEN: {"amount": 80, "lifetime": 9.0, "height": 1.4, "depth": 1.2, "size": 0.09,
 		"speed": [0.15, 0.35], "direction": Vector3(1.0, 0.15, 0.3), "spread": 60.0,
@@ -45,6 +47,10 @@ const KINDS := {
 		"speed": [0.1, 0.3], "direction": Vector3(1.0, 0.2, 0.4), "spread": 180.0,
 		"spin": 0.0, "colors": [Color(0.8, 1.0, 0.3, 1.0), Color(0.6, 1.0, 0.4, 1.0)],
 		"lit": false, "round": true, "glow": true},
+	SAND: {"amount": 90, "lifetime": 2.5, "height": 0.5, "depth": 0.4, "size": 0.04,
+		"speed": [3.0, 5.0], "direction": Vector3(1.0, 0.08, 0.2), "spread": 10.0,
+		"spin": 0.0, "colors": [Color(0.95, 0.82, 0.58, 0.8), Color(0.85, 0.7, 0.46, 0.7)],
+		"lit": true, "round": true, "burst": 0.75},
 }
 
 ## No particles at all while false (low quality). Set by DisplaySettings.
@@ -66,6 +72,7 @@ static func build(kind: String) -> Node3D:
 	parts.position.y = spec.height
 	parts.amount = maxi(1, int(spec.amount) / (2 if half else 1))
 	parts.lifetime = spec.lifetime
+	parts.explosiveness = spec.get("burst", 0.0)
 	parts.preprocess = spec.lifetime
 	parts.local_coords = false
 	parts.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX

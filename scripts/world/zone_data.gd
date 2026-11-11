@@ -13,10 +13,10 @@ class_name ZoneData extends Resource
 
 ## Every zone, in world order (save validation and --autoplay-zone check against it).
 const IDS: Array[String] = ["pradera", "bosque", "mina_1", "mina_2", "mina_3",
-	"castillo_patio", "castillo_trono", "caravana", "jungla"]
+	"castillo_patio", "castillo_trono", "caravana", "jungla", "desierto"]
 ## The zones of the v2 (the caravan), growing with each version: a save with the caravan's
 ## flag is only valid on one of these, and a save without it only on the others.
-const V2_ZONES: Array[String] = ["caravana", "jungla"]
+const V2_ZONES: Array[String] = ["caravana", "jungla", "desierto"]
 ## Side of a dungeon cell, in metres.
 const CELL := 4.0
 ## Dungeon cells: rock (a wall in a castle), floor, stairs up and down, chest, lever,
@@ -59,11 +59,22 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var grass_seed := 7
 ## [position, scale] of each hill (unit spheres, half buried) around the field.
 @export var hills: Array = []
+## The colour of the hills outside the walls and of the dunes (the meadow's green by default).
+@export var hill_color := Color(0.27, 0.47, 0.22)
+## Dunes inside the field: [centre (y below 0: half buried), radii] of a flattened
+## ellipsoid of hill_color. They are solid (WorldStage gives each a row of cylinders) and
+## everything keeps off them: trees, decoration, grass and the monster groups.
+@export var dunes: Array = []
+## Patches of other ground: [centre, radius, colour] discs drawn on the ground under the
+## path (the desert's green oasis).
+@export var ground_patches: Array = []
 
 @export_group("Path and safe ground")
 ## Corners of the dirt path (no grass, no monster groups).
 @export var path_points: Array[Vector3] = []
 @export var path_half_width := 1.5
+## The colour of the path and the safe discs (BattleStage.DIRT by default).
+@export var path_color := Color(0.62, 0.5, 0.34)
 ## [centre, radius] of each round patch of bare dirt (no grass, no monster groups): the
 ## spawn area, the village clearing, the boss's clearing...
 @export var safe_discs: Array = []
@@ -97,6 +108,10 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## the clump.
 @export var tree_models: Array[String] = ["tree_A", "tree_B"]
 @export var clump_model := "trees_A"
+## Where the trees may grow, [centre, radius] discs: when there are any, every tree of the
+## zone is rolled inside one of them (the desert's palms only in its oasis); empty: anywhere,
+## denser toward the walls.
+@export var tree_areas: Array = []
 ## [centre, radius] of each glade: no trees, but grass and monster groups.
 @export var glades: Array = []
 @export var bush_seed := 31
@@ -135,7 +150,8 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## camera), "name" (unique on the map: cutscenes call the figure by it), and what it says:
 ## "lines" and / or "lines_by_chapter" (StoryState.Chapter -> lines, from that chapter on;
 ## they may hold StoryState.NAME_TAG). The "quest" figure uses them once its quest is done;
-## optional "needs" / "gone": flags that make it exist (is_present())}.
+## optional "needs" / "gone": flags that make it exist (is_present())}. Kind "item" is a thing
+## picked up ("Coger · Cantimplora"), with no voice of its own.
 @export var npcs: Array = []
 ## The zone's boss (EnemyLibrary id, "" for none) and where it waits.
 @export var boss_id := ""
