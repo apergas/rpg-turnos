@@ -1,7 +1,9 @@
 # Credits
 
 Every model in this folder is a copy of a file from a free asset pack, unchanged
-(`characters/hero_head_texture.png` is the Knight's texture with the hair darkened). All
+(`characters/hero_head_texture.png` is the Knight's texture with the hair darkened; the
+`characters/head_*.png` are the Knight's texture with another hair colour and skin, made with
+`scripts/tools/head_textures.gd`). All
 packs are CC0 (public domain): they can be used in a commercial game without asking or
 crediting, but the author deserves the thanks.
 

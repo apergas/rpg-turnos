@@ -420,6 +420,8 @@ func _ready() -> void:
 			else:
 				push_error("Not a companion for --autoplay-companion: %s" % companion)
 	_rng.randomize()
+	for line in QuestLog.problems():
+		push_warning(line)
 	if _options == null:
 		_options = GameOptions.new()
 	if _audio == null:
@@ -437,6 +439,9 @@ func _ready() -> void:
 			if _autoplay_save:
 				print("Cargado: %s" % _summary(SaveData.from_state(state, info.position,
 					info.play_time)))
+			# The arrival lines of the lands already passed (and of this one) are not said
+			# again on loading.
+			Allies.mark_arrivals(state.world_flags, state.zone_id)
 			if _new_cycle:
 				# Partida nueva +: the hero as he is, the story from the prologue again, in the
 				# hero's house, with the clock at 0.
@@ -490,6 +495,8 @@ func _ready() -> void:
 			_audio.play_sfx(SfxLibrary.LEVEL_UP)
 			await _world.show_dialogue("", family_lines)
 			_autosave(false)
+		if _save.is_empty():
+			await _check_arrival_line()  # an --autoplay-zone start in a land (the jungle)
 		_set_busy(false)
 		_show_touch_hint()
 		_check_village_scene()
@@ -594,6 +601,8 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 		remove_child(_world)
 		_world.queue_free()
 	_zone = ZoneData.by_id(zone_id)
+	if zone_id == CampLook.ZONE:
+		_zone = CampLook.dressed(_zone, state.tramo())  # the land it camps by (2.4.0)
 	state.zone_id = zone_id
 	_quiet_s = 0.0
 	_world = WORLD_SCENE.instantiate()
@@ -684,6 +693,7 @@ func _on_encounter(boss: bool) -> void:
 	state.sync_level_cap()
 	battle.difficulty = state.difficulty
 	battle.zone = _zone
+	battle.quest_items = state.quests.wanted_items(state)
 	if state.ally_id != "":
 		battle.ally = Allies.data(state.ally_id, state.tramo())
 	add_child(battle)
@@ -876,7 +886,7 @@ func _boss_wanted() -> bool:
 
 
 ## The index of the figure of this kind and id (a shop's) with a quest report waiting
-## (QuestLog.reports_here()), -1 if none.
+## (QuestLog.reports_here()), -1 if none. A shop's or an inn's.
 func _figure_with_report(kind: String, id: String) -> int:
 	var waiting := state.quests.reports_here(_zone.id, state.inventory)
 	for i in _zone.npcs.size():
@@ -979,6 +989,7 @@ func _on_exit(zone_id: String, entry_id: String) -> void:
 	_play_map_music()
 	await _fade_to(0.0)
 	await _world.freeze(false)
+	await _check_arrival_line()
 	_autosave(false)
 	_set_busy(false)
 	_check_village_scene()
@@ -1053,6 +1064,22 @@ func _on_village_changed(inside: bool) -> void:
 	_play_map_music()
 	if inside:
 		_check_village_scene()
+
+
+## The companion's line the first time the hero reaches a land of the caravan
+## (Allies.ARRIVALS), once the place's name is up; remembered with its llegada_<zone> flag.
+## Nothing without a companion. The caller is busy.
+func _check_arrival_line() -> void:
+	var line := Allies.arrival_line(state.ally_id, _zone.id)
+	var flag := Allies.arrival_flag(_zone.id)
+	if line == "" or state.has_flag(flag):
+		return
+	state.world_flags[flag] = true
+	_world.freeze(true)
+	await get_tree().create_timer(World.BANNER_FADE).timeout
+	if _autoplay:
+		print("Compañero: %s" % line)
+	await _world.show_dialogue(Allies.display_name(state.ally_id), [line])
 
 
 ## Plays the cutscene of this zone's village if the hero is inside it and has not seen
@@ -1295,8 +1322,13 @@ func _on_npc(index: int) -> void:
 		_set_busy(false)
 		_check_village_scene()  # the Caravana's first visit, if the hero left
 		return
-	var talk := state.quests.talk(state, _zone.id, figure)
+	var chief := figure == CARAVAN_CHIEF
+	var talk := state.quests.talk(state, _zone.id, figure, chief)
 	var said: Array = talk.get("lines", _world.npc_lines(index, state.chapter()))
+	if chief and talk.get("kind", "") == QuestLog.TALK_WAIT:
+		# The Jefe with quests under way and nothing to deliver: his chapter lines first (the
+		# way on, his joke), then one waiting line.
+		said = _world.npc_lines(index, state.chapter()) + talk.lines
 	var lines: Array[String] = []
 	for line: String in said:
 		lines.append(StoryState.fill(line, state.hero.display_name))
@@ -1304,7 +1336,9 @@ func _on_npc(index: int) -> void:
 	var speaker := "" if _zone.npcs[index].kind == "item" else figure
 	await _world.show_dialogue(speaker, lines)
 	if not talk.is_empty():
-		_after_quest_talk(talk.done)
+		var done: Array[String] = []
+		done.assign(talk.done)
+		_after_quest_talk(done)
 	_set_busy(false)
 
 
@@ -1339,7 +1373,7 @@ func _choose_companion() -> void:
 		await _shop.run(Shop.COMPANIONS_SHOP)
 		await _world.freeze(false)
 	if not Allies.is_companion(state.ally_id):
-		await _world.show_dialogue(CARAVAN_CHIEF, ["Piénsalo bien. Te espero aquí."])
+		await _world.show_dialogue(CARAVAN_CHIEF, ["Piénsalo bien. Te espero aquí, que yo no tengo prisa."])
 		return
 	state.world_flags[StoryState.COMPANION_FLAG] = true
 	_world.set_world_flags(state.world_flags)
@@ -1363,19 +1397,31 @@ func _talk_to_collector() -> void:
 	_autosave(false)
 
 
-## The map shows what changed; a finished quest says so; the game is saved.
-func _after_quest_talk(done_title: String) -> void:
+## The map shows what changed (a done_flag brings a figure back: Nara, the Superviviente);
+## the quests finished say so with one notice and one sound; the game is saved.
+func _after_quest_talk(done: Array[String]) -> void:
 	if _zone.rare_enemy in state.quests.wanted_enemies():
 		_spawn_rare()  # its hunt was just taken: it is on this floor at once
 	if _autoplay:
 		for id in Inventory.SEEDS:
 			while state.inventory.count(id) > 0:
 				state.use_item(id)
+	_world.set_world_flags(state.world_flags)
 	_refresh_status()
-	if done_title != "":
+	if not done.is_empty():
 		_audio.play_sfx(SfxLibrary.LEVEL_UP)
-		_world.show_mission_done(QuestLog.done_text(done_title))
-	_autosave(done_title == "")
+		_world.show_mission_done(_done_text(done))
+	_autosave(done.is_empty())
+
+
+## "Misión cumplida: <title>"; with several, all their titles on a desktop and how many on a
+## phone (its status window has one line of 300 px).
+func _done_text(done: Array[String]) -> String:
+	if done.size() == 1:
+		return QuestLog.done_text(done[0])
+	if Device.is_touch():
+		return QuestLog.done_count_text(done.size())
+	return QuestLog.done_text(" · ".join(done))
 
 
 ## The merchant: the ShopWindow until the player leaves; autosaves if anything changed.
@@ -1407,6 +1453,11 @@ func _on_shop(shop_id: String) -> void:
 ## AUTOPLAY_INN_RATIO of max HP or MP, on GameState.needs_rest() or below the boss's
 ## thresholds (or a retreat for the boss would come back unhealed).
 func _on_inn(inn_id: String) -> void:
+	if _busy:
+		return
+	var waiting := _figure_with_report("inn", inn_id)
+	if waiting >= 0:
+		await _on_npc(waiting)  # a report waiting at the keeper goes first, as at a shop
 	var hurt := state.hero.hp < state.hero.max_hp * AUTOPLAY_INN_RATIO \
 		or state.hero.mp < state.hero.max_mp * AUTOPLAY_INN_RATIO or state.needs_rest() \
 		or not _rested_for_boss()
@@ -1414,7 +1465,8 @@ func _on_inn(inn_id: String) -> void:
 		return
 	_set_busy(true)
 	var keeper := Inn.keeper(inn_id)
-	var lines: Array[String] = [Inn.FULL if Inn.is_rested(state) else Inn.REST]
+	var lines: Array[String] = [Inn.full_line(inn_id) if Inn.is_rested(state)
+		else Inn.rest_line(inn_id)]
 	await _world.show_dialogue(keeper, lines)
 	if Inn.is_rested(state):
 		_set_busy(false)

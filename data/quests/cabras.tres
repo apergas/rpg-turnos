@@ -18,7 +18,7 @@ status = "cabras %d / %d"
 report = "vuelve con el Jefe de caravana"
 offer_lines = Array[String](["AVISO: las cabras montesas embisten a las mulas en la subida. Se paga a quien derrote a cinco. — El Jefe de caravana"])
 wait_lines = Array[String](["¿Cinco cabras? Las oirás antes de verlas: embisten contra las rocas."])
-done_lines = Array[String](["¡Cinco cabras! Las mulas ya suben tranquilas.", "Toma tu paga, y estos éteres: allá arriba hacen falta."])
+done_lines = Array[String](["¡Cinco cabras! Las mulas ya suben tranquilas.", "Una de las cabras nos sigue desde ayer. Creo que te ha cogido cariño.", "Toma tu paga, y estos éteres: allá arriba hacen falta."])
 reward_gold = 600
 reward_items = {
 "eter_grande": 2

@@ -177,8 +177,8 @@ static func is_grass_free(pos: Vector3, zone: ZoneData) -> bool:
 ## True within margin of the trunk (or clump) of a tree inside the walls (MonsterGroups keeps
 ## the groups off them).
 static func near_tree(zone: ZoneData, pos: Vector3, margin: float) -> bool:
-	if _tree_zone != zone.id:
-		_tree_zone = zone.id
+	if _tree_zone != zone.cache_key():
+		_tree_zone = zone.cache_key()
 		_tree_spots.clear()
 		for tree in _tree_layout(zone):
 			if tree.inside:
@@ -400,7 +400,7 @@ static func _add_trees(root: Node3D, zone: ZoneData) -> void:
 ## first single model), "clump", "inside" (inside the walls: it has a collider)}. The same
 ## rolls every time (zone.tree_seed); the last zone asked about is kept.
 static func _tree_layout(zone: ZoneData) -> Array[Dictionary]:
-	if _layout_zone == zone.id:
+	if _layout_zone == zone.cache_key():
 		return _layout
 	var rng := RandomNumberGenerator.new()
 	rng.seed = zone.tree_seed
@@ -432,7 +432,7 @@ static func _tree_layout(zone: ZoneData) -> Array[Dictionary]:
 		placed.append(Vector2(pos.x, pos.z))
 		trees.append({"pos": pos, "yaw": yaw, "scale": scl, "use_a": use_a,
 			"clump": inset < zone.tree_clump_inset, "inside": inset > 0.0})
-	_layout_zone = zone.id
+	_layout_zone = zone.cache_key()
 	_layout = trees
 	return trees
 
@@ -453,9 +453,9 @@ static func _tree_mesh(id: String) -> Mesh:
 	return BattleStage.scene_mesh(MODELS[id])
 
 
-## One kind of tree as a MultiMesh through TREE_SHADER (the dithered hole that keeps the
-## hero in sight). Every surface keeps its own colour and its texture when it has one: the
-## KayKit trees have one textured surface, the palms two plain coloured ones.
+## One kind of tree as a MultiMesh through TREE_SHADER. Every surface keeps its own colour
+## and its texture when it has one: the KayKit trees have one textured surface, the palms
+## two plain coloured ones.
 static func _add_tree_kind(root: Node3D, source_mesh: Mesh, transforms: Array[Transform3D]) -> void:
 	var mesh := source_mesh.duplicate() as Mesh
 	for i in mesh.get_surface_count():

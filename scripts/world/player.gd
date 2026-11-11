@@ -55,6 +55,7 @@ func _ready() -> void:
 	_model = ACTOR_SCENE.instantiate()
 	_model.look = BattleActor.Look.HERO
 	add_child(_model)
+	_model.set_map_readable(true)  # reads on a tree's shadow (only the map's hero)
 
 
 ## The hero's figure, for cutscenes (walking animation, turning, cheering).

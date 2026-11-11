@@ -111,9 +111,9 @@ static func learn(skill_name: String, replaced_name := "") -> Dictionary:
 	return {"type": LEARN, "name": skill_name, "replaced": replaced_name}
 
 
-## owner: the enemy that left it.
-static func drop(item_id: String, owner: int) -> Dictionary:
-	return {"type": DROP, "item": item_id, "owner": owner}
+## owner: the enemy that left it. progress: "(n/m)" for a quest item ("" for the rest).
+static func drop(item_id: String, owner: int, progress := "") -> Dictionary:
+	return {"type": DROP, "item": item_id, "owner": owner, "progress": progress}
 
 
 static func defend(actor: int) -> Dictionary:
