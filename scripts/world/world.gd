@@ -18,6 +18,7 @@ class_name World extends Node3D
 ## rock blocks turn see-through between the camera and the hero, the hero carries a
 ## lantern underground, and next to the lever, the key or a locked gate Enter / Space
 ## pulls it (lever_pulled), takes it (key_taken) or tries the gate (door_used).
+## The zone's particles (ZoneParticles) float around the hero.
 ## Battles and exits freeze the player until set_active(true) (or until Game frees
 ## the map). A "!" or "?" floats over a figure with something about a quest, and a figure a
 ## quest has not brought out is not on the map (set_quest_view()). Run on its own
@@ -297,6 +298,8 @@ var _quest_marks := {}
 var _hidden_figures: Array[String] = []
 var _mark_labels := {}
 var _figure_signs: Array[Label3D] = []
+## The zone's ZoneParticles (null: none, or low quality), carried with the hero.
+var _particles: Node3D
 ## The groups of monsters on the map (MonsterGroups), each {"node": Node3D (no collider),
 ## "actor": BattleActor (its first enemy's figure), "roam": MonsterRoam, "enemies":
 ## Array[Combatant] (the formation, data), "armed": bool (false: fled from, it starts no
@@ -361,6 +364,9 @@ func _ready() -> void:
 		lantern.omni_range = LANTERN_RANGE
 		lantern.position.y = LANTERN_HEIGHT
 		_player.add_child(lantern)
+	_particles = ZoneParticles.build(zone.particles)
+	if _particles:
+		add_child(_particles)
 	_camera = FollowCamera.new()
 	add_child(_camera)
 	_camera.target = _player
@@ -384,6 +390,8 @@ func _physics_process(delta: float) -> void:
 	if _grass:
 		Vegetation.set_pusher(_grass, _player.global_position)
 	RenderingServer.global_shader_parameter_set(HERO_POS_PARAM, _player.global_position)
+	if _particles:
+		ZoneParticles.follow(_particles, _player.global_position)
 	_map_square.follow(_player.global_position)
 	_show_near_medals(_player.global_position)
 	if _hint_window and _hint_window.visible and _player.last_step_m > 0.0:
@@ -559,6 +567,8 @@ func arm_blocked_point_skip() -> void:
 func place_player(pos: Vector3, yaw_deg := 0.0) -> void:
 	_player.place(pos, deg_to_rad(yaw_deg))
 	_camera.snap()
+	if _particles:
+		ZoneParticles.follow(_particles, _player.global_position, true)
 	_calm()
 	_was_near = {}
 	_use_on_arrival = {}

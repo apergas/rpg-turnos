@@ -158,6 +158,8 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var sun_energy := 0.6
 ## BattleStage backdrop of the battles fought here ("pradera", "bosque").
 @export var backdrop := "pradera"
+## ZoneParticles kind floating around the hero ("" for none).
+@export var particles := ""
 
 @export_group("Dungeon")
 ## Rows of a dungeon floor, north (−Z) first, one character per CELL × CELL cell (see

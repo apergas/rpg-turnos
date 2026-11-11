@@ -33,6 +33,7 @@ ambient = "castle"
 haze = Color(0.16, 0.1, 0.22, 1)
 fog_density = 0.01
 backdrop = "castillo"
+particles = "mist"
 layout = PackedStringArray("#############", "#####.R.#####", "#T#.......#T#", "#...#...#...#", "#...........#", "#T..#...#..T#", "#...........#", "#...#...#...#", "#C..........#", "#...#...#...#", "#T.........T#", "#.....B.....#", "#############")
 underground = true
 ambient_color = Color(0.62, 0.55, 0.78, 1)
