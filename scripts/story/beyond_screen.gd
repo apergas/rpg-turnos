@@ -28,11 +28,15 @@ const ROAD := Color(0.62, 0.28, 0.16)
 const HILL := Color(0.17, 0.055, 0.045)
 const HOUSE_TINT := Color(0.34, 0.28, 0.3)
 const WINDOW_LIGHT := Color(1.0, 0.55, 0.3)
-const CORONA := Color(1.0, 0.3, 0.1, 1.0)
+const CORONA := Color(1.0, 0.3, 0.1)
+## How much of the fog covers the sky (1: all, a flat haze).
+const FOG_SKY := 0.3
+const FILL_COLOR := Color(1.0, 0.86, 0.8)
+const FILL_ENERGY := 3.2
 const ROAD_WIDTH := 3.2
 ## The road, from the hero's feet down to the village ([x, z]; y follows the slope).
 const ROAD_POINTS := [Vector2(0, 30), Vector2(1.5, 16), Vector2(-2, 0), Vector2(1, -16),
-	Vector2(-1.5, -30), Vector2(0.5, -42), Vector2(0, -52)]
+	Vector2(-1.5, -30), Vector2(0.5, -42), Vector2(0, -58)]
 ## The village: [WorldStage.MODELS key, x, z, yaw]; smoke rises from the first five.
 const HOUSES := [["house_A_red", -9, -56, 20.0], ["house_B_red", 7, -58, -30.0],
 	["tavern_green", -2, -66, 0.0], ["house_A_green", 14, -68, -60.0],
@@ -51,7 +55,10 @@ const ROCKS := [[2, -4.0, 12.0, 4.0, 30.0], [0, 5.0, -6.0, 3.5, 100.0],
 const SUN_POS := Vector3(-30, 30, -215)
 const SUN_RADIUS := 20.0
 const CAMERA_FROM := Vector3(0, 3.6, 30)
-const CAMERA_TO := Vector3(0, 5.2, -8)
+const CAMERA_TO := Vector3(0, 5.2, -22)
+## Where it looks at the start (from the camera) and the share of the move that lifts it.
+const LOOK_START := Vector3(0, -10, -40)
+const LOOK_LIFT := 0.5
 const HERO_SPOT := Vector2(-0.8, 24)
 const ALLY_SPOT := Vector2(0.9, 24.3)
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
@@ -123,7 +130,10 @@ func _place_camera(t: float) -> void:
 	var from := CAMERA_FROM + Vector3(0, ground_y(CAMERA_FROM.z), 0)
 	var to := CAMERA_TO + Vector3(0, ground_y(CAMERA_TO.z), 0)
 	_camera.position = from.lerp(to, t)
-	_camera.look_at(_on_ground(0, -62) + Vector3(0, 4, 0))
+	# It starts looking down at the two figures and lifts to the village as it moves.
+	var village := _on_ground(0, -62) + Vector3(0, 4, 0)
+	var figures := _camera.position + LOOK_START
+	_camera.look_at(figures.lerp(village, smoothstep(0.0, LOOK_LIFT, t)))
 
 
 func _build_camera() -> void:
@@ -144,6 +154,7 @@ func _build_camera() -> void:
 	env.fog_enabled = true
 	env.fog_light_color = FOG
 	env.fog_density = 0.0055
+	env.fog_sky_affect = FOG_SKY  # the sky keeps its dark top over the red haze
 	_camera = Camera3D.new()
 	_camera.environment = env
 	_camera.fov = 55.0
@@ -157,6 +168,13 @@ func _build_camera() -> void:
 	sun.sky_mode = DirectionalLight3D.SKY_MODE_LIGHT_ONLY  # no bright disc: the sun is black
 	sun.rotation_degrees = Vector3(-30, 150, 0)
 	add_child(sun)
+	# A warm fill from behind the camera, so the two figures' backs and their gear show.
+	var fill := OmniLight3D.new()
+	fill.light_color = FILL_COLOR
+	fill.light_energy = FILL_ENERGY
+	fill.omni_range = 14.0
+	fill.position = _on_ground(0, 29) + Vector3(0, 4, 0)
+	add_child(fill)
 
 
 func _build_land() -> void:
@@ -168,7 +186,7 @@ func _build_land() -> void:
 		var a := _on_ground(ROAD_POINTS[i].x, ROAD_POINTS[i].y) + Vector3(0, 0.03, 0)
 		var b := _on_ground(ROAD_POINTS[i + 1].x, ROAD_POINTS[i + 1].y) + Vector3(0, 0.03, 0)
 		var strip := BoxMesh.new()
-		strip.size = Vector3(ROAD_WIDTH, 0.04, a.distance_to(b) + 2.0)
+		strip.size = Vector3(ROAD_WIDTH, 0.04, a.distance_to(b))
 		var mi := MeshInstance3D.new()
 		mi.mesh = strip
 		var mat := StandardMaterial3D.new()
@@ -177,6 +195,21 @@ func _build_land() -> void:
 		mi.material_override = mat
 		mi.transform = Transform3D(Basis.looking_at(b - a, Vector3.UP), (a + b) / 2.0)
 		add_child(mi)
+		# A round joint covers the corner where two strips meet at an angle.
+		var joint := CylinderMesh.new()
+		joint.top_radius = ROAD_WIDTH / 2.0
+		joint.bottom_radius = ROAD_WIDTH / 2.0
+		joint.height = 0.04
+		joint.radial_segments = 12
+		var disc := MeshInstance3D.new()
+		disc.mesh = joint
+		disc.material_override = mat
+		disc.position = b
+		add_child(disc)
+		if i == 0:
+			var start := disc.duplicate() as MeshInstance3D
+			start.position = a
+			add_child(start)
 	for hill in HILLS:
 		BattleStage.add_mesh(self, BattleStage.unit_sphere(), HILL, hill[0], hill[1])
 	for tree in TREES:
@@ -289,9 +322,6 @@ func _build_sun() -> void:
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		mat.albedo_color = layer[1]
 		mat.disable_fog = true
-		if layer[1].a < 1.0:
-			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-			mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 		ball.material_override = mat
 		ball.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		ball.position = SUN_POS + layer[2]

@@ -180,15 +180,21 @@ func add_enemy_bar(enemy_name := "") -> void:
 	label.add_theme_constant_override("outline_size", 6)
 	label.hide()
 	back.add_child(label)
-	label.size = label.get_combined_minimum_size()
-	label.position = Vector2((ENEMY_BAR_SIZE.x - label.size.x) / 2.0,
-		-label.size.y - ENEMY_NAME_GAP).round()
 	_enemy_names.append(label)
+	_center_enemy_name(label)
 
 
 ## Renames enemy i (a boss that rises in its next phase under another name).
 func set_enemy_name(i: int, enemy_name: String) -> void:
 	_enemy_names[i].text = enemy_name
+	_center_enemy_name(_enemy_names[i])
+
+
+## Fits an enemy's name label to its text and centres it over the bar.
+func _center_enemy_name(label: Label) -> void:
+	label.size = label.get_combined_minimum_size()
+	label.position = Vector2((ENEMY_BAR_SIZE.x - label.size.x) / 2.0,
+		-label.size.y - ENEMY_NAME_GAP).round()
 
 
 ## Shows the name of enemy index over its bar, and only that one (-1: none).

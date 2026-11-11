@@ -2,9 +2,9 @@ class_name ZoneParticles extends RefCounted
 ## The particles that float around the hero on a map (ZoneData.particles): pollen and
 ## dandelion seeds in the meadow, leaves falling slowly in the forest, dust motes that the
 ## lantern lights in the mine, flakes of violet mist in the castle, grains of sand blown in gusts in the desert, flakes of snow falling slowly and a little
-## sideways (the wind) on the mountain, grey flakes of ash falling slowly and sideways in the
-## abandoned city, with the odd ember still glowing among them (each particle takes a colour
-## along the gradient between the two, so most are ash). A CPUParticles3D (the
+## sideways (the wind) on the mountain, pale flakes of ash falling slowly and sideways in the
+## abandoned city, as many as embers still glowing among them (each particle is born one of
+## the two colours, so half and half: dark ash alone vanished on the dark red ground). A CPUParticles3D (the
 ## same on the Compatibility renderer and on the web) in world space: World carries its
 ## box (BOX, 30 × 20 m around the hero; the mine's is smaller, the lantern's reach) along
 ## every physics tick with follow(), and what is already floating stays where it is. Never
@@ -60,9 +60,9 @@ const KINDS := {
 		"speed": [0.6, 1.1], "direction": Vector3(0.6, -1.0, 0.2), "spread": 12.0,
 		"spin": 0.0, "colors": [Color(1.0, 1.0, 1.0, 0.95), Color(0.9, 0.94, 1.0, 0.85)],
 		"lit": false, "round": true},
-	ASH: {"amount": 110, "lifetime": 9.0, "height": 6.0, "depth": 3.0, "size": 0.06,
+	ASH: {"amount": 110, "lifetime": 9.0, "height": 6.0, "depth": 3.0, "size": 0.1,
 		"speed": [0.3, 0.6], "direction": Vector3(0.3, -1.0, 0.15), "spread": 25.0,
-		"spin": 0.0, "colors": [Color(0.3, 0.28, 0.28, 0.85), Color(1.0, 0.45, 0.2, 0.6)],
+		"spin": 0.0, "colors": [Color(0.7, 0.64, 0.62, 0.8), Color(1.0, 0.5, 0.2, 0.75)],
 		"lit": false, "round": true},
 }
 

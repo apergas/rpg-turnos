@@ -176,13 +176,17 @@ const LOW_SHADOW_DISTANCE := 35.0
 ## (ruined), towers of three heights, a warm reddish floor, two torches, no mist, the Kenney
 ## ruins of BACKDROP_DECOR and, in a zone with a portal (zone.portal_flag), the portal
 ## standing behind the enemies.
-const CITY_FLOOR := Color(0.38, 0.32, 0.3)
+const CITY_FLOOR := Color(0.27, 0.23, 0.23)
 const CITY_STONE := Color(0.46, 0.41, 0.4)
 ## Indexes of CASTLE_WALLS drawn at DungeonMap.RUIN_HEIGHT.
+## The distant towers are darker than the walls, so they read as silhouettes in the haze.
+const CITY_TOWER_SHADE := 0.65
 const CITY_LOW_WALLS := [1, 4, 7, 11]
 const CITY_TOWERS := [
 	[Vector3(-14, 0, -11), 3.0], [Vector3(14, 0, -11), 5.0], [Vector3(0, 0, -16), 7.0],
 ]
+## How much of the city's fog covers its sky (1: all, a flat haze).
+const CITY_FOG_SKY := 0.35
 const CITY_PORTAL_POS := Vector3(0.6, 0, -8.5)
 const CITY_PORTAL_SCALE := 0.8
 const CASTLE_TORCHES := [Vector3(-4.0, 2.0, -10.0), Vector3(4.0, 2.0, -10.0)]
@@ -475,7 +479,7 @@ static func _build_city(root: Node3D, zone: ZoneData) -> void:
 	for tower in CITY_TOWERS:
 		var box := BoxMesh.new()
 		box.size = Vector3(4, tower[1], 4)
-		add_mesh(root, box, CITY_STONE, tower[0] + Vector3(0, tower[1] / 2.0, 0))
+		add_mesh(root, box, CITY_STONE.darkened(CITY_TOWER_SHADE), tower[0] + Vector3(0, tower[1] / 2.0, 0))
 	for flame_pos in CASTLE_TORCHES:
 		_add_torch(root, flame_pos)
 	if zone.portal_flag != "":
@@ -567,6 +571,9 @@ static func _add_environment(root: Node3D, zone: ZoneData) -> void:
 	env.fog_enabled = true
 	env.fog_light_color = zone.haze
 	env.fog_density = zone.fog_density
+	if zone.backdrop == "ciudad":
+		env.fog_sky_affect = CITY_FOG_SKY  # the red sky keeps its gradient behind the fog
+		sky_material.ground_bottom_color = zone.haze.darkened(0.4)
 	var world_env := WorldEnvironment.new()
 	world_env.environment = env
 	root.add_child(world_env)
