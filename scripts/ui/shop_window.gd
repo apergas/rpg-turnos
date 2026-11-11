@@ -278,7 +278,7 @@ func _buy_bulk(id: String) -> void:
 ## Name with the count carried, the price paid, and why it can't be sold if so.
 func _add_sell_row(id: String) -> void:
 	var row := _row()
-	var why := Shop.sell_problem(_state, id)
+	var why := Shop.sell_problem(_state, id, _shop_id)
 	var count := Shop.sell_count(_state, id)
 	var text := Shop.display_name(id) if count <= 1 else "%s ×%d" % [Shop.display_name(id), count]
 	var button := _button(text)
@@ -287,7 +287,7 @@ func _add_sell_row(id: String) -> void:
 	button.pressed.connect(_sell.bind(id))
 	button.set_meta("id", id)
 	row.add_child(button)
-	var price := _label("%d G" % Shop.sell_price(id), GREY if why != "" else StatBar.GOLD)
+	var price := _label("%d G" % Shop.sell_price(id, _shop_id), GREY if why != "" else StatBar.GOLD)
 	price.custom_minimum_size.x = PRICE_WIDTH
 	row.add_child(price)
 	if not Shop.is_equipment(id):
@@ -341,7 +341,7 @@ func _answer(equip: bool) -> void:
 
 
 func _sell(id: String) -> void:
-	var result := Shop.sell(_state, id)
+	var result := Shop.sell(_state, id, _shop_id)
 	_say(result.text)
 	if not result.ok:
 		_sfx(SfxLibrary.CANCEL)

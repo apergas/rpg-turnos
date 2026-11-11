@@ -88,6 +88,11 @@ const WORN := "Lo llevas puesto"
 const NOT_FOR_SALE := "No se vende"
 ## What the starting gear sells for: it is worth almost nothing, but it clears the bag.
 const STARTING_GEAR_PRICE := 1
+## A prize ring or amulet (no price: a quest, the bestiary, the Coleccionista) sells for this
+## share of the average price of the gear the shop it is sold in sells, so it is worth
+## something sensible wherever the hero is; PRIZE_ACCESSORY_MIN at least (and with no gear).
+const PRIZE_ACCESSORY_SHARE := 0.5
+const PRIZE_ACCESSORY_MIN := 10
 const NOT_CARRIED := "No lo llevas"
 const HAS_IT := "Ya la tienes"
 const HAS_BETTER := "Ya tienes una mejor"
@@ -159,12 +164,34 @@ static func price(id: String) -> int:
 	return Equipment.price(id) if is_equipment(id) else int(Inventory.ITEMS[id].price)
 
 
-## What the shop pays for id: half its price, rounded down. The starting gear (zone 0)
-## has no price but sells for STARTING_GEAR_PRICE; quest rewards can't be sold.
-static func sell_price(id: String) -> int:
+## What shop_id pays for id: half its price, rounded down. The starting gear (zone 0) has
+## no price but sells for STARTING_GEAR_PRICE, and a prize ring or amulet for
+## prize_accessory_price(shop_id); the other prizes (no price) can't be sold.
+static func sell_price(id: String, shop_id := "") -> int:
 	if is_equipment(id) and Equipment.EQUIPMENT[id].zone == 0:
 		return STARTING_GEAR_PRICE
+	if is_prize_accessory(id):
+		return prize_accessory_price(shop_id)
 	return floori(price(id) / 2.0)
+
+
+## A ring or amulet with no price: a prize, which sells by the shop (prize_accessory_price()).
+static func is_prize_accessory(id: String) -> bool:
+	return is_equipment(id) and price(id) <= 0 \
+		and Equipment.slot(id) in Equipment.ACCESSORY_SLOTS
+
+
+## What shop_id pays for a prize ring or amulet: PRIZE_ACCESSORY_SHARE of the average price
+## of the gear it sells, rounded down to 5 G, PRIZE_ACCESSORY_MIN at least.
+static func prize_accessory_price(shop_id: String) -> int:
+	var gear: Array = SHOPS[shop_id].get("equipment", []) if SHOPS.has(shop_id) else []
+	if gear.is_empty():
+		return PRIZE_ACCESSORY_MIN
+	var total := 0
+	for id: String in gear:
+		total += Equipment.price(id)
+	var value := floori(total * PRIZE_ACCESSORY_SHARE / gear.size() / 5.0) * 5
+	return maxi(value, PRIZE_ACCESSORY_MIN)
 
 
 ## Why state can't buy id now ("" if it can).
@@ -239,25 +266,25 @@ static func sell_count(state: GameState, id: String) -> int:
 
 
 ## Why id can't be sold ("" if it can): worn and none in the bag, or not for sale.
-static func sell_problem(state: GameState, id: String) -> String:
+static func sell_problem(state: GameState, id: String, shop_id := "") -> String:
 	if sell_count(state, id) <= 0:
 		return WORN if state.loadout.is_worn(id) else NOT_CARRIED
-	if sell_price(id) <= 0:
+	if sell_price(id, shop_id) <= 0:
 		return NOT_FOR_SALE
 	return ""
 
 
-static func sell(state: GameState, id: String) -> Dictionary:
-	var why := sell_problem(state, id)
+static func sell(state: GameState, id: String, shop_id := "") -> Dictionary:
+	var why := sell_problem(state, id, shop_id)
 	if why != "":
 		return {"ok": false, "text": "%s." % why}
 	if is_equipment(id):
 		state.bag_equipment.erase(id)
 	else:
 		state.inventory.take(id)
-	state.gold += sell_price(id)
-	return {"ok": true, "text": "Vendes %s %s por %d G." % [article(id), display_name(id),
-		sell_price(id)]}
+	var paid := sell_price(id, shop_id)
+	state.gold += paid
+	return {"ok": true, "text": "Vendes %s %s por %d G." % [article(id), display_name(id), paid]}
 
 
 ## Compares a piece with what is worn in its slot: {"stat": "ATK" / "DEF", "worn": id
