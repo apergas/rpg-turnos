@@ -108,9 +108,9 @@ const JUNGLE_PALMS := ["palm_A", "palm_B"]
 ## The desert backdrop: sand, a darker trodden track, the rocks, two palms and a clump far
 ## behind (PalmModels, the map's), dunes for hills and the Kenney cacti, scrub and a broken
 ## column of BACKDROP_DECOR; no tall grass and no bushes.
-const DESERT_GROUND := Color(0.66, 0.52, 0.33)
-const DESERT_PATH := Color(0.5, 0.38, 0.24)
-const DESERT_HILL := Color(0.7, 0.56, 0.36)
+const DESERT_GROUND := Color(0.56, 0.44, 0.28)
+const DESERT_PATH := Color(0.42, 0.32, 0.2)
+const DESERT_HILL := Color(0.58, 0.45, 0.29)
 ## [position, PalmModels id, scale, yaw in degrees].
 const DESERT_PALMS := [
 	[Vector3(-11, 0, -16), "palm_A", 1.4, 20.0],

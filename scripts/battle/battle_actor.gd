@@ -630,28 +630,30 @@ const LOOKS := {
 		"fly": 1.3,
 	},
 	Look.SAND_GOLEM: {
-		"color": Color(0.82, 0.68, 0.44),
-		"dark_color": Color(0.64, 0.5, 0.3),
+		"color": Color(0.72, 0.58, 0.38),
+		"dark_color": Color(0.56, 0.43, 0.27),
 		"eye_color": Color(1.0, 0.55, 0.15),
 		"scale": 1.15,
 		"top": 2.3,
 	},
-	# The Momia: the skeleton warrior in dirty-white bandages, bare-handed.
+	# The Momia: the skeleton warrior with no helmet, wrapped in dirty linen strips built in
+	# code (_add_mummy_wraps), bare-handed, its eyes a dim glow in the gap of the head wrap.
 	Look.MUMMY: {
 		"scene": SKELETON_WARRIOR,
 		"scale": CHARACTER_SCALE,
 		"top": 1.9,
-		"hide": [],
+		"hide": ["Rig/Skeleton3D/head/Skeleton_Warrior_Helmet", "Rig/Skeleton3D/Skeleton_Warrior_Cloak"],
 		"anims": SKELETON_ANIMS,
 		"props": {},
-		"tint": Color(0.92, 0.86, 0.7),
+		"tint": Color(0.86, 0.82, 0.74),
+		"wrap_color": Color(0.8, 0.76, 0.66),
 	},
 	# The Jefe de caravana's canteen (the cantimplora quest's figure): it stands still.
 	Look.CANTEEN: {
 		"color": Color(0.5, 0.32, 0.18),
 		"cork_color": Color(0.78, 0.62, 0.4),
 		"strap_color": Color(0.3, 0.2, 0.12),
-		"sand_color": Color(0.8, 0.66, 0.43),
+		"sand_color": Color(0.56, 0.44, 0.28),
 		"top": 0.8,
 	},
 	# The Gusano de las dunas: a segmented worm rising out of a ring of sand.
@@ -660,7 +662,7 @@ const LOOKS := {
 		"dark_color": Color(0.62, 0.42, 0.27),
 		"mouth_color": Color(0.35, 0.08, 0.1),
 		"teeth_color": Color(0.96, 0.93, 0.82),
-		"sand_color": Color(0.8, 0.66, 0.43),
+		"sand_color": Color(0.56, 0.44, 0.28),
 		"scale": 1.6,
 		"top": 3.4,
 	},
@@ -1107,6 +1109,8 @@ func _build_character(data: Dictionary) -> void:
 	var mesh_tints: Dictionary = data.get("mesh_tints", {})
 	for mesh_name: String in mesh_tints:
 		_tint_mesh(bones.get_node(mesh_name) as MeshInstance3D, mesh_tints[mesh_name])
+	if data.has("wrap_color"):
+		_add_mummy_wraps(bones, data.wrap_color)
 	if look == Look.HERO:
 		var head := bones.get_node("Knight_Head") as MeshInstance3D
 		var head_material := head.get_active_material(0).duplicate() as BaseMaterial3D
@@ -1129,6 +1133,70 @@ func _build_character(data: Dictionary) -> void:
 	# The imported animations do not loop; idle and walk must.
 	for role in ["idle", "walk"]:
 		_anim.get_animation(_anims[role]).loop_mode = Animation.LOOP_LINEAR
+
+
+## The Momia's bandages: flat rings of linen (squashed cylinders, each a little tilted the
+## other way than the last) round the head, the chest and both arms, a gap at the eyes,
+## and loose strips hanging from the wrists and the hip. Each is placed in the rig's rest
+## pose and hung from its bone, so it follows the animation.
+func _add_mummy_wraps(bones: Skeleton3D, color: Color) -> void:
+	var rings := [
+		["head", Vector3(0, 1.28, 0.0), 0.0, 0.46, 0.1, 0.95],
+		["head", Vector3(0, 1.62, 0.0), 6.0, 0.45, 0.1, 0.98],
+		["head", Vector3(0, 1.78, 0.0), -8.0, 0.46, 0.1, 1.0],
+		["head", Vector3(0, 1.93, 0.0), 8.0, 0.44, 0.1, 1.0],
+		["head", Vector3(0, 2.06, 0.0), -6.0, 0.34, 0.1, 1.0],
+		["chest", Vector3(0, 0.62, 0.0), 6.0, 0.42, 0.14, 0.88],
+		["chest", Vector3(0, 0.78, 0.0), -8.0, 0.44, 0.14, 0.88],
+		["chest", Vector3(0, 0.94, 0.0), 7.0, 0.46, 0.14, 0.88],
+		["chest", Vector3(0, 1.1, 0.0), -7.0, 0.46, 0.14, 0.88],
+		["chest", Vector3(0, 1.24, 0.0), 6.0, 0.4, 0.12, 0.88],
+		["upperarm.l", Vector3(0.30, 1.1, 0.0), -6.0, 0.19, 0.2, 1.0],
+		["upperarm.l", Vector3(0.44, 1.1, 0.0), 6.0, 0.19, 0.2, 1.0],
+		["lowerarm.l", Vector3(0.56, 1.1, 0.0), -6.0, 0.19, 0.2, 1.0],
+		["lowerarm.l", Vector3(0.68, 1.1, 0.0), 6.0, 0.19, 0.2, 1.0],
+		["upperarm.r", Vector3(-0.30, 1.1, 0.0), -6.0, 0.19, 0.2, 1.0],
+		["upperarm.r", Vector3(-0.44, 1.1, 0.0), 6.0, 0.19, 0.2, 1.0],
+		["lowerarm.r", Vector3(-0.56, 1.1, 0.0), -6.0, 0.19, 0.2, 1.0],
+		["lowerarm.r", Vector3(-0.68, 1.1, 0.0), 6.0, 0.19, 0.2, 1.0],
+	]
+	for ring: Array in rings:
+		var bone: String = ring[0]
+		var pos: Vector3 = ring[1]
+		var tilt: float = ring[2]
+		var cylinder := _cylinder(ring[3], ring[4])
+		var basis := Basis.from_euler(Vector3(deg_to_rad(tilt), 0, 0))
+		if bone.begins_with("upperarm") or bone.begins_with("lowerarm"):
+			basis = Basis.from_euler(Vector3(0, 0, PI / 2)) * Basis.from_euler(
+				Vector3(deg_to_rad(tilt), 0, 0))
+		basis = basis * Basis.from_scale(Vector3(1, 1, ring[5]))
+		_hang_on_bone(bones, bone, cylinder, color, Transform3D(basis, pos))
+	# Loose ends: a strip from each wrist and one from the hip.
+	var strip := BoxMesh.new()
+	strip.size = Vector3(0.1, 0.5, 0.02)
+	for end: Array in [["wrist.l", Vector3(0.7, 0.86, 0.04)], ["wrist.r", Vector3(-0.7, 0.8, -0.04)],
+			["hips", Vector3(0.2, 0.3, 0.2)]]:
+		_hang_on_bone(bones, end[0], strip, color * 0.92,
+			Transform3D(Basis.from_euler(Vector3(0.1, 0, 0.08)), end[1]))
+	# The eyes: a dim ember in the dark of the head wrap.
+	var eyes := bones.get_node("Skeleton_Warrior_Eyes") as MeshInstance3D
+	var glow := StandardMaterial3D.new()
+	glow.albedo_color = Color(0.2, 0.05, 0.02)
+	glow.emission_enabled = true
+	glow.emission = Color(1.0, 0.45, 0.12)
+	glow.emission_energy_multiplier = 1.4
+	eyes.set_surface_override_material(0, glow)
+
+
+## One piece of the wraps, placed by a transform in the rig's rest pose and hung from a bone.
+func _hang_on_bone(bones: Skeleton3D, bone: String, mesh: Mesh, color: Color,
+		rig_transform: Transform3D) -> void:
+	var slot := BoneAttachment3D.new()
+	slot.bone_name = bone
+	bones.add_child(slot)
+	_add_mesh(slot, mesh, color, Vector3.ZERO, 0.95)
+	var mi := slot.get_child(-1) as MeshInstance3D
+	mi.transform = bones.get_bone_global_rest(bones.find_bone(bone)).affine_inverse() * rig_transform
 
 
 func _build_slime(data: Dictionary) -> void:
@@ -1493,9 +1561,10 @@ func _build_worm(data: Dictionary) -> void:
 ## its side with a cork and a strap, on a low mound. It stands still.
 func _build_canteen(data: Dictionary) -> void:
 	_add_blob(_body, SLIME_PROFILE, SLIME_SEGMENTS, data.sand_color, Vector3.ZERO,
-		Vector3.ZERO, Vector3(0.6, 0.12, 0.6))  # the mound
+		Vector3.ZERO, Vector3(1.0, 0.16, 1.0))  # the mound
 	var flask := Node3D.new()
-	flask.position = Vector3(0, 0.16, 0)
+	flask.scale = Vector3.ONE * 2.2
+	flask.position = Vector3(0, 0.38, 0)
 	flask.rotation_degrees = Vector3(0, 30, 70)
 	_body.add_child(flask)
 	_add_mesh(flask, _sphere(0.2), data.color, Vector3.ZERO)
