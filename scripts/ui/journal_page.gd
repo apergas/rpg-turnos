@@ -52,10 +52,13 @@ static func collection_lines(state: GameState) -> Array[String]:
 			"Misiones de la caravana: %d/%d" % [state.quests.done_of(true),
 			QuestLog.total_of(true)]]
 	var lines: Array[String] = ["Historia: %s" % ("terminada" if state.is_finished() else "sin terminar")]
+	if state.in_caravan():
+		lines = ["Historia de Villaclaro: terminada",
+			"La caravana: %s" % ("terminada" if state.is_finished_v2() else "en camino")]
 	lines.append_array(missions)
 	lines.append_array([
 		"Bestiario: %d/%d" % [Bestiary.seen_count(state), Bestiary.total_count(state)],
-		"Familias: %d/%d" % [Bestiary.complete_count(state), Bestiary.FAMILIES.size()],
+		"Familias: %d/%d" % [Bestiary.complete_count(state), Bestiary.families(state).size()],
 		"Cofres: %d/%d" % [Chests.opened_count(state), Chests.total(state)],
 		"Medallas: %d/%d" % [state.medals.size(), Medals.MEDALS.size()],
 	])

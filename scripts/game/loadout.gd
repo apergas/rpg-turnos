@@ -45,9 +45,14 @@ func attack_bonus() -> int:
 	return total
 
 
+## The armor's, shield's and helmet's DEF plus the extra DEF of every piece worn
+## (Equipment.extra_defense(): the Amuleto del vigía).
 func defense_bonus() -> int:
-	return Equipment.bonus(worn(Equipment.ARMOR)) + Equipment.bonus(worn(Equipment.SHIELD)) \
+	var total := Equipment.bonus(worn(Equipment.ARMOR)) + Equipment.bonus(worn(Equipment.SHIELD)) \
 		+ Equipment.bonus(worn(Equipment.HELMET))
+	for slot in Equipment.SLOTS:
+		total += Equipment.extra_defense(worn(slot))
+	return total
 
 
 ## The VEL of the ring and the amulet.

@@ -107,6 +107,7 @@ const KEY_ITEMS := {
 	"insignia_jungla": "Insignia de la jungla",
 	"sello_desierto": "Sello del desierto",
 	"mapa_montana": "Mapa de la montaña",
+	"llave_portal": "Llave del portal",
 }
 ## What each key item is, for Objetos.
 const KEY_TEXTS := {
@@ -118,6 +119,7 @@ const KEY_TEXTS := {
 	"insignia_jungla": "La llevaba el Jaguar sombrío. Abre el camino hacia el desierto.",
 	"sello_desierto": "Lo guardaba el Gusano de las dunas. Los guardas de la montaña lo reconocerán.",
 	"mapa_montana": "Lo guardaba el Grifo de la cumbre. Marca el camino hasta la ciudad abandonada.",
+	"llave_portal": "La guardaba el Guardián de la ciudad. Abre la reja del barrio del portal.",
 	MEDAL: "El Coleccionista de Villaclaro las colecciona.",
 }
 
