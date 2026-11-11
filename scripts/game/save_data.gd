@@ -329,8 +329,8 @@ static func _valid_v1_content(data: Dictionary) -> bool:
 				return false
 	var hero: Variant = data.get("hero")
 	if hero is Dictionary:
-		if hero.get("level", 1.0) > float(Leveling.V1_MAX_LEVEL) \
-				or hero.get("experience", 0.0) > float(Leveling.EXP_TABLE[Leveling.V1_MAX_LEVEL - 1]):
+		# Stored EXP is not checked: 1.9.0 never capped it, apply() clamps it on load.
+		if hero.get("level", 1.0) > float(Leveling.V1_MAX_LEVEL):
 			return false
 	return true
 

@@ -70,6 +70,3 @@ static func _append(node: Node, parent: Transform3D, placing: Transform3D, trunk
 	for child in node.get_children():
 		_append(child, here, placing, trunk, fronds)
 
-
-static func clear_cache() -> void:
-	_cache.clear()

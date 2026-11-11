@@ -56,7 +56,7 @@ static func collection_lines(state: GameState) -> Array[String]:
 	lines.append_array([
 		"Bestiario: %d/%d" % [Bestiary.seen_count(state), Bestiary.total_count(state)],
 		"Familias: %d/%d" % [Bestiary.complete_count(state), Bestiary.FAMILIES.size()],
-		"Cofres: %d/%d" % [state.opened_chests.size(), Chests.CHESTS.size()],
+		"Cofres: %d/%d" % [Chests.opened_count(state), Chests.total(state)],
 		"Medallas: %d/%d" % [state.medals.size(), Medals.MEDALS.size()],
 	])
 	return lines

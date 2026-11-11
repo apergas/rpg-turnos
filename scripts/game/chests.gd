@@ -51,6 +51,24 @@ static func of_zone(zone_id: String) -> Array[String]:
 	return ids
 
 
+## The chests of this game: the v1's, plus the v2's once the caravan has been joined.
+static func total(state: GameState) -> int:
+	var count := 0
+	for id: String in CHESTS:
+		if state.in_caravan() or not (CHESTS[id].zone in ZoneData.V2_ZONES):
+			count += 1
+	return count
+
+
+## How many of those chests are open.
+static func opened_count(state: GameState) -> int:
+	var count := 0
+	for id in state.opened_chests:
+		if CHESTS.has(id) and (state.in_caravan() or not (CHESTS[id].zone in ZoneData.V2_ZONES)):
+			count += 1
+	return count
+
+
 ## Opens chest id for state: gives what it holds and marks it opened. Equipment goes on
 ## at once if its slot is empty, else into the bag. Returns {"opened": bool (false if it
 ## was already open), "text": String}.

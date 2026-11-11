@@ -201,11 +201,6 @@ func status_lines(inventory: Inventory) -> Array[String]:
 	return lines
 
 
-## Every mission of the game, the village quest included.
-static func total_count() -> int:
-	return QUESTS.size() + 1
-
-
 ## The missions of the v2 (the caravan's zones), the rest are the v1's (the Colección's
 ## "n/7" and "n/2").
 static func is_v2(id: String) -> bool:
