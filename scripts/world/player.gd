@@ -119,8 +119,9 @@ func _physics_process(delta: float) -> void:
 			_stuck_frames = 0
 			_failed_hunt_id = _hunt.get_instance_id() if is_instance_valid(_hunt) else 0
 			stop_hunt()
-	elif _autoplay and _skip_blocked_point and dir != Vector3.ZERO:
-		# Placed back by the portal, the nearest route point can be behind a wall.
+	elif _autoplay and dir != Vector3.ZERO:
+		# Placed back by the portal or back from a hunt, the nearest route point can be behind
+		# a wall (this once left a hero pushing at it for good).
 		_stuck_frames = _stuck_frames + 1 if last_step_m < SPEED * delta * 0.25 else 0
 		if _stuck_frames > STUCK_FRAMES:
 			_stuck_frames = 0
