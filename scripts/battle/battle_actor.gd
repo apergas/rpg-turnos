@@ -13,7 +13,7 @@ enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPE
 	GOBLIN, PLANT, WITCH, MUD_GOLEM, STONE_GOLEM, SPIDER, SPECTER, SKELETON_WARRIOR,
 	SKELETON_ROGUE, SKELETON_MAGE, FOG_LORD, FARMER, METAL_SLIME, BOARD, CAT, CHILD,
 	CHICKEN, WOLF_CUB, MINI_GOLEM, LOYAL_SKELETON, TAMER, FOG_ECHO, RED_SLIME,
-	POISON_MUSHROOM, CAVE_MUSHROOM, CRYPT_BAT, FROST_SPECTER, COLLECTOR }
+	POISON_MUSHROOM, CAVE_MUSHROOM, CRYPT_BAT, FROST_SPECTER, COLLECTOR, BRENA, TADEO, ULMA }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -498,6 +498,51 @@ const LOOKS := {
 		"props": {RIGHT_HAND_BONE: SKELETON_BLADE, LEFT_HAND_BONE: SKELETON_SHIELD},
 		"tint": Color(0.62, 0.72, 0.82),
 		"aura": ECHO_AURA_COLOR,
+	},
+	# The caravan's companions: the Knight, each with its own gear and colour.
+	Look.BRENA: {
+		"scene": KNIGHT,
+		"scale": CHARACTER_SCALE,
+		"top": 2.0,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/1H_Sword_Offhand",
+			"Rig/Skeleton3D/handslot_l/Badge_Shield",
+			"Rig/Skeleton3D/handslot_l/Rectangle_Shield",
+			"Rig/Skeleton3D/handslot_l/Round_Shield",
+			"Rig/Skeleton3D/handslot_l/Spike_Shield",
+			"Rig/Skeleton3D/handslot_r/1H_Sword",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(1.0, 0.62, 0.55),
+	},
+	Look.TADEO: {
+		"scene": KNIGHT,
+		"scale": CHARACTER_SCALE,
+		"top": 1.9,
+		"hide": [
+			"Rig/Skeleton3D/head/Knight_Helmet",
+			"Rig/Skeleton3D/handslot_l/Badge_Shield",
+			"Rig/Skeleton3D/handslot_l/Rectangle_Shield",
+			"Rig/Skeleton3D/handslot_l/Round_Shield",
+			"Rig/Skeleton3D/handslot_l/Spike_Shield",
+			"Rig/Skeleton3D/handslot_r/2H_Sword",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(0.65, 0.95, 0.6),
+	},
+	Look.ULMA: {
+		"scene": KNIGHT,
+		"scale": CHARACTER_SCALE,
+		"top": 2.0,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/1H_Sword_Offhand",
+			"Rig/Skeleton3D/handslot_l/Badge_Shield",
+			"Rig/Skeleton3D/handslot_l/Round_Shield",
+			"Rig/Skeleton3D/handslot_l/Spike_Shield",
+			"Rig/Skeleton3D/handslot_r/2H_Sword",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(0.78, 0.8, 0.86),
 	},
 }
 

@@ -5,7 +5,8 @@ class_name StoryState extends RefCounted
 ## boss or on reaching a village, and the next step of the story in one line. Pure: Game
 ## asks it and plays the cutscenes (data/cutscenes/<id>.tres).
 
-enum Chapter { PROLOGUE, MEADOW, FOREST, MINE, CASTLE, END }
+enum Chapter { PROLOGUE, MEADOW, FOREST, MINE, CASTLE, END, CARAVAN, DESERT, MOUNTAIN, CITY,
+	V2_END }
 
 const DEFAULT_NAME := "Héroe"
 const MAX_NAME_LENGTH := 8
@@ -13,22 +14,33 @@ const MAX_NAME_LENGTH := 8
 const NAME_TAG := "{nombre}"
 ## Every cutscene, in story order.
 const SCENES: Array[String] = ["prologo", "rey_slime", "aldea_bosque", "bruja", "mina",
-	"golem", "castillo", "final"]
+	"golem", "castillo", "final", "caravana_llega", "caravana_parte", "caravana_campamento",
+	"jaguar"]
 ## The cutscene that follows beating each boss (its world flag).
 const AFTER_BOSS := {
 	"rey_slime": "rey_slime",
 	"bruja": "bruja",
 	"golem_piedra": "golem",
 	"senor_niebla": "final",
+	"jaguar_sombrio": "jaguar",
 }
 ## The cutscene of the first visit to each zone's village.
 const ON_VILLAGE := {
 	"bosque": "aldea_bosque",
 	"mina_1": "mina",
 	"castillo_patio": "castillo",
+	"caravana": "caravana_campamento",
 }
 ## The boss whose flag ends each chapter, from the meadow on.
 const CHAPTER_BOSSES: Array[String] = ["rey_slime", "bruja", "golem_piedra", "senor_niebla"]
+## The v2 (the caravan): its flag is set when the hero leaves Villaclaro with it, and the
+## companion's once one is chosen.
+const CARAVAN_FLAG := "caravana"
+const COMPANION_FLAG := "companero"
+## The v2 zone bosses, one per tramo, and the last boss behind the portal.
+const V2_BOSSES: Array[String] = ["jaguar_sombrio", "gusano_dunas", "grifo_cumbre",
+	"guardian_ciudad"]
+const V2_FINAL_BOSS := "devorador_portal"
 ## The mine's flags (ZoneData lever_flag, floor_key, door_flag of its floors).
 const MINE_LEVER := "mina_palanca"
 const MINE_KEY := "llave_mina"
@@ -50,6 +62,11 @@ const GOALS := {
 	Chapter.FOREST: "Objetivo: vence a la Bruja del bosque",
 	Chapter.CASTLE: "Objetivo: vence al Señor de la Niebla",
 	Chapter.END: "Villaclaro está en paz",
+	Chapter.CARAVAN: "Objetivo: cruza la jungla y vence a su guardián",
+	Chapter.DESERT: "Objetivo: atraviesa el desierto",
+	Chapter.MOUNTAIN: "Objetivo: sube a la cumbre",
+	Chapter.CITY: "Objetivo: entra en la ciudad abandonada",
+	Chapter.V2_END: "El portal está abierto",
 }
 
 ## Cutscene ids already played (SCENES entries), in the order they were seen.
@@ -59,7 +76,11 @@ var finished := false
 
 
 ## The chapter now, from the cutscenes seen and the world flags (GameState.world_flags).
+## In the caravan (CARAVAN_FLAG) it is CARAVAN + the v2 bosses beaten, V2_END once the
+## Devorador del portal falls.
 func chapter(flags: Dictionary) -> Chapter:
+	if flags.get(CARAVAN_FLAG, false):
+		return (Chapter.CARAVAN + tramo(flags) - 1) as Chapter
 	if not has_seen("prologo"):
 		return Chapter.PROLOGUE
 	var reached := Chapter.MEADOW
@@ -68,6 +89,21 @@ func chapter(flags: Dictionary) -> Chapter:
 			break
 		reached = (reached + 1) as Chapter
 	return reached
+
+
+## The stretch of the caravan's road (the v2): 1 + the zone bosses beaten in order, 5 once
+## the Devorador del portal is beaten, 0 before the hero joins the caravan.
+static func tramo(flags: Dictionary) -> int:
+	if not flags.get(CARAVAN_FLAG, false):
+		return 0
+	if flags.get(V2_FINAL_BOSS, false):
+		return 5
+	var reached := 1
+	for boss in V2_BOSSES:
+		if not flags.get(boss, false):
+			break
+		reached += 1
+	return mini(reached, 4)
 
 
 func has_seen(scene_id: String) -> bool:
@@ -103,6 +139,11 @@ func mark_seen_for_flags(flags: Dictionary) -> void:
 			mark_seen(AFTER_BOSS[boss])
 			if village_of_boss.has(boss):
 				mark_seen(village_of_boss[boss])
+	if flags.get(CARAVAN_FLAG, false):
+		mark_seen("caravana_llega")
+		mark_seen("caravana_parte")
+	if flags.get(COMPANION_FLAG, false):
+		mark_seen("caravana_campamento")
 	finished = flags.get("senor_niebla", false)
 
 
@@ -112,6 +153,8 @@ func goal_text(flags: Dictionary, zone_id := "") -> String:
 	var now := chapter(flags)
 	if now == Chapter.MINE:
 		return MINE_GOALS[_mine_step(flags, zone_id)]
+	if now == Chapter.CARAVAN and not flags.get(COMPANION_FLAG, false):
+		return "Objetivo: habla con el Jefe de caravana"
 	return GOALS[now]
 
 
