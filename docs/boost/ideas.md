@@ -28,3 +28,8 @@ Estado: Pendiente
 ## 2026-11-11 · Portal más bonito
 El portal se ve un poco raro, un círculo azul extraño. Hacerlo con un poco más de detalle, más bonito.
 Estado: Pendiente
+
+## 2026-11-11 · Una misión opcional más en la mina y el castillo
+Revisar las zonas de la v1: donde ya hay más de una misión opcional no se toca nada, pero la mina y el castillo solo tienen una (además de la principal), así que añadir otra misión opcional en cada una, a elección de quien la diseñe.
+Comprobado al apuntarla: pradera 2 (Carta para la Leñadora, Setas para el guiso), bosque 2 (Lobos hambrientos, El gato perdido), mina 1 (El Slime de Metal), castillo 1 (El explorador perdido).
+Estado: Pendiente
