@@ -1,5 +1,12 @@
 # Registro de cambios
 
+## 1.9.0 (2026)
+
+- Cada lugar tiene su sonido de fondo: brisa y trinos en la pradera, viento entre las hojas y algún pájaro en el bosque, gotas con eco en la mina y viento que silba en el castillo.
+- El sonido de fondo sigue el volumen de los efectos y calla durante los combates.
+- Partículas en cada lugar: polen y semillas flotando en la pradera, hojas que caen en el bosque, polvo que brilla con el farol en la mina y copos de niebla en el castillo.
+- Con los gráficos en calidad baja no hay partículas, y en el móvil hay la mitad.
+
 ## 1.8.0 (2026)
 
 - Hay doce medallas pequeñas escondidas por el mundo, tres en cada región. Brillan en el suelo y solo se ven de cerca.
