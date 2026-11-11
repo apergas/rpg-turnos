@@ -59,11 +59,22 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var grass_seed := 7
 ## [position, scale] of each hill (unit spheres, half buried) around the field.
 @export var hills: Array = []
+## The colour of the hills outside the walls and of the dunes (the meadow's green by default).
+@export var hill_color := Color(0.27, 0.47, 0.22)
+## Dunes inside the field: [centre (y below 0: half buried), radii] of a flattened
+## ellipsoid of hill_color. They are solid (WorldStage gives each a row of cylinders) and
+## everything keeps off them: trees, decoration, grass and the monster groups.
+@export var dunes: Array = []
+## Patches of other ground: [centre, radius, colour] discs drawn on the ground under the
+## path (the desert's green oasis).
+@export var ground_patches: Array = []
 
 @export_group("Path and safe ground")
 ## Corners of the dirt path (no grass, no monster groups).
 @export var path_points: Array[Vector3] = []
 @export var path_half_width := 1.5
+## The colour of the path and the safe discs (BattleStage.DIRT by default).
+@export var path_color := Color(0.62, 0.5, 0.34)
 ## [centre, radius] of each round patch of bare dirt (no grass, no monster groups): the
 ## spawn area, the village clearing, the boss's clearing...
 @export var safe_discs: Array = []
@@ -97,6 +108,10 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## the clump.
 @export var tree_models: Array[String] = ["tree_A", "tree_B"]
 @export var clump_model := "trees_A"
+## Where the trees may grow, [centre, radius] discs: when there are any, every tree of the
+## zone is rolled inside one of them (the desert's palms only in its oasis); empty: anywhere,
+## denser toward the walls.
+@export var tree_areas: Array = []
 ## [centre, radius] of each glade: no trees, but grass and monster groups.
 @export var glades: Array = []
 @export var bush_seed := 31
