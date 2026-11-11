@@ -324,21 +324,30 @@ static func _add_torch(root: Node3D, flame_pos: Vector3) -> void:
 	var stick := BoxMesh.new()
 	stick.size = Vector3(0.1, 0.5, 0.1)
 	add_mesh(root, stick, DungeonMap.WOOD, flame_pos - Vector3(0, 0.3, 0))
+	add_flame(root, flame_pos)
+
+
+## A torch's flame (unshaded) at flame_pos, size times as big, and, with light, its light at
+## light_offset from it.
+static func add_flame(root: Node3D, flame_pos: Vector3, size := 1.0,
+		light_offset := Vector3(0, 0.2, 1.0), light := true) -> void:
 	var flame := MeshInstance3D.new()
 	flame.mesh = unit_sphere()
-	flame.scale = Vector3(0.13, 0.2, 0.13)
+	flame.scale = Vector3(0.13, 0.2, 0.13) * size
 	flame.position = flame_pos
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.albedo_color = DungeonMap.FLAME_COLOR
 	flame.material_override = mat
 	root.add_child(flame)
-	var light := OmniLight3D.new()
-	light.light_color = DungeonMap.TORCH_COLOR
-	light.light_energy = DungeonMap.TORCH_ENERGY
-	light.omni_range = 10.0
-	light.position = flame_pos + Vector3(0, 0.2, 1.0)
-	root.add_child(light)
+	if not light:
+		return
+	var lamp := OmniLight3D.new()
+	lamp.light_color = DungeonMap.TORCH_COLOR
+	lamp.light_energy = DungeonMap.TORCH_ENERGY
+	lamp.omni_range = 10.0
+	lamp.position = flame_pos + light_offset
+	root.add_child(lamp)
 
 
 ## The fighters' own light, from the camera's side (the hero's lantern).

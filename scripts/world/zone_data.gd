@@ -102,6 +102,17 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var bush_seed := 31
 @export var bush_tries := 220
 
+@export_group("Decoration")
+## Kenney pieces placed by hand (Decor): [pos, yaw_deg, Decor id] or [pos, yaw_deg, id,
+## count], a run of count pieces one after another along the piece's own +X (fences).
+@export var decor: Array = []
+## Decor id → how many spots are tried for it, scattered inside the walls with decor_seed.
+## Open maps only.
+@export var decor_scatter := {}
+@export var decor_seed := 41
+## The green every green of the kit becomes (the kit's are teal).
+@export var decor_green := Color(0.3, 0.55, 0.18)
+
 @export_group("Entries, exits and figures")
 ## entry id -> [position, yaw]: where the player appears (arriving through an exit, a
 ## new game, the Ala de viaje or a defeat).
