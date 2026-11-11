@@ -7,15 +7,15 @@
 script = ExtResource("1_combatant")
 id = "mono_aullador"
 display_name = "Mono aullador"
-max_hp = 150
-hp = 150
-attack = 55
+max_hp = 120
+hp = 120
+attack = 49
 defense = 32
 speed = 28
 map_roam = 2.0
 map_speed = 2.0
-exp_reward = 44
-gold_reward = 30
+exp_reward = 60
+gold_reward = 39
 weak = Array[String](["thunder"])
 drops = {
 "piel_mono": 0.5

@@ -9,16 +9,16 @@ script = ExtResource("1_combatant")
 id = "planta_trampa"
 display_name = "Planta trampa"
 female = true
-max_hp = 170
-hp = 170
+max_hp = 140
+hp = 140
 max_mp = 30
 mp = 30
-attack = 50
+attack = 44
 defense = 40
 speed = 12
 skills = Array[ExtResource("2_skill")]([ExtResource("3_esporas")])
-exp_reward = 48
-gold_reward = 24
+exp_reward = 64
+gold_reward = 31
 ai_weights = {
 "attack": 60,
 "esporas": 40

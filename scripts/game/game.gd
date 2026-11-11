@@ -484,6 +484,8 @@ func _apply_autoplay_zone(args: PackedStringArray) -> void:
 		if start.quest_done:
 			state.quest.stage = Quest.Stage.DONE
 		state.ally_id = start.get("ally", "")
+		if _autoplay_companion != "" and start_id == "jungla":
+			state.ally_id = _autoplay_companion
 		var items: Dictionary = start.get("items", {})
 		for id: String in items:
 			state.inventory.add(id, items[id])
