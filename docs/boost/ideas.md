@@ -33,3 +33,8 @@ Estado: Pendiente
 Revisar las zonas de la v1: donde ya hay más de una misión opcional no se toca nada, pero la mina y el castillo solo tienen una (además de la principal), así que añadir otra misión opcional en cada una, a elección de quien la diseñe.
 Comprobado al apuntarla: pradera 2 (Carta para la Leñadora, Setas para el guiso), bosque 2 (Lobos hambrientos, El gato perdido), mina 1 (El Slime de Metal), castillo 1 (El explorador perdido).
 Estado: Pendiente
+
+## 2026-11-11 · Fuego más realista
+El diseño del fuego también deja mucho que desear: es un círculo naranja. Ponerlo más realista.
+Afecta a la llama compartida (`BattleStage.add_flame()`): antorchas de la mina y del castillo, hogueras del campamento y de la Caravana.
+Estado: Pendiente
