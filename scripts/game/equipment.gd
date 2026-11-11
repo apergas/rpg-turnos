@@ -107,6 +107,17 @@ const EQUIPMENT := {
 		"tint": Color(1.15, 0.72, 0.42)},
 	"casco_oricalco": {"name": "Casco de oricalco", "article": "un", "slot": HELMET,
 		"bonus": 11, "price": 480, "zone": 6, "mesh": "", "tint": Color(1.15, 0.74, 0.45)},
+	# The caravan, tramo 3 (the mountain): adamantite, the platinum meshes tinted violet steel.
+	"espada_adamantita": {"name": "Espada de adamantita", "article": "una", "slot": WEAPON,
+		"bonus": 60, "price": 1750, "zone": 7, "mesh": "2H_Sword",
+		"tint": Color(0.72, 0.66, 1.1)},
+	"armadura_adamantita": {"name": "Armadura de adamantita", "article": "una", "slot": ARMOR,
+		"bonus": 44, "price": 1450, "zone": 7, "mesh": ""},
+	"escudo_adamantita": {"name": "Escudo de adamantita", "article": "un", "slot": SHIELD,
+		"bonus": 20, "price": 800, "zone": 7, "mesh": "Spike_Shield",
+		"tint": Color(0.72, 0.66, 1.1)},
+	"casco_adamantita": {"name": "Casco de adamantita", "article": "un", "slot": HELMET,
+		"bonus": 14, "price": 640, "zone": 7, "mesh": "", "tint": Color(0.74, 0.68, 1.12)},
 	# The Eco de la Niebla's prize (the first time only): DEF like any helmet, plus ATK,
 	# dark grey with a blue cast and two bone horns (BattleActor builds them).
 	MIST_HELM: {"name": "Yelmo de bruma", "article": "un", "slot": HELMET, "bonus": 8,
