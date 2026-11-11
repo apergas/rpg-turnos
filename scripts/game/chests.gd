@@ -32,6 +32,13 @@ const CHESTS := {
 		"yaw": 90.0, "gold": 200},
 	"castillo_trono_cofre": {"zone": "castillo_trono", "pos": Vector3(-20, 0, 8),
 		"yaw": -90.0, "item": Inventory.ETHER},
+	# The jungle: its three glades next to the autoplay route.
+	"jungla_claro_sur": {"zone": "jungla", "pos": Vector3(19.5, 0, 23.5), "yaw": 40.0,
+		"gold": 300},
+	"jungla_claro_este": {"zone": "jungla", "pos": Vector3(21.5, 0, -10.5), "yaw": 130.0,
+		"item": Inventory.BIG_POTION},
+	"jungla_claro_oeste": {"zone": "jungla", "pos": Vector3(-23.5, 0, -18.5), "yaw": -60.0,
+		"item": Inventory.BIG_ETHER},
 }
 
 

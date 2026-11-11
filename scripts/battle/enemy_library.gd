@@ -33,6 +33,7 @@ const ENEMIES := {
 	"serpiente_liana": preload("res://data/enemies/serpiente_liana.tres"),
 	"mono_aullador": preload("res://data/enemies/mono_aullador.tres"),
 	"planta_trampa": preload("res://data/enemies/planta_trampa.tres"),
+	"jaguar_sombrio": preload("res://data/enemies/jaguar_sombrio.tres"),
 	"seta_tropical": preload("res://data/enemies/seta_tropical.tres"),
 }
 ## Figure of each enemy id; any other id is a slime.
@@ -64,6 +65,7 @@ const LOOKS := {
 	"serpiente_liana": BattleActor.Look.SNAKE,
 	"mono_aullador": BattleActor.Look.MONKEY,
 	"planta_trampa": BattleActor.Look.TRAP_PLANT,
+	"jaguar_sombrio": BattleActor.Look.JAGUAR,
 	"seta_tropical": BattleActor.Look.TROPICAL_MUSHROOM,
 	# The creatures that fight beside the hero (data in Allies, not in ENEMIES).
 	"gallina": BattleActor.Look.CHICKEN,

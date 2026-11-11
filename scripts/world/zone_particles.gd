@@ -13,6 +13,7 @@ const POLLEN := "pollen"
 const LEAVES := "leaves"
 const DUST := "dust"
 const MIST := "mist"
+const FIREFLIES := "fireflies"
 ## Half extents, along X and Z, of the box the particles are born in around the hero.
 const BOX := Vector3(15.0, 0.0, 10.0)
 ## Share of a particle's life spent fading in, and again fading out.
@@ -40,6 +41,10 @@ const KINDS := {
 		"speed": [0.2, 0.4], "direction": Vector3(1.0, 0.1, 0.2), "spread": 30.0,
 		"spin": 0.0, "colors": [Color(0.7, 0.55, 0.95, 0.45), Color(0.85, 0.75, 1.0, 0.35)],
 		"lit": false, "round": true},
+	FIREFLIES: {"amount": 60, "lifetime": 8.0, "height": 1.5, "depth": 1.0, "size": 0.06,
+		"speed": [0.1, 0.3], "direction": Vector3(1.0, 0.2, 0.4), "spread": 180.0,
+		"spin": 0.0, "colors": [Color(0.8, 1.0, 0.3, 1.0), Color(0.6, 1.0, 0.4, 1.0)],
+		"lit": false, "round": true, "glow": true},
 }
 
 ## No particles at all while false (low quality). Set by DisplaySettings.
@@ -80,6 +85,8 @@ static func build(kind: String) -> Node3D:
 	parts.scale_amount_max = 1.3
 	parts.color_initial_ramp = _pick(spec.colors)
 	parts.color_ramp = _fade()
+	if spec.get("glow", false):
+		parts.scale_amount_curve = _blink()
 	parts.mesh = _mesh(spec)
 	holder.add_child(parts)
 	return holder
@@ -128,6 +135,17 @@ static func _dot() -> GradientTexture2D:
 	texture.width = 32
 	texture.height = 32
 	return texture
+
+
+## A firefly lights up and goes out over its life (its scale rises and falls).
+static func _blink() -> Curve:
+	var curve := Curve.new()
+	curve.add_point(Vector2(0.0, 0.1))
+	curve.add_point(Vector2(0.25, 1.0))
+	curve.add_point(Vector2(0.5, 0.15))
+	curve.add_point(Vector2(0.75, 1.0))
+	curve.add_point(Vector2(1.0, 0.1))
+	return curve
 
 
 ## Each particle is born one of the two colours, never a mix (constant interpolation).

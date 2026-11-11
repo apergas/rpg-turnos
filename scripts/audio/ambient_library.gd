@@ -10,7 +10,8 @@ const MEADOW := "meadow"
 const FOREST := "forest"
 const MINE := "mine"
 const CASTLE := "castle"
-const IDS: Array[String] = [MEADOW, FOREST, MINE, CASTLE]
+const JUNGLE := "jungle"
+const IDS: Array[String] = [MEADOW, FOREST, MINE, CASTLE, JUNGLE]
 
 ## Seconds of each bed, and of the cross-fade that closes its loop.
 const LOOP := 8.0
@@ -18,10 +19,11 @@ const SEAM := 0.5
 ## Short sounds of each ambient; AudioDirector picks one at random each time.
 const VARIANTS := 4
 ## Seconds between two short sounds: [least, most].
-const GAPS := {MEADOW: [2.0, 6.0], FOREST: [3.0, 7.0], MINE: [1.0, 4.0], CASTLE: [4.0, 9.0]}
+const GAPS := {MEADOW: [2.0, 6.0], FOREST: [3.0, 7.0], MINE: [1.0, 4.0], CASTLE: [4.0, 9.0],
+	JUNGLE: [1.5, 4.0]}
 ## Peak of each bed and of every short sound (AudioDirector plays them at the effects volume
 ## × its AMBIENT_SHARE).
-const BED_PEAK := {MEADOW: 0.35, FOREST: 0.4, MINE: 0.5, CASTLE: 0.35}
+const BED_PEAK := {MEADOW: 0.35, FOREST: 0.4, MINE: 0.5, CASTLE: 0.35, JUNGLE: 0.35}
 const SHOT_PEAK := 0.55
 ## The echoes of a drop in the mine: [delay in seconds, gain].
 const ECHOES := [[0.17, 0.45], [0.34, 0.2], [0.51, 0.08]]
@@ -73,6 +75,8 @@ static func bed(id: String) -> AudioStreamWAV:
 			raw = _leaves(count + seam, rng)
 		MINE:
 			raw = _rumble(count + seam, rng)
+		JUNGLE:
+			raw = _insects(count + seam, rng)
 		_:
 			raw = _wind(count + seam, rng)
 	var samples := raw.slice(0, count)
@@ -104,6 +108,8 @@ static func shot(id: String, variant: int) -> AudioStreamWAV:
 			samples = _bird(rng)
 		MINE:
 			samples = _drop(rng)
+		JUNGLE:
+			samples = _jungle_bird(rng)
 		_:
 			samples = _gust(rng)
 	_normalize(samples, SHOT_PEAK)
@@ -149,6 +155,25 @@ static func _leaves(count: int, rng: RandomNumberGenerator) -> PackedFloat32Arra
 		mid += mid_a * (x - mid)
 		var rustle := maxf(0.0, sin(TAU * 0.21 * t) * sin(TAU * 0.09 * t + 2.0))
 		out[i] = l2 * (0.7 + 0.2 * sin(TAU * 0.07 * t)) + (high - mid) * rustle * 0.35
+	return out
+
+
+## The jungle: insects, noise high-passed above 3500 Hz and low-passed at 6500 Hz, pulsing
+## slowly in volume.
+static func _insects(count: int, rng: RandomNumberGenerator) -> PackedFloat32Array:
+	var out := PackedFloat32Array()
+	out.resize(count)
+	var low_a := _pole(6500.0)
+	var high_a := _pole(3500.0)
+	var low := 0.0
+	var high := 0.0
+	for i in count:
+		var t := float(i) / MusicLibrary.RATE
+		var x := rng.randf_range(-1.0, 1.0)
+		low += low_a * (x - low)
+		high += high_a * (low - high)
+		var pulse := 0.55 + 0.3 * sin(TAU * 0.25 * t) + 0.15 * sin(TAU * 0.61 * t + 1.0)
+		out[i] = (low - high) * pulse
 	return out
 
 
@@ -216,6 +241,22 @@ static func _bird(rng: RandomNumberGenerator) -> PackedFloat32Array:
 	_rest(out, 0.12)
 	_chirp(out, 1250.0 * k, 1150.0 * k, 0.22)
 	_rest(out, 0.05)
+	return out
+
+
+## A jungle bird: two or three quick notes in a square wave, rising or falling.
+static func _jungle_bird(rng: RandomNumberGenerator) -> PackedFloat32Array:
+	var out := PackedFloat32Array()
+	var base := rng.randf_range(1800.0, 2600.0)
+	var up := rng.randf() < 0.5
+	for n in rng.randi_range(2, 3):
+		var hz := base * (1.0 + (0.18 if up else -0.18) * n)
+		var count := int(rng.randf_range(0.06, 0.1) * MusicLibrary.RATE)
+		for i in count:
+			var u := float(i) / count
+			var phase := fmod(hz * float(i) / MusicLibrary.RATE, 1.0)
+			out.append((1.0 if phase < 0.5 else -1.0) * 0.5 * sin(PI * u))
+		_rest(out, rng.randf_range(0.04, 0.08))
 	return out
 
 

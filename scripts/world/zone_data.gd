@@ -13,7 +13,7 @@ class_name ZoneData extends Resource
 
 ## Every zone, in world order (save validation and --autoplay-zone check against it).
 const IDS: Array[String] = ["pradera", "bosque", "mina_1", "mina_2", "mina_3",
-	"castillo_patio", "castillo_trono", "caravana"]
+	"castillo_patio", "castillo_trono", "caravana", "jungla"]
 ## The zones of the v2 (the caravan), growing with each version: a save with the caravan's
 ## flag is only valid on one of these, and a save without it only on the others.
 const V2_ZONES: Array[String] = ["caravana", "jungla"]

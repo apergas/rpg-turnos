@@ -100,6 +100,7 @@ const KEY_ITEMS := {
 	"fragmento_castillo": "Fragmento del amuleto (3/3)",
 	"llave_mina": "Llave de la mina",
 	"carta_granjero": "Carta del Granjero",
+	"insignia_jungla": "Insignia de la jungla",
 }
 ## What each key item is, for Objetos.
 const KEY_TEXTS := {
@@ -108,6 +109,7 @@ const KEY_TEXTS := {
 	"fragmento_castillo": "El último trozo del Amuleto del Alba. Lo guardaba el Señor de la Niebla.",
 	"llave_mina": "Abre la reja de la tercera planta de la mina.",
 	"carta_granjero": "Para la Leñadora, en la aldea del bosque. Huele un poco a gallina.",
+	"insignia_jungla": "La llevaba el Jaguar sombrío. Abre el camino hacia el desierto.",
 	MEDAL: "El Coleccionista de Villaclaro las colecciona.",
 }
 

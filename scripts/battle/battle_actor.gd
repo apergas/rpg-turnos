@@ -15,7 +15,7 @@ enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPE
 	SKELETON_ROGUE, SKELETON_MAGE, FOG_LORD, FARMER, METAL_SLIME, BOARD, CAT, CHILD,
 	CHICKEN, WOLF_CUB, MINI_GOLEM, LOYAL_SKELETON, TAMER, FOG_ECHO, RED_SLIME,
 	POISON_MUSHROOM, CAVE_MUSHROOM, CRYPT_BAT, FROST_SPECTER, COLLECTOR, BRENA, TADEO, ULMA, FROG,
-	SNAKE, MONKEY, TRAP_PLANT, TROPICAL_MUSHROOM, CARAVAN_CHIEF, HEALER }
+	SNAKE, MONKEY, TRAP_PLANT, TROPICAL_MUSHROOM, CARAVAN_CHIEF, HEALER, JAGUAR }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -593,6 +593,15 @@ const LOOKS := {
 		"scale": 1.0,
 		"top": 1.5,
 	},
+	# The Jaguar sombrío, the jungle's boss: a big black wolf-shaped cat with glowing rosettes.
+	Look.JAGUAR: {
+		"color": Color(0.1, 0.09, 0.12),
+		"dark_color": Color(0.05, 0.05, 0.07),
+		"eye_color": Color(0.55, 1.0, 0.3),
+		"spot_color": Color(0.85, 0.65, 0.15),
+		"scale": 1.75,
+		"top": 2.4,
+	},
 	Look.TRAP_PLANT: {
 		"stem_color": Color(0.1, 0.42, 0.12),
 		"leaf_color": Color(0.12, 0.6, 0.18),
@@ -658,7 +667,7 @@ func _ready() -> void:
 	elif look in [Look.MUSHROOM, Look.POISON_MUSHROOM, Look.CAVE_MUSHROOM,
 			Look.TROPICAL_MUSHROOM]:
 		_build_mushroom(data)
-	elif look == Look.WOLF or look == Look.WOLF_CUB:
+	elif look in [Look.WOLF, Look.WOLF_CUB, Look.JAGUAR]:
 		_build_wolf(data)
 	elif look == Look.CHICKEN:
 		_build_chicken(data)
@@ -1172,6 +1181,13 @@ func _build_wolf(data: Dictionary) -> void:
 			_add_blob(root, LEG_PROFILE, 4, data.dark_color, Vector3(x, 0.0, z))
 	_add_mesh(root, _cone(0.07, 0.45), data.color, Vector3(0, 0.8, 0.72))  # tail
 	(root.get_child(-1) as Node3D).rotation_degrees.x = 55.0
+	if data.has("spot_color"):  # the Jaguar sombrío: glowing rosettes on its back
+		for spot in [Vector3(-0.12, 0.9, 0.35), Vector3(0.14, 0.92, 0.5), Vector3(0.0, 0.95, 0.1),
+				Vector3(-0.16, 0.85, 0.72), Vector3(0.12, 0.88, -0.1)]:
+			_add_mesh(root, _sphere(0.055), data.spot_color, spot)
+			var mat := _materials.back() as StandardMaterial3D
+			mat.emission_enabled = true
+			mat.emission = data.spot_color * 0.6
 
 
 ## A poison dart frog: a squat faceted body, a yellow belly, black spots, two big eyes on
@@ -1390,7 +1406,7 @@ func _start_idle() -> void:
 		_start_float()
 	else:
 		var gentle := look in [Look.WOLF, Look.MUD_GOLEM, Look.STONE_GOLEM, Look.SPIDER,
-			Look.CAT, Look.WOLF_CUB, Look.MINI_GOLEM, Look.SNAKE, Look.MONKEY]
+			Look.CAT, Look.WOLF_CUB, Look.MINI_GOLEM, Look.SNAKE, Look.MONKEY, Look.JAGUAR]
 		_start_bounce(0.4 if gentle else 1.0)
 
 

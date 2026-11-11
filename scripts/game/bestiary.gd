@@ -29,7 +29,7 @@ const FAMILIES: Array[Dictionary] = [
 ## The v2's enemies (the caravan), in album order, with no family until 2.3.0: the album
 ## shows them under "La caravana" and they give no prize yet.
 const V2_ENEMIES: Array[String] = ["rana_dardo", "serpiente_liana", "mono_aullador",
-	"planta_trampa", "seta_tropical"]
+	"planta_trampa", "seta_tropical", "jaguar_sombrio"]
 
 
 ## Every enemy with a card, family by family (22).
