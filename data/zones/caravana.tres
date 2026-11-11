@@ -168,7 +168,7 @@ npcs = [{
 "look": "SURVIVOR",
 "name": "Superviviente",
 "needs": "superviviente_vuelve",
-"pos": Vector3(8.4, 0, 3.0),
+"pos": Vector3(9.0, 0, 3.6),
 "yaw": -120.0
 }]
 boss_id = ""
