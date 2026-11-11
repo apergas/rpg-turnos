@@ -43,6 +43,10 @@ const GUARDED_REASON := "Ya estás protegido"
 const POISON := "poison"
 const SLEEP := "sleep"
 const SILENCE := "silence"
+## The Cabra montesa's blow (its attack_status): the fighter loses its next turn, and the
+## status goes when it does. It is not cleared at the end of a round, so a blow after the
+## hero's turn costs the hero the next round's.
+const STUN := "stun"
 
 const MISS_CHANCE := 0.05
 const CRIT_CHANCE := 1.0 / 16.0
@@ -256,6 +260,10 @@ func _resolve(hero_cmd: Dictionary, side: int) -> Array[Dictionary]:
 			continue
 		if fighter.status.has(SLEEP):
 			events.append(BattleEvent.asleep(who))
+			continue
+		if fighter.status.has(STUN):
+			fighter.status.erase(STUN)
+			events.append(BattleEvent.stunned(who))
 			continue
 		var cmd: Dictionary
 		match who:
@@ -519,6 +527,7 @@ func _fall(who: int, events: Array[Dictionary]) -> void:
 		return
 	var next := fighter.next_phase
 	fighter.next_phase = null
+	fighter.display_name = next.display_name
 	fighter.max_hp = next.max_hp
 	fighter.hp = next.hp
 	fighter.max_mp = next.max_mp
@@ -530,7 +539,7 @@ func _fall(who: int, events: Array[Dictionary]) -> void:
 	fighter.ai_weights = next.ai_weights.duplicate()
 	fighter.status.clear()
 	_charged.erase(who)
-	events.append(BattleEvent.phase(who, fighter.hp))
+	events.append(BattleEvent.phase(who, fighter.hp, next.phase_line))
 
 
 ## The Pluma de fénix burns by itself: one is used up and the hero rises with its share

@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="QuestData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/quest_data.gd" id="1_quest"]
+
+[resource]
+script = ExtResource("1_quest")
+id = "cristales_hielo"
+title = "Cristales de hielo"
+kind = 1
+zone = "caravana"
+giver = "Viajera"
+needs = "gusano_dunas"
+turn_in_zone = "caravana"
+turn_in = "Viajera"
+target = "cristal_hielo"
+goal = 3
+objective = "Reúne 3 Cristales de hielo de los golems de la montaña y llévaselos a la Viajera."
+status = "cristales %d / %d"
+report = "cristales a la Viajera"
+offer_lines = Array[String](["Los golems de hielo de la montaña llevan cristales dentro. Dicen que no se derriten nunca.", "Tráeme tres y te daré algo que guardo para los valientes."])
+wait_lines = Array[String](["¿Tres cristales? Los golems de hielo los sueltan al romperse."])
+done_lines = Array[String](["¡Tres cristales, y ni una gota de agua! Son preciosos.", "Toma esta semilla. Te hará más duro que el hielo."])
+reward_gold = 0
+reward_items = {
+"semilla_defensa": 1
+}

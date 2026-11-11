@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "armadura_hueca"
+display_name = "Armadura hueca"
+female = true
+max_hp = 200
+hp = 200
+attack = 74
+defense = 78
+speed = 18
+map_roam = 1.5
+map_speed = 1.2
+exp_reward = 112
+gold_reward = 56
+ai_weights = {
+"attack": 85,
+"stagger": 15
+}
+weak = Array[String](["thunder"])
+drops = {
+"eter_grande": 0.08
+}

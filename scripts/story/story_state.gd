@@ -1,7 +1,8 @@
 class_name StoryState extends RefCounted
 ## Where the story is: the cutscenes already seen and whether the ending was reached.
 ## The chapter follows from them and the world flags (the bosses beaten): 0 prologue,
-## 1 meadow, 2 forest, 3 mine, 4 castle, 5 the end. Says which cutscene comes after a
+## 1 meadow, 2 forest, 3 mine, 4 castle, 5 the end; in the v2 (the caravan) 6 jungle, 7 desert,
+## 8 mountain, 9 the abandoned city, 10 the v2's end (the portal calm). Says which cutscene comes after a
 ## boss or on reaching a village, and the next step of the story in one line. Pure: Game
 ## asks it and plays the cutscenes (data/cutscenes/<id>.tres).
 
@@ -15,7 +16,7 @@ const NAME_TAG := "{nombre}"
 ## Every cutscene, in story order.
 const SCENES: Array[String] = ["prologo", "rey_slime", "aldea_bosque", "bruja", "mina",
 	"golem", "castillo", "final", "caravana_llega", "caravana_parte", "caravana_campamento",
-	"jaguar"]
+	"jaguar", "gusano", "grifo", "guardian", "cruce"]
 ## The cutscene that follows beating each boss (its world flag).
 const AFTER_BOSS := {
 	"rey_slime": "rey_slime",
@@ -23,6 +24,10 @@ const AFTER_BOSS := {
 	"golem_piedra": "golem",
 	"senor_niebla": "final",
 	"jaguar_sombrio": "jaguar",
+	"gusano_dunas": "gusano",
+	"grifo_cumbre": "grifo",
+	"guardian_ciudad": "guardian",
+	"devorador_portal": "cruce",
 }
 ## The cutscene of the first visit to each zone's village.
 const ON_VILLAGE := {
@@ -45,6 +50,28 @@ const V2_FINAL_BOSS := "devorador_portal"
 const MINE_LEVER := "mina_palanca"
 const MINE_KEY := "llave_mina"
 const MINE_DOOR := "mina_puerta"
+## The mountain's flag (ZoneData lever_flag and door_flag of its first floor).
+const MOUNTAIN_LEVER := "montana_palanca"
+## The mountain chapter's goal, step by step: what goal_text() says there.
+const MOUNTAIN_GOALS := {
+	"climb": "Objetivo: sube a la cumbre",
+	"lever": "Objetivo: busca la palanca que abre la reja",
+	"summit": "Objetivo: vence al Grifo de la cumbre",
+}
+## The city's flags: the Guardián beaten (his world flag) and the gate of the portal quarter
+## open (ZoneData door_flag of ciudad_2).
+const CITY_GUARDIAN := "guardian_ciudad"
+const CITY_GATE := "ciudad_reja"
+## The city chapter's goal, step by step: what goal_text() says there.
+const CITY_GOALS := {
+	"enter": "Objetivo: entra en la ciudad abandonada",
+	"guardian": "Objetivo: vence al Guardián de la ciudad",
+	"gate": "Objetivo: abre la reja del barrio del portal",
+	"devourer": "Objetivo: vence al Devorador del portal",
+}
+## Replaced by the companion's name in a cutscene (CutscenePlayer): in figure names, speakers
+## and lines.
+const COMPANION_TAG := "{compañero}"
 ## The mine chapter's goal, step by step: what goal_text() says there.
 const MINE_GOALS := {
 	"enter": "Objetivo: entra en la mina, al norte del bosque",
@@ -66,16 +93,18 @@ const GOALS := {
 	Chapter.DESERT: "Objetivo: atraviesa el desierto",
 	Chapter.MOUNTAIN: "Objetivo: sube a la cumbre",
 	Chapter.CITY: "Objetivo: entra en la ciudad abandonada",
-	Chapter.V2_END: "El portal está abierto",
+	Chapter.V2_END: "El portal está en calma",
 }
-
-## What the story says while a chapter's zone has not been built yet (2.1.0 on).
-const NOT_YET_GOAL := "Objetivo: espera en la caravana; el camino aún no es seguro"
 
 ## Cutscene ids already played (SCENES entries), in the order they were seen.
 var seen: Array[String] = []
 ## True once the ending and the credits were reached: the save is a finished game.
 var finished := false
+## True once the v2's ending and its credits were reached (the Devorador del portal beaten).
+var finished_v2 := false
+## When the hero left with the caravan: [play time in seconds, battles], for the v2's credits;
+## [] for a save that was already in the caravan before 2.3.0.
+var v2_start: Array = []
 
 
 ## The chapter now, from the cutscenes seen and the world flags (GameState.world_flags).
@@ -148,6 +177,7 @@ func mark_seen_for_flags(flags: Dictionary) -> void:
 	if flags.get(COMPANION_FLAG, false):
 		mark_seen("caravana_campamento")
 	finished = flags.get("senor_niebla", false)
+	finished_v2 = flags.get(V2_FINAL_BOSS, false)
 
 
 ## The next step of the story in one line. In the mine chapter it follows the floor the hero
@@ -156,10 +186,12 @@ func goal_text(flags: Dictionary, zone_id := "") -> String:
 	var now := chapter(flags)
 	if now == Chapter.MINE:
 		return MINE_GOALS[_mine_step(flags, zone_id)]
+	if now == Chapter.MOUNTAIN:
+		return MOUNTAIN_GOALS[_mountain_step(flags, zone_id)]
 	if now == Chapter.CARAVAN and not flags.get(COMPANION_FLAG, false):
 		return "Objetivo: habla con el Jefe de caravana"
-	if now == Chapter.DESERT and not "desierto" in ZoneData.IDS:
-		return NOT_YET_GOAL
+	if now == Chapter.CITY:
+		return CITY_GOALS[_city_step(flags, zone_id)]
 	return GOALS[now]
 
 
@@ -173,8 +205,27 @@ static func _mine_step(flags: Dictionary, zone_id: String) -> String:
 	return "key" if zone_id == "mina_3" else "floor_3"
 
 
+static func _mountain_step(flags: Dictionary, zone_id: String) -> String:
+	if zone_id == "montana_2":
+		return "summit"
+	if zone_id == "montana_1" and not flags.get(MOUNTAIN_LEVER, false):
+		return "lever"
+	return "climb"
+
+
+static func _city_step(flags: Dictionary, zone_id: String) -> String:
+	if flags.get(CITY_GATE, false):
+		return "devourer"
+	if flags.get(CITY_GUARDIAN, false):
+		return "gate"
+	if zone_id.begins_with("ciudad_"):
+		return "guardian"
+	return "enter"
+
+
 func to_dict() -> Dictionary:
-	return {"seen": seen.duplicate(), "finished": finished}
+	return {"seen": seen.duplicate(), "finished": finished, "finished_v2": finished_v2,
+		"v2_start": v2_start.duplicate()}
 
 
 ## Loads what to_dict() wrote; unknown scene ids are dropped.
@@ -184,6 +235,11 @@ func set_from(data: Dictionary) -> void:
 		if id is String and id in SCENES:
 			mark_seen(id)
 	finished = bool(data.get("finished", false))
+	finished_v2 = bool(data.get("finished_v2", false))
+	v2_start = []
+	var start: Variant = data.get("v2_start", [])
+	if start is Array and (start as Array).size() == 2:
+		v2_start = [float(start[0]), int(start[1])]
 
 
 ## text with NAME_TAG replaced by name.

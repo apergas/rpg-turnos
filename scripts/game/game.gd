@@ -64,6 +64,9 @@ class_name Game extends Node
 ## record frames of it.
 ## `-- --autoplay --autoplay-zone=<id>`: a new game that starts in that zone with the
 ## level, gold, gear and progress AUTOPLAY_ZONES gives it.
+## `-- --autoplay --autoplay-zone=ciudad` / `portal`: the v2's last stretch: Lv 35 at the city's
+## first floor (the Grifo beaten), or Lv 38 at the portal quarter (the Guardián beaten, its
+## key); they play on to the Devorador, the ending, the v2's credits and "Continuará".
 ## `-- --autoplay --autoplay-zone=medallas`: the finished game of ECHO_START in Villaclaro;
 ## it walks Medals.AUTOPLAY_ROUTE of every region (zone after zone, under black), picks up
 ## the medals, then talks to the Coleccionista and prints "Medallas: n/12 · premios n/5".
@@ -129,7 +132,7 @@ const MEDAL_ZONE_TIME := 300.0
 const NG_PLUS_START := "ngplus"
 ## The autoplay starts that play the v2: only they answer the Jefe de caravana's questions
 ## with Sí (every other run, the finished-game ones included, stays in the v1).
-const V2_STARTS := ["caravana", "jungla"]
+const V2_STARTS := ["caravana", "jungla", "desierto", "montana", "ciudad", "portal"]
 ## --autoplay-zone=<id>: what a new game starting in each zone gets, as planned when
 ## arriving there (zone 1 done: Lv 5, its shop's gear, the Rey Slime beaten).
 const AUTOPLAY_ZONES := {
@@ -245,6 +248,80 @@ const AUTOPLAY_ZONES := {
 		"town": "caravana",
 		"ally": "brena",
 		"items": {Inventory.BIG_POTION: 3, Inventory.ETHER: 3, Inventory.WING: 2},
+		"finished": true,
+	},
+	# --autoplay-zone=desierto: the jungle done: Lv 25 with the jade gear, Brena, the Jaguar
+	# beaten and its insignia, at the desert's entrance.
+	"desierto": {
+		"experience": 6850,
+		"gold": 900,
+		"gear": ["espada_jade", "armadura_jade", "escudo_jade", "casco_jade"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra", "senor_niebla", "caravana_vista", "caravana", "companero",
+			"jaguar_sombrio"],
+		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo",
+			"insignia_jungla"],
+		"quest_done": true,
+		"town": "caravana",
+		"ally": "brena",
+		"items": {Inventory.BIG_POTION: 3, Inventory.BIG_ETHER: 2, Inventory.WING: 2},
+		"finished": true,
+	},
+	# --autoplay-zone=montana: the desert done: Lv 30 with the orichalcum gear, Brena, the
+	# Gusano beaten and its seal, at the mountain's entrance (its first floor).
+	"montana": {
+		"zone": "montana_1",
+		"experience": 11350,
+		"gold": 1000,
+		"gear": ["espada_oricalco", "armadura_oricalco", "escudo_oricalco", "casco_oricalco"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra", "senor_niebla", "caravana_vista", "caravana", "companero",
+			"jaguar_sombrio", "gusano_dunas"],
+		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo",
+			"insignia_jungla", "sello_desierto"],
+		"quest_done": true,
+		"town": "caravana",
+		"ally": "brena",
+		"items": {Inventory.BIG_POTION: 3, Inventory.BIG_ETHER: 2, Inventory.WING: 2},
+		"finished": true,
+	},
+	# --autoplay-zone=ciudad: the mountain done: Lv 35 with the adamantite gear, Brena, the
+	# Grifo beaten and its map, at the city's entrance (its first floor).
+	"ciudad": {
+		"zone": "ciudad_1",
+		"experience": 17100,
+		"gold": 1200,
+		"gear": ["espada_adamantita", "armadura_adamantita", "escudo_adamantita",
+			"casco_adamantita"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra", "senor_niebla", "caravana_vista", "caravana", "companero",
+			"jaguar_sombrio", "gusano_dunas", "montana_palanca", "grifo_cumbre"],
+		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo",
+			"insignia_jungla", "sello_desierto", "mapa_montana"],
+		"quest_done": true,
+		"town": "caravana",
+		"ally": "brena",
+		"items": {Inventory.BIG_POTION: 3, Inventory.BIG_ETHER: 2, Inventory.WING: 2},
+		"finished": true,
+	},
+	# --autoplay-zone=portal: the Guardián beaten: Lv 38 with the stellar gear, Brena and the
+	# Llave del portal, at the portal quarter's entrance (the city's second floor).
+	"portal": {
+		"zone": "ciudad_2",
+		"experience": 21150,
+		"gold": 800,
+		"gear": ["espada_estelar", "armadura_estelar", "escudo_estelar", "casco_estelar"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra", "senor_niebla", "caravana_vista", "caravana", "companero",
+			"jaguar_sombrio", "gusano_dunas", "montana_palanca", "grifo_cumbre",
+			"guardian_ciudad"],
+		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo",
+			"insignia_jungla", "sello_desierto", "mapa_montana", "llave_portal"],
+		"quest_done": true,
+		"town": "caravana",
+		"ally": "brena",
+		"items": {Inventory.BIG_POTION: 4, Inventory.BIG_ETHER: 3, Inventory.WING: 2,
+			Inventory.PHOENIX: 1},
 		"finished": true,
 	},
 	# Ready for the Señor de la Niebla: Lv 17 with the castle's gear.
@@ -483,8 +560,14 @@ func _apply_autoplay_zone(args: PackedStringArray) -> void:
 		state.town_zone = start.get("town", state.town_zone)
 		if start.quest_done:
 			state.quest.stage = Quest.Stage.DONE
+		# The v2's level cap needs the "caravana" flag, set just above: levels again.
+		# (the first pass at the v1 cap clamped the EXP: give it back).
+		state.sync_level_cap()
+		state.hero.experience = start.experience
+		Leveling.apply(state.hero)
+		state.heal_full()
 		state.ally_id = start.get("ally", "")
-		if _autoplay_companion != "" and start_id == "jungla":
+		if Allies.is_companion(state.ally_id):
 			state.ally_id = _autoplay_companion
 		var items: Dictionary = start.get("items", {})
 		for id: String in items:
@@ -631,6 +714,7 @@ func _on_encounter(boss: bool) -> void:
 	var mission_done := false
 	var finished_quests: Array[Dictionary] = []
 	var family_lines: Array[String] = []
+	var ending_v2 := false
 	if won:
 		state.gold += battle.engine.gold_won
 		state.gold_earned += battle.engine.gold_won
@@ -650,7 +734,13 @@ func _on_encounter(boss: bool) -> void:
 		for enemy in battle.engine.enemies:
 			finished_quests.append_array(state.quests.on_victory(state, enemy.id))
 		# The enemies are noted as beaten above: a family may be complete now.
-		family_lines = _give_family_rewards()
+		# The v2's last boss (the first time): its ending follows. It also completes the Jefes
+		# de la caravana, but no map is left to show the prize on: it comes when the game is
+		# next loaded, in the Caravana (_ready() gives it).
+		ending_v2 = boss and _boss_id() == StoryState.V2_FINAL_BOSS \
+			and not state.story.finished_v2
+		if not ending_v2:
+			family_lines = _give_family_rewards()
 	elif outcome == BattleEngine.State.LOST:
 		if _autoplay:
 			_defeats += 1
@@ -689,6 +779,9 @@ func _on_encounter(boss: bool) -> void:
 	for finished: Dictionary in finished_quests:
 		_world.show_mission_done(QuestLog.done_text(finished.title))
 		_world.show_notice(" ".join(finished.lines))
+	if ending_v2:
+		await _finish_v2()
+		return
 	if won and state.is_finished() and not state.story.finished:
 		await _finish_game()
 		return
@@ -782,6 +875,17 @@ func _boss_wanted() -> bool:
 	return state.quest.boss_available() if boss == Quest.BOSS_ID else not state.has_flag(boss)
 
 
+## The index of the figure of this kind and id (a shop's) with a quest report waiting
+## (QuestLog.reports_here()), -1 if none.
+func _figure_with_report(kind: String, id: String) -> int:
+	var waiting := state.quests.reports_here(_zone.id, state.inventory)
+	for i in _zone.npcs.size():
+		var npc: Dictionary = _zone.npcs[i]
+		if npc.kind == kind and npc.get("id", "") == id and npc.name in waiting:
+			return i
+	return -1
+
+
 ## Autoplay, in the village: a night at its inn and the shop's picks, as if the hero had
 ## walked up to the innkeeper and the merchant.
 func _autoplay_restock() -> void:
@@ -791,8 +895,15 @@ func _autoplay_restock() -> void:
 	for npc: Dictionary in _zone.npcs:
 		if npc.kind == "shop":
 			await _on_shop(npc.id)
+	# On a caravan game the figures that offer a quest ("!") are visited too, or autoplay
+	# would never take the v2's quests; a v1 game keeps the reports only.
+	var marks := {}
+	if state.in_caravan():
+		marks = state.quests.markers(_zone.id, state.inventory, state.world_flags)
 	for i in _zone.npcs.size():
-		if _zone.npcs[i].name in state.quests.reports_here(_zone.id, state.inventory):
+		var npc_name: String = _zone.npcs[i].name
+		if npc_name in state.quests.reports_here(_zone.id, state.inventory) \
+				or marks.get(npc_name, "") == QuestLog.NEW_MARK:
 			await _on_npc(i)
 
 
@@ -970,6 +1081,7 @@ func _play_scene(scene_id: String) -> void:
 	state.story.mark_seen(scene_id)
 	_cutscenes.world = _world
 	_cutscenes.hero_name = state.hero.display_name
+	_cutscenes.companion_name = Allies.display_name(state.ally_id) if state.ally_id != "" else ""
 	await _cutscenes.play(scene)
 	_audio.play_ambient(_zone.ambient)  # a "music" step silenced it
 	_refresh_status()
@@ -1009,9 +1121,84 @@ func _finish_game() -> void:
 		print("Juego completado: Nv %d, tiempo de juego %s, misiones %d" % [state.hero.level,
 			time_text, state.quests_done()])
 		print("Familias completas: %d/%d" % [Bestiary.complete_count(state),
-			Bestiary.FAMILIES.size()])
+			Bestiary.families(state).size()])
 		print("Derrotas: %d" % _defeats)
 	quit_to_title.emit()
+
+
+## After the v2's ending (the cruce scene ends under black): the game is finished in the v2
+## and saved in the Caravana, which can still be walked; then the screen beyond the portal,
+## the v2's credits and "Continuará", and Game goes back to the title. Game stays busy, so no
+## window, ☰ or prompt shows over them.
+func _finish_v2() -> void:
+	MusicLibrary.build(MusicLibrary.BEYOND)  # under black
+	state.story.finished_v2 = true
+	_switch_zone("caravana", "")
+	_world.freeze(true)
+	_autosave(false)
+	var numbers := _v2_numbers()
+	_world.set_active(false)
+	_audio.stop_ambient()
+	_audio.play_music(MusicLibrary.BEYOND)
+	var beyond := BeyondScreen.new()
+	beyond.setup(state.loadout.worn(Equipment.WEAPON), state.loadout.worn(Equipment.SHIELD),
+		state.loadout.worn(Equipment.HELMET), state.ally_id)
+	add_child(beyond)
+	await _fade_to(0.0)
+	await beyond.run()
+	await _fade_to(1.0)
+	beyond.queue_free()
+	var layer := CanvasLayer.new()
+	layer.layer = 11
+	add_child(layer)
+	var credits := CreditsScreen.new()
+	credits.end_text = CreditsScreen.TO_BE_CONTINUED
+	layer.add_child(credits)
+	await _fade_to(0.0)
+	await credits.run(_v2_credits_sections(numbers))
+	if _autoplay:
+		print("Juego completado (v2): Nv %d, tiempo en la caravana %s, tiempo de juego %s, misiones de la caravana %d/%d"
+			% [state.hero.level, numbers.time, _clock(play_time), state.quests.done_of(true),
+			QuestLog.total_of(true)])
+		print("Familias completas: %d/%d" % [Bestiary.complete_count(state),
+			Bestiary.families(state).size()])
+		print("Derrotas: %d" % _defeats)
+	quit_to_title.emit()
+
+
+## The v2's time and battles: since the hero left with the caravan (story.v2_start), or the
+## whole game's for a save that was already in the caravan before 2.3.0 ("since" false).
+func _v2_numbers() -> Dictionary:
+	var start: Array = state.story.v2_start
+	var since := not start.is_empty()
+	return {
+		"time": _clock(play_time - (float(start[0]) if since else 0.0)),
+		"battles": state.battles - (int(start[1]) if since else 0),
+		"since": since,
+	}
+
+
+## The v2's credits: the caravan's story, this journey's numbers, who made the game.
+func _v2_credits_sections(numbers: Dictionary) -> Array:
+	var journey: Array[String] = []
+	if state.ally_id != "":
+		journey.append("Compañero: %s" % Allies.display_name(state.ally_id))
+	journey.append(("Tiempo en la caravana: %s" if numbers.since else "Tiempo de juego: %s")
+		% numbers.time)
+	journey.append(("Combates en la caravana: %d" if numbers.since else "Combates: %d")
+		% numbers.battles)
+	journey.append("Misiones de la caravana: %d/%d" % [state.quests.done_of(true),
+		QuestLog.total_of(true)])
+	journey.append("Nivel: %d" % state.hero.level)
+	return [
+		["La caravana del portal", ["La historia de %s" % state.hero.display_name]],
+		["Tu viaje", journey],
+		["Creado por", [AUTHOR]],
+		["Motor", ["Godot Engine 4.7"]],
+		["Modelos 3D", ["KayKit, de Kay Lousberg (CC0)", "Nature Kit, de Kenney (CC0)"]],
+		["Música y sonido", ["Generados por el propio juego"]],
+		["Gracias por jugar", []],
+	]
 
 
 ## The credits: who made the game, with what, and the numbers of this game (and its round,
@@ -1113,7 +1300,9 @@ func _on_npc(index: int) -> void:
 	var lines: Array[String] = []
 	for line: String in said:
 		lines.append(StoryState.fill(line, state.hero.display_name))
-	await _world.show_dialogue(figure, lines)
+	# A thing picked up (kind "item", the cantimplora) has no voice: the narrator says it.
+	var speaker := "" if _zone.npcs[index].kind == "item" else figure
+	await _world.show_dialogue(speaker, lines)
 	if not talk.is_empty():
 		_after_quest_talk(talk.done)
 	_set_busy(false)
@@ -1130,6 +1319,7 @@ func _ask_departure() -> void:
 		return
 	await _play_scene("caravana_parte")  # ends under black
 	state.leave_for_caravan()
+	state.story.v2_start = [play_time, state.battles]  # the v2's credits count from here
 	_switch_zone("caravana", "")
 	_play_map_music()
 	await _fade_to(0.0)
@@ -1191,6 +1381,11 @@ func _after_quest_talk(done_title: String) -> void:
 ## The merchant: the ShopWindow until the player leaves; autosaves if anything changed.
 ## On autoplay it only opens when there is something to buy.
 func _on_shop(shop_id: String) -> void:
+	if _busy:
+		return
+	var waiting := _figure_with_report("shop", shop_id)
+	if waiting >= 0:
+		await _on_npc(waiting)  # a report waiting at the merchant goes first (pieles_mono)
 	if shop_id == Shop.CARAVAN_SHOP:
 		shop_id = Shop.caravan_shop(state.tramo())
 	if _busy or (_autoplay and Shop.autoplay_picks(state, shop_id).is_empty()):
@@ -1487,6 +1682,10 @@ func _refresh_status() -> void:
 	_world.set_autoplay_hunt(_autoplay and _autoplay_hunts())
 	var hidden := state.quests.hidden_figures(_zone.id)
 	hidden.append_array(_zone.absent_figures(state.world_flags))
+	# The companions not chosen never show (the figures of the cruce scene in ciudad_2).
+	for id in Allies.COMPANIONS:
+		if id != state.ally_id:
+			hidden.append(Allies.display_name(id))
 	_world.set_quest_view(state.quests.markers(_zone.id, state.inventory, state.world_flags),
 		hidden)
 	var loadout := state.loadout

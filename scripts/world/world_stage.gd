@@ -3,9 +3,13 @@ class_name WorldStage extends RefCounted
 ## ground, a field of tall grass (Vegetation) with a bare dirt path and safe discs,
 ## low-poly buildings and rocks with hand-made colliders, trees (denser toward the walls,
 ## with trunk colliders) and bushes scattered with fixed seeds, invisible walls and hills
-## outside. Exits, figures and chests are World's. A dungeon floor only gets its sky and
-## light and its buildings (the castle camp's tents) here: its cells are a DungeonMap,
-## which World adds. Every query takes the zone.
+## outside (in the zone's hill_color, like its dunes: solid half-buried ellipsoids that
+## everything keeps off). A zone may colour its path and safe discs (path_color), lay patches
+## of other ground under the path (ground_patches) and grow its trees only inside discs
+## (tree_areas). Exits, figures and chests are World's. A dungeon floor only gets its sky and
+## light and its buildings (the castle camp's tents) and, when it is open to the sky, its
+## hills (the mountain's peaks) here: its cells are a DungeonMap, which World adds. Every
+## query takes the zone.
 
 ## The Medieval Hexagon buildings are miniatures (a house is 0.8 m wide, 0.9 m tall).
 const BUILDING_SCALE := 3.5
@@ -37,6 +41,13 @@ const BUILDING_RADIUS := {
 	"house_A_green": 1.5, "house_B_green": 1.9, "well_green": 1.3,
 	"market_green": 3.2, "tavern_green": 2.4, "tent": 1.6,
 }
+## Dunes: the share of their footprint the colliders fill (their edge is a gentle slope),
+## how far trees, bushes and grass keep from them, and how far (on top of the path's own
+## width) a dune keeps from the path, the autoplay route and what the hero walks up to.
+const DUNE_COLLIDER_SHARE := 0.85
+const DUNE_TREE_MARGIN := 1.0
+const DUNE_MARGIN := 1.5
+const DUNE_SAMPLE_STEP := 0.5
 ## Tall grass keeps this far from the path and the safe discs, the rocks and the chests.
 const GRASS_PATH_MARGIN := 0.3
 const GRASS_ROCK_MARGIN := 0.2
@@ -103,19 +114,27 @@ static func build(root: Node3D, zone: ZoneData) -> ShaderMaterial:
 			_add_solid_model(root, MODELS[building[2]], building[0],
 				MODEL_SCALES.get(building[2], BUILDING_SCALE), building[1])
 		_add_decor(root, zone)
+		for hill in zone.hills:  # the peaks round a floor open to the sky (the mountain)
+			BattleStage.add_mesh(root, BattleStage.unit_sphere(), zone.hill_color, hill[0], hill[1])
 		return null
 	_add_ground(root, zone)
+	for patch in zone.ground_patches:
+		_add_disc(root, patch[0] + Vector3(0, -0.005, 0), patch[1], patch[2])
 	_add_path(root, zone)
 	for rock in zone.rocks:
 		_add_solid_model(root, BattleStage.ROCK_SCENES[rock[1]], rock[0], rock[2], rock[3])
 	for building in zone.buildings:
 		_add_solid_model(root, MODELS[building[2]], building[0],
 			MODEL_SCALES.get(building[2], BUILDING_SCALE), building[1])
+	for dune: Array in zone.dunes:
+		_add_dune(root, zone, dune)
+	for line in dune_problems(zone):
+		push_warning(line)
 	_add_trees(root, zone)
 	_add_bushes(root, zone)
 	_add_decor(root, zone)
 	for hill in zone.hills:
-		BattleStage.add_mesh(root, BattleStage.unit_sphere(), BattleStage.HILL, hill[0], hill[1])
+		BattleStage.add_mesh(root, BattleStage.unit_sphere(), zone.hill_color, hill[0], hill[1])
 	_add_walls(root, zone)
 	if not zone.has_grass:
 		return null
@@ -151,6 +170,7 @@ static func is_grass_free(pos: Vector3, zone: ZoneData) -> bool:
 			or Decor.near_solid(zone, pos, GRASS_DECOR_MARGIN):
 		return false
 	return not _near_rock(zone, pos, GRASS_ROCK_MARGIN) \
+		and not near_dune(zone, pos, GRASS_ROCK_MARGIN) \
 		and not _near_building(zone, pos, GRASS_BUILDING_MARGIN)
 
 
@@ -174,7 +194,7 @@ static func near_tree(zone: ZoneData, pos: Vector3, margin: float) -> bool:
 ## True if pos is clear by margin of every rock's and building's footprint.
 static func is_clear_of_props(zone: ZoneData, pos: Vector3, margin: float) -> bool:
 	return not _near_rock(zone, pos, margin) and not _near_building(zone, pos, margin) \
-		and not Decor.near_solid(zone, pos, margin)
+		and not near_dune(zone, pos, margin) and not Decor.near_solid(zone, pos, margin)
 
 
 ## Upright cylinder collider standing on the ground, for village props and figures.
@@ -215,20 +235,123 @@ static func _add_path(root: Node3D, zone: ZoneData) -> void:
 		mesh.size = Vector2(zone.path_half_width * 2.0, d.length())
 		var mid := (a + b) / 2.0 + Vector3(0, 0.01, 0)
 		var yaw := rad_to_deg(atan2(d.x, d.z))
-		BattleStage.add_mesh(root, mesh, BattleStage.DIRT, mid, Vector3.ONE, Vector3(0, yaw, 0))
+		BattleStage.add_mesh(root, mesh, zone.path_color, mid, Vector3.ONE, Vector3(0, yaw, 0))
 	# Round the inner bends so the drawn path matches is_on_path (union of capsules).
 	for i in range(1, points.size() - 1):
-		_add_disc(root, points[i], zone.path_half_width)
+		_add_disc(root, points[i], zone.path_half_width, zone.path_color)
 	for disc in zone.safe_discs:
-		_add_disc(root, disc[0], disc[1])
+		_add_disc(root, disc[0], disc[1], zone.path_color)
 
 
-static func _add_disc(root: Node3D, center: Vector3, radius: float) -> void:
+static func _add_disc(root: Node3D, center: Vector3, radius: float,
+		color := BattleStage.DIRT) -> void:
 	var mesh := CylinderMesh.new()
 	mesh.top_radius = radius
 	mesh.bottom_radius = radius
 	mesh.height = 0.02
-	BattleStage.add_mesh(root, mesh, BattleStage.DIRT, center + Vector3(0, 0.01, 0))
+	BattleStage.add_mesh(root, mesh, color, center + Vector3(0, 0.01, 0))
+
+
+## A dune: a half-buried ellipsoid of the zone's hill_color, and a static body with a row of
+## upright cylinders along its long axis filling DUNE_COLLIDER_SHARE of its footprint (the
+## hero walks round it; Jolt does not take scaled shapes well, so no squashed sphere).
+static func _add_dune(root: Node3D, zone: ZoneData, dune: Array) -> void:
+	var center: Vector3 = dune[0]
+	var radii: Vector3 = dune[1]
+	BattleStage.add_mesh(root, BattleStage.unit_sphere(), zone.hill_color, center, radii)
+	var foot := dune_footprint(dune)
+	var along_x := foot.x >= foot.y
+	var long := maxf(foot.x, foot.y)
+	var short := minf(foot.x, foot.y)
+	var count := maxi(1, ceili(long / short))
+	var body := StaticBody3D.new()
+	body.position = Vector3(center.x, 0.0, center.z)
+	root.add_child(body)
+	for i in count:
+		var offset := 0.0 if count == 1 \
+			else lerpf(short - long, long - short, float(i) / (count - 1))
+		var cylinder := CylinderShape3D.new()
+		cylinder.radius = short * DUNE_COLLIDER_SHARE
+		cylinder.height = maxf(0.5, center.y + radii.y)
+		var shape := CollisionShape3D.new()
+		shape.shape = cylinder
+		shape.position = Vector3(offset if along_x else 0.0, cylinder.height / 2.0,
+			0.0 if along_x else offset)
+		body.add_child(shape)
+
+
+## Half the size of a dune on the ground (x, z): its radii cut at the ground plane.
+static func dune_footprint(dune: Array) -> Vector2:
+	var center: Vector3 = dune[0]
+	var radii: Vector3 = dune[1]
+	var k := sqrt(maxf(0.0, 1.0 - pow(center.y / radii.y, 2.0)))
+	return Vector2(radii.x * k, radii.z * k)
+
+
+## True within margin of a dune's footprint (an ellipse on the ground).
+static func near_dune(zone: ZoneData, pos: Vector3, margin: float) -> bool:
+	for dune: Array in zone.dunes:
+		if _in_dune(dune, pos, margin):
+			return true
+	return false
+
+
+static func _in_dune(dune: Array, pos: Vector3, margin: float) -> bool:
+	var foot := dune_footprint(dune)
+	var d := Vector2(pos.x - dune[0].x, pos.z - dune[0].z)
+	return pow(d.x / (foot.x + margin), 2.0) + pow(d.y / (foot.y + margin), 2.0) < 1.0
+
+
+## One line for every dune of zone on something the hero must walk or reach: the path and the
+## safe discs, the autoplay route, an entry, an exit, a chest or a well, a figure, the boss.
+## WorldStage.build() prints them as warnings: any of them is a fault of the zone's data.
+static func dune_problems(zone: ZoneData) -> PackedStringArray:
+	var lines := PackedStringArray()
+	for dune: Array in zone.dunes:
+		var what := _dune_blocks(zone, dune)
+		if what != "":
+			lines.append("Duna en (%.1f, %.1f) pisa %s" % [dune[0].x, dune[0].z, what])
+	return lines
+
+
+static func _dune_blocks(zone: ZoneData, dune: Array) -> String:
+	var points := zone.path_points
+	for i in points.size() - 1:
+		if _segment_in_dune(dune, points[i], points[i + 1], zone.path_half_width + DUNE_MARGIN):
+			return "el camino"
+	for disc in zone.safe_discs:
+		if _in_dune(dune, disc[0], disc[1] + DUNE_MARGIN):
+			return "el camino"
+	var route := zone.autoplay_route
+	for i in route.size():
+		if _segment_in_dune(dune, route[i], route[(i + 1) % route.size()], DUNE_MARGIN):
+			return "la ruta automática"
+	for entry: Array in zone.entries.values():
+		if _in_dune(dune, entry[0], DUNE_MARGIN):
+			return "una entrada"
+	for exit: Dictionary in zone.all_exits():
+		if _in_dune(dune, exit.pos, DUNE_MARGIN):
+			return "una salida"
+	for id in Chests.of_zone(zone.id):
+		if _in_dune(dune, Chests.CHESTS[id].pos, DUNE_MARGIN):
+			return "un cofre"
+	for well: Dictionary in zone.wells:
+		if _in_dune(dune, well.pos, DUNE_MARGIN):
+			return "un pozo"
+	for npc: Dictionary in zone.npcs:
+		if _in_dune(dune, npc.pos, DUNE_MARGIN):
+			return "una figura"
+	if zone.boss_id != "" and _in_dune(dune, zone.boss_pos, DUNE_MARGIN + 2.5):
+		return "el jefe"
+	return ""
+
+
+static func _segment_in_dune(dune: Array, a: Vector3, b: Vector3, margin: float) -> bool:
+	var steps := maxi(1, ceili(a.distance_to(b) / DUNE_SAMPLE_STEP))
+	for i in steps + 1:
+		if _in_dune(dune, a.lerp(b, float(i) / steps), margin):
+			return true
+	return false
 
 
 ## An imported model on a static body, with a box collider fitted to its mesh (the
@@ -291,6 +414,16 @@ static func _tree_layout(zone: ZoneData) -> Array[Dictionary]:
 		var yaw := rng.randf() * TAU
 		var scl := rng.randf_range(zone.tree_scale.x, zone.tree_scale.y)
 		var use_a := rng.randf() < 0.5
+		if not zone.tree_areas.is_empty():
+			# Trees only inside the zone's areas (the desert's oasis): the spot is rolled
+			# again inside one of them, and every tree there is inside the walls.
+			pos = _area_spot(zone.tree_areas, rng)
+			if not _tree_fits(zone, pos, placed):
+				continue
+			placed.append(Vector2(pos.x, pos.z))
+			trees.append({"pos": pos, "yaw": yaw, "scale": scl, "use_a": use_a,
+				"clump": false, "inside": true})
+			continue
 		# Distance to the nearest wall (negative outside the field).
 		var inset := minf(zone.half_size.x - absf(pos.x), zone.half_size.y - absf(pos.z))
 		var rise := clampf(1.0 - inset / zone.tree_rise_inset, 0.0, 1.0)
@@ -302,6 +435,14 @@ static func _tree_layout(zone: ZoneData) -> Array[Dictionary]:
 	_layout_zone = zone.id
 	_layout = trees
 	return trees
+
+
+## A spot rolled evenly inside one of areas ([centre, radius] discs).
+static func _area_spot(areas: Array, rng: RandomNumberGenerator) -> Vector3:
+	var area: Array = areas[rng.randi() % areas.size()]
+	var angle := rng.randf() * TAU
+	var r := sqrt(rng.randf()) * float(area[1])
+	return area[0] + Vector3(cos(angle) * r, 0.0, sin(angle) * r)
 
 
 ## The mesh of a tree model: a jungle palm (PalmModels: palm_A, palm_B, palms_clump) or
@@ -337,6 +478,8 @@ static func _tree_fits(zone: ZoneData, pos: Vector3, placed: Array[Vector2]) -> 
 		return false
 	if _near_rock(zone, pos, TREE_ROCK_MARGIN) or _near_chest(zone, pos, CHEST_TREE_MARGIN):
 		return false
+	if near_dune(zone, pos, DUNE_TREE_MARGIN):
+		return false
 	if _near_building(zone, pos, TREE_BUILDING_MARGIN) or _near_exit(zone, pos, TREE_EXIT_MARGIN):
 		return false
 	var p := Vector2(pos.x, pos.z)
@@ -359,6 +502,7 @@ static func _add_bushes(root: Node3D, zone: ZoneData) -> void:
 		var yaw := rng.randf() * TAU
 		var scl := rng.randf_range(BUSH_SCALE.x, BUSH_SCALE.y)
 		if is_on_path(zone, pos, BUSH_PATH_MARGIN) or _near_rock(zone, pos, BUSH_ROCK_MARGIN) \
+				or near_dune(zone, pos, BUSH_ROCK_MARGIN) \
 				or _near_chest(zone, pos, CHEST_BUSH_MARGIN) \
 				or _near_building(zone, pos, GRASS_BUILDING_MARGIN) \
 				or Decor.near_solid(zone, pos, BUSH_DECOR_MARGIN):
@@ -428,7 +572,7 @@ static func _add_decor_collider(root: Node3D, piece: Dictionary, mesh: Mesh) -> 
 ## The cells of a dungeon floor no decoration stands on: the lever, the key, the gates, the
 ## torches and the throne (what decor_blocker() says it would be on).
 const DECOR_KEEP_CELLS := {"L": "la palanca", "K": "la llave", "D": "una reja",
-	"T": "una antorcha", "R": "el trono"}
+	"T": "una antorcha", "R": "el trono", "P": "el portal"}
 
 
 ## What a piece of decoration of this radius at pos would be on that it must not ("" if the
@@ -473,6 +617,8 @@ static func decor_blocker(zone: ZoneData, pos: Vector3, radius: float, solid: bo
 		return "una medalla"
 	if _near_figure(zone, pos, radius + DECOR_FIGURE_MARGIN):
 		return "una figura"
+	if near_dune(zone, pos, radius + DECOR_PROP_MARGIN):
+		return "una duna"
 	if _near_rock(zone, pos, radius + DECOR_PROP_MARGIN):
 		return "una roca"
 	if _near_building(zone, pos, radius + DECOR_PROP_MARGIN):

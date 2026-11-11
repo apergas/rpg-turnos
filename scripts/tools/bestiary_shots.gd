@@ -7,7 +7,7 @@ extends SceneTree
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
 const SIZE := Vector2i(128, 128)
 ## Ambient light by id for the very dark figures (the default is 0.7).
-const AMBIENT := {"jaguar_sombrio": 5.0}
+const AMBIENT := {"jaguar_sombrio": 5.0, "armadura_hueca": 1.8}
 
 
 func _initialize() -> void:

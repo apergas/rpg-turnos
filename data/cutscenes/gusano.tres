@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="Cutscene" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/cutscene.gd" id="1_cutscene"]
+
+[resource]
+script = ExtResource("1_cutscene")
+id = "gusano"
+steps = [
+["wait", 0.4],
+["say", "", ["El Gusano de las dunas se hunde en la arena y no vuelve a salir. Entre las piedras de la ruina queda un sello de arcilla."]],
+["say", "", ["¡Consigues el Sello del desierto!"]],
+["fade_out"],
+["travel", "caravana", "desierto"],
+["fade_in"],
+["approach", "Jefe de caravana", "hero", 1.8],
+["face", "hero", "Jefe de caravana"],
+["say", "Jefe de caravana", ["¡Has vuelto del desierto! Con ese sello, los guardas de la montaña nos abrirán el paso.", "Descansa, y cuando estés listo, sal por el norte: el camino de la montaña ya está montado."]]
+]

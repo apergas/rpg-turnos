@@ -2,7 +2,7 @@ class_name MonsterGroups extends RefCounted
 ## The groups of monsters a map is built with (ZoneData.monster_count), where they stand,
 ## and the distances of touching them. Each group is a formation of
 ## EncounterTable.pick_group(); World draws only its first enemy. On an open map a group
-## stands on the grass, PATH_MARGIN off the path and the safe discs (so a hero on them is
+## stands off the path (on the grass where there is some), PATH_MARGIN off the path and the safe discs (so a hero on them is
 ## never touched), out of the village, inside the walls and clear of the rocks, the
 ## buildings and the trees; on a dungeon floor, on a room cell (is_room_cell(): a corridor
 ## one cell wide never holds one), never in the stair rooms or the village (the refugio, the
@@ -22,6 +22,8 @@ const CALM_MS := 1500
 const MAX_ROAM := 2.5
 ## Open map: groups keep this far off the path and the safe discs.
 const PATH_MARGIN := CONTACT_RADIUS + MAX_ROAM + 0.5
+## Open map: this far from a dune's footprint (a group may walk MAX_ROAM from its spot).
+const DUNE_MARGIN := MAX_ROAM + 0.5
 ## Open map: this far inside the walls, and off the rocks, the buildings and the trunks.
 const EDGE_MARGIN := 4.0
 const PROP_MARGIN := 1.5
@@ -91,7 +93,7 @@ static func is_room_cell(zone: ZoneData, cell: Vector2i) -> bool:
 		var whole := true
 		for part in BLOCK:
 			var ch := zone.cell_char(cell + corner + part)
-			if ch == ZoneData.ROCK or ch == ZoneData.DOOR:
+			if ch == ZoneData.ROCK or ch == ZoneData.DOOR or ch == ZoneData.PORTAL:
 				whole = false
 				break
 		if whole:
@@ -142,16 +144,19 @@ static func _candidates(zone: ZoneData, rng: RandomNumberGenerator,
 	return found
 
 
-## Open map: on the grass, PATH_MARGIN off the path and the safe discs, out of the village,
-## clear of the rocks, the buildings and the trees.
+## Open map: PATH_MARGIN off the path and the safe discs (on the grass where the zone has
+## it; anywhere off the path where it has none, like the desert), out of the village, clear
+## of the rocks, the buildings, the solid decoration and the trees, and DUNE_MARGIN off the
+## dunes.
 static func _open_spot(zone: ZoneData, pos: Vector3) -> bool:
-	if not zone.has_grass or WorldStage.is_on_path(zone, pos, PATH_MARGIN):
+	if WorldStage.is_on_path(zone, pos, PATH_MARGIN):
 		return false
 	if zone.village_radius > 0.0 \
 			and _flat(pos, zone.village_pos) < zone.village_radius + PATH_MARGIN:
 		return false
 	return WorldStage.is_clear_of_props(zone, pos, PROP_MARGIN) \
-		and not WorldStage.near_tree(zone, pos, TREE_MARGIN)
+		and not WorldStage.near_tree(zone, pos, TREE_MARGIN) \
+		and not WorldStage.near_dune(zone, pos, DUNE_MARGIN)
 
 
 ## Clear of what the hero walks up to or arrives at: the exits (and stairs), chests, wells,

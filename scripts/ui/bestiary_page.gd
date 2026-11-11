@@ -9,14 +9,16 @@ signal card_chosen(id: String)
 
 const ELEMENT_NAMES := {Skill.FIRE: "Fuego", Skill.ICE: "Hielo", Skill.THUNDER: "Rayo"}
 
-## Cards per row: every family fits in one (the longest has five).
+## Cards per row: a family of up to six fits in one, one of eight takes two.
 const COLUMNS := 6
 const CARD_SIDE := 96.0
 const TOUCH_CARD_SIDE := 84.0
 const UNKNOWN := "???"
 const SILHOUETTE := Color(0.05, 0.05, 0.1)
-## The title of the v2's enemies, shown only on a caravan game (no prize line).
-const CARAVAN_TITLE := "La caravana"
+## On a caravan game the album has two parts, each under its own title: the v1's families
+## and the v2's.
+const PART_TITLES := ["Villaclaro", "La caravana"]
+const PART_SIZE := 26
 ## Size of a family's title.
 const TITLE_SIZE := 20
 ## What the title, the Volver row and the margins leave for the grid.
@@ -44,12 +46,31 @@ func fill(state: GameState) -> void:
 	for child in _box.get_children():
 		_box.remove_child(child)
 		child.queue_free()
+	var caravan := state.in_caravan()
+	if caravan:
+		_add_part(PART_TITLES[0])
 	for family in Bestiary.FAMILIES:
-		var title := _add_section(state, family.enemies, title_text(state, family.id),
-			StatBar.GOLD if Bestiary.is_complete(state, family.id) else UiStyle.TITLE_COLOR)
-		_titles[family.id] = title
-	if state.in_caravan():
-		_add_section(state, Bestiary.V2_ENEMIES, CARAVAN_TITLE, UiStyle.TITLE_COLOR)
+		_add_family(state, family)
+	if caravan:
+		_add_part(PART_TITLES[1])
+		for family in Bestiary.V2_FAMILIES:
+			_add_family(state, family)
+
+
+## A family's title (in gold with its prize once complete) and its cards.
+func _add_family(state: GameState, family: Dictionary) -> void:
+	var title := _add_section(state, family.enemies, title_text(state, family.id),
+		StatBar.GOLD if Bestiary.is_complete(state, family.id) else UiStyle.TITLE_COLOR)
+	_titles[family.id] = title
+
+
+## The big title of one part of the album.
+func _add_part(text: String) -> void:
+	var title := Label.new()
+	title.text = text
+	title.add_theme_font_size_override("font_size", PART_SIZE)
+	title.add_theme_color_override("font_color", Color.WHITE)
+	_box.add_child(title)
 
 
 ## A title and its grid of cards at the end of the album; returns the title.
@@ -98,8 +119,7 @@ static func entry_lines(id: String, state: GameState) -> Array[String]:
 	var enemy := EnemyLibrary.data(id)
 	var places := EnemyLibrary.zone_names(id)
 	return [
-		"Familia: %s" % Bestiary.family(Bestiary.family_of(id)).get("name",
-			CARAVAN_TITLE if Bestiary.V2_ENEMIES.has(id) else "?"),
+		"Familia: %s" % Bestiary.family(Bestiary.family_of(id)).get("name", "?"),
 		"Vive en: %s" % (", ".join(places) if not places.is_empty() else "?"),
 		"Débil a: %s" % _elements(enemy.weak),
 		"Resiste: %s" % _elements(enemy.resist),

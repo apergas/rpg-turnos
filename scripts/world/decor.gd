@@ -26,6 +26,25 @@ const KINDS := {
 	"pot": {"radius": 0.8, "collider": "cylinder"},
 	"fence": {"radius": 1.5, "collider": "box", "length": 3.0},
 	"campfire": {"radius": 0.9, "collider": "cylinder", "flame": true},
+	# The desert (2.1.0): cacti and dry scrub scattered over the sand, the ruin's pieces.
+	"cactus": {"radius": 0.45, "collider": "cylinder"},
+	"cactus_tall": {"radius": 0.55, "collider": "cylinder"},
+	"scrub": {"radius": 0.5, "collider": ""},
+	"column": {"radius": 0.7, "collider": "cylinder"},
+	"column_broken": {"radius": 0.7, "collider": "cylinder"},
+	"ruin_block": {"radius": 0.9, "collider": "box"},
+	# The mountain (2.2.0): pines and tall stones in its rooms, flat stones in the snow.
+	"pine": {"radius": 0.6, "collider": "cylinder"},
+	"pine_small": {"radius": 0.5, "collider": "cylinder"},
+	"rock_tall": {"radius": 1.1, "collider": "box"},
+	"snow_stones": {"radius": 0.9, "collider": ""},
+	# The abandoned city (2.3.0): ruins in its squares and streets (only placed by hand).
+	"city_column": {"radius": 0.7, "collider": "cylinder"},
+	"city_column_broken": {"radius": 0.7, "collider": "cylinder"},
+	"city_block": {"radius": 0.9, "collider": "box"},
+	"fallen_head": {"radius": 1.0, "collider": "box"},
+	"obelisk": {"radius": 0.7, "collider": "box"},
+	"rubble": {"radius": 1.0, "collider": ""},
 }
 ## Scattered pieces keep this far from each other and from every placed piece.
 const SCATTER_GAP := 1.2

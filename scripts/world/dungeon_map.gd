@@ -9,7 +9,11 @@ class_name DungeonMap extends Node3D
 ## turn see-through. In a castle (zone.castle) the rock cells are stone walls instead:
 ## a KayKit wall piece on each straight run, a square tower at corners and ends, a round
 ## pillar where one stands alone; the ground goes on past the grid, banks of mist drift
-## over the floor (zone.mist_banks) and the throne cell gets a throne on a dais. Set zone
+## over the floor (zone.mist_banks) and the throne cell gets a throne on a dais. With
+## zone.rock_piece each rock block is that NatureModels piece (the mountain's snowy cliff)
+## scaled to the cell, and a floor open to the sky (not underground) has the ground of its
+## hills past the grid. A P cell gets a PortalRing (the abandoned city's portal, calm with
+## zone.portal_flag) and zone.ruined draws some castle walls and towers low. Set zone
 ## before add_child.
 
 ## Height of the rock blocks.
@@ -49,6 +53,10 @@ const WALL_THICKNESS := 1.6
 const WALL_PIECE_HEIGHT := 2.2
 const TOWER_HEIGHT := 2.6
 const PILLAR_RADIUS := 0.8
+## A ruined wall or tower (zone.ruined) keeps this share of its height, without merlons.
+const RUIN_HEIGHT := 0.55
+## Size of the portal's collider (the P cell): nobody walks into the ring.
+const PORTAL_BOX := Vector3(ZoneData.CELL, 5.2, 1.4)
 const THRONE_GOLD := Color(0.85, 0.65, 0.2)
 const THRONE_RED := Color(0.45, 0.08, 0.12)
 ## Mist: flat see-through banks drifting back and forth over floor cells picked with a
@@ -73,19 +81,34 @@ var _gates: Array[StaticBody3D] = []
 var _lever: Node3D
 var _lever_tween: Tween
 var _key: Node3D
+## The P cell's portal (null for none) and whether set_flags() has run once (the first time
+## the portal takes its state at once).
+var _portal: PortalRing
+var _flags_known := false
 ## The drifting mist banks (castle).
 var _mists: Array[MeshInstance3D] = []
 var _mist_material: StandardMaterial3D
 
 
 func _ready() -> void:
+	var piece := _rock_piece_mesh()
 	for shade in ROCK_SHADES:
 		var mat := StandardMaterial3D.new()
-		mat.albedo_color = zone.rock_color * shade
+		if piece:
+			# The piece's own colours (snow on top, grey stone) are its vertex colours; the
+			# shade darkens or lightens the whole block.
+			mat.vertex_color_use_as_albedo = true
+			mat.vertex_color_is_srgb = true
+			mat.albedo_color = Color(shade, shade, shade)
+		else:
+			mat.albedo_color = zone.rock_color * shade
 		mat.roughness = 1.0
 		_rock_materials.append(mat)
 	_clear_material = StandardMaterial3D.new()
-	_clear_material.albedo_color = Color(zone.rock_color, SEE_THROUGH_ALPHA)
+	_clear_material.albedo_color = Color(Color.WHITE if piece else zone.rock_color,
+		SEE_THROUGH_ALPHA)
+	_clear_material.vertex_color_use_as_albedo = piece != null
+	_clear_material.vertex_color_is_srgb = true
 	_clear_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	_clear_material.roughness = 1.0
 	_add_floor()
@@ -95,6 +118,8 @@ func _ready() -> void:
 		_add_rock()
 	for cell in zone.find_cells(ZoneData.THRONE):
 		_add_throne(cell)
+	for cell in zone.find_cells(ZoneData.PORTAL):
+		_add_portal(cell)
 	for i in zone.mist_banks:
 		_add_mist(i)
 	for cell in zone.find_cells(ZoneData.TORCH):
@@ -135,6 +160,10 @@ func set_flags(flags: Dictionary) -> void:
 			_lever.rotation_degrees.x = LEVER_DOWN if pulled else LEVER_UP
 	if _key:
 		_key.visible = not (zone.floor_key != "" and flags.get(zone.floor_key, false))
+	if _portal:
+		_portal.set_calm(zone.portal_flag != "" and flags.get(zone.portal_flag, false),
+			not _flags_known)
+	_flags_known = true
 
 
 ## Pulls the lever down with a short swing (the flag change follows in set_flags()).
@@ -189,6 +218,14 @@ func _shade(cell: Vector2i) -> int:
 	return absi(cell.x * 7 + cell.y * 13) % ROCK_SHADES.size()
 
 
+## The mesh of zone.rock_piece (a unit cube centred on its middle), or null for the plain
+## box of rock_color.
+func _rock_piece_mesh() -> Mesh:
+	if zone.rock_piece == "":
+		return null
+	return NatureModels.mesh(zone.rock_piece, zone.decor_green)
+
+
 ## The floor under the whole grid, in FLOOR_CHUNK × FLOOR_CHUNK squares.
 func _add_floor() -> void:
 	var size := zone.grid_size()
@@ -200,10 +237,13 @@ func _add_floor() -> void:
 			var corner := zone.cell_center(Vector2i(x, y)) - Vector3(ZoneData.CELL, 0, ZoneData.CELL) / 2.0
 			BattleStage.add_mesh(self, mesh, zone.floor_color,
 				corner + Vector3(chunk, 0, chunk) / 2.0)
-	if zone.castle:
+	if zone.castle or not zone.underground:
+		# The ground goes on past the grid: the castle's flagstones darker, a floor open to
+		# the sky (the mountain) the snow of its hills.
 		var outer := PlaneMesh.new()
 		outer.size = Vector2(size) * ZoneData.CELL + Vector2.ONE * OUTER_GROUND * 2.0
-		BattleStage.add_mesh(self, outer, zone.floor_color.darkened(0.25), Vector3(0, -0.02, 0))
+		var color := zone.floor_color.darkened(0.25) if zone.castle else zone.hill_color
+		BattleStage.add_mesh(self, outer, color, Vector3(0, -0.02, 0))
 	var body := StaticBody3D.new()
 	var shape := CollisionShape3D.new()
 	shape.shape = WorldBoundaryShape3D.new()
@@ -217,6 +257,9 @@ func _add_rock() -> void:
 	var size := zone.grid_size()
 	var box := BoxMesh.new()
 	box.size = Vector3(ZoneData.CELL, WALL_HEIGHT, ZoneData.CELL)
+	var piece := _rock_piece_mesh()
+	# The piece is a unit cube: each block scales it to the cell (the box already is).
+	var block_scale := box.size if piece else Vector3.ONE
 	var body := StaticBody3D.new()
 	add_child(body)
 	var buried: Array[Transform3D] = []
@@ -227,10 +270,11 @@ func _add_rock() -> void:
 				continue
 			var pos := zone.cell_center(cell) + Vector3(0, WALL_HEIGHT / 2.0, 0)
 			if not _touches_floor(cell):
-				buried.append(Transform3D(Basis(), pos))
+				buried.append(Transform3D(Basis.from_scale(block_scale), pos))
 				continue
 			var mi := MeshInstance3D.new()
-			mi.mesh = box
+			mi.mesh = piece if piece else box
+			mi.scale = block_scale
 			mi.material_override = _rock_materials[_shade(cell)]
 			mi.position = pos
 			add_child(mi)
@@ -240,9 +284,12 @@ func _add_rock() -> void:
 			(shape.shape as BoxShape3D).size = box.size
 			shape.position = pos
 			body.add_child(shape)
-	var buried_mesh := box.duplicate() as BoxMesh
-	buried_mesh.material = _rock_materials[0]
-	LowPoly.add_multimesh(self, buried_mesh, buried)
+	if piece:
+		LowPoly.add_multimesh(self, piece, buried, _rock_materials[0])
+	else:
+		var buried_mesh := box.duplicate() as BoxMesh
+		buried_mesh.material = _rock_materials[0]
+		LowPoly.add_multimesh(self, buried_mesh, buried)
 
 
 func _touches_floor(cell: Vector2i) -> bool:
@@ -277,7 +324,10 @@ func _add_castle() -> void:
 			var kind := _wall_kind(cell)
 			if kind == "ew" or kind == "ns":
 				var yaw := 0.0 if kind == "ew" else 90.0
-				BattleStage.add_model(block, WALL_SCENE, Vector3.ZERO, WALL_SCALE, yaw)
+				var wall := BattleStage.add_model(block, WALL_SCENE, Vector3.ZERO, WALL_SCALE,
+					yaw)
+				if _is_ruin(cell):
+					wall.scale.y *= RUIN_HEIGHT
 				box.size = Vector3(ZoneData.CELL, WALL_PIECE_HEIGHT, WALL_THICKNESS)
 				shape.rotation_degrees.y = yaw
 				shape.position = block.position + Vector3(0, WALL_PIECE_HEIGHT / 2.0, 0)
@@ -293,19 +343,28 @@ func _add_castle() -> void:
 				box.size = Vector3(PILLAR_RADIUS * 2.0, TOWER_HEIGHT, PILLAR_RADIUS * 2.0)
 				shape.position = block.position
 			else:
+				var ruin := _is_ruin(cell)
+				var height := TOWER_HEIGHT * (RUIN_HEIGHT if ruin else 1.0)
 				var tower := BoxMesh.new()
-				tower.size = Vector3(ZoneData.CELL, TOWER_HEIGHT, ZoneData.CELL)
+				tower.size = Vector3(ZoneData.CELL, height, ZoneData.CELL)
 				block.mesh = tower
 				block.material_override = _rock_materials[_shade(cell)]
-				block.position.y = TOWER_HEIGHT / 2.0
-				var merlon := BoxMesh.new()
-				merlon.size = Vector3(0.9, 0.6, 0.9)
-				for corner in [Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1), Vector2(1, 1)]:
-					BattleStage.add_mesh(block, merlon, zone.rock_color * ROCK_SHADES[1],
-						Vector3(corner.x * 1.55, TOWER_HEIGHT / 2.0 + 0.3, corner.y * 1.55))
-				box.size = tower.size
-				shape.position = block.position
+				block.position.y = height / 2.0
+				if not ruin:
+					var merlon := BoxMesh.new()
+					merlon.size = Vector3(0.9, 0.6, 0.9)
+					for corner in [Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1), Vector2(1, 1)]:
+						BattleStage.add_mesh(block, merlon, zone.rock_color * ROCK_SHADES[1],
+							Vector3(corner.x * 1.55, height / 2.0 + 0.3, corner.y * 1.55))
+				box.size = Vector3(ZoneData.CELL, TOWER_HEIGHT, ZoneData.CELL)
+				shape.position = zone.cell_center(cell) + Vector3(0, TOWER_HEIGHT / 2.0, 0)
 			body.add_child(shape)
+
+
+## A wall or tower of a ruined castle floor (zone.ruined) drawn low: two cells out of five,
+## always the same ones (no randomness: the map looks the same every visit).
+func _is_ruin(cell: Vector2i) -> bool:
+	return zone.ruined and posmod(cell.x * 7 + cell.y * 13, 5) < 2
 
 
 ## How a castle rock cell is drawn: "ew" / "ns" (a straight wall running east-west /
@@ -337,6 +396,22 @@ func _face_inset(rock_cell: Vector2i, side: Vector2i) -> float:
 	if (kind == "ew" and side.y != 0) or (kind == "ns" and side.x != 0):
 		return (ZoneData.CELL - WALL_THICKNESS) / 2.0
 	return 0.0
+
+
+## The city's portal on cell, in the stone of the walls, with a box collider.
+func _add_portal(cell: Vector2i) -> void:
+	_portal = PortalRing.new()
+	_portal.stone = zone.rock_color
+	_portal.position = zone.cell_center(cell)
+	add_child(_portal)
+	var body := StaticBody3D.new()
+	add_child(body)
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = PORTAL_BOX
+	shape.shape = box
+	shape.position = zone.cell_center(cell) + Vector3(0, PORTAL_BOX.y / 2.0, 0)
+	body.add_child(shape)
 
 
 ## A throne on a dais: a red seat with a tall gold-trimmed back, its back to the north.

@@ -15,7 +15,10 @@ enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPE
 	SKELETON_ROGUE, SKELETON_MAGE, FOG_LORD, FARMER, METAL_SLIME, BOARD, CAT, CHILD,
 	CHICKEN, WOLF_CUB, MINI_GOLEM, LOYAL_SKELETON, TAMER, FOG_ECHO, RED_SLIME,
 	POISON_MUSHROOM, CAVE_MUSHROOM, CRYPT_BAT, FROST_SPECTER, COLLECTOR, BRENA, TADEO, ULMA, FROG,
-	SNAKE, MONKEY, TRAP_PLANT, TROPICAL_MUSHROOM, CARAVAN_CHIEF, HEALER, JAGUAR }
+	SNAKE, MONKEY, TRAP_PLANT, TROPICAL_MUSHROOM, CARAVAN_CHIEF, HEALER, JAGUAR,
+	SCORPION, SAND_SLIME, VULTURE, SAND_GOLEM, MUMMY, CANTEEN, SAND_WORM, SNOW_WOLF, ICE_GOLEM,
+	SUMMIT_SPIRIT, ICE_BAT, GOAT, GRIFFIN, HOLLOW_ARMOR, GARGOYLE, SHADOW, SENTINEL, RUIN_RAT, CITY_GUARDIAN,
+	PORTAL_DEVOURER }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -42,6 +45,20 @@ const FOG_AURA_COLOR := Color(0.55, 0.25, 0.85)
 const ECHO_AURA_COLOR := Color(0.45, 0.85, 0.9)
 const FOG_AURA_ALPHA := 0.2
 const FOG_AURA_PHASE_ALPHA := 0.38
+## The Devorador del portal: the side profile of its mass (lathed around +Y), the share it
+## grows by in its second phase, its eyelid's angle half closed and open, and its mouths
+## round the mass ([degrees from the front, height]).
+const DEVOURER_PROFILE: Array[Vector2] = [
+	Vector2(0.0, 0.0), Vector2(1.25, 0.1), Vector2(1.45, 0.7), Vector2(1.3, 1.6),
+	Vector2(1.0, 2.4), Vector2(0.55, 3.0), Vector2(0.0, 3.2),
+]
+const DEVOURER_GROWTH := 1.25
+const EYELID_HALF := 0.0
+const EYELID_OPEN := 75.0
+const DEVOURER_LUMPS := [[180.0, 1.5, 0.7], [105.0, 2.3, 0.5], [-105.0, 2.3, 0.5],
+	[160.0, 0.45, 0.45], [-160.0, 0.45, 0.45], [60.0, 0.35, 0.35], [-60.0, 0.35, 0.35]]
+const DEVOURER_MOUTHS := [[38.0, 1.0], [-38.0, 1.0], [82.0, 1.9], [-82.0, 1.9],
+	[140.0, 1.2], [-140.0, 1.2]]
 ## KayKit characters are 2.47 units tall (helmet included); 0.65 makes the hero 1.6 m.
 const CHARACTER_SCALE := 0.65
 ## The AnimationPlayer inside a KayKit character scene.
@@ -602,6 +619,121 @@ const LOOKS := {
 		"scale": 1.75,
 		"top": 2.4,
 	},
+	# The desert (the v2, 2.1.0).
+	Look.SCORPION: {
+		"color": Color(0.55, 0.3, 0.14),
+		"dark_color": Color(0.38, 0.2, 0.09),
+		"eye_color": Color(0.08, 0.06, 0.05),
+		"sting_color": Color(0.95, 0.85, 0.45),
+		"scale": 1.2,
+		"top": 1.3,
+	},
+	Look.SAND_SLIME: {
+		"color": Color(0.86, 0.68, 0.38),
+		"scale": 1.0,
+		"top": 1.3,
+		"crown": false,
+	},
+	# The Buitre: the bat's builder with a bald head, a hooked beak, a ruff and broad wings.
+	Look.VULTURE: {
+		"color": Color(0.42, 0.3, 0.2),
+		"wing_color": Color(0.3, 0.2, 0.13),
+		"head_color": Color(0.85, 0.6, 0.55),
+		"ruff_color": Color(0.9, 0.86, 0.78),
+		"beak_color": Color(0.95, 0.8, 0.4),
+		"wing_size": Vector3(1.05, 0.04, 0.5),
+		"top": 2.4,
+		"fly": 1.3,
+	},
+	Look.SAND_GOLEM: {
+		"color": Color(0.72, 0.58, 0.38),
+		"dark_color": Color(0.56, 0.43, 0.27),
+		"eye_color": Color(1.0, 0.55, 0.15),
+		"scale": 1.15,
+		"top": 2.3,
+	},
+	# The Momia: the skeleton warrior with no helmet, wrapped in dirty linen strips built in
+	# code (_add_mummy_wraps), bare-handed, its eyes a dim glow in the gap of the head wrap.
+	Look.MUMMY: {
+		"scene": SKELETON_WARRIOR,
+		"scale": CHARACTER_SCALE,
+		"top": 1.9,
+		"hide": ["Rig/Skeleton3D/head/Skeleton_Warrior_Helmet", "Rig/Skeleton3D/Skeleton_Warrior_Cloak"],
+		"anims": SKELETON_ANIMS,
+		"props": {},
+		"tint": Color(0.86, 0.82, 0.74),
+		"wrap_color": Color(0.8, 0.76, 0.66),
+	},
+	# The Jefe de caravana's canteen (the cantimplora quest's figure): it stands still.
+	Look.CANTEEN: {
+		"color": Color(0.5, 0.32, 0.18),
+		"cork_color": Color(0.78, 0.62, 0.4),
+		"strap_color": Color(0.3, 0.2, 0.12),
+		"sand_color": Color(0.56, 0.44, 0.28),
+		"top": 0.8,
+	},
+	# The Gusano de las dunas: a segmented worm rising out of a ring of sand.
+	Look.SAND_WORM: {
+		"color": Color(0.78, 0.55, 0.36),
+		"dark_color": Color(0.62, 0.42, 0.27),
+		"mouth_color": Color(0.35, 0.08, 0.1),
+		"teeth_color": Color(0.96, 0.93, 0.82),
+		"sand_color": Color(0.56, 0.44, 0.28),
+		"scale": 1.6,
+		"top": 3.4,
+	},
+	# The mountain (the v2, 2.2.0).
+	Look.SNOW_WOLF: {
+		"color": Color(0.8, 0.84, 0.9),
+		"dark_color": Color(0.46, 0.52, 0.64),
+		"eye_color": Color(0.35, 0.75, 1.0),
+		"scale": 1.15,
+		"top": 1.5,
+	},
+	Look.ICE_GOLEM: {
+		"color": Color(0.6, 0.8, 0.95),
+		"dark_color": Color(0.4, 0.58, 0.78),
+		"eye_color": Color(0.2, 0.45, 1.0),
+		"scale": 1.3,
+		"top": 2.6,
+	},
+	# The Espíritu de la cumbre: the specter, deep blue and bigger, with a pale gold aura
+	# (the Espectro de escarcha is the white and blue one).
+	Look.SUMMIT_SPIRIT: {
+		"color": Color(0.34, 0.42, 0.82),
+		"aura_color": Color(1.0, 0.76, 0.28),
+		"alpha": 0.9,
+		"scale": 1.2,
+		"top": 2.7,
+		"fly": 0.6,
+	},
+	Look.ICE_BAT: {
+		"color": Color(0.45, 0.62, 0.85),
+		"wing_color": Color(0.3, 0.45, 0.7),
+		"top": 2.0,
+		"fly": 1.1,
+	},
+	Look.GOAT: {
+		"color": Color(0.55, 0.47, 0.38),
+		"dark_color": Color(0.36, 0.3, 0.24),
+		"belly_color": Color(0.9, 0.86, 0.78),
+		"horn_color": Color(0.82, 0.76, 0.62),
+		"eye_color": Color(0.95, 0.75, 0.2),
+		"scale": 1.1,
+		"top": 1.7,
+	},
+	# The Grifo de la cumbre: a lion's body, an eagle's white chest and head, broad wings.
+	Look.GRIFFIN: {
+		"color": Color(0.78, 0.6, 0.36),
+		"dark_color": Color(0.6, 0.44, 0.26),
+		"feather_color": Color(0.94, 0.93, 0.9),
+		"wing_color": Color(0.7, 0.55, 0.36),
+		"beak_color": Color(0.95, 0.78, 0.3),
+		"eye_color": Color(0.1, 0.08, 0.05),
+		"scale": 1.6,
+		"top": 3.1,
+		"flap_time": 0.45,
+	},
 	Look.TRAP_PLANT: {
 		"stem_color": Color(0.1, 0.42, 0.12),
 		"leaf_color": Color(0.12, 0.6, 0.18),
@@ -615,6 +747,92 @@ const LOOKS := {
 		"stem_color": Color(0.98, 0.92, 0.8),
 		"scale": 1.4,
 		"top": 1.6,
+	},
+	# The abandoned city (the v2, 2.3.0). The Armadura hueca: the Knight with no head and no
+	# helmet, black, its sword and round shield, an ember glowing in its empty collar.
+	Look.HOLLOW_ARMOR: {
+		"scene": KNIGHT,
+		"scale": CHARACTER_SCALE * 1.05,
+		"top": 1.9,
+		"hide": [
+			"Rig/Skeleton3D/Knight_Head",
+			"Rig/Skeleton3D/head/Knight_Helmet",
+			"Rig/Skeleton3D/handslot_l/1H_Sword_Offhand",
+			"Rig/Skeleton3D/handslot_l/Badge_Shield",
+			"Rig/Skeleton3D/handslot_l/Rectangle_Shield",
+			"Rig/Skeleton3D/handslot_l/Spike_Shield",
+			"Rig/Skeleton3D/handslot_r/2H_Sword",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(0.32, 0.32, 0.38),
+		"neck_glow": Color(1.0, 0.3, 0.15),
+	},
+	Look.GARGOYLE: {
+		"color": Color(0.46, 0.44, 0.46),
+		"dark_color": Color(0.32, 0.3, 0.33),
+		"wing_color": Color(0.38, 0.36, 0.4),
+		"horn_color": Color(0.62, 0.58, 0.52),
+		"eye_color": Color(1.0, 0.25, 0.15),
+		"scale": 1.15,
+		"top": 2.1,
+		"flap_time": 0.5,
+	},
+	# The Sombra: the specter in black with a red aura.
+	Look.SHADOW: {
+		"color": Color(0.1, 0.07, 0.09),
+		"aura_color": Color(0.85, 0.1, 0.08),
+		"alpha": 0.8,
+		"eye_color": Color(1.0, 0.85, 0.75),
+		"scale": 1.1,
+		"top": 2.5,
+		"fly": 0.5,
+	},
+	# The Esqueleto centinela: the skeleton warrior, reddish.
+	Look.SENTINEL: {
+		"scene": SKELETON_WARRIOR,
+		"scale": CHARACTER_SCALE,
+		"top": 1.9,
+		"hide": [],
+		"anims": SKELETON_ANIMS,
+		"props": {RIGHT_HAND_BONE: SKELETON_BLADE, LEFT_HAND_BONE: SKELETON_SHIELD},
+		"tint": Color(0.95, 0.6, 0.52),
+	},
+	Look.RUIN_RAT: {
+		"color": Color(0.42, 0.36, 0.32),
+		"dark_color": Color(0.3, 0.25, 0.22),
+		"ear_color": Color(0.85, 0.6, 0.6),
+		"eye_color": Color(1.0, 0.2, 0.15),
+		"scale": 1.0,
+		"top": 1.1,
+	},
+	# The Guardián de la ciudad: the Knight at 1.8 times the size, in bronze, with its helmet
+	# and the two-handed sword.
+	# The Devorador del portal: a dark faceted mass with six mouths round a great eye.
+	Look.PORTAL_DEVOURER: {
+		"color": Color(0.13, 0.08, 0.15),
+		"dark_color": Color(0.07, 0.04, 0.09),
+		"lip_color": Color(0.45, 0.06, 0.1),
+		"tooth_color": Color(0.92, 0.88, 0.78),
+		"sclera_color": Color(0.95, 0.9, 0.85),
+		"iris_color": Color(0.95, 0.2, 0.1),
+		"glow_color": Color(1.0, 0.2, 0.1),
+		"scale": 0.9,
+		"top": 3.3,
+	},
+	Look.CITY_GUARDIAN: {
+		"scene": KNIGHT,
+		"scale": CHARACTER_SCALE * 1.8,
+		"top": 3.5,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/1H_Sword_Offhand",
+			"Rig/Skeleton3D/handslot_l/Badge_Shield",
+			"Rig/Skeleton3D/handslot_l/Rectangle_Shield",
+			"Rig/Skeleton3D/handslot_l/Round_Shield",
+			"Rig/Skeleton3D/handslot_l/Spike_Shield",
+			"Rig/Skeleton3D/handslot_r/1H_Sword",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(1.0, 0.82, 0.38),
 	},
 }
 
@@ -653,6 +871,9 @@ var _hover: Node3D
 var _ghosts: Array = []
 ## Figures with an aura (the Señor de la Niebla, the Eco): its ball (null for the rest).
 var _aura: MeshInstance3D
+## Devourer only: the node that grows in its second phase and the pivot of its eyelid.
+var _devourer: Node3D
+var _eyelid: Node3D
 
 
 func _ready() -> void:
@@ -662,12 +883,12 @@ func _ready() -> void:
 	_top = data.top
 	if data.has("scene"):
 		_build_character(data)
-	elif look in [Look.BAT, Look.CRYPT_BAT]:
+	elif look in [Look.BAT, Look.CRYPT_BAT, Look.VULTURE, Look.ICE_BAT]:
 		_build_bat(data)
 	elif look in [Look.MUSHROOM, Look.POISON_MUSHROOM, Look.CAVE_MUSHROOM,
 			Look.TROPICAL_MUSHROOM]:
 		_build_mushroom(data)
-	elif look in [Look.WOLF, Look.WOLF_CUB, Look.JAGUAR]:
+	elif look in [Look.WOLF, Look.WOLF_CUB, Look.JAGUAR, Look.SNOW_WOLF]:
 		_build_wolf(data)
 	elif look == Look.CHICKEN:
 		_build_chicken(data)
@@ -681,12 +902,29 @@ func _ready() -> void:
 		_build_snake(data)
 	elif look == Look.MONKEY:
 		_build_monkey(data)
-	elif look in [Look.MUD_GOLEM, Look.STONE_GOLEM, Look.MINI_GOLEM]:
+	elif look in [Look.MUD_GOLEM, Look.STONE_GOLEM, Look.MINI_GOLEM, Look.SAND_GOLEM,
+			Look.ICE_GOLEM]:
 		_build_golem(data)
 	elif look == Look.SPIDER:
 		_build_spider(data)
-	elif look in [Look.SPECTER, Look.FROST_SPECTER]:
+	elif look in [Look.SPECTER, Look.FROST_SPECTER, Look.SUMMIT_SPIRIT, Look.SHADOW]:
 		_build_specter(data)
+	elif look == Look.GOAT:
+		_build_goat(data)
+	elif look == Look.GRIFFIN:
+		_build_griffin(data)
+	elif look == Look.GARGOYLE:
+		_build_gargoyle(data)
+	elif look == Look.RUIN_RAT:
+		_build_rat(data)
+	elif look == Look.PORTAL_DEVOURER:
+		_build_devourer(data)
+	elif look == Look.SCORPION:
+		_build_scorpion(data)
+	elif look == Look.SAND_WORM:
+		_build_worm(data)
+	elif look == Look.CANTEEN:
+		_build_canteen(data)
 	elif look == Look.BOARD:
 		_build_board(data)
 	elif look == Look.CAT:
@@ -739,7 +977,7 @@ func set_faded(on: bool) -> void:
 
 ## Map only: true for the figures that hop as they walk (the slimes).
 func hops() -> bool:
-	return look in [Look.SLIME, Look.RED_SLIME, Look.METAL_SLIME]
+	return look in [Look.SLIME, Look.RED_SLIME, Look.METAL_SLIME, Look.SAND_SLIME]
 
 
 ## Map only: one small hop (a slime walking); not awaited.
@@ -987,6 +1225,9 @@ func play_appear() -> void:
 ## The fog envelops the Señor de la Niebla: a long purple glow with the spell
 ## animation while his aura swells and thickens (his second phase).
 func play_phase() -> void:
+	if look == Look.PORTAL_DEVOURER:
+		await _devourer_wakes()
+		return
 	_set_flash(true, FOG_AURA_COLOR)
 	var timer := _start("cast")
 	if _aura:
@@ -1039,6 +1280,16 @@ func _build_character(data: Dictionary) -> void:
 	var mesh_tints: Dictionary = data.get("mesh_tints", {})
 	for mesh_name: String in mesh_tints:
 		_tint_mesh(bones.get_node(mesh_name) as MeshInstance3D, mesh_tints[mesh_name])
+	if data.has("neck_glow"):
+		# The Armadura hueca: an ember where its head should be, on the head bone.
+		var slot := BoneAttachment3D.new()
+		slot.bone_name = "head"
+		bones.add_child(slot)
+		_add_mesh(slot, _sphere(0.13), data.neck_glow, Vector3(0, 0.0, 0))
+		var ember := (slot.get_child(-1) as MeshInstance3D).material_override as StandardMaterial3D
+		ember.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	if data.has("wrap_color"):
+		_add_mummy_wraps(bones, data.wrap_color)
 	if look == Look.HERO:
 		var head := bones.get_node("Knight_Head") as MeshInstance3D
 		var head_material := head.get_active_material(0).duplicate() as BaseMaterial3D
@@ -1061,6 +1312,70 @@ func _build_character(data: Dictionary) -> void:
 	# The imported animations do not loop; idle and walk must.
 	for role in ["idle", "walk"]:
 		_anim.get_animation(_anims[role]).loop_mode = Animation.LOOP_LINEAR
+
+
+## The Momia's bandages: flat rings of linen (squashed cylinders, each a little tilted the
+## other way than the last) round the head, the chest and both arms, a gap at the eyes,
+## and loose strips hanging from the wrists and the hip. Each is placed in the rig's rest
+## pose and hung from its bone, so it follows the animation.
+func _add_mummy_wraps(bones: Skeleton3D, color: Color) -> void:
+	var rings := [
+		["head", Vector3(0, 1.28, 0.0), 0.0, 0.46, 0.1, 0.95],
+		["head", Vector3(0, 1.62, 0.0), 6.0, 0.45, 0.1, 0.98],
+		["head", Vector3(0, 1.78, 0.0), -8.0, 0.46, 0.1, 1.0],
+		["head", Vector3(0, 1.93, 0.0), 8.0, 0.44, 0.1, 1.0],
+		["head", Vector3(0, 2.06, 0.0), -6.0, 0.34, 0.1, 1.0],
+		["chest", Vector3(0, 0.62, 0.0), 6.0, 0.42, 0.14, 0.88],
+		["chest", Vector3(0, 0.78, 0.0), -8.0, 0.44, 0.14, 0.88],
+		["chest", Vector3(0, 0.94, 0.0), 7.0, 0.46, 0.14, 0.88],
+		["chest", Vector3(0, 1.1, 0.0), -7.0, 0.46, 0.14, 0.88],
+		["chest", Vector3(0, 1.24, 0.0), 6.0, 0.4, 0.12, 0.88],
+		["upperarm.l", Vector3(0.30, 1.1, 0.0), -6.0, 0.19, 0.2, 1.0],
+		["upperarm.l", Vector3(0.44, 1.1, 0.0), 6.0, 0.19, 0.2, 1.0],
+		["lowerarm.l", Vector3(0.56, 1.1, 0.0), -6.0, 0.19, 0.2, 1.0],
+		["lowerarm.l", Vector3(0.68, 1.1, 0.0), 6.0, 0.19, 0.2, 1.0],
+		["upperarm.r", Vector3(-0.30, 1.1, 0.0), -6.0, 0.19, 0.2, 1.0],
+		["upperarm.r", Vector3(-0.44, 1.1, 0.0), 6.0, 0.19, 0.2, 1.0],
+		["lowerarm.r", Vector3(-0.56, 1.1, 0.0), -6.0, 0.19, 0.2, 1.0],
+		["lowerarm.r", Vector3(-0.68, 1.1, 0.0), 6.0, 0.19, 0.2, 1.0],
+	]
+	for ring: Array in rings:
+		var bone: String = ring[0]
+		var pos: Vector3 = ring[1]
+		var tilt: float = ring[2]
+		var cylinder := _cylinder(ring[3], ring[4])
+		var basis := Basis.from_euler(Vector3(deg_to_rad(tilt), 0, 0))
+		if bone.begins_with("upperarm") or bone.begins_with("lowerarm"):
+			basis = Basis.from_euler(Vector3(0, 0, PI / 2)) * Basis.from_euler(
+				Vector3(deg_to_rad(tilt), 0, 0))
+		basis = basis * Basis.from_scale(Vector3(1, 1, ring[5]))
+		_hang_on_bone(bones, bone, cylinder, color, Transform3D(basis, pos))
+	# Loose ends: a strip from each wrist and one from the hip.
+	var strip := BoxMesh.new()
+	strip.size = Vector3(0.1, 0.5, 0.02)
+	for end: Array in [["wrist.l", Vector3(0.7, 0.86, 0.04)], ["wrist.r", Vector3(-0.7, 0.8, -0.04)],
+			["hips", Vector3(0.2, 0.3, 0.2)]]:
+		_hang_on_bone(bones, end[0], strip, color * 0.92,
+			Transform3D(Basis.from_euler(Vector3(0.1, 0, 0.08)), end[1]))
+	# The eyes: a dim ember in the dark of the head wrap.
+	var eyes := bones.get_node("Skeleton_Warrior_Eyes") as MeshInstance3D
+	var glow := StandardMaterial3D.new()
+	glow.albedo_color = Color(0.2, 0.05, 0.02)
+	glow.emission_enabled = true
+	glow.emission = Color(1.0, 0.45, 0.12)
+	glow.emission_energy_multiplier = 1.4
+	eyes.set_surface_override_material(0, glow)
+
+
+## One piece of the wraps, placed by a transform in the rig's rest pose and hung from a bone.
+func _hang_on_bone(bones: Skeleton3D, bone: String, mesh: Mesh, color: Color,
+		rig_transform: Transform3D) -> void:
+	var slot := BoneAttachment3D.new()
+	slot.bone_name = bone
+	bones.add_child(slot)
+	_add_mesh(slot, mesh, color, Vector3.ZERO, 0.95)
+	var mi := slot.get_child(-1) as MeshInstance3D
+	mi.transform = bones.get_bone_global_rest(bones.find_bone(bone)).affine_inverse() * rig_transform
 
 
 func _build_slime(data: Dictionary) -> void:
@@ -1121,18 +1436,27 @@ func _build_bat(data: Dictionary) -> void:
 	root.position.y = data.fly
 	_body.add_child(root)
 	_add_mesh(root, _sphere(0.32), color, Vector3.ZERO, 0.7)
-	for x in [-0.14, 0.14]:
-		_add_mesh(root, _cone(0.08, 0.22), color, Vector3(x, 0.36, 0))  # ear
-		_add_mesh(root, _sphere(0.08), Color(1.0, 0.85, 0.3), Vector3(x * 0.9, 0.08, -0.27))  # eye
-		_add_mesh(root, _sphere(0.035), Color(0.05, 0.05, 0.05),
-			Vector3(x * 0.9, 0.08, -0.34))  # pupil
+	if data.has("beak_color"):  # the Buitre: a ruff, a bald head on it and a hooked beak
+		_add_mesh(root, _sphere(0.2), data.ruff_color, Vector3(0, 0.2, -0.16))
+		_add_mesh(root, _sphere(0.12), data.head_color, Vector3(0, 0.36, -0.34))
+		_add_mesh(root, _cone(0.05, 0.16), data.beak_color, Vector3(0, 0.33, -0.48))
+		(root.get_child(-1) as Node3D).rotation_degrees.x = -100.0
+		for x in [-0.06, 0.06]:
+			_add_mesh(root, _sphere(0.025), Color(0.05, 0.05, 0.05), Vector3(x, 0.4, -0.43))
+	else:
+		for x in [-0.14, 0.14]:
+			_add_mesh(root, _cone(0.08, 0.22), color, Vector3(x, 0.36, 0))  # ear
+			_add_mesh(root, _sphere(0.08), Color(1.0, 0.85, 0.3),
+				Vector3(x * 0.9, 0.08, -0.27))  # eye
+			_add_mesh(root, _sphere(0.035), Color(0.05, 0.05, 0.05),
+				Vector3(x * 0.9, 0.08, -0.34))  # pupil
 	for side in [-1.0, 1.0]:
 		var pivot := Node3D.new()
 		pivot.position = Vector3(0.22 * side, 0.05, 0)
 		root.add_child(pivot)
 		var wing := BoxMesh.new()
-		wing.size = Vector3(0.75, 0.04, 0.42)
-		_add_mesh(pivot, wing, data.wing_color, Vector3(0.38 * side, 0, 0.05))
+		wing.size = data.get("wing_size", Vector3(0.75, 0.04, 0.42))
+		_add_mesh(pivot, wing, data.wing_color, Vector3(wing.size.x / 2.0 * side, 0, 0.05))
 		_wings.append(pivot)
 
 
@@ -1188,6 +1512,241 @@ func _build_wolf(data: Dictionary) -> void:
 			var mat := _materials.back() as StandardMaterial3D
 			mat.emission_enabled = true
 			mat.emission = data.spot_color * 0.6
+
+
+## A mountain goat: a stocky body on four thin legs, a wedge head tilted down with a pale
+## muzzle and a beard, and two thick horns curling back and down, facing -Z. About 1.5 m
+## tall at its scale.
+func _build_goat(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	_add_blob(root, WOLF_BODY_PROFILE, 6, data.color, Vector3(0, 0.7, 0.45),
+		Vector3(-90, 0, 0), Vector3(1.15, 1.0, 1.1))  # body
+	_add_mesh(root, _sphere(0.2), data.belly_color, Vector3(0, 0.58, 0.05))  # belly
+	_add_mesh(root, _cylinder(0.14, 0.5), data.color, Vector3(0, 1.0, -0.32))  # neck
+	(root.get_child(-1) as Node3D).rotation_degrees.x = -35.0
+	_add_blob(root, WOLF_HEAD_PROFILE, 5, data.color, Vector3(0, 1.12, -0.5),
+		Vector3(-115, 0, 0), Vector3(0.9, 0.9, 0.9))  # head, tilted down
+	_add_mesh(root, _sphere(0.08), data.belly_color, Vector3(0, 0.98, -0.84))  # muzzle
+	_add_mesh(root, _cone(0.05, 0.18), data.belly_color, Vector3(0, 0.84, -0.78))  # beard
+	(root.get_child(-1) as Node3D).rotation_degrees.x = 180.0
+	for side in [-1.0, 1.0]:
+		_add_mesh(root, _sphere(0.035), data.eye_color, Vector3(side * 0.1, 1.17, -0.68))
+		for i in 7:  # a horn: shrinking balls rising from the head, curling back and down
+			var t := i / 6.0
+			_add_mesh(root, _sphere(0.085 - t * 0.05), data.horn_color,
+				Vector3(side * (0.1 + t * 0.08), 1.2 + 0.2 * sin(t * PI) - 0.1 * t,
+					-0.5 + t * 0.55))
+	for x in [-0.16, 0.16]:
+		for z in [-0.25, 0.35]:
+			_add_blob(root, LEG_PROFILE, 4, data.dark_color, Vector3(x, 0.0, z), Vector3.ZERO,
+				Vector3(0.8, 1.15, 0.8))
+	_add_mesh(root, _cone(0.05, 0.15), data.color, Vector3(0, 0.85, 0.72))  # tail
+	(root.get_child(-1) as Node3D).rotation_degrees.x = 40.0
+
+
+## The Grifo de la cumbre: a lion's tawny body on four legs with a tufted tail, a white-
+## feathered chest, an eagle's white head with a hooked golden beak and ear tufts, and two
+## broad wings on pivots (the bat's _wings: they beat slowly, LOOKS "flap_time"), facing -Z.
+## About 3.1 m tall at its scale.
+func _build_griffin(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	_add_blob(root, WOLF_BODY_PROFILE, 6, data.color, Vector3(0, 0.62, 0.55),
+		Vector3(-90, 0, 0), Vector3(1.25, 1.15, 1.1))  # lion body
+	for x in [-0.18, 0.18]:
+		for z in [-0.3, 0.38]:
+			_add_blob(root, LEG_PROFILE, 4, data.dark_color, Vector3(x, 0.0, z))
+		_add_mesh(root, _cone(0.04, 0.1), data.beak_color, Vector3(x, 0.02, -0.42))  # talons
+	_add_mesh(root, _sphere(0.3), data.feather_color, Vector3(0, 0.95, -0.32))  # chest
+	(root.get_child(-1) as Node3D).scale = Vector3(1.0, 1.15, 0.9)
+	_add_mesh(root, _sphere(0.2), data.feather_color, Vector3(0, 1.3, -0.5))  # head
+	_add_mesh(root, _cone(0.07, 0.22), data.beak_color, Vector3(0, 1.26, -0.74))  # beak
+	(root.get_child(-1) as Node3D).rotation_degrees.x = -100.0
+	for x in [-0.09, 0.09]:
+		_add_mesh(root, _sphere(0.035), data.eye_color, Vector3(x, 1.36, -0.64))
+		_add_mesh(root, _cone(0.04, 0.14), data.feather_color, Vector3(x, 1.5, -0.42))  # tuft
+	_add_mesh(root, _cylinder(0.03, 0.6), data.color, Vector3(0, 0.75, 1.0))  # tail
+	(root.get_child(-1) as Node3D).rotation_degrees.x = 60.0
+	_add_mesh(root, _sphere(0.08), data.dark_color, Vector3(0, 0.98, 1.24))  # tail tuft
+	for side in [-1.0, 1.0]:
+		var pivot := Node3D.new()
+		pivot.position = Vector3(0.22 * side, 1.05, 0.1)
+		root.add_child(pivot)
+		var spread := Node3D.new()  # the open wing: an arm and a fan of flight feathers
+		spread.rotation_degrees = Vector3(-32.0, -14.0 * side, 10.0 * side)
+		pivot.add_child(spread)
+		var arm := BoxMesh.new()
+		arm.size = Vector3(1.25, 0.09, 0.34)
+		_add_mesh(spread, arm, data.wing_color, Vector3(0.62 * side, 0, 0))
+		for i in 6:  # feathers lighter toward the tip of the wing, side by side
+			var feather := BoxMesh.new()
+			var length := 0.5 + 0.1 * i
+			feather.size = Vector3(0.22, 0.04, length)
+			_add_mesh(spread, feather, data.wing_color.lerp(data.feather_color, i / 5.0),
+				Vector3((0.15 + 0.2 * i) * side, -0.01, 0.17 + length / 2.0))
+		_wings.append(pivot)
+
+
+## The Gárgola: a crouching beast of stone: a hunched body on four short legs, a horned head
+## with a wide snout and glowing red eyes, a pointed tail and two stone wings on pivots that
+## beat slowly (the bat's _wings, LOOKS "flap_time"), facing -Z. About 1.9 m tall at its
+## scale.
+func _build_gargoyle(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	_add_blob(root, WOLF_BODY_PROFILE, 5, data.color, Vector3(0, 0.55, 0.35),
+		Vector3(-70, 0, 0), Vector3(1.3, 1.1, 1.2))  # hunched body, chest up
+	for x in [-0.2, 0.2]:
+		for z in [-0.15, 0.35]:
+			_add_blob(root, LEG_PROFILE, 4, data.dark_color, Vector3(x, 0.0, z), Vector3.ZERO,
+				Vector3(1.3, 0.9, 1.3))
+		_add_mesh(root, _cone(0.05, 0.12), data.horn_color, Vector3(x, 0.03, -0.3))  # claws
+	_add_blob(root, WOLF_HEAD_PROFILE, 5, data.color, Vector3(0, 1.15, -0.25),
+		Vector3(-100, 0, 0), Vector3(1.2, 1.0, 1.1))  # head
+	for side in [-1.0, 1.0]:
+		_add_mesh(root, _sphere(0.05), data.eye_color, Vector3(side * 0.1, 1.24, -0.52))
+		var eye := (root.get_child(-1) as MeshInstance3D).material_override as StandardMaterial3D
+		eye.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_add_mesh(root, _cone(0.06, 0.32), data.horn_color, Vector3(side * 0.14, 1.42, -0.2))
+		(root.get_child(-1) as Node3D).rotation_degrees = Vector3(-25, 0, side * -20)  # horn
+		var pivot := Node3D.new()
+		pivot.position = Vector3(0.25 * side, 0.95, 0.4)
+		root.add_child(pivot)
+		var sail := PrismMesh.new()  # the stone wing: a pointed sail facing the camera
+		sail.size = Vector3(1.0, 0.85, 0.07)
+		sail.left_to_right = 0.5 + 0.5 * side
+		var spread := Node3D.new()
+		spread.rotation_degrees.z = 22.0 * side
+		pivot.add_child(spread)
+		_add_mesh(spread, sail, data.wing_color, Vector3(0.5 * side, 0.45, 0.0))
+		var bone := BoxMesh.new()  # the arm along the top edge
+		bone.size = Vector3(0.95, 0.09, 0.1)
+		_add_mesh(spread, bone, data.dark_color, Vector3(0.5 * side, 0.3, 0.0))
+		(spread.get_child(-1) as Node3D).rotation_degrees.z = 28.0 * side
+		_add_mesh(spread, _cone(0.05, 0.3), data.horn_color, Vector3(1.0 * side, 0.9, 0.0))  # claw
+		_wings.append(pivot)
+	_add_mesh(root, _cone(0.05, 0.6), data.dark_color, Vector3(0, 0.45, 0.95))  # tail
+	(root.get_child(-1) as Node3D).rotation_degrees.x = 70.0
+
+
+## The Rata de las ruinas: a big rat: a low faceted body, a pointed head with pink ears and
+## red eyes, four short legs and a long thin tail curving behind, facing -Z. About 0.8 m tall
+## at its scale.
+func _build_rat(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	_add_blob(root, WOLF_BODY_PROFILE, 6, data.color, Vector3(0, 0.38, 0.4),
+		Vector3(-90, 0, 0), Vector3(1.05, 0.85, 0.95))  # body
+	_add_blob(root, WOLF_HEAD_PROFILE, 5, data.color, Vector3(0, 0.45, -0.38),
+		Vector3(-95, 0, 0), Vector3(0.8, 0.85, 0.95))  # pointed head
+	_add_mesh(root, _sphere(0.035), data.ear_color, Vector3(0, 0.43, -0.92))  # nose
+	for side in [-1.0, 1.0]:
+		_add_mesh(root, _sphere(0.1), data.ear_color, Vector3(side * 0.14, 0.68, -0.38))
+		(root.get_child(-1) as Node3D).scale = Vector3(1.0, 1.0, 0.35)  # ear
+		_add_mesh(root, _sphere(0.035), data.eye_color, Vector3(side * 0.09, 0.56, -0.66))
+		for z in [-0.15, 0.4]:
+			_add_blob(root, LEG_PROFILE, 4, data.dark_color, Vector3(side * 0.15, 0.0, z),
+				Vector3.ZERO, Vector3(0.9, 0.55, 0.9))
+	for i in 6:  # the tail: thin rods curving back and up
+		var a := i * 0.25
+		_add_mesh(root, _cylinder(0.025 - i * 0.003, 0.22), data.ear_color.darkened(0.2),
+			Vector3(0, 0.3 + sin(a) * 0.25, 0.95 + i * 0.18))
+		(root.get_child(-1) as Node3D).rotation_degrees.x = 80.0 - i * 12.0
+
+
+## The Devorador del portal: a dark faceted mass about 3.2 m tall with lumps on it, six
+## mouths round it (dark red lips, black throats and white teeth, each kind merged into one
+## mesh), tentacles at its foot, and in front a great eye (white, a red iris and a slit) under
+## a heavy lid, half closed until its second phase; a red light glows in front of it. Faces -Z.
+func _build_devourer(data: Dictionary) -> void:
+	_devourer = Node3D.new()
+	_devourer.scale = Vector3.ONE * data.scale
+	_body.add_child(_devourer)
+	_add_mesh(_devourer, LowPoly.blob(DEVOURER_PROFILE, 7), data.color, Vector3.ZERO, 0.9)
+	var lumps: Array[Transform3D] = []
+	for lump: Array in DEVOURER_LUMPS:  # [degrees from the front, height, size]
+		var a := deg_to_rad(lump[0])
+		lumps.append(Transform3D(Basis.from_scale(Vector3.ONE * lump[2]),
+			Vector3(sin(a) * 1.05, lump[1], -cos(a) * 1.05)))
+	_add_mesh(_devourer, _merged(_sphere(1.0), lumps), data.dark_color, Vector3.ZERO, 0.9)
+	var lips: Array[Transform3D] = []
+	var throats: Array[Transform3D] = []
+	var teeth: Array[Transform3D] = []
+	for mouth: Array in DEVOURER_MOUTHS:
+		var a := deg_to_rad(mouth[0])
+		var out := Vector3(sin(a), 0, -cos(a))
+		var frame := Transform3D(Basis.looking_at(out, Vector3.UP),
+			out * 1.3 + Vector3(0, mouth[1], 0))
+		lips.append(frame * Transform3D(Basis.from_scale(Vector3(0.55, 0.26, 0.2)),
+			Vector3.ZERO))
+		throats.append(frame * Transform3D(Basis.from_scale(Vector3(0.45, 0.17, 0.12)),
+			Vector3(0, 0, -0.1)))
+		for x in [-0.3, -0.1, 0.1, 0.3]:
+			teeth.append(frame * Transform3D(Basis(Vector3.RIGHT, PI), Vector3(x, 0.14, -0.2)))
+			teeth.append(frame * Transform3D(Basis(), Vector3(x + 0.1, -0.14, -0.2)))
+	_add_mesh(_devourer, _merged(_sphere(1.0), lips), data.lip_color, Vector3.ZERO, 0.7)
+	_add_mesh(_devourer, _merged(_sphere(1.0), throats), Color(0.02, 0.0, 0.02), Vector3.ZERO)
+	_add_mesh(_devourer, _merged(_cone(0.06, 0.2), teeth), data.tooth_color, Vector3.ZERO, 0.5)
+	var tentacles: Array[Transform3D] = []
+	for i in 6:
+		var a := TAU * i / 6.0 + 0.3
+		var out := Vector3(sin(a), 0, -cos(a))
+		tentacles.append(Transform3D(Basis.looking_at(out, Vector3.UP)
+			* Basis(Vector3.RIGHT, deg_to_rad(-80.0)), out * 1.45 + Vector3(0, 0.15, 0)))
+	_add_mesh(_devourer, _merged(_cone(0.26, 1.5), tentacles), data.dark_color, Vector3.ZERO)
+	var crown: Array[Transform3D] = []  # a crown of horns on top of the mass
+	for i in 6:
+		var a := TAU * i / 6.0
+		var out := Vector3(sin(a), 0, -cos(a))
+		crown.append(Transform3D(Basis.looking_at(out, Vector3.UP)
+			* Basis(Vector3.RIGHT, deg_to_rad(-65.0)), out * 0.4 + Vector3(0, 3.0, 0)))
+	_add_mesh(_devourer, _merged(_cone(0.16, 0.9), crown), data.dark_color, Vector3.ZERO)
+	var eye := Vector3(0, 1.75, -1.1)
+	_add_mesh(_devourer, _sphere(0.62), data.sclera_color, eye, 0.4)
+	_add_mesh(_devourer, _sphere(0.33), data.iris_color, eye + Vector3(0, 0, -0.48))
+	var iris := (_devourer.get_child(-1) as MeshInstance3D)
+	(iris.material_override as StandardMaterial3D).shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	iris.scale = Vector3(1.0, 1.0, 0.4)
+	_add_mesh(_devourer, _sphere(0.13), Color(0.02, 0.0, 0.02), eye + Vector3(0, 0, -0.56))
+	(_devourer.get_child(-1) as Node3D).scale = Vector3(0.4, 1.0, 0.4)  # the slit
+	_eyelid = Node3D.new()
+	_eyelid.position = eye
+	_devourer.add_child(_eyelid)
+	_add_mesh(_eyelid, _hemisphere(0.7, 0.7), data.color, Vector3.ZERO, 0.9)
+	_eyelid.rotation_degrees.x = EYELID_HALF
+	var glow := OmniLight3D.new()
+	glow.light_color = data.glow_color
+	glow.light_energy = 1.2
+	glow.omni_range = 5.0
+	glow.position = Vector3(0, 1.5, -2.2)
+	_devourer.add_child(glow)
+
+
+## mesh repeated at each of xforms, merged into one mesh (one draw call).
+static func _merged(mesh: Mesh, xforms: Array[Transform3D]) -> ArrayMesh:
+	var tool := SurfaceTool.new()
+	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for xform in xforms:
+		tool.append_from(mesh, 0, xform)
+	return tool.commit()
+
+
+## The Devorador wakes (its second phase): a red flash while its eye opens and the whole mass
+## grows by DEVOURER_GROWTH; its bar goes up with it.
+func _devourer_wakes() -> void:
+	_set_flash(true, LOOKS[look].glow_color)
+	var t := create_tween().set_parallel()
+	t.tween_property(_devourer, "scale", _devourer.scale * DEVOURER_GROWTH, 0.9) \
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_property(_eyelid, "rotation_degrees:x", EYELID_OPEN, 0.9)
+	await t.finished
+	_top *= 1.1  # the bar rises with it, still on screen
+	_set_flash(false)
 
 
 ## A poison dart frog: a squat faceted body, a yellow belly, black spots, two big eyes on
@@ -1351,6 +1910,85 @@ func _build_golem(data: Dictionary) -> void:
 			Vector3(0, 20, 0), Vector3(0.22, 0.16, 0.22))  # loose stone
 
 
+## A desert scorpion: a flat body of four plates low on eight short legs, two arms with big
+## pincers in front and a tail of shrinking segments curling up over its back to a pale
+## stinger, facing -Z. About 1 m tall at its scale.
+func _build_scorpion(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	for i in 4:  # the body plates, front to back
+		var color: Color = data.color if i % 2 == 0 else data.dark_color
+		_add_mesh(root, _sphere(0.2 - i * 0.015), color, Vector3(0, 0.2, -0.18 + i * 0.17))
+		(root.get_child(-1) as Node3D).scale = Vector3(1.25, 0.55, 1.0)
+	for x in [-0.07, 0.07]:
+		_add_mesh(root, _sphere(0.03), data.eye_color, Vector3(x, 0.29, -0.36))
+	for side in [-1.0, 1.0]:
+		for i in 4:  # legs: thin sticks going out and down from the body
+			_add_mesh(root, _cylinder(0.022, 0.3), data.dark_color,
+				Vector3(side * 0.34, 0.1, -0.12 + i * 0.15))
+			(root.get_child(-1) as Node3D).rotation_degrees = Vector3(0, 0, side * 60.0)
+		_add_mesh(root, _sphere(0.06), data.color, Vector3(side * 0.22, 0.2, -0.5))  # arm
+		_add_mesh(root, _sphere(0.06), data.color, Vector3(side * 0.24, 0.2, -0.6))
+		_add_mesh(root, _sphere(0.11), data.dark_color, Vector3(side * 0.27, 0.2, -0.74))
+		(root.get_child(-1) as Node3D).scale = Vector3(0.8, 0.6, 1.3)  # pincer
+	var segments := 10
+	var tip := Vector3.ZERO
+	for i in segments:  # the tail rises from the back and curls forward over it
+		var a := PI * 0.9 * i / (segments - 1)
+		tip = Vector3(0, 0.25 + sin(a) * 0.55, 0.42 + cos(a) * 0.3)
+		var color: Color = data.color if i % 2 == 0 else data.dark_color
+		_add_mesh(root, _sphere(0.1 - i * 0.006), color, tip)
+	_add_mesh(root, _cone(0.04, 0.16), data.sting_color, tip + Vector3(0, -0.02, -0.08))
+	(root.get_child(-1) as Node3D).rotation_degrees.x = -120.0
+
+
+## The Gusano de las dunas: a low ring of sand, a thick body of seven segments rising out
+## of it and bending forward, and a round mouth ringed with teeth looking at the hero,
+## facing -Z. About 3.4 m tall at its scale. It sways (_sway) like the plant.
+func _build_worm(data: Dictionary) -> void:
+	_add_blob(_body, SLIME_PROFILE, SLIME_SEGMENTS, data.sand_color, Vector3.ZERO,
+		Vector3.ZERO, Vector3(1.3, 0.22, 1.3) * data.scale)  # the sand: it stays still
+	_sway = Node3D.new()
+	_sway.scale = Vector3.ONE * data.scale
+	_body.add_child(_sway)
+	var segments := 7
+	for i in segments:
+		var u := float(i) / (segments - 1)
+		var color: Color = data.color if i % 2 == 0 else data.dark_color
+		_add_mesh(_sway, _sphere(0.42 - u * 0.12), color, Vector3(0, 0.15 + u * 1.55, -u * u * 0.55))
+		(_sway.get_child(-1) as Node3D).scale = Vector3(1.0, 0.7, 1.0)
+	var head := Node3D.new()
+	head.position = Vector3(0, 1.78, -0.62)
+	head.rotation_degrees.x = -70.0  # its local up points forward and a little up
+	_sway.add_child(head)
+	_add_mesh(head, _sphere(0.3), data.color, Vector3.ZERO)
+	_add_mesh(head, _disc(0.22), data.mouth_color, Vector3(0, 0.2, 0))
+	for i in 10:
+		var a := TAU * i / 10.0
+		_add_mesh(head, _cone(0.035, 0.1), data.teeth_color,
+			Vector3(cos(a) * 0.2, 0.2, sin(a) * 0.2))
+		(head.get_child(-1) as Node3D).rotation = Vector3(0, -a, deg_to_rad(-140.0))
+
+
+## The Jefe de caravana's canteen, half buried in the sand: a flat leather flask lying on
+## its side with a cork and a strap, on a low mound. It stands still.
+func _build_canteen(data: Dictionary) -> void:
+	_add_blob(_body, SLIME_PROFILE, SLIME_SEGMENTS, data.sand_color, Vector3.ZERO,
+		Vector3.ZERO, Vector3(1.0, 0.16, 1.0))  # the mound
+	var flask := Node3D.new()
+	flask.scale = Vector3.ONE * 2.2
+	flask.position = Vector3(0, 0.38, 0)
+	flask.rotation_degrees = Vector3(0, 30, 70)
+	_body.add_child(flask)
+	_add_mesh(flask, _sphere(0.2), data.color, Vector3.ZERO)
+	(flask.get_child(-1) as Node3D).scale = Vector3(1.0, 1.0, 0.45)
+	_add_mesh(flask, _cylinder(0.05, 0.1), data.cork_color, Vector3(0, 0.22, 0))
+	var strap := BoxMesh.new()
+	strap.size = Vector3(0.44, 0.03, 0.1)
+	_add_mesh(flask, strap, data.strap_color, Vector3(0, 0.0, 0.0))
+
+
 ## A spider: a round abdomen behind a small head with red eyes, on eight bent legs
 ## (four a side, each a thigh going up and out and a shin going down to the ground).
 func _build_spider(data: Dictionary) -> void:
@@ -1383,12 +2021,14 @@ func _build_specter(data: Dictionary) -> void:
 	_hover.position.y = data.fly
 	_hover.scale = Vector3.ONE * data.scale
 	_body.add_child(_hover)
-	_add_ghost(_hover, LowPoly.blob(SPECTER_PROFILE, 8), data.color, SPECTER_ALPHA,
+	_add_ghost(_hover, LowPoly.blob(SPECTER_PROFILE, 8), data.color,
+			data.get("alpha", SPECTER_ALPHA),
 		Vector3.ZERO, Vector3.ONE)
 	_add_ghost(_hover, _sphere(0.5), data.aura_color, AURA_ALPHA, Vector3(0, 0.62, 0),
 		Vector3(1.5, 1.7, 1.5))
 	for x in [-0.12, 0.12]:
-		_add_mesh(_hover, _sphere(0.07), Color(0.05, 0.05, 0.12), Vector3(x, 0.8, -0.34))  # eye
+		_add_mesh(_hover, _sphere(0.07), data.get("eye_color", Color(0.05, 0.05, 0.12)),
+			Vector3(x, 0.8, -0.34))  # eye
 	_add_mesh(_hover, _sphere(0.06), Color(0.05, 0.05, 0.12), Vector3(0, 0.6, -0.36))  # mouth
 
 
@@ -1396,7 +2036,7 @@ func _build_specter(data: Dictionary) -> void:
 ## specter floats, the rest squash and stretch (the wolf, the golems and the spider only
 ## breathe).
 func _start_idle() -> void:
-	if look == Look.BOARD:
+	if look in [Look.BOARD, Look.CANTEEN]:
 		return
 	if not _wings.is_empty():
 		_start_flap()
@@ -1406,7 +2046,9 @@ func _start_idle() -> void:
 		_start_float()
 	else:
 		var gentle := look in [Look.WOLF, Look.MUD_GOLEM, Look.STONE_GOLEM, Look.SPIDER,
-			Look.CAT, Look.WOLF_CUB, Look.MINI_GOLEM, Look.SNAKE, Look.MONKEY, Look.JAGUAR]
+			Look.CAT, Look.WOLF_CUB, Look.MINI_GOLEM, Look.SNAKE, Look.MONKEY, Look.JAGUAR,
+			Look.SAND_GOLEM, Look.SCORPION, Look.SNOW_WOLF, Look.ICE_GOLEM, Look.GOAT, Look.RUIN_RAT,
+			Look.PORTAL_DEVOURER]
 		_start_bounce(0.4 if gentle else 1.0)
 
 
@@ -1427,10 +2069,11 @@ func _start_flap() -> void:
 	if _idle_tween:
 		_idle_tween.kill()
 	_idle_tween = create_tween().set_loops()
+	var beat: float = LOOKS[look].get("flap_time", 0.18)
 	for angle in [0.6, -0.4]:
-		_idle_tween.tween_property(_wings[0], "rotation:z", -angle, 0.18) \
+		_idle_tween.tween_property(_wings[0], "rotation:z", -angle, beat) \
 			.set_trans(Tween.TRANS_SINE)
-		_idle_tween.parallel().tween_property(_wings[1], "rotation:z", angle, 0.18) \
+		_idle_tween.parallel().tween_property(_wings[1], "rotation:z", angle, beat) \
 			.set_trans(Tween.TRANS_SINE)
 
 

@@ -44,7 +44,10 @@ bush_seed = 43
 bush_tries = 60
 entries = {
 "inicio": [Vector3(0, 0, 8), 0.0],
+"desierto": [Vector3(0, 0, -13), 180.0],
+"ciudad": [Vector3(0, 0, -13), 180.0],
 "jungla": [Vector3(0, 0, -13), 180.0],
+"montana": [Vector3(0, 0, -13), 180.0],
 "pueblo": [Vector3(0, 0, 4), 0.0]
 }
 start_entry = "inicio"
@@ -61,12 +64,48 @@ exits = [{
 "pos": Vector3(0, 0, -17),
 "to": "jungla",
 "yaw": 0.0
+}, {
+"entry": "caravana",
+"gone": "gusano_dunas",
+"id": "desierto",
+"label": "Al desierto",
+"lock": "",
+"lock_text": "",
+"needs": "jaguar_sombrio",
+"pos": Vector3(0, 0, -17),
+"to": "desierto",
+"yaw": 0.0
+}, {
+"entry": "caravana",
+"gone": "grifo_cumbre",
+"id": "montana",
+"label": "A la montaña",
+"lock": "",
+"lock_text": "",
+"needs": "gusano_dunas",
+"pos": Vector3(0, 0, -17),
+"to": "montana_1",
+"yaw": 0.0
+}, {
+"entry": "caravana",
+"gone": "devorador_portal",
+"id": "ciudad",
+"label": "A la ciudad",
+"lock": "",
+"lock_text": "",
+"needs": "grifo_cumbre",
+"pos": Vector3(0, 0, -17),
+"to": "ciudad_1",
+"yaw": 0.0
 }]
 npcs = [{
 "kind": "npc",
 "lines": ["La jungla está al norte. Cuando estés listo, sal por allí."],
 "lines_by_chapter": {
-7: ["Has vencido al guardián de la jungla. Bien hecho.", "Aún no podemos seguir. Montaremos el camino cuando la ruta sea segura."]
+7: ["El desierto está al norte. Busca la ruina: dicen que algo enorme vive bajo la arena.", "Lleva agua... bueno, pociones. Muchas pociones."],
+8: ["La montaña está al norte. En la cumbre anida un grifo enorme.", "Abrígate. Y busca la palanca de los viejos pastores: abre la reja de la subida."],
+9: ["La ciudad abandonada está al norte. Dicen que un guardián de bronce vigila su plaza mayor.", "Detrás de la ciudad está el portal. Llega hasta él, y la caravana irá detrás."],
+10: ["Cruzaste el portal y volviste para contarlo. Lo que hay al otro lado... ya habrá tiempo.", "La caravana se queda aquí una temporada. Descansa, {nombre}."]
 },
 "look": "CARAVAN_CHIEF",
 "name": "Jefe de caravana",
@@ -96,10 +135,25 @@ npcs = [{
 }, {
 "kind": "npc",
 "lines": ["Llevo tres caravanas encima. Esta es la primera que va hacia el portal."],
+"lines_by_chapter": {
+10: ["Dicen que al otro lado del portal hay un pueblo bajo un sol negro. Yo no pienso ir a verlo."]
+},
 "look": "VILLAGER",
 "name": "Viajera",
 "pos": Vector3(3, 0, 7),
 "yaw": 0.0
+}, {
+"kind": "npc",
+"lines": ["Crucé ese desierto de joven. De día quema y de noche hiela."],
+"lines_by_chapter": {
+9: ["De niño oí que en esa ciudad vivía un rey. Ahora solo quedan piedras y esqueletos."],
+10: ["Si vuelves a cruzar ese portal, tráeme algo de recuerdo."]
+},
+"look": "FARMER",
+"name": "Viajero",
+"needs": "jaguar_sombrio",
+"pos": Vector3(-5.5, 0, 3),
+"yaw": 90.0
 }]
 boss_id = ""
 boss_pos = Vector3(0, 0, 0)
@@ -119,6 +173,6 @@ sun_color = Color(1, 0.88, 0.7, 1)
 sun_energy = 0.7
 backdrop = "pradera"
 particles = "pollen"
-autoplay_route = Array[Vector3]([Vector3(0, 0, 8), Vector3(-3, 0, 4), Vector3(-4, 0, -1), Vector3(4, 0, -1), Vector3(0, 0, -3.5), Vector3(2.5, 0, -7), Vector3(0, 0, -16.5)])
+autoplay_route = Array[Vector3]([Vector3(0, 0, 8), Vector3(2.2, 0, 5.6), Vector3(-3, 0, 4), Vector3(-4, 0, -1), Vector3(4, 0, -1), Vector3(0, 0, -3.5), Vector3(2.5, 0, -7), Vector3(0, 0, -16.5)])
 autoplay_boss_level = 0
 decor = [[Vector3(7, 0, 1.5), 0.0, "campfire"], [Vector3(-8.5, 0, -4), 60.0, "log_stack"]]

@@ -1,5 +1,5 @@
 class_name Bestiary extends RefCounted
-## The bestiary's families: every enemy with a card belongs to one (the Eco de la Niebla
+## The bestiary's families (five, nine on a caravan game): every enemy with a card belongs to one (the Eco de la Niebla
 ## has none and never counts). A family is complete once every enemy of it has been beaten
 ## (GameState.defeated_enemies, not only seen); its prize, a piece of equipment of its own,
 ## is given once (give()) and marked with the world flag "familia_<id>", so the save needs
@@ -26,10 +26,39 @@ const FAMILIES: Array[Dictionary] = [
 		"reward": Equipment.DAWN_SWORD},
 ]
 
-## The v2's enemies (the caravan), in album order, with no family until 2.3.0: the album
-## shows them under "La caravana" and they give no prize yet.
+## The v2's families (2.3.0): the enemies of the caravan's four lands and its bosses. They
+## only count on a caravan game (families()); their prizes follow the same rule.
+const V2_FAMILIES: Array[Dictionary] = [
+	{"id": "fieras", "name": "Fieras salvajes",
+		"enemies": ["rana_dardo", "serpiente_liana", "mono_aullador", "escorpion", "buitre",
+			"lobo_nieves", "cabra_montesa", "rata_ruinas"],
+		"reward": Equipment.CLAW_RING},
+	{"id": "bichos", "name": "Plantas y bichos de la arena",
+		"enemies": ["planta_trampa", "seta_tropical", "slime_arena", "murcielago_hielo"],
+		"reward": Equipment.OASIS_AMULET},
+	{"id": "constructos", "name": "Constructos y almas",
+		"enemies": ["golem_arena", "golem_hielo", "espiritu_cumbre", "armadura_hueca",
+			"gargola", "sombra", "esqueleto_centinela", "momia"],
+		"reward": Equipment.WATCH_AMULET},
+	{"id": "jefes_caravana", "name": "Jefes de la caravana",
+		"enemies": ["jaguar_sombrio", "gusano_dunas", "grifo_cumbre", "guardian_ciudad",
+			"devorador_portal"],
+		"reward": Equipment.PORTAL_SWORD},
+]
+## Every v2 enemy with a card, family by family (25).
 const V2_ENEMIES: Array[String] = ["rana_dardo", "serpiente_liana", "mono_aullador",
-	"planta_trampa", "seta_tropical", "jaguar_sombrio"]
+	"escorpion", "buitre", "lobo_nieves", "cabra_montesa", "rata_ruinas", "planta_trampa",
+	"seta_tropical", "slime_arena", "murcielago_hielo", "golem_arena", "golem_hielo",
+	"espiritu_cumbre", "armadura_hueca", "gargola", "sombra", "esqueleto_centinela", "momia",
+	"jaguar_sombrio", "gusano_dunas", "grifo_cumbre", "guardian_ciudad", "devorador_portal"]
+
+
+## The families that count in this game: the v1's, and the v2's on a caravan game.
+static func families(state: GameState) -> Array[Dictionary]:
+	var all: Array[Dictionary] = FAMILIES.duplicate()
+	if state.in_caravan():
+		all.append_array(V2_FAMILIES)
+	return all
 
 
 ## Every enemy with a card, family by family (22).
@@ -46,14 +75,14 @@ static func has(enemy_id: String) -> bool:
 	return family_of(enemy_id) != "" or V2_ENEMIES.has(enemy_id)
 
 
-## How many enemies the bestiary counts: the families' (22) and, on a caravan game, the v2's.
+## How many enemies the bestiary counts: the families' (22) and, on a caravan game, the v2's (25: 47 in all).
 static func total_count(state: GameState) -> int:
 	return all_ids().size() + (V2_ENEMIES.size() if state.in_caravan() else 0)
 
 
-## The family with family_id ({} if none).
+## The family with family_id ({} if none), the v2's too.
 static func family(family_id: String) -> Dictionary:
-	for entry in FAMILIES:
+	for entry in FAMILIES + V2_FAMILIES:
 		if entry.id == family_id:
 			return entry
 	return {}
@@ -61,7 +90,7 @@ static func family(family_id: String) -> Dictionary:
 
 ## The id of enemy_id's family ("" for none: the Eco de la Niebla).
 static func family_of(enemy_id: String) -> String:
-	for entry in FAMILIES:
+	for entry in FAMILIES + V2_FAMILIES:
 		if (entry.enemies as Array).has(enemy_id):
 			return entry.id
 	return ""
@@ -89,7 +118,7 @@ static func is_complete(state: GameState, family_id: String) -> bool:
 ## The families complete whose prize has not been given yet, in album order.
 static func new_rewards(state: GameState) -> Array[String]:
 	var ids: Array[String] = []
-	for entry in FAMILIES:
+	for entry in families(state):
 		if is_complete(state, entry.id) and not state.has_flag(flag(entry.id)):
 			ids.append(entry.id)
 	return ids
@@ -108,7 +137,7 @@ static func give(state: GameState, family_id: String) -> String:
 ## How many families are complete.
 static func complete_count(state: GameState) -> int:
 	var complete := 0
-	for entry in FAMILIES:
+	for entry in families(state):
 		if is_complete(state, entry.id):
 			complete += 1
 	return complete

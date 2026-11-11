@@ -1,6 +1,7 @@
 class_name CreditsScreen extends Control
 ## The credits after the ending: on black, the sections given to run() roll up from
-## the bottom of the screen (a heading in gold, its lines in white); then "Fin" fades in
+## the bottom of the screen (a heading in gold, its lines in white); then "Fin" (the v1) or
+## "Continuará" (the v2: set end_text to TO_BE_CONTINUED before add_child) fades in
 ## and waits for Enter / Space / a click or tap. Holding Enter, Space or a click while
 ## they roll makes them go SPEED_UP times faster. With `-- --autoplay` every line is
 ## printed and "Fin" leaves by itself after AUTOPLAY_END seconds.
@@ -17,6 +18,10 @@ const SPEED_UP := 5.0
 const SECTION_GAP := 48
 const END_FADE := 1.2
 const AUTOPLAY_END := 2.0
+## What fades in after the credits: "Fin" for the v1, TO_BE_CONTINUED for the v2 (set before
+## add_child).
+const TO_BE_CONTINUED := "Continuará"
+var end_text := "Fin"
 
 var _column: VBoxContainer
 var _end: Label
@@ -39,7 +44,7 @@ func _ready() -> void:
 	_column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_column)
 	_column.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	_end = _label("Fin", HEADING_COLOR, END_SIZE)
+	_end = _label(end_text, HEADING_COLOR, END_SIZE)
 	_end.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_end.modulate.a = 0.0
 	add_child(_end)
@@ -69,7 +74,7 @@ func run(sections: Array) -> void:
 	tween.tween_property(_end, "modulate:a", 1.0, END_FADE)
 	await tween.finished
 	if _autoplay:
-		print("Fin")
+		print(end_text)
 		await get_tree().create_timer(AUTOPLAY_END).timeout
 		return
 	_waiting = true

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "esqueleto_centinela"
+display_name = "Esqueleto centinela"
+max_hp = 200
+hp = 200
+attack = 78
+defense = 58
+speed = 24
+map_roam = 2.0
+map_speed = 1.5
+exp_reward = 116
+gold_reward = 58
+ai_weights = {
+"attack": 85,
+"stagger": 15
+}
+resist = Array[String](["ice"])
+drops = {
+"pocion_grande": 0.1
+}

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="QuestData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/quest_data.gd" id="1_quest"]
+
+[resource]
+script = ExtResource("1_quest")
+id = "cabras"
+title = "Cabras en la subida"
+zone = "caravana"
+giver = "Tablón"
+needs = "gusano_dunas"
+turn_in_zone = "caravana"
+turn_in = "Jefe de caravana"
+target = "cabra_montesa"
+goal = 5
+objective = "Derrota 5 cabras montesas en la montaña y avisa al Jefe de caravana."
+status = "cabras %d / %d"
+report = "vuelve con el Jefe de caravana"
+offer_lines = Array[String](["AVISO: las cabras montesas embisten a las mulas en la subida. Se paga a quien derrote a cinco. — El Jefe de caravana"])
+wait_lines = Array[String](["¿Cinco cabras? Las oirás antes de verlas: embisten contra las rocas."])
+done_lines = Array[String](["¡Cinco cabras! Las mulas ya suben tranquilas.", "Toma tu paga, y estos éteres: allá arriba hacen falta."])
+reward_gold = 600
+reward_items = {
+"eter_grande": 2
+}

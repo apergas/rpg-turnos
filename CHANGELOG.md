@@ -1,5 +1,40 @@
 # Registro de cambios
 
+## 2.3.0 (2026)
+
+La caravana del portal, cuarta y última parte.
+
+- La ciudad abandonada: dos plantas de calles en ruinas bajo un cielo rojo, con el Guardián de la ciudad en la plaza mayor y, detrás de una reja, el portal.
+- Cinco monstruos nuevos: la Armadura hueca, la Gárgola, la Sombra, el Esqueleto centinela y la Rata de las ruinas.
+- El jefe final: el Devorador del portal, que abre su ojo cuando crees que lo has vencido.
+- El final de la caravana: cruzas el portal y ves lo que espera al otro lado. Continuará...
+- El equipo estelar, en la tienda de la Caravana.
+- Cuatro familias nuevas en el bestiario, con sus premios, y la página partida entre Villaclaro y la caravana.
+- Dos misiones más en la Caravana.
+- En la ciudad silba el viento entre las ruinas y cae la ceniza; junto al portal, la tierra retumba.
+
+## 2.2.0 (2026)
+
+La caravana del portal, tercera parte.
+
+- La montaña: dos plantas de roca y nieve, con una palanca que abre el paso y una cumbre donde anida el Grifo.
+- Cinco monstruos nuevos: el Lobo de las nieves, el Golem de hielo, el Espíritu de la cumbre, el Murciélago de la cueva helada y la Cabra montesa, cuyo golpe te deja sin aliento un turno.
+- El equipo de adamantita, en la tienda de la Caravana.
+- Un hechizo nuevo al nivel 32: Sanación, que cura 150 PV.
+- Dos misiones más en la Caravana.
+- En la montaña sopla el viento y cae la nieve.
+
+## 2.1.0 (2026)
+
+La caravana del portal, segunda parte.
+
+- El desierto: dunas, cactus, un oasis con palmeras y una ruina donde espera el Gusano de las dunas.
+- Cinco monstruos nuevos: el Escorpión, el Slime de arena, el Buitre, el Golem de arena y la Momia.
+- El equipo de oricalco, en la tienda de la Caravana.
+- Un viajero nuevo en la Caravana y dos misiones más.
+- El desierto suena a viento, y la arena vuela a ráfagas.
+- Ya se pueden entregar las pieles de mono al Mercader de la Caravana: antes solo se abría su tienda.
+
 ## 2.0.1 (2026)
 
 - Los mapas están más vivos: flores, setas, tocones y troncos caídos en la pradera y el bosque, y helechos bajo las palmeras de la jungla.

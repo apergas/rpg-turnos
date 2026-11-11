@@ -51,10 +51,32 @@ const SHOPS := {
 	"domadora_castillo": {"keeper": "Domadora", "equipment": [], "items": [],
 		"ally": "esqueleto_leal", "gear_shop": CASTILLO},
 	# The Caravana's merchant, tramo 1 (the jungle): the jade gear and the big potions;
-	# caravana_2..4 come with the zones of 2.1.0-2.3.0.
 	"caravana_1": {
 		"keeper": "Mercader",
 		"equipment": ["espada_jade", "armadura_jade", "escudo_jade", "casco_jade"],
+		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
+			Inventory.WING, Inventory.INCENSE, Inventory.PHOENIX, Inventory.ALARM],
+	},
+	# The Caravana's merchant, tramo 2 (the desert): the orichalcum gear and the same items.
+	"caravana_2": {
+		"keeper": "Mercader",
+		"equipment": ["espada_oricalco", "armadura_oricalco", "escudo_oricalco",
+			"casco_oricalco"],
+		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
+			Inventory.WING, Inventory.INCENSE, Inventory.PHOENIX, Inventory.ALARM],
+	},
+	# The Caravana's merchant, tramo 3 (the mountain): the adamantite gear and the same items.
+	"caravana_3": {
+		"keeper": "Mercader",
+		"equipment": ["espada_adamantita", "armadura_adamantita", "escudo_adamantita",
+			"casco_adamantita"],
+		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
+			Inventory.WING, Inventory.INCENSE, Inventory.PHOENIX, Inventory.ALARM],
+	},
+	# The Caravana's merchant, tramo 4 (the city): the stellar gear and the same items.
+	"caravana_4": {
+		"keeper": "Mercader",
+		"equipment": ["espada_estelar", "armadura_estelar", "escudo_estelar", "casco_estelar"],
 		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
 			Inventory.WING, Inventory.INCENSE, Inventory.PHOENIX, Inventory.ALARM],
 	},

@@ -6,9 +6,13 @@ class_name BattleStage extends RefCounted
 ## cave: rock floor, a wall of rock blocks and boulders behind and beside the fighters,
 ## stalagmites and two torches, in the dark of an underground zone. "castillo" is a
 ## castle yard: flagstones, KayKit wall pieces with towers behind and beside the
-## fighters, banks of mist and two torches (and the hero's lantern indoors). The
-## environment, the mesh and model helpers and the rock and tree models are shared with
-## WorldStage.
+## fighters, banks of mist and two torches (and the hero's lantern indoors). "desierto" is
+## sand with a darker track, palms far behind, dunes and the Kenney cacti, scrub and a
+## broken column. "montana" is snow with a grey track, white peaks and the Kenney pines, tall
+## stones and snowy cliffs. "ciudad" is the ruined city's yard: the castle's walls half
+## fallen, a reddish floor, the Kenney ruins and, in the portal quarter, the portal behind the
+## enemies. The environment, the mesh and model helpers and the rock and tree models
+## are shared with WorldStage.
 
 const GRASS := Color(0.32, 0.55, 0.22)
 const DIRT := Color(0.62, 0.5, 0.34)
@@ -104,6 +108,26 @@ const JUNGLE_TIPS := [Color(0.1, 0.45, 0.08), Color(0.26, 0.6, 0.12)]
 const JUNGLE_PALM_RATIO := 0.354
 const JUNGLE_PALMS := ["palm_A", "palm_B"]
 
+## The desert backdrop: sand, a darker trodden track, the rocks, two palms and a clump far
+## behind (PalmModels, the map's), dunes for hills and the Kenney cacti, scrub and a broken
+## column of BACKDROP_DECOR; no tall grass and no bushes.
+const DESERT_GROUND := Color(0.56, 0.44, 0.28)
+const DESERT_PATH := Color(0.42, 0.32, 0.2)
+const DESERT_HILL := Color(0.58, 0.45, 0.29)
+## [position, PalmModels id, scale, yaw in degrees].
+const DESERT_PALMS := [
+	[Vector3(-11, 0, -16), "palm_A", 1.4, 20.0],
+	[Vector3(12, 0, -19), "palm_B", 1.45, 200.0],
+	[Vector3(-17, 0, -10), "palms_clump", 1.4, 90.0],
+]
+
+
+## The mountain backdrop: snow, a trodden track of grey stone, the KayKit rocks, white peaks
+## for hills, and the Kenney pines, tall stones and snowy cliffs (the map's rock block) of
+## BACKDROP_DECOR; no tall grass and no bushes.
+const MOUNTAIN_GROUND := Color(0.8, 0.83, 0.88)
+const MOUNTAIN_PATH := Color(0.5, 0.51, 0.54)
+const MOUNTAIN_HILL := Color(0.84, 0.87, 0.92)
 
 ## The mine backdrop: rock floor, the blocks of the cave wall ([position, size]), the
 ## boulders (same entries as ROCKS), the stalagmites ([position, radius, height]) and
@@ -148,6 +172,23 @@ const CASTLE_MIST := [
 	[Vector3(-8, 0.3, 1), Vector3(4, 0.5, 4)], [Vector3(9, 0.3, 0), Vector3(4, 0.5, 4)],
 ]
 const LOW_SHADOW_DISTANCE := 35.0
+## The city backdrop (ciudad): the castle yard's KayKit walls, CITY_LOW_WALLS of them low
+## (ruined), towers of three heights, a warm reddish floor, two torches, no mist, the Kenney
+## ruins of BACKDROP_DECOR and, in a zone with a portal (zone.portal_flag), the portal
+## standing behind the enemies.
+const CITY_FLOOR := Color(0.27, 0.23, 0.23)
+const CITY_STONE := Color(0.46, 0.41, 0.4)
+## Indexes of CASTLE_WALLS drawn at DungeonMap.RUIN_HEIGHT.
+## The distant towers are darker than the walls, so they read as silhouettes in the haze.
+const CITY_TOWER_SHADE := 0.65
+const CITY_LOW_WALLS := [1, 4, 7, 11]
+const CITY_TOWERS := [
+	[Vector3(-14, 0, -11), 3.0], [Vector3(14, 0, -11), 5.0], [Vector3(0, 0, -16), 7.0],
+]
+## How much of the city's fog covers its sky (1: all, a flat haze).
+const CITY_FOG_SKY := 0.35
+const CITY_PORTAL_POS := Vector3(0.6, 0, -8.5)
+const CITY_PORTAL_SCALE := 0.8
 const CASTLE_TORCHES := [Vector3(-4.0, 2.0, -10.0), Vector3(4.0, 2.0, -10.0)]
 
 ## Low graphics quality: no SSAO and cheap, short sun shadows (DisplaySettings sets it). The
@@ -168,6 +209,29 @@ const BACKDROP_DECOR := {
 		["fern", Vector3(4.2, 0, -2.4), 70.0, 1.6],
 		["fern", Vector3(-4.2, 0, 0.8), 150.0, 1.5],
 		["mushrooms_red", Vector3(4.6, 0, 1.6), 200.0, 1.4]],
+	"desierto": [["cactus_tall", Vector3(-4.2, 0, -3.6), 20.0, 1.0],
+		["cactus", Vector3(4.4, 0, -2.2), 140.0, 1.0],
+		["cactus", Vector3(-4.6, 0, 0.9), 260.0, 0.8],
+		["scrub", Vector3(4.4, 0, 1.6), 0.0, 1.0],
+		["column_broken", Vector3(5.6, 0, -6.5), 15.0, 1.0]],
+	"montana": [["pine", Vector3(-7.5, 0, -6), 20.0, 1.0],
+		["pine", Vector3(7.5, 0, -7), 160.0, 1.1],
+		["pine_small", Vector3(-9, 0, -1), 70.0, 1.0],
+		["pine_small", Vector3(9.5, 0, -1.5), 240.0, 1.0],
+		["pine", Vector3(-4, 0, -11), 200.0, 1.2],
+		["pine", Vector3(3.5, 0, -12), 300.0, 1.1],
+		["rock_tall", Vector3(4.4, 0, -2.6), 140.0, 0.9],
+		["snow_stones", Vector3(-4.2, 0, 0.8), 0.0, 1.0],
+		["snow_rock", Vector3(-12, 2.5, -16), 0.0, 5.0],
+		["snow_rock", Vector3(-7, 2.0, -18), 0.0, 4.0],
+		["snow_rock", Vector3(10, 2.5, -17), 0.0, 5.0],
+		["snow_rock", Vector3(15, 2.0, -12), 0.0, 4.0]],
+	"ciudad": [["city_column_broken", Vector3(-4.2, 0, -3.6), 20.0, 1.0],
+		["rubble", Vector3(4.4, 0, -2.2), 0.0, 1.0],
+		["fallen_head", Vector3(-4.6, 0, 0.9), 200.0, 0.9],
+		["city_block", Vector3(4.6, 0, 1.4), 30.0, 1.0],
+		["city_column", Vector3(-7.5, 0, -8), 0.0, 1.0],
+		["obelisk", Vector3(7.5, 0, -8.5), 0.0, 1.0]],
 }
 
 ## zone: whose sky, light and backdrop to use (null: the meadow's).
@@ -176,8 +240,17 @@ static func build(root: Node3D, zone: ZoneData = null) -> void:
 	if zone != null and zone.backdrop == "mina":
 		_build_cave(root)
 		return
+	if zone != null and zone.backdrop == "ciudad":
+		_build_city(root, zone)
+		return
 	if zone != null and zone.backdrop == "castillo":
 		_build_castle(root, zone)
+		return
+	if zone != null and zone.backdrop == "desierto":
+		_build_desert(root, zone)
+		return
+	if zone != null and zone.backdrop == "montana":
+		_build_mountain(root, zone)
 		return
 	var jungle := zone != null and zone.backdrop == "jungla"
 	var forest := jungle or (zone != null and zone.backdrop == "bosque")
@@ -306,6 +379,43 @@ static func unit_sphere() -> SphereMesh:
 	return mesh
 
 
+static func _build_mountain(root: Node3D, zone: ZoneData) -> void:
+	var ground := PlaneMesh.new()
+	ground.size = Vector2(160, 160)
+	add_mesh(root, ground, MOUNTAIN_GROUND, Vector3.ZERO)
+	var path := PlaneMesh.new()
+	path.size = PATH_SIZE
+	add_mesh(root, path, MOUNTAIN_PATH, PATH_CENTER + Vector3(0, 0.01, 0), Vector3.ONE,
+		Vector3(0, PATH_YAW_DEG, 0))
+	for rock in ROCKS:
+		add_model(root, ROCK_SCENES[rock[1]], rock[0], rock[2], rock[3])
+	for hill in HILLS:
+		add_mesh(root, unit_sphere(), MOUNTAIN_HILL, hill[0], hill[1])
+	_add_backdrop_decor(root, zone)
+
+
+static func _build_desert(root: Node3D, zone: ZoneData) -> void:
+	var ground := PlaneMesh.new()
+	ground.size = Vector2(160, 160)
+	add_mesh(root, ground, DESERT_GROUND, Vector3.ZERO)
+	var path := PlaneMesh.new()
+	path.size = PATH_SIZE
+	add_mesh(root, path, DESERT_PATH, PATH_CENTER + Vector3(0, 0.01, 0), Vector3.ONE,
+		Vector3(0, PATH_YAW_DEG, 0))
+	for rock in ROCKS:
+		add_model(root, ROCK_SCENES[rock[1]], rock[0], rock[2], rock[3])
+	for palm: Array in DESERT_PALMS:
+		var instance := MeshInstance3D.new()
+		instance.mesh = PalmModels.mesh(palm[1])
+		instance.position = palm[0]
+		instance.scale = Vector3.ONE * float(palm[2])
+		instance.rotation_degrees = Vector3(0, palm[3], 0)
+		root.add_child(instance)
+	for hill in HILLS:
+		add_mesh(root, unit_sphere(), DESERT_HILL, hill[0], hill[1])
+	_add_backdrop_decor(root, zone)
+
+
 static func _build_cave(root: Node3D) -> void:
 	var ground := PlaneMesh.new()
 	ground.size = Vector2(60, 60)
@@ -354,6 +464,31 @@ static func _build_castle(root: Node3D, zone: ZoneData) -> void:
 		_add_torch(root, flame_pos)
 	if zone.underground:
 		_add_lantern(root)
+
+
+static func _build_city(root: Node3D, zone: ZoneData) -> void:
+	var ground := PlaneMesh.new()
+	ground.size = Vector2(80, 80)
+	add_mesh(root, ground, CITY_FLOOR, Vector3.ZERO)
+	for i in CASTLE_WALLS.size():
+		var wall: Array = CASTLE_WALLS[i]
+		var model := add_model(root, DungeonMap.WALL_SCENE, wall[0], DungeonMap.WALL_SCALE,
+			wall[1])
+		if i in CITY_LOW_WALLS:
+			model.scale.y *= DungeonMap.RUIN_HEIGHT
+	for tower in CITY_TOWERS:
+		var box := BoxMesh.new()
+		box.size = Vector3(4, tower[1], 4)
+		add_mesh(root, box, CITY_STONE.darkened(CITY_TOWER_SHADE), tower[0] + Vector3(0, tower[1] / 2.0, 0))
+	for flame_pos in CASTLE_TORCHES:
+		_add_torch(root, flame_pos)
+	if zone.portal_flag != "":
+		var portal := PortalRing.new()
+		portal.stone = zone.rock_color
+		portal.position = CITY_PORTAL_POS
+		portal.scale = Vector3.ONE * CITY_PORTAL_SCALE
+		root.add_child(portal)
+	_add_backdrop_decor(root, zone)
 
 
 ## A torch: a stick, an unshaded flame at flame_pos and its warm light a metre out.
@@ -436,6 +571,9 @@ static func _add_environment(root: Node3D, zone: ZoneData) -> void:
 	env.fog_enabled = true
 	env.fog_light_color = zone.haze
 	env.fog_density = zone.fog_density
+	if zone.backdrop == "ciudad":
+		env.fog_sky_affect = CITY_FOG_SKY  # the red sky keeps its gradient behind the fog
+		sky_material.ground_bottom_color = zone.haze.darkened(0.4)
 	var world_env := WorldEnvironment.new()
 	world_env.environment = env
 	root.add_child(world_env)

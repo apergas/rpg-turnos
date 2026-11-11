@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "sombra"
+display_name = "Sombra"
+female = true
+max_hp = 170
+hp = 170
+attack = 72
+defense = 52
+speed = 34
+map_roam = 2.5
+map_speed = 1.6
+exp_reward = 110
+gold_reward = 54
+ai_weights = {
+"attack": 90,
+"stagger": 10
+}
+weak = Array[String](["fire"])
+drops = {
+"eter_grande": 0.08
+}
+attack_status = "silence"
+attack_status_chance = 0.3

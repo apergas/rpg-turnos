@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "rata_ruinas"
+display_name = "Rata de las ruinas"
+female = true
+max_hp = 140
+hp = 140
+attack = 70
+defense = 46
+speed = 40
+map_roam = 2.0
+map_speed = 2.2
+exp_reward = 80
+gold_reward = 40
+ai_weights = {
+"attack": 90,
+"stagger": 10
+}
+weak = Array[String](["ice"])
+drops = {
+"antidote": 0.15
+}
+attack_status = "poison"
+attack_status_chance = 0.3

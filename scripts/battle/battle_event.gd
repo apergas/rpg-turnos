@@ -25,6 +25,7 @@ const STATUS_ON := "status_on"
 const STATUS_TICK := "status_tick"
 const STATUS_OFF := "status_off"
 const ASLEEP := "asleep"
+const STUNNED := "stunned"
 const CALL_HELP := "call_help"
 const CHARGE := "charge"
 const PHASE := "phase"
@@ -146,6 +147,11 @@ static func asleep(actor: int) -> Dictionary:
 	return {"type": ASLEEP, "actor": actor}
 
 
+## The fighter is still stunned by a blow and loses its turn.
+static func stunned(actor: int) -> Dictionary:
+	return {"type": STUNNED, "actor": actor}
+
+
 ## helper: index of the new enemy in BattleEngine.enemies.
 static func call_help(actor: int, helper: int) -> Dictionary:
 	return {"type": CALL_HELP, "actor": actor, "helper": helper}
@@ -161,9 +167,10 @@ static func enemy_flee(actor: int) -> Dictionary:
 	return {"type": ENEMY_FLEE, "actor": actor}
 
 
-## A boss reached 0 HP and rises in its next phase with hp_left HP.
-static func phase(target: int, hp_left: int) -> Dictionary:
-	return {"type": PHASE, "target": target, "hp_left": hp_left}
+## A boss reached 0 HP and rises in its next phase with hp_left HP, saying line ("" for the
+## fog's).
+static func phase(target: int, hp_left: int, line := "") -> Dictionary:
+	return {"type": PHASE, "target": target, "hp_left": hp_left, "line": line}
 
 
 ## The Pluma de fénix burnt: the fighter (the hero) rises with hp_left HP, cured.

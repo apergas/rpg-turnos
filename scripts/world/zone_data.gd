@@ -13,14 +13,15 @@ class_name ZoneData extends Resource
 
 ## Every zone, in world order (save validation and --autoplay-zone check against it).
 const IDS: Array[String] = ["pradera", "bosque", "mina_1", "mina_2", "mina_3",
-	"castillo_patio", "castillo_trono", "caravana", "jungla"]
+	"castillo_patio", "castillo_trono", "caravana", "jungla", "desierto", "montana_1", "montana_2",
+	"ciudad_1", "ciudad_2"]
 ## The zones of the v2 (the caravan), growing with each version: a save with the caravan's
 ## flag is only valid on one of these, and a save without it only on the others.
-const V2_ZONES: Array[String] = ["caravana", "jungla"]
+const V2_ZONES: Array[String] = ["caravana", "jungla", "desierto", "montana_1", "montana_2", "ciudad_1", "ciudad_2"]
 ## Side of a dungeon cell, in metres.
 const CELL := 4.0
 ## Dungeon cells: rock (a wall in a castle), floor, stairs up and down, chest, lever,
-## locked door, key, floor with a torch on its wall and the throne. Anything else is
+## locked door, key, floor with a torch on its wall, the throne and the portal. Anything else is
 ## floor.
 const ROCK := "#"
 const STAIRS_UP := "S"
@@ -31,6 +32,8 @@ const DOOR := "D"
 const KEY := "K"
 const TORCH := "T"
 const THRONE := "R"
+## The city's portal (PortalRing): nobody walks on it, hero or monster.
+const PORTAL := "P"
 ## Plain floor (no torch, no chest...): what a group or the Slime de Metal stands on.
 const FLOOR := "."
 ## Within this distance of a stair cell's centre the stair room is safe (no monster groups).
@@ -57,13 +60,25 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## Two tip greens of the tall grass (sRGB); every tuft gets a mix of them.
 @export var grass_tips := PackedColorArray([Color(0.22, 0.55, 0.12), Color(0.42, 0.72, 0.16)])
 @export var grass_seed := 7
-## [position, scale] of each hill (unit spheres, half buried) around the field.
+## [position, scale] of each hill (unit spheres, half buried) around the field, or around a
+## floor of cells open to the sky (the mountain's peaks).
 @export var hills: Array = []
+## The colour of the hills outside the walls and of the dunes (the meadow's green by default).
+@export var hill_color := Color(0.27, 0.47, 0.22)
+## Dunes inside the field: [centre (y below 0: half buried), radii] of a flattened
+## ellipsoid of hill_color. They are solid (WorldStage gives each a row of cylinders) and
+## everything keeps off them: trees, decoration, grass and the monster groups.
+@export var dunes: Array = []
+## Patches of other ground: [centre, radius, colour] discs drawn on the ground under the
+## path (the desert's green oasis).
+@export var ground_patches: Array = []
 
 @export_group("Path and safe ground")
 ## Corners of the dirt path (no grass, no monster groups).
 @export var path_points: Array[Vector3] = []
 @export var path_half_width := 1.5
+## The colour of the path and the safe discs (BattleStage.DIRT by default).
+@export var path_color := Color(0.62, 0.5, 0.34)
 ## [centre, radius] of each round patch of bare dirt (no grass, no monster groups): the
 ## spawn area, the village clearing, the boss's clearing...
 @export var safe_discs: Array = []
@@ -97,6 +112,10 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## the clump.
 @export var tree_models: Array[String] = ["tree_A", "tree_B"]
 @export var clump_model := "trees_A"
+## Where the trees may grow, [centre, radius] discs: when there are any, every tree of the
+## zone is rolled inside one of them (the desert's palms only in its oasis); empty: anywhere,
+## denser toward the walls.
+@export var tree_areas: Array = []
 ## [centre, radius] of each glade: no trees, but grass and monster groups.
 @export var glades: Array = []
 @export var bush_seed := 31
@@ -135,7 +154,8 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## camera), "name" (unique on the map: cutscenes call the figure by it), and what it says:
 ## "lines" and / or "lines_by_chapter" (StoryState.Chapter -> lines, from that chapter on;
 ## they may hold StoryState.NAME_TAG). The "quest" figure uses them once its quest is done;
-## optional "needs" / "gone": flags that make it exist (is_present())}.
+## optional "needs" / "gone": flags that make it exist (is_present())}. Kind "item" is a thing
+## picked up ("Coger · Cantimplora"), with no voice of its own.
 @export var npcs: Array = []
 ## The zone's boss (EnemyLibrary id, "" for none) and where it waits.
 @export var boss_id := ""
@@ -189,12 +209,23 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var ambient_energy := 0.5
 @export var rock_color := Color(0.33, 0.29, 0.26)
 @export var floor_color := Color(0.36, 0.32, 0.28)
+## A NatureModels piece drawn for every rock block instead of the plain box of rock_color
+## (the mountain's snowy cliff, "snow_rock": a unit cube centred on its middle, scaled to the
+## block). "" keeps the box (the mine).
+@export var rock_piece := ""
 ## Castle: the rock cells are stone walls (KayKit wall pieces on the straight runs,
 ## square towers at corners and ends, round pillars when they stand alone) instead of
 ## rock blocks, and the open ground goes on past the grid.
 @export var castle := false
 ## Banks of mist drifting low over the floor (0 for none).
 @export var mist_banks := 0
+## Ruined castle walls (the abandoned city): on a castle floor, some straight walls and
+## towers are drawn low and without merlons (a fixed rule by cell, DungeonMap._is_ruin()).
+## Their colliders keep their full height.
+@export var ruined := false
+## World flag that calms the portal of a P cell (it turns slowly, its light softens); ""
+## for none.
+@export var portal_flag := ""
 ## Zone ids the S and B stairs lead to (to their B and S entries).
 @export var stairs_up := ""
 @export var stairs_down := ""
@@ -316,7 +347,7 @@ func near_stairs(pos: Vector3) -> bool:
 func _beside(cell: Vector2i) -> Array:
 	for step in [Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 0), Vector2i(-1, 0)]:
 		var ch := cell_char(cell + step)
-		if ch != ROCK and ch != DOOR:
+		if ch != ROCK and ch != DOOR and ch != PORTAL:
 			return [cell_center(cell + step), rad_to_deg(atan2(-step.x, -step.y))]
 	return [cell_center(cell), 0.0]
 

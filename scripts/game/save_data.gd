@@ -25,7 +25,7 @@ class_name SaveData extends RefCounted
 ## METAL_SLIME_VERSION (1.7.0) adds the Slime de Metal's HP kept after it got away (metal_slime_hp, 0 for none); an older save gets 0.
 ## MEDALS_VERSION (1.8.0) adds the small medals taken (medals, sorted), the Coleccionista's prizes
 ## given (medal_prizes), whether he was met (collector_met) and the rounds of the Partida nueva +
-## (ng_plus); an older save gets none, 0, false and 0. CARAVAN_VERSION (2.0.0) changes no field: it marks the saves that may hold the v2 (the caravan's zones, a companion, levels past 20).
+## (ng_plus); an older save gets none, 0, false and 0. CARAVAN_VERSION (2.0.0) changes no field: it marks the saves that may hold the v2 (the caravan's zones, a companion, levels past 20); its `story` may carry `finished_v2` and `v2_start` (2.3.0, without changing the version: an older save has neither and loads with false and []).
 
 const VERSION := 14
 ## First version with the story's fields.
@@ -486,12 +486,32 @@ static func _valid_story(data: Dictionary) -> bool:
 	if not (story is Dictionary and story.get("seen") is Array \
 			and story.get("finished") is bool):
 		return false
+	if story.has("finished_v2") and not story.finished_v2 is bool:
+		return false
+	if story.has("v2_start") and not _valid_v2_start(story.v2_start):
+		return false
 	var stats: Variant = data.get("stats")
 	if not stats is Dictionary:
 		return false
 	for key in ["battles", "steps", "gold"]:
 		var value: Variant = (stats as Dictionary).get(key)
 		if not (value is float and value >= 0.0):
+			return false
+	return true
+
+
+## The story's v2_start: [] or [play time, battles], two numbers >= 0 (2.3.0; older saves
+## don't have it).
+static func _valid_v2_start(value: Variant) -> bool:
+	if not value is Array:
+		return false
+	var start := value as Array
+	if start.is_empty():
+		return true
+	if start.size() != 2:
+		return false
+	for n: Variant in start:
+		if not (n is float and n >= 0.0):
 			return false
 	return true
 
@@ -547,6 +567,13 @@ static func is_finished(data: Dictionary) -> bool:
 ## True if the save's hero has left with the caravan (the v2): no Partida nueva + for it.
 static func is_caravan(data: Dictionary) -> bool:
 	return (data.get("flags", []) as Array).has(StoryState.CARAVAN_FLAG)
+
+
+## True if the save's v2 is finished: the Devorador beaten and the credits seen (no Partida
+## nueva + for it either: that is only for the v1).
+static func is_finished_v2(data: Dictionary) -> bool:
+	var story: Variant = data.get("story")
+	return is_caravan(data) and story is Dictionary and story.get("finished_v2", false) == true
 
 
 const IMPORT_NOT_SAVE := "Ese archivo no es una partida de Villaclaro."

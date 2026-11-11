@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+[ext_resource type="Script" path="res://scripts/battle/skill.gd" id="2_skill"]
+[ext_resource type="Resource" path="res://data/skills/mordisco.tres" id="3_mordisco"]
+[ext_resource type="Resource" path="res://data/enemies/devorador_portal_2.tres" id="4_fase2"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "devorador_portal"
+display_name = "Devorador del portal"
+max_hp = 1700
+hp = 1700
+max_mp = 120
+mp = 120
+attack = 96
+defense = 70
+speed = 30
+skills = Array[ExtResource("2_skill")]([ExtResource("3_mordisco")])
+exp_reward = 2400
+gold_reward = 0
+ai_weights = {
+"attack": 55,
+"mordisco": 35,
+"stagger": 10
+}
+next_phase = ExtResource("4_fase2")
+is_boss = true
