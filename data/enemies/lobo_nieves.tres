@@ -6,15 +6,15 @@
 script = ExtResource("1_combatant")
 id = "lobo_nieves"
 display_name = "Lobo de las nieves"
-max_hp = 130
-hp = 130
-attack = 66
+max_hp = 105
+hp = 105
+attack = 60
 defense = 44
 speed = 32
 map_roam = 2.0
 map_speed = 2.0
-exp_reward = 86
-gold_reward = 44
+exp_reward = 96
+gold_reward = 48
 ai_weights = {
 "attack": 85,
 "stagger": 15
