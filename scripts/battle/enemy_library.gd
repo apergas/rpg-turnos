@@ -48,6 +48,14 @@ const ENEMIES := {
 	"murcielago_hielo": preload("res://data/enemies/murcielago_hielo.tres"),
 	"cabra_montesa": preload("res://data/enemies/cabra_montesa.tres"),
 	"grifo_cumbre": preload("res://data/enemies/grifo_cumbre.tres"),
+	# The abandoned city (the v2, 2.3.0).
+	"armadura_hueca": preload("res://data/enemies/armadura_hueca.tres"),
+	"gargola": preload("res://data/enemies/gargola.tres"),
+	"sombra": preload("res://data/enemies/sombra.tres"),
+	"esqueleto_centinela": preload("res://data/enemies/esqueleto_centinela.tres"),
+	"rata_ruinas": preload("res://data/enemies/rata_ruinas.tres"),
+	"guardian_ciudad": preload("res://data/enemies/guardian_ciudad.tres"),
+	"devorador_portal": preload("res://data/enemies/devorador_portal.tres"),
 }
 ## Figure of each enemy id; any other id is a slime.
 const LOOKS := {
@@ -92,6 +100,13 @@ const LOOKS := {
 	"murcielago_hielo": BattleActor.Look.ICE_BAT,
 	"cabra_montesa": BattleActor.Look.GOAT,
 	"grifo_cumbre": BattleActor.Look.GRIFFIN,
+	"armadura_hueca": BattleActor.Look.HOLLOW_ARMOR,
+	"gargola": BattleActor.Look.GARGOYLE,
+	"sombra": BattleActor.Look.SHADOW,
+	"esqueleto_centinela": BattleActor.Look.SENTINEL,
+	"rata_ruinas": BattleActor.Look.RUIN_RAT,
+	"guardian_ciudad": BattleActor.Look.CITY_GUARDIAN,
+	"devorador_portal": BattleActor.Look.PORTAL_DEVOURER,
 	# The creatures that fight beside the hero (data in Allies, not in ENEMIES).
 	"gallina": BattleActor.Look.CHICKEN,
 	"lobezno": BattleActor.Look.WOLF_CUB,

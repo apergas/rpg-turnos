@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+[ext_resource type="Script" path="res://scripts/battle/skill.gd" id="2_skill"]
+[ext_resource type="Resource" path="res://data/skills/sello_guardian.tres" id="3_sello"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "guardian_ciudad"
+display_name = "Guardián de la ciudad"
+max_hp = 1800
+hp = 1800
+max_mp = 100
+mp = 100
+attack = 104
+defense = 66
+speed = 30
+skills = Array[ExtResource("2_skill")]([ExtResource("3_sello")])
+exp_reward = 1400
+gold_reward = 900
+ai_weights = {
+"attack": 50,
+"charge": 20,
+"sello_guardian": 20,
+"stagger": 10
+}
+weak = Array[String](["thunder"])
+key_item = "llave_portal"
+is_boss = true

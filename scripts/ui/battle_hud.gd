@@ -186,6 +186,11 @@ func add_enemy_bar(enemy_name := "") -> void:
 	_enemy_names.append(label)
 
 
+## Renames enemy i (a boss that rises in its next phase under another name).
+func set_enemy_name(i: int, enemy_name: String) -> void:
+	_enemy_names[i].text = enemy_name
+
+
 ## Shows the name of enemy index over its bar, and only that one (-1: none).
 func show_target_name(index: int) -> void:
 	for i in _enemy_names.size():

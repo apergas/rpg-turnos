@@ -414,7 +414,10 @@ func _play_event(event: Dictionary) -> void:
 			_shake_camera()
 			await _actor(event.target).play_phase()
 			_show_life(event.target, event.hp_left)
-			await _say("¡La niebla envuelve %s!" % _to(boss))
+			if event.target >= 0:
+				_hud.set_enemy_name(event.target, boss.display_name)
+			var line: String = event.get("line", "")
+			await _say(line if line != "" else "¡La niebla envuelve %s!" % _to(boss))
 			await _say("¡%s se levanta con %d PV!" % [_cap(_the(boss)), event.hp_left])
 		BattleEvent.REVIVE:
 			_sfx(SfxLibrary.HEAL)

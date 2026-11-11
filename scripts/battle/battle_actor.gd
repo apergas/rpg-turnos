@@ -17,7 +17,8 @@ enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPE
 	POISON_MUSHROOM, CAVE_MUSHROOM, CRYPT_BAT, FROST_SPECTER, COLLECTOR, BRENA, TADEO, ULMA, FROG,
 	SNAKE, MONKEY, TRAP_PLANT, TROPICAL_MUSHROOM, CARAVAN_CHIEF, HEALER, JAGUAR,
 	SCORPION, SAND_SLIME, VULTURE, SAND_GOLEM, MUMMY, CANTEEN, SAND_WORM, SNOW_WOLF, ICE_GOLEM,
-	SUMMIT_SPIRIT, ICE_BAT, GOAT, GRIFFIN }
+	SUMMIT_SPIRIT, ICE_BAT, GOAT, GRIFFIN, HOLLOW_ARMOR, GARGOYLE, SHADOW, SENTINEL, RUIN_RAT, CITY_GUARDIAN,
+	PORTAL_DEVOURER }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -44,6 +45,20 @@ const FOG_AURA_COLOR := Color(0.55, 0.25, 0.85)
 const ECHO_AURA_COLOR := Color(0.45, 0.85, 0.9)
 const FOG_AURA_ALPHA := 0.2
 const FOG_AURA_PHASE_ALPHA := 0.38
+## The Devorador del portal: the side profile of its mass (lathed around +Y), the share it
+## grows by in its second phase, its eyelid's angle half closed and open, and its mouths
+## round the mass ([degrees from the front, height]).
+const DEVOURER_PROFILE: Array[Vector2] = [
+	Vector2(0.0, 0.0), Vector2(1.25, 0.1), Vector2(1.45, 0.7), Vector2(1.3, 1.6),
+	Vector2(1.0, 2.4), Vector2(0.55, 3.0), Vector2(0.0, 3.2),
+]
+const DEVOURER_GROWTH := 1.25
+const EYELID_HALF := 0.0
+const EYELID_OPEN := 75.0
+const DEVOURER_LUMPS := [[180.0, 1.5, 0.7], [105.0, 2.3, 0.5], [-105.0, 2.3, 0.5],
+	[160.0, 0.45, 0.45], [-160.0, 0.45, 0.45], [60.0, 0.35, 0.35], [-60.0, 0.35, 0.35]]
+const DEVOURER_MOUTHS := [[38.0, 1.0], [-38.0, 1.0], [82.0, 1.9], [-82.0, 1.9],
+	[140.0, 1.2], [-140.0, 1.2]]
 ## KayKit characters are 2.47 units tall (helmet included); 0.65 makes the hero 1.6 m.
 const CHARACTER_SCALE := 0.65
 ## The AnimationPlayer inside a KayKit character scene.
@@ -733,6 +748,92 @@ const LOOKS := {
 		"scale": 1.4,
 		"top": 1.6,
 	},
+	# The abandoned city (the v2, 2.3.0). The Armadura hueca: the Knight with no head and no
+	# helmet, black, its sword and round shield, an ember glowing in its empty collar.
+	Look.HOLLOW_ARMOR: {
+		"scene": KNIGHT,
+		"scale": CHARACTER_SCALE * 1.05,
+		"top": 1.9,
+		"hide": [
+			"Rig/Skeleton3D/Knight_Head",
+			"Rig/Skeleton3D/head/Knight_Helmet",
+			"Rig/Skeleton3D/handslot_l/1H_Sword_Offhand",
+			"Rig/Skeleton3D/handslot_l/Badge_Shield",
+			"Rig/Skeleton3D/handslot_l/Rectangle_Shield",
+			"Rig/Skeleton3D/handslot_l/Spike_Shield",
+			"Rig/Skeleton3D/handslot_r/2H_Sword",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(0.32, 0.32, 0.38),
+		"neck_glow": Color(1.0, 0.3, 0.15),
+	},
+	Look.GARGOYLE: {
+		"color": Color(0.46, 0.44, 0.46),
+		"dark_color": Color(0.32, 0.3, 0.33),
+		"wing_color": Color(0.38, 0.36, 0.4),
+		"horn_color": Color(0.62, 0.58, 0.52),
+		"eye_color": Color(1.0, 0.25, 0.15),
+		"scale": 1.15,
+		"top": 2.1,
+		"flap_time": 0.5,
+	},
+	# The Sombra: the specter in black with a red aura.
+	Look.SHADOW: {
+		"color": Color(0.1, 0.07, 0.09),
+		"aura_color": Color(0.85, 0.1, 0.08),
+		"alpha": 0.8,
+		"eye_color": Color(1.0, 0.85, 0.75),
+		"scale": 1.1,
+		"top": 2.5,
+		"fly": 0.5,
+	},
+	# The Esqueleto centinela: the skeleton warrior, reddish.
+	Look.SENTINEL: {
+		"scene": SKELETON_WARRIOR,
+		"scale": CHARACTER_SCALE,
+		"top": 1.9,
+		"hide": [],
+		"anims": SKELETON_ANIMS,
+		"props": {RIGHT_HAND_BONE: SKELETON_BLADE, LEFT_HAND_BONE: SKELETON_SHIELD},
+		"tint": Color(0.95, 0.6, 0.52),
+	},
+	Look.RUIN_RAT: {
+		"color": Color(0.42, 0.36, 0.32),
+		"dark_color": Color(0.3, 0.25, 0.22),
+		"ear_color": Color(0.85, 0.6, 0.6),
+		"eye_color": Color(1.0, 0.2, 0.15),
+		"scale": 1.0,
+		"top": 1.1,
+	},
+	# The Guardián de la ciudad: the Knight at 1.8 times the size, in bronze, with its helmet
+	# and the two-handed sword.
+	# The Devorador del portal: a dark faceted mass with six mouths round a great eye.
+	Look.PORTAL_DEVOURER: {
+		"color": Color(0.13, 0.08, 0.15),
+		"dark_color": Color(0.07, 0.04, 0.09),
+		"lip_color": Color(0.45, 0.06, 0.1),
+		"tooth_color": Color(0.92, 0.88, 0.78),
+		"sclera_color": Color(0.95, 0.9, 0.85),
+		"iris_color": Color(0.95, 0.2, 0.1),
+		"glow_color": Color(1.0, 0.2, 0.1),
+		"scale": 0.9,
+		"top": 3.3,
+	},
+	Look.CITY_GUARDIAN: {
+		"scene": KNIGHT,
+		"scale": CHARACTER_SCALE * 1.8,
+		"top": 3.5,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/1H_Sword_Offhand",
+			"Rig/Skeleton3D/handslot_l/Badge_Shield",
+			"Rig/Skeleton3D/handslot_l/Rectangle_Shield",
+			"Rig/Skeleton3D/handslot_l/Round_Shield",
+			"Rig/Skeleton3D/handslot_l/Spike_Shield",
+			"Rig/Skeleton3D/handslot_r/1H_Sword",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(1.0, 0.82, 0.38),
+	},
 }
 
 ## Map only: how see-through a group's figure is while it can't start a battle.
@@ -770,6 +871,9 @@ var _hover: Node3D
 var _ghosts: Array = []
 ## Figures with an aura (the Señor de la Niebla, the Eco): its ball (null for the rest).
 var _aura: MeshInstance3D
+## Devourer only: the node that grows in its second phase and the pivot of its eyelid.
+var _devourer: Node3D
+var _eyelid: Node3D
 
 
 func _ready() -> void:
@@ -803,12 +907,18 @@ func _ready() -> void:
 		_build_golem(data)
 	elif look == Look.SPIDER:
 		_build_spider(data)
-	elif look in [Look.SPECTER, Look.FROST_SPECTER, Look.SUMMIT_SPIRIT]:
+	elif look in [Look.SPECTER, Look.FROST_SPECTER, Look.SUMMIT_SPIRIT, Look.SHADOW]:
 		_build_specter(data)
 	elif look == Look.GOAT:
 		_build_goat(data)
 	elif look == Look.GRIFFIN:
 		_build_griffin(data)
+	elif look == Look.GARGOYLE:
+		_build_gargoyle(data)
+	elif look == Look.RUIN_RAT:
+		_build_rat(data)
+	elif look == Look.PORTAL_DEVOURER:
+		_build_devourer(data)
 	elif look == Look.SCORPION:
 		_build_scorpion(data)
 	elif look == Look.SAND_WORM:
@@ -1115,6 +1225,9 @@ func play_appear() -> void:
 ## The fog envelops the Señor de la Niebla: a long purple glow with the spell
 ## animation while his aura swells and thickens (his second phase).
 func play_phase() -> void:
+	if look == Look.PORTAL_DEVOURER:
+		await _devourer_wakes()
+		return
 	_set_flash(true, FOG_AURA_COLOR)
 	var timer := _start("cast")
 	if _aura:
@@ -1167,6 +1280,14 @@ func _build_character(data: Dictionary) -> void:
 	var mesh_tints: Dictionary = data.get("mesh_tints", {})
 	for mesh_name: String in mesh_tints:
 		_tint_mesh(bones.get_node(mesh_name) as MeshInstance3D, mesh_tints[mesh_name])
+	if data.has("neck_glow"):
+		# The Armadura hueca: an ember where its head should be, on the head bone.
+		var slot := BoneAttachment3D.new()
+		slot.bone_name = "head"
+		bones.add_child(slot)
+		_add_mesh(slot, _sphere(0.13), data.neck_glow, Vector3(0, 0.0, 0))
+		var ember := (slot.get_child(-1) as MeshInstance3D).material_override as StandardMaterial3D
+		ember.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	if data.has("wrap_color"):
 		_add_mummy_wraps(bones, data.wrap_color)
 	if look == Look.HERO:
@@ -1469,6 +1590,164 @@ func _build_griffin(data: Dictionary) -> void:
 		_wings.append(pivot)
 
 
+## The Gárgola: a crouching beast of stone: a hunched body on four short legs, a horned head
+## with a wide snout and glowing red eyes, a pointed tail and two stone wings on pivots that
+## beat slowly (the bat's _wings, LOOKS "flap_time"), facing -Z. About 1.9 m tall at its
+## scale.
+func _build_gargoyle(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	_add_blob(root, WOLF_BODY_PROFILE, 5, data.color, Vector3(0, 0.55, 0.35),
+		Vector3(-70, 0, 0), Vector3(1.3, 1.1, 1.2))  # hunched body, chest up
+	for x in [-0.2, 0.2]:
+		for z in [-0.15, 0.35]:
+			_add_blob(root, LEG_PROFILE, 4, data.dark_color, Vector3(x, 0.0, z), Vector3.ZERO,
+				Vector3(1.3, 0.9, 1.3))
+		_add_mesh(root, _cone(0.05, 0.12), data.horn_color, Vector3(x, 0.03, -0.3))  # claws
+	_add_blob(root, WOLF_HEAD_PROFILE, 5, data.color, Vector3(0, 1.15, -0.25),
+		Vector3(-100, 0, 0), Vector3(1.2, 1.0, 1.1))  # head
+	for side in [-1.0, 1.0]:
+		_add_mesh(root, _sphere(0.05), data.eye_color, Vector3(side * 0.1, 1.24, -0.52))
+		var eye := (root.get_child(-1) as MeshInstance3D).material_override as StandardMaterial3D
+		eye.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_add_mesh(root, _cone(0.06, 0.32), data.horn_color, Vector3(side * 0.14, 1.42, -0.2))
+		(root.get_child(-1) as Node3D).rotation_degrees = Vector3(-25, 0, side * -20)  # horn
+		var pivot := Node3D.new()
+		pivot.position = Vector3(0.25 * side, 0.95, 0.4)
+		root.add_child(pivot)
+		var sail := PrismMesh.new()  # the stone wing: a pointed sail facing the camera
+		sail.size = Vector3(1.0, 0.85, 0.07)
+		sail.left_to_right = 0.5 + 0.5 * side
+		var spread := Node3D.new()
+		spread.rotation_degrees.z = 22.0 * side
+		pivot.add_child(spread)
+		_add_mesh(spread, sail, data.wing_color, Vector3(0.5 * side, 0.45, 0.0))
+		var bone := BoxMesh.new()  # the arm along the top edge
+		bone.size = Vector3(0.95, 0.09, 0.1)
+		_add_mesh(spread, bone, data.dark_color, Vector3(0.5 * side, 0.3, 0.0))
+		(spread.get_child(-1) as Node3D).rotation_degrees.z = 28.0 * side
+		_add_mesh(spread, _cone(0.05, 0.3), data.horn_color, Vector3(1.0 * side, 0.9, 0.0))  # claw
+		_wings.append(pivot)
+	_add_mesh(root, _cone(0.05, 0.6), data.dark_color, Vector3(0, 0.45, 0.95))  # tail
+	(root.get_child(-1) as Node3D).rotation_degrees.x = 70.0
+
+
+## The Rata de las ruinas: a big rat: a low faceted body, a pointed head with pink ears and
+## red eyes, four short legs and a long thin tail curving behind, facing -Z. About 0.8 m tall
+## at its scale.
+func _build_rat(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	_add_blob(root, WOLF_BODY_PROFILE, 6, data.color, Vector3(0, 0.38, 0.4),
+		Vector3(-90, 0, 0), Vector3(1.05, 0.85, 0.95))  # body
+	_add_blob(root, WOLF_HEAD_PROFILE, 5, data.color, Vector3(0, 0.45, -0.38),
+		Vector3(-95, 0, 0), Vector3(0.8, 0.85, 0.95))  # pointed head
+	_add_mesh(root, _sphere(0.035), data.ear_color, Vector3(0, 0.43, -0.92))  # nose
+	for side in [-1.0, 1.0]:
+		_add_mesh(root, _sphere(0.1), data.ear_color, Vector3(side * 0.14, 0.68, -0.38))
+		(root.get_child(-1) as Node3D).scale = Vector3(1.0, 1.0, 0.35)  # ear
+		_add_mesh(root, _sphere(0.035), data.eye_color, Vector3(side * 0.09, 0.56, -0.66))
+		for z in [-0.15, 0.4]:
+			_add_blob(root, LEG_PROFILE, 4, data.dark_color, Vector3(side * 0.15, 0.0, z),
+				Vector3.ZERO, Vector3(0.9, 0.55, 0.9))
+	for i in 6:  # the tail: thin rods curving back and up
+		var a := i * 0.25
+		_add_mesh(root, _cylinder(0.025 - i * 0.003, 0.22), data.ear_color.darkened(0.2),
+			Vector3(0, 0.3 + sin(a) * 0.25, 0.95 + i * 0.18))
+		(root.get_child(-1) as Node3D).rotation_degrees.x = 80.0 - i * 12.0
+
+
+## The Devorador del portal: a dark faceted mass about 3.2 m tall with lumps on it, six
+## mouths round it (dark red lips, black throats and white teeth, each kind merged into one
+## mesh), tentacles at its foot, and in front a great eye (white, a red iris and a slit) under
+## a heavy lid, half closed until its second phase; a red light glows in front of it. Faces -Z.
+func _build_devourer(data: Dictionary) -> void:
+	_devourer = Node3D.new()
+	_devourer.scale = Vector3.ONE * data.scale
+	_body.add_child(_devourer)
+	_add_mesh(_devourer, LowPoly.blob(DEVOURER_PROFILE, 7), data.color, Vector3.ZERO, 0.9)
+	var lumps: Array[Transform3D] = []
+	for lump: Array in DEVOURER_LUMPS:  # [degrees from the front, height, size]
+		var a := deg_to_rad(lump[0])
+		lumps.append(Transform3D(Basis.from_scale(Vector3.ONE * lump[2]),
+			Vector3(sin(a) * 1.05, lump[1], -cos(a) * 1.05)))
+	_add_mesh(_devourer, _merged(_sphere(1.0), lumps), data.dark_color, Vector3.ZERO, 0.9)
+	var lips: Array[Transform3D] = []
+	var throats: Array[Transform3D] = []
+	var teeth: Array[Transform3D] = []
+	for mouth: Array in DEVOURER_MOUTHS:
+		var a := deg_to_rad(mouth[0])
+		var out := Vector3(sin(a), 0, -cos(a))
+		var frame := Transform3D(Basis.looking_at(out, Vector3.UP),
+			out * 1.3 + Vector3(0, mouth[1], 0))
+		lips.append(frame * Transform3D(Basis.from_scale(Vector3(0.55, 0.26, 0.2)),
+			Vector3.ZERO))
+		throats.append(frame * Transform3D(Basis.from_scale(Vector3(0.45, 0.17, 0.12)),
+			Vector3(0, 0, -0.1)))
+		for x in [-0.3, -0.1, 0.1, 0.3]:
+			teeth.append(frame * Transform3D(Basis(Vector3.RIGHT, PI), Vector3(x, 0.14, -0.2)))
+			teeth.append(frame * Transform3D(Basis(), Vector3(x + 0.1, -0.14, -0.2)))
+	_add_mesh(_devourer, _merged(_sphere(1.0), lips), data.lip_color, Vector3.ZERO, 0.7)
+	_add_mesh(_devourer, _merged(_sphere(1.0), throats), Color(0.02, 0.0, 0.02), Vector3.ZERO)
+	_add_mesh(_devourer, _merged(_cone(0.06, 0.2), teeth), data.tooth_color, Vector3.ZERO, 0.5)
+	var tentacles: Array[Transform3D] = []
+	for i in 6:
+		var a := TAU * i / 6.0 + 0.3
+		var out := Vector3(sin(a), 0, -cos(a))
+		tentacles.append(Transform3D(Basis.looking_at(out, Vector3.UP)
+			* Basis(Vector3.RIGHT, deg_to_rad(-80.0)), out * 1.45 + Vector3(0, 0.15, 0)))
+	_add_mesh(_devourer, _merged(_cone(0.26, 1.5), tentacles), data.dark_color, Vector3.ZERO)
+	var crown: Array[Transform3D] = []  # a crown of horns on top of the mass
+	for i in 6:
+		var a := TAU * i / 6.0
+		var out := Vector3(sin(a), 0, -cos(a))
+		crown.append(Transform3D(Basis.looking_at(out, Vector3.UP)
+			* Basis(Vector3.RIGHT, deg_to_rad(-65.0)), out * 0.4 + Vector3(0, 3.0, 0)))
+	_add_mesh(_devourer, _merged(_cone(0.16, 0.9), crown), data.dark_color, Vector3.ZERO)
+	var eye := Vector3(0, 1.75, -1.1)
+	_add_mesh(_devourer, _sphere(0.62), data.sclera_color, eye, 0.4)
+	_add_mesh(_devourer, _sphere(0.33), data.iris_color, eye + Vector3(0, 0, -0.48))
+	var iris := (_devourer.get_child(-1) as MeshInstance3D)
+	(iris.material_override as StandardMaterial3D).shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	iris.scale = Vector3(1.0, 1.0, 0.4)
+	_add_mesh(_devourer, _sphere(0.13), Color(0.02, 0.0, 0.02), eye + Vector3(0, 0, -0.56))
+	(_devourer.get_child(-1) as Node3D).scale = Vector3(0.4, 1.0, 0.4)  # the slit
+	_eyelid = Node3D.new()
+	_eyelid.position = eye
+	_devourer.add_child(_eyelid)
+	_add_mesh(_eyelid, _hemisphere(0.7, 0.7), data.color, Vector3.ZERO, 0.9)
+	_eyelid.rotation_degrees.x = EYELID_HALF
+	var glow := OmniLight3D.new()
+	glow.light_color = data.glow_color
+	glow.light_energy = 1.2
+	glow.omni_range = 5.0
+	glow.position = Vector3(0, 1.5, -2.2)
+	_devourer.add_child(glow)
+
+
+## mesh repeated at each of xforms, merged into one mesh (one draw call).
+static func _merged(mesh: Mesh, xforms: Array[Transform3D]) -> ArrayMesh:
+	var tool := SurfaceTool.new()
+	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for xform in xforms:
+		tool.append_from(mesh, 0, xform)
+	return tool.commit()
+
+
+## The Devorador wakes (its second phase): a red flash while its eye opens and the whole mass
+## grows by DEVOURER_GROWTH; its bar goes up with it.
+func _devourer_wakes() -> void:
+	_set_flash(true, LOOKS[look].glow_color)
+	var t := create_tween().set_parallel()
+	t.tween_property(_devourer, "scale", _devourer.scale * DEVOURER_GROWTH, 0.9) 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_property(_eyelid, "rotation_degrees:x", EYELID_OPEN, 0.9)
+	await t.finished
+	_top *= 1.1  # the bar rises with it, still on screen
+	_set_flash(false)
+
+
 ## A poison dart frog: a squat faceted body, a yellow belly, black spots, two big eyes on
 ## top and four bent legs, facing -Z. About 0.55 m tall before the look's scale (1.4); it hops like the slimes.
 func _build_frog(data: Dictionary) -> void:
@@ -1747,7 +2026,8 @@ func _build_specter(data: Dictionary) -> void:
 	_add_ghost(_hover, _sphere(0.5), data.aura_color, AURA_ALPHA, Vector3(0, 0.62, 0),
 		Vector3(1.5, 1.7, 1.5))
 	for x in [-0.12, 0.12]:
-		_add_mesh(_hover, _sphere(0.07), Color(0.05, 0.05, 0.12), Vector3(x, 0.8, -0.34))  # eye
+		_add_mesh(_hover, _sphere(0.07), data.get("eye_color", Color(0.05, 0.05, 0.12)),
+			Vector3(x, 0.8, -0.34))  # eye
 	_add_mesh(_hover, _sphere(0.06), Color(0.05, 0.05, 0.12), Vector3(0, 0.6, -0.36))  # mouth
 
 
@@ -1766,7 +2046,8 @@ func _start_idle() -> void:
 	else:
 		var gentle := look in [Look.WOLF, Look.MUD_GOLEM, Look.STONE_GOLEM, Look.SPIDER,
 			Look.CAT, Look.WOLF_CUB, Look.MINI_GOLEM, Look.SNAKE, Look.MONKEY, Look.JAGUAR,
-			Look.SAND_GOLEM, Look.SCORPION, Look.SNOW_WOLF, Look.ICE_GOLEM, Look.GOAT]
+			Look.SAND_GOLEM, Look.SCORPION, Look.SNOW_WOLF, Look.ICE_GOLEM, Look.GOAT, Look.RUIN_RAT,
+			Look.PORTAL_DEVOURER]
 		_start_bounce(0.4 if gentle else 1.0)
 
 
