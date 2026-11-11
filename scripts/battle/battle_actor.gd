@@ -150,6 +150,8 @@ const JAW_OPEN := 0.95
 ## The hero as a person, not a suit of steel: the KayKit Knight's helmet is hidden and its
 ## armor meshes (one grey palette cell) are tinted bare arms, a blue tunic and leather
 ## legs. Multiplied over a grey that peaks near 0.42 linear, hence the values above 1.
+## The map hero's rim of light (set_map_readable()): one material for him, as an overlay.
+const RIM_SHADER := preload("res://shaders/hero_rim.gdshader")
 const HERO_SKIN := Color(1.75, 1.28, 1.02)
 ## The Knight's atlas with the hair cell brown: the head's hair and skin share one mesh.
 const HERO_HEAD_TEXTURE := preload("res://assets/characters/hero_head_texture.png")
@@ -852,6 +854,9 @@ var _materials: Array[StandardMaterial3D] = []
 var _flash: StandardMaterial3D
 var _highlight: StandardMaterial3D
 var _highlighted := false
+## The map hero only: the overlay every mesh shows when no flash or highlight is on (null
+## for every other figure, and in battle).
+var _map_overlay: ShaderMaterial
 ## Characters only; null for slimes.
 var _anim: AnimationPlayer
 var _anims: Dictionary = {}
@@ -975,6 +980,27 @@ func set_faded(on: bool) -> void:
 		mi.transparency = FADED_TRANSPARENCY if on else 0.0
 
 
+## Map hero only (Player): a soft rim of light and a faint light of his own on every mesh
+## (RIM_SHADER through material_overlay, so the Knight's shared materials never change), so
+## he reads on a tree's shadow. Never in battle, never on the companions or the figures.
+func set_map_readable(on: bool) -> void:
+	if on and _map_overlay == null:
+		_map_overlay = ShaderMaterial.new()
+		_map_overlay.shader = RIM_SHADER
+	elif not on:
+		_map_overlay = null
+	_apply_map_overlay()
+
+
+## Puts the map overlay on every mesh of the figure, the hidden ones too (hand meshes,
+## helmet, horns), unless a flash or the highlight is showing.
+func _apply_map_overlay() -> void:
+	for node in _body.find_children("*", "MeshInstance3D", true, false):
+		var mi := node as MeshInstance3D
+		if mi.material_overlay != _flash or _flash == null:
+			mi.material_overlay = _map_overlay
+
+
 ## Map only: true for the figures that hop as they walk (the slimes).
 func hops() -> bool:
 	return look in [Look.SLIME, Look.RED_SLIME, Look.METAL_SLIME, Look.SAND_SLIME]
@@ -1036,6 +1062,9 @@ func set_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> voi
 		for i in helmet.mesh.get_surface_count():
 			helmet.set_surface_override_material(i, null)
 		_tint_mesh(helmet, Equipment.helmet_tint(helmet_id))
+	# The hand meshes, the helmet and the horns may have changed: the rim goes on them again.
+	if _map_overlay != null:
+		_apply_map_overlay()
 
 
 ## The two horns of the Yelmo de bruma, built once under the helmet mesh. Their meshes
@@ -2176,7 +2205,7 @@ static func _tint_mesh(mi: MeshInstance3D, color: Color) -> void:
 func _set_flash(on: bool, color := Color.WHITE) -> void:
 	_flash.albedo_color = Color(color, FLASH_ALPHA)
 	for mi in _meshes:
-		mi.material_overlay = _flash if on else (_highlight if _highlighted else null)
+		mi.material_overlay = _flash if on else (_highlight if _highlighted else _map_overlay)
 
 
 ## A soft glow over the figure while the player aims at it; a flash still shows over it.
@@ -2184,7 +2213,7 @@ func set_highlight(on: bool) -> void:
 	_highlighted = on
 	for mi in _meshes:
 		if mi.material_overlay != _flash:
-			mi.material_overlay = _highlight if on else null
+			mi.material_overlay = _highlight if on else _map_overlay
 
 
 func _set_alpha(alpha: float) -> void:
