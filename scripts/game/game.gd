@@ -895,8 +895,15 @@ func _autoplay_restock() -> void:
 	for npc: Dictionary in _zone.npcs:
 		if npc.kind == "shop":
 			await _on_shop(npc.id)
+	# On a caravan game the figures that offer a quest ("!") are visited too, or autoplay
+	# would never take the v2's quests; a v1 game keeps the reports only.
+	var marks := {}
+	if state.in_caravan():
+		marks = state.quests.markers(_zone.id, state.inventory, state.world_flags)
 	for i in _zone.npcs.size():
-		if _zone.npcs[i].name in state.quests.reports_here(_zone.id, state.inventory):
+		var npc_name: String = _zone.npcs[i].name
+		if npc_name in state.quests.reports_here(_zone.id, state.inventory) \
+				or marks.get(npc_name, "") == QuestLog.NEW_MARK:
 			await _on_npc(i)
 
 

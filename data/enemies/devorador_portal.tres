@@ -9,11 +9,11 @@
 script = ExtResource("1_combatant")
 id = "devorador_portal"
 display_name = "Devorador del portal"
-max_hp = 2000
-hp = 2000
+max_hp = 1700
+hp = 1700
 max_mp = 120
 mp = 120
-attack = 112
+attack = 96
 defense = 70
 speed = 30
 skills = Array[ExtResource("2_skill")]([ExtResource("3_mordisco")])
