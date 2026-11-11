@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "cabra_montesa"
+display_name = "Cabra montesa"
+female = true
+max_hp = 150
+hp = 150
+attack = 68
+defense = 48
+speed = 26
+map_roam = 2.0
+map_speed = 1.8
+exp_reward = 90
+gold_reward = 46
+ai_weights = {
+"attack": 85,
+"stagger": 15
+}
+weak = Array[String](["thunder"])
+drops = {
+"pocion_grande": 0.1
+}
+attack_status = "stun"
+attack_status_chance = 0.25

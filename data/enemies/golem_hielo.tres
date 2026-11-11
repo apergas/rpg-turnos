@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "golem_hielo"
+display_name = "Golem de hielo"
+max_hp = 180
+hp = 180
+attack = 72
+defense = 56
+speed = 8
+exp_reward = 100
+gold_reward = 50
+ai_weights = {
+"attack": 65,
+"charge": 25,
+"stagger": 10
+}
+weak = Array[String](["fire"])
+resist = Array[String](["ice"])
+drops = {
+"cristal_hielo": 0.4
+}

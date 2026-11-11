@@ -16,7 +16,8 @@ enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPE
 	CHICKEN, WOLF_CUB, MINI_GOLEM, LOYAL_SKELETON, TAMER, FOG_ECHO, RED_SLIME,
 	POISON_MUSHROOM, CAVE_MUSHROOM, CRYPT_BAT, FROST_SPECTER, COLLECTOR, BRENA, TADEO, ULMA, FROG,
 	SNAKE, MONKEY, TRAP_PLANT, TROPICAL_MUSHROOM, CARAVAN_CHIEF, HEALER, JAGUAR,
-	SCORPION, SAND_SLIME, VULTURE, SAND_GOLEM, MUMMY, CANTEEN, SAND_WORM }
+	SCORPION, SAND_SLIME, VULTURE, SAND_GOLEM, MUMMY, CANTEEN, SAND_WORM, SNOW_WOLF, ICE_GOLEM,
+	SUMMIT_SPIRIT, ICE_BAT, GOAT }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -666,6 +667,45 @@ const LOOKS := {
 		"scale": 1.6,
 		"top": 3.4,
 	},
+	# The mountain (the v2, 2.2.0).
+	Look.SNOW_WOLF: {
+		"color": Color(0.9, 0.92, 0.95),
+		"dark_color": Color(0.66, 0.7, 0.78),
+		"eye_color": Color(0.35, 0.75, 1.0),
+		"scale": 1.15,
+		"top": 1.5,
+	},
+	Look.ICE_GOLEM: {
+		"color": Color(0.6, 0.8, 0.95),
+		"dark_color": Color(0.4, 0.58, 0.78),
+		"eye_color": Color(0.2, 0.45, 1.0),
+		"scale": 1.3,
+		"top": 2.6,
+	},
+	# The Espíritu de la cumbre: the specter, pure white and bigger, with a pale gold aura
+	# (the Espectro de escarcha is the white and blue one).
+	Look.SUMMIT_SPIRIT: {
+		"color": Color(0.97, 0.97, 1.0),
+		"aura_color": Color(1.0, 0.88, 0.55),
+		"scale": 1.2,
+		"top": 2.7,
+		"fly": 0.6,
+	},
+	Look.ICE_BAT: {
+		"color": Color(0.45, 0.62, 0.85),
+		"wing_color": Color(0.3, 0.45, 0.7),
+		"top": 2.0,
+		"fly": 1.1,
+	},
+	Look.GOAT: {
+		"color": Color(0.55, 0.47, 0.38),
+		"dark_color": Color(0.36, 0.3, 0.24),
+		"belly_color": Color(0.9, 0.86, 0.78),
+		"horn_color": Color(0.82, 0.76, 0.62),
+		"eye_color": Color(0.95, 0.75, 0.2),
+		"scale": 1.1,
+		"top": 1.7,
+	},
 	Look.TRAP_PLANT: {
 		"stem_color": Color(0.1, 0.42, 0.12),
 		"leaf_color": Color(0.12, 0.6, 0.18),
@@ -726,12 +766,12 @@ func _ready() -> void:
 	_top = data.top
 	if data.has("scene"):
 		_build_character(data)
-	elif look in [Look.BAT, Look.CRYPT_BAT, Look.VULTURE]:
+	elif look in [Look.BAT, Look.CRYPT_BAT, Look.VULTURE, Look.ICE_BAT]:
 		_build_bat(data)
 	elif look in [Look.MUSHROOM, Look.POISON_MUSHROOM, Look.CAVE_MUSHROOM,
 			Look.TROPICAL_MUSHROOM]:
 		_build_mushroom(data)
-	elif look in [Look.WOLF, Look.WOLF_CUB, Look.JAGUAR]:
+	elif look in [Look.WOLF, Look.WOLF_CUB, Look.JAGUAR, Look.SNOW_WOLF]:
 		_build_wolf(data)
 	elif look == Look.CHICKEN:
 		_build_chicken(data)
@@ -745,12 +785,15 @@ func _ready() -> void:
 		_build_snake(data)
 	elif look == Look.MONKEY:
 		_build_monkey(data)
-	elif look in [Look.MUD_GOLEM, Look.STONE_GOLEM, Look.MINI_GOLEM, Look.SAND_GOLEM]:
+	elif look in [Look.MUD_GOLEM, Look.STONE_GOLEM, Look.MINI_GOLEM, Look.SAND_GOLEM,
+			Look.ICE_GOLEM]:
 		_build_golem(data)
 	elif look == Look.SPIDER:
 		_build_spider(data)
-	elif look in [Look.SPECTER, Look.FROST_SPECTER]:
+	elif look in [Look.SPECTER, Look.FROST_SPECTER, Look.SUMMIT_SPIRIT]:
 		_build_specter(data)
+	elif look == Look.GOAT:
+		_build_goat(data)
 	elif look == Look.SCORPION:
 		_build_scorpion(data)
 	elif look == Look.SAND_WORM:
@@ -1335,6 +1378,38 @@ func _build_wolf(data: Dictionary) -> void:
 			mat.emission = data.spot_color * 0.6
 
 
+## A mountain goat: a stocky body on four thin legs, a wedge head tilted down with a pale
+## muzzle and a beard, and two thick horns curling back and down, facing -Z. About 1.5 m
+## tall at its scale.
+func _build_goat(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	_add_blob(root, WOLF_BODY_PROFILE, 6, data.color, Vector3(0, 0.7, 0.45),
+		Vector3(-90, 0, 0), Vector3(1.15, 1.0, 1.1))  # body
+	_add_mesh(root, _sphere(0.2), data.belly_color, Vector3(0, 0.58, 0.05))  # belly
+	_add_mesh(root, _cylinder(0.14, 0.5), data.color, Vector3(0, 1.0, -0.32))  # neck
+	(root.get_child(-1) as Node3D).rotation_degrees.x = -35.0
+	_add_blob(root, WOLF_HEAD_PROFILE, 5, data.color, Vector3(0, 1.12, -0.5),
+		Vector3(-115, 0, 0), Vector3(0.9, 0.9, 0.9))  # head, tilted down
+	_add_mesh(root, _sphere(0.08), data.belly_color, Vector3(0, 0.98, -0.84))  # muzzle
+	_add_mesh(root, _cone(0.05, 0.18), data.belly_color, Vector3(0, 0.84, -0.78))  # beard
+	(root.get_child(-1) as Node3D).rotation_degrees.x = 180.0
+	for side in [-1.0, 1.0]:
+		_add_mesh(root, _sphere(0.035), data.eye_color, Vector3(side * 0.1, 1.17, -0.68))
+		for i in 7:  # a horn: shrinking balls rising from the head, curling back and down
+			var t := i / 6.0
+			_add_mesh(root, _sphere(0.085 - t * 0.05), data.horn_color,
+				Vector3(side * (0.1 + t * 0.08), 1.2 + 0.2 * sin(t * PI) - 0.1 * t,
+					-0.5 + t * 0.55))
+	for x in [-0.16, 0.16]:
+		for z in [-0.25, 0.35]:
+			_add_blob(root, LEG_PROFILE, 4, data.dark_color, Vector3(x, 0.0, z), Vector3.ZERO,
+				Vector3(0.8, 1.15, 0.8))
+	_add_mesh(root, _cone(0.05, 0.15), data.color, Vector3(0, 0.85, 0.72))  # tail
+	(root.get_child(-1) as Node3D).rotation_degrees.x = 40.0
+
+
 ## A poison dart frog: a squat faceted body, a yellow belly, black spots, two big eyes on
 ## top and four bent legs, facing -Z. About 0.55 m tall before the look's scale (1.4); it hops like the slimes.
 func _build_frog(data: Dictionary) -> void:
@@ -1631,7 +1706,7 @@ func _start_idle() -> void:
 	else:
 		var gentle := look in [Look.WOLF, Look.MUD_GOLEM, Look.STONE_GOLEM, Look.SPIDER,
 			Look.CAT, Look.WOLF_CUB, Look.MINI_GOLEM, Look.SNAKE, Look.MONKEY, Look.JAGUAR,
-			Look.SAND_GOLEM, Look.SCORPION]
+			Look.SAND_GOLEM, Look.SCORPION, Look.SNOW_WOLF, Look.ICE_GOLEM, Look.GOAT]
 		_start_bounce(0.4 if gentle else 1.0)
 
 
