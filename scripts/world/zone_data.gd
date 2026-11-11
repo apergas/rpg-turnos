@@ -13,7 +13,7 @@ class_name ZoneData extends Resource
 
 ## Every zone, in world order (save validation and --autoplay-zone check against it).
 const IDS: Array[String] = ["pradera", "bosque", "mina_1", "mina_2", "mina_3",
-	"castillo_patio", "castillo_trono"]
+	"castillo_patio", "castillo_trono", "jungla"]
 ## Side of a dungeon cell, in metres.
 const CELL := 4.0
 ## Dungeon cells: rock (a wall in a castle), floor, stairs up and down, chest, lever,
