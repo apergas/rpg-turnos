@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="Cutscene" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/cutscene.gd" id="1_cutscene"]
+
+[resource]
+script = ExtResource("1_cutscene")
+id = "caravana_llega"
+steps = [
+["wait", 0.3],
+["camera_to", Vector3(0, 0, -25), 14.0],
+["say", "", ["Por el camino del norte, ya sin niebla, llega una caravana. Un hombre de barba gris se acerca al pueblo."]],
+["flag", "caravana_vista"],
+["camera_back"],
+["approach", "Jefe de caravana", "hero", 1.8],
+["face", "hero", "Jefe de caravana"],
+["say", "Jefe de caravana", ["¿Eres {nombre}? Hasta en el camino se habla de quien levantó la niebla.", "La niebla escondía algo más: un camino viejo hacia el norte, a través de la jungla, el desierto y las montañas.", "Al final de ese camino hay un portal. Algo lo guarda, y la caravana sola no pasará.", "Hemos dejado las carretas en el camino del norte. Si te unes a nosotros, avísame."]],
+["move", "Jefe de caravana", Vector3(-1.2, 0, -25.4)]
+]

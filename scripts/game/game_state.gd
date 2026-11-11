@@ -272,6 +272,23 @@ func sync_level_cap() -> void:
 	hero.level_cap = level_cap()
 
 
+## The caravan (the v2) comes to Villaclaro once the v1 is over: the ending's credits seen,
+## a first round (no Partida nueva +), and the hero has not left with it yet.
+func can_meet_caravan() -> bool:
+	return story.finished and ng_plus == 0 and not in_caravan()
+
+
+## The hero joins the caravan: the v1's creature stays behind, an open portal closes and the
+## caravan is the safe place from now on (Ala de viaje, defeat). The companion comes later.
+func leave_for_caravan() -> void:
+	world_flags[StoryState.CARAVAN_FLAG] = true
+	ally_id = ""
+	close_portal()
+	town_zone = "caravana"
+	zone_id = "caravana"
+	sync_level_cap()
+
+
 ## True once the hero has left Villaclaro with the caravan (the v2).
 func in_caravan() -> bool:
 	return has_flag(StoryState.CARAVAN_FLAG)

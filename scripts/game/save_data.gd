@@ -497,7 +497,13 @@ static func summary_line(data: Dictionary) -> String:
 ## True if the save's game is finished (the Señor de la Niebla beaten: GameState.is_finished()):
 ## the title then offers the Partida nueva +.
 static func is_finished(data: Dictionary) -> bool:
-	return int(data.version) >= 4 and (data.get("flags", []) as Array).has(GameState.FINAL_BOSS)
+	var flags: Array = data.get("flags", [])
+	return int(data.version) >= 4 and flags.has(GameState.FINAL_BOSS) and not is_caravan(data)
+
+
+## True if the save's hero has left with the caravan (the v2): no Partida nueva + for it.
+static func is_caravan(data: Dictionary) -> bool:
+	return (data.get("flags", []) as Array).has(StoryState.CARAVAN_FLAG)
 
 
 const IMPORT_NOT_SAVE := "Ese archivo no es una partida de Villaclaro."

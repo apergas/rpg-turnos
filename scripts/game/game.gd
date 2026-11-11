@@ -83,6 +83,10 @@ const CUTSCENE_PATH := "res://data/cutscenes/%s.tres"
 const AUTHOR := "apergas"
 const FADE_TIME := 0.3
 const TOUCH_HINT := "Toca el suelo para ir allí, o arrastra el dedo para andar."
+## The v2's Jefe de caravana: in Villaclaro once the caravan has come, then in the Caravana.
+const CARAVAN_CHIEF := "Jefe de caravana"
+const JOIN_QUESTION := "Cuando partamos, no volverás por aquí en mucho tiempo. ¿Te unes a la caravana?"
+const LEAVE_QUESTION := "No podrás volver a Villaclaro, ni al bosque, la mina o el castillo. Las misiones que no hayas cumplido se quedan sin hacer."
 const REPEL_END_NOTICE := "El incienso se ha consumido."
 const HEAL_LINE := "Descansas un momento. PV y PM recuperados."
 const SAVED_NOTICE := "Partida guardada."
@@ -883,6 +887,9 @@ func _check_village_scene() -> void:
 	if _busy or not _world.in_village():
 		return
 	var scene := state.story.scene_on_village(_zone.id)
+	if scene == "" and _zone.id == "pradera" and state.can_meet_caravan() \
+			and not state.story.has_seen("caravana_llega"):
+		scene = "caravana_llega"
 	if scene == "":
 		return
 	_set_busy(true)
@@ -977,6 +984,7 @@ func _scene_travel(zone_id: String, entry_id: String) -> World:
 func _scene_flag(flag: String) -> void:
 	state.world_flags[flag] = true
 	_world.set_world_flags(state.world_flags)
+	_refresh_status()  # a figure may come with the flag (the Jefe de caravana)
 
 
 ## The old woman always heals; what she says and gives comes from the quest.
@@ -1025,6 +1033,11 @@ func _on_npc(index: int) -> void:
 		await _talk_to_collector()
 		_set_busy(false)
 		return
+	if figure == CARAVAN_CHIEF and _zone.id == "pradera":
+		await _ask_departure()
+		_set_busy(false)
+		_check_village_scene()  # the Caravana's first visit, if the hero left
+		return
 	var talk := state.quests.talk(state, _zone.id, figure)
 	var said: Array = talk.get("lines", _world.npc_lines(index, state.chapter()))
 	var lines: Array[String] = []
@@ -1034,6 +1047,22 @@ func _on_npc(index: int) -> void:
 	if not talk.is_empty():
 		_after_quest_talk(talk.done)
 	_set_busy(false)
+
+
+## The Jefe de caravana in Villaclaro: two questions (focus on the answer that changes
+## nothing), then the farewell, the v1 left behind and the Caravana built under black.
+func _ask_departure() -> void:
+	if await _world.ask(JOIN_QUESTION, ["Sí", "No"], 1) != 0:
+		return
+	if await _world.ask(LEAVE_QUESTION, ["Partir", "Aún no"], 1) != 0:
+		return
+	await _play_scene("caravana_parte")  # ends under black
+	state.leave_for_caravan()
+	_switch_zone("caravana", "")
+	_play_map_music()
+	await _fade_to(0.0)
+	await _world.freeze(false)
+	_autosave(false)
 
 
 ## The Coleccionista (Medals.talk()): every prize the medals reach, at once, with a sound;
