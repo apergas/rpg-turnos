@@ -3,7 +3,9 @@ class_name SlotList extends VBoxContainer
 ## has a row per slot: "Ranura n" and, under it, SaveData.summary_line() of its save
 ## (" · terminada" once the game is finished), "Vacía" or "Partida dañada". LOAD
 ## (Continuar) only lets usable saves be picked; NEW (Nueva partida) takes any slot and
-## asks first, focus on "No", when it holds a usable save. On a finished game (SaveData.is_finished()) LOAD opens a page with "Continuar" and "Partida nueva +", which asks first, focus on "No", and emits ng_plus_chosen(slot). Emits chosen(slot) once a slot is
+## asks first, focus on "No", when it holds a usable save. On a finished game
+## (SaveData.is_finished()) LOAD opens a page with "Continuar" and "Partida nueva +", which asks
+## first, focus on "No", and emits ng_plus_chosen(slot). Emits chosen(slot) once a slot is
 ## settled and closed on Volver. back() is what Esc and a tap outside do. MANAGE (the title's
 ## Opciones, Exportar o importar partida) opens a page per slot with Exportar and Importar,
 ## and emits changed when an import filled the slot.

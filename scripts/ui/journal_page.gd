@@ -1,7 +1,8 @@
 class_name JournalPage extends VBoxContainer
 ## The Diario of the pause menu: "Qué hacer ahora" (the story's next step), the missions in
 ## progress with what each one asks, the missions finished and the Colección (story, missions,
-## bestiary, families, chests and small medals, each count on its own line). Only reads a GameState: call
+## bestiary, families, chests and small medals, each count on its own line). Only reads a GameState:
+## call
 ## fill() each time it opens.
 
 ## A little smaller than the other pages: seven missions must fit a 720 p window.

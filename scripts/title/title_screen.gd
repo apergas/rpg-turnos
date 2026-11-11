@@ -6,7 +6,8 @@ class_name TitleScreen extends Node
 ## game first asks the hero's name (NameEntry, over the meadow). When the Game emits
 ## quit_to_title it frees it and shows the title again. There are three save slots
 ## (SaveStore, SlotList): "Continuar" opens the list and only lets usable saves be picked
-## (it is disabled when none is; a finished one offers "Continuar" or a Partida nueva + on the same slot); "Nueva partida" goes straight to the name when every slot is
+## (it is disabled when none is; a finished one offers "Continuar" or a Partida nueva + on the same
+## slot); "Nueva partida" goes straight to the name when every slot is
 ## empty (slot 1), else asks for a slot and asks again before replacing a save that works.
 ## The old single save.json moves to slot 1 the first time (SaveStore.migrate_legacy()).
 ## With `-- --autoplay` the name entry types AUTOPLAY_NAME by itself and the new game
