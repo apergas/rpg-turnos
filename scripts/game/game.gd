@@ -129,7 +129,7 @@ const MEDAL_ZONE_TIME := 300.0
 const NG_PLUS_START := "ngplus"
 ## The autoplay starts that play the v2: only they answer the Jefe de caravana's questions
 ## with Sí (every other run, the finished-game ones included, stays in the v1).
-const V2_STARTS := ["caravana", "jungla", "desierto"]
+const V2_STARTS := ["caravana", "jungla", "desierto", "montana"]
 ## --autoplay-zone=<id>: what a new game starting in each zone gets, as planned when
 ## arriving there (zone 1 done: Lv 5, its shop's gear, the Rey Slime beaten).
 const AUTOPLAY_ZONES := {
@@ -258,6 +258,24 @@ const AUTOPLAY_ZONES := {
 			"jaguar_sombrio"],
 		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo",
 			"insignia_jungla"],
+		"quest_done": true,
+		"town": "caravana",
+		"ally": "brena",
+		"items": {Inventory.BIG_POTION: 3, Inventory.BIG_ETHER: 2, Inventory.WING: 2},
+		"finished": true,
+	},
+	# --autoplay-zone=montana: the desert done: Lv 30 with the orichalcum gear, Brena, the
+	# Gusano beaten and its seal, at the mountain's entrance (its first floor).
+	"montana": {
+		"zone": "montana_1",
+		"experience": 11350,
+		"gold": 1000,
+		"gear": ["espada_oricalco", "armadura_oricalco", "escudo_oricalco", "casco_oricalco"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra", "senor_niebla", "caravana_vista", "caravana", "companero",
+			"jaguar_sombrio", "gusano_dunas"],
+		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo",
+			"insignia_jungla", "sello_desierto"],
 		"quest_done": true,
 		"town": "caravana",
 		"ally": "brena",

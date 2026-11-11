@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="Cutscene" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/cutscene.gd" id="1_cutscene"]
+
+[resource]
+script = ExtResource("1_cutscene")
+id = "grifo"
+steps = [
+["wait", 0.4],
+["say", "", ["El Grifo de la cumbre se desploma sobre la nieve. Entre las piedras de su nido asoma un mapa enrollado."]],
+["say", "", ["¡Consigues el Mapa de la montaña!"]],
+["fade_out"],
+["travel", "caravana", "montana"],
+["fade_in"],
+["approach", "Jefe de caravana", "hero", 1.8],
+["face", "hero", "Jefe de caravana"],
+["say", "Jefe de caravana", ["¡Has bajado de la cumbre! Ese mapa marca el camino hasta la ciudad abandonada.", "Pero dicen que es un lugar maldito, y aún no podemos seguir. Montaremos el camino cuando la ruta sea segura."]]
+]
