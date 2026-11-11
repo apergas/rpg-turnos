@@ -17,7 +17,7 @@ enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPE
 	POISON_MUSHROOM, CAVE_MUSHROOM, CRYPT_BAT, FROST_SPECTER, COLLECTOR, BRENA, TADEO, ULMA, FROG,
 	SNAKE, MONKEY, TRAP_PLANT, TROPICAL_MUSHROOM, CARAVAN_CHIEF, HEALER, JAGUAR,
 	SCORPION, SAND_SLIME, VULTURE, SAND_GOLEM, MUMMY, CANTEEN, SAND_WORM, SNOW_WOLF, ICE_GOLEM,
-	SUMMIT_SPIRIT, ICE_BAT, GOAT, GRIFFIN, HOLLOW_ARMOR, GARGOYLE, SHADOW, SENTINEL, RUIN_RAT }
+	SUMMIT_SPIRIT, ICE_BAT, GOAT, GRIFFIN, HOLLOW_ARMOR, GARGOYLE, SHADOW, SENTINEL, RUIN_RAT, CITY_GUARDIAN }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -789,6 +789,23 @@ const LOOKS := {
 		"eye_color": Color(1.0, 0.2, 0.15),
 		"scale": 1.0,
 		"top": 1.1,
+	},
+	# The Guardián de la ciudad: the Knight at 1.8 times the size, in bronze, with its helmet
+	# and the two-handed sword.
+	Look.CITY_GUARDIAN: {
+		"scene": KNIGHT,
+		"scale": CHARACTER_SCALE * 1.8,
+		"top": 3.5,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/1H_Sword_Offhand",
+			"Rig/Skeleton3D/handslot_l/Badge_Shield",
+			"Rig/Skeleton3D/handslot_l/Rectangle_Shield",
+			"Rig/Skeleton3D/handslot_l/Round_Shield",
+			"Rig/Skeleton3D/handslot_l/Spike_Shield",
+			"Rig/Skeleton3D/handslot_r/1H_Sword",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(1.0, 0.82, 0.38),
 	},
 }
 

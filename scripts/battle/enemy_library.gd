@@ -54,6 +54,7 @@ const ENEMIES := {
 	"sombra": preload("res://data/enemies/sombra.tres"),
 	"esqueleto_centinela": preload("res://data/enemies/esqueleto_centinela.tres"),
 	"rata_ruinas": preload("res://data/enemies/rata_ruinas.tres"),
+	"guardian_ciudad": preload("res://data/enemies/guardian_ciudad.tres"),
 }
 ## Figure of each enemy id; any other id is a slime.
 const LOOKS := {
@@ -103,6 +104,7 @@ const LOOKS := {
 	"sombra": BattleActor.Look.SHADOW,
 	"esqueleto_centinela": BattleActor.Look.SENTINEL,
 	"rata_ruinas": BattleActor.Look.RUIN_RAT,
+	"guardian_ciudad": BattleActor.Look.CITY_GUARDIAN,
 	# The creatures that fight beside the hero (data in Allies, not in ENEMIES).
 	"gallina": BattleActor.Look.CHICKEN,
 	"lobezno": BattleActor.Look.WOLF_CUB,
