@@ -25,6 +25,8 @@ class_name Game extends Node
 ## boss), autosaves after talking, after every won battle, after shopping, (silently)
 ## after opening a chest, after a defeat and after every change of zone, and opens the
 ## pause menu. Emits quit_to_title when the player goes back to the title.
+## With `--debug` on the command line (never otherwise) it owns a DebugPanel: F1 on the map
+## opens it, and Game does what its buttons ask (_on_debug(), printed as "Depuración: ...").
 ## The story (GameState.story): a new game opens with the prologue in the hero's house
 ## (data/cutscenes/prologo.tres, which starts the slimes quest); each boss beaten plays
 ## its cutscene (StoryState.AFTER_BOSS) and the first visit to each village its own
@@ -214,6 +216,8 @@ var _shop: ShopWindow
 ## Something was bought, sold or equipped since the shop opened.
 var _shop_changed := false
 var _rng := RandomNumberGenerator.new()
+## The development panel, only with --debug (null otherwise).
+var _debug: DebugPanel
 
 
 ## audio and options come from the title screen; save is the Dictionary read by
@@ -276,6 +280,8 @@ func _ready() -> void:
 	_build_shop()
 	_build_fade()
 	_build_pause()
+	if args.has("--debug"):
+		_build_debug()
 	_build_cutscenes()
 	if _autoplay_menu:
 		# The tour of the pause menu needs the map, not a scene.
@@ -1181,10 +1187,13 @@ func _play_map_music() -> void:
 	_audio.play_ambient(_zone.ambient)
 
 
-## The pause menu only opens on the map with nothing else going on.
+## The pause menu (and, with --debug, the debug panel) only opens on the map with nothing
+## else going on.
 func _set_busy(busy: bool) -> void:
 	_busy = busy
 	_pause.available = not busy and not _autoplay
+	if _debug:
+		_debug.available = not busy
 
 
 ## Updates the map's status window, the quests' marks and sought figures and the hero's
@@ -1292,6 +1301,94 @@ func _build_pause() -> void:
 	_pause.open_changed.connect(func(is_open: bool) -> void:
 		_world.set_status_shown(not is_open))
 	_pause.available = not _autoplay
+
+
+## --debug: the panel over the pause menu, under the fade. While it is open Game is busy (no
+## ☰, no pause) and the status window and map square hide, as with the pause menu.
+func _build_debug() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 6
+	add_child(layer)
+	_debug = DebugPanel.new()
+	_debug.setup(state)
+	layer.add_child(_debug)
+	_debug.action_chosen.connect(_on_debug)
+	_debug.open_changed.connect(func(is_open: bool) -> void:
+		_set_busy(is_open)
+		_world.set_status_shown(not is_open))
+
+
+## What a DebugPanel button asks: done at once on the state and the map, printed as
+## "Depuración: ..." and said on the panel. Ir a goes on under black (_debug_go()).
+func _on_debug(action: String, arg: String) -> void:
+	var text := ""
+	match action:
+		DebugPanel.ZONE:
+			_debug_go(arg)
+			return
+		DebugPanel.LEVEL:
+			Leveling.set_level(state.hero, state.hero.level + int(arg), HERO_DATA.skills)
+			var spells := PackedStringArray()
+			for skill in state.hero.skills:
+				spells.append(skill.display_name)
+			text = "nivel %d (PV %d/%d, PM %d/%d, EXP %d; hechizos: %s)" % [state.hero.level,
+				state.hero.hp, state.hero.max_hp, state.hero.mp, state.hero.max_mp,
+				state.hero.experience, ", ".join(spells)]
+		DebugPanel.GOLD:
+			state.gold += int(arg)
+			text = "+%s G (%d G)" % [arg, state.gold]
+		DebugPanel.ITEMS:
+			for id in Inventory.IDS:
+				state.inventory.add(id)
+			text = "+1 de cada objeto (%d objetos)" % Inventory.IDS.size()
+		DebugPanel.HEAL:
+			state.heal_full()
+			text = "PV y PM llenos"
+		DebugPanel.MONSTERS:
+			World.debug_no_groups = not World.debug_no_groups
+			if World.debug_no_groups:
+				_world.clear_groups()
+				text = "grupos quitados (quedan %d)" % _world.group_count()
+			else:
+				_respawn_groups()
+				text = "grupos puestos (%d)" % _world.group_count()
+		DebugPanel.BOSS:
+			var boss := EnemyLibrary.data(arg)
+			var item := state.on_boss_defeated(boss)
+			if arg == Quest.BOSS_ID:
+				state.quest.stage = Quest.Stage.DONE  # as its real victory does
+			state.story.mark_seen_for_flags(state.world_flags)
+			_world.set_world_flags(state.world_flags)
+			text = "%s %s" % [boss.display_name, "vencida" if boss.female else "vencido"]
+			if item != "":
+				text += " (+%s)" % Inventory.KEY_ITEMS[item]
+		DebugPanel.QUEST:
+			state.quest.skip_stage()
+			text = "misión de la aldea: %s" % DebugPanel.STAGE_NAMES[state.quest.stage]
+		DebugPanel.SAVE:
+			var data := SaveData.from_state(state, _world.player_position(), play_time)
+			text = "guardado en la ranura %d" % _slot if SaveStore.save_game(_slot, data) 				else "no se pudo guardar"
+	_update_boss()
+	_refresh_status()
+	print("Depuración: %s" % text)
+	_debug.show_result(text)
+
+
+## DebugPanel's Ir a (the panel is already shut): under black to zone_id's start entry, as
+## through an exit, with no autosave.
+func _debug_go(zone_id: String) -> void:
+	if _busy:
+		return
+	_set_busy(true)
+	_world.freeze(true)
+	await _fade_to(1.0)
+	_switch_zone(zone_id, "")
+	_play_map_music()
+	await _fade_to(0.0)
+	await _world.freeze(false)
+	print("Depuración: a %s" % _zone.map_label())
+	_set_busy(false)
+	_check_village_scene()
 
 
 func _fade_to(alpha: float) -> void:

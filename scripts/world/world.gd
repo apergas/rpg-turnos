@@ -315,6 +315,9 @@ var _hunt_until_ms := 0
 ## Time of the simulation in ms (the hunt's timers count it, so a run with --fixed-fps keeps them).
 var _sim_ms := 0.0
 var _hunt_skip := {}
+## DebugPanel's Monstruos: while set, no map puts any group of monsters or rare enemy
+## (_add_group(), add_rare()). It lasts for the run; only DebugPanel changes it.
+static var debug_no_groups := false
 
 
 func _ready() -> void:
@@ -667,11 +670,22 @@ func group_count() -> int:
 	return count
 
 
+## Debug only (DebugPanel's Monstruos): every group off the map, the rare one too. While
+## debug_no_groups is set none comes back.
+func clear_groups() -> void:
+	for group in _groups:
+		(group.node as Node3D).queue_free()
+	_groups.clear()
+	_contact = -1
+	_hunt_skip.clear()
+	_player.stop_hunt()
+
+
 ## Puts the zone's rare enemy (the Slime de Metal) on this dungeon floor, away from the hero
 ## (MonsterGroups.rare_spot()), unless one is here already. It wanders the whole floor
 ## (MonsterRoam WANDER) and is touched like a group.
 func add_rare(enemy_id: String) -> void:
-	if has_rare() or not zone.is_dungeon():
+	if debug_no_groups or has_rare() or not zone.is_dungeon():
 		return
 	var spot: Variant = MonsterGroups.rare_spot(zone, _rng, _player.global_position)
 	if spot == null:
@@ -691,6 +705,8 @@ func has_rare() -> bool:
 ## A group at pos: the figure of its first enemy (no collider: nothing bumps into it),
 ## facing the camera, and its MonsterRoam.
 func _add_group(pos: Vector3, enemies: Array[Combatant], rare: bool) -> void:
+	if debug_no_groups:
+		return
 	var node := Node3D.new()
 	node.position = pos
 	node.rotation_degrees.y = 180.0
