@@ -1148,7 +1148,8 @@ func remove_medal(medal_id: String) -> void:
 func _show_near_medals(hero: Vector3) -> void:
 	for id: String in _medals:
 		var glint: Node3D = _medals[id]
-		glint.visible = not _player.scripted 			and _flat_distance(hero, glint.position) <= MEDAL_SEEN_RADIUS
+		glint.visible = not _player.scripted \
+			and _flat_distance(hero, glint.position) <= MEDAL_SEEN_RADIUS
 
 
 ## The pause menu covers the middle of the screen and says the same as the status window,

@@ -33,9 +33,7 @@ const IMPORT_YES := "Sí, sustituir"
 ## LOAD on a finished game: its page and the question before a Partida nueva +.
 const CYCLE_CONTINUE := "Continuar"
 const NG_PLUS := "Partida nueva +"
-const NG_PLUS_CONFIRM := "Empiezas de nuevo la historia con tu héroe,
-su equipo y su oro. Los monstruos serán
-más fuertes. ¿Seguro?"
+const NG_PLUS_CONFIRM := "Empiezas de nuevo la historia con tu héroe,\nsu equipo y su oro. Los monstruos serán\nmás fuertes. ¿Seguro?"
 const NG_PLUS_YES := "Sí, Partida nueva +"
 const IMPORTED_TEXT := "Partida importada en la ranura %d."
 const SAVE_FAILED_TEXT := "No se pudo guardar la partida."

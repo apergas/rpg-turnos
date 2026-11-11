@@ -1493,17 +1493,24 @@ func _on_debug(action: String, arg: String) -> void:
 			var item := state.on_boss_defeated(boss)
 			if arg == Quest.BOSS_ID:
 				state.quest.stage = Quest.Stage.DONE  # as its real victory does
+			if Bestiary.has(arg):
+				# As --autoplay-zone does: beaten in the bestiary too, and a family may be complete.
+				state.see_enemy(arg)
+				state.defeat_enemy(arg)
 			state.story.mark_seen_for_flags(state.world_flags)
 			_world.set_world_flags(state.world_flags)
 			text = "%s %s" % [boss.display_name, "vencida" if boss.female else "vencido"]
 			if item != "":
 				text += " (+%s)" % Inventory.KEY_ITEMS[item]
+			for line in _give_family_rewards():
+				text += " · " + line
 		DebugPanel.QUEST:
 			state.quest.skip_stage()
 			text = "misión de la aldea: %s" % DebugPanel.STAGE_NAMES[state.quest.stage]
 		DebugPanel.SAVE:
 			var data := SaveData.from_state(state, _world.player_position(), play_time)
-			text = "guardado en la ranura %d" % _slot if SaveStore.save_game(_slot, data) 				else "no se pudo guardar"
+			text = "guardado en la ranura %d" % _slot if SaveStore.save_game(_slot, data) \
+				else "no se pudo guardar"
 	_update_boss()
 	_refresh_status()
 	print("Depuración: %s" % text)

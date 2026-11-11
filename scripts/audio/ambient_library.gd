@@ -78,7 +78,8 @@ static func bed(id: String) -> AudioStreamWAV:
 	var samples := raw.slice(0, count)
 	for i in seam:
 		var t := float(i) / seam
-		samples[i] = raw[i] * t + raw[count + i] * (1.0 - t)
+		# Equal power: two unrelated noises add in power, so the bed keeps its level.
+		samples[i] = raw[i] * sin(t * PI / 2.0) + raw[count + i] * cos(t * PI / 2.0)
 	_normalize(samples, BED_PEAK[id])
 	var stream := MusicLibrary.to_stream(samples)
 	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD

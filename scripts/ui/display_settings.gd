@@ -2,8 +2,7 @@ class_name DisplaySettings extends RefCounted
 ## Puts into effect the options that live outside the rules: the size of everything in the
 ## windows, fullscreen (desktop only) and the graphics quality the map and battle builders
 ## (and ZoneParticles: none on low quality, half on a phone) read when they build their
-## next scene. TitleScreen calls it at the start, OptionsPanel at
-## each change.
+## next scene. TitleScreen calls it at the start, OptionsPanel at each change.
 
 
 const TOUCH_SCALE := 1.35
