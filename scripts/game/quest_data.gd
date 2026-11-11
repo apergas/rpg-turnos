@@ -46,3 +46,6 @@ enum Kind { HUNT, GATHER, DELIVER, FIND }
 @export var reward_items := {}
 ## An Equipment id, or "".
 @export var reward_equipment := ""
+## A world flag set when the quest is finished ("" for none): it brings a figure back (Nara
+## and the Superviviente in the Caravana). Older saves get it on load (SaveData.apply()).
+@export var done_flag := ""

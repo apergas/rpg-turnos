@@ -169,6 +169,11 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 		state.steps = 0
 		state.gold_earned = 0
 	state.quests.set_from(data.get("quests", {}))
+	# A quest finished before 2.4.0 brings its figure back too (Nara, the Superviviente).
+	for id: String in QuestLog.QUESTS:
+		var flag := QuestLog.data(id).done_flag
+		if flag != "" and state.quests.stage(id) == QuestLog.Stage.DONE:
+			state.world_flags[flag] = true
 	state.difficulty = data.get("difficulty", Difficulty.NORMAL)
 	state.sync_level_cap()
 	Leveling.clamp_exp(state.hero)
