@@ -1,5 +1,9 @@
 # Registro de cambios
 
+## 2.4.1 (2026)
+
+- El sol de la pantalla del más allá ya no es un eclipse: es un sol rojo oscuro y apagado.
+
 ## 2.4.0 (2026)
 
 Lo que pediste tras jugar la caravana.

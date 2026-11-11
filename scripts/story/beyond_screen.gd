@@ -2,7 +2,7 @@ class_name BeyondScreen extends Node3D
 ## What lies beyond the portal (the v2's ending): a scene built in code, never played. A
 ## valley of red earth slopes down to the north, a road winds down it to a village of dark
 ## KayKit houses with smoke rising from them and three warm lights, dark hills close it, the
-## sky is red and a black sun with a red corona hangs over it. The hero (with his gear) and
+## sky is red and a dark red sun hangs over it. The hero (with his gear) and
 ## the companion stand at the head of the road with their backs to us; the camera passes over
 ## them and closes in on the village for CLOSE_TIME seconds while TEXT fades in. Its sky and
 ## fog are its camera's own environment, so the map's WorldEnvironment (hidden but still in
@@ -28,7 +28,8 @@ const ROAD := Color(0.62, 0.28, 0.16)
 const HILL := Color(0.17, 0.055, 0.045)
 const HOUSE_TINT := Color(0.34, 0.28, 0.3)
 const WINDOW_LIGHT := Color(1.0, 0.55, 0.3)
-const CORONA := Color(1.0, 0.3, 0.1)
+## The sun: a dull, dark red, darker than the sky behind it.
+const SUN_COLOR := Color(0.5, 0.1, 0.05)
 ## How much of the fog covers the sky (1: all, a flat haze).
 const FOG_SKY := 0.3
 const FILL_COLOR := Color(1.0, 0.86, 0.8)
@@ -165,7 +166,7 @@ func _build_camera() -> void:
 	sun.light_color = Color(0.95, 0.5, 0.38)
 	sun.light_energy = 0.55
 	sun.shadow_enabled = true
-	sun.sky_mode = DirectionalLight3D.SKY_MODE_LIGHT_ONLY  # no bright disc: the sun is black
+	sun.sky_mode = DirectionalLight3D.SKY_MODE_LIGHT_ONLY  # no bright disc: the sun is a dark ball
 	sun.rotation_degrees = Vector3(-30, 150, 0)
 	add_child(sun)
 	# A warm fill from behind the camera, so the two figures' backs and their gear show.
@@ -308,24 +309,21 @@ func _add_smoke(pos: Vector3) -> void:
 	add_child(smoke)
 
 
-## The black sun: a black ball with a slightly bigger red one behind it (its corona); neither
-## is fogged.
+## The dark sun: one dull red ball, darker than the sky around it, not fogged.
 func _build_sun() -> void:
-	for layer in [[SUN_RADIUS * 1.16, CORONA, Vector3(0, 0, -8)], [SUN_RADIUS, Color.BLACK,
-			Vector3.ZERO]]:
-		var ball := MeshInstance3D.new()
-		var sphere := SphereMesh.new()
-		sphere.radius = layer[0]
-		sphere.height = layer[0] * 2.0
-		ball.mesh = sphere
-		var mat := StandardMaterial3D.new()
-		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		mat.albedo_color = layer[1]
-		mat.disable_fog = true
-		ball.material_override = mat
-		ball.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		ball.position = SUN_POS + layer[2]
-		add_child(ball)
+	var ball := MeshInstance3D.new()
+	var sphere := SphereMesh.new()
+	sphere.radius = SUN_RADIUS
+	sphere.height = SUN_RADIUS * 2.0
+	ball.mesh = sphere
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = SUN_COLOR
+	mat.disable_fog = true
+	ball.material_override = mat
+	ball.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	ball.position = SUN_POS
+	add_child(ball)
 
 
 ## The hero and the companion at the head of the road, their backs to the camera (a
