@@ -536,6 +536,7 @@ func _on_encounter(boss: bool) -> void:
 	battle.char_time = _options.char_time()
 	battle.time_scale = _options.combat_scale()
 	battle.camera_shake = _options.camera_shake
+	state.sync_level_cap()
 	battle.difficulty = state.difficulty
 	battle.zone = _zone
 	if state.ally_id != "":
@@ -1352,6 +1353,7 @@ func _potion_count() -> int:
 
 
 func _refresh_status() -> void:
+	state.sync_level_cap()
 	var missions := state.current_missions()
 	_world.refresh_status(state.hero, _potion_count(), state.gold,
 		missions)

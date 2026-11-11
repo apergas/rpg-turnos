@@ -85,8 +85,8 @@ const ITEMS := {
 		"text": "Sube la VEL en 2 para siempre."},
 }
 ## Order of the item lists.
-const IDS: Array[String] = [POTION, ETHER, BIG_POTION, BIG_ETHER, ANTIDOTE, ALARM, PHOENIX, WING, INCENSE,
-	SEED_ATTACK, SEED_DEFENSE, SEED_SPEED, SETA, PIEL_MONO]
+const IDS: Array[String] = [POTION, ETHER, BIG_POTION, BIG_ETHER, ANTIDOTE, ALARM, PHOENIX, WING,
+	INCENSE, SEED_ATTACK, SEED_DEFENSE, SEED_SPEED, SETA, PIEL_MONO]
 ## Why an Ala de viaje can't be used in a village.
 const IN_TOWN := "Ya estás en un lugar seguro"
 ## Why a "quest" item can't be used.

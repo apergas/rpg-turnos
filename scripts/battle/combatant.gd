@@ -72,6 +72,9 @@ class_name Combatant extends Resource
 ## Status effects during a battle: status -> rounds left (-1: until cured or the battle
 ## ends). Never saved; BattleEngine clears it when the battle ends.
 var status := {}
+## The highest level the hero can reach now: Leveling.V1_MAX_LEVEL until the caravan.
+## Never saved; GameState.sync_level_cap() sets it.
+var level_cap := Leveling.V1_MAX_LEVEL
 
 
 func is_alive() -> bool:

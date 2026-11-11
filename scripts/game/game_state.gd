@@ -262,6 +262,16 @@ func is_finished() -> bool:
 	return has_flag(FINAL_BOSS)
 
 
+## The level cap now: the v1's 20, Leveling.MAX_LEVEL once in the caravan.
+func level_cap() -> int:
+	return Leveling.MAX_LEVEL if in_caravan() else Leveling.V1_MAX_LEVEL
+
+
+## Copies level_cap() into the hero (call after the flags change, a load, a battle start).
+func sync_level_cap() -> void:
+	hero.level_cap = level_cap()
+
+
 ## True once the hero has left Villaclaro with the caravan (the v2).
 func in_caravan() -> bool:
 	return has_flag(StoryState.CARAVAN_FLAG)

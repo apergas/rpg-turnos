@@ -253,7 +253,8 @@ static func autoplay_picks(state: GameState, shop_id: String) -> Array[String]:
 		if gold >= price(id):
 			picks.append(id)
 			gold -= price(id)
-	var potion_id := Inventory.BIG_POTION if Inventory.BIG_POTION in SHOPS[shop_id].items 		else Inventory.POTION
+	var potion_id := Inventory.BIG_POTION if Inventory.BIG_POTION in SHOPS[shop_id].items \
+		else Inventory.POTION
 	var potions := state.inventory.count(potion_id)
 	if upgrades > 0 and potions > 0:
 		return picks

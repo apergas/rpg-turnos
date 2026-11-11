@@ -40,7 +40,8 @@ func _pick(engine: BattleEngine) -> Dictionary:
 	var antidote := BattleEngine.cmd_item(Inventory.ANTIDOTE)
 	if engine.can_use(antidote):
 		return antidote
-	var ether_id := Inventory.BIG_ETHER if engine.inventory.count(Inventory.BIG_ETHER) > 0 		else Inventory.ETHER
+	var ether_id := Inventory.BIG_ETHER if engine.inventory.count(Inventory.BIG_ETHER) > 0 \
+		else Inventory.ETHER
 	var ether := BattleEngine.cmd_item(ether_id)
 	if heal_skill != null and hero.mp < heal_skill.mp_cost and engine.can_use(ether):
 		return ether

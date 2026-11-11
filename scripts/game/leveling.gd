@@ -4,6 +4,9 @@ class_name Leveling extends RefCounted
 ## full heal. Reaching a level listed in the hero's `learn` teaches that spell.
 
 const MAX_LEVEL := 40
+## The v1 cap: a hero stays at it until he joins the caravan (GameState.level_cap(), kept in
+## Combatant.level_cap by GameState.sync_level_cap()).
+const V1_MAX_LEVEL := 20
 ## EXP_TABLE[i] is the total EXP needed to reach level i + 1. Up to 20, the v1; from 21
 ## on, the caravan (v2), where each level asks a little more than the last.
 const EXP_TABLE := [0, 12, 35, 62, 96, 180, 260, 340, 421, 580, 740, 900, 1073, 1550,
@@ -17,7 +20,7 @@ const GAINS := {"max_hp": 6, "max_mp": 3, "attack": 2, "defense": 1, "speed": 1}
 ## followed by a LEARN event when that level teaches a spell.
 static func apply(hero: Combatant) -> Array[Dictionary]:
 	var events: Array[Dictionary] = []
-	while hero.level < MAX_LEVEL and hero.experience >= EXP_TABLE[hero.level]:
+	while hero.level < hero.level_cap and hero.experience >= EXP_TABLE[hero.level]:
 		hero.level += 1
 		hero.max_hp += GAINS.max_hp
 		hero.hp += GAINS.max_hp
@@ -79,20 +82,20 @@ static func _replace(hero: Combatant, skill: Skill) -> String:
 	return old.display_name
 
 
-## Total EXP needed for the next level, or -1 at MAX_LEVEL.
-static func exp_for_next(level: int) -> int:
-	return EXP_TABLE[level] if level < MAX_LEVEL else -1
+## Total EXP needed for the next level, or -1 at the cap (cap: the hero's level_cap).
+static func exp_for_next(level: int, cap := MAX_LEVEL) -> int:
+	return EXP_TABLE[level] if level < cap else -1
 
 
-## "EXP 44/62" ("EXP 3600" at MAX_LEVEL).
+## "EXP 44/62" ("EXP 3600" at the cap).
 static func exp_text(hero: Combatant) -> String:
-	var next := exp_for_next(hero.level)
+	var next := exp_for_next(hero.level, hero.level_cap)
 	return "EXP %d" % hero.experience if next < 0 else "EXP %d/%d" % [hero.experience, next]
 
 
-## How far along the current level the hero is, 0..1 (full at MAX_LEVEL).
+## How far along the current level the hero is, 0..1 (full at the cap).
 static func exp_ratio(hero: Combatant) -> float:
-	var next := exp_for_next(hero.level)
+	var next := exp_for_next(hero.level, hero.level_cap)
 	if next < 0:
 		return 1.0
 	var start: int = EXP_TABLE[hero.level - 1]
