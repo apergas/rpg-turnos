@@ -43,6 +43,10 @@ const GUARDED_REASON := "Ya estás protegido"
 const POISON := "poison"
 const SLEEP := "sleep"
 const SILENCE := "silence"
+## The Cabra montesa's blow (its attack_status): the fighter loses its next turn, and the
+## status goes when it does. It is not cleared at the end of a round, so a blow after the
+## hero's turn costs the hero the next round's.
+const STUN := "stun"
 
 const MISS_CHANCE := 0.05
 const CRIT_CHANCE := 1.0 / 16.0
@@ -256,6 +260,10 @@ func _resolve(hero_cmd: Dictionary, side: int) -> Array[Dictionary]:
 			continue
 		if fighter.status.has(SLEEP):
 			events.append(BattleEvent.asleep(who))
+			continue
+		if fighter.status.has(STUN):
+			fighter.status.erase(STUN)
+			events.append(BattleEvent.stunned(who))
 			continue
 		var cmd: Dictionary
 		match who:

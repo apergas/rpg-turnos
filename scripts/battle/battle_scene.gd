@@ -46,6 +46,7 @@ const STATUS_COLORS := {
 	BattleEngine.POISON: Color(0.6, 0.2, 0.8),
 	BattleEngine.SLEEP: Color(0.35, 0.45, 1.0),
 	BattleEngine.SILENCE: Color(0.6, 0.6, 0.65),
+	BattleEngine.STUN: Color(1.0, 0.85, 0.3),
 }
 const STANDALONE_LEVEL := 3
 ## Autoplay flees from normal battle number AUTOPLAY_EVERY, 2 × AUTOPLAY_EVERY... and
@@ -251,7 +252,7 @@ func _ambush_text(hero_side: bool) -> String:
 
 ## Asleep, the hero does nothing; on autoplay the bot picks; otherwise the menu opens.
 func _ask_command() -> void:
-	if hero.status.has(BattleEngine.SLEEP):
+	if hero.status.has(BattleEngine.SLEEP) or hero.status.has(BattleEngine.STUN):
 		await get_tree().create_timer(0.3).timeout
 		_on_command_chosen(BattleEngine.cmd_none())
 	elif _autoplay:
@@ -397,6 +398,9 @@ func _play_event(event: Dictionary) -> void:
 				_fighter(event.target).display_name])
 		BattleEvent.STATUS_OFF:
 			await _play_status_off(event)
+		BattleEvent.STUNNED:
+			await _actor(event.actor).play_status(STATUS_COLORS[BattleEngine.STUN])
+			await _say("%s aún no se recupera del golpe." % _fighter(event.actor).display_name)
 		BattleEvent.ASLEEP:
 			await _actor(event.actor).play_status(STATUS_COLORS[BattleEngine.SLEEP])
 			var sleeper := _fighter(event.actor)
@@ -520,6 +524,8 @@ func _play_status_on(event: Dictionary) -> void:
 				else "¡%s está envenenad%s!" % [target.display_name, _ending(target)])
 		BattleEngine.SLEEP:
 			await _say("¡%s se ha dormido!" % target.display_name)
+		BattleEngine.STUN:
+			await _say("¡El golpe deja sin aliento a %s!" % target.display_name)
 		BattleEngine.SILENCE:
 			await _say("¡%s ya no puede lanzar hechizos!" % target.display_name)
 
