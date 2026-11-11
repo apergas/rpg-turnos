@@ -16,7 +16,7 @@ enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPE
 	CHICKEN, WOLF_CUB, MINI_GOLEM, LOYAL_SKELETON, TAMER, FOG_ECHO, RED_SLIME,
 	POISON_MUSHROOM, CAVE_MUSHROOM, CRYPT_BAT, FROST_SPECTER, COLLECTOR, BRENA, TADEO, ULMA, FROG,
 	SNAKE, MONKEY, TRAP_PLANT, TROPICAL_MUSHROOM, CARAVAN_CHIEF, HEALER, JAGUAR,
-	SCORPION, SAND_SLIME, VULTURE, SAND_GOLEM, MUMMY, CANTEEN }
+	SCORPION, SAND_SLIME, VULTURE, SAND_GOLEM, MUMMY, CANTEEN, SAND_WORM }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -654,6 +654,16 @@ const LOOKS := {
 		"sand_color": Color(0.8, 0.66, 0.43),
 		"top": 0.8,
 	},
+	# The Gusano de las dunas: a segmented worm rising out of a ring of sand.
+	Look.SAND_WORM: {
+		"color": Color(0.78, 0.55, 0.36),
+		"dark_color": Color(0.62, 0.42, 0.27),
+		"mouth_color": Color(0.35, 0.08, 0.1),
+		"teeth_color": Color(0.96, 0.93, 0.82),
+		"sand_color": Color(0.8, 0.66, 0.43),
+		"scale": 1.6,
+		"top": 3.4,
+	},
 	Look.TRAP_PLANT: {
 		"stem_color": Color(0.1, 0.42, 0.12),
 		"leaf_color": Color(0.12, 0.6, 0.18),
@@ -741,6 +751,8 @@ func _ready() -> void:
 		_build_specter(data)
 	elif look == Look.SCORPION:
 		_build_scorpion(data)
+	elif look == Look.SAND_WORM:
+		_build_worm(data)
 	elif look == Look.CANTEEN:
 		_build_canteen(data)
 	elif look == Look.BOARD:
@@ -1447,6 +1459,34 @@ func _build_scorpion(data: Dictionary) -> void:
 		_add_mesh(root, _sphere(0.1 - i * 0.006), color, tip)
 	_add_mesh(root, _cone(0.04, 0.16), data.sting_color, tip + Vector3(0, -0.02, -0.08))
 	(root.get_child(-1) as Node3D).rotation_degrees.x = -120.0
+
+
+## The Gusano de las dunas: a low ring of sand, a thick body of seven segments rising out
+## of it and bending forward, and a round mouth ringed with teeth looking at the hero,
+## facing -Z. About 3.4 m tall at its scale. It sways (_sway) like the plant.
+func _build_worm(data: Dictionary) -> void:
+	_add_blob(_body, SLIME_PROFILE, SLIME_SEGMENTS, data.sand_color, Vector3.ZERO,
+		Vector3.ZERO, Vector3(1.3, 0.22, 1.3) * data.scale)  # the sand: it stays still
+	_sway = Node3D.new()
+	_sway.scale = Vector3.ONE * data.scale
+	_body.add_child(_sway)
+	var segments := 7
+	for i in segments:
+		var u := float(i) / (segments - 1)
+		var color: Color = data.color if i % 2 == 0 else data.dark_color
+		_add_mesh(_sway, _sphere(0.42 - u * 0.12), color, Vector3(0, 0.15 + u * 1.55, -u * u * 0.55))
+		(_sway.get_child(-1) as Node3D).scale = Vector3(1.0, 0.7, 1.0)
+	var head := Node3D.new()
+	head.position = Vector3(0, 1.78, -0.62)
+	head.rotation_degrees.x = -70.0  # its local up points forward and a little up
+	_sway.add_child(head)
+	_add_mesh(head, _sphere(0.3), data.color, Vector3.ZERO)
+	_add_mesh(head, _disc(0.22), data.mouth_color, Vector3(0, 0.2, 0))
+	for i in 10:
+		var a := TAU * i / 10.0
+		_add_mesh(head, _cone(0.035, 0.1), data.teeth_color,
+			Vector3(cos(a) * 0.2, 0.2, sin(a) * 0.2))
+		(head.get_child(-1) as Node3D).rotation = Vector3(0, -a, deg_to_rad(-140.0))
 
 
 ## The Jefe de caravana's canteen, half buried in the sand: a flat leather flask lying on

@@ -101,6 +101,7 @@ const KEY_ITEMS := {
 	"llave_mina": "Llave de la mina",
 	"carta_granjero": "Carta del Granjero",
 	"insignia_jungla": "Insignia de la jungla",
+	"sello_desierto": "Sello del desierto",
 }
 ## What each key item is, for Objetos.
 const KEY_TEXTS := {
@@ -110,6 +111,7 @@ const KEY_TEXTS := {
 	"llave_mina": "Abre la reja de la tercera planta de la mina.",
 	"carta_granjero": "Para la Leñadora, en la aldea del bosque. Huele un poco a gallina.",
 	"insignia_jungla": "La llevaba el Jaguar sombrío. Abre el camino hacia el desierto.",
+	"sello_desierto": "Lo guardaba el Gusano de las dunas. Los guardas de la montaña lo reconocerán.",
 	MEDAL: "El Coleccionista de Villaclaro las colecciona.",
 }
 

@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+[ext_resource type="Resource" path="res://data/enemies/slime_arena.tres" id="2_slime"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "gusano_dunas"
+display_name = "Gusano de las dunas"
+max_hp = 1300
+hp = 1300
+attack = 88
+defense = 52
+speed = 18
+exp_reward = 950
+gold_reward = 550
+ai_weights = {
+"attack": 55,
+"charge": 30,
+"stagger": 15
+}
+weak = Array[String](["ice"])
+resist = Array[String](["fire"])
+help = ExtResource("2_slime")
+key_item = "sello_desierto"
+is_boss = true

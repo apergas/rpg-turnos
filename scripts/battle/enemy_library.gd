@@ -41,6 +41,7 @@ const ENEMIES := {
 	"buitre": preload("res://data/enemies/buitre.tres"),
 	"golem_arena": preload("res://data/enemies/golem_arena.tres"),
 	"momia": preload("res://data/enemies/momia.tres"),
+	"gusano_dunas": preload("res://data/enemies/gusano_dunas.tres"),
 }
 ## Figure of each enemy id; any other id is a slime.
 const LOOKS := {
@@ -78,6 +79,7 @@ const LOOKS := {
 	"buitre": BattleActor.Look.VULTURE,
 	"golem_arena": BattleActor.Look.SAND_GOLEM,
 	"momia": BattleActor.Look.MUMMY,
+	"gusano_dunas": BattleActor.Look.SAND_WORM,
 	# The creatures that fight beside the hero (data in Allies, not in ENEMIES).
 	"gallina": BattleActor.Look.CHICKEN,
 	"lobezno": BattleActor.Look.WOLF_CUB,
