@@ -17,7 +17,7 @@ enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPE
 	POISON_MUSHROOM, CAVE_MUSHROOM, CRYPT_BAT, FROST_SPECTER, COLLECTOR, BRENA, TADEO, ULMA, FROG,
 	SNAKE, MONKEY, TRAP_PLANT, TROPICAL_MUSHROOM, CARAVAN_CHIEF, HEALER, JAGUAR,
 	SCORPION, SAND_SLIME, VULTURE, SAND_GOLEM, MUMMY, CANTEEN, SAND_WORM, SNOW_WOLF, ICE_GOLEM,
-	SUMMIT_SPIRIT, ICE_BAT, GOAT, GRIFFIN }
+	SUMMIT_SPIRIT, ICE_BAT, GOAT, GRIFFIN, HOLLOW_ARMOR, GARGOYLE, SHADOW, SENTINEL, RUIN_RAT }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -733,6 +733,63 @@ const LOOKS := {
 		"scale": 1.4,
 		"top": 1.6,
 	},
+	# The abandoned city (the v2, 2.3.0). The Armadura hueca: the Knight with no head and no
+	# helmet, black, its sword and round shield, an ember glowing in its empty collar.
+	Look.HOLLOW_ARMOR: {
+		"scene": KNIGHT,
+		"scale": CHARACTER_SCALE * 1.05,
+		"top": 1.9,
+		"hide": [
+			"Rig/Skeleton3D/Knight_Head",
+			"Rig/Skeleton3D/head/Knight_Helmet",
+			"Rig/Skeleton3D/handslot_l/1H_Sword_Offhand",
+			"Rig/Skeleton3D/handslot_l/Badge_Shield",
+			"Rig/Skeleton3D/handslot_l/Rectangle_Shield",
+			"Rig/Skeleton3D/handslot_l/Spike_Shield",
+			"Rig/Skeleton3D/handslot_r/2H_Sword",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(0.32, 0.32, 0.38),
+		"neck_glow": Color(1.0, 0.3, 0.15),
+	},
+	Look.GARGOYLE: {
+		"color": Color(0.46, 0.44, 0.46),
+		"dark_color": Color(0.32, 0.3, 0.33),
+		"wing_color": Color(0.38, 0.36, 0.4),
+		"horn_color": Color(0.62, 0.58, 0.52),
+		"eye_color": Color(1.0, 0.25, 0.15),
+		"scale": 1.15,
+		"top": 2.1,
+		"flap_time": 0.5,
+	},
+	# The Sombra: the specter in black with a red aura.
+	Look.SHADOW: {
+		"color": Color(0.1, 0.07, 0.09),
+		"aura_color": Color(0.85, 0.1, 0.08),
+		"alpha": 0.8,
+		"eye_color": Color(1.0, 0.85, 0.75),
+		"scale": 1.1,
+		"top": 2.5,
+		"fly": 0.5,
+	},
+	# The Esqueleto centinela: the skeleton warrior, reddish.
+	Look.SENTINEL: {
+		"scene": SKELETON_WARRIOR,
+		"scale": CHARACTER_SCALE,
+		"top": 1.9,
+		"hide": [],
+		"anims": SKELETON_ANIMS,
+		"props": {RIGHT_HAND_BONE: SKELETON_BLADE, LEFT_HAND_BONE: SKELETON_SHIELD},
+		"tint": Color(0.95, 0.6, 0.52),
+	},
+	Look.RUIN_RAT: {
+		"color": Color(0.42, 0.36, 0.32),
+		"dark_color": Color(0.3, 0.25, 0.22),
+		"ear_color": Color(0.85, 0.6, 0.6),
+		"eye_color": Color(1.0, 0.2, 0.15),
+		"scale": 1.0,
+		"top": 1.1,
+	},
 }
 
 ## Map only: how see-through a group's figure is while it can't start a battle.
@@ -803,12 +860,16 @@ func _ready() -> void:
 		_build_golem(data)
 	elif look == Look.SPIDER:
 		_build_spider(data)
-	elif look in [Look.SPECTER, Look.FROST_SPECTER, Look.SUMMIT_SPIRIT]:
+	elif look in [Look.SPECTER, Look.FROST_SPECTER, Look.SUMMIT_SPIRIT, Look.SHADOW]:
 		_build_specter(data)
 	elif look == Look.GOAT:
 		_build_goat(data)
 	elif look == Look.GRIFFIN:
 		_build_griffin(data)
+	elif look == Look.GARGOYLE:
+		_build_gargoyle(data)
+	elif look == Look.RUIN_RAT:
+		_build_rat(data)
 	elif look == Look.SCORPION:
 		_build_scorpion(data)
 	elif look == Look.SAND_WORM:
@@ -1167,6 +1228,14 @@ func _build_character(data: Dictionary) -> void:
 	var mesh_tints: Dictionary = data.get("mesh_tints", {})
 	for mesh_name: String in mesh_tints:
 		_tint_mesh(bones.get_node(mesh_name) as MeshInstance3D, mesh_tints[mesh_name])
+	if data.has("neck_glow"):
+		# The Armadura hueca: an ember where its head should be, on the head bone.
+		var slot := BoneAttachment3D.new()
+		slot.bone_name = "head"
+		bones.add_child(slot)
+		_add_mesh(slot, _sphere(0.13), data.neck_glow, Vector3(0, 0.0, 0))
+		var ember := (slot.get_child(-1) as MeshInstance3D).material_override as StandardMaterial3D
+		ember.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	if data.has("wrap_color"):
 		_add_mummy_wraps(bones, data.wrap_color)
 	if look == Look.HERO:
@@ -1469,6 +1538,75 @@ func _build_griffin(data: Dictionary) -> void:
 		_wings.append(pivot)
 
 
+## The Gárgola: a crouching beast of stone: a hunched body on four short legs, a horned head
+## with a wide snout and glowing red eyes, a pointed tail and two stone wings on pivots that
+## beat slowly (the bat's _wings, LOOKS "flap_time"), facing -Z. About 1.9 m tall at its
+## scale.
+func _build_gargoyle(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	_add_blob(root, WOLF_BODY_PROFILE, 5, data.color, Vector3(0, 0.55, 0.35),
+		Vector3(-70, 0, 0), Vector3(1.3, 1.1, 1.2))  # hunched body, chest up
+	for x in [-0.2, 0.2]:
+		for z in [-0.15, 0.35]:
+			_add_blob(root, LEG_PROFILE, 4, data.dark_color, Vector3(x, 0.0, z), Vector3.ZERO,
+				Vector3(1.3, 0.9, 1.3))
+		_add_mesh(root, _cone(0.05, 0.12), data.horn_color, Vector3(x, 0.03, -0.3))  # claws
+	_add_blob(root, WOLF_HEAD_PROFILE, 5, data.color, Vector3(0, 1.15, -0.25),
+		Vector3(-100, 0, 0), Vector3(1.2, 1.0, 1.1))  # head
+	for side in [-1.0, 1.0]:
+		_add_mesh(root, _sphere(0.05), data.eye_color, Vector3(side * 0.1, 1.24, -0.52))
+		var eye := (root.get_child(-1) as MeshInstance3D).material_override as StandardMaterial3D
+		eye.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_add_mesh(root, _cone(0.06, 0.32), data.horn_color, Vector3(side * 0.14, 1.42, -0.2))
+		(root.get_child(-1) as Node3D).rotation_degrees = Vector3(-25, 0, side * -20)  # horn
+		var pivot := Node3D.new()
+		pivot.position = Vector3(0.25 * side, 0.95, 0.4)
+		root.add_child(pivot)
+		var sail := PrismMesh.new()  # the stone wing: a pointed sail facing the camera
+		sail.size = Vector3(1.0, 0.85, 0.07)
+		sail.left_to_right = 0.5 + 0.5 * side
+		var spread := Node3D.new()
+		spread.rotation_degrees.z = 22.0 * side
+		pivot.add_child(spread)
+		_add_mesh(spread, sail, data.wing_color, Vector3(0.5 * side, 0.45, 0.0))
+		var bone := BoxMesh.new()  # the arm along the top edge
+		bone.size = Vector3(0.95, 0.09, 0.1)
+		_add_mesh(spread, bone, data.dark_color, Vector3(0.5 * side, 0.3, 0.0))
+		(spread.get_child(-1) as Node3D).rotation_degrees.z = 28.0 * side
+		_add_mesh(spread, _cone(0.05, 0.3), data.horn_color, Vector3(1.0 * side, 0.9, 0.0))  # claw
+		_wings.append(pivot)
+	_add_mesh(root, _cone(0.05, 0.6), data.dark_color, Vector3(0, 0.45, 0.95))  # tail
+	(root.get_child(-1) as Node3D).rotation_degrees.x = 70.0
+
+
+## The Rata de las ruinas: a big rat: a low faceted body, a pointed head with pink ears and
+## red eyes, four short legs and a long thin tail curving behind, facing -Z. About 0.8 m tall
+## at its scale.
+func _build_rat(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	_add_blob(root, WOLF_BODY_PROFILE, 6, data.color, Vector3(0, 0.38, 0.4),
+		Vector3(-90, 0, 0), Vector3(1.05, 0.85, 0.95))  # body
+	_add_blob(root, WOLF_HEAD_PROFILE, 5, data.color, Vector3(0, 0.45, -0.38),
+		Vector3(-95, 0, 0), Vector3(0.8, 0.85, 0.95))  # pointed head
+	_add_mesh(root, _sphere(0.035), data.ear_color, Vector3(0, 0.43, -0.92))  # nose
+	for side in [-1.0, 1.0]:
+		_add_mesh(root, _sphere(0.1), data.ear_color, Vector3(side * 0.14, 0.68, -0.38))
+		(root.get_child(-1) as Node3D).scale = Vector3(1.0, 1.0, 0.35)  # ear
+		_add_mesh(root, _sphere(0.035), data.eye_color, Vector3(side * 0.09, 0.56, -0.66))
+		for z in [-0.15, 0.4]:
+			_add_blob(root, LEG_PROFILE, 4, data.dark_color, Vector3(side * 0.15, 0.0, z),
+				Vector3.ZERO, Vector3(0.9, 0.55, 0.9))
+	for i in 6:  # the tail: thin rods curving back and up
+		var a := i * 0.25
+		_add_mesh(root, _cylinder(0.025 - i * 0.003, 0.22), data.ear_color.darkened(0.2),
+			Vector3(0, 0.3 + sin(a) * 0.25, 0.95 + i * 0.18))
+		(root.get_child(-1) as Node3D).rotation_degrees.x = 80.0 - i * 12.0
+
+
 ## A poison dart frog: a squat faceted body, a yellow belly, black spots, two big eyes on
 ## top and four bent legs, facing -Z. About 0.55 m tall before the look's scale (1.4); it hops like the slimes.
 func _build_frog(data: Dictionary) -> void:
@@ -1747,7 +1885,8 @@ func _build_specter(data: Dictionary) -> void:
 	_add_ghost(_hover, _sphere(0.5), data.aura_color, AURA_ALPHA, Vector3(0, 0.62, 0),
 		Vector3(1.5, 1.7, 1.5))
 	for x in [-0.12, 0.12]:
-		_add_mesh(_hover, _sphere(0.07), Color(0.05, 0.05, 0.12), Vector3(x, 0.8, -0.34))  # eye
+		_add_mesh(_hover, _sphere(0.07), data.get("eye_color", Color(0.05, 0.05, 0.12)),
+			Vector3(x, 0.8, -0.34))  # eye
 	_add_mesh(_hover, _sphere(0.06), Color(0.05, 0.05, 0.12), Vector3(0, 0.6, -0.36))  # mouth
 
 
@@ -1766,7 +1905,7 @@ func _start_idle() -> void:
 	else:
 		var gentle := look in [Look.WOLF, Look.MUD_GOLEM, Look.STONE_GOLEM, Look.SPIDER,
 			Look.CAT, Look.WOLF_CUB, Look.MINI_GOLEM, Look.SNAKE, Look.MONKEY, Look.JAGUAR,
-			Look.SAND_GOLEM, Look.SCORPION, Look.SNOW_WOLF, Look.ICE_GOLEM, Look.GOAT]
+			Look.SAND_GOLEM, Look.SCORPION, Look.SNOW_WOLF, Look.ICE_GOLEM, Look.GOAT, Look.RUIN_RAT]
 		_start_bounce(0.4 if gentle else 1.0)
 
 
