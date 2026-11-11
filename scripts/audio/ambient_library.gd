@@ -3,7 +3,8 @@ class_name AmbientLibrary extends RefCounted
 ## SfxLibrary: no audio files. Each ambient is a bed that loops (bed(): filtered noise, LOOP
 ## seconds, its end cross-faded into its start so the loop has no seam) and short sounds that
 ## AudioDirector drops on it every gap() seconds (shot(): a trill in the meadow, a bird in
-## the forest, a drop with its echo in the mine, a gust whistling in the castle). Streams
+## the forest, a drop with its echo in the mine, a gust whistling in the castle, a gust of sand
+## in the desert, whose bed is a low wind with the hiss of sand). Streams
 ## are 22050 Hz, 16-bit mono (MusicLibrary.to_stream()) and cached.
 
 const MEADOW := "meadow"
@@ -11,7 +12,8 @@ const FOREST := "forest"
 const MINE := "mine"
 const CASTLE := "castle"
 const JUNGLE := "jungle"
-const IDS: Array[String] = [MEADOW, FOREST, MINE, CASTLE, JUNGLE]
+const DESERT := "desert"
+const IDS: Array[String] = [MEADOW, FOREST, MINE, CASTLE, JUNGLE, DESERT]
 
 ## Seconds of each bed, and of the cross-fade that closes its loop.
 const LOOP := 8.0
@@ -20,10 +22,10 @@ const SEAM := 0.5
 const VARIANTS := 4
 ## Seconds between two short sounds: [least, most].
 const GAPS := {MEADOW: [2.0, 6.0], FOREST: [3.0, 7.0], MINE: [1.0, 4.0], CASTLE: [4.0, 9.0],
-	JUNGLE: [1.5, 4.0]}
+	JUNGLE: [1.5, 4.0], DESERT: [3.0, 8.0]}
 ## Peak of each bed and of every short sound (AudioDirector plays them at the effects volume
 ## × its AMBIENT_SHARE).
-const BED_PEAK := {MEADOW: 0.35, FOREST: 0.4, MINE: 0.5, CASTLE: 0.35, JUNGLE: 0.35}
+const BED_PEAK := {MEADOW: 0.35, FOREST: 0.4, MINE: 0.5, CASTLE: 0.35, JUNGLE: 0.35, DESERT: 0.4}
 const SHOT_PEAK := 0.55
 ## The echoes of a drop in the mine: [delay in seconds, gain].
 const ECHOES := [[0.17, 0.45], [0.34, 0.2], [0.51, 0.08]]
@@ -77,6 +79,8 @@ static func bed(id: String) -> AudioStreamWAV:
 			raw = _rumble(count + seam, rng)
 		JUNGLE:
 			raw = _insects(count + seam, rng)
+		DESERT:
+			raw = _sand_wind(count + seam, rng)
 		_:
 			raw = _wind(count + seam, rng)
 	var samples := raw.slice(0, count)
@@ -110,6 +114,8 @@ static func shot(id: String, variant: int) -> AudioStreamWAV:
 			samples = _drop(rng)
 		JUNGLE:
 			samples = _jungle_bird(rng)
+		DESERT:
+			samples = _sand_gust(rng)
 		_:
 			samples = _gust(rng)
 	_normalize(samples, SHOT_PEAK)
@@ -191,6 +197,57 @@ static func _rumble(count: int, rng: RandomNumberGenerator) -> PackedFloat32Arra
 		y2 += a * (y1 - y2)
 		y3 += a * (y2 - y3)
 		out[i] = y3 * (0.8 + 0.2 * sin(TAU * 0.06 * t))
+	return out
+
+
+## The desert: a low wind (noise low-passed twice at 350 Hz) swelling slowly, and the hiss
+## of the sand it carries (the band between 2500 and 6000 Hz), loudest at the top of each
+## swell.
+static func _sand_wind(count: int, rng: RandomNumberGenerator) -> PackedFloat32Array:
+	var out := PackedFloat32Array()
+	out.resize(count)
+	var low_a := _pole(350.0)
+	var top_a := _pole(6000.0)
+	var bottom_a := _pole(2500.0)
+	var l1 := 0.0
+	var l2 := 0.0
+	var top := 0.0
+	var bottom := 0.0
+	for i in count:
+		var t := float(i) / MusicLibrary.RATE
+		var x := rng.randf_range(-1.0, 1.0)
+		l1 += low_a * (x - l1)
+		l2 += low_a * (l1 - l2)
+		top += top_a * (x - top)
+		bottom += bottom_a * (x - bottom)
+		var swell := 0.5 + 0.3 * sin(TAU * 0.09 * t) + 0.2 * sin(TAU * 0.23 * t + 2.0)
+		out[i] = 2.0 * l2 * swell + 0.4 * (top - bottom) * pow(swell, 3.0)
+	return out
+
+
+## A gust of sand: 1.5 to 2.5 s of noise through a band-pass that rises from 2500 Hz to its
+## top and falls back, swelling and dying away.
+static func _sand_gust(rng: RandomNumberGenerator) -> PackedFloat32Array:
+	var count := int(rng.randf_range(1.5, 2.5) * MusicLibrary.RATE)
+	var peak := rng.randf_range(3800.0, 5000.0)
+	var out := PackedFloat32Array()
+	out.resize(count)
+	var band := PackedFloat32Array()
+	var x1 := 0.0
+	var x2 := 0.0
+	var y1 := 0.0
+	var y2 := 0.0
+	for i in count:
+		var u := float(i) / count
+		if i % 32 == 0:
+			band = _band(lerpf(2500.0, peak, sin(PI * u)), 3.0)
+		var x := rng.randf_range(-1.0, 1.0)
+		var y := band[0] * x + band[1] * x2 - band[2] * y1 - band[3] * y2
+		x2 = x1
+		x1 = x
+		y2 = y1
+		y1 = y
+		out[i] = y * pow(sin(PI * u), 1.5)
 	return out
 
 
