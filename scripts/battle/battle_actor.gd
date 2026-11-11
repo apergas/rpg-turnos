@@ -17,7 +17,8 @@ enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPE
 	POISON_MUSHROOM, CAVE_MUSHROOM, CRYPT_BAT, FROST_SPECTER, COLLECTOR, BRENA, TADEO, ULMA, FROG,
 	SNAKE, MONKEY, TRAP_PLANT, TROPICAL_MUSHROOM, CARAVAN_CHIEF, HEALER, JAGUAR,
 	SCORPION, SAND_SLIME, VULTURE, SAND_GOLEM, MUMMY, CANTEEN, SAND_WORM, SNOW_WOLF, ICE_GOLEM,
-	SUMMIT_SPIRIT, ICE_BAT, GOAT, GRIFFIN, HOLLOW_ARMOR, GARGOYLE, SHADOW, SENTINEL, RUIN_RAT, CITY_GUARDIAN }
+	SUMMIT_SPIRIT, ICE_BAT, GOAT, GRIFFIN, HOLLOW_ARMOR, GARGOYLE, SHADOW, SENTINEL, RUIN_RAT, CITY_GUARDIAN,
+	PORTAL_DEVOURER }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -44,6 +45,20 @@ const FOG_AURA_COLOR := Color(0.55, 0.25, 0.85)
 const ECHO_AURA_COLOR := Color(0.45, 0.85, 0.9)
 const FOG_AURA_ALPHA := 0.2
 const FOG_AURA_PHASE_ALPHA := 0.38
+## The Devorador del portal: the side profile of its mass (lathed around +Y), the share it
+## grows by in its second phase, its eyelid's angle half closed and open, and its mouths
+## round the mass ([degrees from the front, height]).
+const DEVOURER_PROFILE: Array[Vector2] = [
+	Vector2(0.0, 0.0), Vector2(1.25, 0.1), Vector2(1.45, 0.7), Vector2(1.3, 1.6),
+	Vector2(1.0, 2.4), Vector2(0.55, 3.0), Vector2(0.0, 3.2),
+]
+const DEVOURER_GROWTH := 1.25
+const EYELID_HALF := 0.0
+const EYELID_OPEN := 75.0
+const DEVOURER_LUMPS := [[180.0, 1.5, 0.7], [105.0, 2.3, 0.5], [-105.0, 2.3, 0.5],
+	[160.0, 0.45, 0.45], [-160.0, 0.45, 0.45], [60.0, 0.35, 0.35], [-60.0, 0.35, 0.35]]
+const DEVOURER_MOUTHS := [[38.0, 1.0], [-38.0, 1.0], [82.0, 1.9], [-82.0, 1.9],
+	[140.0, 1.2], [-140.0, 1.2]]
 ## KayKit characters are 2.47 units tall (helmet included); 0.65 makes the hero 1.6 m.
 const CHARACTER_SCALE := 0.65
 ## The AnimationPlayer inside a KayKit character scene.
@@ -792,6 +807,18 @@ const LOOKS := {
 	},
 	# The Guardián de la ciudad: the Knight at 1.8 times the size, in bronze, with its helmet
 	# and the two-handed sword.
+	# The Devorador del portal: a dark faceted mass with six mouths round a great eye.
+	Look.PORTAL_DEVOURER: {
+		"color": Color(0.13, 0.08, 0.15),
+		"dark_color": Color(0.07, 0.04, 0.09),
+		"lip_color": Color(0.45, 0.06, 0.1),
+		"tooth_color": Color(0.92, 0.88, 0.78),
+		"sclera_color": Color(0.95, 0.9, 0.85),
+		"iris_color": Color(0.95, 0.2, 0.1),
+		"glow_color": Color(1.0, 0.2, 0.1),
+		"scale": 0.9,
+		"top": 3.3,
+	},
 	Look.CITY_GUARDIAN: {
 		"scene": KNIGHT,
 		"scale": CHARACTER_SCALE * 1.8,
@@ -844,6 +871,9 @@ var _hover: Node3D
 var _ghosts: Array = []
 ## Figures with an aura (the Señor de la Niebla, the Eco): its ball (null for the rest).
 var _aura: MeshInstance3D
+## Devourer only: the node that grows in its second phase and the pivot of its eyelid.
+var _devourer: Node3D
+var _eyelid: Node3D
 
 
 func _ready() -> void:
@@ -887,6 +917,8 @@ func _ready() -> void:
 		_build_gargoyle(data)
 	elif look == Look.RUIN_RAT:
 		_build_rat(data)
+	elif look == Look.PORTAL_DEVOURER:
+		_build_devourer(data)
 	elif look == Look.SCORPION:
 		_build_scorpion(data)
 	elif look == Look.SAND_WORM:
@@ -1193,6 +1225,9 @@ func play_appear() -> void:
 ## The fog envelops the Señor de la Niebla: a long purple glow with the spell
 ## animation while his aura swells and thickens (his second phase).
 func play_phase() -> void:
+	if look == Look.PORTAL_DEVOURER:
+		await _devourer_wakes()
+		return
 	_set_flash(true, FOG_AURA_COLOR)
 	var timer := _start("cast")
 	if _aura:
@@ -1624,6 +1659,95 @@ func _build_rat(data: Dictionary) -> void:
 		(root.get_child(-1) as Node3D).rotation_degrees.x = 80.0 - i * 12.0
 
 
+## The Devorador del portal: a dark faceted mass about 3.2 m tall with lumps on it, six
+## mouths round it (dark red lips, black throats and white teeth, each kind merged into one
+## mesh), tentacles at its foot, and in front a great eye (white, a red iris and a slit) under
+## a heavy lid, half closed until its second phase; a red light glows in front of it. Faces -Z.
+func _build_devourer(data: Dictionary) -> void:
+	_devourer = Node3D.new()
+	_devourer.scale = Vector3.ONE * data.scale
+	_body.add_child(_devourer)
+	_add_mesh(_devourer, LowPoly.blob(DEVOURER_PROFILE, 7), data.color, Vector3.ZERO, 0.9)
+	var lumps: Array[Transform3D] = []
+	for lump: Array in DEVOURER_LUMPS:  # [degrees from the front, height, size]
+		var a := deg_to_rad(lump[0])
+		lumps.append(Transform3D(Basis.from_scale(Vector3.ONE * lump[2]),
+			Vector3(sin(a) * 1.05, lump[1], -cos(a) * 1.05)))
+	_add_mesh(_devourer, _merged(_sphere(1.0), lumps), data.dark_color, Vector3.ZERO, 0.9)
+	var lips: Array[Transform3D] = []
+	var throats: Array[Transform3D] = []
+	var teeth: Array[Transform3D] = []
+	for mouth: Array in DEVOURER_MOUTHS:
+		var a := deg_to_rad(mouth[0])
+		var out := Vector3(sin(a), 0, -cos(a))
+		var frame := Transform3D(Basis.looking_at(out, Vector3.UP),
+			out * 1.3 + Vector3(0, mouth[1], 0))
+		lips.append(frame * Transform3D(Basis.from_scale(Vector3(0.55, 0.26, 0.2)),
+			Vector3.ZERO))
+		throats.append(frame * Transform3D(Basis.from_scale(Vector3(0.45, 0.17, 0.12)),
+			Vector3(0, 0, -0.1)))
+		for x in [-0.3, -0.1, 0.1, 0.3]:
+			teeth.append(frame * Transform3D(Basis(Vector3.RIGHT, PI), Vector3(x, 0.14, -0.2)))
+			teeth.append(frame * Transform3D(Basis(), Vector3(x + 0.1, -0.14, -0.2)))
+	_add_mesh(_devourer, _merged(_sphere(1.0), lips), data.lip_color, Vector3.ZERO, 0.7)
+	_add_mesh(_devourer, _merged(_sphere(1.0), throats), Color(0.02, 0.0, 0.02), Vector3.ZERO)
+	_add_mesh(_devourer, _merged(_cone(0.06, 0.2), teeth), data.tooth_color, Vector3.ZERO, 0.5)
+	var tentacles: Array[Transform3D] = []
+	for i in 6:
+		var a := TAU * i / 6.0 + 0.3
+		var out := Vector3(sin(a), 0, -cos(a))
+		tentacles.append(Transform3D(Basis.looking_at(out, Vector3.UP)
+			* Basis(Vector3.RIGHT, deg_to_rad(-80.0)), out * 1.45 + Vector3(0, 0.15, 0)))
+	_add_mesh(_devourer, _merged(_cone(0.26, 1.5), tentacles), data.dark_color, Vector3.ZERO)
+	var crown: Array[Transform3D] = []  # a crown of horns on top of the mass
+	for i in 6:
+		var a := TAU * i / 6.0
+		var out := Vector3(sin(a), 0, -cos(a))
+		crown.append(Transform3D(Basis.looking_at(out, Vector3.UP)
+			* Basis(Vector3.RIGHT, deg_to_rad(-65.0)), out * 0.4 + Vector3(0, 3.0, 0)))
+	_add_mesh(_devourer, _merged(_cone(0.16, 0.9), crown), data.dark_color, Vector3.ZERO)
+	var eye := Vector3(0, 1.75, -1.1)
+	_add_mesh(_devourer, _sphere(0.62), data.sclera_color, eye, 0.4)
+	_add_mesh(_devourer, _sphere(0.33), data.iris_color, eye + Vector3(0, 0, -0.48))
+	var iris := (_devourer.get_child(-1) as MeshInstance3D)
+	(iris.material_override as StandardMaterial3D).shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	iris.scale = Vector3(1.0, 1.0, 0.4)
+	_add_mesh(_devourer, _sphere(0.13), Color(0.02, 0.0, 0.02), eye + Vector3(0, 0, -0.56))
+	(_devourer.get_child(-1) as Node3D).scale = Vector3(0.4, 1.0, 0.4)  # the slit
+	_eyelid = Node3D.new()
+	_eyelid.position = eye
+	_devourer.add_child(_eyelid)
+	_add_mesh(_eyelid, _hemisphere(0.7, 0.7), data.color, Vector3.ZERO, 0.9)
+	_eyelid.rotation_degrees.x = EYELID_HALF
+	var glow := OmniLight3D.new()
+	glow.light_color = data.glow_color
+	glow.light_energy = 1.2
+	glow.omni_range = 5.0
+	glow.position = Vector3(0, 1.5, -2.2)
+	_devourer.add_child(glow)
+
+
+## mesh repeated at each of xforms, merged into one mesh (one draw call).
+static func _merged(mesh: Mesh, xforms: Array[Transform3D]) -> ArrayMesh:
+	var tool := SurfaceTool.new()
+	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for xform in xforms:
+		tool.append_from(mesh, 0, xform)
+	return tool.commit()
+
+
+## The Devorador wakes (its second phase): a red flash while its eye opens and the whole mass
+## grows by DEVOURER_GROWTH; its bar goes up with it.
+func _devourer_wakes() -> void:
+	_set_flash(true, LOOKS[look].glow_color)
+	var t := create_tween().set_parallel()
+	t.tween_property(_devourer, "scale", _devourer.scale * DEVOURER_GROWTH, 0.9) 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_property(_eyelid, "rotation_degrees:x", EYELID_OPEN, 0.9)
+	await t.finished
+	_top *= 1.1  # the bar rises with it, still on screen
+	_set_flash(false)
+
+
 ## A poison dart frog: a squat faceted body, a yellow belly, black spots, two big eyes on
 ## top and four bent legs, facing -Z. About 0.55 m tall before the look's scale (1.4); it hops like the slimes.
 func _build_frog(data: Dictionary) -> void:
@@ -1922,7 +2046,8 @@ func _start_idle() -> void:
 	else:
 		var gentle := look in [Look.WOLF, Look.MUD_GOLEM, Look.STONE_GOLEM, Look.SPIDER,
 			Look.CAT, Look.WOLF_CUB, Look.MINI_GOLEM, Look.SNAKE, Look.MONKEY, Look.JAGUAR,
-			Look.SAND_GOLEM, Look.SCORPION, Look.SNOW_WOLF, Look.ICE_GOLEM, Look.GOAT, Look.RUIN_RAT]
+			Look.SAND_GOLEM, Look.SCORPION, Look.SNOW_WOLF, Look.ICE_GOLEM, Look.GOAT, Look.RUIN_RAT,
+			Look.PORTAL_DEVOURER]
 		_start_bounce(0.4 if gentle else 1.0)
 
 
