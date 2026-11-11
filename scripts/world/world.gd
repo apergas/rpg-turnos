@@ -236,6 +236,9 @@ var _open_chests: Array[String] = []
 var _medals := {}
 ## exit id -> fog bank shown while the exit is closed.
 var _fogs := {}
+## exit id -> its root (arch, sign and fog): hidden while the exit is not present
+## (ZoneData.is_present()).
+var _arches := {}
 ## ZoneData.all_exits(): the arches and, on a dungeon floor, the stairs.
 var _exits: Array = []
 ## The cells of a dungeon floor (null on an open map).
@@ -608,6 +611,8 @@ func set_world_flags(flags: Dictionary) -> void:
 	for group in _groups:
 		(group.roam as MonsterRoam).set_flags(flags)
 	for exit: Dictionary in zone.exits:
+		var present := ZoneData.is_present(exit, flags)
+		(_arches[exit.id] as Node3D).visible = present
 		(_fogs[exit.id] as Node3D).visible = not _is_open(exit)
 	if _dungeon:
 		_dungeon.set_flags(flags)
@@ -1238,6 +1243,8 @@ func _check_exits(pos: Vector3) -> bool:
 	var nearest := {}
 	var nearest_d := INF
 	for exit: Dictionary in _exits:
+		if not ZoneData.is_present(exit, _flags):
+			continue
 		var d := _flat_distance(pos, exit.pos)
 		if d < nearest_d:
 			nearest = exit
@@ -1430,6 +1437,7 @@ func _build_exit(exit: Dictionary) -> Node3D:
 	var root := Node3D.new()
 	root.position = exit.pos
 	add_child(root)
+	_arches[exit.id] = root
 	var arch := Node3D.new()
 	arch.rotation_degrees.y = exit.yaw
 	root.add_child(arch)

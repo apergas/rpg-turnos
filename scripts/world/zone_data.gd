@@ -112,14 +112,16 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var portal_pos := Vector3.ZERO
 ## Each exit: {"id", "pos" (trigger, inside the walls), "yaw" (the arch's facing), "to"
 ## (zone id), "entry" (entry id there), "label" (sign text), "lock" (GameState.world_flags
-## key that opens it, "" for always open), "lock_text" (notice while it is closed)}.
+## key that opens it, "" for always open), "lock_text" (notice while it is closed), and
+## optional "needs" / "gone": flags that make it exist (is_present())}.
 @export var exits: Array = []
 ## Each figure: {"kind": "quest" (the old woman), "shop", "inn", "npc" or "board" (a notice
 ## board: read, not talked to), "id" (Shop /
 ## Inn id), "look" (BattleActor.Look name), "pos", "yaw" (0 faces -Z; 180 faces the
 ## camera), "name" (unique on the map: cutscenes call the figure by it), and what it says:
 ## "lines" and / or "lines_by_chapter" (StoryState.Chapter -> lines, from that chapter on;
-## they may hold StoryState.NAME_TAG). The "quest" figure uses them once its quest is done}.
+## they may hold StoryState.NAME_TAG). The "quest" figure uses them once its quest is done;
+## optional "needs" / "gone": flags that make it exist (is_present())}.
 @export var npcs: Array = []
 ## The zone's boss (EnemyLibrary id, "" for none) and where it waits.
 @export var boss_id := ""
@@ -311,6 +313,24 @@ func exit_by_id(exit_id: String) -> Dictionary:
 		if exit.id == exit_id:
 			return exit
 	return {}
+
+
+## An exit or a figure of exits / npcs exists only while its optional "needs" flag is set
+## and its optional "gone" flag is not (GameState.world_flags). Without them it is always
+## there, like before the v2.
+static func is_present(entry: Dictionary, flags: Dictionary) -> bool:
+	var needs: String = entry.get("needs", "")
+	var gone: String = entry.get("gone", "")
+	return (needs == "" or flags.get(needs, false)) and (gone == "" or not flags.get(gone, false))
+
+
+## The names of the figures (npcs) that are not on the map with these flags.
+func absent_figures(flags: Dictionary) -> Array[String]:
+	var absent: Array[String] = []
+	for npc: Dictionary in npcs:
+		if not is_present(npc, flags):
+			absent.append(npc.name)
+	return absent
 
 
 ## The banner on arriving, in one line: "Mina abandonada · Planta 2".
