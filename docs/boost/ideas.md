@@ -14,4 +14,5 @@ Estado: Pendiente | Pasada al maestro | Descartada
 
 ## 2026-11-11 · Medallas que caen de los enemigos
 En el pueblo hay un Coleccionista al que le das los objetos que encuentras por ahí. Está bien, pero esos objetos (las medallas pequeñas), en vez de recogerlos del suelo, que caigan de los enemigos con una probabilidad muy baja, igual que las pociones y demás.
+Además, que el Coleccionista esté siempre en todos los pueblos, igual que la Domadora de criaturas, la posada o el mercader.
 Estado: Pendiente
