@@ -437,6 +437,11 @@ func _process(delta: float) -> void:
 			_quiet_s = 0.0
 			print("Grupos repuestos (partida automática, sin combates)")
 			_respawn_groups()
+		elif _quiet_s > AUTOPLAY_STALL_S and _wants_retreat():
+			# At the boss's level but too worn for it, with nothing left to fight: no battle
+			# will ever bring the retreat, so it is made here.
+			_quiet_s = 0.0
+			_autoplay_retreat()
 
 
 ## Back to the title: the map's ambient stops with the game. A Game run on its own frees its
@@ -694,12 +699,7 @@ func _on_encounter(boss: bool) -> void:
 			return
 	_set_busy(false)
 	if _autoplay and won and _wants_retreat():
-		state.inventory.take(Inventory.WING)
-		print("Retirada al pueblo (PV %d/%d, PM %d, pociones %d)" % [state.hero.hp,
-			state.hero.max_hp, state.hero.mp, _potion_count()])
-		await _on_travel_requested()
-		await _autoplay_restock()
-		await _on_portal()
+		await _autoplay_retreat()
 	elif _autoplay and won and _needs_groups():
 		# No Ala de viaje (or in a village): the groups come back as if it had flown away
 		# and back. Only the autoplay does this.
@@ -709,6 +709,17 @@ func _on_encounter(boss: bool) -> void:
 		await _autoplay_restock()
 		if _medal_tour:
 			await _back_to_tour_zone()
+
+
+## Autoplay: flies back to the last village with an Ala de viaje, rests and shops there and
+## comes back through the portal.
+func _autoplay_retreat() -> void:
+	state.inventory.take(Inventory.WING)
+	print("Retirada al pueblo (PV %d/%d, PM %d, pociones %d)" % [state.hero.hp,
+		state.hero.max_hp, state.hero.mp, _potion_count()])
+	await _on_travel_requested()
+	await _autoplay_restock()
+	await _on_portal()
 
 
 ## Autoplay: needs rest (GameState.needs_rest()), is only kept from the zone's boss by its
