@@ -682,7 +682,7 @@ const LOOKS := {
 		"scale": 1.3,
 		"top": 2.6,
 	},
-	# The Espíritu de la cumbre: the specter, pure white and bigger, with a pale gold aura
+	# The Espíritu de la cumbre: the specter, deep blue and bigger, with a pale gold aura
 	# (the Espectro de escarcha is the white and blue one).
 	Look.SUMMIT_SPIRIT: {
 		"color": Color(0.34, 0.42, 0.82),
