@@ -34,6 +34,10 @@ const SANDSTONE_DARK := Color(0.58, 0.51, 0.41)
 ## The mountain (2.2.0): the snow on its cliffs and stones, and their grey stone.
 const SNOW := Color(0.6, 0.6, 0.6)
 const MOUNTAIN_STONE := Color(0.5, 0.52, 0.56)
+## The abandoned city (2.3.0): a warm grey stone, a little red, that sits with the KayKit
+## castle walls under its red sky.
+const CITY_STONE := Color(0.5, 0.45, 0.44)
+const CITY_STONE_DARK := Color(0.36, 0.31, 0.31)
 ## id → [[kit model, scale, position, yaw, overrides]] (the models the mesh holds); overrides
 ## is optional: a material → colour that wins over GREENS and PALETTE in that piece only.
 const PIECES := {
@@ -82,6 +86,22 @@ const PIECES := {
 		{"stone": MOUNTAIN_STONE, "_defaultMat": SNOW}]],
 	"snow_stones": [["stone_smallFlatA", 3.0, Vector3.ZERO, 0.0, {"stone": MOUNTAIN_STONE}],
 		["stone_smallFlatB", 2.6, Vector3(0.7, 0, 0.4), 1.2, {"stone": MOUNTAIN_STONE}]],
+	# The abandoned city (2.3.0): the desert's statues in grey stone, a fallen head, an
+	# obelisk and a heap of rubble. The small rocks of the kit are grass and dirt, not stone.
+	"city_column": [["statue_column", 3.75, Vector3.ZERO, 0.0,
+		{"stone": CITY_STONE, "stoneDark": CITY_STONE_DARK, "_defaultMat": CITY_STONE_DARK}]],
+	"city_column_broken": [["statue_columnDamaged", 3.0, Vector3.ZERO, 0.0,
+		{"stone": CITY_STONE, "stoneDark": CITY_STONE_DARK, "_defaultMat": CITY_STONE_DARK}]],
+	"city_block": [["statue_block", 2.25, Vector3.ZERO, 0.0,
+		{"stone": CITY_STONE, "stoneDark": CITY_STONE_DARK}]],
+	"fallen_head": [["statue_head", 1.8, Vector3.ZERO, 0.0,
+		{"stone": CITY_STONE, "stoneDark": CITY_STONE_DARK, "_defaultMat": CITY_STONE_DARK}]],
+	"obelisk": [["statue_obelisk", 3.6, Vector3.ZERO, 0.0,
+		{"stone": CITY_STONE, "stoneDark": CITY_STONE_DARK}]],
+	"rubble": [["rock_smallA", 2.4, Vector3.ZERO, 0.0,
+		{"grass": CITY_STONE_DARK, "dirt": CITY_STONE_DARK}],
+		["rock_smallC", 2.0, Vector3(0.6, 0, 0.3), 1.1, {"grass": CITY_STONE, "dirt": CITY_STONE}],
+		["stone_smallB", 2.2, Vector3(-0.4, 0, 0.5), 2.3, {"stone": CITY_STONE}]],
 }
 
 static var _cache: Dictionary = {}

@@ -85,7 +85,7 @@ func set_flags(flags: Dictionary) -> void:
 ## door flag is set.
 static func walkable(zone: ZoneData, cell: Vector2i, flags: Dictionary) -> bool:
 	var ch := zone.cell_char(cell)
-	if ch == ZoneData.ROCK:
+	if ch == ZoneData.ROCK or ch == ZoneData.PORTAL:
 		return false
 	if ch == ZoneData.DOOR:
 		return zone.door_flag != "" and flags.get(zone.door_flag, false)
