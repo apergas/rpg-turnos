@@ -43,6 +43,9 @@ clump_model = "palms_clump"
 glades = [[Vector3(18, 0, 22), 6.0], [Vector3(20, 0, -12), 6.0], [Vector3(-22, 0, -20), 6.0], [Vector3(-24, 0, 14), 5.0]]
 bush_seed = 63
 bush_tries = 500
+decor_scatter = {"fern": 220, "leafy": 140, "log": 16, "mushrooms_red": 36}
+decor_seed = 47
+decor_green = Color(0.18, 0.46, 0.11, 1)
 entries = {
 "caravana": [Vector3(0, 0, 41), 180.0],
 "claro": [Vector3(0, 0, -33), 180.0]
