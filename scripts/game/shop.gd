@@ -50,11 +50,11 @@ const SHOPS := {
 		"ally": "golem_pequeno", "gear_shop": MINA},
 	"domadora_castillo": {"keeper": "Domadora", "equipment": [], "items": [],
 		"ally": "esqueleto_leal", "gear_shop": CASTILLO},
-	# The Caravana's merchant, tramo 1 (the jungle): the jade gear comes with its task and the
-	# big potions now; caravana_2..4 come with the zones of 2.1.0-2.3.0.
+	# The Caravana's merchant, tramo 1 (the jungle): the jade gear and the big potions;
+	# caravana_2..4 come with the zones of 2.1.0-2.3.0.
 	"caravana_1": {
 		"keeper": "Mercader",
-		"equipment": [],
+		"equipment": ["espada_jade", "armadura_jade", "escudo_jade", "casco_jade"],
 		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
 			Inventory.WING, Inventory.INCENSE, Inventory.PHOENIX, Inventory.ALARM],
 	},
