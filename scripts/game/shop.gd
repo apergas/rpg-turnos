@@ -7,6 +7,8 @@ const VILLACLARO := "villaclaro"
 const BOSQUE := "bosque"
 const MINA := "mina"
 const CASTILLO := "castillo"
+## The Jefe de caravana's choice of companion (the v2): three "creatures" at no cost.
+const COMPANIONS_SHOP := "companeros"
 ## shop id -> keeper's name, equipment and items (Inventory ids) on sale, in list order.
 ## Zone 1 sells no Éter (it comes with the zone 2 shop); the Ala de viaje, the Incienso and the
 ## Despertador are sold everywhere; the Pluma de fénix from the forest on.
@@ -46,6 +48,8 @@ const SHOPS := {
 		"ally": "golem_pequeno", "gear_shop": MINA},
 	"domadora_castillo": {"keeper": "Domadora", "equipment": [], "items": [],
 		"ally": "esqueleto_leal", "gear_shop": CASTILLO},
+	COMPANIONS_SHOP: {"keeper": "Jefe de caravana", "equipment": [], "items": [],
+		"allies": Allies.COMPANIONS},
 }
 const NO_GOLD := "Falta oro"
 const WORN := "Lo llevas puesto"
@@ -66,7 +70,14 @@ static func keeper(shop_id: String) -> String:
 
 
 static func sells_ally(shop_id: String) -> bool:
-	return SHOPS[shop_id].has("ally")
+	return SHOPS[shop_id].has("ally") or SHOPS[shop_id].has("allies")
+
+
+## The creatures on sale: the tamer's one, or the companions' list.
+static func allies_of(shop_id: String) -> Array:
+	if SHOPS[shop_id].has("allies"):
+		return SHOPS[shop_id].allies
+	return [SHOPS[shop_id].ally] if SHOPS[shop_id].has("ally") else []
 
 
 static func is_ally(id: String) -> bool:
@@ -78,7 +89,7 @@ static func stock(shop_id: String) -> Array[String]:
 	var ids: Array[String] = []
 	ids.assign(SHOPS[shop_id].equipment + SHOPS[shop_id].items)
 	if sells_ally(shop_id):
-		ids.append(SHOPS[shop_id].ally)
+		ids.append_array(allies_of(shop_id))
 	return ids
 
 
@@ -115,6 +126,8 @@ static func sell_price(id: String) -> int:
 ## Why state can't buy id now ("" if it can).
 static func buy_problem(state: GameState, id: String) -> String:
 	if is_ally(id):
+		if Allies.is_companion(id):
+			return HAS_IT if Allies.is_companion(state.ally_id) else ""
 		if state.ally_id == id:
 			return HAS_IT
 		if Allies.tier(state.ally_id) > Allies.tier(id):
@@ -220,9 +233,11 @@ static func compare(state: GameState, id: String) -> Dictionary:
 static func autoplay_picks(state: GameState, shop_id: String) -> Array[String]:
 	var picks: Array[String] = []
 	if sells_ally(shop_id):
-		var ally: String = SHOPS[shop_id].ally
-		if can_buy(state, ally) and not _gear_pending(state, shop_id):
-			picks.append(ally)
+		for ally: String in allies_of(shop_id):
+			if Allies.is_companion(ally):
+				return picks  # Game chooses the companion on autoplay (Task 8), not the shop
+			if can_buy(state, ally) and not _gear_pending(state, shop_id):
+				picks.append(ally)
 		return picks
 	var gold := state.gold
 	var upgrades := 0

@@ -539,7 +539,7 @@ func _on_encounter(boss: bool) -> void:
 	battle.difficulty = state.difficulty
 	battle.zone = _zone
 	if state.ally_id != "":
-		battle.ally = Allies.data(state.ally_id)
+		battle.ally = Allies.data(state.ally_id, state.tramo())
 	add_child(battle)
 	await _fade_to(0.0)
 	var outcome: int = await battle.finished

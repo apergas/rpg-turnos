@@ -59,6 +59,9 @@ const LOOKS := {
 	"lobezno": BattleActor.Look.WOLF_CUB,
 	"golem_pequeno": BattleActor.Look.MINI_GOLEM,
 	"esqueleto_leal": BattleActor.Look.LOYAL_SKELETON,
+	"brena": BattleActor.Look.BRENA,
+	"tadeo": BattleActor.Look.TADEO,
+	"ulma": BattleActor.Look.ULMA,
 }
 ## The rare enemy of the mine floors: on the map while its quest is on, it keeps its HP
 ## between battles (GameState.metal_slime_hp) and never brings a surprise.
