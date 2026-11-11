@@ -6,7 +6,7 @@
 script = ExtResource("1_combatant")
 id = "golem_arena"
 display_name = "Golem de arena"
-max_hp = 170
+max_hp = 150
 hp = 170
 attack = 60
 defense = 44
