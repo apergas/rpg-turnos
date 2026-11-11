@@ -212,6 +212,18 @@ const AUTOPLAY_ZONES := {
 		"items": {Inventory.POTION: 2, Inventory.ETHER: 3, Inventory.WING: 3},
 		"new_cycle": true,
 	},
+	# --autoplay-zone=caravana: the hero of ECHO_START leaving Villaclaro with the caravan.
+	"caravana": {
+		"experience": 3600,
+		"gold": 600,
+		"gear": ["espada_platino", "armadura_platino", "escudo_platino", "casco_platino"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra", "senor_niebla", "caravana"],
+		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo"],
+		"quest_done": true,
+		"town": "caravana",
+		"items": {Inventory.POTION: 3, Inventory.ETHER: 2, Inventory.WING: 1},
+	},
 	# Ready for the Señor de la Niebla: Lv 17 with the castle's gear.
 	"castillo_trono": {
 		"experience": 2244,
@@ -248,6 +260,8 @@ var _leaving := false
 var _autoplay := false
 var _autoplay_save := false
 var _autoplay_menu := false
+## --autoplay-companion=<id>: the companion autoplay chooses at the Caravana (Brena if none).
+var _autoplay_companion := "brena"
 var _last_missions: Array[String] = []
 var _last_gear_text := ""
 ## The save slot this game writes to (SaveStore; ignored on autoplay runs).
@@ -296,6 +310,13 @@ func _ready() -> void:
 	_autoplay = args.has("--autoplay")
 	_autoplay_save = _autoplay and args.has("--autoplay-save")
 	_autoplay_menu = _autoplay and args.has("--autoplay-menu")
+	for arg in args:
+		if arg.begins_with("--autoplay-companion="):
+			var companion := arg.trim_prefix("--autoplay-companion=")
+			if Allies.is_companion(companion):
+				_autoplay_companion = companion
+			else:
+				push_error("Not a companion for --autoplay-companion: %s" % companion)
 	_rng.randomize()
 	if _options == null:
 		_options = GameOptions.new()
@@ -894,6 +915,8 @@ func _check_village_scene() -> void:
 		return
 	_set_busy(true)
 	await _play_scene(scene)
+	if scene == "caravana_campamento":
+		await _choose_companion()
 	_autosave(false)
 	_set_busy(false)
 
@@ -1033,6 +1056,11 @@ func _on_npc(index: int) -> void:
 		await _talk_to_collector()
 		_set_busy(false)
 		return
+	if figure == CARAVAN_CHIEF and _zone.id == "caravana" \
+			and not state.has_flag(StoryState.COMPANION_FLAG):
+		await _choose_companion()
+		_set_busy(false)
+		return
 	if figure == CARAVAN_CHIEF and _zone.id == "pradera":
 		await _ask_departure()
 		_set_busy(false)
@@ -1062,6 +1090,28 @@ func _ask_departure() -> void:
 	_play_map_music()
 	await _fade_to(0.0)
 	await _world.freeze(false)
+	_autosave(false)
+
+
+## The Jefe de caravana's choice of companion: the Compañeros list (a shop at no cost).
+## Closing it without choosing leaves it for the next talk; once one is chosen, the jungle's
+## exit is there. Autoplay takes --autoplay-companion=<id> (Brena if none) at once.
+func _choose_companion() -> void:
+	if _autoplay:
+		state.ally_id = _autoplay_companion
+		print("Compañero: %s" % Allies.display_name(state.ally_id))
+	else:
+		_world.freeze(true)
+		await _shop.run(Shop.COMPANIONS_SHOP)
+		await _world.freeze(false)
+	if not Allies.is_companion(state.ally_id):
+		await _world.show_dialogue(CARAVAN_CHIEF, ["Piénsalo bien. Te espero aquí."])
+		return
+	state.world_flags[StoryState.COMPANION_FLAG] = true
+	_world.set_world_flags(state.world_flags)
+	_refresh_status()
+	var who := Allies.display_name(state.ally_id)
+	await _world.show_dialogue(CARAVAN_CHIEF, ["%s irá contigo. La jungla está al norte." % who])
 	_autosave(false)
 
 
@@ -1097,6 +1147,8 @@ func _after_quest_talk(done_title: String) -> void:
 ## The merchant: the ShopWindow until the player leaves; autosaves if anything changed.
 ## On autoplay it only opens when there is something to buy.
 func _on_shop(shop_id: String) -> void:
+	if shop_id == Shop.CARAVAN_SHOP:
+		shop_id = Shop.caravan_shop(state.tramo())
 	if _busy or (_autoplay and Shop.autoplay_picks(state, shop_id).is_empty()):
 		return
 	_set_busy(true)

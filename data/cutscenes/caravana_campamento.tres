@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Cutscene" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/cutscene.gd" id="1_cutscene"]
+
+[resource]
+script = ExtResource("1_cutscene")
+id = "caravana_campamento"
+steps = [
+["wait", 0.3],
+["camera_to", Vector3(0, 0, -6), 15.0],
+["say", "", ["La caravana monta el campamento al borde de la jungla. El aire es caliente y huele a lluvia."]],
+["camera_back"],
+["approach", "Jefe de caravana", "hero", 1.8],
+["face", "hero", "Jefe de caravana"],
+["say", "Jefe de caravana", ["Nadie cruza la jungla solo. Tres de los míos se han ofrecido a ir contigo.", "Elige a uno. Irá a tu lado en cada combate, hasta el portal."]]
+]

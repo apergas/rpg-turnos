@@ -20,8 +20,9 @@ const BATTLE := "battle"
 const BOSS := "boss"
 const VICTORY := "victory"
 const DEFEAT := "defeat"
+const CARAVAN := "caravan"
 const IDS: Array[String] = [TITLE, MAP, VILLAGE, FOREST, MINE, CASTLE, BATTLE, BOSS, VICTORY,
-	DEFEAT]
+	DEFEAT, CARAVAN]
 
 const LEAD_VOLUME := 0.2
 const BASS_VOLUME := 0.3
@@ -192,6 +193,19 @@ const TRACKS := {
 		"lead": ["E5/4 D5/4 C5/4 B4/4", "C5/4 B4/4 A4/8", "A4/12 r/4"],
 		"bass": ["A2/8 G2/8", "F2/8 E2/8", "A1/12 r/4"],
 		"drums": ["r/48"],
+	},
+	# The Caravana's camp: a travelling tune in G major.
+	CARAVAN: {
+		"bpm": 100, "loop": true, "duty": 0.5,
+		"lead": [
+			"G4/4 B4/4 D5/6 B4/2", "C5/4 E5/4 D5/8", "B4/4 D5/4 G5/6 F#5/2", "E5/4 D5/4 B4/8",
+			"C5/4 E5/4 A5/6 G5/2", "F#5/4 D5/4 E5/8", "D5/4 B4/4 A4/4 F#4/4", "G4/12 r/4",
+		],
+		"bass": [
+			"G2/8 D3/8", "C3/8 G2/8", "G2/8 B2/8", "E2/8 B2/8",
+			"A2/8 E3/8", "D3/8 A2/8", "D3/8 D2/8", "G2/12 r/4",
+		],
+		"drums": ["k/4 h/4 s/4 h/4"],
 	},
 }
 

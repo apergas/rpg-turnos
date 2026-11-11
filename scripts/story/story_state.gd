@@ -69,6 +69,9 @@ const GOALS := {
 	Chapter.V2_END: "El portal está abierto",
 }
 
+## What the story says while a chapter's zone has not been built yet (2.1.0 on).
+const NOT_YET_GOAL := "Objetivo: espera en la caravana; el camino aún no es seguro"
+
 ## Cutscene ids already played (SCENES entries), in the order they were seen.
 var seen: Array[String] = []
 ## True once the ending and the credits were reached: the save is a finished game.
@@ -155,6 +158,8 @@ func goal_text(flags: Dictionary, zone_id := "") -> String:
 		return MINE_GOALS[_mine_step(flags, zone_id)]
 	if now == Chapter.CARAVAN and not flags.get(COMPANION_FLAG, false):
 		return "Objetivo: habla con el Jefe de caravana"
+	if now == Chapter.DESERT and not "desierto" in ZoneData.IDS:
+		return NOT_YET_GOAL
 	return GOALS[now]
 
 

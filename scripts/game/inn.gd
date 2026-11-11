@@ -13,6 +13,7 @@ const INNS := {
 	BOSQUE: "Posadera",
 	MINA: "Posadero",
 	CASTILLO: "Posadera",
+	"caravana": "Curandera",
 }
 const REST := "Descansa un poco."
 ## What the keeper says to someone with full HP and MP (no fade, nothing to heal). Neutral:
