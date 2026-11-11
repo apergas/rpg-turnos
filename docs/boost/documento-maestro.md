@@ -148,8 +148,8 @@ Seis puntos del usuario tras jugar la 2.3.0. Diseño: [spec de la 2.4.0](specs/2
 | ID | Qué | Versión | Talla |
 |---|---|---|---|
 | M-49 | Las misiones de recoger: un objeto de misión cae siempre mientras se pide (el mono en pareja o pidiendo ayuda también) y el combate dice "(n/m)". No era un error: la piel caía al 50 % y había pocos monos | 2.4.0 | S |
-| M-50 | Todas las misiones de la caravana se entregan al Jefe de caravana; una charla entrega todas las que esperan; ninguna entrega puede quedarse en una tienda o una posada | 2.4.0 | S |
-| M-51 | Más grupos de monstruos en las zonas de la v2 (jungla y desierto 22, montaña 11 y 12, ciudad 12 y 9), un mono más en la jungla, y la EXP y el oro reajustados con la partida automática | 2.4.0 | M |
+| M-50 | Todas las misiones de la caravana se entregan al Jefe de caravana; una charla entrega todas las que esperan, y si no hay entregas dice primero su frase del capítulo; Nara y el Superviviente vuelven a la Caravana; ninguna entrega puede quedarse en una tienda o una posada | 2.4.0 | S |
+| M-51 | Más grupos de monstruos en las zonas de la v2 (jungla y desierto 22, montaña 10 y 12, ciudad 12 y 9), un mono más en la jungla, y la EXP y el oro reajustados con la partida automática | 2.4.0 | M |
 | M-52 | Fuera el agujero tramado de árboles, arbustos y decoración en todos los mapas (también agujereaba la sombra sobre el héroe); un borde de luz suave para que el héroe se lea a la sombra | 2.4.0 | S |
 | M-53 | La gente de la caravana como el héroe: el Knight sin casco, con otro pelo, peinados hechos en código (barba, moño, coleta) y otra ropa, en lugar del mago | 2.4.0 | M |
 | M-54 | Los textos de la v2 con algo de gracia, de vez en cuando: el Jefe por capítulo, las misiones cumplidas, la Curandera y una frase del compañero al llegar a cada zona | 2.4.0 | S |
