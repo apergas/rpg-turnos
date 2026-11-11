@@ -1,6 +1,6 @@
 # Documento maestro
 
-Fecha: 2026-11-09. Versión publicada: **1.4.0**. M-01 a M-25 están hechos (M-17, descartado). M-26 a M-38 (las antiguas ideas de la sección 4) tienen diseño y plan para las versiones 1.4.1 a 1.9.0 (sección 6). M-39 a M-47 son la v2 (2.0.0 a 2.3.0), con diseño; la 2.0.0 ya tiene plan.
+Fecha: 2026-11-11. Última versión hecha: **2.0.0** (en `develop`, sin publicar todavía). M-01 a M-38 están hechos (M-17 y M-37, descartados). M-39 a M-47 son la v2 (2.0.0 a 2.3.0), con diseño: la 2.0.0 está hecha; 2.1.0 a 2.3.0 esperan su plan. M-48 es la 2.0.1, la decoración con Kenney.
 
 Este documento es la base de trabajo a partir de ahora. Reúne:
 
@@ -123,15 +123,23 @@ Una segunda parte de unas dos horas sobre una partida terminada: una caravana, u
 
 | ID | Qué | Versión | Talla |
 |---|---|---|---|
-| M-39 | La caravana llega a Villaclaro tras el final y el héroe parte con ella, sin vuelta al mundo de la v1 | 2.0.0 | M |
-| M-40 | El tramo, calculado de los jefes vencidos; capítulos y objetivos de la v2 | 2.0.0 | S |
-| M-41 | La Caravana: un mapa de base con mercader por tramo y salidas que existen según las banderas | 2.0.0 | M |
-| M-42 | El compañero: uno de tres, elegido una vez, un ALLY cuyos números suben con el tramo | 2.0.0 | M |
-| M-43 | Las cuatro zonas: jungla y desierto abiertas, montaña y ciudad de celdas | 2.0.0 a 2.3.0 | L |
-| M-44 | Veinte enemigos, cuatro jefes de zona, el Devorador del portal (dos fases) y cuatro familias del bestiario | 2.0.0 a 2.3.0 | L |
-| M-45 | Nivel máximo 40, Ventisca y Sanación, cuatro niveles de equipo, Poción y Éter grandes | 2.0.0 a 2.3.0 | M |
-| M-46 | Ocho misiones de datos, dos por tramo, con la bandera `needs` | 2.0.0 a 2.3.0 | M |
+| M-39 | La caravana llega a Villaclaro tras el final y el héroe parte con ella, sin vuelta al mundo de la v1 — **hecho en 2.0.0** | 2.0.0 | M |
+| M-40 | El tramo, calculado de los jefes vencidos; capítulos y objetivos de la v2 — **hecho en 2.0.0** | 2.0.0 | S |
+| M-41 | La Caravana: un mapa de base con mercader por tramo y salidas que existen según las banderas — **hecho en 2.0.0** | 2.0.0 | M |
+| M-42 | El compañero: uno de tres, elegido una vez, un ALLY cuyos números suben con el tramo — **hecho en 2.0.0** | 2.0.0 | M |
+| M-43 | Las cuatro zonas: jungla y desierto abiertas, montaña y ciudad de celdas — jungla hecha en 2.0.0 | 2.0.0 a 2.3.0 | L |
+| M-44 | Veinte enemigos, cuatro jefes de zona, el Devorador del portal (dos fases) y cuatro familias del bestiario — jungla hecha en 2.0.0 | 2.0.0 a 2.3.0 | L |
+| M-45 | Nivel máximo 40, Ventisca y Sanación, cuatro niveles de equipo, Poción y Éter grandes — jungla hecha en 2.0.0 | 2.0.0 a 2.3.0 | M |
+| M-46 | Ocho misiones de datos, dos por tramo, con la bandera `needs` — jungla hecha en 2.0.0 | 2.0.0 a 2.3.0 | M |
 | M-47 | El final: el cruce, la pantalla del más allá con el pueblo de la v3 y los créditos de la v2 | 2.3.0 | M |
+
+### Prioridad 7: decoración con modelos reales (2026-11-11)
+
+El usuario permitió el Kenney Nature Kit (CC0). Regla suya: la opción más bonita, con todo en el mismo estilo. KayKit sigue siendo la base (árboles, rocas, casas, personajes) y Kenney entra donde encaja: la 2.0.0 ya usa sus palmeras en la jungla.
+
+| ID | Qué | Versión | Talla |
+|---|---|---|---|
+| M-48 | Decoración Kenney en los mapas que ya existen: arbustos, troncos, tocones, setas, flores, vallas, cultivos y hogueras, teñidos si hace falta para que casen con KayKit | 2.0.1 | M |
 
 ---
 
@@ -256,19 +264,31 @@ Notas para cuando se diseñe:
 | **1.2.0** | M-07 a M-16: orientación y comodidad | [plan](../legacy/plans/2026-11-07-version-1-2-0.md) | Hecha |
 | **1.3.0** | M-18 a M-21: colección y partidas | [plan](../legacy/plans/2026-11-07-version-1-3-0.md) | Hecha |
 | **1.4.0** | M-22: el Eco de la Niebla | [plan](../legacy/plans/2026-11-07-version-1-4-0.md) | Hecha |
-
 | **1.4.1** | M-26 y M-27: retoques del combate | [spec](specs/2026-11-09-version-1-4-1-design.md) · [plan](plans/2026-11-09-version-1-4-1.md) | Hecha |
 | **1.5.0** | M-28 a M-30: ataque sorpresa, Pluma de fénix y Despertador | [spec](specs/2026-11-09-version-1-5-0-design.md) · [plan](plans/2026-11-09-version-1-5-0.md) | Hecha |
 | **1.6.0** | M-31 y M-32: enemigos nuevos y familias del bestiario | [spec](specs/2026-11-09-version-1-6-0-design.md) · [plan](plans/2026-11-09-version-1-6-0.md) | Hecha |
 | **1.7.0** | M-33: monstruos a la vista | [spec](specs/2026-11-09-version-1-7-0-design.md) · [plan](plans/2026-11-09-version-1-7-0.md) | Hecha |
 | **1.8.0** | M-34 y M-35: medallas pequeñas y Partida nueva + | [spec](specs/2026-11-09-version-1-8-0-design.md) · [plan](plans/2026-11-09-version-1-8-0.md) | Hecha |
 | **1.9.0** | M-36 y M-38: ambiente y depuración | [spec](specs/2026-11-09-version-1-9-0-design.md) · [plan](plans/2026-11-09-version-1-9-0.md) | Hecha |
-| **2.0.0** | M-39 a M-42 y la jungla: la caravana, el compañero, el nivel 40 | [spec](specs/2026-11-10-version-2-0-0-design.md) · [plan](plans/2026-11-10-version-2-0-0.md) | Planificada |
+| **2.0.0** | M-39 a M-42 y la jungla: la caravana, el compañero, el nivel 40 | [spec](specs/2026-11-10-version-2-0-0-design.md) · [plan](plans/2026-11-10-version-2-0-0.md) | Hecha |
+| **2.0.1** | M-48: decoración Kenney | por escribir | Pendiente |
 | **2.1.0** | El desierto | [spec](specs/2026-11-10-version-2-0-0-design.md) | Diseñada |
 | **2.2.0** | La montaña | [spec](specs/2026-11-10-version-2-0-0-design.md) | Diseñada |
 | **2.3.0** | La ciudad, el Devorador del portal y el final | [spec](specs/2026-11-10-version-2-0-0-design.md) | Diseñada |
 
-Las versiones 1.1.1 a 1.4.0 están implementadas y publicadas; las pruebas a mano y en móvil real que quedaron pendientes están en sus informes.
+Las versiones 1.1.1 a 1.4.0 están implementadas y publicadas; las pruebas a mano y en móvil real que quedaron pendientes están en sus informes. Las versiones 1.4.1 a 2.0.0 están implementadas en `develop` (2026-11-11) y sin publicar.
+
+Pendiente a mano de 1.4.1 a 2.0.0: escuchar las músicas nuevas (`caravan`, `jungle`) y los ambientes (los WAV de prueba están en `build/ambient/`); jugar en un móvil real los grupos del mapa, la pregunta de partir con la caravana y la lista de compañeros; jugar a mano una partida con los monstruos a la vista; probar F1 con `--debug`; mirar la dificultad de la Partida nueva + con un héroe de Nv 17-18.
+
+Decisiones tomadas al implementar 1.4.1 a 2.0.0, que no estaban en los diseños:
+
+- Una noche en la posada repone los grupos del mapa (1.7.0): sin eso, un jugador que vacía la pradera antes del Rey Slime podía quedarse sin EXP.
+- En una partida de la v1 el nivel sigue tope en 20 y la EXP se para ahí; el tope de 40 solo vale tras partir con la caravana, para no romper el ajuste de la Partida nueva +.
+- El bestiario cuenta los enemigos de la v2 solo tras partir (n/22 en la v1).
+- Un guardado sin la bandera de la caravana no puede tener zonas, misiones, compañero ni nivel de la v2.
+- Las palmeras de la jungla son del Kenney Nature Kit, teñidas para casar con KayKit, en lugar de hechas en código.
+- La partida automática se salta cualquier punto de la ruta en el que se atasca (paredes de la mina, rejas cerradas).
+- Ajuste de la jungla: además de los PV y la EXP, se bajó el ATK de sus cinco enemigos (las derrotas venían de críticos y venenos).
 
 Orden de las nuevas, y por qué:
 
@@ -279,3 +299,4 @@ Orden de las nuevas, y por qué:
 - **1.8.0** después: las medallas se esconden en rincones que se recorren con los monstruos ya a la vista, y la Partida nueva + usa las familias y las medallas.
 - **1.9.0** al final: el ambiente y la herramienta de depuración no cambian reglas y conocen ya todo lo anterior.
 - **2.0.0 a 2.3.0** después de todas las 1.x: las zonas nuevas se diseñan con monstruos a la vista, familias del bestiario, Partida nueva + y ambiente ya hechos. Una zona por versión, cada una jugable hasta su jefe; los planes se escriben uno a uno al llegar a cada versión.
+- **2.0.1** justo después de la 2.0.0: decorar los mapas que ya existen con Kenney no cambia reglas, y deja el estilo fijado antes de construir el desierto y la montaña.
