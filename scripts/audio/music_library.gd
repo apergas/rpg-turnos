@@ -19,13 +19,15 @@ const CASTLE := "castle"
 const JUNGLE := "jungle"
 const DESERT := "desert"
 const MOUNTAIN := "mountain"
+const CITY := "city"
+const BEYOND := "beyond"
 const BATTLE := "battle"
 const BOSS := "boss"
 const VICTORY := "victory"
 const DEFEAT := "defeat"
 const CARAVAN := "caravan"
 const IDS: Array[String] = [TITLE, MAP, VILLAGE, FOREST, MINE, CASTLE, BATTLE, BOSS, VICTORY,
-	DEFEAT, CARAVAN, JUNGLE, DESERT, MOUNTAIN]
+	DEFEAT, CARAVAN, JUNGLE, DESERT, MOUNTAIN, CITY, BEYOND]
 
 const LEAD_VOLUME := 0.2
 const BASS_VOLUME := 0.3
@@ -166,6 +168,30 @@ const TRACKS := {
 			"A2/8 E3/8", "D3/8 D3/8", "C3/8 B2/8", "E3/12 r/4",
 		],
 		"drums": ["k/4 h/4 s/4 h/4", "k/4 k/4 s/4 h/2 h/2"],
+	},
+	# The abandoned city: C minor, slow and heavy, a lead that sighs over a deep bass.
+	CITY: {
+		"bpm": 80, "loop": true, "duty": 0.25,
+		"lead": [
+			"C5/4 D#5/4 G5/6 F5/2", "D#5/4 D5/4 C5/8", "G4/4 C5/4 D5/4 D#5/4", "D5/12 r/4",
+			"G#4/4 C5/4 D#5/4 G5/4", "F5/6 D#5/2 D5/8", "C5/4 D5/4 D#5/4 B4/4", "C5/12 r/4",
+		],
+		"bass": [
+			"C3/8 G2/8", "G#2/8 D#3/8", "F2/8 C3/8", "G2/8 G2/8",
+			"G#2/8 D#3/8", "A#2/8 A#2/8", "F2/8 G2/8", "C3/12 r/4",
+		],
+		"drums": ["k/8 s/8", "k/4 r/4 s/4 h/2 h/2"],
+	},
+	# Beyond the portal (the más allá screen and the v2's credits): A minor, very slow, no
+	# drums, a long held lead.
+	BEYOND: {
+		"bpm": 60, "loop": true, "duty": 0.5,
+		"lead": [
+			"A4/8 C5/8", "E5/12 D5/4", "C5/8 B4/8", "A4/16",
+			"F4/8 A4/8", "C5/12 B4/4", "A4/8 G#4/8", "A4/16",
+		],
+		"bass": ["A2/16", "A2/16", "F2/16", "E2/16", "F2/16", "D2/16", "E2/16", "A2/16"],
+		"drums": ["r/16"],
 	},
 	# The castle: a slow march in E minor.
 	CASTLE: {
