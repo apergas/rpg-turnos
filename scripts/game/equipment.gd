@@ -86,6 +86,16 @@ const EQUIPMENT := {
 		"price": 180, "zone": 3, "mesh": "", "tint": Color(0.95, 0.97, 1.0)},
 	"casco_platino": {"name": "Casco de platino", "article": "un", "slot": HELMET, "bonus": 7,
 		"price": 260, "zone": 4, "mesh": "", "tint": Color(0.85, 0.9, 1.2)},
+	# The caravan, stage 1 (the jungle): jade, the platinum meshes tinted green.
+	"espada_jade": {"name": "Espada de jade", "article": "una", "slot": WEAPON,
+		"bonus": 38, "price": 900, "zone": 5, "mesh": "2H_Sword", "tint": Color(0.55, 1.0, 0.65)},
+	"armadura_jade": {"name": "Armadura de jade", "article": "una", "slot": ARMOR,
+		"bonus": 28, "price": 750, "zone": 5, "mesh": ""},
+	"escudo_jade": {"name": "Escudo de jade", "article": "un", "slot": SHIELD,
+		"bonus": 13, "price": 420, "zone": 5, "mesh": "Spike_Shield",
+		"tint": Color(0.55, 1.0, 0.65)},
+	"casco_jade": {"name": "Casco de jade", "article": "un", "slot": HELMET, "bonus": 9,
+		"price": 330, "zone": 5, "mesh": "", "tint": Color(0.5, 1.05, 0.62)},
 	# The Eco de la Niebla's prize (the first time only): DEF like any helmet, plus ATK,
 	# dark grey with a blue cast and two bone horns (BattleActor builds them).
 	MIST_HELM: {"name": "Yelmo de bruma", "article": "un", "slot": HELMET, "bonus": 8,

@@ -83,6 +83,10 @@ const CUTSCENE_PATH := "res://data/cutscenes/%s.tres"
 const AUTHOR := "apergas"
 const FADE_TIME := 0.3
 const TOUCH_HINT := "Toca el suelo para ir allí, o arrastra el dedo para andar."
+## The v2's Jefe de caravana: in Villaclaro once the caravan has come, then in the Caravana.
+const CARAVAN_CHIEF := "Jefe de caravana"
+const JOIN_QUESTION := "Cuando partamos, no volverás por aquí en mucho tiempo. ¿Te unes a la caravana?"
+const LEAVE_QUESTION := "No podrás volver a Villaclaro, ni al bosque, la mina o el castillo. Las misiones que no hayas cumplido se quedan sin hacer."
 const REPEL_END_NOTICE := "El incienso se ha consumido."
 const HEAL_LINE := "Descansas un momento. PV y PM recuperados."
 const SAVED_NOTICE := "Partida guardada."
@@ -110,8 +114,6 @@ const AUTOPLAY_INN_RATIO := 0.5
 ## Autoplay: seconds on a map without a battle, below the zone's autoplay_boss_level, after
 ## which its groups are put back (the ones left may be out of reach of the route).
 const AUTOPLAY_STALL_S := 90.0
-## Autoplay: seconds after a closed gate says no before the route may skip the points behind it.
-const AUTOPLAY_GATE_WAIT_S := 1.0
 ## On autoplay the boss only comes out while the hero has these shares of max HP and MP.
 const AUTOPLAY_BOSS_HP := 0.7
 const AUTOPLAY_BOSS_MP := 0.4
@@ -125,6 +127,9 @@ const MEDAL_ZONE_TIME := 300.0
 ## --autoplay-zone=ngplus: the hero of ECHO_START with the Yelmo de bruma, and a first
 ## Partida nueva + from the prologue.
 const NG_PLUS_START := "ngplus"
+## The autoplay starts that play the v2: only they answer the Jefe de caravana's questions
+## with Sí (every other run, the finished-game ones included, stays in the v1).
+const V2_STARTS := ["caravana", "jungla"]
 ## --autoplay-zone=<id>: what a new game starting in each zone gets, as planned when
 ## arriving there (zone 1 done: Lv 5, its shop's gear, the Rey Slime beaten).
 const AUTOPLAY_ZONES := {
@@ -210,6 +215,38 @@ const AUTOPLAY_ZONES := {
 		"items": {Inventory.POTION: 2, Inventory.ETHER: 3, Inventory.WING: 3},
 		"new_cycle": true,
 	},
+	# --autoplay-zone=caravana: the v1 finished, in Villaclaro: Lv 20, the platinum gear, the
+	# Esqueleto leal, every boss beaten and the credits seen. The caravan comes on arrival,
+	# the hero leaves with it (V2_STARTS answers the Jefe's questions) and plays the v2 on.
+	"caravana": {
+		"zone": "pradera",
+		"experience": 3600,
+		"gold": 1200,
+		"gear": ["espada_platino", "armadura_platino", "escudo_platino", "casco_platino"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra", "senor_niebla"],
+		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo"],
+		"quest_done": true,
+		"town": "pradera",
+		"ally": "esqueleto_leal",
+		"items": {Inventory.POTION: 3, Inventory.ETHER: 3, Inventory.WING: 2},
+		"finished": true,
+	},
+	# --autoplay-zone=jungla: ready for the jungle: the caravan joined, Brena chosen, Lv 20 with
+	# the platinum gear, at the jungle's entrance.
+	"jungla": {
+		"experience": 3600,
+		"gold": 1500,
+		"gear": ["espada_platino", "armadura_platino", "escudo_platino", "casco_platino"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra", "senor_niebla", "caravana_vista", "caravana", "companero"],
+		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo"],
+		"quest_done": true,
+		"town": "caravana",
+		"ally": "brena",
+		"items": {Inventory.BIG_POTION: 3, Inventory.ETHER: 3, Inventory.WING: 2},
+		"finished": true,
+	},
 	# Ready for the Señor de la Niebla: Lv 17 with the castle's gear.
 	"castillo_trono": {
 		"experience": 2244,
@@ -246,6 +283,10 @@ var _leaving := false
 var _autoplay := false
 var _autoplay_save := false
 var _autoplay_menu := false
+## --autoplay-companion=<id>: the companion autoplay chooses at the Caravana (Brena if none).
+var _autoplay_companion := "brena"
+## --autoplay-zone=caravana / jungla: autoplay leaves with the caravan and plays the v2.
+var _autoplay_v2 := false
 var _last_missions: Array[String] = []
 var _last_gear_text := ""
 ## The save slot this game writes to (SaveStore; ignored on autoplay runs).
@@ -294,6 +335,13 @@ func _ready() -> void:
 	_autoplay = args.has("--autoplay")
 	_autoplay_save = _autoplay and args.has("--autoplay-save")
 	_autoplay_menu = _autoplay and args.has("--autoplay-menu")
+	for arg in args:
+		if arg.begins_with("--autoplay-companion="):
+			var companion := arg.trim_prefix("--autoplay-companion=")
+			if Allies.is_companion(companion):
+				_autoplay_companion = companion
+			else:
+				push_error("Not a companion for --autoplay-companion: %s" % companion)
 	_rng.randomize()
 	if _options == null:
 		_options = GameOptions.new()
@@ -389,6 +437,12 @@ func _process(delta: float) -> void:
 			_quiet_s = 0.0
 			print("Grupos repuestos (partida automática, sin combates)")
 			_respawn_groups()
+		elif _quiet_s > AUTOPLAY_STALL_S and _boss_needs_rest() \
+				and state.inventory.count(Inventory.WING) > 0:
+			# At the boss's level but too worn for it, with no battle coming that would bring
+			# the retreat: one Ala, made here (the quiet clock starts over).
+			_quiet_s = 0.0
+			_autoplay_retreat()
 
 
 ## Back to the title: the map's ambient stops with the game. A Game run on its own frees its
@@ -430,12 +484,18 @@ func _apply_autoplay_zone(args: PackedStringArray) -> void:
 		if start.quest_done:
 			state.quest.stage = Quest.Stage.DONE
 		state.ally_id = start.get("ally", "")
+		if _autoplay_companion != "" and start_id == "jungla":
+			state.ally_id = _autoplay_companion
 		var items: Dictionary = start.get("items", {})
 		for id: String in items:
 			state.inventory.add(id, items[id])
 		_autoplay_echo = start_id == ECHO_START
+		_autoplay_v2 = start_id in V2_STARTS
 		_medal_tour = start_id == MEDAL_TOUR
 		state.story.mark_seen_for_flags(state.world_flags)
+		if start.get("finished", false):
+			state.story.finished = true
+		state.sync_level_cap()
 		if start.get("new_cycle", false):
 			NgPlus.begin(state)
 			print("Partida nueva + %d" % state.ng_plus)
@@ -538,10 +598,11 @@ func _on_encounter(boss: bool) -> void:
 	battle.char_time = _options.char_time()
 	battle.time_scale = _options.combat_scale()
 	battle.camera_shake = _options.camera_shake
+	state.sync_level_cap()
 	battle.difficulty = state.difficulty
 	battle.zone = _zone
 	if state.ally_id != "":
-		battle.ally = Allies.data(state.ally_id)
+		battle.ally = Allies.data(state.ally_id, state.tramo())
 	add_child(battle)
 	await _fade_to(0.0)
 	var outcome: int = await battle.finished
@@ -641,12 +702,7 @@ func _on_encounter(boss: bool) -> void:
 			return
 	_set_busy(false)
 	if _autoplay and won and _wants_retreat():
-		state.inventory.take(Inventory.WING)
-		print("Retirada al pueblo (PV %d/%d, PM %d, pociones %d)" % [state.hero.hp,
-			state.hero.max_hp, state.hero.mp, state.inventory.count(Inventory.POTION)])
-		await _on_travel_requested()
-		await _autoplay_restock()
-		await _on_portal()
+		await _autoplay_retreat()
 	elif _autoplay and won and _needs_groups():
 		# No Ala de viaje (or in a village): the groups come back as if it had flown away
 		# and back. Only the autoplay does this.
@@ -656,6 +712,17 @@ func _on_encounter(boss: bool) -> void:
 		await _autoplay_restock()
 		if _medal_tour:
 			await _back_to_tour_zone()
+
+
+## Autoplay: flies back to the last village with an Ala de viaje, rests and shops there and
+## comes back through the portal.
+func _autoplay_retreat() -> void:
+	state.inventory.take(Inventory.WING)
+	print("Retirada al pueblo (PV %d/%d, PM %d, pociones %d)" % [state.hero.hp,
+		state.hero.max_hp, state.hero.mp, _potion_count()])
+	await _on_travel_requested()
+	await _autoplay_restock()
+	await _on_portal()
 
 
 ## Autoplay: needs rest (GameState.needs_rest()), is only kept from the zone's boss by its
@@ -849,7 +916,6 @@ func _on_portal() -> void:
 		_show_portal()
 	_world.place_player(pos)
 	_respawn_groups()
-	_world.arm_blocked_point_skip()
 	_on_village_changed(_world.in_village())
 	_refresh_status()
 	_update_boss()
@@ -884,10 +950,15 @@ func _check_village_scene() -> void:
 	if _busy or not _world.in_village():
 		return
 	var scene := state.story.scene_on_village(_zone.id)
+	if scene == "" and _zone.id == "pradera" and state.can_meet_caravan() \
+			and not state.story.has_seen("caravana_llega"):
+		scene = "caravana_llega"
 	if scene == "":
 		return
 	_set_busy(true)
 	await _play_scene(scene)
+	if scene == "caravana_campamento":
+		await _choose_companion()
 	_autosave(false)
 	_set_busy(false)
 
@@ -978,6 +1049,7 @@ func _scene_travel(zone_id: String, entry_id: String) -> World:
 func _scene_flag(flag: String) -> void:
 	state.world_flags[flag] = true
 	_world.set_world_flags(state.world_flags)
+	_refresh_status()  # a figure may come with the flag (the Jefe de caravana)
 
 
 ## The old woman always heals; what she says and gives comes from the quest.
@@ -1026,6 +1098,16 @@ func _on_npc(index: int) -> void:
 		await _talk_to_collector()
 		_set_busy(false)
 		return
+	if figure == CARAVAN_CHIEF and _zone.id == "caravana" \
+			and not state.has_flag(StoryState.COMPANION_FLAG):
+		await _choose_companion()
+		_set_busy(false)
+		return
+	if figure == CARAVAN_CHIEF and _zone.id == "pradera":
+		await _ask_departure()
+		_set_busy(false)
+		_check_village_scene()  # the Caravana's first visit, if the hero left
+		return
 	var talk := state.quests.talk(state, _zone.id, figure)
 	var said: Array = talk.get("lines", _world.npc_lines(index, state.chapter()))
 	var lines: Array[String] = []
@@ -1035,6 +1117,46 @@ func _on_npc(index: int) -> void:
 	if not talk.is_empty():
 		_after_quest_talk(talk.done)
 	_set_busy(false)
+
+
+## The Jefe de caravana in Villaclaro: two questions (focus on the answer that changes
+## nothing), then the farewell, the v1 left behind and the Caravana built under black.
+func _ask_departure() -> void:
+	if _autoplay and not _autoplay_v2:
+		return  # the v1 runs never leave with the caravan
+	if await _world.ask(JOIN_QUESTION, ["Sí", "No"], 1) != 0:
+		return
+	if await _world.ask(LEAVE_QUESTION, ["Partir", "Aún no"], 1) != 0:
+		return
+	await _play_scene("caravana_parte")  # ends under black
+	state.leave_for_caravan()
+	_switch_zone("caravana", "")
+	_play_map_music()
+	await _fade_to(0.0)
+	await _world.freeze(false)
+	_autosave(false)
+
+
+## The Jefe de caravana's choice of companion: the Compañeros list (a shop at no cost).
+## Closing it without choosing leaves it for the next talk; once one is chosen, the jungle's
+## exit is there. Autoplay takes --autoplay-companion=<id> (Brena if none) at once.
+func _choose_companion() -> void:
+	if _autoplay:
+		state.ally_id = _autoplay_companion
+		print("Compañero: %s" % Allies.display_name(state.ally_id))
+	else:
+		_world.freeze(true)
+		await _shop.run(Shop.COMPANIONS_SHOP)
+		await _world.freeze(false)
+	if not Allies.is_companion(state.ally_id):
+		await _world.show_dialogue(CARAVAN_CHIEF, ["Piénsalo bien. Te espero aquí."])
+		return
+	state.world_flags[StoryState.COMPANION_FLAG] = true
+	_world.set_world_flags(state.world_flags)
+	_refresh_status()
+	var who := Allies.display_name(state.ally_id)
+	await _world.show_dialogue(CARAVAN_CHIEF, ["%s irá contigo. La jungla está al norte." % who])
+	_autosave(false)
 
 
 ## The Coleccionista (Medals.talk()): every prize the medals reach, at once, with a sound;
@@ -1069,6 +1191,8 @@ func _after_quest_talk(done_title: String) -> void:
 ## The merchant: the ShopWindow until the player leaves; autosaves if anything changed.
 ## On autoplay it only opens when there is something to buy.
 func _on_shop(shop_id: String) -> void:
+	if shop_id == Shop.CARAVAN_SHOP:
+		shop_id = Shop.caravan_shop(state.tramo())
 	if _busy or (_autoplay and Shop.autoplay_picks(state, shop_id).is_empty()):
 		return
 	_set_busy(true)
@@ -1267,11 +1391,6 @@ func _on_door() -> void:
 	var key := _zone.door_key
 	if key == "" or not key in state.key_items:
 		_world.show_notice(_zone.door_text)
-		if _autoplay:
-			# The route went past the key: skip the points behind the gate and go round
-			# again, once the hero is at it (arming at once is cleared by the point before it).
-			await get_tree().create_timer(AUTOPLAY_GATE_WAIT_S).timeout
-			_world.arm_blocked_point_skip()
 		return
 	state.key_items.erase(key)
 	state.world_flags[_zone.door_flag] = true
@@ -1353,15 +1472,23 @@ func _on_stepped() -> void:
 		_world.show_notice(REPEL_END_NOTICE)
 
 
+## The healing potions carried, big ones too: the map's counter and the retreat line.
+func _potion_count() -> int:
+	return state.inventory.count(Inventory.POTION) + state.inventory.count(Inventory.BIG_POTION)
+
+
 func _refresh_status() -> void:
+	state.sync_level_cap()
 	var missions := state.current_missions()
-	_world.refresh_status(state.hero, state.inventory.count(Inventory.POTION), state.gold,
+	_world.refresh_status(state.hero, _potion_count(), state.gold,
 		missions)
 	_world.set_monsters_shy(EncounterMeter.is_shy(state.hero.level, _zone.exit_level))
 	_world.set_repel(state.repel_m > 0.0)
 	_world.set_autoplay_hunt(_autoplay and _autoplay_hunts())
-	_world.set_quest_view(state.quests.markers(_zone.id, state.inventory),
-		state.quests.hidden_figures(_zone.id))
+	var hidden := state.quests.hidden_figures(_zone.id)
+	hidden.append_array(_zone.absent_figures(state.world_flags))
+	_world.set_quest_view(state.quests.markers(_zone.id, state.inventory, state.world_flags),
+		hidden)
 	var loadout := state.loadout
 	_world.set_hero_equipment(loadout.worn(Equipment.WEAPON), loadout.worn(Equipment.SHIELD),
 		loadout.worn(Equipment.HELMET))

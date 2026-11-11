@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="Cutscene" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/cutscene.gd" id="1_cutscene"]
+
+[resource]
+script = ExtResource("1_cutscene")
+id = "caravana_parte"
+steps = [
+["say", "Jefe de caravana", ["Bien dicho. Recoge lo que necesites: salimos ahora."]],
+["approach", "Abuela Rosa", "hero", 2.2],
+["say", "Abuela Rosa", ["¡{nombre}! Cuídate mucho, y escribe. Con paloma, como siempre."]],
+["fade_out"],
+["say", "", ["Villaclaro queda atrás. La caravana sigue el camino del norte durante días, hasta el borde de la jungla."]]
+]

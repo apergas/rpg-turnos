@@ -15,6 +15,8 @@ const CARD_SIDE := 96.0
 const TOUCH_CARD_SIDE := 84.0
 const UNKNOWN := "???"
 const SILHOUETTE := Color(0.05, 0.05, 0.1)
+## The title of the v2's enemies, shown only on a caravan game (no prize line).
+const CARAVAN_TITLE := "La caravana"
 ## Size of a family's title.
 const TITLE_SIZE := 20
 ## What the title, the Volver row and the margins leave for the grid.
@@ -43,20 +45,28 @@ func fill(state: GameState) -> void:
 		_box.remove_child(child)
 		child.queue_free()
 	for family in Bestiary.FAMILIES:
-		var title := Label.new()
-		title.text = title_text(state, family.id)
-		title.add_theme_font_size_override("font_size", TITLE_SIZE)
-		title.add_theme_color_override("font_color", StatBar.GOLD
-			if Bestiary.is_complete(state, family.id) else UiStyle.TITLE_COLOR)
-		_box.add_child(title)
+		var title := _add_section(state, family.enemies, title_text(state, family.id),
+			StatBar.GOLD if Bestiary.is_complete(state, family.id) else UiStyle.TITLE_COLOR)
 		_titles[family.id] = title
-		var grid := GridContainer.new()
-		grid.columns = COLUMNS
-		grid.add_theme_constant_override("h_separation", 8)
-		grid.add_theme_constant_override("v_separation", 8)
-		_box.add_child(grid)
-		for id: String in family.enemies:
-			grid.add_child(_card(id, state.seen_enemies.has(id)))
+	if state.in_caravan():
+		_add_section(state, Bestiary.V2_ENEMIES, CARAVAN_TITLE, UiStyle.TITLE_COLOR)
+
+
+## A title and its grid of cards at the end of the album; returns the title.
+func _add_section(state: GameState, ids: Array, text: String, color: Color) -> Label:
+	var title := Label.new()
+	title.text = text
+	title.add_theme_font_size_override("font_size", TITLE_SIZE)
+	title.add_theme_color_override("font_color", color)
+	_box.add_child(title)
+	var grid := GridContainer.new()
+	grid.columns = COLUMNS
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.add_theme_constant_override("v_separation", 8)
+	_box.add_child(grid)
+	for id: String in ids:
+		grid.add_child(_card(id, state.seen_enemies.has(id)))
+	return title
 
 
 ## "Plantas 3/4" (the enemies beaten), and the prize once complete: "Plantas 4/4 · Anillo
@@ -72,7 +82,7 @@ static func title_text(state: GameState, family_id: String) -> String:
 
 ## "Bestiario 14/22": the enemies seen.
 static func count_text(state: GameState) -> String:
-	return "Bestiario %d/%d" % [Bestiary.seen_count(state), Bestiary.all_ids().size()]
+	return "Bestiario %d/%d" % [Bestiary.seen_count(state), Bestiary.total_count(state)]
 
 
 ## Back from a card: the focus goes to it again.
@@ -88,7 +98,8 @@ static func entry_lines(id: String, state: GameState) -> Array[String]:
 	var enemy := EnemyLibrary.data(id)
 	var places := EnemyLibrary.zone_names(id)
 	return [
-		"Familia: %s" % Bestiary.family(Bestiary.family_of(id)).get("name", "?"),
+		"Familia: %s" % Bestiary.family(Bestiary.family_of(id)).get("name",
+			CARAVAN_TITLE if Bestiary.V2_ENEMIES.has(id) else "?"),
 		"Vive en: %s" % (", ".join(places) if not places.is_empty() else "?"),
 		"Débil a: %s" % _elements(enemy.weak),
 		"Resiste: %s" % _elements(enemy.resist),

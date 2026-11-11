@@ -321,7 +321,8 @@ func _fill_status() -> void:
 		UiStyle.add_small_text(_spells_box, skill.description)
 	_ally_label.visible = _state.ally_id != ""
 	if _state.ally_id != "":
-		BattleHud.fit_label(_ally_label, "Criatura: %s" % Allies.display_name(_state.ally_id),
+		BattleHud.fit_label(_ally_label, "%s: %s" % [Allies.kind_name(_state.ally_id),
+				Allies.display_name(_state.ally_id)],
 			TEXT_WIDTH)
 
 

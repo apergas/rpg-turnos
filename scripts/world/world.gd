@@ -236,6 +236,9 @@ var _open_chests: Array[String] = []
 var _medals := {}
 ## exit id -> fog bank shown while the exit is closed.
 var _fogs := {}
+## exit id -> its root (arch, sign and fog): hidden while the exit is not present
+## (ZoneData.is_present()).
+var _arches := {}
 ## ZoneData.all_exits(): the arches and, on a dungeon floor, the stairs.
 var _exits: Array = []
 ## The cells of a dungeon floor (null on an open map).
@@ -560,11 +563,6 @@ func place_at_entry(entry_id: String) -> void:
 ## Puts the player at pos facing yaw_deg (0 faces north; a loaded game faces north),
 ## with the groups calm for a moment (_calm()) and the exits waiting until the player steps
 ## away from them. in_village() is right at once; village_changed is not emitted.
-## After a return through the portal on autoplay: lets the player skip a blocked route point.
-func arm_blocked_point_skip() -> void:
-	_player.arm_blocked_point_skip()
-
-
 func place_player(pos: Vector3, yaw_deg := 0.0) -> void:
 	_player.place(pos, deg_to_rad(yaw_deg))
 	_camera.snap()
@@ -608,7 +606,9 @@ func set_world_flags(flags: Dictionary) -> void:
 	for group in _groups:
 		(group.roam as MonsterRoam).set_flags(flags)
 	for exit: Dictionary in zone.exits:
-		(_fogs[exit.id] as Node3D).visible = not _is_open(exit)
+		var present := ZoneData.is_present(exit, flags)
+		(_arches[exit.id] as Node3D).visible = present
+		(_fogs[exit.id] as Node3D).visible = present and not _is_open(exit)
 	if _dungeon:
 		_dungeon.set_flags(flags)
 	_refresh_map_marks()
@@ -918,6 +918,20 @@ func show_dialogue(speaker: String, lines: Array[String]) -> void:
 	freeze(true)
 	await _dialogue.say(speaker, lines)
 	await freeze(false)
+
+
+## A question with buttons (ChoiceWindow) over the map, frozen while it lasts; returns the
+## index chosen. On autoplay it opens nothing and takes the first option.
+func ask(question: String, options: Array[String], focus := 0) -> int:
+	if _autoplay:
+		print("Pregunta: %s -> %s" % [question, options[0]])
+		return 0
+	freeze(true)
+	var window := ChoiceWindow.new()
+	_ui.add_child(window)
+	var chosen: int = await window.ask(question, options, focus)
+	await freeze(false)
+	return chosen
 
 
 ## Cutscenes: the map stops answering the player (frozen, which also hides the prompts,
@@ -1238,6 +1252,8 @@ func _check_exits(pos: Vector3) -> bool:
 	var nearest := {}
 	var nearest_d := INF
 	for exit: Dictionary in _exits:
+		if not ZoneData.is_present(exit, _flags):
+			continue
 		var d := _flat_distance(pos, exit.pos)
 		if d < nearest_d:
 			nearest = exit
@@ -1430,6 +1446,7 @@ func _build_exit(exit: Dictionary) -> Node3D:
 	var root := Node3D.new()
 	root.position = exit.pos
 	add_child(root)
+	_arches[exit.id] = root
 	var arch := Node3D.new()
 	arch.rotation_degrees.y = exit.yaw
 	root.add_child(arch)

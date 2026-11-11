@@ -1,11 +1,13 @@
 extends SceneTree
 ## Renders one portrait per enemy of the bestiary to assets/bestiary/<id>.png: the ids given
-## after "--", or every one of the bestiary without any. Run it not headless:
+## after "--", or every one of the bestiary (the v2 enemies too) without any. Run it not headless:
 ## tools/godot.cmd --path . --script res://scripts/tools/bestiary_shots.gd [-- id id ...]
 ## then --headless --path . --import. Excluded from the exports (scripts/tools/*).
 
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
 const SIZE := Vector2i(128, 128)
+## Ambient light by id for the very dark figures (the default is 0.7).
+const AMBIENT := {"jaguar_sombrio": 5.0}
 
 
 func _initialize() -> void:
@@ -19,7 +21,7 @@ func _run() -> void:
 	var ids: Array[String] = []
 	ids.assign(OS.get_cmdline_user_args())
 	if ids.is_empty():
-		ids = Bestiary.all_ids()
+		ids = Bestiary.all_ids() + Bestiary.V2_ENEMIES
 	for id: String in ids:
 		var view := SubViewport.new()
 		view.size = SIZE
@@ -29,11 +31,12 @@ func _run() -> void:
 		root.add_child(view)
 		var sun := DirectionalLight3D.new()
 		sun.rotation_degrees = Vector3(-50, 30, 0)
+		sun.light_energy = 2.5 if AMBIENT.has(id) else 1.0
 		view.add_child(sun)
 		var environment := Environment.new()
 		environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 		environment.ambient_light_color = Color.WHITE
-		environment.ambient_light_energy = 0.7
+		environment.ambient_light_energy = AMBIENT.get(id, 0.7)
 		var world := WorldEnvironment.new()
 		world.environment = environment
 		view.add_child(world)

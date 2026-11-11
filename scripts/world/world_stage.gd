@@ -243,9 +243,9 @@ static func _add_trees(root: Node3D, zone: ZoneData) -> void:
 			root.add_child(body)
 			add_cylinder_shape(body, CLUMP_RADIUS if tree.clump else TRUNK_RADIUS,
 				TREE_COLLIDER_HEIGHT)
-	_add_tree_kind(root, MODELS[zone.tree_models[0]], single_a)
-	_add_tree_kind(root, MODELS[zone.tree_models[1]], single_b)
-	_add_tree_kind(root, MODELS[zone.clump_model], clumps)
+	_add_tree_kind(root, _tree_mesh(zone.tree_models[0]), single_a)
+	_add_tree_kind(root, _tree_mesh(zone.tree_models[1]), single_b)
+	_add_tree_kind(root, _tree_mesh(zone.clump_model), clumps)
 
 
 ## The trees of zone, in the order they are drawn: {"pos", "yaw", "scale", "use_a" (the
@@ -279,17 +279,30 @@ static func _tree_layout(zone: ZoneData) -> Array[Dictionary]:
 	return trees
 
 
-## One kind of tree, drawn with its model's texture through the shader that lets the hero
-## show through (shaders/tree.gdshader).
-static func _add_tree_kind(root: Node3D, scene: PackedScene, transforms: Array[Transform3D]) -> void:
-	var mesh := BattleStage.scene_mesh(scene)
-	var source := mesh.surface_get_material(0) as BaseMaterial3D
-	var material := ShaderMaterial.new()
-	material.shader = TREE_SHADER
-	material.set_shader_parameter("albedo_texture", source.albedo_texture)
-	material.set_shader_parameter("albedo_color", source.albedo_color)
-	material.set_shader_parameter("roughness_value", source.roughness)
-	LowPoly.add_multimesh(root, mesh, transforms, material)
+## The mesh of a tree model: a jungle palm (PalmModels: palm_A, palm_B, palms_clump) or
+## the one mesh of a MODELS scene.
+static func _tree_mesh(id: String) -> Mesh:
+	if PalmModels.has(id):
+		return PalmModels.mesh(id)
+	return BattleStage.scene_mesh(MODELS[id])
+
+
+## One kind of tree as a MultiMesh through TREE_SHADER (the dithered hole that keeps the
+## hero in sight). Every surface keeps its own colour and its texture when it has one: the
+## KayKit trees have one textured surface, the palms two plain coloured ones.
+static func _add_tree_kind(root: Node3D, source_mesh: Mesh, transforms: Array[Transform3D]) -> void:
+	var mesh := source_mesh.duplicate() as Mesh
+	for i in mesh.get_surface_count():
+		var source := mesh.surface_get_material(i) as BaseMaterial3D
+		var material := ShaderMaterial.new()
+		material.shader = TREE_SHADER
+		material.set_shader_parameter("use_texture", source != null and source.albedo_texture != null)
+		if source != null:
+			material.set_shader_parameter("albedo_texture", source.albedo_texture)
+			material.set_shader_parameter("albedo_color", source.albedo_color)
+			material.set_shader_parameter("roughness_value", source.roughness)
+		mesh.surface_set_material(i, material)
+	LowPoly.add_multimesh(root, mesh, transforms)
 
 
 static func _tree_fits(zone: ZoneData, pos: Vector3, placed: Array[Vector2]) -> bool:

@@ -58,6 +58,8 @@ const NAMES := {
 static func of_zone(zone: ZoneData, flags: Dictionary, dry_wells: Array[String]) -> Array[Dictionary]:
 	var marks: Array[Dictionary] = []
 	for npc: Dictionary in zone.npcs:
+		if not ZoneData.is_present(npc, flags):
+			continue
 		if npc.kind == "shop":
 			_add(marks, npc.pos, SHOP)
 		elif npc.kind == "inn":
@@ -66,6 +68,8 @@ static func of_zone(zone: ZoneData, flags: Dictionary, dry_wells: Array[String])
 		var kind := WELL_HP if well.kind == Wells.HP else WELL_MP
 		_add(marks, well.pos, WELL_DRY if dry_wells.has(well.id) else kind)
 	for exit: Dictionary in zone.all_exits():
+		if not ZoneData.is_present(exit, flags):
+			continue
 		var kind := EXIT
 		if exit.get("stairs", false):
 			kind = STAIRS_UP if exit.id == ZoneData.STAIRS_UP else STAIRS_DOWN

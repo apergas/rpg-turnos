@@ -1,0 +1,123 @@
+[gd_resource type="Resource" script_class="ZoneData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/zone_data.gd" id="1_zone"]
+
+[resource]
+script = ExtResource("1_zone")
+id = "caravana"
+display_name = "La caravana"
+short_name = "Caravana"
+number = 5
+half_size = Vector2(20, 20)
+outer_margin = 6.0
+ground_color = Color(0.42, 0.3, 0.18, 1)
+has_grass = false
+hills = [[Vector3(-28, -3.5, -29.4), Vector3(15.4, 7, 15.4)], [Vector3(0, -4.2, -37.8), Vector3(19.6, 7.7, 14)], [Vector3(28, -3.5, -28), Vector3(15.4, 6.3, 15.4)], [Vector3(37.8, -4.2, 0), Vector3(14, 7, 19.6)], [Vector3(29.4, -3.5, 29.4), Vector3(15.4, 6.3, 15.4)], [Vector3(0, -4.2, 39.2), Vector3(19.6, 7, 14)], [Vector3(-29.4, -3.5, 29.4), Vector3(15.4, 7, 15.4)], [Vector3(-37.8, -4.2, 0), Vector3(14, 6.3, 19.6)]]
+path_points = Array[Vector3]([])
+path_half_width = 1.5
+safe_discs = []
+village_name = "la caravana"
+village_pos = Vector3(0, 0, 0)
+village_radius = 30.0
+buildings = [[Vector3(5.5, 0, 9.53), -150.0, "tent"], [Vector3(11, 0, 0), -90.0, "tent"], [Vector3(5.5, 0, -9.53), -30.0, "tent"], [Vector3(-5.5, 0, -9.53), 30.0, "tent"], [Vector3(-11, 0, 0), 90.0, "tent"], [Vector3(-5.5, 0, 9.53), 150.0, "tent"]]
+wells = [{
+"id": "caravana_vida",
+"kind": "hp",
+"pos": Vector3(-6, 0, 6)
+}, {
+"id": "caravana_mana",
+"kind": "mp",
+"pos": Vector3(6, 0, 6)
+}]
+rocks = [[Vector3(-16, 0, -14), 2, 7.0, 15.0], [Vector3(16, 0, -14), 3, 7.0, 130.0], [Vector3(-16, 0, 14), 1, 7.0, 290.0], [Vector3(16, 0, 14), 0, 7.0, 45.0]]
+tree_seed = 41
+tree_tries = 200
+tree_center_chance = 0.0
+tree_rise_inset = 16.0
+tree_clump_inset = 3.0
+tree_spacing = 3.2
+tree_scale = Vector2(3.6, 4.4)
+tree_models = Array[String](["tree_A", "tree_B"])
+clump_model = "trees_A"
+glades = []
+bush_seed = 43
+bush_tries = 60
+entries = {
+"inicio": [Vector3(0, 0, 8), 0.0],
+"jungla": [Vector3(0, 0, -13), 180.0],
+"pueblo": [Vector3(0, 0, 4), 0.0]
+}
+start_entry = "inicio"
+town_entry = "pueblo"
+portal_pos = Vector3(3, 0, 4)
+exits = [{
+"entry": "caravana",
+"gone": "jaguar_sombrio",
+"id": "jungla",
+"label": "A la jungla",
+"lock": "",
+"lock_text": "",
+"needs": "companero",
+"pos": Vector3(0, 0, -17),
+"to": "jungla",
+"yaw": 0.0
+}]
+npcs = [{
+"kind": "npc",
+"lines": ["La jungla está al norte. Cuando estés listo, sal por allí."],
+"lines_by_chapter": {
+7: ["Has vencido al guardián de la jungla. Bien hecho.", "Aún no podemos seguir. Montaremos el camino cuando la ruta sea segura."]
+},
+"look": "CARAVAN_CHIEF",
+"name": "Jefe de caravana",
+"pos": Vector3(0, 0, -6),
+"yaw": 180.0
+}, {
+"id": "caravana",
+"kind": "shop",
+"look": "MERCHANT",
+"name": "Mercader",
+"pos": Vector3(-5, 0, -2),
+"yaw": -90.0
+}, {
+"id": "caravana",
+"kind": "inn",
+"look": "HEALER",
+"name": "Curandera",
+"pos": Vector3(5, 0, -2),
+"yaw": 90.0
+}, {
+"kind": "board",
+"lines": ["Nada nuevo en el tablón."],
+"look": "BOARD",
+"name": "Tablón",
+"pos": Vector3(-3, 0, 6),
+"yaw": 0.0
+}, {
+"kind": "npc",
+"lines": ["Llevo tres caravanas encima. Esta es la primera que va hacia el portal."],
+"look": "VILLAGER",
+"name": "Viajera",
+"pos": Vector3(3, 0, 7),
+"yaw": 0.0
+}]
+boss_id = ""
+boss_pos = Vector3(0, 0, 0)
+formations = []
+start_formations = []
+start_pos = Vector3(0, 0, 0)
+start_radius = 0.0
+monster_count = 0
+exit_level = 20
+music = "caravan"
+village_music = "caravan"
+ambient = "meadow"
+sky_top = Color(0.42, 0.58, 0.85, 1)
+haze = Color(0.86, 0.8, 0.68, 1)
+fog_density = 0.008
+sun_color = Color(1, 0.88, 0.7, 1)
+sun_energy = 0.7
+backdrop = "pradera"
+particles = "pollen"
+autoplay_route = Array[Vector3]([Vector3(0, 0, 8), Vector3(-3, 0, 4), Vector3(-4, 0, -1), Vector3(4, 0, -1), Vector3(0, 0, -3.5), Vector3(2.5, 0, -7), Vector3(0, 0, -16.5)])
+autoplay_boss_level = 0

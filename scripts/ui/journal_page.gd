@@ -44,14 +44,22 @@ func fill(state: GameState) -> void:
 
 ## The Colección: each count on its own line, never a total percentage.
 static func collection_lines(state: GameState) -> Array[String]:
-	return [
-		"Historia: %s" % ("terminada" if state.is_finished() else "sin terminar"),
-		"Misiones: %d/%d" % [state.quests_done(), QuestLog.total_count()],
-		"Bestiario: %d/%d" % [Bestiary.seen_count(state), Bestiary.all_ids().size()],
+	var missions: Array[String] = ["Misiones: %d/%d" % [state.quests.done_of(false),
+		QuestLog.total_of(false)]]
+	if state.in_caravan():
+		missions = ["Misiones de Villaclaro: %d/%d" % [state.quests.done_of(false),
+			QuestLog.total_of(false)],
+			"Misiones de la caravana: %d/%d" % [state.quests.done_of(true),
+			QuestLog.total_of(true)]]
+	var lines: Array[String] = ["Historia: %s" % ("terminada" if state.is_finished() else "sin terminar")]
+	lines.append_array(missions)
+	lines.append_array([
+		"Bestiario: %d/%d" % [Bestiary.seen_count(state), Bestiary.total_count(state)],
 		"Familias: %d/%d" % [Bestiary.complete_count(state), Bestiary.FAMILIES.size()],
-		"Cofres: %d/%d" % [state.opened_chests.size(), Chests.CHESTS.size()],
+		"Cofres: %d/%d" % [Chests.opened_count(state), Chests.total(state)],
 		"Medallas: %d/%d" % [state.medals.size(), Medals.MEDALS.size()],
-	]
+	])
+	return lines
 
 
 func _heading(text: String) -> void:

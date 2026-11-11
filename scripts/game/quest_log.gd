@@ -14,6 +14,8 @@ const QUESTS := {
 	"gato": preload("res://data/quests/gato.tres"),
 	"slime_metal": preload("res://data/quests/slime_metal.tres"),
 	"explorador": preload("res://data/quests/explorador.tres"),
+	"pieles_mono": preload("res://data/quests/pieles_mono.tres"),
+	"explorador_perdido": preload("res://data/quests/explorador_perdido.tres"),
 }
 const VILLAGE_ZONE := "pradera"
 ## Ends the waiting lines of a HUNT or GATHER of several, so the progress is said aloud.
@@ -122,7 +124,7 @@ func talk(state: GameState, zone_id: String, figure: String) -> Dictionary:
 			return {"lines": quest.found_lines.duplicate(), "done": ""}
 	for id: String in QUESTS:
 		var quest := data(id)
-		if quest.zone == zone_id and quest.giver == figure and stage(id) == Stage.OPEN:
+		if quest.zone == zone_id and quest.giver == figure and _offered(quest, state.world_flags):
 			accept(state, id)
 			return {"lines": quest.offer_lines.duplicate(), "done": ""}
 	for id: String in QUESTS:
@@ -134,6 +136,11 @@ func talk(state: GameState, zone_id: String, figure: String) -> Dictionary:
 				lines.append(PROGRESS_LINE % [_progress(quest, state.inventory), quest.goal])
 			return {"lines": lines, "done": ""}
 	return {}
+
+
+## True if the quest may be offered now: still OPEN and its needs flag set.
+func _offered(quest: QuestData, flags: Dictionary) -> bool:
+	return stage(quest.id) == Stage.OPEN and (quest.needs == "" or flags.get(quest.needs, false))
 
 
 ## The figures of this zone with a report waiting for them.
@@ -148,11 +155,11 @@ func reports_here(zone_id: String, inventory: Inventory) -> Array[String]:
 
 ## Figure name -> mark, on this zone: "?" for a report waiting or a figure being sought, "!"
 ## for a new offer. "?" wins. The Abuela Rosa's are the village quest's.
-func markers(zone_id: String, inventory: Inventory) -> Dictionary:
+func markers(zone_id: String, inventory: Inventory, flags := {}) -> Dictionary:
 	var marks := {}
 	for id: String in QUESTS:
 		var quest := data(id)
-		if quest.zone == zone_id and stage(id) == Stage.OPEN:
+		if quest.zone == zone_id and _offered(quest, flags):
 			marks[quest.giver] = NEW_MARK
 	if zone_id == VILLAGE_ZONE:
 		if village.stage == Quest.Stage.OFFER:
@@ -194,9 +201,28 @@ func status_lines(inventory: Inventory) -> Array[String]:
 	return lines
 
 
-## Every mission of the game, the village quest included (the Colección's "n/7").
-static func total_count() -> int:
-	return QUESTS.size() + 1
+## The missions of the v2 (the caravan's zones), the rest are the v1's (the Colección's
+## "n/7" and "n/2").
+static func is_v2(id: String) -> bool:
+	return data(id).zone in ZoneData.V2_ZONES
+
+
+## How many missions the v1 has (the village quest included) or the v2 has.
+static func total_of(v2: bool) -> int:
+	var total := 0 if v2 else 1
+	for id: String in QUESTS:
+		if is_v2(id) == v2:
+			total += 1
+	return total
+
+
+## Missions finished of the v1 (the village quest included) or of the v2.
+func done_of(v2: bool) -> int:
+	var done := 1 if not v2 and village.stage == Quest.Stage.DONE else 0
+	for id: String in QUESTS:
+		if is_v2(id) == v2 and stage(id) == Stage.DONE:
+			done += 1
+	return done
 
 
 ## Missions finished, the village quest included: what the credits count.

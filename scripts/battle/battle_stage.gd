@@ -95,6 +95,15 @@ const FOREST_TREES := [
 	[Vector3(13, 0, 3.5), 3, 4.0, 280.0],
 ]
 
+## The jungle backdrop: dark wet ground, tall bright grass and the same close ring of trees
+## as palms (PalmModels, the map's), scaled by the jungle's tree_scale over the forest's
+## (about 1.0 / 2.9, since a KayKit tree is a third of a palm's size in the table above),
+## with the bushes doubled.
+const JUNGLE_GROUND := Color(0.12, 0.24, 0.07)
+const JUNGLE_TIPS := [Color(0.1, 0.45, 0.08), Color(0.26, 0.6, 0.12)]
+const JUNGLE_PALM_RATIO := 0.354
+const JUNGLE_PALMS := ["palm_A", "palm_B"]
+
 
 ## The mine backdrop: rock floor, the blocks of the cave wall ([position, size]), the
 ## boulders (same entries as ROCKS), the stalagmites ([position, radius, height]) and
@@ -155,27 +164,48 @@ static func build(root: Node3D, zone: ZoneData = null) -> void:
 	if zone != null and zone.backdrop == "castillo":
 		_build_castle(root, zone)
 		return
-	var forest := zone != null and zone.backdrop == "bosque"
+	var jungle := zone != null and zone.backdrop == "jungla"
+	var forest := jungle or (zone != null and zone.backdrop == "bosque")
 	var ground := PlaneMesh.new()
 	ground.size = Vector2(160, 160)
-	add_mesh(root, ground, FOREST_GROUND if forest else GRASS, Vector3.ZERO)
+	add_mesh(root, ground, JUNGLE_GROUND if jungle else (FOREST_GROUND if forest else GRASS),
+		Vector3.ZERO)
 	var path := PlaneMesh.new()
 	path.size = PATH_SIZE
 	add_mesh(root, path, DIRT, PATH_CENTER + Vector3(0, 0.01, 0), Vector3.ONE,
 		Vector3(0, PATH_YAW_DEG, 0))
 	for rock in ROCKS:
 		add_model(root, ROCK_SCENES[rock[1]], rock[0], rock[2], rock[3])
-	for tree in FOREST_TREES if forest else TREES:
-		add_model(root, FOREST_TREE_SCENES[tree[1]], tree[0], tree[2], tree[3])
+	if jungle:
+		_add_jungle_palms(root)
+	else:
+		for tree in FOREST_TREES if forest else TREES:
+			add_model(root, FOREST_TREE_SCENES[tree[1]], tree[0], tree[2], tree[3])
 	var bushes: Array[Transform3D] = []
 	for i in BUSHES.size():
 		bushes.append(Transform3D(Basis(Vector3.UP, i * 0.8).scaled(Vector3.ONE * BUSHES[i][1]),
 			BUSHES[i][0]))
+	if jungle:
+		for i in BUSHES.size():
+			bushes.append(Transform3D(Basis(Vector3.UP, i * 0.8 + PI).scaled(
+				Vector3.ONE * BUSHES[i][1] * 1.3), BUSHES[i][0] + Vector3(0.9, 0, 0.7)))
 	LowPoly.add_multimesh(root, LowPoly.bush_mesh(), bushes)
 	for hill in HILLS:
 		add_mesh(root, unit_sphere(), HILL, hill[0], hill[1])
 	Vegetation.build(root, GRASS_AREA, _is_grass_free, GRASS_SEED,
-		PackedColorArray(FOREST_TIPS) if forest else PackedColorArray())
+		PackedColorArray(JUNGLE_TIPS if jungle else FOREST_TIPS) if forest else PackedColorArray())
+
+
+## The jungle's ring of trees: the forest's entries as palms.
+static func _add_jungle_palms(root: Node3D) -> void:
+	for i in FOREST_TREES.size():
+		var tree: Array = FOREST_TREES[i]
+		var palm := MeshInstance3D.new()
+		palm.mesh = PalmModels.mesh(JUNGLE_PALMS[i % JUNGLE_PALMS.size()])
+		palm.position = tree[0]
+		palm.scale = Vector3.ONE * tree[2] * JUNGLE_PALM_RATIO
+		palm.rotation_degrees = Vector3(0, tree[3], 0)
+		root.add_child(palm)
 
 
 ## Sky, tonemap, fog and sun of zone (null: the meadow's warm daylight), shared by the

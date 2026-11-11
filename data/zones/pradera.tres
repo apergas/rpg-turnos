@@ -123,6 +123,15 @@ npcs = [{
 "name": "Coleccionista",
 "pos": Vector3(10, 0, -24.5),
 "yaw": 180.0
+}, {
+"gone": "caravana",
+"kind": "npc",
+"lines": ["Cuando quieras partir, avísame. La caravana no esperará siempre, pero hoy sí."],
+"look": "CARAVAN_CHIEF",
+"name": "Jefe de caravana",
+"needs": "caravana_vista",
+"pos": Vector3(-1.2, 0, -25.4),
+"yaw": 180.0
 }]
 boss_id = "rey_slime"
 boss_pos = Vector3(0, 0, -27.5)

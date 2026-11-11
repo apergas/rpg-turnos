@@ -1,5 +1,15 @@
 # Registro de cambios
 
+## 2.0.0 (2026)
+
+La caravana del portal, primera parte.
+
+- Después del final llega a Villaclaro una caravana que va hacia un portal al norte. Puedes partir con ella: el mundo de la primera parte queda atrás.
+- La Caravana es tu nueva base: mercader, curandera, tablón de misiones y el Jefe de caravana.
+- Elige un compañero entre tres (Brena, Tadeo y Ulma). Pelea a tu lado en cada combate y se hace más fuerte en cada tramo del camino.
+- La jungla: un mapa nuevo con cinco monstruos nuevos, el Jaguar sombrío, el equipo de jade y dos misiones.
+- El nivel máximo sube a 40, con un hechizo nuevo, Ventisca, y la Poción grande y el Éter grande.
+
 ## 1.9.0 (2026)
 
 - Cada lugar tiene su sonido de fondo: brisa y trinos en la pradera, viento entre las hojas y algún pájaro en el bosque, gotas con eco en la mina y viento que silba en el castillo.

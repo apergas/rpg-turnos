@@ -5,12 +5,16 @@ class_name Inventory extends RefCounted
 
 const POTION := "potion"
 const ETHER := "ether"
+const BIG_POTION := "pocion_grande"
+const BIG_ETHER := "eter_grande"
 const ANTIDOTE := "antidote"
 const WING := "wing"
 const INCENSE := "incienso"
 const PHOENIX := "pluma_fenix"
 const ALARM := "despertador"
 const SETA := "seta"
+## The jungle's quest item (pieles_mono), dropped by the Mono aullador.
+const PIEL_MONO := "piel_mono"
 const SEED_ATTACK := "semilla_fuerza"
 const SEED_DEFENSE := "semilla_defensa"
 const SEED_SPEED := "semilla_agilidad"
@@ -46,6 +50,10 @@ const ITEMS := {
 		"battle": true, "field": true, "text": "Recupera 30 PV."},
 	ETHER: {"name": "Éter", "article": "un", "effect": "mp", "value": 15, "price": 30,
 		"battle": true, "field": true, "text": "Recupera 15 PM."},
+	BIG_POTION: {"name": "Poción grande", "article": "una", "effect": "hp", "value": 100,
+		"price": 40, "battle": true, "field": true, "text": "Recupera 100 PV."},
+	BIG_ETHER: {"name": "Éter grande", "article": "un", "effect": "mp", "value": 40,
+		"price": 90, "battle": true, "field": true, "text": "Recupera 40 PM."},
 	ANTIDOTE: {"name": "Antídoto", "article": "un", "effect": "cure", "value": "poison",
 		"price": 10, "battle": true, "field": false, "text": "Cura el veneno."},
 	ALARM: {"name": "Despertador", "article": "un", "effect": EFFECT_WAKE_GUARD, "value": 0,
@@ -63,6 +71,9 @@ const ITEMS := {
 	SETA: {"name": "Seta", "article": "una", "effect": "quest", "value": 0, "price": 0,
 		"battle": false, "field": false,
 		"text": "De las que saltan. Alguien de Villaclaro las anda buscando."},
+	PIEL_MONO: {"name": "Piel de mono", "article": "una", "effect": "quest", "value": 0,
+		"price": 0, "battle": false, "field": false,
+		"text": "Suave y con rayas. Alguien de la caravana las anda buscando."},
 	SEED_ATTACK: {"name": "Semilla de fuerza", "article": "una", "effect": "seed",
 		"value": "attack", "price": 0, "battle": false, "field": true,
 		"text": "Sube el ATK en 2 para siempre."},
@@ -74,8 +85,8 @@ const ITEMS := {
 		"text": "Sube la VEL en 2 para siempre."},
 }
 ## Order of the item lists.
-const IDS: Array[String] = [POTION, ETHER, ANTIDOTE, ALARM, PHOENIX, WING, INCENSE,
-	SEED_ATTACK, SEED_DEFENSE, SEED_SPEED, SETA]
+const IDS: Array[String] = [POTION, ETHER, BIG_POTION, BIG_ETHER, ANTIDOTE, ALARM, PHOENIX, WING,
+	INCENSE, SEED_ATTACK, SEED_DEFENSE, SEED_SPEED, SETA, PIEL_MONO]
 ## Why an Ala de viaje can't be used in a village.
 const IN_TOWN := "Ya estás en un lugar seguro"
 ## Why a "quest" item can't be used.
@@ -89,6 +100,7 @@ const KEY_ITEMS := {
 	"fragmento_castillo": "Fragmento del amuleto (3/3)",
 	"llave_mina": "Llave de la mina",
 	"carta_granjero": "Carta del Granjero",
+	"insignia_jungla": "Insignia de la jungla",
 }
 ## What each key item is, for Objetos.
 const KEY_TEXTS := {
@@ -97,6 +109,7 @@ const KEY_TEXTS := {
 	"fragmento_castillo": "El último trozo del Amuleto del Alba. Lo guardaba el Señor de la Niebla.",
 	"llave_mina": "Abre la reja de la tercera planta de la mina.",
 	"carta_granjero": "Para la Leñadora, en la aldea del bosque. Huele un poco a gallina.",
+	"insignia_jungla": "La llevaba el Jaguar sombrío. Abre el camino hacia el desierto.",
 	MEDAL: "El Coleccionista de Villaclaro las colecciona.",
 }
 
@@ -204,3 +217,9 @@ func to_dict() -> Dictionary:
 ## Replaces every item with these (id -> count), when a game is loaded.
 func set_items(items: Dictionary) -> void:
 	_items = items.duplicate()
+
+
+## The best healing potion carried: the Poción grande if there is one, else the Poción
+## (also when there is none: the caller checks can_use()).
+static func best_potion(inventory: Inventory) -> String:
+	return BIG_POTION if inventory.count(BIG_POTION) > 0 else POTION
