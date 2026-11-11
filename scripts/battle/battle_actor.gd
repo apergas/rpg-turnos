@@ -1741,7 +1741,8 @@ static func _merged(mesh: Mesh, xforms: Array[Transform3D]) -> ArrayMesh:
 func _devourer_wakes() -> void:
 	_set_flash(true, LOOKS[look].glow_color)
 	var t := create_tween().set_parallel()
-	t.tween_property(_devourer, "scale", _devourer.scale * DEVOURER_GROWTH, 0.9) 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_property(_devourer, "scale", _devourer.scale * DEVOURER_GROWTH, 0.9) \
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	t.tween_property(_eyelid, "rotation_degrees:x", EYELID_OPEN, 0.9)
 	await t.finished
 	_top *= 1.1  # the bar rises with it, still on screen
