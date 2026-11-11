@@ -25,9 +25,9 @@ class_name SaveData extends RefCounted
 ## METAL_SLIME_VERSION (1.7.0) adds the Slime de Metal's HP kept after it got away (metal_slime_hp, 0 for none); an older save gets 0.
 ## MEDALS_VERSION (1.8.0) adds the small medals taken (medals, sorted), the Coleccionista's prizes
 ## given (medal_prizes), whether he was met (collector_met) and the rounds of the Partida nueva +
-## (ng_plus); an older save gets none, 0, false and 0.
+## (ng_plus); an older save gets none, 0, false and 0. CARAVAN_VERSION (2.0.0) changes no field: it marks the saves that may hold the v2 (the caravan's zones, a companion, levels past 20).
 
-const VERSION := 13
+const VERSION := 14
 ## First version with the story's fields.
 const STORY_VERSION := 6
 ## First version with the accessory slot and the side quests.
@@ -46,6 +46,9 @@ const OLD_ACCESSORY := "accessory"
 const METAL_SLIME_VERSION := 12
 ## First version with the small medals and the Partida nueva +.
 const MEDALS_VERSION := 13
+## The caravan (2.0.0, the v2): no new field, but the v2's zones, the companions, level 40
+## and the v2's cutscenes and quests only exist from here on. An older save has none.
+const CARAVAN_VERSION := 14
 ## Oldest version apply() still reads.
 const OLDEST_VERSION := 2
 ## Combatant fields of the hero that change while playing (the rest come from hero.tres).
@@ -282,7 +285,27 @@ static func is_valid(data: Dictionary) -> bool:
 	var pos: Variant = data.get("position")
 	if not (pos is Array and pos.size() == 2 and pos[0] is float and pos[1] is float):
 		return false
+	if not _valid_caravan(data):
+		return false
 	return data.get("play_time") is float and data.play_time >= 0.0
+
+
+## The v2 and the v1 don't mix: with the caravan's flag the zone and the last village are
+## v2 zones and the ally is a companion or none; without it, no v2 zone and no companion.
+## Before CARAVAN_VERSION nothing of the v2 can be there at all.
+static func _valid_caravan(data: Dictionary) -> bool:
+	var flags: Variant = data.get("flags", [])
+	var in_caravan: bool = flags is Array and StoryState.CARAVAN_FLAG in flags
+	if in_caravan and int(data.version) < CARAVAN_VERSION:
+		return false
+	var ally: String = data.ally if data.get("ally", "") is String else ""
+	if Allies.is_companion(ally) != (in_caravan and ally != ""):
+		return false
+	for key in ["zone", "town"]:
+		var zone_id: Variant = data.get(key, "")
+		if zone_id is String and (zone_id in ZoneData.V2_ZONES) != in_caravan:
+			return false
+	return true
 
 
 ## Numbers a played game can't reach: below zero, a level off the table, a dead hero.
@@ -491,6 +514,8 @@ static func summary_line(data: Dictionary) -> String:
 	var cycle := int(data.ng_plus) if version >= MEDALS_VERSION else 0
 	if cycle > 0:
 		text += " · +%d" % cycle
+	if is_caravan(data):
+		text += " · v2"
 	return text
 
 
