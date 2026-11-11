@@ -263,7 +263,7 @@ func is_finished() -> bool:
 
 
 ## True once the Devorador del portal is beaten: the v2's ending follows (story.finished_v2
-## is set after its credits).
+## is set when the ending plays, before its autosave).
 func is_finished_v2() -> bool:
 	return has_flag(StoryState.V2_FINAL_BOSS)
 
