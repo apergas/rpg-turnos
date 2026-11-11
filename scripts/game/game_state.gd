@@ -252,7 +252,8 @@ func needs_rest() -> bool:
 	for skill in hero.skills:
 		if skill.kind == Skill.HEAL:
 			heal_cost = maxi(heal_cost, skill.mp_cost)
-	return inventory.count(Inventory.POTION) == 0 and hero.mp < heal_cost * 2
+	var potions := inventory.count(Inventory.POTION) + inventory.count(Inventory.BIG_POTION)
+	return potions == 0 and hero.mp < heal_cost * 2
 
 
 ## True once the Señor de la Niebla is beaten: the adventure is over (the ending

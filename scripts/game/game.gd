@@ -641,7 +641,7 @@ func _on_encounter(boss: bool) -> void:
 	if _autoplay and won and _wants_retreat():
 		state.inventory.take(Inventory.WING)
 		print("Retirada al pueblo (PV %d/%d, PM %d, pociones %d)" % [state.hero.hp,
-			state.hero.max_hp, state.hero.mp, state.inventory.count(Inventory.POTION)])
+			state.hero.max_hp, state.hero.mp, _potion_count()])
 		await _on_travel_requested()
 		await _autoplay_restock()
 		await _on_portal()
@@ -1346,9 +1346,14 @@ func _on_stepped() -> void:
 		_world.show_notice(REPEL_END_NOTICE)
 
 
+## The healing potions carried, big ones too: the map's counter and the retreat line.
+func _potion_count() -> int:
+	return state.inventory.count(Inventory.POTION) + state.inventory.count(Inventory.BIG_POTION)
+
+
 func _refresh_status() -> void:
 	var missions := state.current_missions()
-	_world.refresh_status(state.hero, state.inventory.count(Inventory.POTION), state.gold,
+	_world.refresh_status(state.hero, _potion_count(), state.gold,
 		missions)
 	_world.set_monsters_shy(EncounterMeter.is_shy(state.hero.level, _zone.exit_level))
 	_world.set_repel(state.repel_m > 0.0)

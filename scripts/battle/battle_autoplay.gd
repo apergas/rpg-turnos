@@ -29,7 +29,7 @@ func _pick(engine: BattleEngine) -> Dictionary:
 	if hero.hp < hero.max_hp * HEAL_RATIO:
 		if heal_skill != null and engine.can_use(BattleEngine.cmd_skill(heal_skill)):
 			return BattleEngine.cmd_skill(heal_skill)
-		var potion := BattleEngine.cmd_item(Inventory.POTION)
+		var potion := BattleEngine.cmd_item(Inventory.best_potion(engine.inventory))
 		if engine.can_use(potion):
 			return potion
 		if hero.hp < hero.max_hp * DEFEND_RATIO and _last_type != BattleEngine.CMD_DEFEND:
@@ -40,7 +40,8 @@ func _pick(engine: BattleEngine) -> Dictionary:
 	var antidote := BattleEngine.cmd_item(Inventory.ANTIDOTE)
 	if engine.can_use(antidote):
 		return antidote
-	var ether := BattleEngine.cmd_item(Inventory.ETHER)
+	var ether_id := Inventory.BIG_ETHER if engine.inventory.count(Inventory.BIG_ETHER) > 0 		else Inventory.ETHER
+	var ether := BattleEngine.cmd_item(ether_id)
 	if heal_skill != null and hero.mp < heal_skill.mp_cost and engine.can_use(ether):
 		return ether
 	var target := _weakest(engine)

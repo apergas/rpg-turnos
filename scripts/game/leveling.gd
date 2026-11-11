@@ -3,10 +3,13 @@ class_name Leveling extends RefCounted
 ## Current HP and MP go up by the same amount as their maximum, so a level up is not a
 ## full heal. Reaching a level listed in the hero's `learn` teaches that spell.
 
-const MAX_LEVEL := 20
-## EXP_TABLE[i] is the total EXP needed to reach level i + 1.
+const MAX_LEVEL := 40
+## EXP_TABLE[i] is the total EXP needed to reach level i + 1. Up to 20, the v1; from 21
+## on, the caravan (v2), where each level asks a little more than the last.
 const EXP_TABLE := [0, 12, 35, 62, 96, 180, 260, 340, 421, 580, 740, 900, 1073, 1550,
-	1780, 2010, 2244, 2650, 3100, 3600]
+	1780, 2010, 2244, 2650, 3100, 3600,
+	4150, 4750, 5400, 6100, 6850, 7650, 8500, 9400, 10350, 11350,
+	12400, 13500, 14650, 15850, 17100, 18400, 19750, 21150, 22600, 24100]
 const GAINS := {"max_hp": 6, "max_mp": 3, "attack": 2, "defense": 1, "speed": 1}
 
 
