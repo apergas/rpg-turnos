@@ -176,22 +176,17 @@ static func build(root: Node3D, zone: ZoneData = null) -> void:
 		Vector3(0, PATH_YAW_DEG, 0))
 	for rock in ROCKS:
 		add_model(root, ROCK_SCENES[rock[1]], rock[0], rock[2], rock[3])
-	for i in (FOREST_TREES if forest else TREES).size():
-		var tree: Array = (FOREST_TREES if forest else TREES)[i]
-		if jungle:
-			var palm := MeshInstance3D.new()
-			palm.mesh = PalmMeshes.mesh(JUNGLE_PALMS[i % JUNGLE_PALMS.size()])
-			palm.position = tree[0]
-			palm.scale = Vector3.ONE * tree[2] * JUNGLE_PALM_RATIO
-			palm.rotation_degrees = Vector3(0, tree[3], 0)
-			root.add_child(palm)
-		else:
+	if jungle:
+		_add_jungle_palms(root)
+	else:
+		for tree in FOREST_TREES if forest else TREES:
 			add_model(root, FOREST_TREE_SCENES[tree[1]], tree[0], tree[2], tree[3])
 	var bushes: Array[Transform3D] = []
 	for i in BUSHES.size():
 		bushes.append(Transform3D(Basis(Vector3.UP, i * 0.8).scaled(Vector3.ONE * BUSHES[i][1]),
 			BUSHES[i][0]))
-		if jungle:
+	if jungle:
+		for i in BUSHES.size():
 			bushes.append(Transform3D(Basis(Vector3.UP, i * 0.8 + PI).scaled(
 				Vector3.ONE * BUSHES[i][1] * 1.3), BUSHES[i][0] + Vector3(0.9, 0, 0.7)))
 	LowPoly.add_multimesh(root, LowPoly.bush_mesh(), bushes)
@@ -199,6 +194,18 @@ static func build(root: Node3D, zone: ZoneData = null) -> void:
 		add_mesh(root, unit_sphere(), HILL, hill[0], hill[1])
 	Vegetation.build(root, GRASS_AREA, _is_grass_free, GRASS_SEED,
 		PackedColorArray(JUNGLE_TIPS if jungle else FOREST_TIPS) if forest else PackedColorArray())
+
+
+## The jungle's ring of trees: the forest's entries as palms.
+static func _add_jungle_palms(root: Node3D) -> void:
+	for i in FOREST_TREES.size():
+		var tree: Array = FOREST_TREES[i]
+		var palm := MeshInstance3D.new()
+		palm.mesh = PalmMeshes.mesh(JUNGLE_PALMS[i % JUNGLE_PALMS.size()])
+		palm.position = tree[0]
+		palm.scale = Vector3.ONE * tree[2] * JUNGLE_PALM_RATIO
+		palm.rotation_degrees = Vector3(0, tree[3], 0)
+		root.add_child(palm)
 
 
 ## Sky, tonemap, fog and sun of zone (null: the meadow's warm daylight), shared by the
