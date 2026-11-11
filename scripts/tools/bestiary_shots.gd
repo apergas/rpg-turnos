@@ -6,6 +6,8 @@ extends SceneTree
 
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
 const SIZE := Vector2i(128, 128)
+## Ambient light by id for the very dark figures (the default is 0.7).
+const AMBIENT := {"jaguar_sombrio": 5.0}
 
 
 func _initialize() -> void:
@@ -29,11 +31,12 @@ func _run() -> void:
 		root.add_child(view)
 		var sun := DirectionalLight3D.new()
 		sun.rotation_degrees = Vector3(-50, 30, 0)
+		sun.light_energy = 2.5 if AMBIENT.has(id) else 1.0
 		view.add_child(sun)
 		var environment := Environment.new()
 		environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 		environment.ambient_light_color = Color.WHITE
-		environment.ambient_light_energy = 0.7
+		environment.ambient_light_energy = AMBIENT.get(id, 0.7)
 		var world := WorldEnvironment.new()
 		world.environment = environment
 		view.add_child(world)

@@ -97,11 +97,11 @@ const FOREST_TREES := [
 
 ## The jungle backdrop: dark wet ground, tall bright grass and the same close ring of trees
 ## as palms (PalmModels, the map's), scaled by the jungle's tree_scale over the forest's
-## (about 1.0 / 4.1, since a KayKit tree is a quarter of a palm's size in the table above),
+## (about 1.0 / 2.9, since a KayKit tree is a third of a palm's size in the table above),
 ## with the bushes doubled.
 const JUNGLE_GROUND := Color(0.12, 0.24, 0.07)
 const JUNGLE_TIPS := [Color(0.1, 0.45, 0.08), Color(0.26, 0.6, 0.12)]
-const JUNGLE_PALM_RATIO := 0.2476
+const JUNGLE_PALM_RATIO := 0.354
 const JUNGLE_PALMS := ["palm_A", "palm_B"]
 
 

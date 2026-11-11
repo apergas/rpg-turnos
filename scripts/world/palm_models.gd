@@ -1,6 +1,6 @@
 class_name PalmModels extends RefCounted
 ## The jungle palms: the Kenney Nature Kit models (assets/nature/, CC0) merged into one
-## mesh per id, scaled to the size the jungle wants (7-9 m tall, a clump's palms 4-6 m).
+## mesh per id, scaled to the size the jungle wants (5-6 m tall, a clump's palms 3-4 m: the top-down camera sits about 11 m up, so taller crowns covered the screen).
 ## Each mesh has two surfaces (trunk, fronds) with a plain colour: the kit's fronds are
 ## teal, so they are tinted green to sit with the KayKit greens. The meshes of a model
 ## (the detailed palms keep their fronds in child meshes) are merged with their own
@@ -13,12 +13,12 @@ const TRUNK_SLIM := 0.75
 
 ## id → [[model, scale, position, yaw]] (the palms the mesh holds).
 const PALMS := {
-	"palm_A": [["tree_palmDetailedTall", 6.7, Vector3.ZERO, 0.0]],
-	"palm_B": [["tree_palmBend", 5.4, Vector3.ZERO, 0.6]],
+	"palm_A": [["tree_palmDetailedTall", 4.7, Vector3.ZERO, 0.0]],
+	"palm_B": [["tree_palmBend", 3.9, Vector3.ZERO, 0.6]],
 	"palms_clump": [
-		["tree_palmDetailedShort", 5.2, Vector3(0.0, 0.0, 0.0), 0.3],
-		["tree_palmShort", 4.0, Vector3(1.3, 0.0, 0.7), 2.2],
-		["tree_palmDetailedShort", 4.6, Vector3(-0.9, 0.0, 1.1), 4.1],
+		["tree_palmDetailedShort", 3.8, Vector3(0.0, 0.0, 0.0), 0.3],
+		["tree_palmShort", 3.0, Vector3(1.3, 0.0, 0.7), 2.2],
+		["tree_palmDetailedShort", 3.4, Vector3(-0.9, 0.0, 1.1), 4.1],
 	],
 }
 
