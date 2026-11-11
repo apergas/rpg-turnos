@@ -262,6 +262,16 @@ func is_finished() -> bool:
 	return has_flag(FINAL_BOSS)
 
 
+## True once the hero has left Villaclaro with the caravan (the v2).
+func in_caravan() -> bool:
+	return has_flag(StoryState.CARAVAN_FLAG)
+
+
+## The caravan's stretch of road (StoryState.tramo()): 0 before the v2.
+func tramo() -> int:
+	return StoryState.tramo(world_flags)
+
+
 ## The story chapter now (StoryState.Chapter).
 func chapter() -> StoryState.Chapter:
 	return story.chapter(world_flags)
