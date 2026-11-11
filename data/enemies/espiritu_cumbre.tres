@@ -8,18 +8,18 @@
 script = ExtResource("1_combatant")
 id = "espiritu_cumbre"
 display_name = "Espíritu de la cumbre"
-max_hp = 125
-hp = 125
+max_hp = 100
+hp = 100
 max_mp = 40
 mp = 40
-attack = 60
+attack = 54
 defense = 50
 speed = 22
 map_roam = 2.5
 map_speed = 1.6
 skills = Array[ExtResource("2_skill")]([ExtResource("3_ventisca")])
-exp_reward = 92
-gold_reward = 46
+exp_reward = 102
+gold_reward = 50
 ai_weights = {
 "attack": 55,
 "ventisca_cumbre": 45

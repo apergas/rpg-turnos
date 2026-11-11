@@ -6,13 +6,13 @@
 script = ExtResource("1_combatant")
 id = "golem_hielo"
 display_name = "Golem de hielo"
-max_hp = 180
-hp = 180
-attack = 72
+max_hp = 150
+hp = 150
+attack = 65
 defense = 56
 speed = 8
-exp_reward = 100
-gold_reward = 50
+exp_reward = 110
+gold_reward = 54
 ai_weights = {
 "attack": 65,
 "charge": 25,

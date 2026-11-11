@@ -7,15 +7,15 @@ script = ExtResource("1_combatant")
 id = "cabra_montesa"
 display_name = "Cabra montesa"
 female = true
-max_hp = 150
-hp = 150
-attack = 68
+max_hp = 120
+hp = 120
+attack = 61
 defense = 48
 speed = 26
 map_roam = 2.0
 map_speed = 1.8
-exp_reward = 90
-gold_reward = 46
+exp_reward = 100
+gold_reward = 50
 ai_weights = {
 "attack": 85,
 "stagger": 15
@@ -25,4 +25,4 @@ drops = {
 "pocion_grande": 0.1
 }
 attack_status = "stun"
-attack_status_chance = 0.25
+attack_status_chance = 0.15

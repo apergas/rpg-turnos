@@ -9,11 +9,11 @@
 script = ExtResource("1_combatant")
 id = "grifo_cumbre"
 display_name = "Grifo de la cumbre"
-max_hp = 1700
-hp = 1700
+max_hp = 1400
+hp = 1400
 max_mp = 120
 mp = 120
-attack = 100
+attack = 90
 defense = 60
 speed = 28
 skills = Array[ExtResource("2_skill")]([ExtResource("3_vendaval")])
