@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="Combatant" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="Combatant" load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
 [ext_resource type="Script" path="res://scripts/battle/skill.gd" id="2_skill"]
@@ -8,6 +8,7 @@
 [ext_resource type="Resource" path="res://data/skills/rayo.tres" id="6_rayo"]
 [ext_resource type="Resource" path="res://data/skills/curar_mas.tres" id="7_curar_mas"]
 [ext_resource type="Resource" path="res://data/skills/ventisca.tres" id="8_ventisca"]
+[ext_resource type="Resource" path="res://data/skills/sanacion.tres" id="9_sanacion"]
 
 [resource]
 script = ExtResource("1_combatant")
@@ -27,5 +28,6 @@ learn = {
 7: ExtResource("5_llamarada"),
 10: ExtResource("6_rayo"),
 11: ExtResource("7_curar_mas"),
-24: ExtResource("8_ventisca")
+24: ExtResource("8_ventisca"),
+32: ExtResource("9_sanacion")
 }

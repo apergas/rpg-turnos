@@ -25,6 +25,7 @@ const STATUS_ON := "status_on"
 const STATUS_TICK := "status_tick"
 const STATUS_OFF := "status_off"
 const ASLEEP := "asleep"
+const STUNNED := "stunned"
 const CALL_HELP := "call_help"
 const CHARGE := "charge"
 const PHASE := "phase"
@@ -144,6 +145,11 @@ static func status_off(target: int, status: String) -> Dictionary:
 ## The fighter is asleep and loses its turn.
 static func asleep(actor: int) -> Dictionary:
 	return {"type": ASLEEP, "actor": actor}
+
+
+## The fighter is still stunned by a blow and loses its turn.
+static func stunned(actor: int) -> Dictionary:
+	return {"type": STUNNED, "actor": actor}
 
 
 ## helper: index of the new enemy in BattleEngine.enemies.
