@@ -15,7 +15,14 @@ const NAME_TAG := "{nombre}"
 ## Every cutscene, in story order.
 const SCENES: Array[String] = ["prologo", "rey_slime", "aldea_bosque", "bruja", "mina",
 	"golem", "castillo", "final", "caravana_llega", "caravana_parte", "caravana_campamento",
-	"jaguar"]
+	"jaguar", "gusano"]
+## The zone each chapter of the v2 is played in: while it is not built yet (not in
+## ZoneData.IDS) the goal says to wait in the caravan (NOT_YET_GOAL).
+const CHAPTER_ZONES := {
+	Chapter.DESERT: "desierto",
+	Chapter.MOUNTAIN: "montana_1",
+	Chapter.CITY: "ciudad_1",
+}
 ## The cutscene that follows beating each boss (its world flag).
 const AFTER_BOSS := {
 	"rey_slime": "rey_slime",
@@ -23,6 +30,7 @@ const AFTER_BOSS := {
 	"golem_piedra": "golem",
 	"senor_niebla": "final",
 	"jaguar_sombrio": "jaguar",
+	"gusano_dunas": "gusano",
 }
 ## The cutscene of the first visit to each zone's village.
 const ON_VILLAGE := {
@@ -158,7 +166,7 @@ func goal_text(flags: Dictionary, zone_id := "") -> String:
 		return MINE_GOALS[_mine_step(flags, zone_id)]
 	if now == Chapter.CARAVAN and not flags.get(COMPANION_FLAG, false):
 		return "Objetivo: habla con el Jefe de caravana"
-	if now == Chapter.DESERT and not "desierto" in ZoneData.IDS:
+	if CHAPTER_ZONES.has(now) and not CHAPTER_ZONES[now] in ZoneData.IDS:
 		return NOT_YET_GOAL
 	return GOALS[now]
 

@@ -67,7 +67,14 @@ exits = [{
 "to": "caravana",
 "yaw": 0.0
 }]
-npcs = []
+npcs = [{
+"kind": "item",
+"lines": ["Una cantimplora vieja, de cuero."],
+"look": "CANTEEN",
+"name": "Cantimplora",
+"pos": Vector3(24, 0, 1.8),
+"yaw": 30.0
+}]
 boss_id = "gusano_dunas"
 boss_pos = Vector3(0, 0, -28)
 formations = [["escorpion"], ["slime_arena"], ["buitre"], ["golem_arena"], ["momia"], ["escorpion", "escorpion"], ["slime_arena", "buitre"], ["momia", "golem_arena"]]

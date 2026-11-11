@@ -150,7 +150,8 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## camera), "name" (unique on the map: cutscenes call the figure by it), and what it says:
 ## "lines" and / or "lines_by_chapter" (StoryState.Chapter -> lines, from that chapter on;
 ## they may hold StoryState.NAME_TAG). The "quest" figure uses them once its quest is done;
-## optional "needs" / "gone": flags that make it exist (is_present())}.
+## optional "needs" / "gone": flags that make it exist (is_present())}. Kind "item" is a thing
+## picked up ("Coger · Cantimplora"), with no voice of its own.
 @export var npcs: Array = []
 ## The zone's boss (EnemyLibrary id, "" for none) and where it waits.
 @export var boss_id := ""
