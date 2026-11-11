@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="QuestData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/quest_data.gd" id="1_quest"]
+
+[resource]
+script = ExtResource("1_quest")
+id = "superviviente"
+title = "El superviviente"
+kind = 3
+zone = "caravana"
+giver = "Viajero"
+needs = "grifo_cumbre"
+turn_in_zone = "caravana"
+turn_in = "Viajero"
+target = "Superviviente"
+target_zone = "ciudad_1"
+objective = "Busca al superviviente que se esconde en una casa de la ciudad abandonada."
+status = "busca al superviviente"
+report = "vuelve con el Viajero"
+offer_lines = Array[String](["Anoche vi una luz en la ciudad abandonada. Alguien sigue vivo allí dentro, escondido en una casa.", "Dicen que las calles del sur aún se tienen en pie. ¿Lo buscarías?"])
+found_lines = Array[String](["¡No me hagas daño! ...Ah, eres de la caravana.", "Llevo semanas escondido de los centinelas. Iré con vosotros: dile al Viajero que voy detrás."])
+wait_lines = Array[String](["¿Has encontrado a alguien en la ciudad? Busca en las casas de la calle del sur."])
+done_lines = Array[String](["¡Ha llegado! Flaco y asustado, pero vivo.", "Toma estas semillas. Las guardaba para un día como hoy."])
+reward_gold = 0
+reward_items = {
+"semilla_fuerza": 1,
+"semilla_agilidad": 1
+}

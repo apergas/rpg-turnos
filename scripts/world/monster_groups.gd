@@ -93,7 +93,7 @@ static func is_room_cell(zone: ZoneData, cell: Vector2i) -> bool:
 		var whole := true
 		for part in BLOCK:
 			var ch := zone.cell_char(cell + corner + part)
-			if ch == ZoneData.ROCK or ch == ZoneData.DOOR:
+			if ch == ZoneData.ROCK or ch == ZoneData.DOOR or ch == ZoneData.PORTAL:
 				whole = false
 				break
 		if whole:

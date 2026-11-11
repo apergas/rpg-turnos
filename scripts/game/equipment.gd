@@ -6,7 +6,7 @@ class_name Equipment extends RefCounted
 ## shows for it
 ## (a handslot mesh of Knight.glb, STICK_MESH built in code, or "" for none) and, on some
 ## rings and amulets, the status it keeps away ("immune"). A piece that is not a weapon may
-## also add "attack" (extra_attack()); a helmet may show "horns" (has_horns()); a helmet or a
+## also add "attack" (extra_attack()) or "defense" (extra_defense()); a helmet may show "horns" (has_horns()); a helmet or a
 ## weapon may have a "tint" for its mesh (tint()).
 ## Pure: no nodes.
 
@@ -43,6 +43,11 @@ const DAWN_SWORD := "espada_alba"
 const MEDAL_SHIELD := "escudo_medallas"
 const MEDAL_MAIL := "cota_medallas"
 const MEDAL_AMULET := "amuleto_medallas"
+## The v2's bestiary families' prizes (Bestiary.V2_FAMILIES).
+const CLAW_RING := "anillo_garra"
+const OASIS_AMULET := "amuleto_oasis"
+const WATCH_AMULET := "amuleto_vigia"
+const PORTAL_SWORD := "espada_portal"
 ## What effect_text() says of each status a piece keeps away.
 const IMMUNE_TEXTS := {"poison": "Inmune al veneno", "sleep": "Inmune al sueño",
 	"silence": "Inmune al silencio"}
@@ -118,6 +123,17 @@ const EQUIPMENT := {
 		"tint": Color(0.72, 0.66, 1.1)},
 	"casco_adamantita": {"name": "Casco de adamantita", "article": "un", "slot": HELMET,
 		"bonus": 14, "price": 560, "zone": 7, "mesh": "", "tint": Color(0.74, 0.68, 1.12)},
+	# The caravan, tramo 4 (the city): stellar, the platinum meshes tinted a bluish white.
+	"espada_estelar": {"name": "Espada estelar", "article": "una", "slot": WEAPON,
+		"bonus": 74, "price": 2100, "zone": 8, "mesh": "2H_Sword",
+		"tint": Color(0.85, 0.95, 1.35)},
+	"armadura_estelar": {"name": "Armadura estelar", "article": "una", "slot": ARMOR,
+		"bonus": 54, "price": 1600, "zone": 8, "mesh": ""},
+	"escudo_estelar": {"name": "Escudo estelar", "article": "un", "slot": SHIELD,
+		"bonus": 25, "price": 950, "zone": 8, "mesh": "Spike_Shield",
+		"tint": Color(0.85, 0.95, 1.35)},
+	"casco_estelar": {"name": "Casco estelar", "article": "un", "slot": HELMET,
+		"bonus": 18, "price": 740, "zone": 8, "mesh": "", "tint": Color(0.88, 0.96, 1.35)},
 	# The Eco de la Niebla's prize (the first time only): DEF like any helmet, plus ATK,
 	# dark grey with a blue cast and two bone horns (BattleActor builds them).
 	MIST_HELM: {"name": "Yelmo de bruma", "article": "un", "slot": HELMET, "bonus": 8,
@@ -147,6 +163,16 @@ const EQUIPMENT := {
 		"price": 0, "zone": -1, "mesh": ""},
 	MEDAL_AMULET: {"name": "Amuleto de medallas", "article": "un", "slot": AMULET, "bonus": 4,
 		"price": 0, "zone": -1, "mesh": "", "attack": 3},
+	# The v2's bestiary families' prizes: VEL and ATK, a status kept away with VEL or DEF,
+	# and the best sword of all, the two-handed one in dark red.
+	CLAW_RING: {"name": "Anillo de garra", "article": "un", "slot": RING, "bonus": 3,
+		"price": 0, "zone": -1, "mesh": "", "attack": 6},
+	OASIS_AMULET: {"name": "Amuleto del oasis", "article": "un", "slot": AMULET, "bonus": 2,
+		"price": 0, "zone": -1, "mesh": "", "immune": "poison"},
+	WATCH_AMULET: {"name": "Amuleto del vigía", "article": "un", "slot": AMULET, "bonus": 0,
+		"price": 0, "zone": -1, "mesh": "", "immune": "silence", "defense": 6},
+	PORTAL_SWORD: {"name": "Espada del portal", "article": "una", "slot": WEAPON, "bonus": 80,
+		"price": 0, "zone": -1, "mesh": "2H_Sword", "tint": Color(1.25, 0.42, 0.4)},
 }
 
 
@@ -214,6 +240,11 @@ static func extra_attack(id: String) -> int:
 	return EQUIPMENT[id].get("attack", 0) if EQUIPMENT.has(id) else 0
 
 
+## The DEF a piece adds besides its own bonus (the Amuleto del vigía); 0 for most.
+static func extra_defense(id: String) -> int:
+	return EQUIPMENT[id].get("defense", 0) if EQUIPMENT.has(id) else 0
+
+
 ## True for a helmet the hero wears with horns (the Yelmo de bruma).
 static func has_horns(id: String) -> bool:
 	return EQUIPMENT[id].get("horns", false) if EQUIPMENT.has(id) else false
@@ -221,12 +252,16 @@ static func has_horns(id: String) -> bool:
 
 ## What a piece gives, for the Equipo page: "ATK +6", "VEL +2 · ATK +2", "Inmune al sueño".
 static func effect_text(id: String) -> String:
+	var parts := PackedStringArray()
 	if immunity(id) != "":
-		return IMMUNE_TEXTS.get(immunity(id), "Inmune")
-	var text := "%s +%d" % [stat_name(id), bonus(id)]
+		parts.append(IMMUNE_TEXTS.get(immunity(id), "Inmune"))
+	if bonus(id) > 0 or immunity(id) == "":
+		parts.append("%s +%d" % [stat_name(id), bonus(id)])
 	if extra_attack(id) > 0:
-		text += " · ATK +%d" % extra_attack(id)
-	return text
+		parts.append("ATK +%d" % extra_attack(id))
+	if extra_defense(id) > 0:
+		parts.append("DEF +%d" % extra_defense(id))
+	return " · ".join(parts)
 
 
 ## The ids sold in a zone, in catalog order.

@@ -1,7 +1,7 @@
 class_name SlotList extends VBoxContainer
 ## The save slots on the title screen, as pages inside one of the title's windows. The list
 ## has a row per slot: "Ranura n" and, under it, SaveData.summary_line() of its save
-## (" · terminada" once the game is finished), "Vacía" or "Partida dañada". LOAD
+## (" · terminada" once the game is finished: the v1's or, in the caravan, the v2's), "Vacía" or "Partida dañada". LOAD
 ## (Continuar) only lets usable saves be picked; NEW (Nueva partida) takes any slot and
 ## asks first, focus on "No", when it holds a usable save. On a finished game
 ## (SaveData.is_finished()) LOAD opens a page with "Continuar" and "Partida nueva +", which asks
@@ -175,8 +175,8 @@ static func _detail(info: Dictionary) -> String:
 	var save: Dictionary = info.save
 	var text := SaveData.summary_line(save)
 	var story: Variant = save.get("story")
-	if story is Dictionary and story.get("finished", false) == true \
-			and not SaveData.is_caravan(save):
+	if SaveData.is_finished_v2(save) or (story is Dictionary
+			and story.get("finished", false) == true and not SaveData.is_caravan(save)):
 		text += FINISHED_TEXT
 	return text
 

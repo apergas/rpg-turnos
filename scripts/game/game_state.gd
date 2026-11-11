@@ -262,6 +262,12 @@ func is_finished() -> bool:
 	return has_flag(FINAL_BOSS)
 
 
+## True once the Devorador del portal is beaten: the v2's ending follows (story.finished_v2
+## is set when the ending plays, before its autosave).
+func is_finished_v2() -> bool:
+	return has_flag(StoryState.V2_FINAL_BOSS)
+
+
 ## The level cap now: the v1's 20, Leveling.MAX_LEVEL once in the caravan.
 func level_cap() -> int:
 	return Leveling.MAX_LEVEL if in_caravan() else Leveling.V1_MAX_LEVEL

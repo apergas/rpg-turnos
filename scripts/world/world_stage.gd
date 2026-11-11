@@ -572,7 +572,7 @@ static func _add_decor_collider(root: Node3D, piece: Dictionary, mesh: Mesh) -> 
 ## The cells of a dungeon floor no decoration stands on: the lever, the key, the gates, the
 ## torches and the throne (what decor_blocker() says it would be on).
 const DECOR_KEEP_CELLS := {"L": "la palanca", "K": "la llave", "D": "una reja",
-	"T": "una antorcha", "R": "el trono"}
+	"T": "una antorcha", "R": "el trono", "P": "el portal"}
 
 
 ## What a piece of decoration of this radius at pos would be on that it must not ("" if the

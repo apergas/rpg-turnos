@@ -1,5 +1,18 @@
 # Registro de cambios
 
+## 2.3.0 (2026)
+
+La caravana del portal, cuarta y última parte.
+
+- La ciudad abandonada: dos plantas de calles en ruinas bajo un cielo rojo, con el Guardián de la ciudad en la plaza mayor y, detrás de una reja, el portal.
+- Cinco monstruos nuevos: la Armadura hueca, la Gárgola, la Sombra, el Esqueleto centinela y la Rata de las ruinas.
+- El jefe final: el Devorador del portal, que abre su ojo cuando crees que lo has vencido.
+- El final de la caravana: cruzas el portal y ves lo que espera al otro lado. Continuará...
+- El equipo estelar, en la tienda de la Caravana.
+- Cuatro familias nuevas en el bestiario, con sus premios, y la página partida entre Villaclaro y la caravana.
+- Dos misiones más en la Caravana.
+- En la ciudad silba el viento entre las ruinas y cae la ceniza; junto al portal, la tierra retumba.
+
 ## 2.2.0 (2026)
 
 La caravana del portal, tercera parte.

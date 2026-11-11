@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="Cutscene" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/cutscene.gd" id="1_cutscene"]
+
+[resource]
+script = ExtResource("1_cutscene")
+id = "guardian"
+steps = [
+["wait", 0.4],
+["say", "", ["El Guardián de la ciudad cae de rodillas. Su armadura de bronce se abre, vacía, y algo tintinea entre las piedras."]],
+["sfx", "level_up"],
+["say", "", ["¡Consigues la Llave del portal!"]],
+["camera_to", Vector3(0, 0, -25), 9.0],
+["sfx", "door"],
+["say", "", ["La niebla roja que cerraba el arco del norte se deshace. Detrás está el barrio del portal."]],
+["camera_back"]
+]

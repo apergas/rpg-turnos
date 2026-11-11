@@ -38,6 +38,13 @@ const KINDS := {
 	"pine_small": {"radius": 0.5, "collider": "cylinder"},
 	"rock_tall": {"radius": 1.1, "collider": "box"},
 	"snow_stones": {"radius": 0.9, "collider": ""},
+	# The abandoned city (2.3.0): ruins in its squares and streets (only placed by hand).
+	"city_column": {"radius": 0.7, "collider": "cylinder"},
+	"city_column_broken": {"radius": 0.7, "collider": "cylinder"},
+	"city_block": {"radius": 0.9, "collider": "box"},
+	"fallen_head": {"radius": 1.0, "collider": "box"},
+	"obelisk": {"radius": 0.7, "collider": "box"},
+	"rubble": {"radius": 1.0, "collider": ""},
 }
 ## Scattered pieces keep this far from each other and from every placed piece.
 const SCATTER_GAP := 1.2

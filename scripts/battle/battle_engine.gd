@@ -527,6 +527,7 @@ func _fall(who: int, events: Array[Dictionary]) -> void:
 		return
 	var next := fighter.next_phase
 	fighter.next_phase = null
+	fighter.display_name = next.display_name
 	fighter.max_hp = next.max_hp
 	fighter.hp = next.hp
 	fighter.max_mp = next.max_mp
@@ -538,7 +539,7 @@ func _fall(who: int, events: Array[Dictionary]) -> void:
 	fighter.ai_weights = next.ai_weights.duplicate()
 	fighter.status.clear()
 	_charged.erase(who)
-	events.append(BattleEvent.phase(who, fighter.hp))
+	events.append(BattleEvent.phase(who, fighter.hp, next.phase_line))
 
 
 ## The Pluma de fénix burns by itself: one is used up and the hero rises with its share

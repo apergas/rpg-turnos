@@ -9,7 +9,9 @@ class_name BattleStage extends RefCounted
 ## fighters, banks of mist and two torches (and the hero's lantern indoors). "desierto" is
 ## sand with a darker track, palms far behind, dunes and the Kenney cacti, scrub and a
 ## broken column. "montana" is snow with a grey track, white peaks and the Kenney pines, tall
-## stones and snowy cliffs. The environment, the mesh and model helpers and the rock and tree models
+## stones and snowy cliffs. "ciudad" is the ruined city's yard: the castle's walls half
+## fallen, a reddish floor, the Kenney ruins and, in the portal quarter, the portal behind the
+## enemies. The environment, the mesh and model helpers and the rock and tree models
 ## are shared with WorldStage.
 
 const GRASS := Color(0.32, 0.55, 0.22)
@@ -170,6 +172,23 @@ const CASTLE_MIST := [
 	[Vector3(-8, 0.3, 1), Vector3(4, 0.5, 4)], [Vector3(9, 0.3, 0), Vector3(4, 0.5, 4)],
 ]
 const LOW_SHADOW_DISTANCE := 35.0
+## The city backdrop (ciudad): the castle yard's KayKit walls, CITY_LOW_WALLS of them low
+## (ruined), towers of three heights, a warm reddish floor, two torches, no mist, the Kenney
+## ruins of BACKDROP_DECOR and, in a zone with a portal (zone.portal_flag), the portal
+## standing behind the enemies.
+const CITY_FLOOR := Color(0.27, 0.23, 0.23)
+const CITY_STONE := Color(0.46, 0.41, 0.4)
+## Indexes of CASTLE_WALLS drawn at DungeonMap.RUIN_HEIGHT.
+## The distant towers are darker than the walls, so they read as silhouettes in the haze.
+const CITY_TOWER_SHADE := 0.65
+const CITY_LOW_WALLS := [1, 4, 7, 11]
+const CITY_TOWERS := [
+	[Vector3(-14, 0, -11), 3.0], [Vector3(14, 0, -11), 5.0], [Vector3(0, 0, -16), 7.0],
+]
+## How much of the city's fog covers its sky (1: all, a flat haze).
+const CITY_FOG_SKY := 0.35
+const CITY_PORTAL_POS := Vector3(0.6, 0, -8.5)
+const CITY_PORTAL_SCALE := 0.8
 const CASTLE_TORCHES := [Vector3(-4.0, 2.0, -10.0), Vector3(4.0, 2.0, -10.0)]
 
 ## Low graphics quality: no SSAO and cheap, short sun shadows (DisplaySettings sets it). The
@@ -207,6 +226,12 @@ const BACKDROP_DECOR := {
 		["snow_rock", Vector3(-7, 2.0, -18), 0.0, 4.0],
 		["snow_rock", Vector3(10, 2.5, -17), 0.0, 5.0],
 		["snow_rock", Vector3(15, 2.0, -12), 0.0, 4.0]],
+	"ciudad": [["city_column_broken", Vector3(-4.2, 0, -3.6), 20.0, 1.0],
+		["rubble", Vector3(4.4, 0, -2.2), 0.0, 1.0],
+		["fallen_head", Vector3(-4.6, 0, 0.9), 200.0, 0.9],
+		["city_block", Vector3(4.6, 0, 1.4), 30.0, 1.0],
+		["city_column", Vector3(-7.5, 0, -8), 0.0, 1.0],
+		["obelisk", Vector3(7.5, 0, -8.5), 0.0, 1.0]],
 }
 
 ## zone: whose sky, light and backdrop to use (null: the meadow's).
@@ -214,6 +239,9 @@ static func build(root: Node3D, zone: ZoneData = null) -> void:
 	build_environment(root, zone)
 	if zone != null and zone.backdrop == "mina":
 		_build_cave(root)
+		return
+	if zone != null and zone.backdrop == "ciudad":
+		_build_city(root, zone)
 		return
 	if zone != null and zone.backdrop == "castillo":
 		_build_castle(root, zone)
@@ -438,6 +466,31 @@ static func _build_castle(root: Node3D, zone: ZoneData) -> void:
 		_add_lantern(root)
 
 
+static func _build_city(root: Node3D, zone: ZoneData) -> void:
+	var ground := PlaneMesh.new()
+	ground.size = Vector2(80, 80)
+	add_mesh(root, ground, CITY_FLOOR, Vector3.ZERO)
+	for i in CASTLE_WALLS.size():
+		var wall: Array = CASTLE_WALLS[i]
+		var model := add_model(root, DungeonMap.WALL_SCENE, wall[0], DungeonMap.WALL_SCALE,
+			wall[1])
+		if i in CITY_LOW_WALLS:
+			model.scale.y *= DungeonMap.RUIN_HEIGHT
+	for tower in CITY_TOWERS:
+		var box := BoxMesh.new()
+		box.size = Vector3(4, tower[1], 4)
+		add_mesh(root, box, CITY_STONE.darkened(CITY_TOWER_SHADE), tower[0] + Vector3(0, tower[1] / 2.0, 0))
+	for flame_pos in CASTLE_TORCHES:
+		_add_torch(root, flame_pos)
+	if zone.portal_flag != "":
+		var portal := PortalRing.new()
+		portal.stone = zone.rock_color
+		portal.position = CITY_PORTAL_POS
+		portal.scale = Vector3.ONE * CITY_PORTAL_SCALE
+		root.add_child(portal)
+	_add_backdrop_decor(root, zone)
+
+
 ## A torch: a stick, an unshaded flame at flame_pos and its warm light a metre out.
 static func _add_torch(root: Node3D, flame_pos: Vector3) -> void:
 	var stick := BoxMesh.new()
@@ -518,6 +571,9 @@ static func _add_environment(root: Node3D, zone: ZoneData) -> void:
 	env.fog_enabled = true
 	env.fog_light_color = zone.haze
 	env.fog_density = zone.fog_density
+	if zone.backdrop == "ciudad":
+		env.fog_sky_affect = CITY_FOG_SKY  # the red sky keeps its gradient behind the fog
+		sky_material.ground_bottom_color = zone.haze.darkened(0.4)
 	var world_env := WorldEnvironment.new()
 	world_env.environment = env
 	root.add_child(world_env)

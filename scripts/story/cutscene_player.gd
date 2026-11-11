@@ -16,6 +16,8 @@ var world: World
 ## Plays the music steps; without it they are skipped.
 var audio: AudioDirector
 var hero_name := StoryState.DEFAULT_NAME
+## The companion's name, set by Game: it replaces StoryState.COMPANION_TAG in the steps.
+var companion_name := ""
 ## await fade.call(alpha): to black (1.0) or back (0.0).
 var fade: Callable
 ## set_flag.call(name): sets a world flag.
@@ -43,7 +45,18 @@ func play(scene: Cutscene) -> void:
 	await world.end_cutscene()
 
 
+## value with StoryState.COMPANION_TAG replaced by the companion's name in every string
+## (figure names, speakers and lines), inside arrays too.
+func _resolve(value: Variant) -> Variant:
+	if value is String:
+		return (value as String).replace(StoryState.COMPANION_TAG, companion_name)
+	if value is Array:
+		return (value as Array).map(_resolve)
+	return value
+
+
 func _play_step(step: Array) -> void:
+	step = _resolve(step)
 	var kind: String = step[0]
 	if _autoplay and kind != "say":
 		print("  %s: %s" % [_scene_id, " ".join(step.map(func(v: Variant) -> String:

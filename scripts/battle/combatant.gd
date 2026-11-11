@@ -62,6 +62,9 @@ class_name Combatant extends Resource
 ## Niebla's second phase; null: none). BattleEngine copies its HP, MP, attack, defense,
 ## speed, skills and ai_weights into the fighter, which stays the same enemy.
 @export var next_phase: Combatant
+## Said when a boss rises in this phase (set on the next_phase resource): "¡El ojo del
+## Devorador se abre!". "" for the fog's line (the Señor de la Niebla).
+@export var phase_line := ""
 ## Enemy only: a boss gets its own look and intro line, and the hero can't flee.
 @export var is_boss := false
 ## Enemy only, on the map (MonsterRoam): how far from its spot the figure of a group it

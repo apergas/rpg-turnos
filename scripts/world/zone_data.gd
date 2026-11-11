@@ -13,14 +13,15 @@ class_name ZoneData extends Resource
 
 ## Every zone, in world order (save validation and --autoplay-zone check against it).
 const IDS: Array[String] = ["pradera", "bosque", "mina_1", "mina_2", "mina_3",
-	"castillo_patio", "castillo_trono", "caravana", "jungla", "desierto", "montana_1", "montana_2"]
+	"castillo_patio", "castillo_trono", "caravana", "jungla", "desierto", "montana_1", "montana_2",
+	"ciudad_1", "ciudad_2"]
 ## The zones of the v2 (the caravan), growing with each version: a save with the caravan's
 ## flag is only valid on one of these, and a save without it only on the others.
-const V2_ZONES: Array[String] = ["caravana", "jungla", "desierto", "montana_1", "montana_2"]
+const V2_ZONES: Array[String] = ["caravana", "jungla", "desierto", "montana_1", "montana_2", "ciudad_1", "ciudad_2"]
 ## Side of a dungeon cell, in metres.
 const CELL := 4.0
 ## Dungeon cells: rock (a wall in a castle), floor, stairs up and down, chest, lever,
-## locked door, key, floor with a torch on its wall and the throne. Anything else is
+## locked door, key, floor with a torch on its wall, the throne and the portal. Anything else is
 ## floor.
 const ROCK := "#"
 const STAIRS_UP := "S"
@@ -31,6 +32,8 @@ const DOOR := "D"
 const KEY := "K"
 const TORCH := "T"
 const THRONE := "R"
+## The city's portal (PortalRing): nobody walks on it, hero or monster.
+const PORTAL := "P"
 ## Plain floor (no torch, no chest...): what a group or the Slime de Metal stands on.
 const FLOOR := "."
 ## Within this distance of a stair cell's centre the stair room is safe (no monster groups).
@@ -216,6 +219,13 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var castle := false
 ## Banks of mist drifting low over the floor (0 for none).
 @export var mist_banks := 0
+## Ruined castle walls (the abandoned city): on a castle floor, some straight walls and
+## towers are drawn low and without merlons (a fixed rule by cell, DungeonMap._is_ruin()).
+## Their colliders keep their full height.
+@export var ruined := false
+## World flag that calms the portal of a P cell (it turns slowly, its light softens); ""
+## for none.
+@export var portal_flag := ""
 ## Zone ids the S and B stairs lead to (to their B and S entries).
 @export var stairs_up := ""
 @export var stairs_down := ""
@@ -337,7 +347,7 @@ func near_stairs(pos: Vector3) -> bool:
 func _beside(cell: Vector2i) -> Array:
 	for step in [Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 0), Vector2i(-1, 0)]:
 		var ch := cell_char(cell + step)
-		if ch != ROCK and ch != DOOR:
+		if ch != ROCK and ch != DOOR and ch != PORTAL:
 			return [cell_center(cell + step), rad_to_deg(atan2(-step.x, -step.y))]
 	return [cell_center(cell), 0.0]
 

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+[ext_resource type="Script" path="res://scripts/battle/skill.gd" id="2_skill"]
+[ext_resource type="Resource" path="res://data/skills/vacio.tres" id="3_vacio"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "devorador_portal"
+display_name = "Devorador despierto"
+max_hp = 1200
+hp = 1200
+max_mp = 160
+mp = 160
+attack = 100
+defense = 74
+speed = 32
+skills = Array[ExtResource("2_skill")]([ExtResource("3_vacio")])
+ai_weights = {
+"attack": 40,
+"vacio": 35,
+"charge": 25
+}
+phase_line = "¡El ojo del Devorador se abre!"
+is_boss = true
