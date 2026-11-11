@@ -413,10 +413,16 @@ static func _add_decor_collider(root: Node3D, piece: Dictionary, mesh: Mesh) -> 
 		add_cylinder_shape(body, Decor.radius(piece), bounds.size.y * piece.scale)
 
 
+## The cells of a dungeon floor no decoration stands on: the lever, the key, the gates, the
+## torches and the throne (what decor_blocker() says it would be on).
+const DECOR_KEEP_CELLS := {"L": "la palanca", "K": "la llave", "D": "una reja",
+	"T": "una antorcha", "R": "el trono"}
+
+
 ## What a piece of decoration of this radius at pos would be on that it must not ("" if the
 ## spot is fine): the path, the autoplay route, exits and stairs, entries, the portal,
 ## chests and wells, small medals, figures, the boss, rocks, buildings, trees, and on a
-## dungeon floor rock cells and the stair rooms. Decor asks it; it never asks Decor (so
+## dungeon floor rock cells, the stair rooms and DECOR_KEEP_CELLS. Decor asks it; it never asks Decor (so
 ## is_clear_of_props() is not used here).
 static func decor_blocker(zone: ZoneData, pos: Vector3, radius: float, solid: bool) -> String:
 	if zone.is_dungeon():
@@ -425,6 +431,12 @@ static func decor_blocker(zone: ZoneData, pos: Vector3, radius: float, solid: bo
 			return "la roca"
 		if zone.near_stairs(pos):
 			return "las escaleras"
+		for ch: String in DECOR_KEEP_CELLS:
+			for c: Vector2i in zone.find_cells(ch):
+				var to_cell := zone.cell_center(c) - pos
+				to_cell.y = 0.0
+				if to_cell.length() < ZoneData.CELL * 0.5 + radius:
+					return DECOR_KEEP_CELLS[ch]
 	elif is_on_path(zone, pos, radius + DECOR_PATH_MARGIN):
 		return "el camino"
 	if _near_route(zone, pos, radius + (DECOR_ROUTE_MARGIN if solid else DECOR_SOFT_ROUTE_MARGIN)):
