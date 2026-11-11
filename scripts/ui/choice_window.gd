@@ -11,6 +11,8 @@ const WIDTH := 460
 const TOUCH_WIDTH := 300
 
 var _options := 0
+## The first answer given; kept so one that comes before ask() awaits it is not lost.
+var _answer := -1
 
 
 func _ready() -> void:
@@ -27,7 +29,7 @@ func ask(question: String, options: Array[String], focus := 0) -> int:
 	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	shade.gui_input.connect(func(event: InputEvent) -> void:
 		if UiStyle.is_outside_tap(event):
-			answered.emit(_options - 1))
+			_give(_options - 1))
 	add_child(shade)
 	var window := BattleHud.make_window()
 	add_child(window)
@@ -44,13 +46,15 @@ func ask(question: String, options: Array[String], focus := 0) -> int:
 		var button := Button.new()
 		button.text = options[i]
 		UiStyle.fit_finger(button)
-		button.pressed.connect(func() -> void: answered.emit(i))
+		button.pressed.connect(func() -> void: _give(i))
 		box.add_child(button)
 		buttons.append(button)
 	await get_tree().process_frame
 	window.position = (size - window.size) / 2.0
 	buttons[focus].grab_focus()
-	var chosen: int = await answered
+	var chosen := _answer
+	if chosen < 0:
+		chosen = await answered
 	queue_free()
 	return chosen
 
@@ -58,4 +62,11 @@ func ask(question: String, options: Array[String], focus := 0) -> int:
 func _unhandled_input(event: InputEvent) -> void:
 	if _options > 0 and event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
-		answered.emit(_options - 1)
+		_give(_options - 1)
+
+
+func _give(index: int) -> void:
+	if _answer >= 0:
+		return
+	_answer = index
+	answered.emit(index)

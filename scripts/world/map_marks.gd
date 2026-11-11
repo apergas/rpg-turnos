@@ -58,6 +58,8 @@ const NAMES := {
 static func of_zone(zone: ZoneData, flags: Dictionary, dry_wells: Array[String]) -> Array[Dictionary]:
 	var marks: Array[Dictionary] = []
 	for npc: Dictionary in zone.npcs:
+		if not ZoneData.is_present(npc, flags):
+			continue
 		if npc.kind == "shop":
 			_add(marks, npc.pos, SHOP)
 		elif npc.kind == "inn":

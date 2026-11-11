@@ -613,7 +613,7 @@ func set_world_flags(flags: Dictionary) -> void:
 	for exit: Dictionary in zone.exits:
 		var present := ZoneData.is_present(exit, flags)
 		(_arches[exit.id] as Node3D).visible = present
-		(_fogs[exit.id] as Node3D).visible = not _is_open(exit)
+		(_fogs[exit.id] as Node3D).visible = present and not _is_open(exit)
 	if _dungeon:
 		_dungeon.set_flags(flags)
 	_refresh_map_marks()
