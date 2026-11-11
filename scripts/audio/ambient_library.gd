@@ -5,7 +5,9 @@ class_name AmbientLibrary extends RefCounted
 ## AudioDirector drops on it every gap() seconds (shot(): a trill in the meadow, a bird in
 ## the forest, a drop with its echo in the mine, a gust whistling in the castle, a gust of sand
 ## in the desert, whose bed is a low wind with the hiss of sand, a howl over the peaks on
-## the mountain, whose bed is a strong wind that never stops). Streams
+## the mountain, whose bed is a strong wind that never stops, a softer wind whistling
+## through the ruins with falling stones in the abandoned city, and the same wind with a deep
+## throbbing rumble and groans in the portal quarter). Streams
 ## are 22050 Hz, 16-bit mono (MusicLibrary.to_stream()) and cached.
 
 const MEADOW := "meadow"
@@ -15,7 +17,9 @@ const CASTLE := "castle"
 const JUNGLE := "jungle"
 const DESERT := "desert"
 const MOUNTAIN := "mountain"
-const IDS: Array[String] = [MEADOW, FOREST, MINE, CASTLE, JUNGLE, DESERT, MOUNTAIN]
+const CITY := "city"
+const PORTAL := "portal"
+const IDS: Array[String] = [MEADOW, FOREST, MINE, CASTLE, JUNGLE, DESERT, MOUNTAIN, CITY, PORTAL]
 
 ## Seconds of each bed, and of the cross-fade that closes its loop.
 const LOOP := 8.0
@@ -24,10 +28,12 @@ const SEAM := 0.5
 const VARIANTS := 4
 ## Seconds between two short sounds: [least, most].
 const GAPS := {MEADOW: [2.0, 6.0], FOREST: [3.0, 7.0], MINE: [1.0, 4.0], CASTLE: [4.0, 9.0],
-	JUNGLE: [1.5, 4.0], DESERT: [3.0, 8.0], MOUNTAIN: [2.5, 6.0]}
+	JUNGLE: [1.5, 4.0], DESERT: [3.0, 8.0], MOUNTAIN: [2.5, 6.0],
+	CITY: [3.0, 8.0], PORTAL: [4.0, 9.0]}
 ## Peak of each bed and of every short sound (AudioDirector plays them at the effects volume
 ## × its AMBIENT_SHARE).
-const BED_PEAK := {MEADOW: 0.35, FOREST: 0.4, MINE: 0.5, CASTLE: 0.35, JUNGLE: 0.35, DESERT: 0.4, MOUNTAIN: 0.45}
+const BED_PEAK := {MEADOW: 0.35, FOREST: 0.4, MINE: 0.5, CASTLE: 0.35, JUNGLE: 0.35, DESERT: 0.4, MOUNTAIN: 0.45,
+	CITY: 0.35, PORTAL: 0.45}
 const SHOT_PEAK := 0.55
 ## The echoes of a drop in the mine: [delay in seconds, gain].
 const ECHOES := [[0.17, 0.45], [0.34, 0.2], [0.51, 0.08]]
@@ -85,6 +91,8 @@ static func bed(id: String) -> AudioStreamWAV:
 			raw = _sand_wind(count + seam, rng)
 		MOUNTAIN:
 			raw = _mountain_wind(count + seam, rng)
+		CITY, PORTAL:
+			raw = _ruin_wind(count + seam, rng)
 		_:
 			raw = _wind(count + seam, rng)
 	var samples := raw.slice(0, count)
@@ -92,6 +100,8 @@ static func bed(id: String) -> AudioStreamWAV:
 		var t := float(i) / seam
 		# Equal power: two unrelated noises add in power, so the bed keeps its level.
 		samples[i] = raw[i] * sin(t * PI / 2.0) + raw[count + i] * cos(t * PI / 2.0)
+	if id == PORTAL:
+		_add_rumble(samples)
 	_normalize(samples, BED_PEAK[id])
 	var stream := MusicLibrary.to_stream(samples)
 	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
@@ -122,6 +132,10 @@ static func shot(id: String, variant: int) -> AudioStreamWAV:
 			samples = _sand_gust(rng)
 		MOUNTAIN:
 			samples = _howl(rng)
+		CITY:
+			samples = _rubble(rng)
+		PORTAL:
+			samples = _groan(rng)
 		_:
 			samples = _gust(rng)
 	_normalize(samples, SHOT_PEAK)
@@ -312,6 +326,90 @@ static func _howl(rng: RandomNumberGenerator) -> PackedFloat32Array:
 		y2 = y1
 		y1 = y
 		out[i] = y * pow(sin(PI * u), 1.2)
+	return out
+
+
+## The abandoned city: wind whistling through the ruins in slow gusts (a band-pass wandering
+## between 450 and 900 Hz, lower and softer than the castle's) over a low hiss.
+static func _ruin_wind(count: int, rng: RandomNumberGenerator) -> PackedFloat32Array:
+	var out := PackedFloat32Array()
+	out.resize(count)
+	var low_a := _pole(200.0)
+	var low := 0.0
+	var band := PackedFloat32Array()
+	var x1 := 0.0
+	var x2 := 0.0
+	var y1 := 0.0
+	var y2 := 0.0
+	for i in count:
+		var t := float(i) / MusicLibrary.RATE
+		if i % 32 == 0:
+			band = _band(650.0 + 220.0 * sin(TAU * 0.06 * t) + 80.0 * sin(TAU * 0.19 * t + 2.0),
+				14.0)
+		var x := rng.randf_range(-1.0, 1.0)
+		var y := band[0] * x + band[1] * x2 - band[2] * y1 - band[3] * y2
+		x2 = x1
+		x1 = x
+		y2 = y1
+		y1 = y
+		low += low_a * (x - low)
+		var gust := pow(0.5 + 0.5 * sin(TAU * 0.125 * t), 2.0)
+		out[i] = 2.6 * y * (0.2 + 0.8 * gust) + 0.35 * low
+	return out
+
+
+## The portal quarter's deep rumble, added to the ruins' wind after the loop's seam is made:
+## sines at 41, 55 and 82 Hz that throb every 2 s, as loud as the wind's peak. Each makes
+## whole cycles in LOOP seconds, so the loop stays seamless.
+static func _add_rumble(samples: PackedFloat32Array) -> void:
+	var peak := 0.0
+	for v in samples:
+		peak = maxf(peak, absf(v))
+	for i in samples.size():
+		var t := float(i) / MusicLibrary.RATE
+		var throb := 0.55 + 0.45 * sin(TAU * 0.5 * t)
+		samples[i] += peak * throb * (0.5 * sin(TAU * 41.0 * t) + 0.3 * sin(TAU * 55.0 * t)
+			+ 0.15 * sin(TAU * 82.0 * t))
+
+
+## Stones falling in the ruins: 3 to 6 short knocks (noise through a band-pass at 900 to
+## 1800 Hz, with a fast decay), each softer than the last.
+static func _rubble(rng: RandomNumberGenerator) -> PackedFloat32Array:
+	var out := PackedFloat32Array()
+	var gain := 1.0
+	for n in rng.randi_range(3, 6):
+		var count := int(rng.randf_range(0.04, 0.08) * MusicLibrary.RATE)
+		var band := _band(rng.randf_range(900.0, 1800.0), 6.0)
+		var x1 := 0.0
+		var x2 := 0.0
+		var y1 := 0.0
+		var y2 := 0.0
+		for i in count:
+			var u := float(i) / count
+			var x := rng.randf_range(-1.0, 1.0)
+			var y := band[0] * x + band[1] * x2 - band[2] * y1 - band[3] * y2
+			x2 = x1
+			x1 = x
+			y2 = y1
+			y1 = y
+			out.append(y * gain * pow(1.0 - u, 3.0))
+		_rest(out, rng.randf_range(0.05, 0.14))
+		gain *= rng.randf_range(0.6, 0.85)
+	return out
+
+
+## A groan from the portal: 1.5 to 2.5 s of a sine sliding down to 45 Hz with its octave,
+## swelling and dying away.
+static func _groan(rng: RandomNumberGenerator) -> PackedFloat32Array:
+	var count := int(rng.randf_range(1.5, 2.5) * MusicLibrary.RATE)
+	var top := rng.randf_range(62.0, 78.0)
+	var out := PackedFloat32Array()
+	out.resize(count)
+	var phase := 0.0
+	for i in count:
+		var u := float(i) / count
+		phase += lerpf(top, 45.0, u) / MusicLibrary.RATE
+		out[i] = (sin(TAU * phase) + 0.4 * sin(TAU * 2.0 * phase)) * pow(sin(PI * u), 1.5)
 	return out
 
 
