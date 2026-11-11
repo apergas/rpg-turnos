@@ -18,7 +18,7 @@ enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPE
 	SNAKE, MONKEY, TRAP_PLANT, TROPICAL_MUSHROOM, CARAVAN_CHIEF, HEALER, JAGUAR,
 	SCORPION, SAND_SLIME, VULTURE, SAND_GOLEM, MUMMY, CANTEEN, SAND_WORM, SNOW_WOLF, ICE_GOLEM,
 	SUMMIT_SPIRIT, ICE_BAT, GOAT, GRIFFIN, HOLLOW_ARMOR, GARGOYLE, SHADOW, SENTINEL, RUIN_RAT, CITY_GUARDIAN,
-	PORTAL_DEVOURER }
+	PORTAL_DEVOURER, CARAVAN_MERCHANT, TRAVELLER_F, TRAVELLER_M, EXPLORER, SURVIVOR }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -147,6 +147,8 @@ const AURA_ALPHA := 0.22
 ## Angle (radians about X) of the plant's upper jaw: resting, and wide open to bite.
 const JAW_REST := 0.3
 const JAW_OPEN := 0.95
+## The map hero's rim of light (set_map_readable()): one material for him, as an overlay.
+const RIM_SHADER := preload("res://shaders/hero_rim.gdshader")
 ## The hero as a person, not a suit of steel: the KayKit Knight's helmet is hidden and its
 ## armor meshes (one grey palette cell) are tinted bare arms, a blue tunic and leather
 ## legs. Multiplied over a grey that peaks near 0.42 linear, hence the values above 1.
@@ -155,6 +157,51 @@ const HERO_SKIN := Color(1.75, 1.28, 1.02)
 const HERO_HEAD_TEXTURE := preload("res://assets/characters/hero_head_texture.png")
 const HERO_TUNIC := Color(0.75, 1.0, 1.7)
 const HERO_LEGS := Color(0.95, 0.75, 0.6)
+## The caravan's people (2.4.0): the Knight without helmet like the hero, with their own head
+## (scripts/tools/head_textures.gd: the hair cell recoloured, and the skin), their own
+## clothes and, for some, a hair piece built in code. No hats.
+const HEAD_GREY := preload("res://assets/characters/head_gris_clara.png")
+const HEAD_BLACK_DARK := preload("res://assets/characters/head_negro_morena.png")
+const HEAD_RED := preload("res://assets/characters/head_pelirrojo_clara.png")
+const HEAD_BLOND := preload("res://assets/characters/head_rubio_clara.png")
+const HEAD_BROWN_DARK := preload("res://assets/characters/head_castano_morena.png")
+const HEAD_BROWN_PALE := preload("res://assets/characters/head_castano_palida.png")
+## Each hair's mean colour, as head_textures.gd prints it (the flat hair pieces match it).
+const HAIR_GREY := Color(0.618, 0.618, 0.598)
+const HAIR_BLOND := Color(0.858, 0.698, 0.378)
+const HAIR_RED := Color(0.718, 0.298, 0.128)
+const HAIR_BROWN := Color(0.298, 0.188, 0.108)
+## The arms of a darker and a paler skin (HERO_SKIN is the light one).
+const SKIN_DARK := Color(1.37, 0.79, 0.51)
+const SKIN_PALE := Color(1.75, 1.2, 0.92)
+## A person's hidden parts: the helmet and every hand mesh (no weapons).
+const PERSON_HIDE := [
+	"Rig/Skeleton3D/head/Knight_Helmet",
+	"Rig/Skeleton3D/handslot_l/1H_Sword_Offhand",
+	"Rig/Skeleton3D/handslot_l/Badge_Shield",
+	"Rig/Skeleton3D/handslot_l/Rectangle_Shield",
+	"Rig/Skeleton3D/handslot_l/Round_Shield",
+	"Rig/Skeleton3D/handslot_l/Spike_Shield",
+	"Rig/Skeleton3D/handslot_r/1H_Sword",
+	"Rig/Skeleton3D/handslot_r/2H_Sword",
+]
+## The hair pieces, in the head bone's space (the Knight faces +Z there, before the turn):
+## where, turned how and scaled how. Tuned with close frames.
+const HAIR_PIECES := {
+	"beard": {"profile": "beard", "pos": Vector3(0, 0.22, 0.4), "rot": Vector3(180, 0, 0),
+		"scale": Vector3(0.6, 0.4, 0.38)},
+	"bun": {"profile": "bun", "pos": Vector3(0, 0.85, -0.3), "rot": Vector3.ZERO,
+		"scale": Vector3.ONE * 0.5},
+	"tail": {"profile": "tail", "pos": Vector3(0, 0.75, -0.6), "rot": Vector3(-160, 0, 0),
+		"scale": Vector3(0.3, 0.7, 0.3)},
+}
+const HAIR_PROFILES := {
+	"beard": [Vector2(0, 0.0), Vector2(0.5, 0.15), Vector2(0.45, 0.6), Vector2(0, 1.0)],
+	"bun": [Vector2(0, 0.0), Vector2(0.45, 0.2), Vector2(0.5, 0.55), Vector2(0.3, 0.9),
+		Vector2(0, 1.0)],
+	"tail": [Vector2(0, 0.0), Vector2(0.35, 0.15), Vector2(0.28, 0.6), Vector2(0, 1.0)],
+}
+const HAIR_SEGMENTS := 7
 ## Hand slots of the KayKit characters (BoneAttachment3D nodes).
 const HELMET_PATH := "Rig/Skeleton3D/head/Knight_Helmet"
 const HAND_R := "Rig/Skeleton3D/handslot_r"
@@ -191,6 +238,7 @@ const STICK_CENTER := 0.45
 ## scale and top. Specter: color, aura color, scale, top and fly (height it floats at).
 const LOOKS := {
 	Look.HERO: {
+		"head_texture": HERO_HEAD_TEXTURE,
 		"scene": KNIGHT,
 		"scale": CHARACTER_SCALE,
 		"top": 1.9,
@@ -285,31 +333,62 @@ const LOOKS := {
 		"anims": CHARACTER_ANIMS,
 		"tint": Color(0.65, 0.8, 1.0),
 	},
-	# The Jefe de caravana (the v2): the Mage in travelling browns.
+	# The caravan's people (2.4.0): Knights without helmet, like the hero.
 	Look.CARAVAN_CHIEF: {
-		"scene": MAGE,
-		"scale": CHARACTER_SCALE * 1.05,
-		"top": 2.3,
-		"hide": [
-			"Rig/Skeleton3D/handslot_l/Spellbook",
-			"Rig/Skeleton3D/handslot_l/Spellbook_open",
-			"Rig/Skeleton3D/handslot_r/1H_Wand",
-		],
-		"anims": CHARACTER_ANIMS,
-		"tint": Color(0.85, 0.68, 0.48),
+		"scene": KNIGHT, "scale": CHARACTER_SCALE * 1.05, "top": 2.0, "hide": PERSON_HIDE,
+		"head_texture": HEAD_GREY, "hair": {"style": "beard", "color": HAIR_GREY},
+		"mesh_tints": {"Knight_ArmLeft": HERO_SKIN, "Knight_ArmRight": HERO_SKIN,
+			"Knight_Body": Color(1.2, 0.85, 0.55), "Knight_LegLeft": Color(0.7, 0.5, 0.35),
+			"Knight_LegRight": Color(0.7, 0.5, 0.35)},
+		"cape": Color(0.16, 0.32, 0.18), "anims": CHARACTER_ANIMS,
 	},
-	# The Curandera of the Caravana: the Mage in white and pale green.
+	Look.CARAVAN_MERCHANT: {
+		"scene": KNIGHT, "scale": CHARACTER_SCALE, "top": 1.9, "hide": PERSON_HIDE,
+		"head_texture": HEAD_BLACK_DARK,
+		"mesh_tints": {"Knight_ArmLeft": SKIN_DARK, "Knight_ArmRight": SKIN_DARK,
+			"Knight_Body": Color(1.9, 1.5, 0.45), "Knight_LegLeft": Color(0.5, 0.45, 0.42),
+			"Knight_LegRight": Color(0.5, 0.45, 0.42)},
+		"cape": Color(0.4, 0.2, 0.5), "anims": CHARACTER_ANIMS,
+	},
 	Look.HEALER: {
-		"scene": MAGE,
-		"scale": CHARACTER_SCALE,
-		"top": 2.2,
-		"hide": [
-			"Rig/Skeleton3D/handslot_l/Spellbook",
-			"Rig/Skeleton3D/handslot_l/Spellbook_open",
-			"Rig/Skeleton3D/handslot_r/1H_Wand",
-		],
-		"anims": CHARACTER_ANIMS,
-		"tint": Color(0.92, 1.0, 0.9),
+		"scene": KNIGHT, "scale": CHARACTER_SCALE, "top": 1.9, "hide": PERSON_HIDE,
+		"head_texture": HEAD_RED, "hair": {"style": "bun", "color": HAIR_RED},
+		"mesh_tints": {"Knight_ArmLeft": HERO_SKIN, "Knight_ArmRight": HERO_SKIN,
+			"Knight_Body": Color(2.1, 2.1, 2.0), "Knight_LegLeft": Color(1.2, 1.6, 1.1),
+			"Knight_LegRight": Color(1.2, 1.6, 1.1)},
+		"cape": Color(0.3, 0.6, 0.35), "anims": CHARACTER_ANIMS,
+	},
+	Look.TRAVELLER_F: {
+		"scene": KNIGHT, "scale": CHARACTER_SCALE, "top": 1.9, "hide": PERSON_HIDE,
+		"head_texture": HEAD_BLOND, "hair": {"style": "tail", "color": HAIR_BLOND},
+		"mesh_tints": {"Knight_ArmLeft": HERO_SKIN, "Knight_ArmRight": HERO_SKIN,
+			"Knight_Body": Color(0.5, 1.6, 1.5), "Knight_LegLeft": Color(0.9, 0.9, 0.9),
+			"Knight_LegRight": Color(0.9, 0.9, 0.9)},
+		"hide_cape": true, "anims": CHARACTER_ANIMS,
+	},
+	Look.TRAVELLER_M: {
+		"scene": KNIGHT, "scale": CHARACTER_SCALE, "top": 1.9, "hide": PERSON_HIDE,
+		"head_texture": HEAD_BROWN_DARK,
+		"mesh_tints": {"Knight_ArmLeft": SKIN_DARK, "Knight_ArmRight": SKIN_DARK,
+			"Knight_Body": Color(1.8, 0.75, 0.5), "Knight_LegLeft": Color(0.9, 0.9, 0.9),
+			"Knight_LegRight": Color(0.9, 0.9, 0.9)},
+		"cape": Color(0.42, 0.28, 0.16), "anims": CHARACTER_ANIMS,
+	},
+	Look.EXPLORER: {
+		"scene": KNIGHT, "scale": CHARACTER_SCALE, "top": 1.9, "hide": PERSON_HIDE,
+		"head_texture": HEAD_BLOND, "hair": {"style": "tail", "color": HAIR_BLOND},
+		"mesh_tints": {"Knight_ArmLeft": HERO_SKIN, "Knight_ArmRight": HERO_SKIN,
+			"Knight_Body": Color(2.0, 1.05, 0.45), "Knight_LegLeft": HERO_LEGS,
+			"Knight_LegRight": HERO_LEGS},
+		"hide_cape": true, "anims": CHARACTER_ANIMS,
+	},
+	Look.SURVIVOR: {
+		"scene": KNIGHT, "scale": CHARACTER_SCALE, "top": 1.9, "hide": PERSON_HIDE,
+		"head_texture": HEAD_BROWN_PALE, "hair": {"style": "beard", "color": HAIR_BROWN},
+		"mesh_tints": {"Knight_ArmLeft": SKIN_PALE, "Knight_ArmRight": SKIN_PALE,
+			"Knight_Body": Color(1.05, 1.0, 0.92), "Knight_LegLeft": Color(0.8, 0.8, 0.8),
+			"Knight_LegRight": Color(0.8, 0.8, 0.8)},
+		"hide_cape": true, "anims": CHARACTER_ANIMS,
 	},
 	# The Niña of the forest village: a small Mage in pink.
 	Look.CHILD: {
@@ -852,6 +931,9 @@ var _materials: Array[StandardMaterial3D] = []
 var _flash: StandardMaterial3D
 var _highlight: StandardMaterial3D
 var _highlighted := false
+## The map hero only: the overlay every mesh shows when no flash or highlight is on (null
+## for every other figure, and in battle).
+var _map_overlay: ShaderMaterial
 ## Characters only; null for slimes.
 var _anim: AnimationPlayer
 var _anims: Dictionary = {}
@@ -975,6 +1057,30 @@ func set_faded(on: bool) -> void:
 		mi.transparency = FADED_TRANSPARENCY if on else 0.0
 
 
+## Map hero only (Player): a soft rim of light and a faint light of his own on every mesh
+## (RIM_SHADER through material_overlay, so the Knight's shared materials never change), so
+## he reads on a tree's shadow. Never in battle, never on the companions or the figures.
+func set_map_readable(on: bool) -> void:
+	# The dummy renderer of --headless runs errors on shader overlays: no rim there.
+	if DisplayServer.get_name() == "headless":
+		return
+	if on and _map_overlay == null:
+		_map_overlay = ShaderMaterial.new()
+		_map_overlay.shader = RIM_SHADER
+	elif not on:
+		_map_overlay = null
+	_apply_map_overlay()
+
+
+## Puts the map overlay on every mesh of the figure, the hidden ones too (hand meshes,
+## helmet, horns), unless a flash or the highlight is showing.
+func _apply_map_overlay() -> void:
+	for node in _body.find_children("*", "MeshInstance3D", true, false):
+		var mi := node as MeshInstance3D
+		if mi.material_overlay != _flash or _flash == null:
+			mi.material_overlay = _map_overlay
+
+
 ## Map only: true for the figures that hop as they walk (the slimes).
 func hops() -> bool:
 	return look in [Look.SLIME, Look.RED_SLIME, Look.METAL_SLIME, Look.SAND_SLIME]
@@ -1036,6 +1142,9 @@ func set_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> voi
 		for i in helmet.mesh.get_surface_count():
 			helmet.set_surface_override_material(i, null)
 		_tint_mesh(helmet, Equipment.helmet_tint(helmet_id))
+	# The hand meshes, the helmet and the horns may have changed: the rim goes on them again.
+	if _map_overlay != null:
+		_apply_map_overlay()
 
 
 ## The two horns of the Yelmo de bruma, built once under the helmet mesh. Their meshes
@@ -1290,11 +1399,23 @@ func _build_character(data: Dictionary) -> void:
 		ember.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	if data.has("wrap_color"):
 		_add_mummy_wraps(bones, data.wrap_color)
-	if look == Look.HERO:
+	if data.has("head_texture"):
+		# The head's hair and skin share one mesh: a copy of its material with this atlas.
 		var head := bones.get_node("Knight_Head") as MeshInstance3D
 		var head_material := head.get_active_material(0).duplicate() as BaseMaterial3D
-		head_material.albedo_texture = HERO_HEAD_TEXTURE
+		head_material.albedo_texture = data.head_texture
 		head.set_surface_override_material(0, head_material)
+	var cape := model.find_child("Knight_Cape", true, false) as MeshInstance3D
+	if cape != null and data.get("hide_cape", false):
+		cape.hide()
+	elif cape != null and data.has("cape"):
+		# One flat colour (the cape is one palette cell): a copy without the atlas.
+		var cape_material := cape.get_active_material(0).duplicate() as BaseMaterial3D
+		cape_material.albedo_texture = null
+		cape_material.albedo_color = data.cape
+		cape.set_surface_override_material(0, cape_material)
+	if data.has("hair"):
+		_add_hair(model, data.hair)
 	if data.has("aura"):
 		_add_ghost(_body, _sphere(0.5), data.aura, FOG_AURA_ALPHA, Vector3(0, _top * 0.45, 0),
 			Vector3(2.2, 3.2, 2.2))
@@ -1312,6 +1433,16 @@ func _build_character(data: Dictionary) -> void:
 	# The imported animations do not loop; idle and walk must.
 	for role in ["idle", "walk"]:
 		_anim.get_animation(_anims[role]).loop_mode = Animation.LOOP_LINEAR
+
+
+## A hair piece (HAIR_PIECES: a beard, a bun or a ponytail), faceted like the slimes, in the
+## hair's colour, hung from the head bone's attachment so it follows every animation.
+func _add_hair(model: Node3D, hair: Dictionary) -> void:
+	var head := model.get_node("Rig/Skeleton3D/head") as Node3D
+	var piece: Dictionary = HAIR_PIECES[hair.style]
+	var profile: Array[Vector2] = []
+	profile.assign(HAIR_PROFILES[piece.profile])
+	_add_blob(head, profile, HAIR_SEGMENTS, hair.color, piece.pos, piece.rot, piece.scale)
 
 
 ## The Momia's bandages: flat rings of linen (squashed cylinders, each a little tilted the
@@ -2176,7 +2307,7 @@ static func _tint_mesh(mi: MeshInstance3D, color: Color) -> void:
 func _set_flash(on: bool, color := Color.WHITE) -> void:
 	_flash.albedo_color = Color(color, FLASH_ALPHA)
 	for mi in _meshes:
-		mi.material_overlay = _flash if on else (_highlight if _highlighted else null)
+		mi.material_overlay = _flash if on else (_highlight if _highlighted else _map_overlay)
 
 
 ## A soft glow over the figure while the player aims at it; a flash still shows over it.
@@ -2184,7 +2315,7 @@ func set_highlight(on: bool) -> void:
 	_highlighted = on
 	for mi in _meshes:
 		if mi.material_overlay != _flash:
-			mi.material_overlay = _highlight if on else null
+			mi.material_overlay = _highlight if on else _map_overlay
 
 
 func _set_alpha(alpha: float) -> void:

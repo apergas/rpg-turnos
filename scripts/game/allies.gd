@@ -32,6 +32,37 @@ const GROWTH := {
 	"tadeo": {"max_hp": 35, "attack": 10, "defense": 5, "speed": 4},
 	"ulma": {"max_hp": 55, "attack": 8, "defense": 10, "speed": 1},
 }
+## What the companion says the first time the hero reaches each land of the caravan:
+## zone id -> companion id -> line (2.4.0). Remembered with the world flag ARRIVAL_PREFIX
+## + zone id.
+const ARRIVALS := {
+	"jungla": {
+		"brena": "Qué calor. Si algo se mueve entre las hojas, le pego. Si no se mueve, también.",
+		"tadeo": "Huele a lluvia, a flores y a algo que nos quiere comer. Por ese orden.",
+		"ulma": "Mantente detrás de mi escudo. Y no toques las ranas azules: no son caramelos.",
+	},
+	"desierto": {
+		"brena": "Arena en las botas, arena en el pelo... Hasta en el desayuno había arena.",
+		"tadeo": "Si ves un lago a lo lejos, no corras. Es mentira. Lo sé por experiencia.",
+		"ulma": "Mi escudo quema al sol. Ahora sirve también de sartén.",
+	},
+	"montana_1": {
+		"brena": "¡Por fin fresquito! En la jungla sudaba hasta la espada.",
+		"tadeo": "Me castañetean los dientes. No es miedo: es ritmo.",
+		"ulma": "He traído dos mantas. Una es para mí y la otra también.",
+	},
+	"ciudad_1": {
+		"brena": "Qué silencio. No me gustan los sitios donde nadie se queja.",
+		"tadeo": "Mira esas casas. Seguro que alguna tenía una despensa llena.",
+		"ulma": "Esqueletos de guardia. Ponte detrás de mí y no hagas ruido.",
+	},
+}
+const ARRIVAL_PREFIX := "llegada_"
+## Each arrival zone's tramo boss: a save past it has heard (or skipped) that line.
+const ARRIVAL_BOSSES := {"jungla": "jaguar_sombrio", "desierto": "gusano_dunas",
+	"montana_1": "grifo_cumbre", "ciudad_1": "guardian_ciudad"}
+## The upper floors count as their land's arrival zone.
+const ARRIVAL_REGIONS := {"montana_2": "montana_1", "ciudad_2": "ciudad_1"}
 
 
 static func is_companion(id: String) -> bool:
@@ -87,3 +118,25 @@ static func data(id: String, tramo := 1) -> Combatant:
 static func stats_text(id: String) -> String:
 	var c: Combatant = CREATURES[id].data
 	return "PV %d  ATK %d  DEF %d" % [c.max_hp, c.attack, c.defense]
+
+
+## The companion's line on first reaching zone_id ("" for none: no companion, or not an
+## arrival zone).
+static func arrival_line(id: String, zone_id: String) -> String:
+	return ARRIVALS.get(zone_id, {}).get(id, "")
+
+
+static func arrival_flag(zone_id: String) -> String:
+	return ARRIVAL_PREFIX + zone_id
+
+
+## A loaded game: the arrival lines of the lands already left behind (their boss beaten)
+## and of the land it stands in are taken as heard, so loading in the jungle never says
+## "first time here". Works on GameState.world_flags.
+static func mark_arrivals(flags: Dictionary, zone_id: String) -> void:
+	for zone: String in ARRIVAL_BOSSES:
+		if flags.get(ARRIVAL_BOSSES[zone], false):
+			flags[arrival_flag(zone)] = true
+	var here: String = ARRIVAL_REGIONS.get(zone_id, zone_id)
+	if ARRIVALS.has(here):
+		flags[arrival_flag(here)] = true

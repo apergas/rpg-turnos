@@ -147,7 +147,7 @@ No bloquean nada ni dan EXP.
 | Misión | Dónde empieza | Qué pide | Dónde termina | Premio |
 |---|---|---|---|---|
 | Carta para la Leñadora | Granjero | Llevar la carta | Leñadora, aldea del bosque | 60 G, 2 Pociones |
-| Setas para el guiso | Tablón de Villaclaro | 3 setas: la Seta saltarina las suelta al 50 % | Granjero | 40 G, Semilla de fuerza |
+| Setas para el guiso | Tablón de Villaclaro | 3 setas: la Seta saltarina las suelta siempre mientras la misión las pide | Granjero | 40 G, Semilla de fuerza |
 | Lobos hambrientos | Tablón del bosque | 5 lobos | Leñadora | 120 G, Anillo antiveneno |
 | El gato perdido | Niña | Encontrar al gato en el claro oeste | Niña | 80 G, Semilla de agilidad |
 | El Slime de Metal | Tablón del refugio | Vencerlo: 25 % de los encuentros de la mina mientras dure la misión | Al vencer | Amuleto de velocidad |

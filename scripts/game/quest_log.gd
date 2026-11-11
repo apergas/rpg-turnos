@@ -32,6 +32,18 @@ const MAX_STATUS_LINES := 3
 const MORE_LINES := "y %d más en el Diario"
 const NEW_MARK := "!"
 const REPORT_MARK := "?"
+## What talk() did: delivered every report waiting, met a sought figure, made an offer or
+## said a waiting line.
+const TALK_REPORT := "report"
+const TALK_FOUND := "found"
+const TALK_OFFER := "offer"
+const TALK_WAIT := "wait"
+## The notice of several missions finished at once on a phone (one line of 300 px).
+const DONE_MANY_TEXT := "Misiones cumplidas: %d"
+## The v2's flags in the order a game sets them: a turn-in figure that needs a flag earlier
+## than its quest's is always there when the quest can be finished (problems()).
+const FLAG_ORDER := ["caravana_vista", "caravana", "companero", "jaguar_sombrio",
+	"gusano_dunas", "grifo_cumbre", "guardian_ciudad", "devorador_portal"]
 
 ## The village quest, the same object as GameState.quest.
 var village: Quest
@@ -51,6 +63,11 @@ static func data(id: String) -> QuestData:
 ## What show_mission_done() says about a quest with this title.
 static func done_text(title: String) -> String:
 	return "%s: %s" % [Quest.DONE_TEXT, title]
+
+
+## What show_mission_done() says on a phone when several quests end at once.
+static func done_count_text(count: int) -> String:
+	return DONE_MANY_TEXT % count
 
 
 func stage(id: String) -> Stage:
@@ -109,38 +126,64 @@ func hunted_enemies() -> Array[String]:
 	return hunted
 
 
-## What this figure says about a quest now, and what that does: a report it was waiting for
-## (paid at once), a sought figure found, a new offer (taken), else its waiting lines.
-## Returns {"lines": Array[String], "done": title of the quest finished or ""}, or {} when
-## it has nothing to say about any.
-func talk(state: GameState, zone_id: String, figure: String) -> Dictionary:
-	if figure in reports_here(zone_id, state.inventory):
-		for id: String in QUESTS:
-			var quest := data(id)
-			if quest.turn_in_zone == zone_id and quest.turn_in == figure \
-					and _is_ready(quest, state.inventory):
-				var lines: Array[String] = quest.done_lines.duplicate()
-				lines.append_array(_finish(state, quest))
-				return {"lines": lines, "done": quest.title}
+## Quest item -> how many a GATHER quest asks for, while the quest is taken or can be offered
+## now and the bag holds fewer: those always drop in battle, the others never
+## (BattleEngine.quest_items). Before reading the board a monkey still leaves its skin.
+func wanted_items(state: GameState) -> Dictionary:
+	var wanted := {}
+	for id: String in QUESTS:
+		var quest := data(id)
+		if quest.kind != QuestData.Kind.GATHER:
+			continue
+		if stage(id) != Stage.ACTIVE and not _offered(quest, state.world_flags):
+			continue
+		if state.inventory.count(quest.target) < quest.goal:
+			wanted[quest.target] = quest.goal
+	return wanted
+
+
+## What this figure says about the quests now, and what that does: every report it was
+## waiting for, one after another, each with its payment (in QUESTS order); else a sought
+## figure found, a new offer (taken), or the waiting lines of its first quest under way
+## (short_wait: only the first line, the Jefe de caravana's rule). Returns {} when it has
+## nothing to say about any, else {"lines": Array[String], "done": the titles finished,
+## "kind": TALK_REPORT, TALK_FOUND, TALK_OFFER or TALK_WAIT}.
+func talk(state: GameState, zone_id: String, figure: String, short_wait := false) -> Dictionary:
+	var lines: Array[String] = []
+	var done: Array[String] = []
+	for id: String in QUESTS:
+		var quest := data(id)
+		if quest.turn_in_zone == zone_id and quest.turn_in == figure \
+				and _is_ready(quest, state.inventory):
+			lines.append_array(quest.done_lines)
+			lines.append_array(_finish(state, quest))
+			done.append(quest.title)
+	if not done.is_empty():
+		return {"lines": lines, "done": done, "kind": TALK_REPORT}
 	for id: String in QUESTS:
 		var quest := data(id)
 		if quest.kind == QuestData.Kind.FIND and quest.target_zone == zone_id \
 				and quest.target == figure and stage(id) == Stage.ACTIVE:
 			_stages[id] = Stage.REPORT
-			return {"lines": quest.found_lines.duplicate(), "done": ""}
+			lines.assign(quest.found_lines)
+			return {"lines": lines, "done": done, "kind": TALK_FOUND}
 	for id: String in QUESTS:
 		var quest := data(id)
 		if quest.zone == zone_id and quest.giver == figure and _offered(quest, state.world_flags):
 			accept(state, id)
-			return {"lines": quest.offer_lines.duplicate(), "done": ""}
+			lines.assign(quest.offer_lines)
+			return {"lines": lines, "done": done, "kind": TALK_OFFER}
 	for id: String in QUESTS:
 		var quest := data(id)
 		if quest.turn_in_zone == zone_id and quest.turn_in == figure and is_active(id) \
 				and not quest.wait_lines.is_empty():
-			var lines: Array[String] = quest.wait_lines.duplicate()
+			if short_wait:
+				lines.append(quest.wait_lines[0])
+			else:
+				lines.assign(quest.wait_lines)
 			if quest.goal > 1 and quest.kind in [QuestData.Kind.HUNT, QuestData.Kind.GATHER]:
 				lines.append(PROGRESS_LINE % [_progress(quest, state.inventory), quest.goal])
-			return {"lines": lines, "done": ""}
+			return {"lines": lines, "done": done, "kind": TALK_WAIT}
 	return {}
 
 
@@ -298,6 +341,8 @@ func _finish(state: GameState, quest: QuestData) -> Array[String]:
 			state.inventory.take(quest.target)
 	if quest.key_item != "":
 		state.key_items.erase(quest.key_item)
+	if quest.done_flag != "":
+		state.world_flags[quest.done_flag] = true
 	_stages[quest.id] = Stage.DONE
 	return QuestRewards.give(state, quest)
 
@@ -328,3 +373,42 @@ func _journal_text(quest: QuestData, inventory: Inventory) -> String:
 ## text with a capital and a full stop, for a mission line said in the Diario.
 static func _sentence(text: String) -> String:
 	return "%s%s." % [text.left(1).to_upper(), text.substr(1)]
+
+
+## A WARNING line for each quest whose report could get stuck: its turn_in figure is missing
+## from turn_in_zone, is not one to talk to (a shop, an inn or a board opens something
+## else), or may be off the map when the quest is ready (a needs flag that may come later
+## than the quest's own, or any gone flag). Game prints them when it starts; none today.
+static func problems() -> Array[String]:
+	var found: Array[String] = []
+	for id: String in QUESTS:
+		var quest := data(id)
+		if quest.turn_in == "":
+			continue
+		var zone := ZoneData.by_id(quest.turn_in_zone)
+		var figure := {}
+		if zone != null:
+			for npc: Dictionary in zone.npcs:
+				if npc.name == quest.turn_in:
+					figure = npc
+		if figure.is_empty():
+			found.append("Misión %s: se entrega a %s, que no está en %s" % [id, quest.turn_in,
+				quest.turn_in_zone])
+			continue
+		if not figure.get("kind", "npc") in ["npc", "quest"]:
+			found.append("Misión %s: se entrega a %s, que no es una figura con quien hablar" \
+				% [id, quest.turn_in])
+			continue
+		var needs: String = figure.get("needs", "")
+		var may_miss: bool = figure.get("gone", "") != ""
+		if needs != "" and needs != quest.needs and not _comes_before(needs, quest.needs):
+			may_miss = true
+		if may_miss:
+			found.append("Misión %s: %s puede faltar cuando la misión está lista" % [id,
+				quest.turn_in])
+	return found
+
+
+## True if flag a is always set before flag b in a game (both in FLAG_ORDER).
+static func _comes_before(a: String, b: String) -> bool:
+	return a in FLAG_ORDER and b in FLAG_ORDER and FLAG_ORDER.find(a) < FLAG_ORDER.find(b)

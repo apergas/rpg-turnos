@@ -65,18 +65,18 @@ exits = [{
 npcs = [{
 "kind": "npc",
 "lines": ["Gracias otra vez."],
-"look": "VILLAGER",
+"look": "EXPLORER",
 "name": "Exploradora",
 "pos": Vector3(-24, 0, 14),
 "yaw": 90.0
 }]
 boss_id = "jaguar_sombrio"
 boss_pos = Vector3(0, 0, -38)
-formations = [["rana_dardo"], ["serpiente_liana"], ["mono_aullador"], ["planta_trampa"], ["seta_tropical"], ["rana_dardo", "rana_dardo"], ["serpiente_liana", "seta_tropical"], ["mono_aullador", "planta_trampa"]]
+formations = [["rana_dardo"], ["serpiente_liana"], ["mono_aullador"], ["planta_trampa"], ["seta_tropical"], ["rana_dardo", "rana_dardo"], ["serpiente_liana", "seta_tropical"], ["mono_aullador", "planta_trampa"], ["mono_aullador"]]
 start_formations = [["rana_dardo"], ["seta_tropical"]]
 start_pos = Vector3(0, 0, 40)
 start_radius = 14.0
-monster_count = 14
+monster_count = 22
 exit_level = 25
 music = "jungle"
 ambient = "jungle"

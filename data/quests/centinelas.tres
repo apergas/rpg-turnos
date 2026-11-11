@@ -18,7 +18,7 @@ status = "centinelas %d / %d"
 report = "vuelve con el Jefe de caravana"
 offer_lines = Array[String](["AVISO: los esqueletos centinela de la ciudad no dejan acercarse a nadie. Se paga a quien derrote a seis. — El Jefe de caravana"])
 wait_lines = Array[String](["¿Seis centinelas? Cuidado: cuando uno cae, llama a otro."])
-done_lines = Array[String](["¡Seis centinelas! El camino del portal queda libre.", "Toma tu paga, y estas plumas: donde vas a ir, nunca sobran."])
+done_lines = Array[String](["¡Seis centinelas! El camino del portal queda libre.", "Esos esqueletos llevaban siglos de guardia. Ya era hora de que descansaran.", "Toma tu paga, y estas plumas: donde vas a ir, nunca sobran."])
 reward_gold = 800
 reward_items = {
 "pluma_fenix": 2

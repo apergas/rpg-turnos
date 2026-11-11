@@ -12,5 +12,5 @@ steps = [
 ["camera_back"],
 ["approach", "Jefe de caravana", "hero", 1.8],
 ["face", "hero", "Jefe de caravana"],
-["say", "Jefe de caravana", ["Nadie cruza la jungla solo. Tres de los míos se han ofrecido a ir contigo.", "Elige a uno. Irá a tu lado en cada combate, hasta el portal."]]
+["say", "Jefe de caravana", ["Nadie cruza la jungla solo. Ni siquiera yo, y eso que tengo un camello muy valiente.", "Tres de los míos se han ofrecido a ir contigo.", "Elige a uno. Irá a tu lado en cada combate, hasta el portal."]]
 ]

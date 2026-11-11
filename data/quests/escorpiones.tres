@@ -18,7 +18,7 @@ status = "escorpiones %d / %d"
 report = "vuelve con el Jefe de caravana"
 offer_lines = Array[String](["AVISO: los escorpiones de las dunas pican a los camellos. Se paga a quien derrote a seis. — El Jefe de caravana"])
 wait_lines = Array[String](["¿Seis escorpiones? Los verás entre las dunas, con la cola en alto."])
-done_lines = Array[String](["¡Seis escorpiones! Los camellos ya duermen tranquilos.", "Toma tu paga, y esta pluma: en el desierto nunca sobra."])
+done_lines = Array[String](["¡Seis escorpiones! Los camellos ya duermen tranquilos.", "Bueno, uno ronca. Pero eso no es culpa tuya.", "Toma tu paga, y esta pluma: en el desierto nunca sobra."])
 reward_gold = 450
 reward_items = {
 "pluma_fenix": 1

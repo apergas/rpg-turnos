@@ -78,6 +78,9 @@ var zone: ZoneData
 ## The creature at the hero's side (null: none). Set it before adding the scene; it is
 ## already a copy with its life full.
 var ally: Combatant
+## Quest item -> how many its quest asks for (Game: QuestLog.wanted_items()); set before
+## adding it. Empty: no quest item drops.
+var quest_items := {}
 
 var _rng := RandomNumberGenerator.new()
 var _autoplay := false
@@ -164,6 +167,7 @@ func _ready() -> void:
 	engine.damage_mult = Difficulty.damage_mult(difficulty)
 	engine.exp_mult = Difficulty.exp_mult(difficulty)
 	engine.ally = ally
+	engine.quest_items = quest_items
 	_hud.set_engine(engine)
 	if ally != null:
 		_hud.show_ally(ally)
@@ -471,8 +475,11 @@ func _play_event(event: Dictionary) -> void:
 				learned += " Sustituye a %s." % event.replaced
 			await _say(learned)
 		BattleEvent.DROP:
-			await _say("¡%s ha dejado %s %s!" % [_cap(_the(_fighter(event.owner))),
-				Inventory.article(event.item), Inventory.display_name(event.item)])
+			var said := "¡%s ha dejado %s %s!" % [_cap(_the(_fighter(event.owner))),
+				Inventory.article(event.item), Inventory.display_name(event.item)]
+			if event.get("progress", "") != "":
+				said += " " + event.progress
+			await _say(said)
 
 
 func _play_damage(event: Dictionary) -> void:
