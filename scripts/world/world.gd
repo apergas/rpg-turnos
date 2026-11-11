@@ -138,6 +138,7 @@ const KEY := "key"
 const DOOR := "door"
 const PORTAL := "portal"
 const BOARD := "board"
+const ITEM := "item"
 const MEDAL := "medal"
 ## Between the verb and who it is done with: "Hablar · Granjero".
 const PROMPT_JOIN := " · "
@@ -154,9 +155,10 @@ const PROMPTS := {
 	PORTAL: "Volver",
 	BOARD: "Leer",
 	MEDAL: "Coger",
+	ITEM: "Coger",
 }
 ## ZoneData.npcs kinds -> use kinds.
-const NPC_KINDS := {"quest": TALK, "npc": NPC, "shop": SHOP, "inn": INN, "board": BOARD}
+const NPC_KINDS := {"quest": TALK, "npc": NPC, "shop": SHOP, "inn": INN, "board": BOARD, "item": ITEM}
 ## Chest model: wooden box with a gold band and a lid hinged at the back.
 const CHEST_SIZE := Vector3(0.9, 0.45, 0.6)
 const CHEST_LID_HEIGHT := 0.2
@@ -440,7 +442,7 @@ func _physics_process(delta: float) -> void:
 	elif not near.is_empty() and near != _was_near and _autoplay and near.kind != PORTAL:
 		# Autoplay talks to each villager once per visit to the zone, and again when a
 		# mark over it says there is something new.
-		var chats: bool = near.kind == NPC or near.kind == BOARD
+		var chats: bool = near.kind in [NPC, BOARD, ITEM]
 		if not chats or not _autoplay_talked.has(near.index) \
 				or _quest_marks.has(zone.npcs[near.index].name):
 			_autoplay_talked[near.index] = true
@@ -1357,7 +1359,7 @@ func _use(use: Dictionary) -> void:
 	match use.get("kind", ""):
 		TALK:
 			talk_requested.emit()
-		NPC, BOARD:
+		NPC, BOARD, ITEM:
 			npc_requested.emit(use.index)
 		SHOP:
 			shop_requested.emit(use.id)

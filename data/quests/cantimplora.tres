@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="QuestData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/quest_data.gd" id="1_quest"]
+
+[resource]
+script = ExtResource("1_quest")
+id = "cantimplora"
+title = "La cantimplora del Jefe"
+kind = 3
+zone = "caravana"
+giver = "Viajero"
+needs = "jaguar_sombrio"
+turn_in_zone = "caravana"
+turn_in = "Jefe de caravana"
+target = "Cantimplora"
+target_zone = "desierto"
+objective = "Busca la cantimplora del Jefe de caravana junto al oasis del desierto."
+status = "busca la cantimplora"
+report = "llévasela al Jefe de caravana"
+offer_lines = Array[String](["El Jefe perdió su cantimplora la última vez que cruzamos el desierto. Se la regaló su padre.", "Paramos a beber en el oasis del este. Si sigue en algún sitio, será allí."])
+found_lines = Array[String](["Entre las palmeras del oasis asoma una cantimplora de cuero, medio enterrada en la arena.", "Lleva grabado el sello de la caravana. La guardas para el Jefe."])
+wait_lines = Array[String](["¿Mi cantimplora? Ese viajero habla demasiado... aunque me haría ilusión."])
+done_lines = Array[String](["¡Mi cantimplora! Creía que se la había tragado la arena.", "Toma, una semilla de las buenas. Y dale las gracias a ese viajero chismoso."])
+reward_gold = 0
+reward_items = {
+"semilla_fuerza": 1
+}
