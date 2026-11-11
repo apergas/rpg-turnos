@@ -7,30 +7,38 @@ const VILLACLARO := "villaclaro"
 const BOSQUE := "bosque"
 const MINA := "mina"
 const CASTILLO := "castillo"
+## The Caravana's merchant (the v2): one figure, a shop per tramo (caravan_shop()).
+const CARAVAN_SHOP := "caravana"
+## The Jefe de caravana's choice of companion (the v2): three "creatures" at no cost.
+const COMPANIONS_SHOP := "companeros"
 ## shop id -> keeper's name, equipment and items (Inventory ids) on sale, in list order.
-## Zone 1 sells no Éter (it comes with the zone 2 shop); the Ala de viaje and the Incienso are sold
-## everywhere.
+## Zone 1 sells no Éter (it comes with the zone 2 shop); the Ala de viaje, the Incienso and the
+## Despertador are sold everywhere; the Pluma de fénix from the forest on.
 const SHOPS := {
 	VILLACLARO: {
 		"keeper": "Mercader",
 		"equipment": [Equipment.COPPER_SWORD, Equipment.LEATHER_MAIL, Equipment.WOODEN_SHIELD,
 			"casco_cobre"],
-		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.WING, Inventory.INCENSE],
+		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ALARM, Inventory.WING,
+			Inventory.INCENSE],
 	},
 	BOSQUE: {
 		"keeper": "Mercader",
 		"equipment": ["espada_hierro", "cota_malla", "escudo_hierro", "casco_hierro"],
-		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.WING, Inventory.INCENSE],
+		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.ALARM,
+			Inventory.PHOENIX, Inventory.WING, Inventory.INCENSE],
 	},
 	MINA: {
 		"keeper": "Herrero",
 		"equipment": ["espada_acero", "armadura_acero", "escudo_acero", "casco_acero"],
-		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.WING, Inventory.INCENSE],
+		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.ALARM,
+			Inventory.PHOENIX, Inventory.WING, Inventory.INCENSE],
 	},
 	CASTILLO: {
 		"keeper": "Mercader",
 		"equipment": ["espada_platino", "armadura_platino", "escudo_platino", "casco_platino"],
-		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.WING, Inventory.INCENSE],
+		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.ALARM,
+			Inventory.PHOENIX, Inventory.WING, Inventory.INCENSE],
 	},
 	# The tamers: they sell one creature each. gear_shop: the shop whose gear autoplay
 	# buys first.
@@ -42,6 +50,16 @@ const SHOPS := {
 		"ally": "golem_pequeno", "gear_shop": MINA},
 	"domadora_castillo": {"keeper": "Domadora", "equipment": [], "items": [],
 		"ally": "esqueleto_leal", "gear_shop": CASTILLO},
+	# The Caravana's merchant, tramo 1 (the jungle): the jade gear and the big potions;
+	# caravana_2..4 come with the zones of 2.1.0-2.3.0.
+	"caravana_1": {
+		"keeper": "Mercader",
+		"equipment": ["espada_jade", "armadura_jade", "escudo_jade", "casco_jade"],
+		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
+			Inventory.WING, Inventory.INCENSE, Inventory.PHOENIX, Inventory.ALARM],
+	},
+	COMPANIONS_SHOP: {"keeper": "Jefe de caravana", "equipment": [], "items": [],
+		"allies": Allies.COMPANIONS},
 }
 const NO_GOLD := "Falta oro"
 const WORN := "Lo llevas puesto"
@@ -51,10 +69,21 @@ const STARTING_GEAR_PRICE := 1
 const NOT_CARRIED := "No lo llevas"
 const HAS_IT := "Ya la tienes"
 const HAS_BETTER := "Ya tienes una mejor"
+## Shown on the other companions once one has been chosen.
+const HAS_COMPANION := "Ya tienes compañero"
 ## Potions --autoplay keeps in stock once it has the shop's equipment.
 const AUTOPLAY_POTIONS := 3
 ## The ×5 button of consumables.
 const BULK := 5
+
+
+## The shop of the highest tramo up to `tramo` that exists in SHOPS.
+static func caravan_shop(tramo: int) -> String:
+	for t in range(clampi(tramo, 1, 4), 0, -1):
+		var id := "%s_%d" % [CARAVAN_SHOP, t]
+		if SHOPS.has(id):
+			return id
+	return "%s_1" % CARAVAN_SHOP
 
 
 static func keeper(shop_id: String) -> String:
@@ -62,7 +91,15 @@ static func keeper(shop_id: String) -> String:
 
 
 static func sells_ally(shop_id: String) -> bool:
-	return SHOPS[shop_id].has("ally")
+	# The Caravana's figure id (CARAVAN_SHOP) is not a key: it picks one per tramo.
+	return SHOPS.has(shop_id) and (SHOPS[shop_id].has("ally") or SHOPS[shop_id].has("allies"))
+
+
+## The creatures on sale: the tamer's one, or the companions' list.
+static func allies_of(shop_id: String) -> Array:
+	if SHOPS[shop_id].has("allies"):
+		return SHOPS[shop_id].allies
+	return [SHOPS[shop_id].ally] if SHOPS[shop_id].has("ally") else []
 
 
 static func is_ally(id: String) -> bool:
@@ -74,7 +111,7 @@ static func stock(shop_id: String) -> Array[String]:
 	var ids: Array[String] = []
 	ids.assign(SHOPS[shop_id].equipment + SHOPS[shop_id].items)
 	if sells_ally(shop_id):
-		ids.append(SHOPS[shop_id].ally)
+		ids.append_array(allies_of(shop_id))
 	return ids
 
 
@@ -111,6 +148,8 @@ static func sell_price(id: String) -> int:
 ## Why state can't buy id now ("" if it can).
 static func buy_problem(state: GameState, id: String) -> String:
 	if is_ally(id):
+		if Allies.is_companion(id):
+			return HAS_COMPANION if Allies.is_companion(state.ally_id) else ""
 		if state.ally_id == id:
 			return HAS_IT
 		if Allies.tier(state.ally_id) > Allies.tier(id):
@@ -130,6 +169,8 @@ static func buy(state: GameState, id: String) -> Dictionary:
 	state.gold -= price(id)
 	if is_ally(id):
 		state.ally_id = id
+		if Allies.is_companion(id):
+			return {"ok": true, "text": "%s se une a ti." % Allies.display_name(id)}
 	elif is_equipment(id):
 		state.bag_equipment.append(id)
 	else:
@@ -216,9 +257,11 @@ static func compare(state: GameState, id: String) -> Dictionary:
 static func autoplay_picks(state: GameState, shop_id: String) -> Array[String]:
 	var picks: Array[String] = []
 	if sells_ally(shop_id):
-		var ally: String = SHOPS[shop_id].ally
-		if can_buy(state, ally) and not _gear_pending(state, shop_id):
-			picks.append(ally)
+		for ally: String in allies_of(shop_id):
+			if Allies.is_companion(ally):
+				return picks  # Game chooses the companion on autoplay (Task 8), not the shop
+			if can_buy(state, ally) and not _gear_pending(state, shop_id):
+				picks.append(ally)
 		return picks
 	var gold := state.gold
 	var upgrades := 0
@@ -234,15 +277,17 @@ static func autoplay_picks(state: GameState, shop_id: String) -> Array[String]:
 		if gold >= price(id):
 			picks.append(id)
 			gold -= price(id)
-	var potions := state.inventory.count(Inventory.POTION)
+	var potion_id := Inventory.BIG_POTION if Inventory.BIG_POTION in SHOPS[shop_id].items \
+		else Inventory.POTION
+	var potions := state.inventory.count(potion_id)
 	if upgrades > 0 and potions > 0:
 		return picks
 	if upgrades == 0 and wants_wing and gold >= price(Inventory.WING):
 		picks.append(Inventory.WING)
 		gold -= price(Inventory.WING)
-	while potions < AUTOPLAY_POTIONS and gold >= price(Inventory.POTION):
-		picks.append(Inventory.POTION)
-		gold -= price(Inventory.POTION)
+	while potions < AUTOPLAY_POTIONS and gold >= price(potion_id):
+		picks.append(potion_id)
+		gold -= price(potion_id)
 		potions += 1
 	return picks
 

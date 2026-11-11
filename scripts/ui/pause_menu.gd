@@ -4,8 +4,9 @@ class_name PauseMenu extends Control
 ## Main page: two windows side by side. The hero's ("Héroe Nv X", the pages of
 ## HERO_PAGES and the missions under way) and the system's (Guardar, Opciones, Volver al
 ## título, Cerrar). Other pages: Estado (hero stats, gold, spells), Objetos (items usable
-## outside battle, the Ala de viaje too, and the key items, each with what it does),
-## Equipo (the four slots; choosing one lists the pieces of that slot in the bag, with
+## outside battle, the Ala de viaje too, and the key items, each with what it does, and the
+## small medals, "Medalla pequeña ×n"),
+## Equipo (the six slots; choosing one lists the pieces of that slot in the bag, with
 ## the comparison, and Quitar), Diario (JournalPage: what to do now, the missions in progress
 ## and the finished ones), Opciones (OptionsPanel) and a confirmation before going
 ## back to the title. Esc goes back one page. Keeps running while paused. Call setup()
@@ -320,7 +321,8 @@ func _fill_status() -> void:
 		UiStyle.add_small_text(_spells_box, skill.description)
 	_ally_label.visible = _state.ally_id != ""
 	if _state.ally_id != "":
-		BattleHud.fit_label(_ally_label, "Criatura: %s" % Allies.display_name(_state.ally_id),
+		BattleHud.fit_label(_ally_label, "%s: %s" % [Allies.kind_name(_state.ally_id),
+				Allies.display_name(_state.ally_id)],
 			TEXT_WIDTH)
 
 
@@ -367,6 +369,18 @@ func _fill_items() -> void:
 		row.add_child(label)
 		row.add_child(_label("Objeto clave", GREY))
 		UiStyle.add_description(_items_box, id)
+	if not _state.medals.is_empty():
+		# The small medals: counted, never used (the Coleccionista only counts them).
+		any = true
+		var medal_row := HBoxContainer.new()
+		medal_row.add_theme_constant_override("separation", 16)
+		_items_box.add_child(medal_row)
+		var medal_label := _label("%s ×%d" % [Inventory.MEDAL_NAME, _state.medals.size()],
+			TITLE_COLOR)
+		medal_label.custom_minimum_size = Vector2(260, 0)
+		medal_row.add_child(medal_label)
+		medal_row.add_child(_label("Objeto clave", GREY))
+		UiStyle.add_description(_items_box, Inventory.MEDAL)
 	if not any:
 		_items_box.add_child(_label("No llevas objetos.", Color.WHITE))
 
@@ -405,11 +419,11 @@ func _use_text(id: String, result: Dictionary) -> String:
 		"seed":
 			return "¡%s +%d para siempre!" % [Inventory.seed_stat(id), result.amount]
 		"repel":
-			return "Los monstruos se apartan durante %d m." % Inventory.ITEMS[id].value
+			return "Los monstruos no te atacan durante %d m." % Inventory.ITEMS[id].value
 	return "Recuperas %d PV." % result.amount
 
 
-## The four slots with what is worn ("Arma: Palo  ATK +2") and the totals; with a slot
+## The six slots with what is worn ("Arma: Palo  ATK +2") and the totals; with a slot
 ## chosen, the pieces of that slot in the bag (bonus and comparison), Quitar and Volver.
 func _fill_equipment() -> void:
 	for child in _equip_box.get_children():
@@ -445,7 +459,7 @@ func _fill_equipment() -> void:
 		button.pressed.connect(_on_equip.bind(id))
 		row.add_child(button)
 		row.add_child(_label(Equipment.effect_text(id), Color.WHITE))
-		if _equip_slot != Equipment.ACCESSORY:
+		if not _equip_slot in Equipment.ACCESSORY_SLOTS:
 			row.add_child(ShopWindow.comparison(
 				Equipment.bonus(id) - Equipment.bonus(loadout.worn(_equip_slot))))
 	if listed.is_empty():
@@ -711,7 +725,6 @@ func _fill_spells() -> void:
 		row.add_child(cast)
 		if why != "":
 			row.add_child(_label(why, GREY))
-		UiStyle.add_small_text(_cast_box, skill.description)
 
 
 func _on_cast(skill: Skill) -> void:

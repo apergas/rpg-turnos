@@ -1,5 +1,73 @@
 # Registro de cambios
 
+## 2.0.1 (2026)
+
+- Los mapas están más vivos: flores, setas, tocones y troncos caídos en la pradera y el bosque, y helechos bajo las palmeras de la jungla.
+- Villaclaro tiene un huerto vallado con trigo, maíz y calabazas.
+- Hay hogueras en el campamento del castillo y en la Caravana, y leña y vasijas en el refugio de la mina.
+- Los fondos de combate de la pradera, el bosque y la jungla también ganan algún detalle.
+
+## 2.0.0 (2026)
+
+La caravana del portal, primera parte.
+
+- Después del final llega a Villaclaro una caravana que va hacia un portal al norte. Puedes partir con ella: el mundo de la primera parte queda atrás.
+- La Caravana es tu nueva base: mercader, curandera, tablón de misiones y el Jefe de caravana.
+- Elige un compañero entre tres (Brena, Tadeo y Ulma). Pelea a tu lado en cada combate y se hace más fuerte en cada tramo del camino.
+- La jungla: un mapa nuevo con cinco monstruos nuevos, el Jaguar sombrío, el equipo de jade y dos misiones.
+- El nivel máximo sube a 40, con un hechizo nuevo, Ventisca, y la Poción grande y el Éter grande.
+
+## 1.9.0 (2026)
+
+- Cada lugar tiene su sonido de fondo: brisa y trinos en la pradera, viento entre las hojas y algún pájaro en el bosque, gotas con eco en la mina y viento que silba en el castillo.
+- El sonido de fondo sigue el volumen de los efectos y calla durante los combates.
+- Partículas en cada lugar: polen y semillas flotando en la pradera, hojas que caen en el bosque, polvo que brilla con el farol en la mina y copos de niebla en el castillo.
+- Con los gráficos en calidad baja no hay partículas, y en el móvil hay la mitad.
+
+## 1.8.0 (2026)
+
+- Hay doce medallas pequeñas escondidas por el mundo, tres en cada región. Brillan en el suelo y solo se ven de cerca.
+- El Coleccionista de Villaclaro, detrás de la posada, te da premios por ellas: Plumas de fénix, semillas y tres piezas de equipo únicas.
+- Las medallas no se gastan: cuantas más lleves, mejores premios. El Diario y la página Objetos dicen cuántas tienes.
+- Partida nueva +: con una partida terminada, "Continuar" te deja empezar la historia otra vez con tu héroe, su equipo y su oro.
+- En la Partida nueva + los monstruos y los jefes son más fuertes y dan más experiencia y oro.
+- De una vuelta a otra se quedan el bestiario, sus premios, las medallas y los premios del Coleccionista.
+
+## 1.7.0 (2026)
+
+- Ya no hay combates al azar al andar por la hierba: los monstruos están a la vista en el mapa, en grupos.
+- El combate empieza cuando tocas un grupo. Se ve su primer monstruo; al tocarlo salen todos.
+- Por el sendero puedes cruzar una zona sin pelear. En la mina y el castillo, los pasillos estrechos también están libres.
+- Unos monstruos están quietos y otros pasean cerca de su sitio. Nunca te persiguen.
+- Si huyes, el grupo se queda medio transparente y no te ataca hasta que te alejas un poco.
+- Los grupos vencidos vuelven cuando cambias de zona, vuelves por el portal, caes en combate o duermes en la posada.
+- Si eres mucho más fuerte que la zona, los monstruos que se mueven se apartan de ti.
+- Incienso: los monstruos no te atacan durante 200 m.
+- Mientras buscas al Slime de Metal, anda suelto por cada planta de la mina y huye corriendo si te acercas. Si se escapa, conserva sus heridas para la próxima vez.
+
+## 1.6.0 (2026)
+
+- Cinco monstruos nuevos: el Slime rojo y la Seta venenosa en el bosque, el Hongo de cueva en la mina, y el Murciélago de la cripta y el Espectro de escarcha en el castillo.
+- El bestiario se ordena por familias: Criaturas mágicas, Plantas, Bestias, Muertos vivientes y Jefes.
+- Vence a todos los monstruos de una familia y recibirás una pieza de equipo única. La de los Jefes es la Espada del alba, la mejor del juego.
+- La casilla de Accesorio se parte en dos: Anillo y Amuleto. Puedes llevar uno de cada.
+- El Anillo de savia te protege del sueño y el Amuleto de hueso, del silencio. En combate se avisa cuando tu equipo te protege, también del veneno.
+- Tus partidas siguen cargando: el accesorio que llevabas pasa a su casilla. Si ya habías vencido a los cuatro jefes, la Espada del alba te espera al cargar.
+
+## 1.5.0 (2026)
+
+- A veces pillas desprevenidos a los monstruos y atacas tú primero sin que respondan.
+- Otras veces son ellos los que te atacan por sorpresa antes de que puedas hacer nada.
+- Nunca pasa contra un jefe.
+- Pluma de fénix (150 G, desde la tienda del bosque): si caes en combate, te levanta con la mitad de PV. Una por combate.
+- Despertador (12 G, en todas las tiendas): úsalo en combate y ya no te dormirás hasta que acabe.
+
+## 1.4.1 (2026)
+
+- En combate, los hechizos solo dicen su nombre y sus PM. Lo que hace cada uno está en la página Estado del menú.
+- La página Hechizos del menú también es más sencilla: nombre, PM y "Usar".
+- Dos monstruos iguales se llaman igual: "Slime" y "Slime". La flecha amarilla marca a cuál apuntas.
+
 ## 1.4.0 (2026)
 
 - Tras el final, el Eco de la Niebla espera en el salón del trono: el reto más duro del juego.

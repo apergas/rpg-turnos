@@ -20,8 +20,21 @@ const ENEMIES := {
 	"esqueleto_mago": preload("res://data/enemies/esqueleto_mago.tres"),
 	"senor_niebla": preload("res://data/enemies/senor_niebla.tres"),
 	"slime_metal": preload("res://data/enemies/slime_metal.tres"),
-	# The boss after the ending, in the throne room. Not in the bestiary (BestiaryPage.ORDER).
+	# The color variants of 1.6.0.
+	"slime_rojo": preload("res://data/enemies/slime_rojo.tres"),
+	"seta_venenosa": preload("res://data/enemies/seta_venenosa.tres"),
+	"hongo_cueva": preload("res://data/enemies/hongo_cueva.tres"),
+	"murcielago_cripta": preload("res://data/enemies/murcielago_cripta.tres"),
+	"espectro_escarcha": preload("res://data/enemies/espectro_escarcha.tres"),
+	# The boss after the ending, in the throne room. Not in the bestiary (Bestiary.FAMILIES).
 	"eco_niebla": preload("res://data/enemies/eco_niebla.tres"),
+	# The jungle (the v2, Bestiary.V2_ENEMIES).
+	"rana_dardo": preload("res://data/enemies/rana_dardo.tres"),
+	"serpiente_liana": preload("res://data/enemies/serpiente_liana.tres"),
+	"mono_aullador": preload("res://data/enemies/mono_aullador.tres"),
+	"planta_trampa": preload("res://data/enemies/planta_trampa.tres"),
+	"jaguar_sombrio": preload("res://data/enemies/jaguar_sombrio.tres"),
+	"seta_tropical": preload("res://data/enemies/seta_tropical.tres"),
 }
 ## Figure of each enemy id; any other id is a slime.
 const LOOKS := {
@@ -42,13 +55,30 @@ const LOOKS := {
 	"esqueleto_mago": BattleActor.Look.SKELETON_MAGE,
 	"senor_niebla": BattleActor.Look.FOG_LORD,
 	"slime_metal": BattleActor.Look.METAL_SLIME,
+	"slime_rojo": BattleActor.Look.RED_SLIME,
+	"seta_venenosa": BattleActor.Look.POISON_MUSHROOM,
+	"hongo_cueva": BattleActor.Look.CAVE_MUSHROOM,
+	"murcielago_cripta": BattleActor.Look.CRYPT_BAT,
+	"espectro_escarcha": BattleActor.Look.FROST_SPECTER,
 	"eco_niebla": BattleActor.Look.FOG_ECHO,
+	"rana_dardo": BattleActor.Look.FROG,
+	"serpiente_liana": BattleActor.Look.SNAKE,
+	"mono_aullador": BattleActor.Look.MONKEY,
+	"planta_trampa": BattleActor.Look.TRAP_PLANT,
+	"jaguar_sombrio": BattleActor.Look.JAGUAR,
+	"seta_tropical": BattleActor.Look.TROPICAL_MUSHROOM,
 	# The creatures that fight beside the hero (data in Allies, not in ENEMIES).
 	"gallina": BattleActor.Look.CHICKEN,
 	"lobezno": BattleActor.Look.WOLF_CUB,
 	"golem_pequeno": BattleActor.Look.MINI_GOLEM,
 	"esqueleto_leal": BattleActor.Look.LOYAL_SKELETON,
+	"brena": BattleActor.Look.BRENA,
+	"tadeo": BattleActor.Look.TADEO,
+	"ulma": BattleActor.Look.ULMA,
 }
+## The rare enemy of the mine floors: on the map while its quest is on, it keeps its HP
+## between battles (GameState.metal_slime_hp) and never brings a surprise.
+const METAL_SLIME := "slime_metal"
 
 
 ## The data of enemy id (not duplicated: BattleScene does it), or null.

@@ -410,15 +410,17 @@ func _open(page: Page, cursor: int) -> void:
 		Page.SPELLS:
 			for skill in _engine.hero.skills:
 				var why := _engine.problem(BattleEngine.cmd_skill(skill))
-				_add_row(_with_reason("%s  %d PM  %s" % [skill.display_name, skill.mp_cost,
-					skill.description], why), why == "")
+				_add_row(_with_reason("%s  %d PM" % [skill.display_name, skill.mp_cost],
+					why), why == "")
 			_add_back_row()
 			_set_message("¿Qué hechizo?")
 		Page.ITEMS:
 			for id in _item_ids():
 				var why := _engine.problem(BattleEngine.cmd_item(id))
-				_add_row(_with_reason("%s ×%d  %s" % [Inventory.display_name(id),
-					_engine.inventory.count(id), Inventory.description(id)], why), why == "")
+				var text := "%s ×%d" % [Inventory.display_name(id), _engine.inventory.count(id)]
+				if why == "":
+					text += "  %s" % Inventory.description(id)
+				_add_row(_with_reason(text, why), why == "")
 			if _rows.is_empty():
 				_list.add_child(_label("No llevas objetos."))
 			_add_back_row()
@@ -435,11 +437,12 @@ func _add_back_row() -> void:
 	_add_row("Volver", true)
 
 
-## Items in stock that can be used in battle, in Inventory.IDS order.
+## Items in stock the battle lists, in Inventory.IDS order: the ones usable in battle and
+## the Pluma de fénix (grey: it is used by itself).
 func _item_ids() -> Array[String]:
 	var ids: Array[String] = []
 	for id in Inventory.IDS:
-		if _engine.inventory.count(id) > 0 and Inventory.ITEMS[id].battle:
+		if _engine.inventory.count(id) > 0 and Inventory.listed_in_battle(id):
 			ids.append(id)
 	return ids
 

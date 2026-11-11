@@ -5,22 +5,43 @@ class_name Inventory extends RefCounted
 
 const POTION := "potion"
 const ETHER := "ether"
+const BIG_POTION := "pocion_grande"
+const BIG_ETHER := "eter_grande"
 const ANTIDOTE := "antidote"
 const WING := "wing"
 const INCENSE := "incienso"
+const PHOENIX := "pluma_fenix"
+const ALARM := "despertador"
 const SETA := "seta"
+## The jungle's quest item (pieles_mono), dropped by the Mono aullador.
+const PIEL_MONO := "piel_mono"
 const SEED_ATTACK := "semilla_fuerza"
 const SEED_DEFENSE := "semilla_defensa"
 const SEED_SPEED := "semilla_agilidad"
+## The small medals are not an item: GameState.medals counts them. These are the name and
+## the key text (KEY_TEXTS) the pause menu's Objetos shows for them.
+const MEDAL := "medalla_pequena"
+const MEDAL_NAME := "Medalla pequeña"
 const START_POTIONS := 3
 ## What a seed adds to its stat, for good.
 const SEED_BONUS := 2
 const SEEDS: Array[String] = [SEED_ATTACK, SEED_DEFENSE, SEED_SPEED]
+## Effect of the Pluma de fénix: if the hero falls in battle it burns by itself and he
+## rises with value of his max HP (BattleEngine), once per battle. Never used by hand.
+const EFFECT_REVIVE := "revive"
+## Why an item that works by itself can't be used by hand.
+const AUTO_USE := "Se usa sola"
+## Effect of the Despertador: in battle, the hero can't fall asleep until it ends
+## (BattleEngine keeps the guard; it is gone with the battle).
+const EFFECT_WAKE_GUARD := "wake_guard"
 ## name and article (for "una Poción"); effect "hp" (heals value HP), "mp" (restores
 ## value MP), "cure" (removes the status named by value), "travel" (the Ala de viaje:
 ## Game takes the hero to the last village visited and leaves a portal there that leads
-## back once), "repel" (the Incienso: no random encounters for value metres; GameState
-## counts them), "seed" (adds SEED_BONUS to the Combatant field named by value) or "quest"
+## back once), "repel" (the Incienso: for value metres touching a group of monsters starts no battle; GameState
+## counts them), "seed" (adds SEED_BONUS to the Combatant field named by value),
+## "revive" (EFFECT_REVIVE: the Pluma de fénix, used by itself when the hero falls in battle,
+## value is the share of max HP he rises with), "wake_guard" (EFFECT_WAKE_GUARD: the
+## Despertador, no sleep for the rest of the battle) or "quest"
 ## (of no use: someone is asking for it); price in gold (Shop sells at it and
 ## buys back at half); battle / field: usable in battle / from the pause menu; text: what
 ## it does, shown in the shop, in Objetos and in battle.
@@ -29,17 +50,30 @@ const ITEMS := {
 		"battle": true, "field": true, "text": "Recupera 30 PV."},
 	ETHER: {"name": "Éter", "article": "un", "effect": "mp", "value": 15, "price": 30,
 		"battle": true, "field": true, "text": "Recupera 15 PM."},
+	BIG_POTION: {"name": "Poción grande", "article": "una", "effect": "hp", "value": 100,
+		"price": 40, "battle": true, "field": true, "text": "Recupera 100 PV."},
+	BIG_ETHER: {"name": "Éter grande", "article": "un", "effect": "mp", "value": 40,
+		"price": 90, "battle": true, "field": true, "text": "Recupera 40 PM."},
 	ANTIDOTE: {"name": "Antídoto", "article": "un", "effect": "cure", "value": "poison",
 		"price": 10, "battle": true, "field": false, "text": "Cura el veneno."},
+	ALARM: {"name": "Despertador", "article": "un", "effect": EFFECT_WAKE_GUARD, "value": 0,
+		"price": 12, "battle": true, "field": false,
+		"text": "Evita el sueño hasta el final del combate."},
+	PHOENIX: {"name": "Pluma de fénix", "article": "una", "effect": EFFECT_REVIVE,
+		"value": 0.5, "price": 150, "battle": false, "field": false,
+		"text": "Si caes en combate, te levanta con la mitad de PV."},
 	WING: {"name": "Ala de viaje", "article": "un", "effect": "travel", "value": 0,
 		"price": 25, "battle": false, "field": true,
 		"text": "Te lleva al último lugar seguro y deja un portal para volver una vez."},
 	INCENSE: {"name": "Incienso", "article": "un", "effect": "repel", "value": 200,
 		"price": 20, "battle": false, "field": true,
-		"text": "Sin combates durante 200 m."},
+		"text": "Los monstruos no te atacan durante 200 m."},
 	SETA: {"name": "Seta", "article": "una", "effect": "quest", "value": 0, "price": 0,
 		"battle": false, "field": false,
 		"text": "De las que saltan. Alguien de Villaclaro las anda buscando."},
+	PIEL_MONO: {"name": "Piel de mono", "article": "una", "effect": "quest", "value": 0,
+		"price": 0, "battle": false, "field": false,
+		"text": "Suave y con rayas. Alguien de la caravana las anda buscando."},
 	SEED_ATTACK: {"name": "Semilla de fuerza", "article": "una", "effect": "seed",
 		"value": "attack", "price": 0, "battle": false, "field": true,
 		"text": "Sube el ATK en 2 para siempre."},
@@ -51,8 +85,8 @@ const ITEMS := {
 		"text": "Sube la VEL en 2 para siempre."},
 }
 ## Order of the item lists.
-const IDS: Array[String] = [POTION, ETHER, ANTIDOTE, WING, INCENSE, SEED_ATTACK, SEED_DEFENSE,
-	SEED_SPEED, SETA]
+const IDS: Array[String] = [POTION, ETHER, BIG_POTION, BIG_ETHER, ANTIDOTE, ALARM, PHOENIX, WING,
+	INCENSE, SEED_ATTACK, SEED_DEFENSE, SEED_SPEED, SETA, PIEL_MONO]
 ## Why an Ala de viaje can't be used in a village.
 const IN_TOWN := "Ya estás en un lugar seguro"
 ## Why a "quest" item can't be used.
@@ -66,6 +100,7 @@ const KEY_ITEMS := {
 	"fragmento_castillo": "Fragmento del amuleto (3/3)",
 	"llave_mina": "Llave de la mina",
 	"carta_granjero": "Carta del Granjero",
+	"insignia_jungla": "Insignia de la jungla",
 }
 ## What each key item is, for Objetos.
 const KEY_TEXTS := {
@@ -74,6 +109,8 @@ const KEY_TEXTS := {
 	"fragmento_castillo": "El último trozo del Amuleto del Alba. Lo guardaba el Señor de la Niebla.",
 	"llave_mina": "Abre la reja de la tercera planta de la mina.",
 	"carta_granjero": "Para la Leñadora, en la aldea del bosque. Huele un poco a gallina.",
+	"insignia_jungla": "La llevaba el Jaguar sombrío. Abre el camino hacia el desierto.",
+	MEDAL: "El Coleccionista de Villaclaro las colecciona.",
 }
 
 var _items := {}
@@ -95,6 +132,12 @@ static func seed_stat(id: String) -> String:
 ## What an item or a key item does, in a short sentence.
 static func description(id: String) -> String:
 	return ITEMS[id].text if ITEMS.has(id) else KEY_TEXTS.get(id, "")
+
+
+## True if the battle's Objetos page lists id: the items usable in battle and the
+## Pluma de fénix, shown grey ("Se usa sola").
+static func listed_in_battle(id: String) -> bool:
+	return ITEMS.has(id) and (ITEMS[id].battle or ITEMS[id].effect == EFFECT_REVIVE)
 
 
 func count(id: String) -> int:
@@ -120,6 +163,8 @@ func problem(id: String, c: Combatant, in_battle: bool) -> String:
 	var item: Dictionary = ITEMS[id]
 	if item.effect == "quest":
 		return QUEST_ITEM
+	if item.effect == EFFECT_REVIVE:
+		return AUTO_USE
 	if in_battle and not item.battle:
 		return "Solo fuera de combate"
 	if not in_battle and not item.field:
@@ -172,3 +217,9 @@ func to_dict() -> Dictionary:
 ## Replaces every item with these (id -> count), when a game is loaded.
 func set_items(items: Dictionary) -> void:
 	_items = items.duplicate()
+
+
+## The best healing potion carried: the Poción grande if there is one, else the Poción
+## (also when there is none: the caller checks can_use()).
+static func best_potion(inventory: Inventory) -> String:
+	return BIG_POTION if inventory.count(BIG_POTION) > 0 else POTION

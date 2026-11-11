@@ -1,8 +1,8 @@
 class_name ZoneData extends Resource
 ## Everything one map of the world is built from (data/zones/<id>.tres): the field and
 ## its walls, ground and grass, the dirt path and the safe discs, the village, buildings,
-## rocks, trees and bushes, the entries and exits, the figures, the boss, the encounter
-## formations and pace, the music, the light and the battle backdrop. WorldStage builds
+## rocks, trees and bushes, the entries and exits, the figures, the boss, the
+## formations of its groups of monsters, the music, the light and the battle backdrop. WorldStage builds
 ## the map from it, World runs it and Game switches between zones. A dungeon floor (the
 ## mine, the castle) is drawn instead as a grid of CELL metres (layout, see "Dungeon"):
 ## DungeonMap builds it and the lookups below answer about its cells. Pure data plus a few lookups:
@@ -13,7 +13,10 @@ class_name ZoneData extends Resource
 
 ## Every zone, in world order (save validation and --autoplay-zone check against it).
 const IDS: Array[String] = ["pradera", "bosque", "mina_1", "mina_2", "mina_3",
-	"castillo_patio", "castillo_trono"]
+	"castillo_patio", "castillo_trono", "caravana", "jungla"]
+## The zones of the v2 (the caravan), growing with each version: a save with the caravan's
+## flag is only valid on one of these, and a save without it only on the others.
+const V2_ZONES: Array[String] = ["caravana", "jungla"]
 ## Side of a dungeon cell, in metres.
 const CELL := 4.0
 ## Dungeon cells: rock (a wall in a castle), floor, stairs up and down, chest, lever,
@@ -28,7 +31,9 @@ const DOOR := "D"
 const KEY := "K"
 const TORCH := "T"
 const THRONE := "R"
-## Within this distance of a stair cell's centre the stair room is safe (no encounters).
+## Plain floor (no torch, no chest...): what a group or the Slime de Metal stands on.
+const FLOOR := "."
+## Within this distance of a stair cell's centre the stair room is safe (no monster groups).
 const STAIRS_SAFE_RADIUS := 6.0
 
 @export var id := ""
@@ -56,10 +61,10 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var hills: Array = []
 
 @export_group("Path and safe ground")
-## Corners of the dirt path (no grass, no encounters).
+## Corners of the dirt path (no grass, no monster groups).
 @export var path_points: Array[Vector3] = []
 @export var path_half_width := 1.5
-## [centre, radius] of each round patch of bare dirt (no grass, no encounters): the
+## [centre, radius] of each round patch of bare dirt (no grass, no monster groups): the
 ## spawn area, the village clearing, the boss's clearing...
 @export var safe_discs: Array = []
 ## The village: inside this circle World emits village_changed(true) and the village
@@ -92,10 +97,21 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## the clump.
 @export var tree_models: Array[String] = ["tree_A", "tree_B"]
 @export var clump_model := "trees_A"
-## [centre, radius] of each glade: no trees, but grass and encounters.
+## [centre, radius] of each glade: no trees, but grass and monster groups.
 @export var glades: Array = []
 @export var bush_seed := 31
 @export var bush_tries := 220
+
+@export_group("Decoration")
+## Kenney pieces placed by hand (Decor): [pos, yaw_deg, Decor id] or [pos, yaw_deg, id,
+## count], a run of count pieces one after another along the piece's own +X (fences).
+@export var decor: Array = []
+## Decor id → how many spots are tried for it, scattered inside the walls with decor_seed.
+## Open maps only.
+@export var decor_scatter := {}
+@export var decor_seed := 41
+## The green every green of the kit becomes (the kit's are teal).
+@export var decor_green := Color(0.3, 0.55, 0.18)
 
 @export_group("Entries, exits and figures")
 ## entry id -> [position, yaw]: where the player appears (arriving through an exit, a
@@ -110,14 +126,16 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var portal_pos := Vector3.ZERO
 ## Each exit: {"id", "pos" (trigger, inside the walls), "yaw" (the arch's facing), "to"
 ## (zone id), "entry" (entry id there), "label" (sign text), "lock" (GameState.world_flags
-## key that opens it, "" for always open), "lock_text" (notice while it is closed)}.
+## key that opens it, "" for always open), "lock_text" (notice while it is closed), and
+## optional "needs" / "gone": flags that make it exist (is_present())}.
 @export var exits: Array = []
 ## Each figure: {"kind": "quest" (the old woman), "shop", "inn", "npc" or "board" (a notice
 ## board: read, not talked to), "id" (Shop /
 ## Inn id), "look" (BattleActor.Look name), "pos", "yaw" (0 faces -Z; 180 faces the
 ## camera), "name" (unique on the map: cutscenes call the figure by it), and what it says:
 ## "lines" and / or "lines_by_chapter" (StoryState.Chapter -> lines, from that chapter on;
-## they may hold StoryState.NAME_TAG). The "quest" figure uses them once its quest is done}.
+## they may hold StoryState.NAME_TAG). The "quest" figure uses them once its quest is done;
+## optional "needs" / "gone": flags that make it exist (is_present())}.
 @export var npcs: Array = []
 ## The zone's boss (EnemyLibrary id, "" for none) and where it waits.
 @export var boss_id := ""
@@ -127,27 +145,28 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var postgame_boss_id := ""
 
 @export_group("Encounters")
-## Formations of a random encounter (each a list of EnemyLibrary ids, left to right),
-## every one with the same weight; within start_radius of start_pos only
-## start_formations come.
+## Formations of the groups of monsters on the map (each a list of EnemyLibrary ids, left
+## to right; EncounterTable.pick_group()), every one with the same weight; within
+## start_radius of start_pos only start_formations.
 @export var formations: Array = []
 @export var start_formations: Array = []
 @export var start_pos := Vector3.ZERO
 @export var start_radius := 0.0
-## An enemy that only comes while a quest hunts it, alone, with this chance per encounter
-## (EnemyLibrary id, "" for none).
+## How many groups of monsters stand on the map (MonsterGroups; fewer if there is no room).
+@export var monster_count := 0
+## An enemy that walks the map alone, not as one of its groups: always while a quest hunts
+## it, now and then once it is done (EncounterTable.rare_on_map(); EnemyLibrary id, "" for
+## none).
 @export var rare_enemy := ""
-@export var rare_chance := 0.0
-## EncounterMeter: free meters after each battle, then this chance per meter on grass.
-@export var encounter_grace := 5.0
-@export var encounter_chance := 0.025
 ## The level a hero usually has on leaving this zone (about its boss's): from
-## EncounterMeter.LEVEL_GAP levels past it, its monsters come half as often. 0: never.
+## EncounterMeter.LEVEL_GAP levels past it, its moving groups keep away from the hero (EncounterMeter.is_shy()). 0: never.
 @export var exit_level := 0
 
 @export_group("Look and sound")
 @export var music := "map"
 @export var village_music := "village"
+## AmbientLibrary id of the sound under the map's music ("" for none).
+@export var ambient := ""
 @export var sky_top := Color(0.32, 0.52, 0.88)
 @export var haze := Color(0.78, 0.84, 0.92)
 @export var fog_density := 0.008
@@ -155,6 +174,8 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var sun_energy := 0.6
 ## BattleStage backdrop of the battles fought here ("pradera", "bosque").
 @export var backdrop := "pradera"
+## ZoneParticles kind floating around the hero ("" for none).
+@export var particles := ""
 
 @export_group("Dungeon")
 ## Rows of a dungeon floor, north (−Z) first, one character per CELL × CELL cell (see
@@ -280,7 +301,7 @@ func find_cells(ch: String) -> Array[Vector2i]:
 	return cells
 
 
-## True within STAIRS_SAFE_RADIUS of a stair cell (the stair rooms have no encounters).
+## True within STAIRS_SAFE_RADIUS of a stair cell (the stair rooms have no monster groups).
 func near_stairs(pos: Vector3) -> bool:
 	for kind in [STAIRS_UP, STAIRS_DOWN]:
 		for cell in find_cells(kind):
@@ -306,6 +327,24 @@ func exit_by_id(exit_id: String) -> Dictionary:
 		if exit.id == exit_id:
 			return exit
 	return {}
+
+
+## An exit or a figure of exits / npcs exists only while its optional "needs" flag is set
+## and its optional "gone" flag is not (GameState.world_flags). Without them it is always
+## there, like before the v2.
+static func is_present(entry: Dictionary, flags: Dictionary) -> bool:
+	var needs: String = entry.get("needs", "")
+	var gone: String = entry.get("gone", "")
+	return (needs == "" or flags.get(needs, false)) and (gone == "" or not flags.get(gone, false))
+
+
+## The names of the figures (npcs) that are not on the map with these flags.
+func absent_figures(flags: Dictionary) -> Array[String]:
+	var absent: Array[String] = []
+	for npc: Dictionary in npcs:
+		if not is_present(npc, flags):
+			absent.append(npc.name)
+	return absent
 
 
 ## The banner on arriving, in one line: "Mina abandonada · Planta 2".

@@ -180,7 +180,10 @@ func _show_page(page: String, focus_id := "") -> void:
 			_add_button("Vender", func() -> void: _open("sell"))
 			_add_button("Salir", _back)
 		"buy":
-			_title.text = "Criaturas" if Shop.sells_ally(_shop_id) else "Comprar"
+			if _shop_id == Shop.COMPANIONS_SHOP:
+				_title.text = "Compañeros"
+			else:
+				_title.text = "Criaturas" if Shop.sells_ally(_shop_id) else "Comprar"
 			for id in Shop.stock(_shop_id):
 				_add_buy_row(id)
 			_add_footer_button("Volver", _back)
@@ -224,16 +227,21 @@ func _add_buy_row(id: String) -> void:
 	button.pressed.connect(_buy.bind(id))
 	button.set_meta("id", id)
 	row.add_child(button)
-	var price := _label("%d G" % Shop.price(id), GREY if why != "" else StatBar.GOLD)
+	var chosen := Allies.is_companion(id)
+	var price := _label("Elegir" if chosen else "%d G" % Shop.price(id),
+		GREY if why != "" else (Color.WHITE if chosen else StatBar.GOLD))
 	price.custom_minimum_size.x = PRICE_WIDTH
 	row.add_child(price)
 	if Shop.is_ally(id):
 		# Stats with the note under them, so a long note never widens the window.
 		var info_box := VBoxContainer.new()
 		info_box.add_child(_label(Allies.stats_text(id), Color.WHITE))
+		if Allies.line(id) != "":
+			UiStyle.add_small_text(info_box, Allies.line(id))
 		if why != "":
 			info_box.add_child(_label(why, GREY))
-		if _state.ally_id != "" and why != Shop.HAS_IT and why != Shop.HAS_BETTER:
+		if _state.ally_id != "" and why != Shop.HAS_IT and why != Shop.HAS_BETTER \
+				and not Allies.is_companion(id):
 			info_box.add_child(_label("Sustituye a %s" % Allies.display_name(_state.ally_id),
 				GREY))
 		row.add_child(info_box)
@@ -312,7 +320,10 @@ func _buy(id: String) -> void:
 		return
 	_sfx(SfxLibrary.ACCEPT)
 	changed.emit()
-	if Shop.is_equipment(id):
+	if Allies.is_companion(id):
+		_page = ""
+		_left.emit()
+	elif Shop.is_equipment(id):
 		_asking = id
 		_show_page("ask")
 	else:

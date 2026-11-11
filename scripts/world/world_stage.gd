@@ -10,6 +10,9 @@ class_name WorldStage extends RefCounted
 ## The Medieval Hexagon buildings are miniatures (a house is 0.8 m wide, 0.9 m tall).
 const BUILDING_SCALE := 3.5
 const TREE_SHADER := preload("res://shaders/tree.gdshader")
+## Side of the squares the decoration is merged by (metres): a map holds a few chunks, so the
+## whole decoration costs a few draws.
+const DECOR_CHUNK := 48.0
 ## Models named by ZoneData (buildings, tree_models, clump_model).
 const MODELS := {
 	"house_A_red": preload("res://assets/medieval/building_home_A_red.gltf"),
@@ -60,6 +63,35 @@ const TREE_COLLIDER_HEIGHT := 3.0
 ## _near_chest()'s cache: the zone id and its chests' spots on the ground.
 static var _chest_zone := ""
 static var _chest_spots: Array[Vector2] = []
+## Tall grass keeps this far from a small medal (Medals), so the glint shows on the ground;
+## _near_medal()'s cache, like _near_chest()'s.
+const MEDAL_GRASS_MARGIN := 0.8
+## How far decoration keeps from what the game needs (Decor; added to the piece's radius).
+## Soft pieces (no collider) may stand closer to the autoplay route: the hero walks through.
+const DECOR_PATH_MARGIN := 0.3
+const DECOR_ROUTE_MARGIN := 1.5
+const DECOR_SOFT_ROUTE_MARGIN := 0.4
+const DECOR_EXIT_MARGIN := 3.5
+const DECOR_ENTRY_MARGIN := 2.0
+const DECOR_PORTAL_MARGIN := 2.5
+const DECOR_CHEST_MARGIN := 1.5
+const DECOR_MEDAL_MARGIN := 2.0
+const DECOR_FIGURE_MARGIN := 1.5
+const DECOR_BOSS_MARGIN := 3.0
+const DECOR_PROP_MARGIN := 0.4
+## Trees keep this far from the pieces placed by hand, bushes and tall grass from every
+## placed or solid piece.
+const TREE_DECOR_MARGIN := 2.0
+const BUSH_DECOR_MARGIN := 0.6
+const GRASS_DECOR_MARGIN := 0.3
+static var _medal_zone := ""
+static var _medal_spots: Array[Vector2] = []
+## _tree_layout()'s cache (the zone id and its trees) and near_tree()'s (x, z and the
+## collider radius of each tree inside the walls).
+static var _layout_zone := ""
+static var _layout: Array[Dictionary] = []
+static var _tree_zone := ""
+static var _tree_spots: Array[Vector3] = []
 
 
 ## Builds zone under root. Returns the tall grass material (null if the zone has no
@@ -70,6 +102,7 @@ static func build(root: Node3D, zone: ZoneData) -> ShaderMaterial:
 		for building in zone.buildings:
 			_add_solid_model(root, MODELS[building[2]], building[0],
 				MODEL_SCALES.get(building[2], BUILDING_SCALE), building[1])
+		_add_decor(root, zone)
 		return null
 	_add_ground(root, zone)
 	_add_path(root, zone)
@@ -80,6 +113,7 @@ static func build(root: Node3D, zone: ZoneData) -> ShaderMaterial:
 			MODEL_SCALES.get(building[2], BUILDING_SCALE), building[1])
 	_add_trees(root, zone)
 	_add_bushes(root, zone)
+	_add_decor(root, zone)
 	for hill in zone.hills:
 		BattleStage.add_mesh(root, BattleStage.unit_sphere(), BattleStage.HILL, hill[0], hill[1])
 	_add_walls(root, zone)
@@ -90,7 +124,7 @@ static func build(root: Node3D, zone: ZoneData) -> ShaderMaterial:
 
 
 ## True on the dirt path and the safe discs (and in the stair rooms of a dungeon floor):
-## no encounters there. margin widens every one of them (the grass keeps a little off the
+## no monster groups there. margin widens every one of them (the grass keeps a little off the
 ## path's edge).
 static func is_on_path(zone: ZoneData, pos: Vector3, margin := 0.0) -> bool:
 	if zone.is_dungeon() and zone.near_stairs(pos):
@@ -110,13 +144,37 @@ static func is_on_path(zone: ZoneData, pos: Vector3, margin := 0.0) -> bool:
 
 
 ## Where tall grass may grow: off the path and the safe discs (the village is inside one),
-## the rocks, the buildings, the chests and the figures.
+## the rocks, the buildings, the chests, the figures and the small medals.
 static func is_grass_free(pos: Vector3, zone: ZoneData) -> bool:
 	if is_on_path(zone, pos, GRASS_PATH_MARGIN) or _near_chest(zone, pos, CHEST_GRASS_MARGIN) \
-			or _near_figure(zone, pos):
+			or _near_figure(zone, pos) or _near_medal(zone, pos) \
+			or Decor.near_solid(zone, pos, GRASS_DECOR_MARGIN):
 		return false
 	return not _near_rock(zone, pos, GRASS_ROCK_MARGIN) \
 		and not _near_building(zone, pos, GRASS_BUILDING_MARGIN)
+
+
+## True within margin of the trunk (or clump) of a tree inside the walls (MonsterGroups keeps
+## the groups off them).
+static func near_tree(zone: ZoneData, pos: Vector3, margin: float) -> bool:
+	if _tree_zone != zone.id:
+		_tree_zone = zone.id
+		_tree_spots.clear()
+		for tree in _tree_layout(zone):
+			if tree.inside:
+				_tree_spots.append(Vector3(tree.pos.x, tree.pos.z,
+					CLUMP_RADIUS if tree.clump else TRUNK_RADIUS))
+	var p := Vector2(pos.x, pos.z)
+	for spot in _tree_spots:
+		if p.distance_to(Vector2(spot.x, spot.y)) < spot.z + margin:
+			return true
+	return false
+
+
+## True if pos is clear by margin of every rock's and building's footprint.
+static func is_clear_of_props(zone: ZoneData, pos: Vector3, margin: float) -> bool:
+	return not _near_rock(zone, pos, margin) and not _near_building(zone, pos, margin) \
+		and not Decor.near_solid(zone, pos, margin)
 
 
 ## Upright cylinder collider standing on the ground, for village props and figures.
@@ -192,13 +250,40 @@ static func _add_solid_model(root: Node3D, scene: PackedScene, pos: Vector3, scl
 
 
 static func _add_trees(root: Node3D, zone: ZoneData) -> void:
+	var single_a: Array[Transform3D] = []
+	var single_b: Array[Transform3D] = []
+	var clumps: Array[Transform3D] = []
+	for tree in _tree_layout(zone):
+		var xform := Transform3D(Basis(Vector3.UP, tree.yaw).scaled(Vector3.ONE * tree.scale),
+			tree.pos)
+		if tree.clump:
+			clumps.append(xform)
+		elif tree.use_a:
+			single_a.append(xform)
+		else:
+			single_b.append(xform)
+		if tree.inside:
+			var body := StaticBody3D.new()
+			body.position = tree.pos
+			root.add_child(body)
+			add_cylinder_shape(body, CLUMP_RADIUS if tree.clump else TRUNK_RADIUS,
+				TREE_COLLIDER_HEIGHT)
+	_add_tree_kind(root, _tree_mesh(zone.tree_models[0]), single_a)
+	_add_tree_kind(root, _tree_mesh(zone.tree_models[1]), single_b)
+	_add_tree_kind(root, _tree_mesh(zone.clump_model), clumps)
+
+
+## The trees of zone, in the order they are drawn: {"pos", "yaw", "scale", "use_a" (the
+## first single model), "clump", "inside" (inside the walls: it has a collider)}. The same
+## rolls every time (zone.tree_seed); the last zone asked about is kept.
+static func _tree_layout(zone: ZoneData) -> Array[Dictionary]:
+	if _layout_zone == zone.id:
+		return _layout
 	var rng := RandomNumberGenerator.new()
 	rng.seed = zone.tree_seed
 	var area := zone.half_size + Vector2.ONE * zone.outer_margin
 	var placed: Array[Vector2] = []
-	var single_a: Array[Transform3D] = []
-	var single_b: Array[Transform3D] = []
-	var clumps: Array[Transform3D] = []
+	var trees: Array[Dictionary] = []
 	for i in zone.tree_tries:
 		# Every roll is made even for spots left out, so the layout stays stable.
 		var pos := Vector3(rng.randf_range(-area.x, area.x), 0.0, rng.randf_range(-area.y, area.y))
@@ -212,40 +297,43 @@ static func _add_trees(root: Node3D, zone: ZoneData) -> void:
 		if roll > lerpf(zone.tree_center_chance, 1.0, rise) or not _tree_fits(zone, pos, placed):
 			continue
 		placed.append(Vector2(pos.x, pos.z))
-		var xform := Transform3D(Basis(Vector3.UP, yaw).scaled(Vector3.ONE * scl), pos)
-		var clump := inset < zone.tree_clump_inset
-		if clump:
-			clumps.append(xform)
-		elif use_a:
-			single_a.append(xform)
-		else:
-			single_b.append(xform)
-		if inset > 0.0:
-			var body := StaticBody3D.new()
-			body.position = pos
-			root.add_child(body)
-			add_cylinder_shape(body, CLUMP_RADIUS if clump else TRUNK_RADIUS,
-				TREE_COLLIDER_HEIGHT)
-	_add_tree_kind(root, MODELS[zone.tree_models[0]], single_a)
-	_add_tree_kind(root, MODELS[zone.tree_models[1]], single_b)
-	_add_tree_kind(root, MODELS[zone.clump_model], clumps)
+		trees.append({"pos": pos, "yaw": yaw, "scale": scl, "use_a": use_a,
+			"clump": inset < zone.tree_clump_inset, "inside": inset > 0.0})
+	_layout_zone = zone.id
+	_layout = trees
+	return trees
 
 
-## One kind of tree, drawn with its model's texture through the shader that lets the hero
-## show through (shaders/tree.gdshader).
-static func _add_tree_kind(root: Node3D, scene: PackedScene, transforms: Array[Transform3D]) -> void:
-	var mesh := BattleStage.scene_mesh(scene)
-	var source := mesh.surface_get_material(0) as BaseMaterial3D
-	var material := ShaderMaterial.new()
-	material.shader = TREE_SHADER
-	material.set_shader_parameter("albedo_texture", source.albedo_texture)
-	material.set_shader_parameter("albedo_color", source.albedo_color)
-	material.set_shader_parameter("roughness_value", source.roughness)
-	LowPoly.add_multimesh(root, mesh, transforms, material)
+## The mesh of a tree model: a jungle palm (PalmModels: palm_A, palm_B, palms_clump) or
+## the one mesh of a MODELS scene.
+static func _tree_mesh(id: String) -> Mesh:
+	if PalmModels.has(id):
+		return PalmModels.mesh(id)
+	return BattleStage.scene_mesh(MODELS[id])
+
+
+## One kind of tree as a MultiMesh through TREE_SHADER (the dithered hole that keeps the
+## hero in sight). Every surface keeps its own colour and its texture when it has one: the
+## KayKit trees have one textured surface, the palms two plain coloured ones.
+static func _add_tree_kind(root: Node3D, source_mesh: Mesh, transforms: Array[Transform3D]) -> void:
+	var mesh := source_mesh.duplicate() as Mesh
+	for i in mesh.get_surface_count():
+		var source := mesh.surface_get_material(i) as BaseMaterial3D
+		var material := ShaderMaterial.new()
+		material.shader = TREE_SHADER
+		material.set_shader_parameter("use_texture", source != null and source.albedo_texture != null)
+		if source != null:
+			material.set_shader_parameter("albedo_texture", source.albedo_texture)
+			material.set_shader_parameter("albedo_color", source.albedo_color)
+			material.set_shader_parameter("roughness_value", source.roughness)
+		mesh.surface_set_material(i, material)
+	LowPoly.add_multimesh(root, mesh, transforms)
 
 
 static func _tree_fits(zone: ZoneData, pos: Vector3, placed: Array[Vector2]) -> bool:
 	if is_on_path(zone, pos, TREE_PATH_MARGIN) or _near_route(zone, pos, TREE_ROUTE_MARGIN):
+		return false
+	if Decor.near_placed(zone, pos, TREE_DECOR_MARGIN):
 		return false
 	if _near_rock(zone, pos, TREE_ROCK_MARGIN) or _near_chest(zone, pos, CHEST_TREE_MARGIN):
 		return false
@@ -272,13 +360,126 @@ static func _add_bushes(root: Node3D, zone: ZoneData) -> void:
 		var scl := rng.randf_range(BUSH_SCALE.x, BUSH_SCALE.y)
 		if is_on_path(zone, pos, BUSH_PATH_MARGIN) or _near_rock(zone, pos, BUSH_ROCK_MARGIN) \
 				or _near_chest(zone, pos, CHEST_BUSH_MARGIN) \
-				or _near_building(zone, pos, GRASS_BUILDING_MARGIN):
+				or _near_building(zone, pos, GRASS_BUILDING_MARGIN) \
+				or Decor.near_solid(zone, pos, BUSH_DECOR_MARGIN):
 			continue
 		bushes.append(Transform3D(Basis(Vector3.UP, yaw).scaled(Vector3.ONE * scl), pos))
 	var material := ShaderMaterial.new()
 	material.shader = TREE_SHADER
 	material.set_shader_parameter("albedo_color", LowPoly.BUSH_COLOR)
 	LowPoly.add_multimesh(root, LowPoly.bush_mesh(), bushes, material)
+
+
+## The Kenney decoration of zone (Decor, NatureModels): the pieces merged into one mesh per
+## DECOR_CHUNK-metre chunk (one surface, vertex colours, through the trees' shader), so the
+## whole decoration is a handful of draws; a collider for each solid piece (always, whatever
+## the quality, so the map stays the same), a flame on each campfire. With half_density (low
+## quality) only every other scattered piece without a collider is drawn.
+static func _add_decor(root: Node3D, zone: ZoneData) -> void:
+	for line in Decor.problems(zone):
+		push_warning(line)
+	var chunks := {}  # Vector2i → [{"id", "xform"}]
+	var soft := 0
+	for piece in Decor.placed(zone) + Decor.scattered(zone):
+		var solid := Decor.is_solid(piece.id)
+		if piece.scattered and not solid and Vegetation.half_density:
+			soft += 1
+			if soft % 2 == 0:
+				continue
+		var xform := Transform3D(Basis(Vector3.UP, piece.yaw).scaled(Vector3.ONE * piece.scale),
+			piece.pos)
+		var key := Vector2i(floori(piece.pos.x / DECOR_CHUNK), floori(piece.pos.z / DECOR_CHUNK))
+		if not chunks.has(key):
+			chunks[key] = []
+		(chunks[key] as Array).append({"id": piece.id, "xform": xform})
+		if solid:
+			_add_decor_collider(root, piece, NatureModels.mesh(piece.id, zone.decor_green))
+		if Decor.KINDS[piece.id].get("flame", false):
+			BattleStage.add_flame(root, piece.pos + Vector3(0, 0.35, 0), 2.2, Vector3(0, 0.8, 0),
+				not BattleStage.plain_light)
+	var material := ShaderMaterial.new()
+	material.shader = TREE_SHADER
+	material.set_shader_parameter("use_texture", false)
+	material.set_shader_parameter("use_vertex_color", true)
+	for key: Vector2i in chunks:
+		var instance := MeshInstance3D.new()
+		instance.mesh = NatureModels.merged(chunks[key], zone.decor_green)
+		instance.material_override = material
+		root.add_child(instance)
+
+
+static func _add_decor_collider(root: Node3D, piece: Dictionary, mesh: Mesh) -> void:
+	var body := StaticBody3D.new()
+	body.position = piece.pos
+	body.rotation = Vector3(0, piece.yaw, 0)
+	root.add_child(body)
+	var bounds := mesh.get_aabb()
+	if Decor.KINDS[piece.id].collider == "box":
+		var box := BoxShape3D.new()
+		box.size = bounds.size * piece.scale
+		var shape := CollisionShape3D.new()
+		shape.shape = box
+		shape.position = bounds.get_center() * piece.scale
+		body.add_child(shape)
+	else:
+		add_cylinder_shape(body, Decor.radius(piece), bounds.size.y * piece.scale)
+
+
+## The cells of a dungeon floor no decoration stands on: the lever, the key, the gates, the
+## torches and the throne (what decor_blocker() says it would be on).
+const DECOR_KEEP_CELLS := {"L": "la palanca", "K": "la llave", "D": "una reja",
+	"T": "una antorcha", "R": "el trono"}
+
+
+## What a piece of decoration of this radius at pos would be on that it must not ("" if the
+## spot is fine): the path, the autoplay route, exits and stairs, entries, the portal,
+## chests and wells, small medals, figures, the boss, rocks, buildings, trees, and on a
+## dungeon floor rock cells, the stair rooms and DECOR_KEEP_CELLS. Decor asks it for the
+## scattered pieces; it only asks Decor for the placed ones (near_tree() through
+## _tree_fits() and near_placed()), never for the scattered ones, so is_clear_of_props()
+## is not used here.
+static func decor_blocker(zone: ZoneData, pos: Vector3, radius: float, solid: bool) -> String:
+	if zone.is_dungeon():
+		var cell := zone.cell_at(pos)
+		if zone.cell_char(cell) == "#":
+			return "la roca"
+		if zone.near_stairs(pos):
+			return "las escaleras"
+		for ch: String in DECOR_KEEP_CELLS:
+			for c: Vector2i in zone.find_cells(ch):
+				var to_cell := zone.cell_center(c) - pos
+				to_cell.y = 0.0
+				if to_cell.length() < ZoneData.CELL * 0.5 + radius:
+					return DECOR_KEEP_CELLS[ch]
+	elif is_on_path(zone, pos, radius + DECOR_PATH_MARGIN):
+		return "el camino"
+	if _near_route(zone, pos, radius + (DECOR_ROUTE_MARGIN if solid else DECOR_SOFT_ROUTE_MARGIN)):
+		return "la ruta automática"
+	if _near_exit(zone, pos, radius + DECOR_EXIT_MARGIN):
+		return "una salida"
+	var p := Vector2(pos.x, pos.z)
+	for entry: Array in zone.entries.values():
+		if p.distance_to(Vector2(entry[0].x, entry[0].z)) < radius + DECOR_ENTRY_MARGIN:
+			return "una entrada"
+	if zone.portal_pos != Vector3.ZERO \
+			and p.distance_to(Vector2(zone.portal_pos.x, zone.portal_pos.z)) < radius + DECOR_PORTAL_MARGIN:
+		return "el portal"
+	if zone.boss_id != "" \
+			and p.distance_to(Vector2(zone.boss_pos.x, zone.boss_pos.z)) < radius + DECOR_BOSS_MARGIN:
+		return "el jefe"
+	if _near_chest(zone, pos, radius + DECOR_CHEST_MARGIN):
+		return "un cofre o un pozo"
+	if _near_medal(zone, pos, radius + DECOR_MEDAL_MARGIN):
+		return "una medalla"
+	if _near_figure(zone, pos, radius + DECOR_FIGURE_MARGIN):
+		return "una figura"
+	if _near_rock(zone, pos, radius + DECOR_PROP_MARGIN):
+		return "una roca"
+	if _near_building(zone, pos, radius + DECOR_PROP_MARGIN):
+		return "una casa"
+	if not zone.is_dungeon() and near_tree(zone, pos, radius + DECOR_PROP_MARGIN):
+		return "un árbol"
+	return ""
 
 
 ## True within margin of a rock's footprint.
@@ -302,10 +503,10 @@ static func _near_building(zone: ZoneData, pos: Vector3, margin: float) -> bool:
 
 ## True within FIGURE_GRASS_MARGIN of one of the zone's figures (a cat would be lost in the
 ## grass).
-static func _near_figure(zone: ZoneData, pos: Vector3) -> bool:
+static func _near_figure(zone: ZoneData, pos: Vector3, margin := FIGURE_GRASS_MARGIN) -> bool:
 	var p := Vector2(pos.x, pos.z)
 	for npc: Dictionary in zone.npcs:
-		if p.distance_to(Vector2(npc.pos.x, npc.pos.z)) < FIGURE_GRASS_MARGIN:
+		if p.distance_to(Vector2(npc.pos.x, npc.pos.z)) < margin:
 			return true
 	return false
 
@@ -329,10 +530,26 @@ static func _near_chest(zone: ZoneData, pos: Vector3, margin: float) -> bool:
 	return false
 
 
+## True within MEDAL_GRASS_MARGIN of one of the zone's small medals (taken or not: the map
+## is built from the zone alone). Only the grass asks: the trees and bushes don't change.
+static func _near_medal(zone: ZoneData, pos: Vector3, margin := MEDAL_GRASS_MARGIN) -> bool:
+	if _medal_zone != zone.id:
+		_medal_zone = zone.id
+		_medal_spots.clear()
+		for id in Medals.of_zone(zone.id):
+			var spot: Vector3 = Medals.MEDALS[id].pos
+			_medal_spots.append(Vector2(spot.x, spot.z))
+	var p := Vector2(pos.x, pos.z)
+	for spot in _medal_spots:
+		if p.distance_to(spot) < margin:
+			return true
+	return false
+
+
 ## True within margin of an exit's trigger (its arch stands there).
 static func _near_exit(zone: ZoneData, pos: Vector3, margin: float) -> bool:
 	var p := Vector2(pos.x, pos.z)
-	for exit: Dictionary in zone.exits:
+	for exit: Dictionary in zone.all_exits():
 		if p.distance_to(Vector2(exit.pos.x, exit.pos.z)) < margin:
 			return true
 	return false

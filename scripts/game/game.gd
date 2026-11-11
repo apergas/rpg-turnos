@@ -1,11 +1,11 @@
 class_name Game extends Node
 ## One play session, created by TitleScreen (setup() before add_child). Owns the
 ## GameState and the map of the current zone (a World built from its ZoneData), and puts
-## a battle on top of the map when an encounter starts (the enemies come from
-## EncounterTable with the zone's formations, or the zone's boss). The map stays while
-## battles come and go, so the hero's position, the camera and the encounter grace
-## survive them; walking into an open exit fades to black, frees the map and builds the
-## next zone at the exit's entry (GameState.zone_id). A victory adds the gold and counts
+## a battle on top of the map when the hero touches a group of monsters on it (its
+## formation, World.contact_enemies()) or the zone's boss. The map stays while battles
+## come and go, so the hero's position, the camera and the groups survive them; walking
+## into an open exit fades to black, frees the map and builds the next zone at the exit's
+## entry (GameState.zone_id), every group back. A victory adds the gold and counts
 ## every enemy defeated for the quest; a boss also sets its world flag (the Rey Slime
 ## lifts the fog of the meadow's north exit) and gives its key item. Fleeing just goes
 ## back to the map; a defeat takes half the gold (GameState.defeat_gold_loss()), heals the
@@ -14,9 +14,11 @@ class_name Game extends Node
 ## that leads back once (GameState.open_portal(); a second Ala replaces it, a defeat leaves
 ## it open). Talking to the old woman heals, moves the
 ## quest on and, once the slimes are reported, brings out the Rey Slime; the other
-## villagers say their ZoneData lines. The merchant opens the ShopWindow; the innkeeper
+## villagers say their ZoneData lines. The Coleccionista of Villaclaro trades the small medals for
+## prizes (Medals.talk()). The merchant opens the ShopWindow; the innkeeper
 ## offers a free night (Inn.stay(): fade to black, full HP and MP, autosave); a chest gives
-## what it holds (Chests.open()) and stays open. The hero's figure on the map and in
+## what it holds (Chests.open()) and stays open. A small medal (Medals) goes to
+## GameState.medals and leaves the map for good. The hero's figure on the map and in
 ## battle shows the weapon and shield worn. On a dungeon floor the lever sets its world
 ## flag (and opens the gates it works), the key goes to the key items (and its flag is
 ## set, so it stays taken) and a locked gate opens with the key, which is used up; all
@@ -24,6 +26,8 @@ class_name Game extends Node
 ## boss), autosaves after talking, after every won battle, after shopping, (silently)
 ## after opening a chest, after a defeat and after every change of zone, and opens the
 ## pause menu. Emits quit_to_title when the player goes back to the title.
+## With `--debug` on the command line (never otherwise) it owns a DebugPanel: F1 on the map
+## opens it, and Game does what its buttons ask (_on_debug(), printed as "Depuración: ...").
 ## The story (GameState.story): a new game opens with the prologue in the hero's house
 ## (data/cutscenes/prologo.tres, which starts the slimes quest); each boss beaten plays
 ## its cutscene (StoryState.AFTER_BOSS) and the first visit to each village its own
@@ -31,7 +35,11 @@ class_name Game extends Node
 ## chapter. Beating the Señor de la Niebla (GameState.FINAL_BOSS) plays the ending (back
 ## to Villaclaro), marks the save as finished (story.finished) and rolls the credits with
 ## the numbers of the game (CreditsScreen); then it goes back to the title. A finished
-## save loads in Villaclaro and the world can still be walked.
+## save loads in Villaclaro and the world can still be walked. On a finished save the title may
+## start a Partida nueva + (setup(..., new_cycle)): NgPlus.begin() keeps the hero and starts the
+## story again, and every enemy of every battle is a stronger copy (NgPlus.scaled(), by the zone's
+## number); the credits add its round.
+## Each bestiary family beaten whole (Bestiary) gives its prize once, after the battle that completes it or when a game is loaded, in the dialogue window.
 ## The side quests (GameState.quests): a villager or a board asks the QuestLog first (a
 ## report, a figure found, a new offer) and says its chapter lines if it has nothing about
 ## any; the map shows the marks and the sought figures it says. Each finished quest shows
@@ -41,20 +49,26 @@ class_name Game extends Node
 ## On autoplay it prints the gold and the equipment each time they change, the level and
 ## the play time on every change of zone and, after the credits, the play time of the
 ## whole run (TitleScreen then quits). After a won battle, when the hero needs rest
-## (GameState.needs_rest()) away from a village, it flies back with an Ala de viaje, sleeps
-## at the inn, restocks at the shop and goes back through the portal; after a defeat it
-## sleeps and restocks too.
+## (GameState.needs_rest()) or the map has no group left (_needs_groups()) away from a
+## village, it flies back with an Ala de viaje, sleeps at the inn, restocks at the shop
+## and goes back through the portal; after a defeat it
+## sleeps and restocks too. With no Ala de viaje an empty map gets its groups back at once.
 ## Run on its own (res://scenes/game/game.tscn) it starts a new game with its own
 ## AudioDirector and default options.
 ##
 ## `-- --autoplay --autoplay-save`: after the first autosave that follows a won battle
 ## it prints the saved values ("Guardado: ...") and goes back to the title, which loads
 ## the save at once; the loaded game prints the same values ("Cargado: ...").
-## `-- --autoplay --autoplay-menu`: MENU_TOUR_DELAY seconds into the map (still inside
-## the encounter grace) it shows every page of the pause menu (PauseMenu.tour()), to
+## `-- --autoplay --autoplay-menu`: MENU_TOUR_DELAY seconds into the map (before any group
+## is in reach) it shows every page of the pause menu (PauseMenu.tour()), to
 ## record frames of it.
 ## `-- --autoplay --autoplay-zone=<id>`: a new game that starts in that zone with the
 ## level, gold, gear and progress AUTOPLAY_ZONES gives it.
+## `-- --autoplay --autoplay-zone=medallas`: the finished game of ECHO_START in Villaclaro;
+## it walks Medals.AUTOPLAY_ROUTE of every region (zone after zone, under black), picks up
+## the medals, then talks to the Coleccionista and prints "Medallas: n/12 · premios n/5".
+## `-- --autoplay --autoplay-zone=ngplus`: a first Partida nueva + with the hero of ECHO_START
+## and the Yelmo de bruma, the whole story again.
 ## `-- --autoplay --autoplay-zone=eco`: a finished game in the throne room at Lv 20 that
 ## fights the Eco de la Niebla again and again, printing each result.
 ## `-- --autoplay --autoplay-easy`: a new game on Fácil.
@@ -69,6 +83,10 @@ const CUTSCENE_PATH := "res://data/cutscenes/%s.tres"
 const AUTHOR := "apergas"
 const FADE_TIME := 0.3
 const TOUCH_HINT := "Toca el suelo para ir allí, o arrastra el dedo para andar."
+## The v2's Jefe de caravana: in Villaclaro once the caravan has come, then in the Caravana.
+const CARAVAN_CHIEF := "Jefe de caravana"
+const JOIN_QUESTION := "Cuando partamos, no volverás por aquí en mucho tiempo. ¿Te unes a la caravana?"
+const LEAVE_QUESTION := "No podrás volver a Villaclaro, ni al bosque, la mina o el castillo. Las misiones que no hayas cumplido se quedan sin hacer."
 const REPEL_END_NOTICE := "El incienso se ha consumido."
 const HEAL_LINE := "Descansas un momento. PV y PM recuperados."
 const SAVED_NOTICE := "Partida guardada."
@@ -93,11 +111,25 @@ const MENU_TOUR_DELAY := 1.0
 const INN_NIGHT_TIME := 0.8
 ## On autoplay the hero only stops at an inn below this share of max HP or MP.
 const AUTOPLAY_INN_RATIO := 0.5
+## Autoplay: seconds on a map without a battle, below the zone's autoplay_boss_level, after
+## which its groups are put back (the ones left may be out of reach of the route).
+const AUTOPLAY_STALL_S := 90.0
 ## On autoplay the boss only comes out while the hero has these shares of max HP and MP.
 const AUTOPLAY_BOSS_HP := 0.7
 const AUTOPLAY_BOSS_MP := 0.4
 ## --autoplay-zone=eco: a finished game in the throne room, ready for the Eco de la Niebla.
 const ECHO_START := "eco"
+## --autoplay-zone=medallas: the finished game of ECHO_START in Villaclaro; it walks every
+## zone's Medals.AUTOPLAY_ROUTE, at most MEDAL_ZONE_TIME seconds each, and ends talking to
+## the Coleccionista.
+const MEDAL_TOUR := "medallas"
+const MEDAL_ZONE_TIME := 300.0
+## --autoplay-zone=ngplus: the hero of ECHO_START with the Yelmo de bruma, and a first
+## Partida nueva + from the prologue.
+const NG_PLUS_START := "ngplus"
+## The autoplay starts that play the v2: only they answer the Jefe de caravana's questions
+## with Sí (every other run, the finished-game ones included, stays in the v1).
+const V2_STARTS := ["caravana", "jungla"]
 ## --autoplay-zone=<id>: what a new game starting in each zone gets, as planned when
 ## arriving there (zone 1 done: Lv 5, its shop's gear, the Rey Slime beaten).
 const AUTOPLAY_ZONES := {
@@ -153,6 +185,68 @@ const AUTOPLAY_ZONES := {
 		"ally": "esqueleto_leal",
 		"items": {Inventory.POTION: 2, Inventory.ETHER: 3, Inventory.WING: 3},
 	},
+	# --autoplay-zone=medallas: the hero of ECHO_START, the game finished, in Villaclaro.
+	MEDAL_TOUR: {
+		"zone": "pradera",
+		"experience": 3600,
+		"gold": 1000,
+		"gear": ["espada_platino", "armadura_platino", "escudo_platino", "casco_platino"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra", "senor_niebla"],
+		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo"],
+		"quest_done": true,
+		"town": "pradera",
+		"ally": "esqueleto_leal",
+		"items": {Inventory.POTION: 5, Inventory.ETHER: 3, Inventory.WING: 3},
+	},
+	# --autoplay-zone=ngplus: the hero of ECHO_START with the Yelmo de bruma (the Eco beaten
+	# once: its flag stays), then NgPlus.begin().
+	NG_PLUS_START: {
+		"zone": "pradera",
+		"experience": 3600,
+		"gold": 1000,
+		"gear": ["espada_platino", "armadura_platino", "escudo_platino", Equipment.MIST_HELM],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra", "senor_niebla", "eco_niebla"],
+		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo"],
+		"quest_done": true,
+		"town": "castillo_patio",
+		"ally": "esqueleto_leal",
+		"items": {Inventory.POTION: 2, Inventory.ETHER: 3, Inventory.WING: 3},
+		"new_cycle": true,
+	},
+	# --autoplay-zone=caravana: the v1 finished, in Villaclaro: Lv 20, the platinum gear, the
+	# Esqueleto leal, every boss beaten and the credits seen. The caravan comes on arrival,
+	# the hero leaves with it (V2_STARTS answers the Jefe's questions) and plays the v2 on.
+	"caravana": {
+		"zone": "pradera",
+		"experience": 3600,
+		"gold": 1200,
+		"gear": ["espada_platino", "armadura_platino", "escudo_platino", "casco_platino"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra", "senor_niebla"],
+		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo"],
+		"quest_done": true,
+		"town": "pradera",
+		"ally": "esqueleto_leal",
+		"items": {Inventory.POTION: 3, Inventory.ETHER: 3, Inventory.WING: 2},
+		"finished": true,
+	},
+	# --autoplay-zone=jungla: ready for the jungle: the caravan joined, Brena chosen, Lv 20 with
+	# the platinum gear, at the jungle's entrance.
+	"jungla": {
+		"experience": 3600,
+		"gold": 1500,
+		"gear": ["espada_platino", "armadura_platino", "escudo_platino", "casco_platino"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra", "senor_niebla", "caravana_vista", "caravana", "companero"],
+		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo"],
+		"quest_done": true,
+		"town": "caravana",
+		"ally": "brena",
+		"items": {Inventory.BIG_POTION: 3, Inventory.ETHER: 3, Inventory.WING: 2},
+		"finished": true,
+	},
 	# Ready for the Señor de la Niebla: Lv 17 with the castle's gear.
 	"castillo_trono": {
 		"experience": 2244,
@@ -183,36 +277,57 @@ var _hero_name := ""
 var _difficulty := Difficulty.NORMAL
 var _cutscenes: CutscenePlayer
 var _busy := false
+## Autoplay: seconds since the last battle or change of map (AUTOPLAY_STALL_S).
+var _quiet_s := 0.0
 var _leaving := false
 var _autoplay := false
 var _autoplay_save := false
 var _autoplay_menu := false
+## --autoplay-companion=<id>: the companion autoplay chooses at the Caravana (Brena if none).
+var _autoplay_companion := "brena"
+## --autoplay-zone=caravana / jungla: autoplay leaves with the caravan and plays the v2.
+var _autoplay_v2 := false
 var _last_missions: Array[String] = []
 var _last_gear_text := ""
 ## The save slot this game writes to (SaveStore; ignored on autoplay runs).
 var _slot := 1
+## A Partida nueva + on the save given (TitleScreen): NgPlus.begin() once it is loaded.
+var _new_cycle := false
+## The save could not be read: the new game says so after the prologue.
+var _load_failed := false
+## Autoplay: defeats so far (each prints "Derrota en <zone> (n)"; the credits say the total).
+var _defeats := 0
 ## --autoplay-zone=eco: autoplay goes for the Eco de la Niebla (never on any other run).
 var _autoplay_echo := false
 ## --autoplay-zone=eco: fights with the Eco and how many were won, printed after each.
 var _echo_fights := 0
 var _echo_wins := 0
+## --autoplay-zone=medallas: the zones with medals in ZoneData.IDS order, the one being
+## walked, and the serial that lets only the last timer count.
+var _medal_tour := false
+var _tour_zones: Array[String] = []
+var _tour_index := 0
+var _tour_serial := 0
 var _shop: ShopWindow
 ## Something was bought, sold or equipped since the shop opened.
 var _shop_changed := false
 var _rng := RandomNumberGenerator.new()
+## The development panel, only with --debug (null otherwise).
+var _debug: DebugPanel
 
 
 ## audio and options come from the title screen; save is the Dictionary read by
 ## SaveStore.load_game(), empty for a new game, which gets hero_name and difficulty; slot is
-## the save slot it writes to.
+## the save slot it writes to; new_cycle starts a Partida nueva + on that (finished) save.
 func setup(audio: AudioDirector, options: GameOptions, save: Dictionary,
-		hero_name := "", difficulty := Difficulty.NORMAL, slot := 1) -> void:
+		hero_name := "", difficulty := Difficulty.NORMAL, slot := 1, new_cycle := false) -> void:
 	_slot = slot
 	_audio = audio
 	_options = options
 	_save = save
 	_hero_name = hero_name
 	_difficulty = difficulty
+	_new_cycle = new_cycle
 
 
 func _ready() -> void:
@@ -220,6 +335,13 @@ func _ready() -> void:
 	_autoplay = args.has("--autoplay")
 	_autoplay_save = _autoplay and args.has("--autoplay-save")
 	_autoplay_menu = _autoplay and args.has("--autoplay-menu")
+	for arg in args:
+		if arg.begins_with("--autoplay-companion="):
+			var companion := arg.trim_prefix("--autoplay-companion=")
+			if Allies.is_companion(companion):
+				_autoplay_companion = companion
+			else:
+				push_error("Not a companion for --autoplay-companion: %s" % companion)
 	_rng.randomize()
 	if _options == null:
 		_options = GameOptions.new()
@@ -238,8 +360,15 @@ func _ready() -> void:
 			if _autoplay_save:
 				print("Cargado: %s" % _summary(SaveData.from_state(state, info.position,
 					info.play_time)))
+			if _new_cycle:
+				# Partida nueva +: the hero as he is, the story from the prologue again, in the
+				# hero's house, with the clock at 0.
+				NgPlus.begin(state)
+				start_pos = null
+				play_time = 0.0
 		else:
 			load_failed = true
+	_load_failed = load_failed
 	if _save.is_empty() or load_failed:
 		state.hero.display_name = StoryState.clean_name(_hero_name)
 		state.difficulty = _difficulty
@@ -247,9 +376,15 @@ func _ready() -> void:
 			state.difficulty = Difficulty.EASY
 	if _save.is_empty() and _autoplay:
 		_apply_autoplay_zone(args)
+	# A loaded game (or an --autoplay-zone start) may have a family complete already: a
+	# finished game gets the Espada del alba now. After the "Cargado:" line, so the save
+	# round trip still compares what was saved.
+	var family_lines := _give_family_rewards()
 	_build_shop()
 	_build_fade()
 	_build_pause()
+	if args.has("--debug"):
+		_build_debug()
 	_build_cutscenes()
 	if _autoplay_menu:
 		# The tour of the pause menu needs the map, not a scene.
@@ -260,6 +395,7 @@ func _ready() -> void:
 	_switch_zone(state.zone_id, "")
 	if start_pos != null:
 		_world.place_player(start_pos)
+		_respawn_groups()
 	var prologue := state.chapter() == StoryState.Chapter.PROLOGUE
 	if prologue:
 		# Under black: the prologue fades in by itself.
@@ -273,9 +409,15 @@ func _ready() -> void:
 		get_tree().create_timer(MENU_TOUR_DELAY).timeout.connect(_pause.tour)
 	if not prologue:
 		await _world.freeze(false)
+		if not family_lines.is_empty():
+			_audio.play_sfx(SfxLibrary.LEVEL_UP)
+			await _world.show_dialogue("", family_lines)
+			_autosave(false)
 		_set_busy(false)
 		_show_touch_hint()
 		_check_village_scene()
+		if _medal_tour:
+			_start_medal_tour()
 
 
 ## The first time a phone reaches the map (never on autoplay): how to walk, once for good.
@@ -289,6 +431,25 @@ func _show_touch_hint() -> void:
 
 func _process(delta: float) -> void:
 	play_time += delta / Engine.time_scale  # a fast battle takes less play time, not more
+	if _autoplay and not _busy and _world != null and not _world.in_village():
+		_quiet_s += delta
+		if _quiet_s > AUTOPLAY_STALL_S and _autoplay_hunts():
+			_quiet_s = 0.0
+			print("Grupos repuestos (partida automática, sin combates)")
+			_respawn_groups()
+		elif _quiet_s > AUTOPLAY_STALL_S and _boss_needs_rest() \
+				and state.inventory.count(Inventory.WING) > 0:
+			# At the boss's level but too worn for it, with no battle coming that would bring
+			# the retreat: one Ala, made here (the quiet clock starts over).
+			_quiet_s = 0.0
+			_autoplay_retreat()
+
+
+## Back to the title: the map's ambient stops with the game. A Game run on its own frees its
+## own AudioDirector first (it is a child), so there is nothing to stop.
+func _exit_tree() -> void:
+	if _audio and _audio.is_inside_tree():
+		_audio.stop_ambient()
 
 
 ## --autoplay-zone=<id>: starts the new game in that zone with AUTOPLAY_ZONES' state.
@@ -314,17 +475,30 @@ func _apply_autoplay_zone(args: PackedStringArray) -> void:
 			state.equip(id)
 		for flag: String in start.flags:
 			state.world_flags[flag] = true
+			if Bestiary.has(flag):
+				# A boss of the flags was beaten on the way: the bestiary says so too.
+				state.defeat_enemy(flag)
 		for id: String in start.get("key_items", []):
 			state.key_items.append(id)
 		state.town_zone = start.get("town", state.town_zone)
 		if start.quest_done:
 			state.quest.stage = Quest.Stage.DONE
 		state.ally_id = start.get("ally", "")
+		if _autoplay_companion != "" and start_id == "jungla":
+			state.ally_id = _autoplay_companion
 		var items: Dictionary = start.get("items", {})
 		for id: String in items:
 			state.inventory.add(id, items[id])
 		_autoplay_echo = start_id == ECHO_START
+		_autoplay_v2 = start_id in V2_STARTS
+		_medal_tour = start_id == MEDAL_TOUR
 		state.story.mark_seen_for_flags(state.world_flags)
+		if start.get("finished", false):
+			state.story.finished = true
+		state.sync_level_cap()
+		if start.get("new_cycle", false):
+			NgPlus.begin(state)
+			print("Partida nueva + %d" % state.ng_plus)
 		print("Zona de inicio: %s (Nv %d)" % [zone_id, state.hero.level])
 
 
@@ -338,6 +512,7 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 		_world.queue_free()
 	_zone = ZoneData.by_id(zone_id)
 	state.zone_id = zone_id
+	_quiet_s = 0.0
 	_world = WORLD_SCENE.instantiate()
 	_world.zone = _zone
 	_world.boss_id = _boss_id()
@@ -351,6 +526,7 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 	_world.shop_requested.connect(_on_shop)
 	_world.inn_requested.connect(_on_inn)
 	_world.chest_opened.connect(_on_chest)
+	_world.medal_taken.connect(_on_medal)
 	_world.well_requested.connect(_on_well)
 	_world.exit_requested.connect(_on_exit)
 	_world.map_requested.connect(_pause.open_map)
@@ -365,12 +541,18 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 		_world.place_at_entry(entry_id)
 	for id in state.opened_chests:
 		_world.set_chest_open(id, true, true)
+	for id in state.medals:
+		_world.remove_medal(id)
 	_world.set_explored(state.explored_map(zone_id))
 	_world.set_world_flags(state.world_flags)
+	if _medal_tour and Medals.AUTOPLAY_ROUTE.has(zone_id):
+		_world.set_autoplay_route(Medals.AUTOPLAY_ROUTE[zone_id])
 	_show_portal()
 	_update_boss()
+	_spawn_rare()
 	_refresh_status()
 	MusicLibrary.build(_zone.music)
+	AmbientLibrary.prepare(_zone.ambient)  # under black, like the music
 	if _world.in_village():
 		_on_village_changed(true)
 	if _autoplay:
@@ -381,18 +563,32 @@ func _on_encounter(boss: bool) -> void:
 	if _busy:
 		return
 	_set_busy(true)
+	_quiet_s = 0.0
 	state.battles += 1
 	var enemies: Array[Combatant] = []
 	if boss:
 		enemies.append(EnemyLibrary.data(_boss_id()))
 	else:
-		enemies = EncounterTable.pick(_zone, _world.player_position(), _rng,
-			state.quests.wanted_enemies(), state.quests.hunted_enemies())
+		enemies = _world.contact_enemies()
+	# Partida nueva +: stronger copies of every enemy, the boss too (a first game: as is).
+	enemies = NgPlus.scaled(enemies, state.ng_plus, _zone.number)
+	if not boss:
+		var kept := state.give_metal_slime_hp(enemies)
+		if _autoplay and kept > 0:
+			print("Slime de Metal con PV %d" % kept)
+	if _autoplay and state.ng_plus > 0:
+		var shown := PackedStringArray()
+		for enemy in enemies:
+			shown.append("%s PV %d ATK %d DEF %d" % [enemy.display_name, enemy.max_hp,
+				enemy.attack, enemy.defense])
+		print("Partida nueva + %d (×%.1f): %s" % [state.ng_plus,
+			NgPlus.stat_mult(state.ng_plus, _zone.number), ", ".join(shown)])
 	_note_enemies(enemies, false)
 	var echo := boss and _boss_id() == _zone.postgame_boss_id
 	await _fade_to(1.0)
 	_world.set_active(false)
 	_audio.play_music(MusicLibrary.BOSS if boss else MusicLibrary.BATTLE)
+	_audio.stop_ambient()
 	var battle: BattleScene = BATTLE_SCENE.instantiate()
 	battle.setup(state.hero, enemies, state.inventory)
 	battle.set_audio(_audio)
@@ -402,10 +598,11 @@ func _on_encounter(boss: bool) -> void:
 	battle.char_time = _options.char_time()
 	battle.time_scale = _options.combat_scale()
 	battle.camera_shake = _options.camera_shake
+	state.sync_level_cap()
 	battle.difficulty = state.difficulty
 	battle.zone = _zone
 	if state.ally_id != "":
-		battle.ally = Allies.data(state.ally_id)
+		battle.ally = Allies.data(state.ally_id, state.tramo())
 	add_child(battle)
 	await _fade_to(0.0)
 	var outcome: int = await battle.finished
@@ -421,11 +618,19 @@ func _on_encounter(boss: bool) -> void:
 		Wells.on_battle(state)
 		_world.set_dry_wells(Wells.dry_ids(state))
 	await _fade_to(1.0)
+	if not boss:
+		# Under black: a beaten group leaves the map, one fled from stays half see-through.
+		_world.end_contact(outcome)
+	if state.keep_metal_slime_hp(battle.engine.enemies, outcome) > 0:
+		if _autoplay:
+			print("Slime de Metal: PV %d guardados" % state.metal_slime_hp)
+		_autosave(false)  # a fled battle saves nothing else: quitting now must not lose them
 	var notice := ""
 	var reward_lines: Array[String] = []
 	var scene := ""
 	var mission_done := false
 	var finished_quests: Array[Dictionary] = []
+	var family_lines: Array[String] = []
 	if won:
 		state.gold += battle.engine.gold_won
 		state.gold_earned += battle.engine.gold_won
@@ -444,7 +649,12 @@ func _on_encounter(boss: bool) -> void:
 		mission_done = quest_was_on and state.quest.stage == Quest.Stage.DONE
 		for enemy in battle.engine.enemies:
 			finished_quests.append_array(state.quests.on_victory(state, enemy.id))
+		# The enemies are noted as beaten above: a family may be complete now.
+		family_lines = _give_family_rewards()
 	elif outcome == BattleEngine.State.LOST:
+		if _autoplay:
+			_defeats += 1
+			print("Derrota en %s (%d)" % [_zone.id, _defeats])
 		state.gold -= battle.gold_lost
 		state.heal_full()
 		_go_to_town()
@@ -471,6 +681,9 @@ func _on_encounter(boss: bool) -> void:
 			await _world.show_dialogue("", reward_lines)
 		elif notice != "":
 			_world.show_notice(notice)
+	if not family_lines.is_empty():
+		_audio.play_sfx(SfxLibrary.LEVEL_UP)
+		await _world.show_dialogue("", family_lines)
 	if mission_done:
 		_world.show_mission_done(QuestLog.done_text(Quest.TITLE))
 	for finished: Dictionary in finished_quests:
@@ -489,23 +702,53 @@ func _on_encounter(boss: bool) -> void:
 			return
 	_set_busy(false)
 	if _autoplay and won and _wants_retreat():
-		state.inventory.take(Inventory.WING)
-		print("Retirada al pueblo (PV %d/%d, PM %d, pociones %d)" % [state.hero.hp,
-			state.hero.max_hp, state.hero.mp, state.inventory.count(Inventory.POTION)])
-		await _on_travel_requested()
-		await _autoplay_restock()
-		await _on_portal()
+		await _autoplay_retreat()
+	elif _autoplay and won and _needs_groups():
+		# No Ala de viaje (or in a village): the groups come back as if it had flown away
+		# and back. Only the autoplay does this.
+		print("Grupos repuestos (partida automática)")
+		_respawn_groups()
 	elif _autoplay and outcome == BattleEngine.State.LOST:
 		await _autoplay_restock()
+		if _medal_tour:
+			await _back_to_tour_zone()
+
+
+## Autoplay: flies back to the last village with an Ala de viaje, rests and shops there and
+## comes back through the portal.
+func _autoplay_retreat() -> void:
+	state.inventory.take(Inventory.WING)
+	print("Retirada al pueblo (PV %d/%d, PM %d, pociones %d)" % [state.hero.hp,
+		state.hero.max_hp, state.hero.mp, _potion_count()])
+	await _on_travel_requested()
+	await _autoplay_restock()
+	await _on_portal()
 
 
 ## Autoplay: needs rest (GameState.needs_rest()), is only kept from the zone's boss by its
-## HP or MP, or has a report waiting in the last village, away from a village, with an Ala
-## de viaje (the night at the inn is free). The route may never pass the one who waits.
+## HP or MP, has a report waiting in the last village or has no group left to fight
+## (_needs_groups(): the portal back brings them), away from a village, with an Ala de
+## viaje (the night at the inn is free). The route may never pass the one who waits.
 func _wants_retreat() -> bool:
+	if _medal_tour:
+		return false  # the medal tour never flies back: it walks its routes
 	var report := not state.quests.reports_here(state.town_zone, state.inventory).is_empty()
-	return (state.needs_rest() or _boss_needs_rest() or report) and not _world.in_village() \
-		and state.inventory.count(Inventory.WING) > 0
+	return (state.needs_rest() or _boss_needs_rest() or report or _needs_groups()) \
+		and not _world.in_village() and state.inventory.count(Inventory.WING) > 0
+
+
+## Autoplay: no group left on this map while the hero still has levels to win before its
+## boss (they only come back when the map is built again).
+func _needs_groups() -> bool:
+	return _world.group_count() == 0 and _autoplay_hunts()
+
+
+## Autoplay: the hero goes after the groups while he has levels to win before the zone's
+## boss or, in a Partida nueva + (he is at the top already), while the village quest wants
+## its slimes (or the Rey Slime would never come out).
+func _autoplay_hunts() -> bool:
+	return state.hero.level < _zone.autoplay_boss_level \
+		or (state.ng_plus > 0 and state.quest.stage == Quest.Stage.HUNT)
 
 
 ## Autoplay: the zone's boss is due at this level but the hero is too worn for it. MP
@@ -553,16 +796,25 @@ func _autoplay_restock() -> void:
 			await _on_npc(i)
 
 
-## Notes enemies in the bestiary: seen, or beaten too after a won battle. Only those of
-## BestiaryPage.ORDER: the Eco de la Niebla has no card and never counts.
+## Notes enemies in the bestiary: seen, or beaten too after a won battle. Only those with a
+## card (Bestiary.has()): the Eco de la Niebla never counts.
 func _note_enemies(enemies: Array[Combatant], beaten: bool) -> void:
 	for enemy in enemies:
-		if not enemy.id in BestiaryPage.ORDER:
+		if not Bestiary.has(enemy.id):
 			continue
 		if beaten:
 			state.defeat_enemy(enemy.id)
 		else:
 			state.see_enemy(enemy.id)
+
+
+## Gives the prize of every bestiary family completed and not paid yet (Bestiary): its
+## flag and its piece. Returns the lines that say so, for the dialogue window.
+func _give_family_rewards() -> Array[String]:
+	var lines: Array[String] = []
+	for family_id in Bestiary.new_rewards(state):
+		lines.append(Bestiary.give(state, family_id))
+	return lines
 
 
 ## Sets the boss's world flag, gives its key item and says so.
@@ -576,14 +828,34 @@ func _boss_notice(boss: Combatant) -> String:
 
 
 ## Puts the player at the town entry of the last village visited, switching zones if
-## needed (no fade: the caller is already under black).
+## needed (no fade: the caller is already under black). The groups of the map come back
+## either way.
 func _go_to_town() -> void:
 	var town := ZoneData.by_id(state.town_zone)
 	if state.town_zone != state.zone_id:
 		_switch_zone(state.town_zone, town.town_entry)
 	else:
 		_world.place_at_entry(town.town_entry)
+		_respawn_groups()
 		_on_village_changed(_world.in_village())
+
+
+## Every group of this map comes back (the map counts as built again: a defeat, the portal,
+## a game loaded), clear of where the hero stands.
+func _respawn_groups() -> void:
+	var avoid: Array[Vector3] = [_world.player_position()]
+	_world.respawn_groups(avoid)
+	_spawn_rare()
+
+
+## The zone's rare enemy on this map (the Slime de Metal on the mine floors): always while
+## its quest is on, now and then once it is done (EncounterTable.rare_on_map()).
+func _spawn_rare() -> void:
+	if _zone.rare_enemy == "" or _world.has_rare():
+		return
+	if EncounterTable.rare_on_map(_zone, state.quests.wanted_enemies(),
+			state.quests.hunted_enemies(), _rng):
+		_world.add_rare(_zone.rare_enemy)
 
 
 ## An open exit: fades to black, builds the next zone at the exit's entry, autosaves.
@@ -632,6 +904,7 @@ func _on_portal() -> void:
 	if _busy or not state.has_portal():
 		return
 	_set_busy(true)
+	_quiet_s = 0.0
 	_world.freeze(true)
 	await _fade_to(1.0)
 	var zone_id := state.portal_zone
@@ -642,7 +915,7 @@ func _on_portal() -> void:
 	else:
 		_show_portal()
 	_world.place_player(pos)
-	_world.arm_blocked_point_skip()
+	_respawn_groups()
 	_on_village_changed(_world.in_village())
 	_refresh_status()
 	_update_boss()
@@ -677,10 +950,15 @@ func _check_village_scene() -> void:
 	if _busy or not _world.in_village():
 		return
 	var scene := state.story.scene_on_village(_zone.id)
+	if scene == "" and _zone.id == "pradera" and state.can_meet_caravan() \
+			and not state.story.has_seen("caravana_llega"):
+		scene = "caravana_llega"
 	if scene == "":
 		return
 	_set_busy(true)
 	await _play_scene(scene)
+	if scene == "caravana_campamento":
+		await _choose_companion()
 	_autosave(false)
 	_set_busy(false)
 
@@ -693,6 +971,7 @@ func _play_scene(scene_id: String) -> void:
 	_cutscenes.world = _world
 	_cutscenes.hero_name = state.hero.display_name
 	await _cutscenes.play(scene)
+	_audio.play_ambient(_zone.ambient)  # a "music" step silenced it
 	_refresh_status()
 
 
@@ -705,7 +984,7 @@ func _play_prologue() -> void:
 	_autosave(false)
 	_set_busy(false)
 	_show_touch_hint()
-	if not _save.is_empty():
+	if _load_failed:
 		_world.show_notice(LOAD_FAILED_NOTICE)
 
 
@@ -718,6 +997,7 @@ func _finish_game() -> void:
 	_autosave(false)
 	var time_text := _clock(play_time)
 	_audio.play_music(MusicLibrary.TITLE)
+	_audio.stop_ambient()
 	var layer := CanvasLayer.new()
 	layer.layer = 11
 	add_child(layer)
@@ -728,25 +1008,32 @@ func _finish_game() -> void:
 	if _autoplay:
 		print("Juego completado: Nv %d, tiempo de juego %s, misiones %d" % [state.hero.level,
 			time_text, state.quests_done()])
+		print("Familias completas: %d/%d" % [Bestiary.complete_count(state),
+			Bestiary.FAMILIES.size()])
+		print("Derrotas: %d" % _defeats)
 	quit_to_title.emit()
 
 
-## The credits: who made the game, with what, and the numbers of this game.
+## The credits: who made the game, with what, and the numbers of this game (and its round,
+## in a Partida nueva +).
 func _credits_sections(time_text: String) -> Array:
+	var numbers: Array[String] = [
+		"Tiempo de juego: %s" % time_text,
+		"Combates: %d" % state.battles,
+		"Pasos: %d" % state.steps,
+		"Oro ganado: %d G" % state.gold_earned,
+		"Misiones cumplidas: %d" % state.quests_done(),
+		"Nivel: %d" % state.hero.level,
+	]
+	if state.ng_plus > 0:
+		numbers.append("Partida nueva + %d" % state.ng_plus)
 	return [
 		["Villaclaro", ["La historia de %s" % state.hero.display_name]],
 		["Creado por", [AUTHOR]],
 		["Motor", ["Godot Engine 4.7"]],
 		["Modelos 3D", ["KayKit, de Kay Lousberg (CC0)"]],
 		["Música y sonido", ["Generados por el propio juego"]],
-		["Tu partida", [
-			"Tiempo de juego: %s" % time_text,
-			"Combates: %d" % state.battles,
-			"Pasos: %d" % state.steps,
-			"Oro ganado: %d G" % state.gold_earned,
-			"Misiones cumplidas: %d" % state.quests_done(),
-			"Nivel: %d" % state.hero.level,
-		]],
+		["Tu partida", numbers],
 		["Gracias por jugar", []],
 	]
 
@@ -762,6 +1049,7 @@ func _scene_travel(zone_id: String, entry_id: String) -> World:
 func _scene_flag(flag: String) -> void:
 	state.world_flags[flag] = true
 	_world.set_world_flags(state.world_flags)
+	_refresh_status()  # a figure may come with the flag (the Jefe de caravana)
 
 
 ## The old woman always heals; what she says and gives comes from the quest.
@@ -806,6 +1094,20 @@ func _on_npc(index: int) -> void:
 		return
 	_set_busy(true)
 	var figure: String = _zone.npcs[index].name
+	if figure == Medals.COLLECTOR:
+		await _talk_to_collector()
+		_set_busy(false)
+		return
+	if figure == CARAVAN_CHIEF and _zone.id == "caravana" \
+			and not state.has_flag(StoryState.COMPANION_FLAG):
+		await _choose_companion()
+		_set_busy(false)
+		return
+	if figure == CARAVAN_CHIEF and _zone.id == "pradera":
+		await _ask_departure()
+		_set_busy(false)
+		_check_village_scene()  # the Caravana's first visit, if the hero left
+		return
 	var talk := state.quests.talk(state, _zone.id, figure)
 	var said: Array = talk.get("lines", _world.npc_lines(index, state.chapter()))
 	var lines: Array[String] = []
@@ -817,8 +1119,64 @@ func _on_npc(index: int) -> void:
 	_set_busy(false)
 
 
+## The Jefe de caravana in Villaclaro: two questions (focus on the answer that changes
+## nothing), then the farewell, the v1 left behind and the Caravana built under black.
+func _ask_departure() -> void:
+	if _autoplay and not _autoplay_v2:
+		return  # the v1 runs never leave with the caravan
+	if await _world.ask(JOIN_QUESTION, ["Sí", "No"], 1) != 0:
+		return
+	if await _world.ask(LEAVE_QUESTION, ["Partir", "Aún no"], 1) != 0:
+		return
+	await _play_scene("caravana_parte")  # ends under black
+	state.leave_for_caravan()
+	_switch_zone("caravana", "")
+	_play_map_music()
+	await _fade_to(0.0)
+	await _world.freeze(false)
+	_autosave(false)
+
+
+## The Jefe de caravana's choice of companion: the Compañeros list (a shop at no cost).
+## Closing it without choosing leaves it for the next talk; once one is chosen, the jungle's
+## exit is there. Autoplay takes --autoplay-companion=<id> (Brena if none) at once.
+func _choose_companion() -> void:
+	if _autoplay:
+		state.ally_id = _autoplay_companion
+		print("Compañero: %s" % Allies.display_name(state.ally_id))
+	else:
+		_world.freeze(true)
+		await _shop.run(Shop.COMPANIONS_SHOP)
+		await _world.freeze(false)
+	if not Allies.is_companion(state.ally_id):
+		await _world.show_dialogue(CARAVAN_CHIEF, ["Piénsalo bien. Te espero aquí."])
+		return
+	state.world_flags[StoryState.COMPANION_FLAG] = true
+	_world.set_world_flags(state.world_flags)
+	_refresh_status()
+	var who := Allies.display_name(state.ally_id)
+	await _world.show_dialogue(CARAVAN_CHIEF, ["%s irá contigo. La jungla está al norte." % who])
+	_autosave(false)
+
+
+## The Coleccionista (Medals.talk()): every prize the medals reach, at once, with a sound;
+## then how many are carried. Saves silently (he has met the hero, maybe given something).
+func _talk_to_collector() -> void:
+	var talk := Medals.talk(state)
+	var lines: Array[String] = []
+	for line: String in talk.lines:
+		lines.append(StoryState.fill(line, state.hero.display_name))
+	if talk.given > 0:
+		_audio.play_sfx(SfxLibrary.LEVEL_UP)
+		_refresh_status()
+	await _world.show_dialogue(Medals.COLLECTOR, lines)
+	_autosave(false)
+
+
 ## The map shows what changed; a finished quest says so; the game is saved.
 func _after_quest_talk(done_title: String) -> void:
+	if _zone.rare_enemy in state.quests.wanted_enemies():
+		_spawn_rare()  # its hunt was just taken: it is on this floor at once
 	if _autoplay:
 		for id in Inventory.SEEDS:
 			while state.inventory.count(id) > 0:
@@ -833,6 +1191,8 @@ func _after_quest_talk(done_title: String) -> void:
 ## The merchant: the ShopWindow until the player leaves; autosaves if anything changed.
 ## On autoplay it only opens when there is something to buy.
 func _on_shop(shop_id: String) -> void:
+	if shop_id == Shop.CARAVAN_SHOP:
+		shop_id = Shop.caravan_shop(state.tramo())
 	if _busy or (_autoplay and Shop.autoplay_picks(state, shop_id).is_empty()):
 		return
 	_set_busy(true)
@@ -867,6 +1227,7 @@ func _on_inn(inn_id: String) -> void:
 	_world.freeze(true)
 	Inn.stay(state)
 	await _fade_to(1.0)
+	_respawn_groups()
 	_refresh_status()
 	_audio.play_sfx(SfxLibrary.HEAL)
 	await get_tree().create_timer(INN_NIGHT_TIME).timeout
@@ -914,6 +1275,87 @@ func _on_chest(chest_id: String) -> void:
 	var lines: Array[String] = [result.text]
 	await _world.show_dialogue("", lines)
 	_set_busy(false)
+
+
+## A small medal: into GameState.medals, off the map, saved without a notice and said in the
+## dialogue window ("¡Encuentras una Medalla pequeña! (n/12)").
+func _on_medal(medal_id: String) -> void:
+	if _busy:
+		return
+	var text := Medals.take(state, medal_id)
+	if text == "":
+		return
+	_set_busy(true)
+	_world.remove_medal(medal_id)
+	_audio.play_sfx(SfxLibrary.LEVEL_UP)
+	_refresh_status()
+	_autosave(false)
+	var lines: Array[String] = [text]
+	await _world.show_dialogue("", lines)
+	_set_busy(false)
+	if _medal_tour and Medals.taken_in(state, _zone.id) == Medals.of_zone(_zone.id).size():
+		await _next_tour_zone()
+
+
+## --autoplay-zone=medallas: from the zone it starts in (Villaclaro), every zone with medals.
+func _start_medal_tour() -> void:
+	for id in ZoneData.IDS:
+		if not Medals.of_zone(id).is_empty():
+			_tour_zones.append(id)
+	_tour_index = maxi(0, _tour_zones.find(_zone.id))
+	print("Medallas: vuelta por %s" % [_tour_zones])
+	_arm_tour_timer()
+
+
+func _arm_tour_timer() -> void:
+	_tour_serial += 1
+	get_tree().create_timer(MEDAL_ZONE_TIME).timeout.connect(
+		_on_tour_timeout.bind(_tour_serial))
+
+
+## Time is up in this zone: says what is missing and goes on (after the battle, if any).
+func _on_tour_timeout(serial: int) -> void:
+	if serial != _tour_serial:
+		return
+	if _busy:
+		get_tree().create_timer(1.0).timeout.connect(_on_tour_timeout.bind(serial))
+		return
+	print("Medallas: tiempo agotado en %s (%d/%d)" % [_zone.id, Medals.taken_in(state, _zone.id),
+		Medals.of_zone(_zone.id).size()])
+	await _next_tour_zone()
+
+
+## Under black, the next zone of the tour at its start entry; after the last one, Villaclaro,
+## the Coleccionista, the counts printed and back to the title (which quits on autoplay).
+func _next_tour_zone() -> void:
+	_set_busy(true)
+	_tour_index += 1
+	await _fade_to(1.0)
+	if _tour_index < _tour_zones.size():
+		_switch_zone(_tour_zones[_tour_index], "")
+		_play_map_music()
+		await _fade_to(0.0)
+		await _world.freeze(false)
+		_set_busy(false)
+		_arm_tour_timer()
+		return
+	_tour_serial += 1
+	var town := ZoneData.by_id(Medals.COLLECTOR_ZONE)
+	_switch_zone(town.id, town.town_entry)
+	_play_map_music()
+	await _fade_to(0.0)
+	await _world.freeze(false)
+	await _talk_to_collector()
+	print("Medallas: %d/%d · premios %d/%d" % [state.medals.size(), Medals.MEDALS.size(),
+		state.medal_prizes, Medals.PRIZES.size()])
+	quit_to_title.emit()
+
+
+## --autoplay-zone=medallas, after a defeat (the hero woke in a village): the zone of the
+## tour again, its route from the start.
+func _back_to_tour_zone() -> void:
+	_tour_index -= 1
+	await _next_tour_zone()
 
 
 ## The dungeon floor's lever: sets its flag, which opens the gates it works.
@@ -1000,15 +1442,20 @@ func _update_boss() -> void:
 	_world.set_boss_present(_boss_wanted() and strong_enough)
 
 
-## The zone's map music, or its village one inside the village.
+## The zone's map music, or its village one inside the village, and the zone's ambient
+## under it (after a battle or a cutscene that silenced it, it comes back here).
 func _play_map_music() -> void:
 	_audio.play_music(_zone.village_music if _world.in_village() else _zone.music)
+	_audio.play_ambient(_zone.ambient)
 
 
-## The pause menu only opens on the map with nothing else going on.
+## The pause menu (and, with --debug, the debug panel) only opens on the map with nothing
+## else going on.
 func _set_busy(busy: bool) -> void:
 	_busy = busy
 	_pause.available = not busy and not _autoplay
+	if _debug:
+		_debug.available = not busy
 
 
 ## Updates the map's status window, the quests' marks and sought figures and the hero's
@@ -1025,14 +1472,23 @@ func _on_stepped() -> void:
 		_world.show_notice(REPEL_END_NOTICE)
 
 
+## The healing potions carried, big ones too: the map's counter and the retreat line.
+func _potion_count() -> int:
+	return state.inventory.count(Inventory.POTION) + state.inventory.count(Inventory.BIG_POTION)
+
+
 func _refresh_status() -> void:
+	state.sync_level_cap()
 	var missions := state.current_missions()
-	_world.refresh_status(state.hero, state.inventory.count(Inventory.POTION), state.gold,
+	_world.refresh_status(state.hero, _potion_count(), state.gold,
 		missions)
-	_world.set_encounter_rate(EncounterMeter.level_rate(state.hero.level, _zone.exit_level))
+	_world.set_monsters_shy(EncounterMeter.is_shy(state.hero.level, _zone.exit_level))
 	_world.set_repel(state.repel_m > 0.0)
-	_world.set_quest_view(state.quests.markers(_zone.id, state.inventory),
-		state.quests.hidden_figures(_zone.id))
+	_world.set_autoplay_hunt(_autoplay and _autoplay_hunts())
+	var hidden := state.quests.hidden_figures(_zone.id)
+	hidden.append_array(_zone.absent_figures(state.world_flags))
+	_world.set_quest_view(state.quests.markers(_zone.id, state.inventory, state.world_flags),
+		hidden)
 	var loadout := state.loadout
 	_world.set_hero_equipment(loadout.worn(Equipment.WEAPON), loadout.worn(Equipment.SHIELD),
 		loadout.worn(Equipment.HELMET))
@@ -1115,6 +1571,101 @@ func _build_pause() -> void:
 	_pause.open_changed.connect(func(is_open: bool) -> void:
 		_world.set_status_shown(not is_open))
 	_pause.available = not _autoplay
+
+
+## --debug: the panel over the pause menu, under the fade. While it is open Game is busy (no
+## ☰, no pause) and the status window and map square hide, as with the pause menu.
+func _build_debug() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 6
+	add_child(layer)
+	_debug = DebugPanel.new()
+	_debug.setup(state)
+	layer.add_child(_debug)
+	_debug.action_chosen.connect(_on_debug)
+	_debug.open_changed.connect(func(is_open: bool) -> void:
+		_set_busy(is_open)
+		_world.set_status_shown(not is_open))
+
+
+## What a DebugPanel button asks: done at once on the state and the map, printed as
+## "Depuración: ..." and said on the panel. Ir a goes on under black (_debug_go()).
+func _on_debug(action: String, arg: String) -> void:
+	var text := ""
+	match action:
+		DebugPanel.ZONE:
+			_debug_go(arg)
+			return
+		DebugPanel.LEVEL:
+			Leveling.set_level(state.hero, state.hero.level + int(arg), HERO_DATA.skills)
+			var spells := PackedStringArray()
+			for skill in state.hero.skills:
+				spells.append(skill.display_name)
+			text = "nivel %d (PV %d/%d, PM %d/%d, EXP %d; hechizos: %s)" % [state.hero.level,
+				state.hero.hp, state.hero.max_hp, state.hero.mp, state.hero.max_mp,
+				state.hero.experience, ", ".join(spells)]
+		DebugPanel.GOLD:
+			state.gold += int(arg)
+			text = "+%s G (%d G)" % [arg, state.gold]
+		DebugPanel.ITEMS:
+			for id in Inventory.IDS:
+				state.inventory.add(id)
+			text = "+1 de cada objeto (%d objetos)" % Inventory.IDS.size()
+		DebugPanel.HEAL:
+			state.heal_full()
+			text = "PV y PM llenos"
+		DebugPanel.MONSTERS:
+			World.debug_no_groups = not World.debug_no_groups
+			if World.debug_no_groups:
+				_world.clear_groups()
+				text = "grupos quitados (quedan %d)" % _world.group_count()
+			else:
+				_respawn_groups()
+				text = "grupos puestos (%d)" % _world.group_count()
+		DebugPanel.BOSS:
+			var boss := EnemyLibrary.data(arg)
+			var item := state.on_boss_defeated(boss)
+			if arg == Quest.BOSS_ID:
+				state.quest.stage = Quest.Stage.DONE  # as its real victory does
+			if Bestiary.has(arg):
+				# As --autoplay-zone does: beaten in the bestiary too, and a family may be complete.
+				state.see_enemy(arg)
+				state.defeat_enemy(arg)
+			state.story.mark_seen_for_flags(state.world_flags)
+			_world.set_world_flags(state.world_flags)
+			text = "%s %s" % [boss.display_name, "vencida" if boss.female else "vencido"]
+			if item != "":
+				text += " (+%s)" % Inventory.KEY_ITEMS[item]
+			for line in _give_family_rewards():
+				text += " · " + line
+		DebugPanel.QUEST:
+			state.quest.skip_stage()
+			text = "misión de la aldea: %s" % DebugPanel.STAGE_NAMES[state.quest.stage]
+		DebugPanel.SAVE:
+			var data := SaveData.from_state(state, _world.player_position(), play_time)
+			text = "guardado en la ranura %d" % _slot if SaveStore.save_game(_slot, data) \
+				else "no se pudo guardar"
+	_update_boss()
+	_refresh_status()
+	print("Depuración: %s" % text)
+	_debug.show_result(text)
+
+
+## DebugPanel's Ir a (the panel is already shut): under black to zone_id's start entry, as
+## through an exit, with no autosave.
+func _debug_go(zone_id: String) -> void:
+	if _busy:
+		return
+	_set_busy(true)
+	_world.freeze(true)
+	await _fade_to(1.0)
+	_switch_zone(zone_id, "")
+	_play_map_music()
+	await _fade_to(0.0)
+	await _world.freeze(false)
+	print("Depuración: a %s" % _zone.map_label())
+	_set_busy(false)
+	_check_village_scene()
 
 
 func _fade_to(alpha: float) -> void:

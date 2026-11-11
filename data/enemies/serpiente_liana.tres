@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "serpiente_liana"
+display_name = "Serpiente de liana"
+female = true
+max_hp = 110
+hp = 110
+attack = 52
+defense = 34
+speed = 34
+map_roam = 2.0
+map_speed = 1.8
+exp_reward = 62
+gold_reward = 34
+ai_weights = {
+"attack": 80,
+"stagger": 20
+}
+weak = Array[String](["fire"])

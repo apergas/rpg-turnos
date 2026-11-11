@@ -32,6 +32,13 @@ const CHESTS := {
 		"yaw": 90.0, "gold": 200},
 	"castillo_trono_cofre": {"zone": "castillo_trono", "pos": Vector3(-20, 0, 8),
 		"yaw": -90.0, "item": Inventory.ETHER},
+	# The jungle: its three glades next to the autoplay route.
+	"jungla_claro_sur": {"zone": "jungla", "pos": Vector3(19.5, 0, 23.5), "yaw": 40.0,
+		"gold": 300},
+	"jungla_claro_este": {"zone": "jungla", "pos": Vector3(21.5, 0, -10.5), "yaw": 130.0,
+		"item": Inventory.BIG_POTION},
+	"jungla_claro_oeste": {"zone": "jungla", "pos": Vector3(-23.5, 0, -18.5), "yaw": -60.0,
+		"item": Inventory.BIG_ETHER},
 }
 
 
@@ -42,6 +49,24 @@ static func of_zone(zone_id: String) -> Array[String]:
 		if CHESTS[id].zone == zone_id:
 			ids.append(id)
 	return ids
+
+
+## The chests of this game: the v1's, plus the v2's once the caravan has been joined.
+static func total(state: GameState) -> int:
+	var count := 0
+	for id: String in CHESTS:
+		if state.in_caravan() or not (CHESTS[id].zone in ZoneData.V2_ZONES):
+			count += 1
+	return count
+
+
+## How many of those chests are open.
+static func opened_count(state: GameState) -> int:
+	var count := 0
+	for id in state.opened_chests:
+		if CHESTS.has(id) and (state.in_caravan() or not (CHESTS[id].zone in ZoneData.V2_ZONES)):
+			count += 1
+	return count
 
 
 ## Opens chest id for state: gives what it holds and marks it opened. Equipment goes on

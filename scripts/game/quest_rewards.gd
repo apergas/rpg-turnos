@@ -1,8 +1,8 @@
 class_name QuestRewards extends RefCounted
 ## Pays a finished quest. Pure: works on a GameState and returns the lines that say so.
 ## The gold counts as gold won for the credits; a piece of equipment goes on at once if its
-## slot is empty, else into the bag, like a chest's. A boss's prize is put on at once
-## instead (wear_prize()).
+## slot is empty, else into the bag, like a chest's. A bestiary family's prize goes the same way (Bestiary.give()). A boss's prize is put on at once
+## instead (wear_prize()). The Coleccionista's prizes go the same way (Medals.give_prize()).
 
 
 static func give(state: GameState, quest: QuestData) -> Array[String]:
@@ -11,15 +11,23 @@ static func give(state: GameState, quest: QuestData) -> Array[String]:
 		state.gold += quest.reward_gold
 		state.gold_earned += quest.reward_gold
 		lines.append("Recibes %d monedas de oro." % quest.reward_gold)
-	for id: String in quest.reward_items:
-		var amount: int = quest.reward_items[id]
+	lines.append_array(give_items(state, quest.reward_items))
+	if quest.reward_equipment != "":
+		lines.append(give_piece(state, quest.reward_equipment))
+	return lines
+
+
+## Puts items (Inventory id -> amount) into the inventory and returns the lines that say so:
+## "Recibes Pluma de fénix ×2." / "Recibes una Semilla de fuerza.". Also used by Medals.
+static func give_items(state: GameState, items: Dictionary) -> Array[String]:
+	var lines: Array[String] = []
+	for id: String in items:
+		var amount: int = items[id]
 		state.inventory.add(id, amount)
 		if amount > 1:
 			lines.append("Recibes %s ×%d." % [Inventory.display_name(id), amount])
 		else:
 			lines.append("Recibes %s %s." % [Inventory.article(id), Inventory.display_name(id)])
-	if quest.reward_equipment != "":
-		lines.append(_give_piece(state, quest.reward_equipment))
 	return lines
 
 
@@ -37,7 +45,8 @@ static func wear_prize(state: GameState, piece: String) -> Array[String]:
 	return lines
 
 
-static func _give_piece(state: GameState, piece: String) -> String:
+## Gives a piece: on at once if its slot is empty, else into the bag. Returns "Recibes un Anillo de savia. Te lo equipas." / "... Está en tu bolsa.". Also used by Bestiary.give().
+static func give_piece(state: GameState, piece: String) -> String:
 	var text := "Recibes %s %s." % [Equipment.article(piece), Equipment.display_name(piece)]
 	state.bag_equipment.append(piece)
 	if state.loadout.worn(Equipment.slot(piece)) == "":

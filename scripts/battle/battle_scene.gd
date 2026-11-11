@@ -6,7 +6,9 @@ class_name BattleScene extends Node3D
 ## With `-- --autoplay` BattleAutoplay picks the commands (shown on the HUD with
 ## BattleHud.demo()); to show Huir and Defender it flees from one normal battle out of
 ## AUTOPLAY_EVERY and defends in the first round of another one. It prints every battle
-## message and continues on its own. With set_audio() it plays the sound effects and
+## message and continues on its own. After the enemies appear the engine rolls the
+## surprise (BattleEngine.roll_ambush()): it is said before the first menu, and an enemy
+## surprise plays its round first. With set_audio() it plays the sound effects and
 ## the victory or defeat music; without it the battle is silent.
 ## Run on its own (res://scenes/battle/battle_scene.tscn) it sets up a test battle: a
 ## poisoned hero of STANDALONE_LEVEL with potions and an antidote against a Slime and a
@@ -21,7 +23,7 @@ const RESULT_SCENE := preload("res://scenes/ui/battle_result.tscn")
 const HERO_POS := Vector3(-1.0, 0, 1.8)
 const ENEMY_POS := Vector3(0.6, 0, -2.4)
 ## Where the creature stands, beside the hero.
-const ALLY_POS := Vector3(0.7, 0, 1.4)
+const ALLY_POS := Vector3(2.2, 0, 1.8)
 ## With two enemies, each stands this far to one side of ENEMY_POS.
 const PAIR_OFFSET := Vector3(1.5, 0, 0)
 const CAMERA_POS := Vector3(0.8, 2.6, 6.0)
@@ -38,6 +40,8 @@ const MP_COLOR := StatBar.MP
 const DEFEND_COLOR := Color(0.6, 0.8, 1.0)
 ## Glow of an enemy gathering strength for a charged blow.
 const CHARGE_COLOR := Color(1.0, 0.55, 0.15)
+## Glow of the hero when the Despertador works.
+const WAKE_COLOR := Color(1.0, 0.85, 0.35)
 const STATUS_COLORS := {
 	BattleEngine.POISON: Color(0.6, 0.2, 0.8),
 	BattleEngine.SLEEP: Color(0.35, 0.45, 1.0),
@@ -102,17 +106,14 @@ var _helmet_id := ""
 
 
 ## The hero and the inventory are used as is, so HP, MP, EXP and items stay with the
-## caller; the enemy data is duplicated so the .tres files never change. Two enemies
-## with the same name become "Slime A" and "Slime B".
+## caller; the enemy data is duplicated so the .tres files never change. Two enemies of
+## the same kind keep the same name: the arrow, the glow and the bar tell them apart.
 func setup(hero_ref: Combatant, enemy_data: Array[Combatant], inv: Inventory) -> void:
 	hero = hero_ref
 	inventory = inv
 	enemies.clear()
 	for data in enemy_data:
 		enemies.append(data.duplicate() as Combatant)
-	if enemies.size() == 2 and enemies[0].display_name == enemies[1].display_name:
-		enemies[0].display_name += " A"
-		enemies[1].display_name += " B"
 
 
 ## Call before adding it to the tree, like setup().
@@ -166,13 +167,17 @@ func _ready() -> void:
 	if ally != null:
 		_hud.show_ally(ally)
 	for i in _enemy_actors.size():
-		_hud.add_enemy_bar(engine.enemies[i].display_name)
+		var foe := engine.enemies[i]
+		_hud.add_enemy_bar(foe.display_name)
+		if foe.hp < foe.max_hp:
+			# A Slime de Metal that kept its HP from the last battle.
+			_hud.set_enemy_life(i, float(foe.hp) / foe.max_hp)
 	if _autoplay and not engine.has_boss():
 		_autoplay_battles += 1
 		_autoplay_flee = _autoplay_battles % AUTOPLAY_EVERY == 0
 		_autoplay_defend = _autoplay_battles % AUTOPLAY_EVERY == AUTOPLAY_DEFEND_AT
 	await _say(_intro_text())
-	_ask_command()
+	await _play_ambush()
 
 
 func _exit_tree() -> void:
@@ -210,6 +215,40 @@ func _intro_text() -> String:
 	return "¡Aparece %s %s!" % ["una" if first.female else "un", first.display_name]
 
 
+## The surprise roll, after the enemies appear: said, then the first menu, or the
+## enemies' round first. Autoplay also prints "Sorpresa: héroe" / "Sorpresa: monstruos".
+func _play_ambush() -> void:
+	match engine.roll_ambush():
+		BattleEngine.Ambush.HERO:
+			if _autoplay:
+				print("Sorpresa: héroe")
+			_sfx(SfxLibrary.ACCEPT)
+			await _say(_ambush_text(true))
+			_ask_command()
+		BattleEngine.Ambush.ENEMY:
+			if _autoplay:
+				print("Sorpresa: monstruos")
+			_sfx(SfxLibrary.ENCOUNTER)
+			_shake_camera()
+			await _say(_ambush_text(false))
+			await _play_round(engine.resolve_ambush_round())
+		_:
+			_ask_command()
+
+
+## "¡Pillas desprevenido al Lobo!" / "¡El Lobo te ataca por sorpresa!", or "los
+## monstruos" with two.
+func _ambush_text(hero_side: bool) -> String:
+	var alive := engine.alive_enemies()
+	if alive.size() > 1:
+		return "¡Pillas desprevenidos a los monstruos!" if hero_side \
+			else "¡Los monstruos te atacan por sorpresa!"
+	var foe := engine.enemies[alive[0]]
+	if hero_side:
+		return "¡Pillas desprevenid%s %s!" % [_ending(foe), _to(foe)]
+	return "¡%s te ataca por sorpresa!" % _cap(_the(foe))
+
+
 ## Asleep, the hero does nothing; on autoplay the bot picks; otherwise the menu opens.
 func _ask_command() -> void:
 	if hero.status.has(BattleEngine.SLEEP):
@@ -234,7 +273,12 @@ func _autoplay_command() -> Dictionary:
 
 func _on_command_chosen(cmd: Dictionary) -> void:
 	_hud.hide_menu()
-	for event in engine.resolve_round(cmd):
+	await _play_round(engine.resolve_round(cmd))
+
+
+## Plays a round's events back, then asks for the next command or shows the result.
+func _play_round(events: Array[Dictionary]) -> void:
+	for event in events:
 		await _play_event(event)
 	match engine.state:
 		BattleEngine.State.ONGOING:
@@ -368,6 +412,24 @@ func _play_event(event: Dictionary) -> void:
 			_show_life(event.target, event.hp_left)
 			await _say("¡La niebla envuelve %s!" % _to(boss))
 			await _say("¡%s se levanta con %d PV!" % [_cap(_the(boss)), event.hp_left])
+		BattleEvent.REVIVE:
+			_sfx(SfxLibrary.HEAL)
+			_reset_camera()
+			await _actor(event.target).play_heal(event.hp_left)
+			_show_life(event.target, event.hp_left)
+			_hud.update_status(hero.status)
+			await _say("¡La Pluma de fénix arde! %s se levanta." % hero.display_name)
+		BattleEvent.WAKE_GUARD:
+			await _actor(event.target).play_status(WAKE_COLOR)
+			await _say("%s no se dormirá en este combate." % _fighter(event.target).display_name)
+		BattleEvent.NO_SLEEP:
+			_sfx(SfxLibrary.MISS)
+			await _actor(event.target).play_status(WAKE_COLOR)
+			await _say("%s no se duerme." % _fighter(event.target).display_name)
+		BattleEvent.IMMUNE:
+			_sfx(SfxLibrary.MISS)
+			await _actor(event.target).play_status(STATUS_COLORS[event.status])
+			await _say(_immune_text(event))
 		BattleEvent.DEFEATED:
 			_show_arrow(-1)
 			if event.target >= 0:
@@ -475,6 +537,12 @@ func _play_status_off(event: Dictionary) -> void:
 			await _say("¡%s se despierta!" % target.display_name)
 		BattleEngine.SILENCE:
 			await _say("¡%s puede volver a lanzar hechizos!" % target.display_name)
+
+
+## "El veneno no afecta a Rocío." / "El silencio no afecta a Rocío.".
+func _immune_text(event: Dictionary) -> String:
+	var what := "El silencio" if event.status == BattleEngine.SILENCE else "El veneno"
+	return "%s no afecta a %s." % [what, _fighter(event.target).display_name]
 
 
 ## The caller steps to the left place and the helper appears on the right one.

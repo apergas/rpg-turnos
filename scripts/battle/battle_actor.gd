@@ -5,13 +5,17 @@ class_name BattleActor extends Node3D
 ## bat, the mushroom, the wolf,
 ## the goblin, the carnivorous plant, the golems, the spider, the specter and the
 ## creatures that fight beside the hero are low-poly figures built in code (see LOOKS).
+## The jungle's frog, snake, monkey, trap plant and tropical mushroom (the v2) come after.
+## Five of them are color variants of those (RED_SLIME, POISON_MUSHROOM, CAVE_MUSHROOM, CRYPT_BAT, FROST_SPECTER), built by the same functions.
 ## Set look before add_child. The figure faces -Z, so look_at() the opponent. Every
 ## play_* can be awaited: it returns when its animation and its tween are done.
 
 enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPER, WOLF,
 	GOBLIN, PLANT, WITCH, MUD_GOLEM, STONE_GOLEM, SPIDER, SPECTER, SKELETON_WARRIOR,
 	SKELETON_ROGUE, SKELETON_MAGE, FOG_LORD, FARMER, METAL_SLIME, BOARD, CAT, CHILD,
-	CHICKEN, WOLF_CUB, MINI_GOLEM, LOYAL_SKELETON, TAMER, FOG_ECHO }
+	CHICKEN, WOLF_CUB, MINI_GOLEM, LOYAL_SKELETON, TAMER, FOG_ECHO, RED_SLIME,
+	POISON_MUSHROOM, CAVE_MUSHROOM, CRYPT_BAT, FROST_SPECTER, COLLECTOR, BRENA, TADEO, ULMA, FROG,
+	SNAKE, MONKEY, TRAP_PLANT, TROPICAL_MUSHROOM, CARAVAN_CHIEF, HEALER, JAGUAR }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -227,6 +231,19 @@ const LOOKS := {
 		"anims": CHARACTER_ANIMS,
 		"tint": Color(0.35, 0.75, 0.65),
 	},
+	# The Coleccionista of Villaclaro: the Mage tinted purple.
+	Look.COLLECTOR: {
+		"scene": MAGE,
+		"scale": CHARACTER_SCALE,
+		"top": 2.2,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/Spellbook",
+			"Rig/Skeleton3D/handslot_l/Spellbook_open",
+			"Rig/Skeleton3D/handslot_r/1H_Wand",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(0.75, 0.55, 1.0),
+	},
 	Look.INNKEEPER: {
 		"scene": MAGE,
 		"scale": CHARACTER_SCALE,
@@ -250,6 +267,32 @@ const LOOKS := {
 		],
 		"anims": CHARACTER_ANIMS,
 		"tint": Color(0.65, 0.8, 1.0),
+	},
+	# The Jefe de caravana (the v2): the Mage in travelling browns.
+	Look.CARAVAN_CHIEF: {
+		"scene": MAGE,
+		"scale": CHARACTER_SCALE * 1.05,
+		"top": 2.3,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/Spellbook",
+			"Rig/Skeleton3D/handslot_l/Spellbook_open",
+			"Rig/Skeleton3D/handslot_r/1H_Wand",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(0.85, 0.68, 0.48),
+	},
+	# The Curandera of the Caravana: the Mage in white and pale green.
+	Look.HEALER: {
+		"scene": MAGE,
+		"scale": CHARACTER_SCALE,
+		"top": 2.2,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/Spellbook",
+			"Rig/Skeleton3D/handslot_l/Spellbook_open",
+			"Rig/Skeleton3D/handslot_r/1H_Wand",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(0.92, 1.0, 0.9),
 	},
 	# The Niña of the forest village: a small Mage in pink.
 	Look.CHILD: {
@@ -296,9 +339,23 @@ const LOOKS := {
 		"top": 1.1,
 		"crown": false,
 	},
+	# The color variants of 1.6.0: the same figures as the slime, the mushroom, the bat and
+	# the specter, in other colors.
+	Look.RED_SLIME: {
+		"color": Color(0.85, 0.2, 0.18),
+		"scale": 1.0,
+		"top": 1.3,
+		"crown": false,
+	},
 	Look.BAT: {
 		"color": Color(0.32, 0.22, 0.42),
 		"wing_color": Color(0.2, 0.13, 0.28),
+		"top": 2.0,
+		"fly": 1.1,
+	},
+	Look.CRYPT_BAT: {
+		"color": Color(0.45, 0.1, 0.12),
+		"wing_color": Color(0.3, 0.05, 0.08),
 		"top": 2.0,
 		"fly": 1.1,
 	},
@@ -307,6 +364,19 @@ const LOOKS := {
 		"stem_color": Color(0.95, 0.9, 0.78),
 		"scale": 1.4,
 		"top": 1.6,
+	},
+	Look.POISON_MUSHROOM: {
+		"cap_color": Color(0.55, 0.22, 0.72),
+		"stem_color": Color(0.9, 0.86, 0.8),
+		"scale": 1.4,
+		"top": 1.6,
+	},
+	# The cave mushroom: pale blue and 1.2 times the size of the Seta saltarina.
+	Look.CAVE_MUSHROOM: {
+		"cap_color": Color(0.62, 0.8, 0.98),
+		"stem_color": Color(0.85, 0.9, 0.95),
+		"scale": 1.4 * 1.2,
+		"top": 1.6 * 1.2,
 	},
 	Look.WOLF: {
 		"color": Color(0.45, 0.45, 0.52),
@@ -402,6 +472,13 @@ const LOOKS := {
 		"top": 2.3,
 		"fly": 0.5,
 	},
+	Look.FROST_SPECTER: {
+		"color": Color(0.82, 0.95, 1.0),
+		"aura_color": Color(0.55, 0.9, 1.0),
+		"scale": 1.0,
+		"top": 2.3,
+		"fly": 0.5,
+	},
 	Look.SKELETON_WARRIOR: {
 		"scene": SKELETON_WARRIOR,
 		"scale": CHARACTER_SCALE,
@@ -450,7 +527,99 @@ const LOOKS := {
 		"tint": Color(0.62, 0.72, 0.82),
 		"aura": ECHO_AURA_COLOR,
 	},
+	# The caravan's companions: the Knight, each with its own gear and colour.
+	Look.BRENA: {
+		"scene": KNIGHT,
+		"scale": CHARACTER_SCALE,
+		"top": 2.0,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/1H_Sword_Offhand",
+			"Rig/Skeleton3D/handslot_l/Badge_Shield",
+			"Rig/Skeleton3D/handslot_l/Rectangle_Shield",
+			"Rig/Skeleton3D/handslot_l/Round_Shield",
+			"Rig/Skeleton3D/handslot_l/Spike_Shield",
+			"Rig/Skeleton3D/handslot_r/1H_Sword",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(1.0, 0.62, 0.55),
+	},
+	Look.TADEO: {
+		"scene": KNIGHT,
+		"scale": CHARACTER_SCALE,
+		"top": 1.9,
+		"hide": [
+			"Rig/Skeleton3D/head/Knight_Helmet",
+			"Rig/Skeleton3D/handslot_l/Badge_Shield",
+			"Rig/Skeleton3D/handslot_l/Rectangle_Shield",
+			"Rig/Skeleton3D/handslot_l/Round_Shield",
+			"Rig/Skeleton3D/handslot_l/Spike_Shield",
+			"Rig/Skeleton3D/handslot_r/2H_Sword",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(0.65, 0.95, 0.6),
+	},
+	Look.ULMA: {
+		"scene": KNIGHT,
+		"scale": CHARACTER_SCALE,
+		"top": 2.0,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/1H_Sword_Offhand",
+			"Rig/Skeleton3D/handslot_l/Badge_Shield",
+			"Rig/Skeleton3D/handslot_l/Round_Shield",
+			"Rig/Skeleton3D/handslot_l/Spike_Shield",
+			"Rig/Skeleton3D/handslot_r/2H_Sword",
+		],
+		"anims": CHARACTER_ANIMS,
+		"tint": Color(0.78, 0.8, 0.86),
+	},
+	# The jungle (the v2).
+	Look.FROG: {
+		"color": Color(0.15, 0.55, 0.95),
+		"spot_color": Color(0.08, 0.08, 0.1),
+		"belly_color": Color(1.0, 0.8, 0.15),
+		"scale": 1.4,
+		"top": 1.1,
+	},
+	Look.SNAKE: {
+		"color": Color(0.3, 0.6, 0.15),
+		"dark_color": Color(0.16, 0.36, 0.08),
+		"eye_color": Color(1.0, 0.85, 0.1),
+		"scale": 1.0,
+		"top": 1.3,
+	},
+	Look.MONKEY: {
+		"color": Color(0.42, 0.28, 0.16),
+		"face_color": Color(0.85, 0.68, 0.5),
+		"scale": 1.0,
+		"top": 1.5,
+	},
+	# The Jaguar sombrío, the jungle's boss: a big black wolf-shaped cat with glowing rosettes.
+	Look.JAGUAR: {
+		"color": Color(0.1, 0.09, 0.12),
+		"dark_color": Color(0.05, 0.05, 0.07),
+		"eye_color": Color(0.55, 1.0, 0.3),
+		"spot_color": Color(0.85, 0.65, 0.15),
+		"scale": 1.75,
+		"top": 2.4,
+	},
+	Look.TRAP_PLANT: {
+		"stem_color": Color(0.1, 0.42, 0.12),
+		"leaf_color": Color(0.12, 0.6, 0.18),
+		"head_color": Color(0.85, 0.15, 0.35),
+		"inner_color": Color(0.35, 0.05, 0.1),
+		"scale": 1.3,
+		"top": 1.9,
+	},
+	Look.TROPICAL_MUSHROOM: {
+		"cap_color": Color(1.0, 0.5, 0.1),
+		"stem_color": Color(0.98, 0.92, 0.8),
+		"scale": 1.4,
+		"top": 1.6,
+	},
 }
+
+## Map only: how see-through a group's figure is while it can't start a battle.
+const FADED_TRANSPARENCY := 0.5
 
 @export var look := Look.HERO
 
@@ -493,23 +662,30 @@ func _ready() -> void:
 	_top = data.top
 	if data.has("scene"):
 		_build_character(data)
-	elif look == Look.BAT:
+	elif look in [Look.BAT, Look.CRYPT_BAT]:
 		_build_bat(data)
-	elif look == Look.MUSHROOM:
+	elif look in [Look.MUSHROOM, Look.POISON_MUSHROOM, Look.CAVE_MUSHROOM,
+			Look.TROPICAL_MUSHROOM]:
 		_build_mushroom(data)
-	elif look == Look.WOLF or look == Look.WOLF_CUB:
+	elif look in [Look.WOLF, Look.WOLF_CUB, Look.JAGUAR]:
 		_build_wolf(data)
 	elif look == Look.CHICKEN:
 		_build_chicken(data)
 	elif look == Look.GOBLIN:
 		_build_goblin(data)
-	elif look == Look.PLANT:
+	elif look == Look.PLANT or look == Look.TRAP_PLANT:
 		_build_plant(data)
+	elif look == Look.FROG:
+		_build_frog(data)
+	elif look == Look.SNAKE:
+		_build_snake(data)
+	elif look == Look.MONKEY:
+		_build_monkey(data)
 	elif look in [Look.MUD_GOLEM, Look.STONE_GOLEM, Look.MINI_GOLEM]:
 		_build_golem(data)
 	elif look == Look.SPIDER:
 		_build_spider(data)
-	elif look == Look.SPECTER:
+	elif look in [Look.SPECTER, Look.FROST_SPECTER]:
 		_build_specter(data)
 	elif look == Look.BOARD:
 		_build_board(data)
@@ -554,9 +730,28 @@ func set_walking(on: bool) -> void:
 		_anim.play(anim_name, BLEND_TIME, WALK_SPEED if on else 1.0)
 
 
+## Map only: half see-through (a group that can't start a battle now: fled from, or an
+## Incienso burning), or whole again. Every mesh of the figure.
+func set_faded(on: bool) -> void:
+	for mi in _meshes:
+		mi.transparency = FADED_TRANSPARENCY if on else 0.0
+
+
+## Map only: true for the figures that hop as they walk (the slimes).
+func hops() -> bool:
+	return look in [Look.SLIME, Look.RED_SLIME, Look.METAL_SLIME]
+
+
+## Map only: one small hop (a slime walking); not awaited.
+func play_hop() -> void:
+	_hop()
+
+
 ## Hero only: shows the hand meshes of the weapon and shield worn (Equipment ids, ""
 ## for none) and hides the rest. A helmet shows the model's helmet mesh tinted with its
-## color, with horns for the Yelmo de bruma. Armor does not change the model. Others ignore it.
+## color, with horns for the Yelmo de bruma. The weapon's mesh takes its Equipment.tint() (the
+## Espada del alba is pale gold); the shield's mesh takes its Equipment.tint() too (the Escudo
+## de medallas is gold). Armor does not change the model. Others ignore it.
 func set_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> void:
 	if look != Look.HERO or _model == null:
 		return
@@ -564,6 +759,34 @@ func set_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> voi
 	for hand: String in shown:
 		for child in _model.get_node(hand).get_children():
 			(child as Node3D).visible = child.name == shown[hand] and shown[hand] != ""
+	# The weapon's own tint (the Espada del alba): every hand mesh back to its imported
+	# materials first, so a tint never stays on the next weapon that uses the mesh.
+	var right := _model.get_node(HAND_R)
+	for node in right.find_children("*", "MeshInstance3D", true, false):
+		if node.name != Equipment.STICK_MESH:
+			for i in (node as MeshInstance3D).mesh.get_surface_count():
+				(node as MeshInstance3D).set_surface_override_material(i, null)
+	var weapon_tint := Equipment.tint(weapon_id)
+	var weapon_mesh := Equipment.mesh(weapon_id)
+	if weapon_tint != Color.WHITE and weapon_mesh != "" and right.has_node(weapon_mesh):
+		var weapon := right.get_node(weapon_mesh)
+		if weapon is MeshInstance3D:
+			_tint_mesh(weapon as MeshInstance3D, weapon_tint)
+		else:
+			_tint(weapon as Node3D, weapon_tint)
+	# The shield's own tint (the Escudo de medallas is gold), the same way.
+	var left := _model.get_node(HAND_L)
+	for node in left.find_children("*", "MeshInstance3D", true, false):
+		for i in (node as MeshInstance3D).mesh.get_surface_count():
+			(node as MeshInstance3D).set_surface_override_material(i, null)
+	var shield_tint := Equipment.tint(shield_id)
+	var shield_mesh := Equipment.mesh(shield_id)
+	if shield_tint != Color.WHITE and shield_mesh != "" and left.has_node(shield_mesh):
+		var shield := left.get_node(shield_mesh)
+		if shield is MeshInstance3D:
+			_tint_mesh(shield as MeshInstance3D, shield_tint)
+		else:
+			_tint(shield as Node3D, shield_tint)
 	var helmet := _model.get_node(HELMET_PATH) as MeshInstance3D
 	helmet.visible = helmet_id != ""
 	if Equipment.has_horns(helmet_id) and _horns == null:
@@ -958,6 +1181,78 @@ func _build_wolf(data: Dictionary) -> void:
 			_add_blob(root, LEG_PROFILE, 4, data.dark_color, Vector3(x, 0.0, z))
 	_add_mesh(root, _cone(0.07, 0.45), data.color, Vector3(0, 0.8, 0.72))  # tail
 	(root.get_child(-1) as Node3D).rotation_degrees.x = 55.0
+	if data.has("spot_color"):  # the Jaguar sombrío: glowing rosettes on its back
+		for spot in [Vector3(-0.12, 0.9, 0.35), Vector3(0.14, 0.92, 0.5), Vector3(0.0, 0.95, 0.1),
+				Vector3(-0.16, 0.85, 0.72), Vector3(0.12, 0.88, -0.1)]:
+			_add_mesh(root, _sphere(0.055), data.spot_color, spot)
+			var mat := _materials.back() as StandardMaterial3D
+			mat.emission_enabled = true
+			mat.emission = data.spot_color * 0.6
+
+
+## A poison dart frog: a squat faceted body, a yellow belly, black spots, two big eyes on
+## top and four bent legs, facing -Z. About 0.55 m tall before the look's scale (1.4); it hops like the slimes.
+func _build_frog(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	_add_blob(root, SLIME_PROFILE, SLIME_SEGMENTS, data.color, Vector3(0, 0.08, 0),
+		Vector3.ZERO, Vector3(0.55, 0.38, 0.62))  # body
+	_add_blob(root, SLIME_PROFILE, SLIME_SEGMENTS, data.belly_color, Vector3(0, 0.04, -0.12),
+		Vector3.ZERO, Vector3(0.42, 0.22, 0.42))  # belly
+	for spot in [Vector3(-0.14, 0.33, 0.1), Vector3(0.16, 0.3, 0.02), Vector3(0.0, 0.36, 0.22)]:
+		_add_mesh(root, _sphere(0.06), data.spot_color, spot)
+	for x in [-0.15, 0.15]:
+		_add_mesh(root, _sphere(0.1), data.color, Vector3(x, 0.42, -0.2))  # eye bump
+		_add_mesh(root, _sphere(0.065), Color(0.05, 0.05, 0.05), Vector3(x, 0.45, -0.27))
+		_add_blob(root, LEG_PROFILE, 4, data.color, Vector3(x * 2.0, 0.0, 0.18),
+			Vector3(0, 0, 40.0 if x > 0 else -40.0), Vector3(1.2, 0.6, 1.2))  # back leg
+		_add_blob(root, LEG_PROFILE, 4, data.color, Vector3(x * 1.6, 0.0, -0.2),
+			Vector3.ZERO, Vector3(0.8, 0.5, 0.8))  # front leg
+
+
+## A vine snake: a chain of shrinking green spheres coiled on the ground that rises into a
+## raised neck and a wedge head with yellow eyes, facing -Z. About 1.1 m tall.
+func _build_snake(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	var coil := 10
+	for i in coil:
+		var angle := TAU * i / coil * 1.3
+		var radius := 0.32 - i * 0.012
+		var color: Color = data.color if i % 2 == 0 else data.dark_color
+		_add_mesh(root, _sphere(0.13 - i * 0.004),
+			color, Vector3(cos(angle) * radius, 0.12, sin(angle) * radius + 0.15))
+	for i in 4:  # the neck rises toward the front
+		_add_mesh(root, _sphere(0.12 - i * 0.008), data.color,
+			Vector3(0, 0.25 + i * 0.18, -0.05 - i * 0.07))
+	_add_blob(root, WOLF_HEAD_PROFILE, 5, data.color, Vector3(0, 0.98, -0.32),
+		Vector3(-100, 0, 0), Vector3(0.85, 0.85, 0.85))  # head
+	for x in [-0.07, 0.07]:
+		_add_mesh(root, _sphere(0.05), data.eye_color, Vector3(x * 1.5, 1.08, -0.55))
+	_add_mesh(root, _cone(0.015, 0.12), Color(0.9, 0.1, 0.15), Vector3(0, 0.95, -0.6))  # tongue
+	(root.get_child(-1) as Node3D).rotation_degrees.x = -90.0
+
+
+## A howler monkey: a round brown body, a light face with dark eyes, long arms and a curled
+## tail, sitting up, facing -Z. About 1.3 m tall.
+func _build_monkey(data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	_body.add_child(root)
+	_add_blob(root, SLIME_PROFILE, SLIME_SEGMENTS, data.color, Vector3(0, 0.25, 0),
+		Vector3.ZERO, Vector3(0.42, 0.62, 0.4))  # body
+	_add_mesh(root, _sphere(0.26), data.color, Vector3(0, 1.0, -0.02))  # head
+	_add_mesh(root, _sphere(0.17), data.face_color, Vector3(0, 0.97, -0.17))  # face
+	for x in [-0.07, 0.07]:
+		_add_mesh(root, _sphere(0.035), Color(0.05, 0.05, 0.05), Vector3(x, 1.03, -0.3))
+		_add_mesh(root, _sphere(0.07), data.color, Vector3(x * 3.4, 1.1, -0.02))  # ear
+	for x in [-0.25, 0.25]:
+		_add_mesh(root, _cylinder(0.06, 0.7), data.color, Vector3(x, 0.52, -0.08))  # arm
+		_add_mesh(root, _sphere(0.08), data.face_color, Vector3(x, 0.15, -0.08))  # hand
+	_add_mesh(root, _cylinder(0.045, 0.7), data.color, Vector3(0, 0.45, 0.42))  # tail
+	(root.get_child(-1) as Node3D).rotation_degrees.x = 60.0
 
 
 ## A chicken: a white round body with a red comb and wattle, an orange beak, two thin
@@ -1111,7 +1406,7 @@ func _start_idle() -> void:
 		_start_float()
 	else:
 		var gentle := look in [Look.WOLF, Look.MUD_GOLEM, Look.STONE_GOLEM, Look.SPIDER,
-			Look.CAT, Look.WOLF_CUB, Look.MINI_GOLEM]
+			Look.CAT, Look.WOLF_CUB, Look.MINI_GOLEM, Look.SNAKE, Look.MONKEY, Look.JAGUAR]
 		_start_bounce(0.4 if gentle else 1.0)
 
 

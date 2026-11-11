@@ -88,21 +88,22 @@ npcs = [{
 "pos": Vector3(-20.5, 0, 0.5),
 "yaw": 90.0
 }]
-formations = [["esqueleto_guerrero"], ["esqueleto_picaro"], ["esqueleto_mago"], ["esqueleto_picaro"], ["esqueleto_guerrero", "esqueleto_mago"], ["esqueleto_picaro", "esqueleto_mago"]]
+formations = [["esqueleto_guerrero"], ["esqueleto_picaro"], ["esqueleto_mago"], ["esqueleto_picaro"], ["esqueleto_guerrero", "esqueleto_mago"], ["esqueleto_picaro", "esqueleto_mago"], ["murcielago_cripta"], ["espectro_escarcha"]]
 start_formations = [["esqueleto_guerrero"], ["esqueleto_picaro"], ["esqueleto_mago"]]
 start_pos = Vector3(0, 0, 20)
 start_radius = 26.0
-encounter_grace = 4.0
-encounter_chance = 0.04
+monster_count = 8
 exit_level = 17
 music = "castle"
 village_music = "village"
+ambient = "castle"
 sky_top = Color(0.26, 0.24, 0.36, 1)
 haze = Color(0.42, 0.4, 0.5, 1)
 fog_density = 0.022
 sun_color = Color(0.78, 0.75, 0.92, 1)
 sun_energy = 0.4
 backdrop = "castillo"
+particles = "mist"
 layout = PackedStringArray("#################", "#T..#...S...#..C#", "#...#.......#...#", "#...###.#.###...#", "#.......#.......#", "###.#########.###", "#...#...T...#...#", "#.C.#.......#...#", "#.....##.##.....#", "#T....#...#....T#", "########.########", "#####.......#####", "#####.......#####", "#####.......#####", "#################")
 rock_color = Color(0.44, 0.43, 0.48, 1)
 floor_color = Color(0.34, 0.33, 0.36, 1)
@@ -111,3 +112,4 @@ mist_banks = 10
 stairs_up = "castillo_trono"
 autoplay_route = Array[Vector3]([Vector3(0, 0, 20), Vector3(-6, 0, 16.8), Vector3(6, 0, 16.8), Vector3(7.5, 0, 17.8), Vector3(0, 0, 16), Vector3(0, 0, 12), Vector3(0, 0, 0), Vector3(12, 0, 0), Vector3(12, 0, 4), Vector3(20, 0, 4), Vector3(20, 0, -12), Vector3(24, 0, -16), Vector3(24, 0, -20), Vector3(27, 0, -24), Vector3(24, 0, -20), Vector3(20, 0, -12), Vector3(4, 0, -12), Vector3(4, 0, -20), Vector3(-4, 0, -20), Vector3(-4, 0, -12), Vector3(-20, 0, -12), Vector3(-20, 0, -4), Vector3(-23, 0, 0), Vector3(-20, 0, -4), Vector3(-20, 0, -12), Vector3(-4, 0, -12), Vector3(-4, 0, -20), Vector3(0, 0, -20), Vector3(0, 0, -24)])
 autoplay_boss_level = 17
+decor = [[Vector3(-3.5, 0, 21), 0.0, "campfire"], [Vector3(-12, 0, 17), 30.0, "log_stack"]]

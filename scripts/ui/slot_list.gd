@@ -3,7 +3,9 @@ class_name SlotList extends VBoxContainer
 ## has a row per slot: "Ranura n" and, under it, SaveData.summary_line() of its save
 ## (" · terminada" once the game is finished), "Vacía" or "Partida dañada". LOAD
 ## (Continuar) only lets usable saves be picked; NEW (Nueva partida) takes any slot and
-## asks first, focus on "No", when it holds a usable save. Emits chosen(slot) once a slot is
+## asks first, focus on "No", when it holds a usable save. On a finished game
+## (SaveData.is_finished()) LOAD opens a page with "Continuar" and "Partida nueva +", which asks
+## first, focus on "No", and emits ng_plus_chosen(slot). Emits chosen(slot) once a slot is
 ## settled and closed on Volver. back() is what Esc and a tap outside do. MANAGE (the title's
 ## Opciones, Exportar o importar partida) opens a page per slot with Exportar and Importar,
 ## and emits changed when an import filled the slot.
@@ -12,6 +14,8 @@ signal chosen(slot: int)
 signal closed
 ## A slot was filled from a file (MANAGE).
 signal changed
+## A finished game's slot asks for a Partida nueva + on it (LOAD).
+signal ng_plus_chosen(slot: int)
 
 enum Mode { LOAD, NEW, MANAGE }
 
@@ -26,6 +30,11 @@ const NEW_CONFIRM := "La partida de la ranura %d se borrará.\n¿Empezar una nue
 const NEW_YES := "Sí, empezar de nuevo"
 const IMPORT_CONFIRM := "La partida de la ranura %d se sustituirá\npor la del archivo. ¿Seguir?"
 const IMPORT_YES := "Sí, sustituir"
+## LOAD on a finished game: its page and the question before a Partida nueva +.
+const CYCLE_CONTINUE := "Continuar"
+const NG_PLUS := "Partida nueva +"
+const NG_PLUS_CONFIRM := "Empiezas de nuevo la historia con tu héroe,\nsu equipo y su oro. Los monstruos serán\nmás fuertes. ¿Seguro?"
+const NG_PLUS_YES := "Sí, Partida nueva +"
 const IMPORTED_TEXT := "Partida importada en la ranura %d."
 const SAVE_FAILED_TEXT := "No se pudo guardar la partida."
 ## Messages wrap past this width.
@@ -56,6 +65,9 @@ var _confirm_no: Button
 var _confirm_action: Callable
 ## The page "No" goes back to.
 var _confirm_back := "list"
+## The finished game's page: its line and "Continuar" (focused first).
+var _cycle_line: Label
+var _cycle_continue: Button
 
 
 func setup(audio: AudioDirector, transfer: SaveTransfer = null) -> void:
@@ -103,6 +115,20 @@ func _ready() -> void:
 	_message.custom_minimum_size.x = MESSAGE_WIDTH
 	_message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	actions.add_child(_message)
+	var cycle := _page_box("cycle")
+	_cycle_line = _label("", Color.WHITE)
+	_cycle_line.add_theme_font_size_override("font_size", UiStyle.TEXT_SIZE)
+	cycle.add_child(_cycle_line)
+	_cycle_continue = _button(CYCLE_CONTINUE)
+	_cycle_continue.pressed.connect(func() -> void: chosen.emit(_slot))
+	cycle.add_child(_cycle_continue)
+	var plus := _button(NG_PLUS)
+	plus.pressed.connect(func() -> void:
+		_ask(NG_PLUS_CONFIRM, NG_PLUS_YES, func() -> void: ng_plus_chosen.emit(_slot)))
+	cycle.add_child(plus)
+	var cycle_back := _button("Volver")
+	cycle_back.pressed.connect(back)
+	cycle.add_child(cycle_back)
 
 
 ## Shows the slots for p_mode, read again from the files (a game may have saved since).
@@ -149,7 +175,8 @@ static func _detail(info: Dictionary) -> String:
 	var save: Dictionary = info.save
 	var text := SaveData.summary_line(save)
 	var story: Variant = save.get("story")
-	if story is Dictionary and story.get("finished", false) == true:
+	if story is Dictionary and story.get("finished", false) == true \
+			and not SaveData.is_caravan(save):
 		text += FINISHED_TEXT
 	return text
 
@@ -161,7 +188,10 @@ func _on_row(slot: int) -> void:
 	var usable: bool = _infos[slot - 1].kind == SaveStore.SlotKind.USABLE
 	match mode:
 		Mode.LOAD:
-			chosen.emit(slot)
+			if SaveData.is_finished(_infos[slot - 1].save):
+				_show_cycle()
+			else:
+				chosen.emit(slot)
 		Mode.NEW:
 			if usable:
 				_ask(NEW_CONFIRM % slot, NEW_YES, func() -> void: chosen.emit(slot))
@@ -197,6 +227,18 @@ func _focus_page(page: String) -> void:
 		_focus_row(_slot)
 	elif page == "actions":
 		_focus(_import_button if _export_button.disabled else _export_button)
+	elif page == "cycle":
+		_focus(_cycle_continue)
+
+
+## A finished game: "Continuar" (the game as it is, the world after the ending) or
+## "Partida nueva +" (asked first, focus on "No"); "Continuar" is focused.
+func _show_cycle() -> void:
+	_sfx(SfxLibrary.ACCEPT)
+	_title.text = SLOT_TEXT % _slot
+	_cycle_line.text = _detail(_infos[_slot - 1])
+	_show("cycle")
+	_focus(_cycle_continue)
 
 
 ## The chosen slot's page: its line, Exportar only with a usable save, and message.

@@ -1,8 +1,9 @@
 class_name CutscenePlayer extends Node
 ## Plays a Cutscene on the current World: the controls are locked from the first step
 ## to the last (World.begin_cutscene() / end_cutscene()), the figures walk and turn, the
-## camera glides, Enter or a tap moves the dialogue on. Game owns it and gives it the
-## things only Game can do: the fade, setting a world flag and building another map
+## camera glides, Enter or a tap moves the dialogue on. A "music" step also silences the
+## ambient. Game owns it and gives it the things only Game can do: the fade, setting a
+## world flag and building another map
 ## ("travel"). With `-- --autoplay` every step is printed (the dialogue prints its lines).
 
 ## Walking speed of the figures in a cutscene, metres per second.
@@ -77,6 +78,7 @@ func _play_step(step: Array) -> void:
 		"music":
 			if audio:
 				audio.play_music(step[1])
+				audio.stop_ambient()  # Game brings it back when the scene ends
 		"sfx":
 			if audio:
 				audio.play_sfx(step[1])

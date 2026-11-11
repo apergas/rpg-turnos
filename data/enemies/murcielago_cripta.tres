@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "murcielago_cripta"
+display_name = "Murciélago de la cripta"
+max_hp = 56
+hp = 56
+attack = 38
+defense = 28
+speed = 22
+map_roam = 2.5
+map_speed = 1.6
+exp_reward = 44
+gold_reward = 42
+ai_weights = {
+"attack": 90,
+"stagger": 10
+}
+weak = Array[String](["thunder"])
+drops = {
+"antidote": 0.15
+}

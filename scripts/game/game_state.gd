@@ -22,6 +22,14 @@ var loadout := Loadout.new()
 var bag_equipment: Array[String] = []
 ## Ids of the chests already opened (Chests.CHESTS keys).
 var opened_chests: Array[String] = []
+## Small medals taken (Medals ids, in the order found), the Coleccionista's prizes given
+## so far (Medals.PRIZES in order) and whether he has spoken to the hero. A Partida nueva +
+## keeps them.
+var medals: Array[String] = []
+var medal_prizes := 0
+var collector_met := false
+## Rounds of the Partida nueva + (NgPlus): 0 in a first game, 1 in the first one, and so on.
+var ng_plus := 0
 ## Enemy ids met in battle (EnemyLibrary ids), for the bestiary.
 var seen_enemies: Array[String] = []
 ## Enemy ids beaten in a won battle (EnemyLibrary ids), for the bestiary's cards.
@@ -30,6 +38,9 @@ var defeated_enemies: Array[String] = []
 var well_charge := {}
 ## The creature fighting beside the hero (Allies id, "" for none).
 var ally_id := ""
+## The HP the Slime de Metal had when it last got away (it ran, or the hero fled): its next
+## battle starts with them. 0: none (it was beaten, or never fought). Saved.
+var metal_slime_hp := 0
 ## Progress through the world: flag -> true. A boss sets its enemy id when defeated
 ## ("rey_slime" lifts the fog of the meadow's north exit); ZoneData exits name the flag
 ## that opens them.
@@ -72,6 +83,36 @@ func _init(hero_data: Combatant) -> void:
 func heal_full() -> void:
 	hero.hp = hero.max_hp
 	hero.mp = hero.max_mp
+
+
+## The Slime de Metal of a battle about to start gets metal_slime_hp: enemies holds data,
+## so it is replaced by a copy. Returns the HP it starts with (0: none kept).
+func give_metal_slime_hp(enemies: Array[Combatant]) -> int:
+	if metal_slime_hp <= 0:
+		return 0
+	for i in enemies.size():
+		if enemies[i].id == EnemyLibrary.METAL_SLIME:
+			var metal := enemies[i].duplicate() as Combatant
+			metal.hp = mini(metal_slime_hp, metal.max_hp)
+			enemies[i] = metal
+			return metal.hp
+	return 0
+
+
+## After a battle (outcome: BattleEngine.State) with the Slime de Metal: beaten, it forgets
+## its HP; still standing after a FLED one (it ran, or the hero did), it keeps them for the
+## next (full HP: nothing to keep). Returns the HP kept now (0: none).
+func keep_metal_slime_hp(enemies: Array[Combatant], outcome: int) -> int:
+	for enemy in enemies:
+		if enemy.id != EnemyLibrary.METAL_SLIME:
+			continue
+		if outcome == BattleEngine.State.WON:
+			metal_slime_hp = 0
+		elif outcome == BattleEngine.State.FLED and enemy.is_alive():
+			metal_slime_hp = enemy.hp if enemy.hp < enemy.max_hp else 0
+			return metal_slime_hp
+		return 0
+	return 0
 
 
 ## The next thing the story asks: the village quest while it lasts, then the chapter's goal.
@@ -211,13 +252,51 @@ func needs_rest() -> bool:
 	for skill in hero.skills:
 		if skill.kind == Skill.HEAL:
 			heal_cost = maxi(heal_cost, skill.mp_cost)
-	return inventory.count(Inventory.POTION) == 0 and hero.mp < heal_cost * 2
+	var potions := inventory.count(Inventory.POTION) + inventory.count(Inventory.BIG_POTION)
+	return potions == 0 and hero.mp < heal_cost * 2
 
 
 ## True once the Señor de la Niebla is beaten: the adventure is over (the ending
 ## cutscene and the credits follow; story.finished is set after them).
 func is_finished() -> bool:
 	return has_flag(FINAL_BOSS)
+
+
+## The level cap now: the v1's 20, Leveling.MAX_LEVEL once in the caravan.
+func level_cap() -> int:
+	return Leveling.MAX_LEVEL if in_caravan() else Leveling.V1_MAX_LEVEL
+
+
+## Copies level_cap() into the hero (call after the flags change, a load, a battle start).
+func sync_level_cap() -> void:
+	hero.level_cap = level_cap()
+
+
+## The caravan (the v2) comes to Villaclaro once the v1 is over: the ending's credits seen,
+## a first round (no Partida nueva +), and the hero has not left with it yet.
+func can_meet_caravan() -> bool:
+	return story.finished and ng_plus == 0 and not in_caravan()
+
+
+## The hero joins the caravan: the v1's creature stays behind, an open portal closes and the
+## caravan is the safe place from now on (Ala de viaje, defeat). The companion comes later.
+func leave_for_caravan() -> void:
+	world_flags[StoryState.CARAVAN_FLAG] = true
+	ally_id = ""
+	close_portal()
+	town_zone = "caravana"
+	zone_id = "caravana"
+	sync_level_cap()
+
+
+## True once the hero has left Villaclaro with the caravan (the v2).
+func in_caravan() -> bool:
+	return has_flag(StoryState.CARAVAN_FLAG)
+
+
+## The caravan's stretch of road (StoryState.tramo()): 0 before the v2.
+func tramo() -> int:
+	return StoryState.tramo(world_flags)
 
 
 ## The story chapter now (StoryState.Chapter).

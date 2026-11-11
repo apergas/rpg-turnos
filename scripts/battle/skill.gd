@@ -15,7 +15,8 @@ const THUNDER := "thunder"
 
 @export var id := ""
 @export var display_name := ""
-## What it does, in one short sentence for the menus ("Cura 30 PV."). Only the hero's say it.
+## What it does, in one short sentence ("Cura 30 PV."), shown only on the pause menu's
+## Estado page. Only the hero's spells have one.
 @export var description := ""
 @export var mp_cost := 0
 @export var power := 0

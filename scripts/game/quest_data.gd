@@ -17,6 +17,9 @@ enum Kind { HUNT, GATHER, DELIVER, FIND }
 ## Where it is offered: a zone id and a figure of that zone.
 @export var zone := ""
 @export var giver := ""
+## A world flag that must be set before the quest is offered ("" for none). A quest
+## already taken goes on whatever happens to the flag.
+@export var needs := ""
 ## Who hears the report ("" : it ends on the spot, when the goal is reached).
 @export var turn_in_zone := ""
 @export var turn_in := ""
