@@ -17,13 +17,14 @@ const FOREST := "forest"
 const MINE := "mine"
 const CASTLE := "castle"
 const JUNGLE := "jungle"
+const DESERT := "desert"
 const BATTLE := "battle"
 const BOSS := "boss"
 const VICTORY := "victory"
 const DEFEAT := "defeat"
 const CARAVAN := "caravan"
 const IDS: Array[String] = [TITLE, MAP, VILLAGE, FOREST, MINE, CASTLE, BATTLE, BOSS, VICTORY,
-	DEFEAT, CARAVAN, JUNGLE]
+	DEFEAT, CARAVAN, JUNGLE, DESERT]
 
 const LEAD_VOLUME := 0.2
 const BASS_VOLUME := 0.3
@@ -137,6 +138,20 @@ const TRACKS := {
 			"k/2 k/2 h/4 s/4 s/4", "k/2 h/2 h/2 k/2 s/4 h/4", "k/2 h/2 k/2 h/2 s/4 h/4",
 			"k/2 h/2 h/2 k/2 s/4 h/4", "k/4 s/4 k/4 s/2 s/2",
 		],
+	},
+	# The desert: D Phrygian dominant, slow, a hand drum.
+	DESERT: {
+		"bpm": 84, "loop": true, "duty": 0.125,
+		"lead": [
+			"D5/4 D#5/2 F#5/2 G5/4 A5/4", "A#5/6 A5/2 G5/8", "F#5/4 G5/4 A5/4 G5/2 F#5/2",
+			"D#5/6 D5/2 r/8", "A5/4 A#5/4 C6/4 A#5/4", "A5/6 G5/2 F#5/8",
+			"G5/4 F#5/4 D#5/4 F#5/4", "D5/12 r/4",
+		],
+		"bass": [
+			"D3/8 A2/8", "G2/8 D3/8", "D3/8 A2/8", "D#3/8 D3/8",
+			"C3/8 G2/8", "D3/8 A2/8", "G2/8 D#3/8", "D3/12 r/4",
+		],
+		"drums": ["k/4 r/2 k/2 s/4 r/4", "k/4 h/2 h/2 s/4 h/4"],
 	},
 	# The castle: a slow march in E minor.
 	CASTLE: {
