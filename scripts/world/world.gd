@@ -925,6 +925,20 @@ func show_dialogue(speaker: String, lines: Array[String]) -> void:
 	await freeze(false)
 
 
+## A question with buttons (ChoiceWindow) over the map, frozen while it lasts; returns the
+## index chosen. On autoplay it opens nothing and takes the first option.
+func ask(question: String, options: Array[String], focus := 0) -> int:
+	if _autoplay:
+		print("Pregunta: %s -> %s" % [question, options[0]])
+		return 0
+	freeze(true)
+	var window := ChoiceWindow.new()
+	_ui.add_child(window)
+	var chosen: int = await window.ask(question, options, focus)
+	await freeze(false)
+	return chosen
+
+
 ## Cutscenes: the map stops answering the player (frozen, which also hides the prompts,
 ## the portal's too), the status window, the map square and the notice go, and the hero
 ## stops where he is, not walking on his own, until end_cutscene().
