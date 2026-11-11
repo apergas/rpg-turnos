@@ -10,6 +10,9 @@ class_name WorldStage extends RefCounted
 ## The Medieval Hexagon buildings are miniatures (a house is 0.8 m wide, 0.9 m tall).
 const BUILDING_SCALE := 3.5
 const TREE_SHADER := preload("res://shaders/tree.gdshader")
+## Side of the squares the decoration is merged by (metres): a map holds a few chunks, so the
+## whole decoration costs a few draws.
+const DECOR_CHUNK := 48.0
 ## Models named by ZoneData (buildings, tree_models, clump_model).
 const MODELS := {
 	"house_A_red": preload("res://assets/medieval/building_home_A_red.gltf"),
@@ -367,14 +370,15 @@ static func _add_bushes(root: Node3D, zone: ZoneData) -> void:
 	LowPoly.add_multimesh(root, LowPoly.bush_mesh(), bushes, material)
 
 
-## The Kenney decoration of zone (Decor, NatureModels): one MultiMesh per piece through the
-## trees' shader, a collider for each solid piece (always, whatever the quality, so the map
-## stays the same), a flame on each campfire. With half_density (low quality) only every
-## other scattered piece without a collider is drawn.
+## The Kenney decoration of zone (Decor, NatureModels): the pieces merged into one mesh per
+## DECOR_CHUNK-metre chunk (one surface, vertex colours, through the trees' shader), so the
+## whole decoration is a handful of draws; a collider for each solid piece (always, whatever
+## the quality, so the map stays the same), a flame on each campfire. With half_density (low
+## quality) only every other scattered piece without a collider is drawn.
 static func _add_decor(root: Node3D, zone: ZoneData) -> void:
 	for line in Decor.problems(zone):
 		push_warning(line)
-	var by_id := {}
+	var chunks := {}  # Vector2i → [{"id", "xform"}]
 	var soft := 0
 	for piece in Decor.placed(zone) + Decor.scattered(zone):
 		var solid := Decor.is_solid(piece.id)
@@ -382,18 +386,26 @@ static func _add_decor(root: Node3D, zone: ZoneData) -> void:
 			soft += 1
 			if soft % 2 == 0:
 				continue
-		if not by_id.has(piece.id):
-			by_id[piece.id] = [] as Array[Transform3D]
 		var xform := Transform3D(Basis(Vector3.UP, piece.yaw).scaled(Vector3.ONE * piece.scale),
 			piece.pos)
-		(by_id[piece.id] as Array[Transform3D]).append(xform)
+		var key := Vector2i(floori(piece.pos.x / DECOR_CHUNK), floori(piece.pos.z / DECOR_CHUNK))
+		if not chunks.has(key):
+			chunks[key] = []
+		(chunks[key] as Array).append({"id": piece.id, "xform": xform})
 		if solid:
 			_add_decor_collider(root, piece, NatureModels.mesh(piece.id, zone.decor_green))
 		if Decor.KINDS[piece.id].get("flame", false):
 			BattleStage.add_flame(root, piece.pos + Vector3(0, 0.35, 0), 2.2, Vector3(0, 0.8, 0),
 				not BattleStage.plain_light)
-	for id: String in by_id:
-		_add_tree_kind(root, NatureModels.mesh(id, zone.decor_green), by_id[id])
+	var material := ShaderMaterial.new()
+	material.shader = TREE_SHADER
+	material.set_shader_parameter("use_texture", false)
+	material.set_shader_parameter("use_vertex_color", true)
+	for key: Vector2i in chunks:
+		var instance := MeshInstance3D.new()
+		instance.mesh = NatureModels.merged(chunks[key], zone.decor_green)
+		instance.material_override = material
+		root.add_child(instance)
 
 
 static func _add_decor_collider(root: Node3D, piece: Dictionary, mesh: Mesh) -> void:

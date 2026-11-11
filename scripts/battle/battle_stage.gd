@@ -212,18 +212,20 @@ static func build(root: Node3D, zone: ZoneData = null) -> void:
 	_add_backdrop_decor(root, zone)
 
 
-## The Kenney pieces of BACKDROP_DECOR for this backdrop, one MultiMesh per id, no collision.
+## The Kenney pieces of BACKDROP_DECOR for this backdrop, merged into one mesh, no collision.
 static func _add_backdrop_decor(root: Node3D, zone: ZoneData) -> void:
 	var backdrop := zone.backdrop if zone != null else "pradera"
 	var green := zone.decor_green if zone != null else NatureModels.MEADOW_GREEN
-	var by_id := {}
+	var items := []
 	for piece: Array in BACKDROP_DECOR.get(backdrop, []):
-		if not by_id.has(piece[0]):
-			by_id[piece[0]] = [] as Array[Transform3D]
-		by_id[piece[0]].append(Transform3D(
-			Basis(Vector3.UP, deg_to_rad(piece[2])).scaled(Vector3.ONE * piece[3]), piece[1]))
-	for id: String in by_id:
-		LowPoly.add_multimesh(root, NatureModels.mesh(id, green), by_id[id])
+		items.append({"id": piece[0], "xform": Transform3D(
+			Basis(Vector3.UP, deg_to_rad(piece[2])).scaled(Vector3.ONE * piece[3]), piece[1])})
+	if items.is_empty():
+		return
+	var instance := MeshInstance3D.new()
+	instance.mesh = NatureModels.merged(items, green)
+	instance.mesh.surface_set_material(0, NatureModels.mesh(items[0].id, green).surface_get_material(0))
+	root.add_child(instance)
 
 
 ## The jungle's ring of trees: the forest's entries as palms.

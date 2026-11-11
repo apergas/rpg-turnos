@@ -1,6 +1,6 @@
 class_name NatureModels extends RefCounted
 ## The Kenney Nature Kit decoration (assets/nature/, CC0): every Decor id is one mesh merged
-## from one or more kit models, one surface per kit material, retinted so the pieces sit with
+## from one or more kit models, ONE surface (the kit's materials baked into vertex colours), retinted so the pieces sit with
 ## the KayKit models: the kit's teal greens become the zone's green, its woods, stones and
 ## flower colours the softer PALETTE. Each kit model is centred on its own footprint and
 ## lifted out of the 0.05 its node sinks it. Cached per id and green.
@@ -63,33 +63,77 @@ const PIECES := {
 }
 
 static var _cache: Dictionary = {}
+static var _arrays: Dictionary = {}
 
 
 static func has(id: String) -> bool:
 	return PIECES.has(id)
 
 
+## The mesh of piece id: ONE surface whose vertex colours hold the kit's materials already
+## retinted (sRGB), so a piece costs one draw. Its material reads them
+## (vertex_color_use_as_albedo); WorldStage swaps it for the trees' shader.
 static func mesh(id: String, green: Color) -> ArrayMesh:
 	var key := "%s/%s" % [id, green.to_html()]
 	if not _cache.has(key):
-		var surfaces := {}  # kit material name → SurfaceTool
+		var data := {"vertices": PackedVector3Array(), "normals": PackedVector3Array(),
+			"colors": PackedColorArray(), "indices": PackedInt32Array()}
 		for piece: Array in PIECES[id]:
 			var model := (load("res://assets/nature/%s.glb" % piece[0]) as PackedScene).instantiate()
 			var center := _footprint_center(model)
 			var placing := Transform3D(Basis(Vector3.UP, piece[3]).scaled(Vector3.ONE * piece[1]),
 				piece[2]) * Transform3D(Basis.IDENTITY, Vector3(-center.x, KIT_SINK, -center.z))
-			_append(model, Transform3D.IDENTITY, placing, surfaces)
+			_append(model, Transform3D.IDENTITY, placing, green, data)
 			model.free()
+		var arrays := []
+		arrays.resize(Mesh.ARRAY_MAX)
+		arrays[Mesh.ARRAY_VERTEX] = data.vertices
+		arrays[Mesh.ARRAY_NORMAL] = data.normals
+		arrays[Mesh.ARRAY_COLOR] = data.colors
+		arrays[Mesh.ARRAY_INDEX] = data.indices
 		var result := ArrayMesh.new()
-		for name: String in surfaces:
-			(surfaces[name] as SurfaceTool).commit(result)
-			var material := StandardMaterial3D.new()
-			material.albedo_color = green if GREENS.has(name) else PALETTE.get(name, Color.WHITE)
-			material.roughness = 1.0
-			material.cull_mode = BaseMaterial3D.CULL_DISABLED
-			result.surface_set_material(result.get_surface_count() - 1, material)
+		result.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+		var material := StandardMaterial3D.new()
+		material.vertex_color_use_as_albedo = true
+		material.vertex_color_is_srgb = true
+		material.roughness = 1.0
+		material.cull_mode = BaseMaterial3D.CULL_DISABLED
+		result.surface_set_material(0, material)
 		_cache[key] = result
 	return _cache[key]
+
+
+## One mesh holding every item of items ({"id", "xform"}), each piece's own mesh moved by its
+## transform: a whole chunk of static decoration drawn at once.
+static func merged(items: Array, green: Color) -> ArrayMesh:
+	var vertices := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var colors := PackedColorArray()
+	var indices := PackedInt32Array()
+	for item: Dictionary in items:
+		var key := "%s/%s" % [item.id, green.to_html()]
+		if not _arrays.has(key):
+			_arrays[key] = mesh(item.id, green).surface_get_arrays(0)
+		var source: Array = _arrays[key]
+		var xform: Transform3D = item.xform
+		var normal_basis := xform.basis.inverse().transposed()
+		var base := vertices.size()
+		for v: Vector3 in source[Mesh.ARRAY_VERTEX]:
+			vertices.append(xform * v)
+		for n: Vector3 in source[Mesh.ARRAY_NORMAL]:
+			normals.append((normal_basis * n).normalized())
+		colors.append_array(source[Mesh.ARRAY_COLOR])
+		for i: int in source[Mesh.ARRAY_INDEX]:
+			indices.append(base + i)
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = vertices
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	arrays[Mesh.ARRAY_COLOR] = colors
+	arrays[Mesh.ARRAY_INDEX] = indices
+	var result := ArrayMesh.new()
+	result.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return result
 
 
 ## The middle of the model's meshes on the ground (x, z), in kit units.
@@ -109,25 +153,40 @@ static func _footprint_center(model: Node) -> Vector3:
 	return box.get_center()
 
 
-## Adds every surface of node's meshes (and its children's) to the SurfaceTool of its kit
-## material, with node's transform.
-static func _append(node: Node, parent: Transform3D, placing: Transform3D, surfaces: Dictionary) -> void:
+## Adds every surface of node's meshes (and its children's) to data with node's transform,
+## coloured by its kit material (the zone's green, or the PALETTE).
+static func _append(node: Node, parent: Transform3D, placing: Transform3D, green: Color,
+		data: Dictionary) -> void:
 	var here := parent
 	if node is Node3D and node.get_parent() != null:
 		here = parent * (node as Node3D).transform
 	if node is MeshInstance3D:
 		var source := (node as MeshInstance3D).mesh
+		var xform := placing * here
+		var normal_basis := xform.basis.inverse().transposed()
 		for i in source.get_surface_count():
 			var material := source.surface_get_material(i)
 			var name := material.resource_name if material != null else "_defaultMat"
-			if not surfaces.has(name):
-				var st := SurfaceTool.new()
-				st.begin(Mesh.PRIMITIVE_TRIANGLES)
-				surfaces[name] = st
-			(surfaces[name] as SurfaceTool).append_from(source, i, placing * here)
+			var color: Color = green if GREENS.has(name) else PALETTE.get(name, Color.WHITE)
+			var arrays := source.surface_get_arrays(i)
+			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+			var base: int = data.vertices.size()
+			for v in vertices:
+				data.vertices.append(xform * v)
+				data.colors.append(color)
+			for n in normals:
+				data.normals.append((normal_basis * n).normalized())
+			if arrays[Mesh.ARRAY_INDEX] != null:
+				for index: int in arrays[Mesh.ARRAY_INDEX]:
+					data.indices.append(base + index)
+			else:
+				for index in vertices.size():
+					data.indices.append(base + index)
 	for child in node.get_children():
-		_append(child, here, placing, surfaces)
+		_append(child, here, placing, green, data)
 
 
 static func clear_cache() -> void:
 	_cache.clear()
+	_arrays.clear()
