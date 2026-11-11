@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Skill" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/skill.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+id = "ventisca_cumbre"
+display_name = "Ventisca"
+mp_cost = 8
+power = 40
+color = Color(0.85, 0.95, 1, 1)
+element = "ice"
+kind = "damage"
+targets = "all"
+status = ""
+status_chance = 0.0

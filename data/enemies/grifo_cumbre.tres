@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+[ext_resource type="Script" path="res://scripts/battle/skill.gd" id="2_skill"]
+[ext_resource type="Resource" path="res://data/skills/vendaval_grifo.tres" id="3_vendaval"]
+[ext_resource type="Resource" path="res://data/skills/curar_grifo.tres" id="4_curar"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "grifo_cumbre"
+display_name = "Grifo de la cumbre"
+max_hp = 1700
+hp = 1700
+max_mp = 120
+mp = 120
+attack = 100
+defense = 60
+speed = 28
+skills = Array[ExtResource("2_skill")]([ExtResource("3_vendaval")])
+exp_reward = 1200
+gold_reward = 700
+ai_weights = {
+"attack": 55,
+"vendaval_grifo": 30,
+"stagger": 15
+}
+weak = Array[String](["thunder"])
+resist = Array[String](["ice"])
+rescue_heal = ExtResource("4_curar")
+rescue_heal_ratio = 0.35
+key_item = "mapa_montana"
+is_boss = true
