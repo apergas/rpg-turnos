@@ -1,5 +1,18 @@
 # Registro de cambios
 
+## 2.4.0 (2026)
+
+Lo que pediste tras jugar la caravana.
+
+- Las misiones de recoger dan lo que piden: un mono deja su piel siempre que la necesitas, venga solo o acompañado, y el combate dice cuántas llevas.
+- Todas las misiones de la caravana se entregan al Jefe, que entrega todas las que tengas en una sola charla.
+- Nara y el superviviente de la ciudad vuelven al campamento cuando los encuentras.
+- Más monstruos en la jungla, el desierto, la montaña y la ciudad.
+- El campamento de la caravana cambia según dónde acampa: la jungla, el desierto, la montaña o la ciudad.
+- Los árboles ya no se agujerean alrededor del héroe, y el héroe se ve bien bajo su sombra.
+- La gente de la caravana parece gente: cada uno con su pelo, su ropa y su peinado.
+- Los personajes dicen alguna tontería de vez en cuando, y tu compañero comenta cada sitio nuevo.
+
 ## 2.3.0 (2026)
 
 La caravana del portal, cuarta y última parte.
