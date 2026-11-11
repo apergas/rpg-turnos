@@ -44,6 +44,9 @@ clump_model = "trees_A"
 glades = []
 bush_seed = 31
 bush_tries = 220
+decor = [[Vector3(-15, 0, -12), 0.0, "fence", 2], [Vector3(-15, 0, -6), 0.0, "fence_gate"], [Vector3(-12, 0, -6), 0.0, "fence", 1], [Vector3(-16.5, 0, -7.5), 90.0, "fence", 2], [Vector3(-10.5, 0, -7.5), 90.0, "fence", 2], [Vector3(-15, 0, -10.5), 0.0, "row_wheat", 2], [Vector3(-15, 0, -9), 0.0, "row_corn", 2], [Vector3(-15, 0, -7.5), 0.0, "row_pumpkin", 2], [Vector3(-10, 0, -26), 30.0, "log_stack"]]
+decor_scatter = {"flowers": 70, "stump": 10}
+decor_seed = 41
 entries = {
 "casa": [Vector3(-3.7, 0, -16.1), -120.0],
 "inicio": [Vector3(0, 0, 26), 0.0],
