@@ -669,8 +669,8 @@ const LOOKS := {
 	},
 	# The mountain (the v2, 2.2.0).
 	Look.SNOW_WOLF: {
-		"color": Color(0.9, 0.92, 0.95),
-		"dark_color": Color(0.66, 0.7, 0.78),
+		"color": Color(0.8, 0.84, 0.9),
+		"dark_color": Color(0.46, 0.52, 0.64),
 		"eye_color": Color(0.35, 0.75, 1.0),
 		"scale": 1.15,
 		"top": 1.5,
@@ -685,8 +685,9 @@ const LOOKS := {
 	# The Espíritu de la cumbre: the specter, pure white and bigger, with a pale gold aura
 	# (the Espectro de escarcha is the white and blue one).
 	Look.SUMMIT_SPIRIT: {
-		"color": Color(0.97, 0.97, 1.0),
-		"aura_color": Color(1.0, 0.88, 0.55),
+		"color": Color(0.34, 0.42, 0.82),
+		"aura_color": Color(1.0, 0.76, 0.28),
+		"alpha": 0.9,
 		"scale": 1.2,
 		"top": 2.7,
 		"fly": 0.6,
@@ -1740,7 +1741,8 @@ func _build_specter(data: Dictionary) -> void:
 	_hover.position.y = data.fly
 	_hover.scale = Vector3.ONE * data.scale
 	_body.add_child(_hover)
-	_add_ghost(_hover, LowPoly.blob(SPECTER_PROFILE, 8), data.color, SPECTER_ALPHA,
+	_add_ghost(_hover, LowPoly.blob(SPECTER_PROFILE, 8), data.color,
+			data.get("alpha", SPECTER_ALPHA),
 		Vector3.ZERO, Vector3.ONE)
 	_add_ghost(_hover, _sphere(0.5), data.aura_color, AURA_ALPHA, Vector3(0, 0.62, 0),
 		Vector3(1.5, 1.7, 1.5))

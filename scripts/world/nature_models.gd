@@ -32,7 +32,7 @@ const KIT_SINK := 0.05
 const SANDSTONE := Color(0.74, 0.66, 0.54)
 const SANDSTONE_DARK := Color(0.58, 0.51, 0.41)
 ## The mountain (2.2.0): the snow on its cliffs and stones, and their grey stone.
-const SNOW := Color(0.74, 0.77, 0.82)
+const SNOW := Color(0.6, 0.6, 0.6)
 const MOUNTAIN_STONE := Color(0.5, 0.52, 0.56)
 ## id → [[kit model, scale, position, yaw, overrides]] (the models the mesh holds); overrides
 ## is optional: a material → colour that wins over GREENS and PALETTE in that piece only.

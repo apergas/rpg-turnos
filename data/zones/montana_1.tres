@@ -10,10 +10,10 @@ short_name = "Montaña"
 floor_name = "La subida"
 number = 8
 half_size = Vector2(30, 26)
-ground_color = Color(0.66, 0.67, 0.7, 1)
+ground_color = Color(0.56, 0.57, 0.6, 1)
 has_grass = false
 hills = [[Vector3(-46, -6, -42), Vector3(26, 16, 22)], [Vector3(0, -6, -50), Vector3(34, 18, 18)], [Vector3(46, -6, -42), Vector3(26, 15, 22)], [Vector3(52, -6, 0), Vector3(18, 12, 30)], [Vector3(-52, -6, 0), Vector3(18, 12, 30)], [Vector3(46, -6, 40), Vector3(24, 10, 20)], [Vector3(-46, -6, 40), Vector3(24, 10, 20)], [Vector3(0, -6, 46), Vector3(30, 8, 16)]]
-hill_color = Color(0.82, 0.85, 0.9, 1)
+hill_color = Color(0.7, 0.72, 0.76, 1)
 village_name = ""
 village_radius = 0.0
 wells = [{
@@ -26,7 +26,7 @@ wells = [{
 "pos": Vector3(10, 0, 9.5)
 }]
 decor = [[Vector3(-25, 0, -9.5), 0.0, "pine"], [Vector3(17, 0, 5.5), 40.0, "pine"], [Vector3(25, 0, -17), 0.0, "pine_small"], [Vector3(-25, 0, -21), 120.0, "pine_small"], [Vector3(25, 0, -9.5), 30.0, "rock_tall"], [Vector3(-9.5, 0, 9.5), 200.0, "rock_tall"], [Vector3(19, 0, -6.5), 0.0, "snow_stones"], [Vector3(-14, 0, -8.5), 90.0, "snow_stones"]]
-decor_green = Color(0.16, 0.32, 0.2, 1)
+decor_green = Color(0.2, 0.44, 0.3, 1)
 entries = {
 "caravana": [Vector3(0, 0, 18.5), 0.0]
 }
@@ -53,17 +53,17 @@ exit_level = 35
 music = "mountain"
 village_music = ""
 ambient = "mountain"
-sky_top = Color(0.6, 0.7, 0.86, 1)
-haze = Color(0.86, 0.89, 0.95, 1)
+sky_top = Color(0.7, 0.76, 0.84, 1)
+haze = Color(0.86, 0.87, 0.9, 1)
 fog_density = 0.012
 sun_color = Color(1, 0.95, 0.88, 1)
-sun_energy = 0.34
+sun_energy = 0.4
 backdrop = "montana"
 particles = "snow"
 layout = PackedStringArray("###############", "#..S.#.....C..#", "#....#.###....#", "##D###.#L#.####", "#......#.#....#", "#......#......#", "#.###.###.###.#", "#.#C..#.....#.#", "#.#...#.....#.#", "#.###.##.####.#", "#.............#", "#####.....#####", "###############")
 underground = false
 rock_color = Color(0.5, 0.52, 0.56, 1)
-floor_color = Color(0.66, 0.67, 0.7, 1)
+floor_color = Color(0.56, 0.57, 0.6, 1)
 rock_piece = "snow_rock"
 stairs_up = "montana_2"
 lever_flag = "montana_palanca"
