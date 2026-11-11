@@ -437,9 +437,9 @@ func _process(delta: float) -> void:
 			_quiet_s = 0.0
 			print("Grupos repuestos (partida automática, sin combates)")
 			_respawn_groups()
-		elif _quiet_s > AUTOPLAY_STALL_S and _wants_retreat():
-			# At the boss's level but too worn for it, with nothing left to fight: no battle
-			# will ever bring the retreat, so it is made here.
+		elif _quiet_s > AUTOPLAY_STALL_S and _boss_needs_rest() 				and state.inventory.count(Inventory.WING) > 0:
+			# At the boss's level but too worn for it, with no battle coming that would bring
+			# the retreat: one Ala, made here (the quiet clock starts over).
 			_quiet_s = 0.0
 			_autoplay_retreat()
 

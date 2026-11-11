@@ -298,6 +298,8 @@ static func _valid_caravan(data: Dictionary) -> bool:
 	var in_caravan: bool = flags is Array and StoryState.CARAVAN_FLAG in flags
 	if in_caravan and int(data.version) < CARAVAN_VERSION:
 		return false
+	if not in_caravan and not _valid_v1_content(data):
+		return false
 	var ally: String = data.ally if data.get("ally", "") is String else ""
 	if Allies.is_companion(ally) != (in_caravan and ally != ""):
 		return false
@@ -315,6 +317,21 @@ static func _valid_hero_ranges(hero: Dictionary) -> bool:
 			return false
 	return hero.level >= 1.0 and hero.level <= Leveling.MAX_LEVEL \
 		and hero.hp >= 1.0 and hero.hp <= hero.max_hp and hero.mp <= hero.max_mp
+
+
+## A save without the caravan's flag holds nothing of the v2: no v2 quest taken and a hero
+## within the v1's level and EXP cap.
+static func _valid_v1_content(data: Dictionary) -> bool:
+	var quests: Variant = data.get("quests", {})
+	if quests is Dictionary:
+		for id: Variant in quests:
+			if id is String and QuestLog.QUESTS.has(id) and QuestLog.is_v2(id):
+				return false
+	var hero: Variant = data.get("hero")
+	if hero is Dictionary:
+		if hero.get("level", 1.0) > float(Leveling.V1_MAX_LEVEL) 				or hero.get("experience", 0.0) > float(Leveling.EXP_TABLE[Leveling.V1_MAX_LEVEL - 1]):
+			return false
+	return true
 
 
 ## An Array of EnemyLibrary ids (the bestiary's seen and beaten lists).
