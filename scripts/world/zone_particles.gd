@@ -1,7 +1,8 @@
 class_name ZoneParticles extends RefCounted
 ## The particles that float around the hero on a map (ZoneData.particles): pollen and
 ## dandelion seeds in the meadow, leaves falling slowly in the forest, dust motes that the
-## lantern lights in the mine, flakes of violet mist in the castle, grains of sand blown in gusts in the desert. A CPUParticles3D (the
+## lantern lights in the mine, flakes of violet mist in the castle, grains of sand blown in gusts in the desert, flakes of snow falling slowly and a little
+## sideways (the wind) on the mountain. A CPUParticles3D (the
 ## same on the Compatibility renderer and on the web) in world space: World carries its
 ## box (BOX, 30 × 20 m around the hero; the mine's is smaller, the lantern's reach) along
 ## every physics tick with follow(), and what is already floating stays where it is. Never
@@ -15,6 +16,7 @@ const DUST := "dust"
 const MIST := "mist"
 const FIREFLIES := "fireflies"
 const SAND := "sand"
+const SNOW := "snow"
 ## Half extents, along X and Z, of the box the particles are born in around the hero.
 const BOX := Vector3(15.0, 0.0, 10.0)
 ## Share of a particle's life spent fading in, and again fading out.
@@ -51,6 +53,10 @@ const KINDS := {
 		"speed": [3.0, 5.0], "direction": Vector3(1.0, 0.08, 0.2), "spread": 10.0,
 		"spin": 0.0, "colors": [Color(0.95, 0.82, 0.58, 0.8), Color(0.85, 0.7, 0.46, 0.7)],
 		"lit": true, "round": true, "burst": 0.75},
+	SNOW: {"amount": 150, "lifetime": 7.0, "height": 6.0, "depth": 3.0, "size": 0.07,
+		"speed": [0.6, 1.1], "direction": Vector3(0.6, -1.0, 0.2), "spread": 12.0,
+		"spin": 0.0, "colors": [Color(1.0, 1.0, 1.0, 0.95), Color(0.9, 0.94, 1.0, 0.85)],
+		"lit": false, "round": true},
 }
 
 ## No particles at all while false (low quality). Set by DisplaySettings.
