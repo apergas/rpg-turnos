@@ -9,8 +9,10 @@ class_name DungeonMap extends Node3D
 ## turn see-through. In a castle (zone.castle) the rock cells are stone walls instead:
 ## a KayKit wall piece on each straight run, a square tower at corners and ends, a round
 ## pillar where one stands alone; the ground goes on past the grid, banks of mist drift
-## over the floor (zone.mist_banks) and the throne cell gets a throne on a dais. Set zone
-## before add_child.
+## over the floor (zone.mist_banks) and the throne cell gets a throne on a dais. With
+## zone.rock_piece each rock block is that NatureModels piece (the mountain's snowy cliff)
+## scaled to the cell, and a floor open to the sky (not underground) has the ground of its
+## hills past the grid. Set zone before add_child.
 
 ## Height of the rock blocks.
 const WALL_HEIGHT := 3.0
@@ -79,13 +81,24 @@ var _mist_material: StandardMaterial3D
 
 
 func _ready() -> void:
+	var piece := _rock_piece_mesh()
 	for shade in ROCK_SHADES:
 		var mat := StandardMaterial3D.new()
-		mat.albedo_color = zone.rock_color * shade
+		if piece:
+			# The piece's own colours (snow on top, grey stone) are its vertex colours; the
+			# shade darkens or lightens the whole block.
+			mat.vertex_color_use_as_albedo = true
+			mat.vertex_color_is_srgb = true
+			mat.albedo_color = Color(shade, shade, shade)
+		else:
+			mat.albedo_color = zone.rock_color * shade
 		mat.roughness = 1.0
 		_rock_materials.append(mat)
 	_clear_material = StandardMaterial3D.new()
-	_clear_material.albedo_color = Color(zone.rock_color, SEE_THROUGH_ALPHA)
+	_clear_material.albedo_color = Color(Color.WHITE if piece else zone.rock_color,
+		SEE_THROUGH_ALPHA)
+	_clear_material.vertex_color_use_as_albedo = piece != null
+	_clear_material.vertex_color_is_srgb = true
 	_clear_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	_clear_material.roughness = 1.0
 	_add_floor()
@@ -189,6 +202,14 @@ func _shade(cell: Vector2i) -> int:
 	return absi(cell.x * 7 + cell.y * 13) % ROCK_SHADES.size()
 
 
+## The mesh of zone.rock_piece (a unit cube centred on its middle), or null for the plain
+## box of rock_color.
+func _rock_piece_mesh() -> Mesh:
+	if zone.rock_piece == "":
+		return null
+	return NatureModels.mesh(zone.rock_piece, zone.decor_green)
+
+
 ## The floor under the whole grid, in FLOOR_CHUNK × FLOOR_CHUNK squares.
 func _add_floor() -> void:
 	var size := zone.grid_size()
@@ -200,10 +221,13 @@ func _add_floor() -> void:
 			var corner := zone.cell_center(Vector2i(x, y)) - Vector3(ZoneData.CELL, 0, ZoneData.CELL) / 2.0
 			BattleStage.add_mesh(self, mesh, zone.floor_color,
 				corner + Vector3(chunk, 0, chunk) / 2.0)
-	if zone.castle:
+	if zone.castle or not zone.underground:
+		# The ground goes on past the grid: the castle's flagstones darker, a floor open to
+		# the sky (the mountain) the snow of its hills.
 		var outer := PlaneMesh.new()
 		outer.size = Vector2(size) * ZoneData.CELL + Vector2.ONE * OUTER_GROUND * 2.0
-		BattleStage.add_mesh(self, outer, zone.floor_color.darkened(0.25), Vector3(0, -0.02, 0))
+		var color := zone.floor_color.darkened(0.25) if zone.castle else zone.hill_color
+		BattleStage.add_mesh(self, outer, color, Vector3(0, -0.02, 0))
 	var body := StaticBody3D.new()
 	var shape := CollisionShape3D.new()
 	shape.shape = WorldBoundaryShape3D.new()
@@ -217,6 +241,9 @@ func _add_rock() -> void:
 	var size := zone.grid_size()
 	var box := BoxMesh.new()
 	box.size = Vector3(ZoneData.CELL, WALL_HEIGHT, ZoneData.CELL)
+	var piece := _rock_piece_mesh()
+	# The piece is a unit cube: each block scales it to the cell (the box already is).
+	var block_scale := box.size if piece else Vector3.ONE
 	var body := StaticBody3D.new()
 	add_child(body)
 	var buried: Array[Transform3D] = []
@@ -227,10 +254,11 @@ func _add_rock() -> void:
 				continue
 			var pos := zone.cell_center(cell) + Vector3(0, WALL_HEIGHT / 2.0, 0)
 			if not _touches_floor(cell):
-				buried.append(Transform3D(Basis(), pos))
+				buried.append(Transform3D(Basis.from_scale(block_scale), pos))
 				continue
 			var mi := MeshInstance3D.new()
-			mi.mesh = box
+			mi.mesh = piece if piece else box
+			mi.scale = block_scale
 			mi.material_override = _rock_materials[_shade(cell)]
 			mi.position = pos
 			add_child(mi)
@@ -240,9 +268,12 @@ func _add_rock() -> void:
 			(shape.shape as BoxShape3D).size = box.size
 			shape.position = pos
 			body.add_child(shape)
-	var buried_mesh := box.duplicate() as BoxMesh
-	buried_mesh.material = _rock_materials[0]
-	LowPoly.add_multimesh(self, buried_mesh, buried)
+	if piece:
+		LowPoly.add_multimesh(self, piece, buried, _rock_materials[0])
+	else:
+		var buried_mesh := box.duplicate() as BoxMesh
+		buried_mesh.material = _rock_materials[0]
+		LowPoly.add_multimesh(self, buried_mesh, buried)
 
 
 func _touches_floor(cell: Vector2i) -> bool:

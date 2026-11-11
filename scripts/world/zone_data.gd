@@ -57,7 +57,8 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## Two tip greens of the tall grass (sRGB); every tuft gets a mix of them.
 @export var grass_tips := PackedColorArray([Color(0.22, 0.55, 0.12), Color(0.42, 0.72, 0.16)])
 @export var grass_seed := 7
-## [position, scale] of each hill (unit spheres, half buried) around the field.
+## [position, scale] of each hill (unit spheres, half buried) around the field, or around a
+## floor of cells open to the sky (the mountain's peaks).
 @export var hills: Array = []
 ## The colour of the hills outside the walls and of the dunes (the meadow's green by default).
 @export var hill_color := Color(0.27, 0.47, 0.22)
@@ -205,6 +206,10 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var ambient_energy := 0.5
 @export var rock_color := Color(0.33, 0.29, 0.26)
 @export var floor_color := Color(0.36, 0.32, 0.28)
+## A NatureModels piece drawn for every rock block instead of the plain box of rock_color
+## (the mountain's snowy cliff, "snow_rock": a unit cube centred on its middle, scaled to the
+## block). "" keeps the box (the mine).
+@export var rock_piece := ""
 ## Castle: the rock cells are stone walls (KayKit wall pieces on the straight runs,
 ## square towers at corners and ends, round pillars when they stand alone) instead of
 ## rock blocks, and the open ground goes on past the grid.
