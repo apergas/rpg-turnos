@@ -197,6 +197,6 @@ sun_color = Color(1, 0.88, 0.7, 1)
 sun_energy = 0.7
 backdrop = "pradera"
 particles = "pollen"
-autoplay_route = Array[Vector3]([Vector3(0, 0, 8), Vector3(2.2, 0, 5.6), Vector3(-3, 0, 4), Vector3(-4, 0, -1), Vector3(-4.8, 0, -4.5), Vector3(-4, 0, -1), Vector3(4, 0, -1), Vector3(0, 0, -3.5), Vector3(2.5, 0, -7), Vector3(0, 0, -16.5)])
+autoplay_route = Array[Vector3]([Vector3(0, 0, 8), Vector3(2.2, 0, 5.6), Vector3(-3, 0, 4), Vector3(-4, 0, -1), Vector3(-5.2, 0, -5.0), Vector3(-4, 0, -1), Vector3(4, 0, -1), Vector3(0, 0, -3.5), Vector3(2.5, 0, -7), Vector3(0, 0, -16.5)])
 autoplay_boss_level = 0
 decor = [[Vector3(7, 0, 1.5), 0.0, "campfire"], [Vector3(-8.5, 0, -4), 60.0, "log_stack"]]
