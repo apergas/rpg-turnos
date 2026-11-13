@@ -22,10 +22,10 @@ Lo que se ha hecho y lo que queda por hacer en Villaclaro. Una fila por versión
 | 2.3.0 · M-43 a M-47 | La ciudad, el Devorador del portal y el final de la v2 | hecho |
 | 2.4.0 · M-49 a M-55 | Lo que pidió el usuario tras jugar la v2: misiones de recoger, entregas al Jefe, más monstruos, árboles, gente de la caravana, humor, campamento vestido | hecho |
 | 2.4.1 | Vender los anillos y amuletos de premio | hecho |
-| 2.5.0 · M-56 | Las medallas pequeñas caen de los enemigos; el Coleccionista en cada pueblo ([spec](specs/2026-11-13-version-2-5-0-design.md) · [plan](plans/2026-11-13-version-2-5-0.md)) | plan |
-| 2.5.0 · M-57 | Más monstruos en las zonas de la v1, y grupos que vuelven solos en todas | plan |
-| 2.5.0 · M-58 | El Slime de Metal a la mitad de velocidad | plan |
-| 2.5.0 · M-59 | Un portal del Ala de viaje más bonito | plan |
-| 2.5.0 · M-60 | Una misión opcional más en la mina y otra en el castillo | plan |
-| 2.5.0 · M-61 | Un fuego más realista en antorchas y hogueras | plan |
-| v3 | La siguiente parte: el pueblo al otro lado del portal (la pantalla final de la 2.3.0) | idea |
+| 2.5.0 · M-56 | Las medallas pequeñas caen de los enemigos; el Coleccionista en cada pueblo ([spec](../legacy/specs/2026-11-13-version-2-5-0-design.md) · [plan](../legacy/plans/2026-11-13-version-2-5-0.md)) | hecho |
+| 2.5.0 · M-57 | Más monstruos en las zonas de la v1, y grupos que vuelven solos en todas | hecho |
+| 2.5.0 · M-58 | El Slime de Metal a la mitad de velocidad | hecho |
+| 2.5.0 · M-59 | Un portal del Ala de viaje más bonito | hecho |
+| 2.5.0 · M-60 | Una misión opcional más en la mina y otra en el castillo | hecho |
+| 2.5.0 · M-61 | Un fuego más realista en antorchas y hogueras | hecho |
+| v3 | La siguiente parte: el pueblo al otro lado del portal ([guiones posibles](v3-guiones.md)) | idea |

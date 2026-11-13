@@ -18,7 +18,7 @@ enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPE
 	SNAKE, MONKEY, TRAP_PLANT, TROPICAL_MUSHROOM, CARAVAN_CHIEF, HEALER, JAGUAR,
 	SCORPION, SAND_SLIME, VULTURE, SAND_GOLEM, MUMMY, CANTEEN, SAND_WORM, SNOW_WOLF, ICE_GOLEM,
 	SUMMIT_SPIRIT, ICE_BAT, GOAT, GRIFFIN, HOLLOW_ARMOR, GARGOYLE, SHADOW, SENTINEL, RUIN_RAT, CITY_GUARDIAN,
-	PORTAL_DEVOURER, CARAVAN_MERCHANT, TRAVELLER_F, TRAVELLER_M, EXPLORER, SURVIVOR }
+	PORTAL_DEVOURER, CARAVAN_MERCHANT, TRAVELLER_F, TRAVELLER_M, EXPLORER, SURVIVOR, POT, CARAVAN_COLLECTOR }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -149,6 +149,8 @@ const JAW_REST := 0.3
 const JAW_OPEN := 0.95
 ## The map hero's rim of light (set_map_readable()): one material for him, as an overlay.
 const RIM_SHADER := preload("res://shaders/hero_rim.gdshader")
+## The trees' shader, for the pot's vertex colours (NatureModels meshes have no material).
+const TREE_SHADER := preload("res://shaders/tree.gdshader")
 ## The hero as a person, not a suit of steel: the KayKit Knight's helmet is hidden and its
 ## armor meshes (one grey palette cell) are tinted bare arms, a blue tunic and leather
 ## legs. Multiplied over a grey that peaks near 0.42 linear, hence the values above 1.
@@ -341,6 +343,15 @@ const LOOKS := {
 			"Knight_Body": Color(1.2, 0.85, 0.55), "Knight_LegLeft": Color(0.7, 0.5, 0.35),
 			"Knight_LegRight": Color(0.7, 0.5, 0.35)},
 		"cape": Color(0.16, 0.32, 0.18), "anims": CHARACTER_ANIMS,
+	},
+	# The Coleccionista in the Caravana: a person, in the purple of his Villaclaro robes.
+	Look.CARAVAN_COLLECTOR: {
+		"scene": KNIGHT, "scale": CHARACTER_SCALE, "top": 1.9, "hide": PERSON_HIDE,
+		"head_texture": HEAD_BROWN_PALE, "hair": {"style": "bun", "color": HAIR_BROWN},
+		"mesh_tints": {"Knight_ArmLeft": SKIN_PALE, "Knight_ArmRight": SKIN_PALE,
+			"Knight_Body": Color(1.3, 0.8, 1.9), "Knight_LegLeft": Color(0.75, 0.6, 0.9),
+			"Knight_LegRight": Color(0.75, 0.6, 0.9)},
+		"cape": Color(0.5, 0.25, 0.7), "anims": CHARACTER_ANIMS,
 	},
 	Look.CARAVAN_MERCHANT: {
 		"scene": KNIGHT, "scale": CHARACTER_SCALE, "top": 1.9, "hide": PERSON_HIDE,
@@ -751,6 +762,11 @@ const LOOKS := {
 		"sand_color": Color(0.56, 0.44, 0.28),
 		"top": 0.8,
 	},
+	# The Posadera's big pot (the olla quest's figure): the refugio's Kenney pot, still.
+	Look.POT: {
+		"model_scale": 1.0,
+		"top": 0.9,
+	},
 	# The Gusano de las dunas: a segmented worm rising out of a ring of sand.
 	Look.SAND_WORM: {
 		"color": Color(0.78, 0.55, 0.36),
@@ -1007,6 +1023,8 @@ func _ready() -> void:
 		_build_worm(data)
 	elif look == Look.CANTEEN:
 		_build_canteen(data)
+	elif look == Look.POT:
+		_build_pot(data)
 	elif look == Look.BOARD:
 		_build_board(data)
 	elif look == Look.CAT:
@@ -1055,6 +1073,15 @@ func set_walking(on: bool) -> void:
 func set_faded(on: bool) -> void:
 	for mi in _meshes:
 		mi.transparency = FADED_TRANSPARENCY if on else 0.0
+
+
+## A group coming back on the map: every mesh from invisible to solid in seconds.
+func play_fade_in(seconds: float) -> void:
+	for mi in _meshes:
+		mi.transparency = 1.0
+	var t := create_tween().set_parallel()
+	for mi in _meshes:
+		t.tween_property(mi, "transparency", 0.0, seconds)
 
 
 ## Map hero only (Player): a soft rim of light and a faint light of his own on every mesh
@@ -2120,6 +2147,23 @@ func _build_canteen(data: Dictionary) -> void:
 	_add_mesh(flask, strap, data.strap_color, Vector3(0, 0.0, 0.0))
 
 
+## The Posadera's pot: the Kenney pot of the mine's refuge (NatureModels "pot", vertex
+## colours through the tree shader, as on the map), a little tipped over.
+func _build_pot(data: Dictionary) -> void:
+	var mi := MeshInstance3D.new()
+	# The refugio's own green (ZoneData.decor_green's default): the pot has no green part,
+	# and the same key reuses NatureModels' cached mesh.
+	mi.mesh = NatureModels.mesh("pot", ZoneData.by_id("mina_1").decor_green)
+	var mat := ShaderMaterial.new()
+	mat.shader = TREE_SHADER
+	mat.set_shader_parameter("use_texture", false)
+	mat.set_shader_parameter("use_vertex_color", true)
+	mi.material_override = mat
+	mi.scale = Vector3.ONE * float(data.model_scale)
+	mi.rotation_degrees = Vector3(0, 0, 12)
+	_body.add_child(mi)
+
+
 ## A spider: a round abdomen behind a small head with red eyes, on eight bent legs
 ## (four a side, each a thigh going up and out and a shin going down to the ground).
 func _build_spider(data: Dictionary) -> void:
@@ -2167,7 +2211,7 @@ func _build_specter(data: Dictionary) -> void:
 ## specter floats, the rest squash and stretch (the wolf, the golems and the spider only
 ## breathe).
 func _start_idle() -> void:
-	if look in [Look.BOARD, Look.CANTEEN]:
+	if look in [Look.BOARD, Look.CANTEEN, Look.POT]:
 		return
 	if not _wings.is_empty():
 		_start_flap()

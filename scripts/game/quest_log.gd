@@ -14,6 +14,8 @@ const QUESTS := {
 	"gato": preload("res://data/quests/gato.tres"),
 	"slime_metal": preload("res://data/quests/slime_metal.tres"),
 	"explorador": preload("res://data/quests/explorador.tres"),
+	"aranas": preload("res://data/quests/aranas.tres"),
+	"olla": preload("res://data/quests/olla.tres"),
 	"pieles_mono": preload("res://data/quests/pieles_mono.tres"),
 	"explorador_perdido": preload("res://data/quests/explorador_perdido.tres"),
 	"escorpiones": preload("res://data/quests/escorpiones.tres"),
@@ -395,7 +397,8 @@ static func problems() -> Array[String]:
 			found.append("Misión %s: se entrega a %s, que no está en %s" % [id, quest.turn_in,
 				quest.turn_in_zone])
 			continue
-		if not figure.get("kind", "npc") in ["npc", "quest"]:
+		# a shop or an inn hears first what waits (Game, since 2.4.0)
+		if not figure.get("kind", "npc") in ["npc", "quest", "inn", "shop"]:
 			found.append("Misión %s: se entrega a %s, que no es una figura con quien hablar" \
 				% [id, quest.turn_in])
 			continue

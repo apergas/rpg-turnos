@@ -19,8 +19,8 @@ const CRISTAL_HIELO := "cristal_hielo"
 const SEED_ATTACK := "semilla_fuerza"
 const SEED_DEFENSE := "semilla_defensa"
 const SEED_SPEED := "semilla_agilidad"
-## The small medals are not an item: GameState.medals counts them. These are the name and
-## the key text (KEY_TEXTS) the pause menu's Objetos shows for them.
+## The small medals are not an item: GameState.medals counts them, and a battle drops them
+## (BattleEngine), never into the inventory. These are the name and the key text (KEY_TEXTS).
 const MEDAL := "medalla_pequena"
 const MEDAL_NAME := "Medalla pequeña"
 const START_POTIONS := 3
@@ -120,7 +120,7 @@ const KEY_TEXTS := {
 	"sello_desierto": "Lo guardaba el Gusano de las dunas. Los guardas de la montaña lo reconocerán.",
 	"mapa_montana": "Lo guardaba el Grifo de la cumbre. Marca el camino hasta la ciudad abandonada.",
 	"llave_portal": "La guardaba el Guardián de la ciudad. Abre la reja del barrio del portal.",
-	MEDAL: "El Coleccionista de Villaclaro las colecciona.",
+	MEDAL: "Algunos monstruos las llevan encima. El Coleccionista las colecciona.",
 }
 
 var _items := {}
@@ -133,10 +133,14 @@ static func is_quest_item(id: String) -> bool:
 
 
 static func display_name(id: String) -> String:
+	if id == MEDAL:
+		return MEDAL_NAME
 	return ITEMS[id].name if ITEMS.has(id) else id
 
 
 static func article(id: String) -> String:
+	if id == MEDAL:
+		return "una"
 	return ITEMS[id].article if ITEMS.has(id) else "un"
 
 

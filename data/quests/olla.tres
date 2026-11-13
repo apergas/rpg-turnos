@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="QuestData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/quest_data.gd" id="1_quest"]
+
+[resource]
+script = ExtResource("1_quest")
+id = "olla"
+title = "La olla de la Posadera"
+kind = 3
+zone = "castillo_patio"
+giver = "Posadera"
+turn_in_zone = "castillo_patio"
+turn_in = "Posadera"
+target = "Olla"
+target_zone = "castillo_patio"
+objective = "Busca la olla grande de la Posadera en algún rincón del patio del castillo."
+status = "busca la olla"
+report = "llévasela a la Posadera"
+offer_lines = Array[String](["Me falta la olla grande. Seguro que un esqueleto se la llevó para hacerse un casco.", "Si la ves por el patio, tráemela. Y si la lleva puesta, quítasela con cariño."])
+found_lines = Array[String](["En un rincón del patio, junto a una antorcha, hay una olla abollada.", "Por dentro tiene marcas de dientes. Se ve que de casco no le valía."])
+wait_lines = Array[String](["¿Mi olla? Sin ella, el guiso de esta noche va a ser una sopa muy fina."])
+done_lines = Array[String](["¡Mi olla! Abollada, pero mía. Esta noche hay guiso para todos.", "Toma, una pluma que salió flotando en el caldo. No preguntes."])
+reward_gold = 200
+reward_items = {
+"pluma_fenix": 1
+}

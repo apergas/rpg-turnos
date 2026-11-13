@@ -81,6 +81,10 @@ var ally: Combatant
 ## Quest item -> how many its quest asks for (Game: QuestLog.wanted_items()); set before
 ## adding it. Empty: no quest item drops.
 var quest_items := {}
+## Small medals carried and the chance a common enemy leaves one (Game; set before adding
+## it). -1: no medal drops (the battle run on its own).
+var medals_carried := -1
+var medal_chance := Medals.DROP_CHANCE
 
 var _rng := RandomNumberGenerator.new()
 var _autoplay := false
@@ -168,6 +172,8 @@ func _ready() -> void:
 	engine.exp_mult = Difficulty.exp_mult(difficulty)
 	engine.ally = ally
 	engine.quest_items = quest_items
+	engine.medals_carried = medals_carried
+	engine.medal_chance = medal_chance
 	_hud.set_engine(engine)
 	if ally != null:
 		_hud.show_ally(ally)
@@ -475,6 +481,9 @@ func _play_event(event: Dictionary) -> void:
 				learned += " Sustituye a %s." % event.replaced
 			await _say(learned)
 		BattleEvent.DROP:
+			if event.item == Inventory.MEDAL:
+				await _say("¡Consigues una Medalla pequeña! %s" % event.progress)
+				return
 			var said := "¡%s ha dejado %s %s!" % [_cap(_the(_fighter(event.owner))),
 				Inventory.article(event.item), Inventory.display_name(event.item)]
 			if event.get("progress", "") != "":

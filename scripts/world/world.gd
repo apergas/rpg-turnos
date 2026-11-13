@@ -5,9 +5,7 @@ class_name World extends Node3D
 ## too) walks the player there, with a marker on the spot. Next to a figure or a closed
 ## chest (the nearest one in reach) Enter / Space talks to the old woman
 ## (talk_requested) or to a villager (npc_requested), opens the shop (shop_requested),
-## asks for a room (inn_requested) or opens the chest (chest_opened); a small medal (Medals) shows
-## only with the hero
-## close and is picked up ("Coger", medal_taken); a click or tap on
+## asks for a room (inn_requested) or opens the chest (chest_opened); a click or tap on
 ## one of them walks there and does it on arrival. With the boss present, walking into
 ## it starts the boss battle. Walking into an open exit (or onto the stairs of a dungeon
 ## floor) emits exit_requested; a closed one (its world flag not set: set_world_flags())
@@ -38,9 +36,6 @@ signal inn_requested(inn_id: String)
 ## The player asked to open a closed chest (a Chests.CHESTS key); Game opens it in the
 ## GameState and calls set_chest_open().
 signal chest_opened(chest_id: String)
-## The player picked up the small medal medal_id (a Medals.MEDALS key); Game takes it in
-## the GameState and calls remove_medal().
-signal medal_taken(medal_id: String)
 ## The player drank (or tried to) from the well id, which fills kind (Wells.HP or Wells.MP).
 signal well_requested(id: String, kind: String)
 ## The player walked into (true) or out of (false) the village clearing.
@@ -97,22 +92,8 @@ const EXIT_RADIUS := 1.2
 ## After arriving (or after a closed exit's notice) exits wait until the player is this
 ## much farther than EXIT_RADIUS from all of them.
 const EXIT_REARM := 0.8
-## The return portal: an upright glowing oval on a ring, pulsing, with its sign. The spot
-## it leads back to is the same ring alone, flat on the ground.
-const PORTAL_COLOR := Color(0.2, 0.45, 1.0, 0.7)
-const PORTAL_SIZE := Vector3(0.95, 1.35, 0.7)
-const PORTAL_PULSE := 1.08
 ## How close the player must be to a lever, a key or a gate (its centre) to use it.
 const MECHANISM_RADIUS := 2.2
-## A small medal (Medals): picked up within MEDAL_RADIUS, shown only within
-## MEDAL_SEEN_RADIUS of the hero; a gold disc of MEDAL_DISC radius with a brighter core,
-## blinking every MEDAL_BLINK seconds.
-const MEDAL_RADIUS := 1.5
-const MEDAL_SEEN_RADIUS := 7.0
-const MEDAL_DISC := 0.15
-const MEDAL_COLOR := Color(1.0, 0.8, 0.2)
-const MEDAL_CORE_COLOR := Color(1.0, 0.97, 0.75)
-const MEDAL_BLINK := 0.9
 ## A click or tap this close to a figure or a chest means "go there and use it".
 const NPC_TAP_RADIUS := 1.2
 ## A tap on a figure is measured at this height, so its feet and its head both count.
@@ -136,7 +117,6 @@ const DOOR := "door"
 const PORTAL := "portal"
 const BOARD := "board"
 const ITEM := "item"
-const MEDAL := "medal"
 ## Between the verb and who it is done with: "Hablar · Granjero".
 const PROMPT_JOIN := " · "
 const PROMPTS := {
@@ -151,7 +131,6 @@ const PROMPTS := {
 	DOOR: "Abrir",
 	PORTAL: "Volver",
 	BOARD: "Leer",
-	MEDAL: "Coger",
 	ITEM: "Coger",
 }
 ## ZoneData.npcs kinds -> use kinds.
@@ -189,6 +168,8 @@ const LANTERN_HEIGHT := 2.4
 const QUEST_MARK_COLOR := Color(1.0, 0.85, 0.2)
 const QUEST_MARK_GAP := 0.35
 const QUEST_MARK_BOB := 0.12
+## A quest mark over a figure with a sign ("Posada") goes above the sign.
+const FIGURE_SIGN_RISE := 0.65
 const FIGURE_SIGN_GAP := 0.25
 const FIGURE_SIGN_FONT := 48
 const FIGURE_SIGN_PIXEL := 0.012
@@ -200,6 +181,10 @@ const MISSION_WIDTH := 420.0
 const GROUP_ANIMATE_RADIUS := 30.0
 ## Seconds between two hops of a slime walking on the map.
 const HOP_TIME := 0.45
+## Seconds of play on this map between two groups coming back while it has fewer than
+## zone.monster_count (counted on _sim_ms, like the hunt's timers), and the fade they come in with.
+const REFILL_S := 45.0
+const REFILL_FADE := 0.5
 ## Autoplay: below the zone's autoplay_boss_level the hero leaves the route for the
 ## nearest group this close that can start a battle, gives up after AUTOPLAY_HUNT_MS (or
 ## stuck on the way, Player.take_failed_hunt()) and leaves that one alone for
@@ -231,8 +216,6 @@ var _chest_lids := {}
 ## Well id -> its water and light, hidden while it is dry.
 var _well_waters := {}
 var _open_chests: Array[String] = []
-## Medal id -> its glint, while it lies on this map (remove_medal() takes it off).
-var _medals := {}
 ## exit id -> fog bank shown while the exit is closed.
 var _fogs := {}
 ## exit id -> its root (arch, sign and fog): hidden while the exit is not present
@@ -319,6 +302,8 @@ var _hunt_on := false
 var _hunt_until_ms := 0
 ## Time of the simulation in ms (the hunt's timers count it, so a run with --fixed-fps keeps them).
 var _sim_ms := 0.0
+## Simulation ms counted toward the next group coming back (_tick_refill()).
+var _refill_ms := 0.0
 var _hunt_skip := {}
 ## DebugPanel's Monstruos: while set, no map puts any group of monsters or rare enemy
 ## (_add_group(), add_rare()). It lasts for the run; only DebugPanel changes it.
@@ -346,8 +331,6 @@ func _ready() -> void:
 		_boss = _add_figure(EnemyLibrary.look(boss_id), zone.boss_pos, 180.0, 1.0, 2.0)
 	for id in Chests.of_zone(zone.id):
 		_chest_lids[id] = build_chest(self, Chests.CHESTS[id])
-	for id in Medals.of_zone(zone.id):
-		_medals[id] = _build_medal(Medals.MEDALS[id].pos)
 	for well: Dictionary in zone.wells:
 		_build_well(well)
 	_exits = zone.all_exits()
@@ -394,7 +377,6 @@ func _physics_process(delta: float) -> void:
 	if _particles:
 		ZoneParticles.follow(_particles, _player.global_position)
 	_map_square.follow(_player.global_position)
-	_show_near_medals(_player.global_position)
 	if _hint_window and _hint_window.visible and _player.last_step_m > 0.0:
 		_hint_window.hide()
 	_marker.visible = _player.move_target != null
@@ -405,6 +387,7 @@ func _physics_process(delta: float) -> void:
 	_move_groups(delta)
 	if _waiting or _talking:
 		return
+	_tick_refill(delta)
 	var pos := _player.global_position
 	var inside := _is_in_village(pos)
 	if inside != _in_village:
@@ -649,18 +632,10 @@ func set_autoplay_hunt(on: bool) -> void:
 		_player.stop_hunt()
 
 
-## Autoplay: walks these points, from the first, instead of the zone's autoplay_route
-## (--autoplay-zone=medallas: Medals.AUTOPLAY_ROUTE). A copy: the zone's route never changes.
-func set_autoplay_route(points: Array) -> void:
-	var route: Array[Vector3] = []
-	route.assign(points)
-	_player.route = route
-	_player.restart_route()
-
-
 ## Every group of the zone again (MonsterGroups.groups()), in new places, none within
 ## MonsterGroups.ENTRY_GAP of avoid (where the hero stands). On autoplay prints "Grupos: n".
 func respawn_groups(avoid: Array[Vector3] = []) -> void:
+	_refill_ms = 0.0
 	for group in _groups:
 		(group.node as Node3D).queue_free()
 	_groups.clear()
@@ -716,9 +691,9 @@ func has_rare() -> bool:
 
 ## A group at pos: the figure of its first enemy (no collider: nothing bumps into it),
 ## facing the camera, and its MonsterRoam.
-func _add_group(pos: Vector3, enemies: Array[Combatant], rare: bool) -> void:
+func _add_group(pos: Vector3, enemies: Array[Combatant], rare: bool) -> Dictionary:
 	if debug_no_groups:
-		return
+		return {}
 	var node := Node3D.new()
 	node.position = pos
 	node.rotation_degrees.y = 180.0
@@ -733,6 +708,33 @@ func _add_group(pos: Vector3, enemies: Array[Combatant], rare: bool) -> void:
 		"armed": true, "rare": rare, "hop": 0.0}
 	_groups.append(group)
 	_fade_group(group)
+	return group
+
+
+## A beaten group comes back, one every REFILL_S seconds of play on this map while it has
+## fewer than zone.monster_count (MonsterGroups.refill_spot(): never near the hero), fading in.
+## Not during a cutscene or an Incienso, nor on a map without monsters (the Caravana).
+func _tick_refill(delta: float) -> void:
+	if debug_no_groups or zone.monster_count <= 0 or zone.formations.is_empty() \
+			or _player.scripted or _repelled or group_count() >= zone.monster_count:
+		_refill_ms = 0.0
+		return
+	_refill_ms += delta * 1000.0
+	if _refill_ms < REFILL_S * 1000.0:
+		return
+	_refill_ms = 0.0
+	var taken: Array[Vector3] = []
+	for g in _groups:
+		taken.append((g.node as Node3D).position)
+	var spot: Variant = MonsterGroups.refill_spot(zone, _rng, _player.global_position, taken)
+	if spot == null:
+		return
+	var group := _add_group(spot, EncounterTable.pick_group(zone, spot, _rng), false)
+	if group.is_empty():
+		return
+	(group.actor as BattleActor).play_fade_in(REFILL_FADE)
+	if _autoplay:
+		print("Grupo repuesto (%d)" % group_count())
 
 
 ## Moves every group near the hero one physics tick (MonsterRoam), turned the way it walks,
@@ -781,8 +783,8 @@ func contact_enemies() -> Array[Combatant]:
 
 
 ## After the battle of the group touched (outcome: BattleEngine.State): WON takes it off the
-## map until the map is built again ("Grupo vencido (quedan n)" on autoplay), FLED leaves it
-## half see-through, starting no battle until the hero is MonsterGroups.REARM_RADIUS away;
+## map ("Grupo vencido (quedan n)" on autoplay; another comes back later, _tick_refill()),
+## FLED leaves it half see-through, starting no battle until the hero is MonsterGroups.REARM_RADIUS away;
 ## LOST changes nothing (Game sends the hero back and the groups come back with the map).
 func end_contact(outcome: int) -> void:
 	if _contact < 0:
@@ -948,7 +950,6 @@ func begin_cutscene() -> void:
 	_show_quest_marks()
 	for label in _figure_signs:
 		label.hide()
-	_show_near_medals(_player.global_position)
 
 
 ## Puts every figure back on its spot, gives the camera back to the hero and the
@@ -963,7 +964,6 @@ func end_cutscene() -> void:
 	_show_quest_marks()
 	for label in _figure_signs:
 		label.show()
-	_show_near_medals(_player.global_position)
 	_calm()
 	_was_near = {}
 	await freeze(false)
@@ -1108,6 +1108,9 @@ func _build_mark(figure_name: String) -> Label3D:
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.no_depth_test = true
 	label.position.y = figure_actor(figure_name).top_height() + QUEST_MARK_GAP
+	for npc: Dictionary in zone.npcs:
+		if npc.name == figure_name and _figure_sign_text(npc) != "":
+			label.position.y += FIGURE_SIGN_RISE
 	(_figures[figure_name] as Node3D).add_child(label)
 	_mark_labels[figure_name] = label
 	var bob := label.create_tween().set_loops()
@@ -1138,24 +1141,6 @@ func set_chest_open(chest_id: String, open: bool, instant := false) -> void:
 	else:
 		lid.create_tween().tween_property(lid, "rotation:x", angle, 0.35) \
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-
-
-## Takes a small medal off this map (taken now, or before: Game calls it for every medal of
-## GameState.medals once the map is built). Ids of other zones are ignored.
-func remove_medal(medal_id: String) -> void:
-	if not _medals.has(medal_id):
-		return
-	(_medals[medal_id] as Node3D).queue_free()
-	_medals.erase(medal_id)
-
-
-## A medal only shows with the hero close (and never in a cutscene): it is there to be found
-## by exploring.
-func _show_near_medals(hero: Vector3) -> void:
-	for id: String in _medals:
-		var glint: Node3D = _medals[id]
-		glint.visible = not _player.scripted \
-			and _flat_distance(hero, glint.position) <= MEDAL_SEEN_RADIUS
 
 
 ## The pause menu covers the middle of the screen and says the same as the status window,
@@ -1307,8 +1292,7 @@ func _in_reach(wanted: Dictionary) -> bool:
 	return false
 
 
-## Everything usable now: the zone's figures, its closed chests, the small medals still on it and,
-## on a dungeon floor,
+## Everything usable now: the zone's figures, its closed chests and, on a dungeon floor,
 ## the lever until pulled, the key until taken and the gates while closed.
 func _uses() -> Array[Dictionary]:
 	var uses: Array[Dictionary] = []
@@ -1322,9 +1306,6 @@ func _uses() -> Array[Dictionary]:
 		if not _open_chests.has(id):
 			uses.append({"kind": CHEST, "id": id, "index": -1, "pos": Chests.CHESTS[id].pos,
 				"radius": CHEST_RADIUS})
-	for id: String in _medals:
-		uses.append({"kind": MEDAL, "id": id, "index": -1, "pos": Medals.MEDALS[id].pos,
-			"radius": MEDAL_RADIUS})
 	if _portal != null:
 		uses.append({"kind": PORTAL, "id": "", "index": -1, "pos": zone.portal_pos,
 			"radius": MECHANISM_RADIUS})
@@ -1356,8 +1337,6 @@ func _use(use: Dictionary) -> void:
 			inn_requested.emit(use.id)
 		CHEST:
 			chest_opened.emit(use.id)
-		MEDAL:
-			medal_taken.emit(use.id)
 		WELL:
 			well_requested.emit(use.id, _well_kind(use.id))
 		LEVER:
@@ -1388,9 +1367,6 @@ func _connect_standalone() -> void:
 	chest_opened.connect(func(chest_id: String) -> void:
 		print("Cofre: %s" % chest_id)
 		set_chest_open(chest_id, true))
-	medal_taken.connect(func(medal_id: String) -> void:
-		print("Medalla: %s" % medal_id)
-		remove_medal(medal_id))
 	well_requested.connect(func(id: String, kind: String) -> void:
 		print("Pozo: %s (%s)" % [id, kind]))
 	exit_requested.connect(func(zone_id: String, entry_id: String) -> void:
@@ -1477,49 +1453,14 @@ func _build_exit(exit: Dictionary) -> Node3D:
 	return fog
 
 
-## A ring on the ground at pos and, for the portal itself, a pulsing see-through oval over
-## it with its sign. Nothing to bump into.
+## The Ala de viaje's return portal at pos (full: the standing portal with its sign), or only
+## the glowing ring on the ground of the spot it leads back to (TravelPortal).
 func _build_portal(pos: Vector3, full: bool) -> Node3D:
-	var root := Node3D.new()
-	root.position = pos
-	add_child(root)
-	var material := StandardMaterial3D.new()
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	material.albedo_color = PORTAL_COLOR
-	var ring := TorusMesh.new()
-	ring.inner_radius = 0.9
-	ring.outer_radius = 1.05
-	ring.rings = 24
-	ring.ring_segments = 6
-	var base := MeshInstance3D.new()
-	base.mesh = ring
-	base.material_override = material
-	base.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	base.position.y = 0.05
-	root.add_child(base)
-	if not full:
-		return root
-	var oval := MeshInstance3D.new()
-	oval.mesh = BattleStage.unit_sphere()
-	oval.material_override = material
-	oval.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	oval.position.y = PORTAL_SIZE.y
-	oval.scale = PORTAL_SIZE
-	root.add_child(oval)
-	var label := Label3D.new()
-	label.text = "Portal"
-	label.font_size = 48
-	label.pixel_size = 0.008
-	label.outline_size = 10
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.position.y = PORTAL_SIZE.y * 2.0 + 0.4
-	root.add_child(label)
-	var pulse := root.create_tween().set_loops()
-	pulse.tween_property(oval, "scale", PORTAL_SIZE * PORTAL_PULSE, 0.6) \
-		.set_trans(Tween.TRANS_SINE)
-	pulse.tween_property(oval, "scale", PORTAL_SIZE, 0.6).set_trans(Tween.TRANS_SINE)
-	return root
+	var portal := TravelPortal.new()
+	portal.ring_only = not full
+	portal.position = pos
+	add_child(portal)
+	return portal
 
 
 ## Hides the water and the light of the wells in dry.
@@ -1609,40 +1550,6 @@ static func build_chest(root: Node3D, chest: Dictionary) -> Node3D:
 		BattleStage.add_mesh(lid, lid_band, CHEST_BAND,
 			Vector3(x, CHEST_LID_HEIGHT / 2.0, -CHEST_SIZE.z / 2.0))
 	return lid
-
-
-## A small medal at pos: a flat gold disc on the ground with a brighter core on top, both
-## unshaded (they show in the dark mine too) and blinking slowly. No collider, no sign.
-func _build_medal(pos: Vector3) -> Node3D:
-	var root := Node3D.new()
-	root.position = pos
-	root.visible = false
-	add_child(root)
-	var materials: Array[StandardMaterial3D] = []
-	for part in [[MEDAL_DISC, 0.06, MEDAL_COLOR], [MEDAL_DISC * 0.5, 0.08, MEDAL_CORE_COLOR]]:
-		var disc := CylinderMesh.new()
-		disc.top_radius = part[0]
-		disc.bottom_radius = part[0]
-		disc.height = 0.02
-		disc.radial_segments = 16
-		disc.rings = 1
-		var material := StandardMaterial3D.new()
-		material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		material.albedo_color = part[2]
-		materials.append(material)
-		var mesh := MeshInstance3D.new()
-		mesh.mesh = disc
-		mesh.material_override = material
-		mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		mesh.position.y = part[1]
-		root.add_child(mesh)
-	var blink := root.create_tween().set_loops()
-	blink.tween_property(materials[0], "albedo_color:a", 0.35, MEDAL_BLINK)
-	blink.parallel().tween_property(materials[1], "albedo_color:a", 0.35, MEDAL_BLINK)
-	blink.tween_property(materials[0], "albedo_color:a", 1.0, MEDAL_BLINK)
-	blink.parallel().tween_property(materials[1], "albedo_color:a", 1.0, MEDAL_BLINK)
-	return root
 
 
 ## A figure: a BattleActor on a cylinder collider, turned yaw_deg (180 faces south,
