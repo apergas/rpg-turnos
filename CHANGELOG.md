@@ -1,5 +1,18 @@
 # Registro de cambios
 
+## 2.6.1 (2026)
+
+Más fácil de leer.
+
+- Opción nueva «Alto contraste» en Opciones: ventanas opacas y textos grises más claros.
+- Los avisos dicen qué son con una palabra de color: «Guardado», «Misión cumplida», «Cuidado»...
+- Cuando una frase del diálogo espera, una flecha abajo a la derecha te lo dice.
+- Con pocos PV, la barra late y su texto se pone naranja.
+- El aturdimiento del combate tiene su insignia, «Aturdido».
+- Los golpes críticos lo dicen: «¡Crítico!».
+- El resultado del combate es una tarjeta, y las filas de objetos y tienda dicen cuántos tienes y por qué no se pueden usar.
+- En el ordenador, la acción cercana enseña la tecla que la hace.
+
 ## 2.6.0 (2026)
 
 La interfaz se pone al día.

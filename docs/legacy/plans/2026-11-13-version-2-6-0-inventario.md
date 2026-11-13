@@ -1,6 +1,6 @@
 # Versión 2.6.0 / 2.6.1: inventario de la interfaz (anexo del plan)
 
-Anexo de `docs/boost/plans/2026-11-13-version-2-6-0.md`. Todo valor visual escrito a mano en la interfaz de hoy (rama `feature/version-2-6-0`, versión 2.5.0), con el token o el estilo que lo sustituye y la tarea que lo cambia. Los números de línea son los de la rama de partida: **busca siempre por el texto citado**, las líneas se mueven.
+Anexo de `docs/legacy/plans/2026-11-13-version-2-6-0.md`. Todo valor visual escrito a mano en la interfaz de hoy (rama `feature/version-2-6-0`, versión 2.5.0), con el token o el estilo que lo sustituye y la tarea que lo cambia. Los números de línea son los de la rama de partida: **busca siempre por el texto citado**, las líneas se mueven.
 
 Columnas: `archivo:línea` · lo que hay hoy · a qué pasa · tarea (A3 = Parte A, Task 3...).
 
