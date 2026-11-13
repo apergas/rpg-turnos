@@ -11,7 +11,6 @@ signal cancelled
 
 const FONT_SIZE := 26
 const NAME_SIZE := 44
-const TITLE_COLOR := UiStyle.TITLE_COLOR
 const HINT_COLOR := Color(0.7, 0.72, 0.8)
 const KEY_SIZE := Vector2(58, 50)
 const COLUMNS := 8
@@ -52,7 +51,7 @@ func _ready() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 10)
 	window.add_child(box)
-	box.add_child(_label("¿Cómo te llamas?", TITLE_COLOR, FONT_SIZE))
+	box.add_child(_label("¿Cómo te llamas?", UiTokens.color(&"text-accent"), FONT_SIZE))
 	_name_label = _label("", Color.WHITE, NAME_SIZE)
 	_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_name_label)
@@ -66,6 +65,8 @@ func _ready() -> void:
 	box.add_child(grid)
 	for letter in LETTERS:
 		var key := _button(letter)
+		key.theme_type_variation = UiTheme.KEY
+		key.remove_theme_font_size_override("font_size")
 		key.custom_minimum_size = KEY_SIZE
 		key.pressed.connect(func() -> void: _add(key.text))
 		grid.add_child(key)

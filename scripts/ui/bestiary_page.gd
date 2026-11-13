@@ -60,7 +60,7 @@ func fill(state: GameState) -> void:
 ## A family's title (in gold with its prize once complete) and its cards.
 func _add_family(state: GameState, family: Dictionary) -> void:
 	var title := _add_section(state, family.enemies, title_text(state, family.id),
-		StatBar.GOLD if Bestiary.is_complete(state, family.id) else UiStyle.TITLE_COLOR)
+		UiTokens.color(&"text-money") if Bestiary.is_complete(state, family.id) else UiTokens.color(&"text-accent"))
 	_titles[family.id] = title
 
 
@@ -154,10 +154,10 @@ func _card(id: String, seen: bool) -> Control:
 	label.custom_minimum_size.x = side
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", UiStyle.TEXT_SIZE)
+	label.add_theme_font_size_override("font_size", UiTokens.TYPE_CAPTION_SIZE)
 	box.add_child(label)
 	var hit := Button.new()
-	hit.flat = true
+	hit.theme_type_variation = UiTheme.CARD_HIT
 	hit.disabled = not seen
 	hit.focus_mode = Control.FOCUS_ALL if seen else Control.FOCUS_NONE
 	hit.mouse_filter = Control.MOUSE_FILTER_STOP if seen else Control.MOUSE_FILTER_IGNORE

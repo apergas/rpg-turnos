@@ -46,7 +46,7 @@ func _ready() -> void:
 	_main = VBoxContainer.new()
 	_main.add_theme_constant_override("separation", 8)
 	add_child(_main)
-	_main.add_child(_label("Opciones", UiStyle.TITLE_COLOR))
+	_main.add_child(_label("Opciones", UiTokens.color(&"text-accent")))
 	var scroll := ScrollBox.new(ROWS_RESERVED)
 	_main.add_child(scroll)
 	_rows = scroll.content
@@ -191,6 +191,8 @@ func _choice_row(title: String, names: Array, current: int, chosen: Callable) ->
 	var buttons: Array[Button] = []
 	for i in names.size():
 		var button := _button(names[i])
+		button.theme_type_variation = UiTheme.SELECTOR
+		button.remove_theme_font_size_override("font_size")
 		button.toggle_mode = true
 		button.button_group = group
 		button.button_pressed = i == current

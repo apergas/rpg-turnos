@@ -28,14 +28,14 @@ func _ready() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 8)
 	window.add_child(box)
-	var title := _label("¿Qué dificultad prefieres?", UiStyle.TITLE_COLOR, FONT_SIZE)
+	var title := _label("¿Qué dificultad prefieres?", UiTokens.color(&"text-accent"), FONT_SIZE)
 	box.add_child(title)
 	var first: Button = null
 	for id in Difficulty.IDS:
 		var button := _button(Difficulty.NAMES[id])
 		button.pressed.connect(_choose.bind(id))
 		box.add_child(button)
-		box.add_child(_label(Difficulty.TEXTS[id], UiStyle.GREY, UiStyle.TEXT_SIZE))
+		box.add_child(_label(Difficulty.TEXTS[id], UiTokens.color(&"text-secondary"), UiTokens.TYPE_CAPTION_SIZE))
 		if first == null:
 			first = button
 	var back := _button("Volver")

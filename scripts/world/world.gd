@@ -65,7 +65,6 @@ const UI_EDGE := 24.0
 ## Phone: the mission line wraps here and the bars narrow to fit.
 const TOUCH_MISSION_WIDTH := 300.0
 ## The use button of the phone interface.
-const USE_BUTTON_FONT := 28
 const USE_BUTTON_SIZE := Vector2(180, 72)
 ## The place's line by the map square.
 const PLACE_OUTLINE := 6
@@ -311,6 +310,7 @@ static var debug_no_groups := false
 
 
 func _ready() -> void:
+	UiTheme.ensure(get_window())
 	if zone == null:
 		zone = ZoneData.by_id("pradera")
 	# The groups are placed with the zone and the clock: never twice the same.
@@ -1170,7 +1170,7 @@ func show_mission_done(text: String) -> void:
 	var serial := _mission_done_serial
 	_mission_done = true
 	var lines: Array[String] = [text]
-	_show_missions(lines, StatBar.GOLD)
+	_show_missions(lines, UiTokens.color(&"text-money"))
 	if _autoplay:
 		print(text)
 	await get_tree().create_timer(MISSION_DONE_TIME).timeout
@@ -1569,6 +1569,7 @@ func _add_figure(look: BattleActor.Look, pos: Vector3, yaw_deg: float, radius: f
 
 func _build_ui() -> void:
 	_ui = CanvasLayer.new()
+	_ui.layer = UiTokens.LAYER_HUD
 	add_child(_ui)
 	# No size of its own: the column follows the status window as it grows and shrinks.
 	var column := VBoxContainer.new()
@@ -1589,7 +1590,7 @@ func _build_ui() -> void:
 		if not _talking and not _waiting:
 			map_requested.emit())
 	_place_label = _label()
-	_place_label.add_theme_font_size_override("font_size", UiStyle.TEXT_SIZE)
+	_place_label.add_theme_font_size_override("font_size", UiTokens.TYPE_CAPTION_SIZE)
 	_place_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	_place_label.add_theme_constant_override("outline_size", PLACE_OUTLINE)
 	_place_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1628,7 +1629,7 @@ func _build_ui() -> void:
 		# Estado in the pause menu says the same.
 		_exp_bar.hide()
 	_gold_label = _label()
-	_gold_label.add_theme_color_override("font_color", StatBar.GOLD)
+	_gold_label.add_theme_color_override("font_color", UiTokens.color(&"text-money"))
 	box.add_child(_gold_label)
 	_mission_box = VBoxContainer.new()
 	_mission_box.add_theme_constant_override("separation", 0)
@@ -1668,7 +1669,7 @@ func _build_touch_controls() -> void:
 	_pad.pinched.connect(_camera.zoom_by)
 	_use_button = Button.new()
 	_use_button.focus_mode = Control.FOCUS_NONE
-	_use_button.add_theme_font_size_override("font_size", USE_BUTTON_FONT)
+	_use_button.theme_type_variation = UiTheme.ACTION_BUTTON
 	_use_button.custom_minimum_size = USE_BUTTON_SIZE
 	_use_button.hide()
 	_ui.add_child(_use_button)

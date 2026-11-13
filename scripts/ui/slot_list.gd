@@ -77,7 +77,7 @@ func setup(audio: AudioDirector, transfer: SaveTransfer = null) -> void:
 
 func _ready() -> void:
 	add_theme_constant_override("separation", 8)
-	_title = _label("", UiStyle.TITLE_COLOR)
+	_title = _label("", UiTokens.color(&"text-accent"))
 	add_child(_title)
 	var list := _page_box("list")
 	for slot in range(1, SaveStore.SLOT_COUNT + 1):
@@ -99,7 +99,7 @@ func _ready() -> void:
 	confirm.add_child(_confirm_no)
 	var actions := _page_box("actions")
 	_detail_line = _label("", Color.WHITE)
-	_detail_line.add_theme_font_size_override("font_size", UiStyle.TEXT_SIZE)
+	_detail_line.add_theme_font_size_override("font_size", UiTokens.TYPE_CAPTION_SIZE)
 	actions.add_child(_detail_line)
 	_export_button = _button("Exportar")
 	_export_button.pressed.connect(_on_export)
@@ -111,13 +111,13 @@ func _ready() -> void:
 	actions_back.pressed.connect(back)
 	actions.add_child(actions_back)
 	_message = _label(" ", Color.WHITE)
-	_message.add_theme_font_size_override("font_size", UiStyle.TEXT_SIZE)
+	_message.add_theme_font_size_override("font_size", UiTokens.TYPE_CAPTION_SIZE)
 	_message.custom_minimum_size.x = MESSAGE_WIDTH
 	_message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	actions.add_child(_message)
 	var cycle := _page_box("cycle")
 	_cycle_line = _label("", Color.WHITE)
-	_cycle_line.add_theme_font_size_override("font_size", UiStyle.TEXT_SIZE)
+	_cycle_line.add_theme_font_size_override("font_size", UiTokens.TYPE_CAPTION_SIZE)
 	cycle.add_child(_cycle_line)
 	_cycle_continue = _button(CYCLE_CONTINUE)
 	_cycle_continue.pressed.connect(func() -> void: chosen.emit(_slot))

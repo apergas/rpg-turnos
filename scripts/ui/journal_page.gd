@@ -8,9 +8,7 @@ class_name JournalPage extends VBoxContainer
 ## A little smaller than the other pages: seven missions must fit a 720 p window.
 const HEADING_SIZE := 22
 const ENTRY_SIZE := 20
-const TEXT_SIZE := UiStyle.TEXT_SIZE
-const TITLE_COLOR := UiStyle.TITLE_COLOR
-const GREY := UiStyle.GREY
+const TEXT_SIZE := UiTokens.TYPE_CAPTION_SIZE
 ## Long lines wrap past this width.
 const TEXT_WIDTH := 720.0
 
@@ -28,13 +26,13 @@ func fill(state: GameState) -> void:
 	_line(state.main_goal(), Color.WHITE, ENTRY_SIZE)
 	_heading("En curso")
 	if journal.active.is_empty():
-		_line("Nada por ahora.", GREY, ENTRY_SIZE)
+		_line("Nada por ahora.", UiTokens.color(&"text-secondary"), ENTRY_SIZE)
 	for entry: Dictionary in journal.active:
 		_line(entry.title, Color.WHITE, ENTRY_SIZE)
-		_line(entry.text, GREY, TEXT_SIZE)
+		_line(entry.text, UiTokens.color(&"text-secondary"), TEXT_SIZE)
 	_heading("Cumplidas")
 	if journal.done.is_empty():
-		_line("Ninguna todavía.", GREY, ENTRY_SIZE)
+		_line("Ninguna todavía.", UiTokens.color(&"text-secondary"), ENTRY_SIZE)
 	else:
 		_line(", ".join(journal.done), Color.WHITE, TEXT_SIZE)
 	_heading("Colección")
@@ -66,7 +64,7 @@ static func collection_lines(state: GameState) -> Array[String]:
 
 
 func _heading(text: String) -> void:
-	_line(text, TITLE_COLOR, HEADING_SIZE)
+	_line(text, UiTokens.color(&"text-accent"), HEADING_SIZE)
 
 
 func _line(text: String, color: Color, font_size: int) -> void:

@@ -88,7 +88,7 @@ func _ready() -> void:
 	if Device.is_touch():
 		# A child of the title itself, which stays while the Game comes and goes.
 		var hint_layer := CanvasLayer.new()
-		hint_layer.layer = 100
+		hint_layer.layer = UiTokens.LAYER_SYSTEM
 		hint_layer.add_child(RotateHint.new())
 		add_child(hint_layer)
 	KeyMap.apply(_options.keys)
@@ -368,6 +368,7 @@ func _show_update_notice() -> void:
 
 func _build_menu() -> void:
 	_ui = CanvasLayer.new()
+	_ui.layer = UiTokens.LAYER_HUD
 	add_child(_ui)
 	var root := Control.new()
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -516,7 +517,7 @@ func _button(text: String) -> Button:
 
 func _build_fade() -> void:
 	var layer := CanvasLayer.new()
-	layer.layer = 20
+	layer.layer = UiTokens.LAYER_TITLE_FADE
 	add_child(layer)
 	_fade = ColorRect.new()
 	_fade.color = Color(0, 0, 0, 0)

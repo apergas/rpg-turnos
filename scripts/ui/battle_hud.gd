@@ -43,8 +43,6 @@ const ENEMY_BAR_SIZE := Vector2(96, 8)
 const TARGET_NAME_COLOR := Color(1.0, 0.9, 0.3)
 const ENEMY_NAME_GAP := 2.0
 const ENEMY_BAR_BACK := Color(0.0, 0.0, 0.0, 0.7)
-## Inner margins of every window: modest, the window hugs what it holds.
-const WINDOW_MARGIN := Vector2(14, 10)
 ## Seconds each step of demo() stays on screen.
 const DEMO_STEP := 0.35
 const MAIN_ROWS: Array[String] = ["Atacar", "Hechizos", "Objetos", "Defender", "Huir"]
@@ -165,7 +163,7 @@ func add_enemy_bar(enemy_name := "") -> void:
 	add_child(back)
 	move_child(back, 0)  # under every window
 	var fill := ColorRect.new()
-	fill.color = StatBar.HP
+	fill.color = UiTokens.color(StatBar.HP)
 	fill.position = Vector2.ONE
 	fill.size = ENEMY_BAR_SIZE - Vector2(2, 2)
 	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -174,7 +172,7 @@ func add_enemy_bar(enemy_name := "") -> void:
 	var label := Label.new()
 	label.text = enemy_name
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.add_theme_font_size_override("font_size", UiStyle.TEXT_SIZE)
+	label.add_theme_font_size_override("font_size", UiTokens.TYPE_CAPTION_SIZE)
 	label.add_theme_color_override("font_color", TARGET_NAME_COLOR)
 	label.add_theme_color_override("font_outline_color", Color.BLACK)
 	label.add_theme_constant_override("outline_size", 6)
@@ -309,19 +307,9 @@ func show_message(text: String) -> void:
 	_advance_requested = false
 
 
-## Shared look of every window: dark panel with a white rounded border.
+## Shared look of every window: the theme draws the panel (design system window).
 static func make_window() -> PanelContainer:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.04, 0.04, 0.12, 0.9)
-	style.border_color = Color.WHITE
-	style.set_border_width_all(3)
-	style.set_corner_radius_all(8)
-	style.content_margin_left = WINDOW_MARGIN.x
-	style.content_margin_right = WINDOW_MARGIN.x
-	style.content_margin_top = WINDOW_MARGIN.y
-	style.content_margin_bottom = WINDOW_MARGIN.y
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", style)
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return panel
 
@@ -703,7 +691,7 @@ func _build_bottom() -> void:
 func _set_message(text: String) -> void:
 	var menu_width := maxf(_menu.get_combined_minimum_size().x, MENU_WIDTH)
 	var room := get_viewport_rect().size.x - EDGE * 2.0 - GAP - menu_width
-	fit_label(_message, text, room - WINDOW_MARGIN.x * 2.0)
+	fit_label(_message, text, room - UiTokens.SPACE_4 * 2.0)
 
 
 ## A small colored tag with the status name.

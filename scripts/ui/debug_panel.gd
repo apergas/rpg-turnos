@@ -81,7 +81,7 @@ func _ready() -> void:
 	window.add_child(stack)
 	var title := Label.new()
 	title.text = "Depuración"
-	title.add_theme_color_override("font_color", UiStyle.TITLE_COLOR)
+	title.add_theme_color_override("font_color", UiTokens.color(&"text-accent"))
 	stack.add_child(title)
 	_status = _line(stack)
 	var list := ScrollBox.new(LIST_RESERVED)
@@ -189,8 +189,8 @@ func _choose(action: String, arg: String) -> void:
 func _section(box: VBoxContainer, heading: String) -> HFlowContainer:
 	var label := Label.new()
 	label.text = heading
-	label.add_theme_font_size_override("font_size", UiStyle.TEXT_SIZE)
-	label.add_theme_color_override("font_color", UiStyle.TITLE_COLOR)
+	label.add_theme_font_size_override("font_size", UiTokens.TYPE_CAPTION_SIZE)
+	label.add_theme_color_override("font_color", UiTokens.color(&"text-accent"))
 	box.add_child(label)
 	var flow := HFlowContainer.new()
 	box.add_child(flow)
@@ -216,7 +216,7 @@ func _button(parent: Control, node_name: String, text: String) -> Button:
 ## A line of small text as wide as the rows, wrapped.
 func _line(parent: Control) -> Label:
 	var label := Label.new()
-	label.add_theme_font_size_override("font_size", UiStyle.TEXT_SIZE)
+	label.add_theme_font_size_override("font_size", UiTokens.TYPE_CAPTION_SIZE)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.custom_minimum_size.x = ROW_WIDTH
 	parent.add_child(label)

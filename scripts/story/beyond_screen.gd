@@ -343,7 +343,7 @@ func _build_figures() -> void:
 
 func _build_text() -> void:
 	var layer := CanvasLayer.new()
-	layer.layer = 9  # under Game's fade (10)
+	layer.layer = UiTokens.LAYER_CINEMATIC  # under Game's fade (10)
 	add_child(layer)
 	_label = Label.new()
 	_label.text = TEXT

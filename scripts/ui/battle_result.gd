@@ -45,11 +45,11 @@ func show_victory(exp_gained: int, hero: Combatant, new_level: int, gold: int,
 		drops: Array[String]) -> void:
 	_title.text = "¡Victoria!"
 	_clear_detail()
-	_add_line("+%d EXP" % exp_gained, StatBar.EXP_TEXT)
+	_add_line("+%d EXP" % exp_gained, UiTokens.color(&"text-positive"))
 	if new_level > 0:
 		_add_line("¡Nivel %d!" % new_level, Color.WHITE)
 	if gold > 0:
-		_add_line("+%d G" % gold, StatBar.GOLD)
+		_add_line("+%d G" % gold, UiTokens.color(&"text-money"))
 	for id in drops:
 		_add_line("+1 %s" % Inventory.display_name(id), Color.WHITE)
 	_exp_bar.show_exp(hero)
@@ -62,7 +62,7 @@ func show_defeat(gold_lost := 0) -> void:
 	_title.text = "Has caído"
 	_clear_detail()
 	if gold_lost > 0:
-		_add_line("Pierdes %d G." % gold_lost, StatBar.GOLD)
+		_add_line("Pierdes %d G." % gold_lost, UiTokens.color(&"text-money"))
 	_add_line("Volverás al último lugar seguro.", Color.WHITE)
 	_exp_bar.hide()
 	_open()

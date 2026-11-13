@@ -409,6 +409,7 @@ func setup(audio: AudioDirector, options: GameOptions, save: Dictionary,
 
 
 func _ready() -> void:
+	UiTheme.ensure(get_window())
 	var args := OS.get_cmdline_user_args()
 	_autoplay = args.has("--autoplay")
 	_autoplay_save = _autoplay and args.has("--autoplay-save")
@@ -1150,7 +1151,7 @@ func _finish_game() -> void:
 	_audio.play_music(MusicLibrary.TITLE)
 	_audio.stop_ambient()
 	var layer := CanvasLayer.new()
-	layer.layer = 11
+	layer.layer = UiTokens.LAYER_OVERLAY
 	add_child(layer)
 	var credits := CreditsScreen.new()
 	layer.add_child(credits)
@@ -1190,7 +1191,7 @@ func _finish_v2() -> void:
 	await _fade_to(1.0)
 	beyond.queue_free()
 	var layer := CanvasLayer.new()
-	layer.layer = 11
+	layer.layer = UiTokens.LAYER_OVERLAY
 	add_child(layer)
 	var credits := CreditsScreen.new()
 	credits.end_text = CreditsScreen.TO_BE_CONTINUED
@@ -1741,7 +1742,7 @@ static func _summary(data: Dictionary) -> String:
 
 func _build_shop() -> void:
 	var layer := CanvasLayer.new()
-	layer.layer = 4
+	layer.layer = UiTokens.LAYER_SHOP
 	add_child(layer)
 	_shop = ShopWindow.new()
 	_shop.setup(state, _audio)
@@ -1762,7 +1763,7 @@ func _build_cutscenes() -> void:
 
 func _build_fade() -> void:
 	var layer := CanvasLayer.new()
-	layer.layer = 10
+	layer.layer = UiTokens.LAYER_FADE
 	add_child(layer)
 	_fade = ColorRect.new()
 	_fade.color = Color(0, 0, 0, 0)
@@ -1773,7 +1774,7 @@ func _build_fade() -> void:
 
 func _build_pause() -> void:
 	var layer := CanvasLayer.new()
-	layer.layer = 5
+	layer.layer = UiTokens.LAYER_PAUSE
 	add_child(layer)
 	_pause = PauseMenu.new()
 	_pause.setup(state, _options, _audio)
@@ -1793,7 +1794,7 @@ func _build_pause() -> void:
 ## ☰, no pause) and the status window and map square hide, as with the pause menu.
 func _build_debug() -> void:
 	var layer := CanvasLayer.new()
-	layer.layer = 6
+	layer.layer = UiTokens.LAYER_DEBUG
 	add_child(layer)
 	_debug = DebugPanel.new()
 	_debug.setup(state)

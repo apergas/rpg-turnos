@@ -22,8 +22,6 @@ signal travel_requested
 signal open_changed(is_open: bool)
 
 const FONT_SIZE := 24
-const TITLE_COLOR := UiStyle.TITLE_COLOR
-const GREY := UiStyle.GREY
 ## Rows of the hero's window: text and page. A new page only needs its row here.
 const HERO_PAGES := [["Estado", "status"], ["Hechizos", "spells"], ["Objetos", "items"], ["Equipo", "equipment"],
 	["Mapa", "map"], ["Diario", "journal"], ["Bestiario", "bestiary"]]
@@ -43,8 +41,8 @@ const MESSAGE_WIDTH := 240.0
 ## What the title, the message, Volver and the margins leave out of a page's scrolling list.
 const LIST_RESERVED := 245.0
 const STATUS_BAR_WIDTH := 300.0
-const MENU_BUTTON_SIZE := Vector2(64, 64)
-const MENU_BUTTON_MARGIN := 24.0
+const MENU_BUTTON_SIZE := Vector2.ONE * UiTokens.MENU_BUTTON
+const MENU_BUTTON_MARGIN := float(UiTokens.SPACE_6)
 ## Seconds each page stays open in tour().
 const TOUR_STEP := 1.5
 
@@ -313,7 +311,7 @@ func _fill_status() -> void:
 	for child in _spells_box.get_children():
 		_spells_box.remove_child(child)
 		child.queue_free()
-	_spells_box.add_child(_label("Hechizos", TITLE_COLOR))
+	_spells_box.add_child(_label("Hechizos", UiTokens.color(&"text-accent")))
 	for skill in hero.skills:
 		_spells_box.add_child(_label("%s  %d PM" % [skill.display_name, skill.mp_cost],
 			Color.WHITE))
@@ -357,7 +355,7 @@ func _fill_items() -> void:
 		use.pressed.connect(_on_use_item.bind(id))
 		row.add_child(use)
 		if why != "":
-			row.add_child(_label(why, GREY))
+			row.add_child(_label(why, UiTokens.color(&"text-disabled")))
 		UiStyle.add_description(_items_box, id)
 	if not any:
 		_items_box.add_child(_label("No llevas objetos.", Color.WHITE))
@@ -423,7 +421,7 @@ func _fill_equipment() -> void:
 		_focus_first_in(_equip_box)
 		return
 	_equip_stats.hide()
-	_equip_box.add_child(_label("%s:" % Equipment.SLOT_NAMES[_equip_slot], TITLE_COLOR))
+	_equip_box.add_child(_label("%s:" % Equipment.SLOT_NAMES[_equip_slot], UiTokens.color(&"text-accent")))
 	var listed: Array[String] = []
 	for id in _state.bag_equipment:
 		if Equipment.slot(id) != _equip_slot or listed.has(id):
@@ -496,9 +494,7 @@ func _build_menu_button() -> void:
 	_menu_button = Button.new()
 	_menu_button.custom_minimum_size = MENU_BUTTON_SIZE
 	_menu_button.focus_mode = Control.FOCUS_NONE
-	_menu_button.add_theme_stylebox_override("normal", _menu_button_style(0.75))
-	_menu_button.add_theme_stylebox_override("hover", _menu_button_style(0.9))
-	_menu_button.add_theme_stylebox_override("pressed", _menu_button_style(1.0))
+	_menu_button.theme_type_variation = UiTheme.MENU_BUTTON
 	add_child(_menu_button)
 	_menu_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	_menu_button.offset_left = -MENU_BUTTON_MARGIN - MENU_BUTTON_SIZE.x
@@ -509,21 +505,12 @@ func _build_menu_button() -> void:
 	# The ☰ icon as three white bars (the default font has no ☰ glyph on the web).
 	for i in 3:
 		var bar := ColorRect.new()
-		bar.color = Color.WHITE
+		bar.color = UiTokens.color(&"text-primary")
 		bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		bar.position = Vector2(16, 18 + i * 12)
 		bar.size = Vector2(32, 5)
 		_menu_button.add_child(bar)
 	_menu_button.hide()
-
-
-func _menu_button_style(alpha: float) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.04, 0.04, 0.12, alpha)
-	style.border_color = Color.WHITE
-	style.set_border_width_all(3)
-	style.set_corner_radius_all(8)
-	return style
 
 
 ## The main page: the hero's window on the left, the system's on the right.
@@ -534,7 +521,7 @@ func _build_main(center: CenterContainer) -> void:
 	center.add_child(_main_row)
 	_pages["main"] = _main_row
 	var hero_box := _main_window()
-	_hero_label = _label("", TITLE_COLOR)
+	_hero_label = _label("", UiTokens.color(&"text-accent"))
 	hero_box.add_child(_hero_label)
 	var rows: Container = hero_box
 	if Device.is_touch():
@@ -550,7 +537,7 @@ func _build_main(center: CenterContainer) -> void:
 		rows.add_child(button)
 		if entry[1] == "bestiary":
 			_bestiary_button = button
-	hero_box.add_child(_label("Misiones", TITLE_COLOR))
+	hero_box.add_child(_label("Misiones", UiTokens.color(&"text-accent")))
 	_mission_box = VBoxContainer.new()
 	_mission_box.add_theme_constant_override("separation", 0)
 	hero_box.add_child(_mission_box)
@@ -597,7 +584,7 @@ func _build_status(stack: VBoxContainer) -> void:
 	left.add_child(_exp_bar)
 	_stats_label = _label("", Color.WHITE)
 	left.add_child(_stats_label)
-	_gold_label = _label("", StatBar.GOLD)
+	_gold_label = _label("", UiTokens.color(&"text-money"))
 	left.add_child(_gold_label)
 	_ally_label = _label("", Color.WHITE)
 	left.add_child(_ally_label)
@@ -654,7 +641,7 @@ func _add_legend_row(legend: VBoxContainer, color: Color, text: String) -> void:
 	swatch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(swatch)
 	var label := _label(text, Color.WHITE)
-	label.add_theme_font_size_override("font_size", UiStyle.TEXT_SIZE)
+	label.add_theme_font_size_override("font_size", UiTokens.TYPE_CAPTION_SIZE)
 	row.add_child(label)
 
 
@@ -702,7 +689,7 @@ func _fill_spells() -> void:
 		cast.pressed.connect(_on_cast.bind(skill))
 		row.add_child(cast)
 		if why != "":
-			row.add_child(_label(why, GREY))
+			row.add_child(_label(why, UiTokens.color(&"text-disabled")))
 
 
 func _on_cast(skill: Skill) -> void:
@@ -783,7 +770,7 @@ func _open_bestiary_entry(id: String) -> void:
 		child.queue_free()
 	for line in BestiaryPage.entry_lines(id, _state):
 		var label := _label(line, Color.WHITE)
-		label.add_theme_font_size_override("font_size", UiStyle.TEXT_SIZE)
+		label.add_theme_font_size_override("font_size", UiTokens.TYPE_CAPTION_SIZE)
 		_entry_lines.add_child(label)
 	_open_page("bestiary_entry")
 
@@ -832,7 +819,7 @@ func _page_box(stack: VBoxContainer, page_name: String, title: String) -> VBoxCo
 	page.add_theme_constant_override("separation", 8)
 	page.hide()
 	stack.add_child(page)
-	page.add_child(_label(title, TITLE_COLOR))
+	page.add_child(_label(title, UiTokens.color(&"text-accent")))
 	_pages[page_name] = page
 	return page
 

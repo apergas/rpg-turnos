@@ -27,7 +27,7 @@ func setup(options: GameOptions, audio: AudioDirector) -> void:
 
 func _ready() -> void:
 	add_theme_constant_override("separation", 6)
-	add_child(_label("Teclas", UiStyle.TITLE_COLOR))
+	add_child(_label("Teclas", UiTokens.color(&"text-accent")))
 	for action in KeyMap.ACTIONS:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 8)

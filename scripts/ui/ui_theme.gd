@@ -199,10 +199,12 @@ static func style_3d(label: Label3D, style: StringName, color: StringName, outli
 static func menu_row(button: Button) -> Button:
 	button.flat = false
 	UiStyle.fit_finger(button)
-	button.mouse_entered.connect(func() -> void:
-		if not button.disabled and button.focus_mode != Control.FOCUS_NONE \
-				and button.is_visible_in_tree() and not button.has_focus():
-			button.grab_focus())
+	if not button.has_meta(&"menu_row"):
+		button.set_meta(&"menu_row", true)
+		button.mouse_entered.connect(func() -> void:
+			if not button.disabled and button.focus_mode != Control.FOCUS_NONE \
+					and button.is_visible_in_tree() and not button.has_focus():
+				button.grab_focus())
 	return button
 
 
@@ -238,13 +240,14 @@ static func row_style() -> StyleBoxEmpty:
 
 
 static func _rows(theme: Theme) -> void:
-	for box_name in [&"normal", &"hover", &"pressed", &"disabled"]:
+	for box_name in [&"normal", &"hover", &"pressed", &"hover_pressed", &"disabled"]:
 		theme.set_stylebox(box_name, &"Button", row_style())
 	theme.set_stylebox(&"focus", &"Button", StyleBoxEmpty.new())
 	theme.set_color(&"font_color", &"Button", UiTokens.color(&"text-primary"))
 	theme.set_color(&"font_hover_color", &"Button", UiTokens.color(&"text-primary"))
 	theme.set_color(&"font_focus_color", &"Button", UiTokens.color(&"text-primary"))
 	theme.set_color(&"font_pressed_color", &"Button", UiTokens.color(&"text-accent"))
+	theme.set_color(&"font_hover_pressed_color", &"Button", UiTokens.color(&"text-accent"))
 	theme.set_color(&"font_disabled_color", &"Button", UiTokens.color(&"text-disabled"))
 	theme.set_constant(&"h_separation", &"Button", UiTokens.SPACE_2)
 

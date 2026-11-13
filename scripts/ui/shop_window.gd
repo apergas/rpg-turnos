@@ -14,11 +14,9 @@ signal changed
 signal _left
 
 const FONT_SIZE := 24
-const TITLE_COLOR := UiStyle.TITLE_COLOR
-const GREY := UiStyle.GREY
 const BETTER := Color(0.35, 1.0, 0.4)
 const WORSE := Color(1.0, 0.35, 0.3)
-const NAME_WIDTH := 300.0
+const NAME_WIDTH := 280.0
 ## Phone: narrower names, so the widest row still fits the screen.
 const TOUCH_NAME_WIDTH := 240.0
 const PRICE_WIDTH := 90.0
@@ -99,10 +97,10 @@ func _ready() -> void:
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 24)
 	box.add_child(header)
-	_keeper = _label("", TITLE_COLOR)
+	_keeper = _label("", UiTokens.color(&"text-accent"))
 	_keeper.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(_keeper)
-	_gold = _label("", StatBar.GOLD)
+	_gold = _label("", UiTokens.color(&"text-money"))
 	header.add_child(_gold)
 	_title = _label("", Color.WHITE)
 	box.add_child(_title)
@@ -229,7 +227,7 @@ func _add_buy_row(id: String) -> void:
 	row.add_child(button)
 	var chosen := Allies.is_companion(id)
 	var price := _label("Elegir" if chosen else "%d G" % Shop.price(id),
-		GREY if why != "" else (Color.WHITE if chosen else StatBar.GOLD))
+		UiTokens.color(&"text-disabled") if why != "" else (Color.WHITE if chosen else UiTokens.color(&"text-money")))
 	price.custom_minimum_size.x = PRICE_WIDTH
 	row.add_child(price)
 	if Shop.is_ally(id):
@@ -239,11 +237,11 @@ func _add_buy_row(id: String) -> void:
 		if Allies.line(id) != "":
 			UiStyle.add_small_text(info_box, Allies.line(id))
 		if why != "":
-			info_box.add_child(_label(why, GREY))
+			info_box.add_child(_label(why, UiTokens.color(&"text-disabled")))
 		if _state.ally_id != "" and why != Shop.HAS_IT and why != Shop.HAS_BETTER \
 				and not Allies.is_companion(id):
 			info_box.add_child(_label("Sustituye a %s" % Allies.display_name(_state.ally_id),
-				GREY))
+				UiTokens.color(&"text-disabled")))
 		row.add_child(info_box)
 		return
 	var info := Shop.compare(_state, id)
@@ -259,7 +257,7 @@ func _add_buy_row(id: String) -> void:
 		row.add_child(bulk)
 		UiStyle.add_description(row, id)
 	# The reason always takes its place, so the window keeps its width after a purchase.
-	var why_label := _label(why, GREY)
+	var why_label := _label(why, UiTokens.color(&"text-disabled"))
 	why_label.custom_minimum_size.x = WHY_WIDTH
 	row.add_child(why_label)
 
@@ -287,13 +285,13 @@ func _add_sell_row(id: String) -> void:
 	button.pressed.connect(_sell.bind(id))
 	button.set_meta("id", id)
 	row.add_child(button)
-	var price := _label("%d G" % Shop.sell_price(id, _shop_id), GREY if why != "" else StatBar.GOLD)
+	var price := _label("%d G" % Shop.sell_price(id, _shop_id), UiTokens.color(&"text-disabled") if why != "" else UiTokens.color(&"text-money"))
 	price.custom_minimum_size.x = PRICE_WIDTH
 	row.add_child(price)
 	if not Shop.is_equipment(id):
 		UiStyle.add_description(row, id)
 	if why != "":
-		row.add_child(_label(why, GREY))
+		row.add_child(_label(why, UiTokens.color(&"text-disabled")))
 
 
 ## Green ▲ and +n when better, red ▼ and -n when worse, "=" when the same (also used by
