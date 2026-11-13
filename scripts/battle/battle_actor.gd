@@ -18,7 +18,7 @@ enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPE
 	SNAKE, MONKEY, TRAP_PLANT, TROPICAL_MUSHROOM, CARAVAN_CHIEF, HEALER, JAGUAR,
 	SCORPION, SAND_SLIME, VULTURE, SAND_GOLEM, MUMMY, CANTEEN, SAND_WORM, SNOW_WOLF, ICE_GOLEM,
 	SUMMIT_SPIRIT, ICE_BAT, GOAT, GRIFFIN, HOLLOW_ARMOR, GARGOYLE, SHADOW, SENTINEL, RUIN_RAT, CITY_GUARDIAN,
-	PORTAL_DEVOURER, CARAVAN_MERCHANT, TRAVELLER_F, TRAVELLER_M, EXPLORER, SURVIVOR, POT }
+	PORTAL_DEVOURER, CARAVAN_MERCHANT, TRAVELLER_F, TRAVELLER_M, EXPLORER, SURVIVOR, POT, CARAVAN_COLLECTOR }
 
 const FIRE_COLOR := Color(1.0, 0.45, 0.1)
 const HEAL_COLOR := Color(0.3, 1.0, 0.4)
@@ -343,6 +343,15 @@ const LOOKS := {
 			"Knight_Body": Color(1.2, 0.85, 0.55), "Knight_LegLeft": Color(0.7, 0.5, 0.35),
 			"Knight_LegRight": Color(0.7, 0.5, 0.35)},
 		"cape": Color(0.16, 0.32, 0.18), "anims": CHARACTER_ANIMS,
+	},
+	# The Coleccionista in the Caravana: a person, in the purple of his Villaclaro robes.
+	Look.CARAVAN_COLLECTOR: {
+		"scene": KNIGHT, "scale": CHARACTER_SCALE, "top": 1.9, "hide": PERSON_HIDE,
+		"head_texture": HEAD_BROWN_PALE, "hair": {"style": "bun", "color": HAIR_BROWN},
+		"mesh_tints": {"Knight_ArmLeft": SKIN_PALE, "Knight_ArmRight": SKIN_PALE,
+			"Knight_Body": Color(1.3, 0.8, 1.9), "Knight_LegLeft": Color(0.75, 0.6, 0.9),
+			"Knight_LegRight": Color(0.75, 0.6, 0.9)},
+		"cape": Color(0.5, 0.25, 0.7), "anims": CHARACTER_ANIMS,
 	},
 	Look.CARAVAN_MERCHANT: {
 		"scene": KNIGHT, "scale": CHARACTER_SCALE, "top": 1.9, "hide": PERSON_HIDE,

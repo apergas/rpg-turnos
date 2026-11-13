@@ -101,7 +101,7 @@ exits = [{
 npcs = [{
 "kind": "npc",
 "lines": ["Colecciono medallas pequeñas."],
-"look": "COLLECTOR",
+"look": "CARAVAN_COLLECTOR",
 "name": "Coleccionista",
 "needs": "companero",
 "pos": Vector3(-6.5, 0, -6.5),
