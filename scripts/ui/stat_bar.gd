@@ -77,6 +77,6 @@ func _draw() -> void:
 	var font_size := UiTokens.TYPE_LABEL_SIZE
 	var at := Vector2(8, (size.y + font.get_ascent(font_size) - font.get_descent(font_size)) / 2.0)
 	draw_string_outline(font, at, _text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size,
-		UiTokens.OUTLINE_S, UiTokens.color(&"text-outline"))
+		UiTokens.OUTLINE_M, UiTokens.color(&"text-outline"))
 	draw_string(font, at, _text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size,
 		UiTokens.color(&"text-danger" if critical else &"text-on-fill"))
