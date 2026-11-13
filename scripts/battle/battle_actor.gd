@@ -1066,6 +1066,15 @@ func set_faded(on: bool) -> void:
 		mi.transparency = FADED_TRANSPARENCY if on else 0.0
 
 
+## A group coming back on the map: every mesh from invisible to solid in seconds.
+func play_fade_in(seconds: float) -> void:
+	for mi in _meshes:
+		mi.transparency = 1.0
+	var t := create_tween().set_parallel()
+	for mi in _meshes:
+		t.tween_property(mi, "transparency", 0.0, seconds)
+
+
 ## Map hero only (Player): a soft rim of light and a faint light of his own on every mesh
 ## (RIM_SHADER through material_overlay, so the Knight's shared materials never change), so
 ## he reads on a tree's shadow. Never in battle, never on the companions or the figures.

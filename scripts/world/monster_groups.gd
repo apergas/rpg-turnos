@@ -43,6 +43,8 @@ const OPEN_TRIES := 600
 const PLACE_TRIES := 6
 ## The rare enemy (the Slime de Metal) starts at least this far from the hero.
 const RARE_GAP := 12.0
+## A group that comes back (World's refill) stands at least this far from the hero.
+const REFILL_GAP := 20.0
 ## The 2 × 2 blocks a cell can be part of (their top left corner, from the cell) and the
 ## four cells of a block.
 const BLOCK_CORNERS: Array[Vector2i] = [Vector2i(-1, -1), Vector2i(0, -1), Vector2i(-1, 0),
@@ -123,6 +125,21 @@ static func rare_spot(zone: ZoneData, rng: RandomNumberGenerator, hero_pos: Vect
 	if far.is_empty():
 		return null
 	return far[rng.randi_range(0, far.size() - 1)]
+
+
+## Where one more group may stand now: a spot spots() could pick (the same _candidates()),
+## REFILL_GAP or more from the hero and MIN_GAP from every group on the map (taken); null if
+## there is none.
+static func refill_spot(zone: ZoneData, rng: RandomNumberGenerator, hero_pos: Vector3,
+		taken: Array[Vector3]) -> Variant:
+	var avoid: Array[Vector3] = [hero_pos]
+	var found: Array[Vector3] = []
+	for pos in _candidates(zone, rng, avoid):
+		if _flat(pos, hero_pos) >= REFILL_GAP and _apart(pos, taken):
+			found.append(pos)
+	if found.is_empty():
+		return null
+	return found[rng.randi_range(0, found.size() - 1)]
 
 
 ## The spots a group may stand on: the room cells of a dungeon floor, or OPEN_TRIES random

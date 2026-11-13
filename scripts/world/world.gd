@@ -186,6 +186,10 @@ const MISSION_WIDTH := 420.0
 const GROUP_ANIMATE_RADIUS := 30.0
 ## Seconds between two hops of a slime walking on the map.
 const HOP_TIME := 0.45
+## Seconds of play on this map between two groups coming back while it has fewer than
+## zone.monster_count (counted on _sim_ms, like the hunt's timers), and the fade they come in with.
+const REFILL_S := 45.0
+const REFILL_FADE := 0.5
 ## Autoplay: below the zone's autoplay_boss_level the hero leaves the route for the
 ## nearest group this close that can start a battle, gives up after AUTOPLAY_HUNT_MS (or
 ## stuck on the way, Player.take_failed_hunt()) and leaves that one alone for
@@ -303,6 +307,8 @@ var _hunt_on := false
 var _hunt_until_ms := 0
 ## Time of the simulation in ms (the hunt's timers count it, so a run with --fixed-fps keeps them).
 var _sim_ms := 0.0
+## Simulation ms counted toward the next group coming back (_tick_refill()).
+var _refill_ms := 0.0
 var _hunt_skip := {}
 ## DebugPanel's Monstruos: while set, no map puts any group of monsters or rare enemy
 ## (_add_group(), add_rare()). It lasts for the run; only DebugPanel changes it.
@@ -386,6 +392,7 @@ func _physics_process(delta: float) -> void:
 	_move_groups(delta)
 	if _waiting or _talking:
 		return
+	_tick_refill(delta)
 	var pos := _player.global_position
 	var inside := _is_in_village(pos)
 	if inside != _in_village:
@@ -633,6 +640,7 @@ func set_autoplay_hunt(on: bool) -> void:
 ## Every group of the zone again (MonsterGroups.groups()), in new places, none within
 ## MonsterGroups.ENTRY_GAP of avoid (where the hero stands). On autoplay prints "Grupos: n".
 func respawn_groups(avoid: Array[Vector3] = []) -> void:
+	_refill_ms = 0.0
 	for group in _groups:
 		(group.node as Node3D).queue_free()
 	_groups.clear()
@@ -688,9 +696,9 @@ func has_rare() -> bool:
 
 ## A group at pos: the figure of its first enemy (no collider: nothing bumps into it),
 ## facing the camera, and its MonsterRoam.
-func _add_group(pos: Vector3, enemies: Array[Combatant], rare: bool) -> void:
+func _add_group(pos: Vector3, enemies: Array[Combatant], rare: bool) -> Dictionary:
 	if debug_no_groups:
-		return
+		return {}
 	var node := Node3D.new()
 	node.position = pos
 	node.rotation_degrees.y = 180.0
@@ -705,6 +713,32 @@ func _add_group(pos: Vector3, enemies: Array[Combatant], rare: bool) -> void:
 		"armed": true, "rare": rare, "hop": 0.0}
 	_groups.append(group)
 	_fade_group(group)
+	return group
+
+
+## A beaten group comes back, one every REFILL_S seconds of play on this map while it has
+## fewer than zone.monster_count (MonsterGroups.refill_spot(): never near the hero), fading in.
+## Not during a cutscene or an Incienso, nor on a map without monsters (the Caravana).
+func _tick_refill(delta: float) -> void:
+	if debug_no_groups or zone.monster_count <= 0 or zone.formations.is_empty() 			or _player.scripted or _repelled or group_count() >= zone.monster_count:
+		_refill_ms = 0.0
+		return
+	_refill_ms += delta * 1000.0
+	if _refill_ms < REFILL_S * 1000.0:
+		return
+	_refill_ms = 0.0
+	var taken: Array[Vector3] = []
+	for g in _groups:
+		taken.append((g.node as Node3D).position)
+	var spot: Variant = MonsterGroups.refill_spot(zone, _rng, _player.global_position, taken)
+	if spot == null:
+		return
+	var group := _add_group(spot, EncounterTable.pick_group(zone, spot, _rng), false)
+	if group.is_empty():
+		return
+	(group.actor as BattleActor).play_fade_in(REFILL_FADE)
+	if _autoplay:
+		print("Grupo repuesto (%d)" % group_count())
 
 
 ## Moves every group near the hero one physics tick (MonsterRoam), turned the way it walks,
@@ -753,7 +787,7 @@ func contact_enemies() -> Array[Combatant]:
 
 
 ## After the battle of the group touched (outcome: BattleEngine.State): WON takes it off the
-## map until the map is built again ("Grupo vencido (quedan n)" on autoplay), FLED leaves it
+## map ("Grupo vencido (quedan n)" on autoplay; another comes back later, _tick_refill()), FLED leaves it
 ## half see-through, starting no battle until the hero is MonsterGroups.REARM_RADIUS away;
 ## LOST changes nothing (Game sends the hero back and the groups come back with the map).
 func end_contact(outcome: int) -> void:
