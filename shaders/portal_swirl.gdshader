@@ -10,6 +10,12 @@ uniform vec3 core_color : source_color = vec3(0.1, 0.2, 0.55);
 uniform float spin = 0.6;
 uniform float pulse_time = 1.2;
 uniform bool ring_only = false;
+// corona: the quad is bigger than the swirl; the swirl fills the fraction `disc` of it and an
+// eclipse's corona (light rays fading out) is drawn in the rest.
+uniform bool corona = false;
+uniform float disc = 1.0;
+uniform vec3 corona_inner : source_color = vec3(0.92, 0.97, 1.0);
+uniform vec3 corona_outer : source_color = vec3(0.45, 0.7, 1.0);
 
 float hash(vec2 p) {
 	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
@@ -29,6 +35,25 @@ void fragment() {
 	if (r > 1.0) {
 		discard;
 	}
+	if (corona && !ring_only) {
+		r /= disc;
+	}
+	if (corona && !ring_only && r > 1.0) {
+		float t = clamp((r - 1.0) / (1.0 / disc - 1.0), 0.0, 1.0);
+		float a = atan(p.y, p.x) / 6.2831;
+		float ray = noise(vec2(a * 26.0 + TIME * 0.35, TIME * 0.5));
+		float ray2 = noise(vec2(a * 7.0 - TIME * 0.2, 3.0 + TIME * 0.3));
+		float reach = 0.15 + 0.85 * smoothstep(0.2, 0.9, ray * 0.75 + ray2 * 0.45);
+		float rays = pow(clamp(1.0 - t / reach, 0.0, 1.0), 1.2);
+		float glow = pow(1.0 - t, 4.0) * 0.6;
+		float pulse_c = 0.9 + 0.1 * sin(TIME * 6.2831 / pulse_time);
+		float k = clamp(rays * 1.0 + glow, 0.0, 1.0) * pulse_c;
+		ALBEDO = mix(corona_inner, corona_outer, smoothstep(0.0, 0.7, t));
+		ALPHA = k * (1.0 - smoothstep(0.9, 1.0, t)) * smoothstep(0.0, 0.03, t + 0.03);
+	} else {
+	if (r > 1.0) {
+		discard;
+	}
 	float pulse = 0.85 + 0.15 * sin(TIME * 6.2831 / pulse_time);
 	float edge = smoothstep(0.78, 0.95, r) * (1.0 - smoothstep(0.95, 1.0, r));
 	if (ring_only) {
@@ -42,5 +67,6 @@ void fragment() {
 		vec3 color = mix(inside * (0.6 + 0.9 * swirl), edge_color, edge);
 		ALBEDO = color * (0.9 + 0.1 * pulse);
 		ALPHA = 0.92 * (1.0 - smoothstep(0.97, 1.0, r));
+	}
 	}
 }
