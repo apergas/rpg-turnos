@@ -10,8 +10,8 @@ const CELL := ZoneData.CELL
 const REVEAL_FIELD := 9.0
 const REVEAL_DUNGEON := 6.0
 ## Colors of the seen cells on the map square.
-const FIELD_COLOR := Color(0.3, 0.55, 0.26)
-const PATH_COLOR := Color(0.78, 0.68, 0.48)
+const FIELD_COLOR: Color = UiTokens.JUEGO[&"world-meadow"]
+const PATH_COLOR: Color = UiTokens.JUEGO[&"world-path"]
 const ROCK_COLOR := Color(0.16, 0.15, 0.17)
 const FLOOR_COLOR := Color(0.62, 0.6, 0.58)
 const STAIRS_COLOR := Color(1.0, 0.8, 0.25)

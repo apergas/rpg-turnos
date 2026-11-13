@@ -507,10 +507,8 @@ func _add_stairs(cell: Vector2i, up: bool) -> void:
 				center - toward * (1.0 - i * 0.6) + Vector3(0, 0.03, 0))
 	var label := Label3D.new()
 	label.text = "Subir" if up else "Bajar"
-	label.font_size = 48
+	UiTheme.style_3d(label, &"display-m", &"text-display-soft", UiTokens.OUTLINE_L)
 	label.pixel_size = 0.008
-	label.outline_size = 10
-	label.modulate = Color(1.0, 0.95, 0.8)
 	label.position = center + Vector3(0, 2.6, 0)
 	add_child(label)
 

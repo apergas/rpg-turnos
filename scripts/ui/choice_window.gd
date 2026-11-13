@@ -6,7 +6,7 @@ class_name ChoiceWindow extends Control
 
 signal answered(index: int)
 
-const WIDTH := 460
+const WIDTH := UiTokens.WINDOW_W_L
 ## On a phone the window is narrower so it fits 740 px (370 virtual at scale 1.6 with large text).
 const TOUCH_WIDTH := 300
 
@@ -25,7 +25,7 @@ func ask(question: String, options: Array[String], focus := 0) -> int:
 	_options = options.size()
 	size = get_viewport_rect().size  # under a CanvasLayer the anchors have no parent to follow
 	var shade := ColorRect.new()
-	shade.color = Color(0, 0, 0, 0.35)
+	shade.color = UiTokens.color(&"surface-scrim")
 	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	shade.gui_input.connect(func(event: InputEvent) -> void:
 		if UiStyle.is_outside_tap(event):
@@ -34,7 +34,8 @@ func ask(question: String, options: Array[String], focus := 0) -> int:
 	var window := BattleHud.make_window()
 	add_child(window)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 10 if not Device.is_touch() else 4)
+	box.add_theme_constant_override("separation",
+			UiTokens.SPACE_2 if not Device.is_touch() else UiTokens.SPACE_1)
 	window.add_child(box)
 	var label := Label.new()
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

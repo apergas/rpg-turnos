@@ -628,9 +628,9 @@ func _fill_map() -> void:
 	var legend := VBoxContainer.new()
 	legend.add_theme_constant_override("separation", 4)
 	_map_holder.add_child(legend)
-	_add_legend_row(legend, MapSquare.MARKER_COLOR, "Tú")
+	_add_legend_row(legend, UiTokens.color(&"map-hero"), "Tú")
 	for kind in MapMarks.kinds_in(MapMarks.seen(marks, map)):
-		_add_legend_row(legend, MapMarks.COLORS[kind], MapMarks.NAMES[kind])
+		_add_legend_row(legend, MapMarks.color_of(kind), MapMarks.NAMES[kind])
 
 
 func _add_legend_row(legend: VBoxContainer, color: Color, text: String) -> void:

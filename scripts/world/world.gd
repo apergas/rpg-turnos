@@ -60,24 +60,18 @@ const NOTICE_TIME := 2.0
 ## Seconds "Misión cumplida" stays in the status window.
 const MISSION_DONE_TIME := 4.0
 ## The notice window, top centre (clear of the status window and the ☰ button).
-const NOTICE_MAX_WIDTH := 640.0
-const UI_EDGE := 24.0
+const NOTICE_MAX_WIDTH := float(UiTokens.WINDOW_W_XL)
+const UI_EDGE := float(UiTokens.SPACE_6)
 ## Phone: the mission line wraps here and the bars narrow to fit.
 const TOUCH_MISSION_WIDTH := 300.0
 ## The use button of the phone interface.
 const USE_BUTTON_SIZE := Vector2(180, 72)
-## The place's line by the map square.
-const PLACE_OUTLINE := 6
 ## The phone's walking hint: wraps here and sits over the use button's row.
-const TOUCH_HINT_WIDTH := 480.0
+const TOUCH_HINT_WIDTH := float(UiTokens.WINDOW_W_L)
 ## The place's name, big, the first time the map is the player's (World.freeze(false)).
 const BANNER_TOP := 110.0
-const BANNER_NAME_FONT := 48
-const BANNER_FLOOR_FONT := 30
-const BANNER_COLOR := Color(1.0, 0.9, 0.45)
 const BANNER_FADE := 0.5
 const BANNER_TIME := 2.5
-const FONT_SIZE := 24
 ## How close the player must be to talk to a figure / to open a chest / to run into the
 ## boss / to take an exit.
 const TALK_RADIUS := 2.5
@@ -155,7 +149,6 @@ const ARCH_WIDTH := 3.6
 const ARCH_HEIGHT := 3.0
 const SIGN_COLOR := Color(0.62, 0.45, 0.25)
 const FOG_COLOR := Color(0.92, 0.93, 0.97, 0.6)
-const MARKER_COLOR := Color(1.0, 0.9, 0.4)
 ## Meters walked between two footstep sounds.
 const STEP_DISTANCE := 1.6
 ## Underground the hero carries a lantern: a warm light over the head.
@@ -164,16 +157,12 @@ const LANTERN_ENERGY := 2.0
 const LANTERN_RANGE := 10.0
 const LANTERN_HEIGHT := 2.4
 ## The "!" and "?" of the quests: over the figure, bobbing.
-const QUEST_MARK_COLOR := Color(1.0, 0.85, 0.2)
 const QUEST_MARK_GAP := 0.35
 const QUEST_MARK_BOB := 0.12
 ## A quest mark over a figure with a sign ("Posada") goes above the sign.
 const FIGURE_SIGN_RISE := 0.65
 const FIGURE_SIGN_GAP := 0.25
-const FIGURE_SIGN_FONT := 48
 const FIGURE_SIGN_PIXEL := 0.012
-const FIGURE_SIGN_OUTLINE := 14
-const FIGURE_SIGN_COLOR := Color(1.0, 0.95, 0.8)
 ## Mission lines wrap past this width, so the status window stays at the side of the screen.
 const MISSION_WIDTH := 420.0
 ## Groups of monsters farther than this from the hero neither move nor animate.
@@ -1088,10 +1077,8 @@ func _add_figure_sign(npc: Dictionary) -> void:
 		return
 	var label := Label3D.new()
 	label.text = text
-	label.font_size = FIGURE_SIGN_FONT
+	UiTheme.style_3d(label, &"display-m", &"text-display-soft", UiTokens.OUTLINE_L)
 	label.pixel_size = FIGURE_SIGN_PIXEL
-	label.outline_size = FIGURE_SIGN_OUTLINE
-	label.modulate = FIGURE_SIGN_COLOR
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.no_depth_test = true
 	label.position.y = figure_actor(npc.name).top_height() + FIGURE_SIGN_GAP
@@ -1101,10 +1088,8 @@ func _add_figure_sign(npc: Dictionary) -> void:
 
 func _build_mark(figure_name: String) -> Label3D:
 	var label := Label3D.new()
-	label.font_size = 96
+	UiTheme.style_3d(label, &"display-xl", &"quest-mark", UiTokens.OUTLINE_M)
 	label.pixel_size = 0.01
-	label.outline_size = 16
-	label.modulate = QUEST_MARK_COLOR
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.no_depth_test = true
 	label.position.y = figure_actor(figure_name).top_height() + QUEST_MARK_GAP
@@ -1160,7 +1145,7 @@ func refresh_status(hero: Combatant, _potions: int, gold: int, missions: Array[S
 	_gold_label.text = "%d G" % gold
 	_missions = missions
 	if not _mission_done:
-		_show_missions(missions, Color.WHITE)
+		_show_missions(missions)
 
 
 ## Puts "Misión cumplida" (or text) in the mission list for a few seconds, then the
@@ -1170,24 +1155,26 @@ func show_mission_done(text: String) -> void:
 	var serial := _mission_done_serial
 	_mission_done = true
 	var lines: Array[String] = [text]
-	_show_missions(lines, UiTokens.color(&"text-money"))
+	_show_missions(lines, true)
 	if _autoplay:
 		print(text)
 	await get_tree().create_timer(MISSION_DONE_TIME).timeout
 	if serial == _mission_done_serial:
 		_mission_done = false
-		_show_missions(_missions, Color.WHITE)
+		_show_missions(_missions)
 
 
-func _show_missions(lines: Array[String], color: Color) -> void:
+func _show_missions(lines: Array[String], done := false) -> void:
 	for child in _mission_box.get_children():
 		_mission_box.remove_child(child)
 		child.queue_free()
 	var shown := lines.slice(0, 1) if Device.is_touch() else lines
 	var width := TOUCH_MISSION_WIDTH if Device.is_touch() else MISSION_WIDTH
 	for line in shown:
-		var label := _label()
-		label.add_theme_color_override("font_color", color)
+		var label := Label.new()
+		label.theme_type_variation = UiTheme.CAPTION
+		if done:
+			UiTheme.style_label(label, &"caption", &"text-positive")
 		_mission_box.add_child(label)
 		BattleHud.fit_label(label, line, width)
 
@@ -1396,7 +1383,7 @@ func _build_marker() -> MeshInstance3D:
 	ring.ring_segments = 4
 	var material := StandardMaterial3D.new()
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.albedo_color = MARKER_COLOR
+	material.albedo_color = UiTokens.color(&"border-focus")
 	material.no_depth_test = true
 	var marker := MeshInstance3D.new()
 	marker.mesh = ring
@@ -1429,10 +1416,8 @@ func _build_exit(exit: Dictionary) -> Node3D:
 	BattleStage.add_mesh(root, board, SIGN_COLOR, Vector3(0, ARCH_HEIGHT + 0.5, 0.1))
 	var label := Label3D.new()
 	label.text = exit.label
-	label.font_size = 48
+	UiTheme.style_3d(label, &"display-m", &"text-display-soft", UiTokens.OUTLINE_L)
 	label.pixel_size = 0.008
-	label.outline_size = 10
-	label.modulate = Color(1.0, 0.95, 0.8)
 	label.position = Vector3(0, ARCH_HEIGHT + 0.5, 0.15)
 	root.add_child(label)
 	var fog := Node3D.new()
@@ -1578,7 +1563,7 @@ func _build_ui() -> void:
 	column.offset_top = UI_EDGE
 	column.offset_right = UI_EDGE
 	column.offset_bottom = UI_EDGE
-	column.add_theme_constant_override("separation", 8)
+	column.add_theme_constant_override("separation", UiTokens.SPACE_2)
 	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ui.add_child(column)
 	_status_column = column
@@ -1589,10 +1574,8 @@ func _build_ui() -> void:
 	_map_square.pressed.connect(func() -> void:
 		if not _talking and not _waiting:
 			map_requested.emit())
-	_place_label = _label()
-	_place_label.add_theme_font_size_override("font_size", UiTokens.TYPE_CAPTION_SIZE)
-	_place_label.add_theme_color_override("font_outline_color", Color.BLACK)
-	_place_label.add_theme_constant_override("outline_size", PLACE_OUTLINE)
+	_place_label = Label.new()
+	_place_label.theme_type_variation = UiTheme.OUTLINED
 	_place_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if Device.is_touch():
 		# Under the menu button, top right.
@@ -1601,7 +1584,7 @@ func _build_ui() -> void:
 		_map_square.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 		_map_square.offset_right = -PauseMenu.MENU_BUTTON_MARGIN
 		_map_square.offset_left = _map_square.offset_right - MapSquare.TOUCH_SIDE
-		_map_square.offset_top = PauseMenu.MENU_BUTTON_MARGIN + PauseMenu.MENU_BUTTON_SIZE.y + 8.0
+		_map_square.offset_top = PauseMenu.MENU_BUTTON_MARGIN + PauseMenu.MENU_BUTTON_SIZE.y + UiTokens.SPACE_2
 		_map_square.offset_bottom = _map_square.offset_top + MapSquare.TOUCH_SIDE
 		_ui.add_child(_place_label)
 		_place_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -1609,15 +1592,16 @@ func _build_ui() -> void:
 		_place_label.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 		_place_label.offset_right = _map_square.offset_right
 		_place_label.offset_left = _map_square.offset_right
-		_place_label.offset_top = _map_square.offset_bottom + 4.0
+		_place_label.offset_top = _map_square.offset_bottom + UiTokens.SPACE_1
 		_place_label.offset_bottom = _place_label.offset_top
 	else:
 		column.add_child(_place_label)
 		column.add_child(_map_square)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 4)
+	box.add_theme_constant_override("separation", UiTokens.SPACE_1)
 	panel.add_child(box)
-	_name_label = _label()
+	_name_label = Label.new()
+	_name_label.theme_type_variation = UiTheme.TITLE
 	box.add_child(_name_label)
 	_hp_bar = StatBar.new(StatBar.HP)
 	box.add_child(_hp_bar)
@@ -1628,8 +1612,8 @@ func _build_ui() -> void:
 	if Device.is_touch():
 		# Estado in the pause menu says the same.
 		_exp_bar.hide()
-	_gold_label = _label()
-	_gold_label.add_theme_color_override("font_color", UiTokens.color(&"text-money"))
+	_gold_label = Label.new()
+	_gold_label.theme_type_variation = UiTheme.MONEY
 	box.add_child(_gold_label)
 	_mission_box = VBoxContainer.new()
 	_mission_box.add_theme_constant_override("separation", 0)
@@ -1646,10 +1630,9 @@ func _build_ui() -> void:
 	_notice = _label()
 	_notice_window.add_child(_notice)
 	_build_banner()
-	_prompt = _label()
+	_prompt = Label.new()
+	_prompt.theme_type_variation = UiTheme.OUTLINED
 	_prompt.text = PROMPTS[TALK]
-	_prompt.add_theme_color_override("font_outline_color", Color.BLACK)
-	_prompt.add_theme_constant_override("outline_size", 8)
 	_ui.add_child(_prompt)
 	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, \
 		Control.PRESET_MODE_MINSIZE, 200)
@@ -1694,7 +1677,7 @@ func show_touch_hint(text: String) -> void:
 		_hint_window.grow_vertical = Control.GROW_DIRECTION_BEGIN
 		_hint_window.offset_left = 0.0
 		_hint_window.offset_right = 0.0
-		_hint_window.offset_bottom = -(UI_EDGE + USE_BUTTON_SIZE.y + 12.0)
+		_hint_window.offset_bottom = -(UI_EDGE + USE_BUTTON_SIZE.y + UiTokens.SPACE_3)
 		_hint_window.offset_top = _hint_window.offset_bottom
 		_hint = _label()
 		_hint_window.add_child(_hint)
@@ -1711,14 +1694,11 @@ func _build_banner() -> void:
 	_banner.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	_banner.offset_top = BANNER_TOP
 	_banner.offset_bottom = BANNER_TOP
-	for font_size in [BANNER_NAME_FONT, BANNER_FLOOR_FONT]:
+	for variation in [UiTheme.DISPLAY, UiTheme.DISPLAY_SUB]:
 		var label := Label.new()
+		label.theme_type_variation = variation
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		label.add_theme_font_size_override("font_size", font_size)
-		label.add_theme_color_override("font_color", BANNER_COLOR)
-		label.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.0))
-		label.add_theme_constant_override("outline_size", 12)
 		_banner.add_child(label)
 	_banner.hide()
 
@@ -1744,10 +1724,7 @@ func _show_banner() -> void:
 
 
 func _label() -> Label:
-	var label := Label.new()
-	label.add_theme_font_size_override("font_size", FONT_SIZE)
-	label.add_theme_color_override("font_color", Color.WHITE)
-	return label
+	return Label.new()
 
 
 ## A soft footstep every STEP_DISTANCE meters walked.

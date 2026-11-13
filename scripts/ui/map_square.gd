@@ -8,13 +8,10 @@ class_name MapSquare extends PanelContainer
 ## A left click or a lifted finger on it (only when clickable).
 signal pressed
 
-const SIDE := 150.0
+const SIDE := float(UiTokens.MAP_SIZE)
 const TOUCH_SIDE := 110.0
-const BACK := Color(0.04, 0.04, 0.12, 0.45)
-const BORDER := Color(1.0, 1.0, 1.0, 0.7)
 const ALPHA := 0.8
 const MARKER_SIZE := 7.0
-const MARKER_COLOR := Color.WHITE
 const MARK_SIZE := 5.0
 
 ## Set before add_child: the square takes clicks and emits pressed (the map's square opens
@@ -40,12 +37,7 @@ func _init(side := SIDE) -> void:
 
 
 func _ready() -> void:
-	var style := StyleBoxFlat.new()
-	style.bg_color = BACK
-	style.border_color = BORDER
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(4)
-	add_theme_stylebox_override("panel", style)
+	theme_type_variation = UiTheme.WINDOW_MAP
 	custom_minimum_size = Vector2(_side, _side)
 	size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	mouse_filter = Control.MOUSE_FILTER_STOP if clickable else Control.MOUSE_FILTER_IGNORE
@@ -65,7 +57,7 @@ func _ready() -> void:
 	_picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	inside.add_child(_picture)
 	_marker = ColorRect.new()
-	_marker.color = MARKER_COLOR
+	_marker.color = UiTokens.color(&"map-hero")
 	_marker.size = Vector2.ONE * MARKER_SIZE
 	_marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	inside.add_child(_marker)
