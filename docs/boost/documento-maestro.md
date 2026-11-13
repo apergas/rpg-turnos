@@ -28,4 +28,4 @@ Lo que se ha hecho y lo que queda por hacer en Villaclaro. Una fila por versión
 | 2.5.0 · M-59 | Un portal del Ala de viaje más bonito | plan |
 | 2.5.0 · M-60 | Una misión opcional más en la mina y otra en el castillo | plan |
 | 2.5.0 · M-61 | Un fuego más realista en antorchas y hogueras | plan |
-| v3 | La siguiente parte: el pueblo al otro lado del portal (la pantalla final de la 2.3.0) | idea |
+| v3 | La siguiente parte: el pueblo al otro lado del portal ([guiones posibles](v3-guiones.md)) | idea |
