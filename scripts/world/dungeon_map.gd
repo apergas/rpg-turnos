@@ -2,8 +2,8 @@ class_name DungeonMap extends Node3D
 ## The cells of a dungeon floor (ZoneData.layout), built when it enters the tree: a dark
 ## floor in chunks, a rock block with a box collider for every rock cell next to the
 ## floor (the buried ones are drawn in one MultiMesh, with no collider), torches on the
-## walls with a flickering point light, the stairs (a flight going up, a dark pit going
-## down, with a sign), iron gates on the door cells, the lever and the key. World tells
+## walls (Flame: a flame, embers and a flickering light), the stairs (a flight going up, a dark
+## pit going down, with a sign), iron gates on the door cells, the lever and the key. World tells
 ## it the world flags (set_flags(): gates open, lever pulled, key taken) and, every
 ## frame, where the camera and the hero are (see_through()): the rock blocks between them
 ## turn see-through. In a castle (zone.castle) the rock cells are stone walls instead:
@@ -33,10 +33,6 @@ const TORCH_HEIGHT := 2.1
 const TORCH_COLOR := Color(1.0, 0.62, 0.3)
 const TORCH_ENERGY := 2.5
 const TORCH_RANGE := 8.0
-const FLAME_COLOR := Color(1.0, 0.7, 0.25)
-## How much the torch lights waver (share of their energy) and how fast.
-const FLICKER := 0.12
-const FLICKER_SPEED := 9.0
 const IRON := Color(0.2, 0.2, 0.23)
 const WOOD := Color(0.36, 0.22, 0.1)
 const STONE := Color(0.45, 0.43, 0.42)
@@ -73,7 +69,6 @@ var _blocks := {}
 var _rock_materials: Array[StandardMaterial3D] = []
 var _clear_material: StandardMaterial3D
 var _faded: Array[MeshInstance3D] = []
-var _lights: Array[OmniLight3D] = []
 var _time := 0.0
 ## Gate bodies (their collider goes away when the doors open), the lever's handle pivot
 ## and the key's root.
@@ -138,9 +133,6 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_time += delta
-	for i in _lights.size():
-		var wave := sin(_time * FLICKER_SPEED + i * 1.7) * 0.6 + sin(_time * 23.0 + i) * 0.4
-		_lights[i].light_energy = TORCH_ENERGY * (1.0 + FLICKER * wave)
 	if _key and _key.visible:
 		_key.rotation.y += delta * 1.5
 	for i in _mists.size():
@@ -475,7 +467,7 @@ func _wall_side(cell: Vector2i) -> Vector2i:
 	return Vector2i(0, -1)
 
 
-## A bracket on the cell's wall with a flame and a flickering light a little out from it.
+## A bracket on the cell's wall with a Flame (embers and a flickering light a little out from it).
 func _add_torch(cell: Vector2i) -> void:
 	var side := _wall_side(cell)
 	var out := -Vector3(side.x, 0, side.y)
@@ -484,23 +476,9 @@ func _add_torch(cell: Vector2i) -> void:
 	var stick := BoxMesh.new()
 	stick.size = Vector3(0.1, 0.5, 0.1)
 	BattleStage.add_mesh(self, stick, WOOD, at_wall + out * 0.1 + Vector3(0, TORCH_HEIGHT - 0.2, 0))
-	var flame := MeshInstance3D.new()
-	flame.mesh = BattleStage.unit_sphere()
-	flame.scale = Vector3(0.13, 0.2, 0.13)
-	flame.position = at_wall + out * 0.2 + Vector3(0, TORCH_HEIGHT + 0.12, 0)
-	var mat := StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.albedo_color = FLAME_COLOR
-	flame.material_override = mat
-	flame.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(flame)
-	var light := OmniLight3D.new()
-	light.light_color = TORCH_COLOR
-	light.light_energy = TORCH_ENERGY
-	light.omni_range = TORCH_RANGE
-	light.position = at_wall + out * 0.7 + Vector3(0, TORCH_HEIGHT + 0.2, 0)
-	add_child(light)
-	_lights.append(light)
+	var flame_pos := at_wall + out * 0.2 + Vector3(0, TORCH_HEIGHT + 0.12, 0)
+	var light_pos := at_wall + out * 0.7 + Vector3(0, TORCH_HEIGHT + 0.2, 0)
+	BattleStage.add_flame(self, flame_pos, 1.0, light_pos - flame_pos, true, TORCH_RANGE)
 
 
 ## Stairs up: a flight of stone steps rising toward the cell's wall. Stairs down: a dark
