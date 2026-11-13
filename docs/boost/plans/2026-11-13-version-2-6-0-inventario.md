@@ -248,7 +248,7 @@ Como son constantes y `UiTokens.color()` es una llamada, `FIELD_COLOR` y `PATH_C
 | línea | hoy | pasa a |
 |---|---|---|
 | `:14` `FONT_SIZE` 24 | | tema |
-| `:16` `NAME_WIDTH` 220 | | se queda |
+| `:16` `NAME_WIDTH` 220 | | 260 (A7) |
 | `:47`, `:53`, `:218` | 8 / 6 / 8 | `T.SPACE_2` / `T.SPACE_1` / `T.SPACE_2` |
 | `:49` | «Opciones» `UiStyle.TITLE_COLOR` | `V.TITLE` |
 | `:54`, `:56` | valor del volumen `Color.WHITE`, 24 | `V.CAPTION` con `c(text-primary)` («70 %» en `caption`, OptionRow) |
