@@ -1677,9 +1677,23 @@ func _build_ui() -> void:
 	_prompt_box.add_child(_prompt)
 	# The key of the action, on a badge that is not a status colour.
 	_prompt_key = Label.new()
-	_prompt_key.theme_type_variation = UiTheme.BADGE
+	_prompt_key.theme_type_variation = UiTheme.NOTE
+	_prompt_key.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_prompt_key.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_prompt_key.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var key_panel := PanelContainer.new()
-	key_panel.add_theme_stylebox_override(&"panel", UiTheme.selected_style())
+	var cap := StyleBoxFlat.new()
+	cap.bg_color = UiTokens.color(&"surface-window")
+	cap.border_color = UiTokens.color(&"border-subtle")
+	cap.set_border_width_all(UiTokens.BORDER_2)
+	cap.set_corner_radius_all(UiTokens.RADIUS_S)
+	cap.content_margin_left = UiTokens.SPACE_2
+	cap.content_margin_right = UiTokens.SPACE_2
+	cap.content_margin_top = UiTokens.SPACE_1
+	cap.content_margin_bottom = UiTokens.SPACE_1
+	key_panel.add_theme_stylebox_override(&"panel", cap)
+	key_panel.custom_minimum_size = Vector2(UiTokens.ICON_M, UiTokens.ICON_M)
+	key_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	key_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	key_panel.add_child(_prompt_key)
 	_prompt_box.add_child(key_panel)
