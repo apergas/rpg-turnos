@@ -6,8 +6,6 @@ class_name DifficultyWindow extends Control
 signal chosen(id: String)
 signal cancelled
 
-const FONT_SIZE := 26
-
 var _audio: AudioDirector
 
 
@@ -26,16 +24,16 @@ func _ready() -> void:
 	var window := BattleHud.make_window()
 	center.add_child(window)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 8)
+	box.add_theme_constant_override("separation", UiTokens.SPACE_2)
 	window.add_child(box)
-	var title := _label("¿Qué dificultad prefieres?", UiTokens.color(&"text-accent"), FONT_SIZE)
+	var title := _label("¿Qué dificultad prefieres?", UiTheme.TITLE)
 	box.add_child(title)
 	var first: Button = null
 	for id in Difficulty.IDS:
 		var button := _button(Difficulty.NAMES[id])
 		button.pressed.connect(_choose.bind(id))
 		box.add_child(button)
-		box.add_child(_label(Difficulty.TEXTS[id], UiTokens.color(&"text-secondary"), UiTokens.TYPE_CAPTION_SIZE))
+		box.add_child(_label(Difficulty.TEXTS[id], UiTheme.CAPTION))
 		if first == null:
 			first = button
 	var back := _button("Volver")
@@ -68,13 +66,11 @@ func _button(text: String) -> Button:
 	button.text = text
 	UiTheme.menu_row(button)
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	button.add_theme_font_size_override("font_size", FONT_SIZE)
 	return button
 
 
-func _label(text: String, color: Color, size: int) -> Label:
+func _label(text: String, variation: StringName) -> Label:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", size)
-	label.add_theme_color_override("font_color", color)
+	label.theme_type_variation = variation
 	return label

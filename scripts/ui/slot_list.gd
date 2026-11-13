@@ -19,7 +19,6 @@ signal ng_plus_chosen(slot: int)
 
 enum Mode { LOAD, NEW, MANAGE }
 
-const FONT_SIZE := 24
 const TITLES := {Mode.LOAD: "Continuar", Mode.NEW: "Nueva partida",
 	Mode.MANAGE: "Exportar o importar"}
 const SLOT_TEXT := "Ranura %d"
@@ -38,7 +37,7 @@ const NG_PLUS_YES := "Sí, Partida nueva +"
 const IMPORTED_TEXT := "Partida importada en la ranura %d."
 const SAVE_FAILED_TEXT := "No se pudo guardar la partida."
 ## Messages wrap past this width.
-const MESSAGE_WIDTH := 360.0
+const MESSAGE_WIDTH := float(UiTokens.WINDOW_W_M)
 
 var mode := Mode.LOAD
 var _audio: AudioDirector
@@ -76,8 +75,8 @@ func setup(audio: AudioDirector, transfer: SaveTransfer = null) -> void:
 
 
 func _ready() -> void:
-	add_theme_constant_override("separation", 8)
-	_title = _label("", UiTokens.color(&"text-accent"))
+	add_theme_constant_override("separation", UiTokens.SPACE_2)
+	_title = _label("", UiTheme.TITLE)
 	add_child(_title)
 	var list := _page_box("list")
 	for slot in range(1, SaveStore.SLOT_COUNT + 1):
@@ -89,7 +88,7 @@ func _ready() -> void:
 	_list_back.pressed.connect(back)
 	list.add_child(_list_back)
 	var confirm := _page_box("confirm")
-	_confirm_text = _label("", Color.WHITE)
+	_confirm_text = _label("")
 	confirm.add_child(_confirm_text)
 	_confirm_yes = _button("")
 	_confirm_yes.pressed.connect(func() -> void: _confirm_action.call())
@@ -98,8 +97,7 @@ func _ready() -> void:
 	_confirm_no.pressed.connect(back)
 	confirm.add_child(_confirm_no)
 	var actions := _page_box("actions")
-	_detail_line = _label("", Color.WHITE)
-	_detail_line.add_theme_font_size_override("font_size", UiTokens.TYPE_CAPTION_SIZE)
+	_detail_line = _label("", UiTheme.CAPTION)
 	actions.add_child(_detail_line)
 	_export_button = _button("Exportar")
 	_export_button.pressed.connect(_on_export)
@@ -110,14 +108,12 @@ func _ready() -> void:
 	var actions_back := _button("Volver")
 	actions_back.pressed.connect(back)
 	actions.add_child(actions_back)
-	_message = _label(" ", Color.WHITE)
-	_message.add_theme_font_size_override("font_size", UiTokens.TYPE_CAPTION_SIZE)
+	_message = _label(" ", UiTheme.CAPTION)
 	_message.custom_minimum_size.x = MESSAGE_WIDTH
 	_message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	actions.add_child(_message)
 	var cycle := _page_box("cycle")
-	_cycle_line = _label("", Color.WHITE)
-	_cycle_line.add_theme_font_size_override("font_size", UiTokens.TYPE_CAPTION_SIZE)
+	_cycle_line = _label("", UiTheme.CAPTION)
 	cycle.add_child(_cycle_line)
 	_cycle_continue = _button(CYCLE_CONTINUE)
 	_cycle_continue.pressed.connect(func() -> void: chosen.emit(_slot))
@@ -304,7 +300,7 @@ func _focus_row(slot: int) -> void:
 
 func _page_box(page_name: String) -> VBoxContainer:
 	var page := VBoxContainer.new()
-	page.add_theme_constant_override("separation", 8)
+	page.add_theme_constant_override("separation", UiTokens.SPACE_2)
 	page.hide()
 	add_child(page)
 	_pages[page_name] = page
@@ -328,11 +324,10 @@ func _button(text: String) -> Button:
 	return button
 
 
-func _label(text: String, color: Color) -> Label:
+func _label(text: String, variation := &"") -> Label:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", FONT_SIZE)
-	label.add_theme_color_override("font_color", color)
+	label.theme_type_variation = variation
 	return label
 
 
