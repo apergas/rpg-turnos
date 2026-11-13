@@ -715,7 +715,8 @@ func _add_group(pos: Vector3, enemies: Array[Combatant], rare: bool) -> Dictiona
 ## fewer than zone.monster_count (MonsterGroups.refill_spot(): never near the hero), fading in.
 ## Not during a cutscene or an Incienso, nor on a map without monsters (the Caravana).
 func _tick_refill(delta: float) -> void:
-	if debug_no_groups or zone.monster_count <= 0 or zone.formations.is_empty() 			or _player.scripted or _repelled or group_count() >= zone.monster_count:
+	if debug_no_groups or zone.monster_count <= 0 or zone.formations.is_empty() \
+			or _player.scripted or _repelled or group_count() >= zone.monster_count:
 		_refill_ms = 0.0
 		return
 	_refill_ms += delta * 1000.0
@@ -782,8 +783,8 @@ func contact_enemies() -> Array[Combatant]:
 
 
 ## After the battle of the group touched (outcome: BattleEngine.State): WON takes it off the
-## map ("Grupo vencido (quedan n)" on autoplay; another comes back later, _tick_refill()), FLED leaves it
-## half see-through, starting no battle until the hero is MonsterGroups.REARM_RADIUS away;
+## map ("Grupo vencido (quedan n)" on autoplay; another comes back later, _tick_refill()),
+## FLED leaves it half see-through, starting no battle until the hero is MonsterGroups.REARM_RADIUS away;
 ## LOST changes nothing (Game sends the hero back and the groups come back with the map).
 func end_contact(outcome: int) -> void:
 	if _contact < 0:
