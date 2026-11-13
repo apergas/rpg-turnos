@@ -405,7 +405,7 @@ func _play_event(event: Dictionary) -> void:
 			await _play_status_on(event)
 		BattleEvent.STATUS_TICK:
 			_sfx(SfxLibrary.HIT)
-			await _actor(event.target).play_status(STATUS_COLORS[event.status], event.amount)
+			await _actor(event.target).play_status(STATUS_COLORS[event.status], event.amount, &"status-poison")
 			_show_life(event.target, event.hp_left)
 			await _say("¡El veneno quita %d PV a %s!" % [event.amount,
 				_fighter(event.target).display_name])
@@ -506,12 +506,12 @@ func _play_damage(event: Dictionary) -> void:
 	if event.crit:
 		_shake_camera()
 	_sfx(SfxLibrary.CRIT if event.crit else SfxLibrary.HIT)
-	var tag := ""
+	var tag := BattleActor.Tag.NONE
 	match event.affinity:
 		BattleEvent.WEAK:
-			tag = "¡Débil!"
+			tag = BattleActor.Tag.WEAK
 		BattleEvent.RESIST:
-			tag = "¡Resiste!"
+			tag = BattleActor.Tag.RESIST
 	if event.magic:
 		await _actor(event.target).play_burn(event.amount, _spell_color, tag, _spell_number)
 	else:

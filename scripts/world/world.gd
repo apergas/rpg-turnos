@@ -1629,6 +1629,9 @@ func _build_ui() -> void:
 	if Device.is_touch():
 		# Estado in the pause menu says the same.
 		_exp_bar.hide()
+	var line := HSeparator.new()
+	line.theme_type_variation = UiTheme.STATUS_LINE
+	box.add_child(line)
 	_gold_label = Label.new()
 	_gold_label.theme_type_variation = UiTheme.MONEY
 	box.add_child(_gold_label)

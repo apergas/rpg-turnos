@@ -20,6 +20,8 @@ enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPE
 	SUMMIT_SPIRIT, ICE_BAT, GOAT, GRIFFIN, HOLLOW_ARMOR, GARGOYLE, SHADOW, SENTINEL, RUIN_RAT, CITY_GUARDIAN,
 	PORTAL_DEVOURER, CARAVAN_MERCHANT, TRAVELLER_F, TRAVELLER_M, EXPLORER, SURVIVOR, POT, CARAVAN_COLLECTOR }
 
+## What floats under a damage number: nothing, "¡Débil!" or "¡Resiste!".
+enum Tag { NONE, WEAK, RESIST }
 ## Damage numbers: font px of a normal number and a critical one, and the world height each
 ## drew at before the design system (pixel_size = old height / font px).
 const NUMBER_FONT := 48
@@ -1247,8 +1249,8 @@ func top_height() -> float:
 
 
 ## Hit animation, white flash, small knockback and a floating damage number; tag
-## ("¡Débil!", "¡Resiste!") floats under the number.
-func play_hit(amount: int, crit: bool, tag := "", number := &"text-primary") -> void:
+## (weak, resist) floats under the number and a crit adds "¡Crítico!".
+func play_hit(amount: int, crit: bool, tag := Tag.NONE, number := &"text-primary") -> void:
 	_spawn_number(amount, crit, number, tag)
 	var timer := _start("hit")
 	var base := global_position
@@ -1310,7 +1312,7 @@ func play_cast(color := UiTokens.color(&"element-fire")) -> void:
 
 
 ## A ball in the spell's color grows on the actor and fades while the hit plays.
-func play_burn(amount: int, color := UiTokens.color(&"element-fire"), tag := "",
+func play_burn(amount: int, color := UiTokens.color(&"element-fire"), tag := Tag.NONE,
 		number := &"text-primary") -> void:
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -1342,8 +1344,8 @@ func play_heal(amount: int, color := UiTokens.color(&"element-heal"),
 
 
 ## Glow in a status color (poison, sleep, defend...); amount > 0 also floats a number of
-## that color (poison damage).
-func play_status(color: Color, amount := 0, number := &"status-poison") -> void:
+## that color (poison damage, the only damaging status), whose token the caller names.
+func play_status(color: Color, amount := 0, number := &"text-primary") -> void:
 	if amount > 0:
 		_spawn_number(amount, false, number)
 	_set_flash(true, color)
@@ -2311,10 +2313,16 @@ func _end(timer: SceneTreeTimer) -> void:
 
 ## A damage number over the actor; color_token names its colour (a critical one is always
 ## text-display); tag floats under it.
-func _spawn_number(amount: int, crit: bool, color_token := &"text-primary", tag := "") -> void:
-	if tag != "":
-		var tag_token := &"element-weak" if tag == "¡Débil!" else &"text-secondary"
-		_float_label(tag, &"label", tag_token, TAG_WORLD, _top - 0.3)
+func _spawn_number(amount: int, crit: bool, color_token := &"text-primary", tag := Tag.NONE) -> void:
+	var tag_y := _top - 0.3
+	if crit:
+		_float_label("¡Crítico!", &"label", &"text-accent", TAG_WORLD, tag_y)
+		tag_y -= 0.3  # a weak or resist tag goes under the crit one
+	match tag:
+		Tag.WEAK:
+			_float_label("¡Débil!", &"label", &"element-weak", TAG_WORLD, tag_y)
+		Tag.RESIST:
+			_float_label("¡Resiste!", &"label", &"text-secondary", TAG_WORLD, tag_y)
 	if crit:
 		_float_label(str(amount), &"display-m", &"text-display", NUMBER_CRIT_WORLD, _top,
 			NUMBER_CRIT_FONT)
