@@ -6,10 +6,11 @@ class_name KeysPanel extends VBoxContainer
 
 signal closed
 
-const FONT_SIZE := 24
 const NAME_WIDTH := 160.0
 const KEYS_WIDTH := 400.0
 const WAITING := "Pulsa una tecla..."
+## What the title, the message, Restablecer, Volver and the margins leave for the rows.
+const ROWS_RESERVED := 270.0
 
 var _options: GameOptions
 var _audio: AudioDirector
@@ -26,13 +27,16 @@ func setup(options: GameOptions, audio: AudioDirector) -> void:
 
 
 func _ready() -> void:
-	add_theme_constant_override("separation", 6)
-	add_child(_label("Teclas", UiTokens.color(&"text-accent")))
+	add_theme_constant_override("separation", UiTokens.SPACE_1)
+	add_child(_label("Teclas", UiTheme.TITLE))
+	# The rows scroll when the screen is short; the message and the buttons stay under them.
+	var scroll := ScrollBox.new(ROWS_RESERVED)
+	add_child(scroll)
 	for action in KeyMap.ACTIONS:
 		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 8)
-		add_child(row)
-		var name_label := _label(KeyMap.NAMES[action], Color.WHITE)
+		row.add_theme_constant_override("separation", UiTokens.SPACE_2)
+		scroll.content.add_child(row)
+		var name_label := _label(KeyMap.NAMES[action])
 		name_label.custom_minimum_size.x = NAME_WIDTH
 		row.add_child(name_label)
 		var button := _button("")
@@ -40,7 +44,7 @@ func _ready() -> void:
 		button.pressed.connect(_listen.bind(action))
 		row.add_child(button)
 		_buttons[action] = button
-	_message = _label("", Color.WHITE)
+	_message = _label("")
 	_message.hide()
 	add_child(_message)
 	var reset := _button("Restablecer")
@@ -122,9 +126,9 @@ func _button(text: String) -> Button:
 	return button
 
 
-func _label(text: String, color: Color) -> Label:
+func _label(text: String, variation := &"") -> Label:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", FONT_SIZE)
-	label.add_theme_color_override("font_color", color)
+	if variation != &"":
+		label.theme_type_variation = variation
 	return label

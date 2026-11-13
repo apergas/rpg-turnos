@@ -64,7 +64,7 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var shade := ColorRect.new()
-	shade.color = Color(0, 0, 0, 0.5)
+	shade.color = UiTokens.color(&"surface-scrim")
 	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	shade.gui_input.connect(func(event: InputEvent) -> void:
 		if UiStyle.is_outside_tap(event):
@@ -81,7 +81,7 @@ func _ready() -> void:
 	window.add_child(stack)
 	var title := Label.new()
 	title.text = "Depuración"
-	title.add_theme_color_override("font_color", UiTokens.color(&"text-accent"))
+	title.theme_type_variation = UiTheme.TITLE
 	stack.add_child(title)
 	_status = _line(stack)
 	var list := ScrollBox.new(LIST_RESERVED)
@@ -190,8 +190,7 @@ func _choose(action: String, arg: String) -> void:
 func _section(box: VBoxContainer, heading: String) -> HFlowContainer:
 	var label := Label.new()
 	label.text = heading
-	label.add_theme_font_size_override("font_size", UiTokens.TYPE_CAPTION_SIZE)
-	label.add_theme_color_override("font_color", UiTokens.color(&"text-accent"))
+	label.theme_type_variation = UiTheme.SECTION
 	box.add_child(label)
 	var flow := HFlowContainer.new()
 	box.add_child(flow)
@@ -217,7 +216,7 @@ func _button(parent: Control, node_name: String, text: String) -> Button:
 ## A line of small text as wide as the rows, wrapped.
 func _line(parent: Control) -> Label:
 	var label := Label.new()
-	label.add_theme_font_size_override("font_size", UiTokens.TYPE_CAPTION_SIZE)
+	label.theme_type_variation = UiTheme.CAPTION
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.custom_minimum_size.x = ROW_WIDTH
 	parent.add_child(label)

@@ -1,6 +1,6 @@
 class_name BestiaryPage extends VBoxContainer
 ## The album of enemies by family (Bestiary.FAMILIES): each family's title with how many of
-## its enemies have been beaten ("Plantas 3/4"; complete, in gold and with its prize:
+## its enemies have been beaten ("Plantas 3/4"; complete, in green and with its prize:
 ## "Plantas 4/4 · Anillo de savia"), and under it its cards: portrait and name once met in
 ## battle, a dark silhouette and "???" until then. fill() rebuilds it from the GameState.
 ## A card of an enemy seen is pressed (tap, or arrows and Enter) and emits card_chosen(id).
@@ -14,13 +14,9 @@ const COLUMNS := 6
 const CARD_SIDE := 96.0
 const TOUCH_CARD_SIDE := 84.0
 const UNKNOWN := "???"
-const SILHOUETTE := Color(0.05, 0.05, 0.1)
 ## On a caravan game the album has two parts, each under its own title: the v1's families
 ## and the v2's.
 const PART_TITLES := ["Villaclaro", "La caravana"]
-const PART_SIZE := 26
-## Size of a family's title.
-const TITLE_SIZE := 20
 ## What the title, the Volver row and the margins leave for the grid.
 const RESERVED := 160.0
 
@@ -36,7 +32,7 @@ func _ready() -> void:
 	var scroll := ScrollBox.new(RESERVED)
 	add_child(scroll)
 	_box = VBoxContainer.new()
-	_box.add_theme_constant_override("separation", 8)
+	_box.add_theme_constant_override("separation", UiTokens.SPACE_2)
 	scroll.content.add_child(_box)
 
 
@@ -57,10 +53,10 @@ func fill(state: GameState) -> void:
 			_add_family(state, family)
 
 
-## A family's title (in gold with its prize once complete) and its cards.
+## A family's title (in green with its prize once complete) and its cards.
 func _add_family(state: GameState, family: Dictionary) -> void:
 	var title := _add_section(state, family.enemies, title_text(state, family.id),
-		UiTokens.color(&"text-money") if Bestiary.is_complete(state, family.id) else UiTokens.color(&"text-accent"))
+		Bestiary.is_complete(state, family.id))
 	_titles[family.id] = title
 
 
@@ -68,22 +64,23 @@ func _add_family(state: GameState, family: Dictionary) -> void:
 func _add_part(text: String) -> void:
 	var title := Label.new()
 	title.text = text
-	title.add_theme_font_size_override("font_size", PART_SIZE)
-	title.add_theme_color_override("font_color", Color.WHITE)
+	title.theme_type_variation = UiTheme.TITLE
 	_box.add_child(title)
 
 
 ## A title and its grid of cards at the end of the album; returns the title.
-func _add_section(state: GameState, ids: Array, text: String, color: Color) -> Label:
+func _add_section(state: GameState, ids: Array, text: String, complete: bool) -> Label:
 	var title := Label.new()
 	title.text = text
-	title.add_theme_font_size_override("font_size", TITLE_SIZE)
-	title.add_theme_color_override("font_color", color)
+	title.theme_type_variation = UiTheme.SECTION
+	if complete:
+		# Not a theme colour: a finished family stays green in high contrast too.
+		title.add_theme_color_override("font_color", UiTokens.color(&"text-positive"))
 	_box.add_child(title)
 	var grid := GridContainer.new()
 	grid.columns = COLUMNS
-	grid.add_theme_constant_override("h_separation", 8)
-	grid.add_theme_constant_override("v_separation", 8)
+	grid.add_theme_constant_override("h_separation", UiTokens.SPACE_2)
+	grid.add_theme_constant_override("v_separation", UiTokens.SPACE_2)
 	_box.add_child(grid)
 	for id: String in ids:
 		grid.add_child(_card(id, state.seen_enemies.has(id)))
@@ -147,14 +144,14 @@ func _card(id: String, seen: bool) -> Control:
 	picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	if not seen:
-		picture.modulate = SILHOUETTE
+		picture.modulate = UiTokens.color(&"surface-window-solid")
 	box.add_child(picture)
 	var label := Label.new()
 	label.text = EnemyLibrary.data(id).display_name if seen else UNKNOWN
 	label.custom_minimum_size.x = side
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", UiTokens.TYPE_CAPTION_SIZE)
+	label.theme_type_variation = UiTheme.NOTE
 	box.add_child(label)
 	var hit := Button.new()
 	hit.theme_type_variation = UiTheme.CARD_HIT

@@ -21,7 +21,6 @@ signal travel_requested
 ## The menu opened or closed: the map hides its status window behind it.
 signal open_changed(is_open: bool)
 
-const FONT_SIZE := 24
 ## Rows of the hero's window: text and page. A new page only needs its row here.
 const HERO_PAGES := [["Estado", "status"], ["Hechizos", "spells"], ["Objetos", "items"], ["Equipo", "equipment"],
 	["Mapa", "map"], ["Diario", "journal"], ["Bestiario", "bestiary"]]
@@ -35,9 +34,9 @@ const MAP_LEGEND_SWATCH := 12.0
 ## On a phone the hero's rows go in this many columns: one per row doesn't fit the height.
 const TOUCH_HERO_COLUMNS := 3
 ## Long texts wrap past this width.
-const TEXT_WIDTH := 480.0
+const TEXT_WIDTH := float(UiTokens.WINDOW_W_L)
 const MISSION_WIDTH := 420.0
-const MESSAGE_WIDTH := 240.0
+const MESSAGE_WIDTH := float(UiTokens.WINDOW_W_S)
 ## What the title, the message, Volver and the margins leave out of a page's scrolling list.
 const LIST_RESERVED := 245.0
 const STATUS_BAR_WIDTH := 300.0
@@ -119,7 +118,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_build_menu_button()
 	_shade = ColorRect.new()
-	_shade.color = Color(0, 0, 0, 0.5)
+	_shade.color = UiTokens.color(&"surface-scrim")
 	_shade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_shade.hide()
 	_shade.gui_input.connect(func(event: InputEvent) -> void:
@@ -296,7 +295,7 @@ func _fill_main() -> void:
 		_mission_box.remove_child(child)
 		child.queue_free()
 	for line in _state.current_missions():
-		var label := _label("", Color.WHITE)
+		var label := _label("")
 		_mission_box.add_child(label)
 		BattleHud.fit_label(label, line, MISSION_WIDTH)
 
@@ -312,10 +311,9 @@ func _fill_status() -> void:
 	for child in _spells_box.get_children():
 		_spells_box.remove_child(child)
 		child.queue_free()
-	_spells_box.add_child(_label("Hechizos", UiTokens.color(&"text-accent")))
+	_spells_box.add_child(_label("Hechizos", UiTheme.TITLE))
 	for skill in hero.skills:
-		_spells_box.add_child(_label("%s  %d PM" % [skill.display_name, skill.mp_cost],
-			Color.WHITE))
+		_spells_box.add_child(_label("%s  %d PM" % [skill.display_name, skill.mp_cost]))
 		UiStyle.add_small_text(_spells_box, skill.description)
 	_ally_label.visible = _state.ally_id != ""
 	if _state.ally_id != "":
@@ -344,10 +342,9 @@ func _fill_items() -> void:
 			continue
 		any = true
 		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 16)
+		row.add_theme_constant_override("separation", UiTokens.SPACE_4)
 		_items_box.add_child(row)
-		var label := _label("%s ×%d" % [Inventory.display_name(id), inventory.count(id)],
-			Color.WHITE)
+		var label := _label("%s ×%d" % [Inventory.display_name(id), inventory.count(id)])
 		label.custom_minimum_size = Vector2(260, 0)
 		row.add_child(label)
 		var use := _button("Usar")
@@ -356,10 +353,10 @@ func _fill_items() -> void:
 		use.pressed.connect(_on_use_item.bind(id))
 		row.add_child(use)
 		if why != "":
-			row.add_child(_label(why, UiTokens.color(&"text-disabled")))
+			row.add_child(_label(why, UiTheme.REASON))
 		UiStyle.add_description(_items_box, id)
 	if not any:
-		_items_box.add_child(_label("No llevas objetos.", Color.WHITE))
+		_items_box.add_child(_label("No llevas objetos."))
 
 
 ## Why an item can't be used from the menu now ("" if it can).
@@ -422,25 +419,25 @@ func _fill_equipment() -> void:
 		_focus_first_in(_equip_box)
 		return
 	_equip_stats.hide()
-	_equip_box.add_child(_label("%s:" % Equipment.SLOT_NAMES[_equip_slot], UiTokens.color(&"text-accent")))
+	_equip_box.add_child(_label("%s:" % Equipment.SLOT_NAMES[_equip_slot], UiTheme.TITLE))
 	var listed: Array[String] = []
 	for id in _state.bag_equipment:
 		if Equipment.slot(id) != _equip_slot or listed.has(id):
 			continue
 		listed.append(id)
 		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 12)
+		row.add_theme_constant_override("separation", UiTokens.SPACE_3)
 		_equip_box.add_child(row)
 		var button := _button(Equipment.display_name(id))
 		button.custom_minimum_size.x = 260.0
 		button.pressed.connect(_on_equip.bind(id))
 		row.add_child(button)
-		row.add_child(_label(Equipment.effect_text(id), Color.WHITE))
+		row.add_child(_label(Equipment.effect_text(id)))
 		if not _equip_slot in Equipment.ACCESSORY_SLOTS:
 			row.add_child(ShopWindow.comparison(
 				Equipment.bonus(id) - Equipment.bonus(loadout.worn(_equip_slot))))
 	if listed.is_empty():
-		_equip_box.add_child(_label("No llevas otra pieza.", Color.WHITE))
+		_equip_box.add_child(_label("No llevas otra pieza."))
 	if loadout.worn(_equip_slot) != "":
 		var remove := _button("Quitar")
 		remove.pressed.connect(_on_unequip)
@@ -517,19 +514,19 @@ func _build_menu_button() -> void:
 ## The main page: the hero's window on the left, the system's on the right.
 func _build_main(center: CenterContainer) -> void:
 	_main_row = HBoxContainer.new()
-	_main_row.add_theme_constant_override("separation", 16)
+	_main_row.add_theme_constant_override("separation", UiTokens.SPACE_4)
 	_main_row.hide()
 	center.add_child(_main_row)
 	_pages["main"] = _main_row
 	var hero_box := _main_window()
-	_hero_label = _label("", UiTokens.color(&"text-accent"))
+	_hero_label = _label("", UiTheme.TITLE)
 	hero_box.add_child(_hero_label)
 	var rows: Container = hero_box
 	if Device.is_touch():
 		var grid := GridContainer.new()
 		grid.columns = TOUCH_HERO_COLUMNS
-		grid.add_theme_constant_override("h_separation", 8)
-		grid.add_theme_constant_override("v_separation", 6)
+		grid.add_theme_constant_override("h_separation", UiTokens.SPACE_2)
+		grid.add_theme_constant_override("v_separation", UiTokens.SPACE_1)
 		hero_box.add_child(grid)
 		rows = grid
 	for entry: Array in HERO_PAGES:
@@ -538,7 +535,7 @@ func _build_main(center: CenterContainer) -> void:
 		rows.add_child(button)
 		if entry[1] == "bestiary":
 			_bestiary_button = button
-	hero_box.add_child(_label("Misiones", UiTokens.color(&"text-accent")))
+	hero_box.add_child(_label("Misiones", UiTheme.TITLE))
 	_mission_box = VBoxContainer.new()
 	_mission_box.add_theme_constant_override("separation", 0)
 	hero_box.add_child(_mission_box)
@@ -553,7 +550,7 @@ func _build_main(center: CenterContainer) -> void:
 		var button := _button(entry[0])
 		button.pressed.connect(entry[1])
 		system_box.add_child(button)
-	_main_message = _label("", Color.WHITE)
+	_main_message = _label("")
 	_main_message.custom_minimum_size.x = MESSAGE_WIDTH
 	system_box.add_child(_main_message)
 
@@ -564,7 +561,7 @@ func _main_window() -> VBoxContainer:
 	window.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	_main_row.add_child(window)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 6)
+	box.add_theme_constant_override("separation", UiTokens.SPACE_1)
 	window.add_child(box)
 	UiTheme.add_cursor(window)
 	return box
@@ -573,10 +570,10 @@ func _main_window() -> VBoxContainer:
 func _build_status(stack: VBoxContainer) -> void:
 	var page := _page_box(stack, "status", "Estado")
 	var columns := HBoxContainer.new()
-	columns.add_theme_constant_override("separation", 24)
+	columns.add_theme_constant_override("separation", UiTokens.SPACE_6)
 	page.add_child(columns)
 	var left := VBoxContainer.new()
-	left.add_theme_constant_override("separation", 8)
+	left.add_theme_constant_override("separation", UiTokens.SPACE_2)
 	columns.add_child(left)
 	_hp_bar = StatBar.new(StatBar.HP, STATUS_BAR_WIDTH)
 	left.add_child(_hp_bar)
@@ -584,14 +581,14 @@ func _build_status(stack: VBoxContainer) -> void:
 	left.add_child(_mp_bar)
 	_exp_bar = StatBar.new(StatBar.EXP, STATUS_BAR_WIDTH)
 	left.add_child(_exp_bar)
-	_stats_label = _label("", Color.WHITE)
+	_stats_label = _label("")
 	left.add_child(_stats_label)
-	_gold_label = _label("", UiTokens.color(&"text-money"))
+	_gold_label = _label("", UiTheme.MONEY)
 	left.add_child(_gold_label)
-	_ally_label = _label("", Color.WHITE)
+	_ally_label = _label("")
 	left.add_child(_ally_label)
 	_spells_box = VBoxContainer.new()
-	_spells_box.add_theme_constant_override("separation", 2)
+	_spells_box.add_theme_constant_override("separation", 0)
 	columns.add_child(_spells_box)
 	page.add_child(_back_button())
 
@@ -600,7 +597,7 @@ func _build_map(stack: VBoxContainer) -> void:
 	var page := _page_box(stack, "map", "Mapa")
 	_map_title = page.get_child(0) as Label
 	_map_holder = HBoxContainer.new()
-	_map_holder.add_theme_constant_override("separation", 16)
+	_map_holder.add_theme_constant_override("separation", UiTokens.SPACE_4)
 	page.add_child(_map_holder)
 	var back := _button("Volver")
 	back.pressed.connect(_go_back)
@@ -626,7 +623,7 @@ func _fill_map() -> void:
 	if hero_position.is_valid():
 		square.show_hero(hero_position.call())
 	var legend := VBoxContainer.new()
-	legend.add_theme_constant_override("separation", 4)
+	legend.add_theme_constant_override("separation", UiTokens.SPACE_1)
 	_map_holder.add_child(legend)
 	_add_legend_row(legend, UiTokens.color(&"map-hero"), "Tú")
 	for kind in MapMarks.kinds_in(MapMarks.seen(marks, map)):
@@ -635,16 +632,14 @@ func _fill_map() -> void:
 
 func _add_legend_row(legend: VBoxContainer, color: Color, text: String) -> void:
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
+	row.add_theme_constant_override("separation", UiTokens.SPACE_2)
 	legend.add_child(row)
 	var swatch := ColorRect.new()
 	swatch.color = color
 	swatch.custom_minimum_size = Vector2.ONE * MAP_LEGEND_SWATCH
 	swatch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(swatch)
-	var label := _label(text, Color.WHITE)
-	label.add_theme_font_size_override("font_size", UiTokens.TYPE_CAPTION_SIZE)
-	row.add_child(label)
+	row.add_child(_label(text, UiTheme.MICRO))
 
 
 const NO_SPELLS := "Aún no conoces hechizos que se puedan usar aquí."
@@ -657,9 +652,9 @@ func _build_spells(stack: VBoxContainer) -> void:
 	_spell_mp = StatBar.new(StatBar.MP, STATUS_BAR_WIDTH)
 	page.add_child(_spell_mp)
 	_cast_box = VBoxContainer.new()
-	_cast_box.add_theme_constant_override("separation", 8)
+	_cast_box.add_theme_constant_override("separation", UiTokens.SPACE_2)
 	page.add_child(_cast_box)
-	_spells_message = _label("", Color.WHITE)
+	_spells_message = _label("")
 	_spells_message.custom_minimum_size.x = MESSAGE_WIDTH
 	page.add_child(_spells_message)
 	page.add_child(_back_button())
@@ -676,13 +671,13 @@ func _fill_spells() -> void:
 	_spell_mp.show_mp(hero.mp, hero.max_mp)
 	var spells := _state.field_spells()
 	if spells.is_empty():
-		_cast_box.add_child(_label(NO_SPELLS, Color.WHITE))
+		_cast_box.add_child(_label(NO_SPELLS))
 		return
 	for skill in spells:
 		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 16)
+		row.add_theme_constant_override("separation", UiTokens.SPACE_4)
 		_cast_box.add_child(row)
-		var label := _label("%s  %d PM" % [skill.display_name, skill.mp_cost], Color.WHITE)
+		var label := _label("%s  %d PM" % [skill.display_name, skill.mp_cost])
 		label.custom_minimum_size = Vector2(260, 0)
 		row.add_child(label)
 		var cast := _button("Usar")
@@ -691,7 +686,7 @@ func _fill_spells() -> void:
 		cast.pressed.connect(_on_cast.bind(skill))
 		row.add_child(cast)
 		if why != "":
-			row.add_child(_label(why, UiTokens.color(&"text-disabled")))
+			row.add_child(_label(why, UiTheme.REASON))
 
 
 func _on_cast(skill: Skill) -> void:
@@ -710,7 +705,7 @@ func _build_items(stack: VBoxContainer) -> void:
 	var scroll := ScrollBox.new(LIST_RESERVED)
 	page.add_child(scroll)
 	_items_box = scroll.content
-	_items_message = _label("", Color.WHITE)
+	_items_message = _label("")
 	page.add_child(_items_message)
 	page.add_child(_back_button())
 
@@ -725,9 +720,9 @@ func _build_equipment(stack: VBoxContainer) -> void:
 	else:
 		_equip_box = VBoxContainer.new()
 		page.add_child(_equip_box)
-	_equip_stats = _label("", Color.WHITE)
+	_equip_stats = _label("")
 	page.add_child(_equip_stats)
-	_equip_message = _label("", Color.WHITE)
+	_equip_message = _label("")
 	page.add_child(_equip_message)
 	page.add_child(_back_button())
 
@@ -745,7 +740,7 @@ func _build_journal(stack: VBoxContainer) -> void:
 func _build_bestiary_entry(stack: VBoxContainer) -> void:
 	var page := _page_box(stack, "bestiary_entry", "Bestiario")
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 16)
+	row.add_theme_constant_override("separation", UiTokens.SPACE_4)
 	page.add_child(row)
 	_entry_picture = TextureRect.new()
 	_entry_picture.custom_minimum_size = Vector2(ENTRY_PICTURE, ENTRY_PICTURE)
@@ -754,7 +749,7 @@ func _build_bestiary_entry(stack: VBoxContainer) -> void:
 	row.add_child(_entry_picture)
 	var text := VBoxContainer.new()
 	row.add_child(text)
-	_entry_name = _label("", Color.WHITE)
+	_entry_name = _label("")
 	text.add_child(_entry_name)
 	_entry_lines = VBoxContainer.new()
 	text.add_child(_entry_lines)
@@ -771,9 +766,7 @@ func _open_bestiary_entry(id: String) -> void:
 		_entry_lines.remove_child(child)
 		child.queue_free()
 	for line in BestiaryPage.entry_lines(id, _state):
-		var label := _label(line, Color.WHITE)
-		label.add_theme_font_size_override("font_size", UiTokens.TYPE_CAPTION_SIZE)
-		_entry_lines.add_child(label)
+		_entry_lines.add_child(_label(line, UiTheme.NOTE))
 	_open_page("bestiary_entry")
 
 
@@ -801,7 +794,7 @@ func _build_options(stack: VBoxContainer) -> void:
 
 func _build_confirm(stack: VBoxContainer) -> void:
 	var page := _page_box(stack, "confirm", "Volver al título")
-	page.add_child(_label("Lo que no esté guardado se perderá.", Color.WHITE))
+	page.add_child(_label("Lo que no esté guardado se perderá."))
 	var yes := _button("Sí, volver")
 	yes.pressed.connect(func() -> void: title_requested.emit())
 	page.add_child(yes)
@@ -818,10 +811,10 @@ func _open_page(page: String) -> void:
 ## A page: a VBox with its title, registered under name and hidden.
 func _page_box(stack: VBoxContainer, page_name: String, title: String) -> VBoxContainer:
 	var page := VBoxContainer.new()
-	page.add_theme_constant_override("separation", 8)
+	page.add_theme_constant_override("separation", UiTokens.SPACE_2)
 	page.hide()
 	stack.add_child(page)
-	page.add_child(_label(title, UiTokens.color(&"text-accent")))
+	page.add_child(_label(title, UiTheme.TITLE))
 	_pages[page_name] = page
 	return page
 
@@ -853,11 +846,11 @@ func _button(text: String) -> Button:
 	return button
 
 
-func _label(text: String, color: Color) -> Label:
+func _label(text: String, variation := &"") -> Label:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", FONT_SIZE)
-	label.add_theme_color_override("font_color", color)
+	if variation != &"":
+		label.theme_type_variation = variation
 	return label
 
 

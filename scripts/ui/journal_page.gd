@@ -5,10 +5,6 @@ class_name JournalPage extends VBoxContainer
 ## call
 ## fill() each time it opens.
 
-## A little smaller than the other pages: seven missions must fit a 720 p window.
-const HEADING_SIZE := 22
-const ENTRY_SIZE := 20
-const TEXT_SIZE := UiTokens.TYPE_CAPTION_SIZE
 ## Long lines wrap past this width.
 const TEXT_WIDTH := 720.0
 
@@ -23,21 +19,21 @@ func fill(state: GameState) -> void:
 		child.queue_free()
 	var journal := state.quests.journal(state.inventory)
 	_heading("Qué hacer ahora")
-	_line(state.main_goal(), Color.WHITE, ENTRY_SIZE)
+	_line(state.main_goal(), UiTheme.SMALL)
 	_heading("En curso")
 	if journal.active.is_empty():
-		_line("Nada por ahora.", UiTokens.color(&"text-secondary"), ENTRY_SIZE)
+		_line("Nada por ahora.", UiTheme.CAPTION)
 	for entry: Dictionary in journal.active:
-		_line(entry.title, Color.WHITE, ENTRY_SIZE)
-		_line(entry.text, UiTokens.color(&"text-secondary"), TEXT_SIZE)
+		_line(entry.title, UiTheme.SMALL)
+		_line(entry.text, UiTheme.CAPTION)
 	_heading("Cumplidas")
 	if journal.done.is_empty():
-		_line("Ninguna todavía.", UiTokens.color(&"text-secondary"), ENTRY_SIZE)
+		_line("Ninguna todavía.", UiTheme.CAPTION)
 	else:
-		_line(", ".join(journal.done), Color.WHITE, TEXT_SIZE)
+		_line(", ".join(journal.done), UiTheme.NOTE)
 	_heading("Colección")
 	for line in collection_lines(state):
-		_line(line, Color.WHITE, ENTRY_SIZE)
+		_line(line, UiTheme.SMALL)
 
 
 ## The Colección: each count on its own line, never a total percentage.
@@ -64,12 +60,11 @@ static func collection_lines(state: GameState) -> Array[String]:
 
 
 func _heading(text: String) -> void:
-	_line(text, UiTokens.color(&"text-accent"), HEADING_SIZE)
+	_line(text, UiTheme.SECTION)
 
 
-func _line(text: String, color: Color, font_size: int) -> void:
+func _line(text: String, variation: StringName) -> void:
 	var label := Label.new()
-	label.add_theme_font_size_override("font_size", font_size)
-	label.add_theme_color_override("font_color", color)
+	label.theme_type_variation = variation
 	add_child(label)
 	BattleHud.fit_label(label, text, TEXT_WIDTH)

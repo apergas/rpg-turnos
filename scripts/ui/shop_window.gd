@@ -13,18 +13,15 @@ class_name ShopWindow extends Control
 signal changed
 signal _left
 
-const FONT_SIZE := 24
-const BETTER := Color(0.35, 1.0, 0.4)
-const WORSE := Color(1.0, 0.35, 0.3)
 const NAME_WIDTH := 280.0
 ## Phone: narrower names, so the widest row still fits the screen.
 const TOUCH_NAME_WIDTH := 240.0
 const PRICE_WIDTH := 90.0
 const BULK_WIDTH := 72.0
 ## Room kept for the reason a row can't be bought ("Falta oro"), so the width never changes.
-const WHY_WIDTH := 120.0
+const WHY_WIDTH := 84.0
 ## Messages under the list wrap past this width.
-const MESSAGE_WIDTH := 640.0
+const MESSAGE_WIDTH := float(UiTokens.WINDOW_W_XL)
 ## What the header, the title, a two-line message and the margins leave for the rows.
 const ROWS_RESERVED := 220.0
 ## Seconds each step stays on screen on autoplay.
@@ -52,7 +49,7 @@ var _message: Label
 ## depends on the font having ▲ / ▼ (the web build has no system fonts).
 class Arrow extends Control:
 	var up := true
-	var color := Color.WHITE
+	var color: Color
 
 	func _init(p_up: bool, p_color: Color) -> void:
 		up = p_up
@@ -92,26 +89,26 @@ func _ready() -> void:
 	var window := BattleHud.make_window()
 	center.add_child(window)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 8)
+	box.add_theme_constant_override("separation", UiTokens.SPACE_2)
 	window.add_child(box)
 	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", 24)
+	header.add_theme_constant_override("separation", UiTokens.SPACE_6)
 	box.add_child(header)
-	_keeper = _label("", UiTokens.color(&"text-accent"))
+	_keeper = _label("", UiTheme.TITLE)
 	_keeper.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(_keeper)
-	_gold = _label("", UiTokens.color(&"text-money"))
+	_gold = _label("", UiTheme.MONEY)
 	header.add_child(_gold)
-	_title = _label("", Color.WHITE)
+	_title = _label("")
 	box.add_child(_title)
 	_scroll = ScrollBox.new(ROWS_RESERVED)
 	box.add_child(_scroll)
 	_rows = _scroll.content
 	_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_rows.add_theme_constant_override("separation", 6)
+	_rows.add_theme_constant_override("separation", UiTokens.SPACE_1)
 	_footer = VBoxContainer.new()
 	box.add_child(_footer)
-	_message = _label("", Color.WHITE)
+	_message = _label("")
 	box.add_child(_message)
 	UiTheme.add_cursor(window)
 	hide()
@@ -192,16 +189,30 @@ func _show_page(page: String, focus_id := "") -> void:
 			for id in ids:
 				_add_sell_row(id)
 			if ids.is_empty():
-				_rows.add_child(_label("No llevas nada que vender.", Color.WHITE))
+				_rows.add_child(_label("No llevas nada que vender."))
 			_add_footer_button("Volver", _back)
 		"ask":
 			_title.text = "¿Te %s equipas ahora?" % Equipment.pronoun(_asking)
 			_add_button("Sí", func() -> void: _answer(true))
 			_add_button("No", func() -> void: _answer(false))
+	_align_names()
 	if focus_id == "" or not _focus_id(focus_id):
 		_focus_first()
 	if focus_id != "":
 		_keep_scroll(kept)
+
+
+## The name column is as wide as the longest name of the list (never less than NAME_WIDTH), so the
+## prices line up even with "Armadura de adamantita".
+func _align_names() -> void:
+	var names: Array[Button] = []
+	var widest := TOUCH_NAME_WIDTH if Device.is_touch() else NAME_WIDTH
+	for node in _rows.find_children("*", "Button", true, false):
+		if node.has_meta("id"):
+			names.append(node as Button)
+			widest = maxf(widest, (node as Button).get_minimum_size().x)
+	for button in names:
+		button.custom_minimum_size.x = widest
 
 
 ## The rows were just rebuilt: once they are laid out, the list goes back where it was.
@@ -228,26 +239,26 @@ func _add_buy_row(id: String) -> void:
 	row.add_child(button)
 	var chosen := Allies.is_companion(id)
 	var price := _label("Elegir" if chosen else "%d G" % Shop.price(id),
-		UiTokens.color(&"text-disabled") if why != "" else (Color.WHITE if chosen else UiTokens.color(&"text-money")))
+		UiTheme.REASON if why != "" else (&"" if chosen else UiTheme.MONEY))
 	price.custom_minimum_size.x = PRICE_WIDTH
 	row.add_child(price)
 	if Shop.is_ally(id):
 		# Stats with the note under them, so a long note never widens the window.
 		var info_box := VBoxContainer.new()
-		info_box.add_child(_label(Allies.stats_text(id), Color.WHITE))
+		info_box.add_child(_label(Allies.stats_text(id)))
 		if Allies.line(id) != "":
 			UiStyle.add_small_text(info_box, Allies.line(id))
 		if why != "":
-			info_box.add_child(_label(why, UiTokens.color(&"text-disabled")))
+			info_box.add_child(_label(why, UiTheme.REASON))
 		if _state.ally_id != "" and why != Shop.HAS_IT and why != Shop.HAS_BETTER \
 				and not Allies.is_companion(id):
 			info_box.add_child(_label("Sustituye a %s" % Allies.display_name(_state.ally_id),
-				UiTokens.color(&"text-disabled")))
+				UiTheme.REASON))
 		row.add_child(info_box)
 		return
 	var info := Shop.compare(_state, id)
 	if not info.is_empty():
-		row.add_child(_label("%s +%d" % [info.stat, info.bonus], Color.WHITE))
+		row.add_child(_label("%s +%d" % [info.stat, info.bonus]))
 		row.add_child(comparison(info.diff))
 	else:
 		var bulk := _button("×%d" % Shop.BULK)
@@ -258,7 +269,7 @@ func _add_buy_row(id: String) -> void:
 		row.add_child(bulk)
 		UiStyle.add_description(row, id)
 	# The reason always takes its place, so the window keeps its width after a purchase.
-	var why_label := _label(why, UiTokens.color(&"text-disabled"))
+	var why_label := _label(why, UiTheme.REASON)
 	why_label.custom_minimum_size.x = WHY_WIDTH
 	row.add_child(why_label)
 
@@ -286,28 +297,29 @@ func _add_sell_row(id: String) -> void:
 	button.pressed.connect(_sell.bind(id))
 	button.set_meta("id", id)
 	row.add_child(button)
-	var price := _label("%d G" % Shop.sell_price(id, _shop_id), UiTokens.color(&"text-disabled") if why != "" else UiTokens.color(&"text-money"))
+	var price := _label("%d G" % Shop.sell_price(id, _shop_id),
+		UiTheme.REASON if why != "" else UiTheme.MONEY)
 	price.custom_minimum_size.x = PRICE_WIDTH
 	row.add_child(price)
 	if not Shop.is_equipment(id):
 		UiStyle.add_description(row, id)
 	if why != "":
-		row.add_child(_label(why, UiTokens.color(&"text-disabled")))
+		row.add_child(_label(why, UiTheme.REASON))
 
 
 ## Green ▲ and +n when better, red ▼ and -n when worse, "=" when the same (also used by
 ## the Equipo page of the pause menu).
 static func comparison(diff: int) -> HBoxContainer:
 	var box := HBoxContainer.new()
-	box.add_theme_constant_override("separation", 4)
+	box.add_theme_constant_override("separation", UiTokens.SPACE_1)
 	if diff == 0:
-		box.add_child(_make_label("=", Color.WHITE))
+		box.add_child(_make_label("="))
 		return box
-	var color := BETTER if diff > 0 else WORSE
-	var arrow := Arrow.new(diff > 0, color)
+	var token := &"text-positive" if diff > 0 else &"text-negative"
+	var arrow := Arrow.new(diff > 0, UiTokens.color(token))
 	arrow.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	box.add_child(arrow)
-	box.add_child(_make_label("%+d" % diff, color))
+	box.add_child(_make_label("%+d" % diff, UiTheme.POSITIVE if diff > 0 else UiTheme.NEGATIVE))
 	return box
 
 
@@ -390,7 +402,7 @@ func _set_message(text: String) -> void:
 
 func _row() -> HBoxContainer:
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
+	row.add_theme_constant_override("separation", UiTokens.SPACE_3)
 	_rows.add_child(row)
 	return row
 
@@ -455,15 +467,15 @@ func _button(text: String) -> Button:
 	return button
 
 
-func _label(text: String, color: Color) -> Label:
-	return _make_label(text, color)
+func _label(text: String, variation := &"") -> Label:
+	return _make_label(text, variation)
 
 
-static func _make_label(text: String, color: Color) -> Label:
+static func _make_label(text: String, variation := &"") -> Label:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", FONT_SIZE)
-	label.add_theme_color_override("font_color", color)
+	if variation != &"":
+		label.theme_type_variation = variation
 	return label
 
 
