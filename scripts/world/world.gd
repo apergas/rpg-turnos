@@ -173,6 +173,8 @@ const LANTERN_HEIGHT := 2.4
 const QUEST_MARK_COLOR := Color(1.0, 0.85, 0.2)
 const QUEST_MARK_GAP := 0.35
 const QUEST_MARK_BOB := 0.12
+## A quest mark over a figure with a sign ("Posada") goes above the sign.
+const FIGURE_SIGN_RISE := 0.65
 const FIGURE_SIGN_GAP := 0.25
 const FIGURE_SIGN_FONT := 48
 const FIGURE_SIGN_PIXEL := 0.012
@@ -1076,6 +1078,9 @@ func _build_mark(figure_name: String) -> Label3D:
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.no_depth_test = true
 	label.position.y = figure_actor(figure_name).top_height() + QUEST_MARK_GAP
+	for npc: Dictionary in zone.npcs:
+		if npc.name == figure_name and _figure_sign_text(npc) != "":
+			label.position.y += FIGURE_SIGN_RISE
 	(_figures[figure_name] as Node3D).add_child(label)
 	_mark_labels[figure_name] = label
 	var bob := label.create_tween().set_loops()

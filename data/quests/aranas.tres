@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="QuestData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/quest_data.gd" id="1_quest"]
+
+[resource]
+script = ExtResource("1_quest")
+id = "aranas"
+title = "Telarañas en la galería"
+zone = "mina_1"
+giver = "Minera"
+turn_in_zone = "mina_1"
+turn_in = "Minera"
+target = "arana"
+goal = 5
+objective = "Derrota 5 arañas en cualquier planta de la mina para la Minera."
+status = "arañas %d / %d"
+report = "vuelve con la Minera"
+offer_lines = Array[String](["No puedo picar con tantas arañas mirándome. Una me guiñó los ocho ojos. Los ocho.", "Si espantas a cinco, te pago. A la sexta ya le explico yo cómo van las cosas."])
+wait_lines = Array[String](["¿Y esas arañas? Sigo oyendo patitas. Muchas patitas."])
+done_lines = Array[String](["¡Ni una pata a la vista! Por fin puedo trabajar sin que me miren.", "Toma, para el camino. Y si ves una araña con gafas, esa es buena: me ayuda a contar."])
+reward_gold = 150
+reward_items = {
+"ether": 1
+}

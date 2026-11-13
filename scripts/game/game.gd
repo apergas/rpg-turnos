@@ -896,13 +896,14 @@ func _boss_wanted() -> bool:
 	return state.quest.boss_available() if boss == Quest.BOSS_ID else not state.has_flag(boss)
 
 
-## The index of the figure of this kind and id (a shop's) with a quest report waiting
-## (QuestLog.reports_here()), -1 if none. A shop's or an inn's.
-func _figure_with_report(kind: String, id: String) -> int:
-	var waiting := state.quests.reports_here(_zone.id, state.inventory)
+## The index of the figure of this kind and id (a shop's or an inn's) with something about a
+## quest now: a report waiting or a new offer (QuestLog.markers(): "?" or "!"), -1 if none.
+## It is heard before the shop opens or the night is offered.
+func _figure_with_quest(kind: String, id: String) -> int:
+	var marks := state.quests.markers(_zone.id, state.inventory, state.world_flags)
 	for i in _zone.npcs.size():
 		var npc: Dictionary = _zone.npcs[i]
-		if npc.kind == kind and npc.get("id", "") == id and npc.name in waiting:
+		if npc.kind == kind and npc.get("id", "") == id and marks.has(npc.name):
 			return i
 	return -1
 
@@ -1444,9 +1445,9 @@ func _done_text(done: Array[String]) -> String:
 func _on_shop(shop_id: String) -> void:
 	if _busy:
 		return
-	var waiting := _figure_with_report("shop", shop_id)
+	var waiting := _figure_with_quest("shop", shop_id)
 	if waiting >= 0:
-		await _on_npc(waiting)  # a report waiting at the merchant goes first (pieles_mono)
+		await _on_npc(waiting)  # a report or an offer at the merchant goes first (pieles_mono)
 	if shop_id == Shop.CARAVAN_SHOP:
 		shop_id = Shop.caravan_shop(state.tramo())
 	if _busy or (_autoplay and Shop.autoplay_picks(state, shop_id).is_empty()):
@@ -1470,9 +1471,9 @@ func _on_shop(shop_id: String) -> void:
 func _on_inn(inn_id: String) -> void:
 	if _busy:
 		return
-	var waiting := _figure_with_report("inn", inn_id)
+	var waiting := _figure_with_quest("inn", inn_id)
 	if waiting >= 0:
-		await _on_npc(waiting)  # a report waiting at the keeper goes first, as at a shop
+		await _on_npc(waiting)  # a report or an offer at the keeper goes first, as at a shop
 	var hurt := state.hero.hp < state.hero.max_hp * AUTOPLAY_INN_RATIO \
 		or state.hero.mp < state.hero.max_mp * AUTOPLAY_INN_RATIO or state.needs_rest() \
 		or not _rested_for_boss()
