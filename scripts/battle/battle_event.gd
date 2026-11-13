@@ -78,9 +78,9 @@ static func defeat() -> Dictionary:
 
 ## targets: every fighter the spell aims at (the caster itself for a heal).
 static func skill(actor: int, targets: Array[int], skill_name: String, mp_left: int, \
-		color := Color(1.0, 0.45, 0.1)) -> Dictionary:
+		color := Color(1.0, 0.45, 0.1), element := "") -> Dictionary:
 	return {"type": SKILL, "actor": actor, "targets": targets, "name": skill_name,
-		"mp_left": mp_left, "color": color}
+		"mp_left": mp_left, "color": color, "element": element}
 
 
 static func item(actor: int, item_id: String) -> Dictionary:

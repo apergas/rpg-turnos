@@ -25,24 +25,19 @@ const AUTO_ADVANCE := 0.6
 const MENU_GUARD := 0.3
 ## Seconds of each half of the cursor's blink when the menu starts taking orders.
 const READY_BLINK := 0.08
-const FONT_SIZE := 24
-const BADGE_FONT_SIZE := 16
 ## Least width of the command window (a longer row widens it).
-const MENU_WIDTH := 240.0
+const MENU_WIDTH := float(UiTokens.WINDOW_W_S)
 ## On a phone the status window is compact: HP and MP side by side, the creature on one row.
 const TOUCH_BAR_WIDTH := 170.0
 const TOUCH_ALLY_BAR_WIDTH := 110.0
 ## With large text everything draws at 1.6, so a row of 48 is as tall on screen as 56 at 1.35.
 const TOUCH_LARGE_ROW_HEIGHT := 48.0
 ## Margin of the windows to the screen edges and gap between them.
-const EDGE := 24.0
-const GAP := 16.0
+const EDGE := float(UiTokens.SPACE_6)
+const GAP := float(UiTokens.SPACE_4)
 ## The thin bar over an enemy: its life left, no number.
-const ENEMY_BAR_SIZE := Vector2(96, 8)
-## The name over the bar of the enemy being aimed at.
-const TARGET_NAME_COLOR := Color(1.0, 0.9, 0.3)
+const ENEMY_BAR_SIZE := Vector2(UiTokens.ENEMY_BAR_WIDTH, UiTokens.ENEMY_BAR_HEIGHT)
 const ENEMY_NAME_GAP := 2.0
-const ENEMY_BAR_BACK := Color(0.0, 0.0, 0.0, 0.7)
 ## Seconds each step of demo() stays on screen.
 const DEMO_STEP := 0.35
 const MAIN_ROWS: Array[String] = ["Atacar", "Hechizos", "Objetos", "Defender", "Huir"]
@@ -54,11 +49,11 @@ const MAIN_ROW_OF := {
 	BattleEngine.CMD_DEFEND: 3,
 	BattleEngine.CMD_FLEE: 4,
 }
-## Badge text and color of each status, shown next to the PV.
+## Badge text and color token of each status, shown next to the PV.
 const BADGES := {
-	BattleEngine.POISON: ["Veneno", Color(0.5, 0.2, 0.65)],
-	BattleEngine.SLEEP: ["Sueño", Color(0.2, 0.35, 0.8)],
-	BattleEngine.SILENCE: ["Silencio", Color(0.4, 0.4, 0.45)],
+	BattleEngine.POISON: ["Veneno", &"status-poison"],
+	BattleEngine.SLEEP: ["Sueño", &"status-sleep"],
+	BattleEngine.SILENCE: ["Silencio", &"status-silence"],
 }
 
 ## Returns the enemy index under a screen point, or -1. Set by BattleScene.
@@ -157,13 +152,13 @@ func update_ally_hp(hp: int, max_hp: int) -> void:
 ## while it is aimed at (show_target_name()).
 func add_enemy_bar(enemy_name := "") -> void:
 	var back := ColorRect.new()
-	back.color = ENEMY_BAR_BACK
+	back.color = UiTokens.color(&"surface-track")
 	back.size = ENEMY_BAR_SIZE
 	back.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(back)
 	move_child(back, 0)  # under every window
 	var fill := ColorRect.new()
-	fill.color = UiTokens.color(StatBar.HP)
+	fill.color = UiTokens.color(&"stat-hp")
 	fill.position = Vector2.ONE
 	fill.size = ENEMY_BAR_SIZE - Vector2(2, 2)
 	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -172,10 +167,7 @@ func add_enemy_bar(enemy_name := "") -> void:
 	var label := Label.new()
 	label.text = enemy_name
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.add_theme_font_size_override("font_size", UiTokens.TYPE_CAPTION_SIZE)
-	label.add_theme_color_override("font_color", TARGET_NAME_COLOR)
-	label.add_theme_color_override("font_outline_color", Color.BLACK)
-	label.add_theme_constant_override("outline_size", 6)
+	UiTheme.style_label(label, &"label", &"text-accent", UiTokens.OUTLINE_S)
 	label.hide()
 	back.add_child(label)
 	_enemy_names.append(label)
@@ -457,7 +449,6 @@ func _add_row(text: String, enabled: bool) -> void:
 	if Device.is_touch() and get_window().content_scale_factor >= DisplaySettings.TOUCH_LARGE_SCALE:
 		_shrink_row(button)
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	button.add_theme_color_override("font_disabled_color", Color(0.5, 0.5, 0.55))
 	var index := _rows.size()
 	button.pressed.connect(func() -> void: _press(index))
 	button.focus_entered.connect(func() -> void: _on_focus(index))
@@ -470,7 +461,7 @@ func _add_row(text: String, enabled: bool) -> void:
 func _shrink_row(button: Button) -> void:
 	button.custom_minimum_size.y = TOUCH_LARGE_ROW_HEIGHT
 	var theme := ThemeDB.get_default_theme()
-	var text_height := theme.get_default_font().get_height(FONT_SIZE)
+	var text_height := theme.get_default_font().get_height(UiTokens.TYPE_BODY_SIZE)
 	var pad := maxf(0.0, (TOUCH_LARGE_ROW_HEIGHT - text_height) / 2.0)
 	for style_name: String in DisplaySettings.BUTTON_STYLES:
 		var box := theme.get_stylebox(style_name, "Button").duplicate() as StyleBox
@@ -619,15 +610,15 @@ func _build_status() -> void:
 	panel.position = Vector2(EDGE, EDGE)
 	add_child(panel)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 4)
+	box.add_theme_constant_override("separation", UiTokens.SPACE_1)
 	panel.add_child(box)
 	var title_row := HBoxContainer.new()
-	title_row.add_theme_constant_override("separation", 10)
+	title_row.add_theme_constant_override("separation", UiTokens.SPACE_2)
 	box.add_child(title_row)
 	_name_label = _label()
 	title_row.add_child(_name_label)
 	_badges = HBoxContainer.new()
-	_badges.add_theme_constant_override("separation", 4)
+	_badges.add_theme_constant_override("separation", UiTokens.SPACE_1)
 	title_row.add_child(_badges)
 	var touch := Device.is_touch()
 	var width := TOUCH_BAR_WIDTH if touch else StatBar.BAR_SIZE.x
@@ -636,14 +627,14 @@ func _build_status() -> void:
 	var bars: Container = box
 	if touch:
 		bars = HBoxContainer.new()
-		bars.add_theme_constant_override("separation", 8)
+		bars.add_theme_constant_override("separation", UiTokens.SPACE_2)
 		box.add_child(bars)
 	bars.add_child(_hp_bar)
 	bars.add_child(_mp_bar)
 	var ally_row: Container = box
 	if touch:
 		ally_row = HBoxContainer.new()
-		ally_row.add_theme_constant_override("separation", 8)
+		ally_row.add_theme_constant_override("separation", UiTokens.SPACE_2)
 		box.add_child(ally_row)
 	_ally_name = _label()
 	_ally_name.hide()
@@ -694,20 +685,15 @@ func _set_message(text: String) -> void:
 
 
 ## A small colored tag with the status name.
-func _badge(text: String, color: Color) -> PanelContainer:
-	var style := StyleBoxFlat.new()
-	style.bg_color = color
-	style.set_corner_radius_all(4)
-	style.content_margin_left = 6
-	style.content_margin_right = 6
+func _badge(text: String, token: StringName) -> PanelContainer:
+	var style := UiTheme.badge_style(token)
 	var panel := PanelContainer.new()
 	panel.add_theme_stylebox_override("panel", style)
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", BADGE_FONT_SIZE)
-	label.add_theme_color_override("font_color", Color.WHITE)
+	label.theme_type_variation = UiTheme.BADGE
 	panel.add_child(label)
 	return panel
 
@@ -725,8 +711,6 @@ func _set_enabled(button: Button, enabled: bool) -> void:
 func _label(text := "") -> Label:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", FONT_SIZE)
-	label.add_theme_color_override("font_color", Color.WHITE)
 	return label
 
 

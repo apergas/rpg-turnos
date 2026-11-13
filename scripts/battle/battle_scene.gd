@@ -33,7 +33,6 @@ const CAMERA_FOCUS := 0.18
 ## How far over a figure's top its life bar floats; the target arrow goes above the bar.
 const BAR_GAP := 0.15
 const ARROW_GAP := 0.5
-const ARROW_COLOR := Color(1.0, 0.9, 0.3)
 ## A click this close (pixels) to an enemy aims at it.
 const PICK_RADIUS := 120.0
 const DEFEND_COLOR := Color(0.6, 0.8, 1.0)
@@ -93,7 +92,9 @@ var _bot := BattleAutoplay.new()
 var _done := false
 var _new_level := 0
 ## Color of the last spell cast, used for the hit that follows it.
-var _spell_color := BattleActor.FIRE_COLOR
+var _spell_color := UiTokens.color(&"element-fire")
+## Token of the number a spell paints: its element, or text-primary.
+var _spell_number := &"text-primary"
 var _hero_actor: BattleActor
 var _ally_actor: BattleActor
 var _enemy_actors: Array[BattleActor] = []
@@ -349,6 +350,7 @@ func _play_event(event: Dictionary) -> void:
 			if event.actor == BattleEvent.HERO:
 				_hud.update_mp(event.mp_left, hero.max_mp)
 			_spell_color = event.color
+			_spell_number = _element_token(event)
 			_sfx(SfxLibrary.FIRE)
 			await _say("¡%s lanza %s!" % [_fighter(event.actor).display_name, event.name])
 			var first: int = event.targets[0]
@@ -375,7 +377,7 @@ func _play_event(event: Dictionary) -> void:
 				_fighter(event.target).display_name, event.amount])
 		BattleEvent.MP_HEAL:
 			_sfx(SfxLibrary.HEAL)
-			await _actor(event.target).play_heal(event.amount, UiTokens.color(StatBar.MP))
+			await _actor(event.target).play_heal(event.amount, UiTokens.color(&"stat-mp"), &"stat-mp")
 			if event.target == BattleEvent.HERO:
 				_hud.update_mp(event.mp_left, hero.max_mp)
 			await _say("¡%s recupera %d PM!" % [
@@ -492,6 +494,14 @@ func _play_event(event: Dictionary) -> void:
 			await _say(said)
 
 
+## The number colour of a spell: &"element-<element>" for fire, ice and thunder.
+func _element_token(event: Dictionary) -> StringName:
+	var element := str(event.get("element", ""))
+	if element in ["fire", "ice", "thunder"]:
+		return StringName("element-" + element)
+	return &"text-primary"
+
+
 func _play_damage(event: Dictionary) -> void:
 	if event.crit:
 		_shake_camera()
@@ -503,7 +513,7 @@ func _play_damage(event: Dictionary) -> void:
 		BattleEvent.RESIST:
 			tag = "¡Resiste!"
 	if event.magic:
-		await _actor(event.target).play_burn(event.amount, _spell_color, tag)
+		await _actor(event.target).play_burn(event.amount, _spell_color, tag, _spell_number)
 	else:
 		await _actor(event.target).play_hit(event.amount, event.crit, tag)
 	_reset_camera()
@@ -651,7 +661,7 @@ func _build_arrow() -> void:
 	cone.radial_segments = 4
 	var material := StandardMaterial3D.new()
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.albedo_color = ARROW_COLOR
+	material.albedo_color = UiTokens.color(&"border-focus")
 	material.no_depth_test = true
 	_arrow = MeshInstance3D.new()
 	_arrow.mesh = cone
