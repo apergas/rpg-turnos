@@ -1,28 +1,28 @@
 class_name StatBar extends Control
-## One datum of the hero as a bar with its text on top ("PV 42/42"), and the colors every
-## window uses for the hero's data: gold golden, PV red, PM blue, EXP green. It draws
+## One datum of the hero as a bar with its text on top ("PV 42/42"). HP, MP and EXP are the
+## names of the tokens that colour it (PV red, PM blue, EXP green). It draws
 ## itself and redraws only when its value changes, so a dozen of them cost nothing.
 
-const HP := Color(0.8, 0.16, 0.16)
-const MP := Color(0.2, 0.4, 0.92)
-const EXP := Color(0.18, 0.62, 0.26)
-const GOLD := Color(1.0, 0.8, 0.25)
-## The EXP as text on a dark window (the bar's green is too dark to read there).
-const EXP_TEXT := Color(0.4, 0.9, 0.48)
-const BACK := Color(0.0, 0.0, 0.0, 0.55)
-const BAR_SIZE := Vector2(220, 30)
-const FONT_SIZE := 20
-const OUTLINE := 4
+const HP := &"stat-hp"
+const MP := &"stat-mp"
+const EXP := &"stat-exp"
+const BAR_SIZE := Vector2(UiTokens.BAR_WIDTH, UiTokens.BAR_HEIGHT)
+## Below this share of its bar the HP is critical: red text and a fill that pulses.
+const CRITICAL_RATIO := 0.25
+## Seconds of one pulse (the fill's alpha goes 1.0 -> 0.6 -> 1.0).
+const CRITICAL_PULSE := 1.0
+const PULSE_LOW := 0.6
 
-var _color: Color
+var _token: StringName
 var _text := ""
 var _ratio := 0.0
 
 
-func _init(color: Color, width := BAR_SIZE.x) -> void:
-	_color = color
+func _init(token: StringName, width := float(UiTokens.BAR_WIDTH)) -> void:
+	_token = token
 	custom_minimum_size = Vector2(width, BAR_SIZE.y)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	set_process(false)
 
 
 ## "Héroe Nv 3", the name every window gives the hero.
@@ -47,14 +47,36 @@ func _show(text: String, ratio: float) -> void:
 		return
 	_text = text
 	_ratio = ratio
+	# Only a critical HP bar needs a repaint every frame.
+	set_process(_is_critical())
 	queue_redraw()
 
 
+func _is_critical() -> bool:
+	return _token == HP and _ratio > 0.0 and _ratio < CRITICAL_RATIO
+
+
+func _process(_delta: float) -> void:
+	queue_redraw()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_THEME_CHANGED:
+		queue_redraw()
+
+
 func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO, size), BACK)
-	draw_rect(Rect2(Vector2.ZERO, Vector2(size.x * clampf(_ratio, 0.0, 1.0), size.y)), _color)
-	var font := get_theme_default_font()
-	var at := Vector2(8, (size.y + font.get_ascent(FONT_SIZE) - font.get_descent(FONT_SIZE)) / 2.0)
-	draw_string_outline(font, at, _text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, OUTLINE,
-		Color.BLACK)
-	draw_string(font, at, _text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color.WHITE)
+	draw_rect(Rect2(Vector2.ZERO, size), UiTokens.color(&"surface-track"))
+	var fill := UiTokens.color(_token)
+	var critical := _is_critical()
+	if critical:
+		var phase := 0.5 + 0.5 * cos(Time.get_ticks_msec() / 1000.0 / CRITICAL_PULSE * TAU)
+		fill.a = lerpf(PULSE_LOW, 1.0, phase)
+	draw_rect(Rect2(Vector2.ZERO, Vector2(size.x * clampf(_ratio, 0.0, 1.0), size.y)), fill)
+	var font := UiTheme.font_for(&"label")
+	var font_size := UiTokens.TYPE_LABEL_SIZE
+	var at := Vector2(8, (size.y + font.get_ascent(font_size) - font.get_descent(font_size)) / 2.0)
+	draw_string_outline(font, at, _text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size,
+		UiTokens.OUTLINE_M, UiTokens.color(&"text-outline"))
+	draw_string(font, at, _text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size,
+		UiTokens.color(&"text-danger" if critical else &"text-on-fill"))

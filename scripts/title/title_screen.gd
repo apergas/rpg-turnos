@@ -21,24 +21,17 @@ const GAME_SCENE := preload("res://scenes/game/game.tscn")
 ## The name the autoplay types (an accent, to try the grid's last row).
 const AUTOPLAY_NAME := "Rocío"
 const TITLE_TEXT := "Villaclaro"
-const TITLE_SIZE := 96
 const SUBTITLE_TEXT := "La Niebla del Norte"
-const SUBTITLE_SIZE := 36
-const VERSION_SIZE := 18
-const FONT_SIZE := 28
 const FADE_TIME := 0.4
 const UPDATE_CHECK_TIME := 1.0
 const UPDATE_WIDTH := 300
 const UPDATE_TEXT := "Hay una versión nueva. Recargar"
-## Where the menu's room starts under the title.
-const MENU_TOP := 160
+## Where the menu's room starts under the title: the subtitle's bottom (measured: 227 on a
+## desktop, 110 on a phone) plus SPACE_2.
+const MENU_TOP := 235
 ## On a phone the title moves up, so the menu fits under its subtitle.
-const TOUCH_MENU_TOP := 135
+const TOUCH_MENU_TOP := 118
 const TOUCH_TITLE_TOP := 8
-## A phone held sideways is short: the title is smaller there so the menu, with the fullscreen
-## row and large text, fits under it.
-const TOUCH_TITLE_SIZE := 64
-const TOUCH_SUBTITLE_SIZE := 26
 ## Drifting camera: looks down PITCH_DEG from DISTANCE m at a point that wanders over
 ## the field at DRIFT_SPEED (radians per second of its slow loop).
 const PITCH_DEG := 55.0
@@ -88,7 +81,7 @@ func _ready() -> void:
 	if Device.is_touch():
 		# A child of the title itself, which stays while the Game comes and goes.
 		var hint_layer := CanvasLayer.new()
-		hint_layer.layer = 100
+		hint_layer.layer = UiTokens.LAYER_SYSTEM
 		hint_layer.add_child(RotateHint.new())
 		add_child(hint_layer)
 	KeyMap.apply(_options.keys)
@@ -368,6 +361,7 @@ func _show_update_notice() -> void:
 
 func _build_menu() -> void:
 	_ui = CanvasLayer.new()
+	_ui.layer = UiTokens.LAYER_HUD
 	add_child(_ui)
 	var root := Control.new()
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -376,10 +370,9 @@ func _build_menu() -> void:
 	var title := Label.new()
 	title.text = TITLE_TEXT
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", TOUCH_TITLE_SIZE if Device.is_touch() else TITLE_SIZE)
-	title.add_theme_color_override("font_color", Color(1.0, 0.9, 0.45))
-	title.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.0))
-	title.add_theme_constant_override("outline_size", 18)
+	# display-l on a phone held sideways, so the menu with the fullscreen row fits under it.
+	UiTheme.style_label(title, &"display-l" if Device.is_touch() else &"display-xl", &"text-display",
+		UiTokens.OUTLINE_XL, &"text-outline-warm")
 	root.add_child(title)
 	_title_label = title
 	title.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP, \
@@ -387,10 +380,8 @@ func _build_menu() -> void:
 	var subtitle := Label.new()
 	subtitle.text = SUBTITLE_TEXT
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	subtitle.add_theme_font_size_override("font_size", TOUCH_SUBTITLE_SIZE if Device.is_touch() else SUBTITLE_SIZE)
-	subtitle.add_theme_color_override("font_color", Color(1.0, 0.95, 0.8))
-	subtitle.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.0))
-	subtitle.add_theme_constant_override("outline_size", 10)
+	UiTheme.style_label(subtitle, &"title-m" if Device.is_touch() else &"title-l", &"text-display-soft",
+		UiTokens.OUTLINE_L, &"text-outline-warm")
 	title.add_child(subtitle)  # it comes and goes with the title
 	subtitle.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	subtitle.offset_left = 0.0
@@ -401,12 +392,10 @@ func _build_menu() -> void:
 	subtitle.grow_vertical = Control.GROW_DIRECTION_END
 	var version := Label.new()
 	version.text = "v%s" % ProjectSettings.get_setting("application/config/version")
-	version.add_theme_font_size_override("font_size", VERSION_SIZE)
-	version.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.0))
-	version.add_theme_constant_override("outline_size", 6)
+	UiTheme.style_label(version, &"caption", &"text-primary", UiTokens.OUTLINE_S, &"text-outline-warm")
 	root.add_child(version)
 	version.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, \
-		Control.PRESET_MODE_MINSIZE, 12)
+		Control.PRESET_MODE_MINSIZE, UiTokens.SPACE_3)
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	center.offset_top = _menu_top()
@@ -417,7 +406,7 @@ func _build_menu() -> void:
 	_menu_window.custom_minimum_size = Vector2(320, 0)
 	center.add_child(_menu_window)
 	var menu := VBoxContainer.new()
-	menu.add_theme_constant_override("separation", 8)
+	menu.add_theme_constant_override("separation", UiTokens.SPACE_2)
 	_menu_window.add_child(menu)
 	var start := _button("Nueva partida")
 	start.pressed.connect(func() -> void: new_game.emit())
@@ -438,6 +427,7 @@ func _build_menu() -> void:
 			get_window().mode = Window.MODE_FULLSCREEN)
 		menu.add_child(_fullscreen_button)
 		_sync_fullscreen_row()
+	UiTheme.add_cursor(_menu_window)
 	# A tap outside the options window goes back; under the centred windows, shown only while open.
 	_options_backdrop = Control.new()
 	_options_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -458,6 +448,7 @@ func _build_menu() -> void:
 	_options_panel.setup(_options, _audio)
 	_options_panel.closed.connect(_close_options)
 	_options_window.add_child(_options_panel)
+	UiTheme.add_cursor(_options_window)
 	_slot_window = BattleHud.make_window()
 	_slot_window.hide()
 	center.add_child(_slot_window)
@@ -471,6 +462,7 @@ func _build_menu() -> void:
 	_options_panel.transfer_requested.connect(func() -> void:
 		_open_slots(SlotList.Mode.MANAGE))
 	_slot_window.add_child(_slot_list)
+	UiTheme.add_cursor(_slot_window)
 	_focus(_continue_button if not _continue_button.disabled else start)
 
 
@@ -505,9 +497,14 @@ func _focus(button: Button) -> void:
 func _button(text: String) -> Button:
 	var button := Button.new()
 	button.text = text
-	button.flat = true
-	UiStyle.fit_finger(button)
-	button.add_theme_font_size_override("font_size", FONT_SIZE)
+	UiTheme.menu_row(button)
+	button.add_theme_font_override(&"font", UiTheme.font_for(&"title-s"))
+	button.add_theme_font_size_override(&"font_size", UiTokens.TYPE_TITLE_S_SIZE)
+	# The row reserves room on the left for the cursor; the same on the right centres the text.
+	for box_name in [&"normal", &"hover", &"pressed", &"hover_pressed", &"disabled"]:
+		var box := UiTheme.row_style()
+		box.content_margin_right = box.content_margin_left
+		button.add_theme_stylebox_override(box_name, box)
 	button.focus_entered.connect(func() -> void:
 		if not _quiet_focus:
 			_audio.play_sfx(SfxLibrary.CURSOR))
@@ -516,7 +513,7 @@ func _button(text: String) -> Button:
 
 func _build_fade() -> void:
 	var layer := CanvasLayer.new()
-	layer.layer = 20
+	layer.layer = UiTokens.LAYER_TITLE_FADE
 	add_child(layer)
 	_fade = ColorRect.new()
 	_fade.color = Color(0, 0, 0, 0)

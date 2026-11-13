@@ -20,7 +20,8 @@ const WAIT := Vector2(0.6, 2.0)
 const SHY_RADIUS := 5.0
 const SHY_REACH := 2.0
 const RUN_RADIUS := 6.0
-const RUN_SPEED := 4.5
+## Only the Slime de Metal uses it (WANDER); the hero (5 m/s) catches up with it.
+const RUN_SPEED := 2.25
 const RUN_PICKS := 6
 ## Random points tried for one it may stand on before staying home.
 const POINT_TRIES := 8

@@ -1,5 +1,42 @@
 # Registro de cambios
 
+## 2.6.1 (2026)
+
+Más fácil de leer.
+
+- Opción nueva «Alto contraste» en Opciones: ventanas opacas y textos grises más claros.
+- Los avisos dicen qué son con una palabra de color: «Guardado», «Misión cumplida», «Cuidado»...
+- Cuando una frase del diálogo espera, una flecha abajo a la derecha te lo dice.
+- Con pocos PV, la barra late y su texto se pone naranja.
+- El aturdimiento del combate tiene su insignia, «Aturdido».
+- Los golpes críticos lo dicen: «¡Crítico!».
+- El resultado del combate es una tarjeta, y las filas de objetos y tienda dicen cuántos tienes y por qué no se pueden usar.
+- En el ordenador, la acción cercana enseña la tecla que la hace.
+
+## 2.6.0 (2026)
+
+La interfaz se pone al día.
+
+- Una sola letra en todas partes, la misma en el ordenador, el navegador y el móvil: Nunito para las ventanas y Baloo 2 para el título, los nombres de los lugares, los letreros y los números del combate.
+- En todos los menús se ve qué fila tienes elegida: un cursor dorado ▶ y un fondo, también en el móvil.
+- Las ventanas tienen sombra y se leen mejor sobre el cielo, la nieve o la arena.
+- La barra de EXP es de un verde más oscuro y el texto gris es más claro: los dos se leen mejor.
+- Cada color tiene un solo significado: el dorado es para lo importante y el oro, el verde para lo bueno, el rojo para lo malo.
+- Los números de los hechizos tienen el color de su elemento, y la página de Teclas cabe en el móvil.
+
+## 2.5.0 (2026)
+
+Las ideas que apuntaste.
+
+- Las medallas pequeñas ya no están escondidas por el suelo: algunos monstruos las llevan encima y las sueltan de vez en cuando. El Slime de Metal siempre deja una.
+- El Coleccionista viaja: está en todos los pueblos, y en la caravana cuando ya tienes compañero. Lleva la misma cuenta en todos.
+- Más monstruos en la pradera, el bosque, la mina y el castillo.
+- Los monstruos vencidos vuelven poco a poco, lejos de ti: ya no hace falta salir del mapa para que reaparezcan.
+- El Slime de Metal corre la mitad: ahora se le puede alcanzar.
+- El portal del Ala de viaje es un remolino azul con una corona de rayos, chispas y una luz.
+- Una misión más en la mina (a la Minera le sobran arañas) y otra en el castillo (a la Posadera le falta una olla).
+- El fuego de las antorchas y las hogueras parece fuego, con brasas y una luz que tiembla.
+
 ## 2.4.1 (2026)
 
 - El sol de la pantalla del más allá ya no es un eclipse: es un sol rojo oscuro y apagado.

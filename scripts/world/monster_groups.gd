@@ -6,7 +6,7 @@ class_name MonsterGroups extends RefCounted
 ## never touched), out of the village, inside the walls and clear of the rocks, the
 ## buildings and the trees; on a dungeon floor, on a room cell (is_room_cell(): a corridor
 ## one cell wide never holds one), never in the stair rooms or the village (the refugio, the
-## camp). Everywhere clear of the exits, the chests, the small medals, the wells, the figures, the
+## camp). Everywhere clear of the exits, the chests, the wells, the figures, the
 ## boss and the
 ## entries, and MIN_GAP from each other. Pure: no nodes.
 
@@ -28,7 +28,7 @@ const DUNE_MARGIN := MAX_ROAM + 0.5
 const EDGE_MARGIN := 4.0
 const PROP_MARGIN := 1.5
 const TREE_MARGIN := 1.5
-## Clear of the exits, the chests, the small medals, the wells, the figures and, on a dungeon floor,
+## Clear of the exits, the chests, the wells, the figures and, on a dungeon floor,
 ## the
 ## lever, the key and the gates; farther from the boss; farther still from the entries and
 ## from the spots to avoid (the hero).
@@ -43,6 +43,8 @@ const OPEN_TRIES := 600
 const PLACE_TRIES := 6
 ## The rare enemy (the Slime de Metal) starts at least this far from the hero.
 const RARE_GAP := 12.0
+## A group that comes back (World's refill) stands at least this far from the hero.
+const REFILL_GAP := 20.0
 ## The 2 × 2 blocks a cell can be part of (their top left corner, from the cell) and the
 ## four cells of a block.
 const BLOCK_CORNERS: Array[Vector2i] = [Vector2i(-1, -1), Vector2i(0, -1), Vector2i(-1, 0),
@@ -125,6 +127,21 @@ static func rare_spot(zone: ZoneData, rng: RandomNumberGenerator, hero_pos: Vect
 	return far[rng.randi_range(0, far.size() - 1)]
 
 
+## Where one more group may stand now: a spot spots() could pick (the same _candidates()),
+## REFILL_GAP or more from the hero and MIN_GAP from every group on the map (taken); null if
+## there is none.
+static func refill_spot(zone: ZoneData, rng: RandomNumberGenerator, hero_pos: Vector3,
+		taken: Array[Vector3]) -> Variant:
+	var avoid: Array[Vector3] = [hero_pos]
+	var found: Array[Vector3] = []
+	for pos in _candidates(zone, rng, avoid):
+		if _flat(pos, hero_pos) >= REFILL_GAP and _apart(pos, taken):
+			found.append(pos)
+	if found.is_empty():
+		return null
+	return found[rng.randi_range(0, found.size() - 1)]
+
+
 ## The spots a group may stand on: the room cells of a dungeon floor, or OPEN_TRIES random
 ## points of an open map that pass _open_spot(); both only if _clear().
 static func _candidates(zone: ZoneData, rng: RandomNumberGenerator,
@@ -169,8 +186,6 @@ static func _clear(zone: ZoneData, pos: Vector3, avoid: Array[Vector3]) -> bool:
 		near.append(exit.pos)
 	for id in Chests.of_zone(zone.id):
 		near.append(Chests.CHESTS[id].pos)
-	for id in Medals.of_zone(zone.id):
-		near.append(Medals.MEDALS[id].pos)
 	for well: Dictionary in zone.wells:
 		near.append(well.pos)
 	for npc: Dictionary in zone.npcs:

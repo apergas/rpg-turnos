@@ -1,0 +1,36 @@
+class_name MenuCursor extends Control
+## El cursor dorado ▶ de los menús (propuesta del design system). Un solo nodo por ventana:
+## sigue al botón que tiene el foco o, en un móvil, al último tocado, así la selección se ve
+## igual con teclado, ratón o dedo. Se dibuja (no es un glifo: la letra web no lo tiene).
+
+var _target: Control
+
+
+func _init() -> void:
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top_level = true
+	size = Vector2(UiTokens.CURSOR_SIZE, UiTokens.CURSOR_SIZE)
+
+
+func _ready() -> void:
+	get_viewport().gui_focus_changed.connect(_on_focus)
+
+
+func _on_focus(control: Control) -> void:
+	if control is Button and get_parent().is_ancestor_of(control):
+		_target = control
+	queue_redraw()
+
+
+func _process(_delta: float) -> void:
+	visible = _target != null and is_instance_valid(_target) and _target.is_visible_in_tree()
+	if visible:
+		var rect := _target.get_global_rect()
+		global_position = Vector2(rect.position.x + UiTokens.SPACE_2,
+			rect.position.y + (rect.size.y - size.y) / 2.0)
+
+
+func _draw() -> void:
+	var s := float(UiTokens.CURSOR_SIZE)
+	draw_colored_polygon(PackedVector2Array([Vector2(0, 0), Vector2(s * 0.8, s / 2.0), Vector2(0, s)]),
+		UiTokens.color(&"border-focus"))

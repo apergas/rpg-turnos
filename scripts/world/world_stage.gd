@@ -74,9 +74,6 @@ const TREE_COLLIDER_HEIGHT := 3.0
 ## _near_chest()'s cache: the zone id and its chests' spots on the ground.
 static var _chest_zone := ""
 static var _chest_spots: Array[Vector2] = []
-## Tall grass keeps this far from a small medal (Medals), so the glint shows on the ground;
-## _near_medal()'s cache, like _near_chest()'s.
-const MEDAL_GRASS_MARGIN := 0.8
 ## How far decoration keeps from what the game needs (Decor; added to the piece's radius).
 ## Soft pieces (no collider) may stand closer to the autoplay route: the hero walks through.
 const DECOR_PATH_MARGIN := 0.3
@@ -86,7 +83,6 @@ const DECOR_EXIT_MARGIN := 3.5
 const DECOR_ENTRY_MARGIN := 2.0
 const DECOR_PORTAL_MARGIN := 2.5
 const DECOR_CHEST_MARGIN := 1.5
-const DECOR_MEDAL_MARGIN := 2.0
 const DECOR_FIGURE_MARGIN := 1.5
 const DECOR_BOSS_MARGIN := 3.0
 const DECOR_PROP_MARGIN := 0.4
@@ -95,8 +91,6 @@ const DECOR_PROP_MARGIN := 0.4
 const TREE_DECOR_MARGIN := 2.0
 const BUSH_DECOR_MARGIN := 0.6
 const GRASS_DECOR_MARGIN := 0.3
-static var _medal_zone := ""
-static var _medal_spots: Array[Vector2] = []
 ## _tree_layout()'s cache (the zone id and its trees) and near_tree()'s (x, z and the
 ## collider radius of each tree inside the walls).
 static var _layout_zone := ""
@@ -163,10 +157,10 @@ static func is_on_path(zone: ZoneData, pos: Vector3, margin := 0.0) -> bool:
 
 
 ## Where tall grass may grow: off the path and the safe discs (the village is inside one),
-## the rocks, the buildings, the chests, the figures and the small medals.
+## the rocks, the buildings, the chests and the figures.
 static func is_grass_free(pos: Vector3, zone: ZoneData) -> bool:
 	if is_on_path(zone, pos, GRASS_PATH_MARGIN) or _near_chest(zone, pos, CHEST_GRASS_MARGIN) \
-			or _near_figure(zone, pos) or _near_medal(zone, pos) \
+			or _near_figure(zone, pos) \
 			or Decor.near_solid(zone, pos, GRASS_DECOR_MARGIN):
 		return false
 	return not _near_rock(zone, pos, GRASS_ROCK_MARGIN) \
@@ -577,7 +571,7 @@ const DECOR_KEEP_CELLS := {"L": "la palanca", "K": "la llave", "D": "una reja",
 
 ## What a piece of decoration of this radius at pos would be on that it must not ("" if the
 ## spot is fine): the path, the autoplay route, exits and stairs, entries, the portal,
-## chests and wells, small medals, figures, the boss, rocks, buildings, trees, and on a
+## chests and wells, figures, the boss, rocks, buildings, trees, and on a
 ## dungeon floor rock cells, the stair rooms and DECOR_KEEP_CELLS. Decor asks it for the
 ## scattered pieces; it only asks Decor for the placed ones (near_tree() through
 ## _tree_fits() and near_placed()), never for the scattered ones, so is_clear_of_props()
@@ -613,8 +607,6 @@ static func decor_blocker(zone: ZoneData, pos: Vector3, radius: float, solid: bo
 		return "el jefe"
 	if _near_chest(zone, pos, radius + DECOR_CHEST_MARGIN):
 		return "un cofre o un pozo"
-	if _near_medal(zone, pos, radius + DECOR_MEDAL_MARGIN):
-		return "una medalla"
 	if _near_figure(zone, pos, radius + DECOR_FIGURE_MARGIN):
 		return "una figura"
 	if near_dune(zone, pos, radius + DECOR_PROP_MARGIN):
@@ -671,22 +663,6 @@ static func _near_chest(zone: ZoneData, pos: Vector3, margin: float) -> bool:
 			_chest_spots.append(Vector2(well.pos.x, well.pos.z))
 	var p := Vector2(pos.x, pos.z)
 	for spot in _chest_spots:
-		if p.distance_to(spot) < margin:
-			return true
-	return false
-
-
-## True within MEDAL_GRASS_MARGIN of one of the zone's small medals (taken or not: the map
-## is built from the zone alone). Only the grass asks: the trees and bushes don't change.
-static func _near_medal(zone: ZoneData, pos: Vector3, margin := MEDAL_GRASS_MARGIN) -> bool:
-	if _medal_zone != zone.id:
-		_medal_zone = zone.id
-		_medal_spots.clear()
-		for id in Medals.of_zone(zone.id):
-			var spot: Vector3 = Medals.MEDALS[id].pos
-			_medal_spots.append(Vector2(spot.x, spot.z))
-	var p := Vector2(pos.x, pos.z)
-	for spot in _medal_spots:
 		if p.distance_to(spot) < margin:
 			return true
 	return false

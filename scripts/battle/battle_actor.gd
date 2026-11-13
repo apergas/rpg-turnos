@@ -18,12 +18,17 @@ enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPE
 	SNAKE, MONKEY, TRAP_PLANT, TROPICAL_MUSHROOM, CARAVAN_CHIEF, HEALER, JAGUAR,
 	SCORPION, SAND_SLIME, VULTURE, SAND_GOLEM, MUMMY, CANTEEN, SAND_WORM, SNOW_WOLF, ICE_GOLEM,
 	SUMMIT_SPIRIT, ICE_BAT, GOAT, GRIFFIN, HOLLOW_ARMOR, GARGOYLE, SHADOW, SENTINEL, RUIN_RAT, CITY_GUARDIAN,
-	PORTAL_DEVOURER, CARAVAN_MERCHANT, TRAVELLER_F, TRAVELLER_M, EXPLORER, SURVIVOR }
+	PORTAL_DEVOURER, CARAVAN_MERCHANT, TRAVELLER_F, TRAVELLER_M, EXPLORER, SURVIVOR, POT, CARAVAN_COLLECTOR }
 
-const FIRE_COLOR := Color(1.0, 0.45, 0.1)
-const HEAL_COLOR := Color(0.3, 1.0, 0.4)
-## Color of the "¡Débil!" / "¡Resiste!" line under a damage number.
-const TAG_COLOR := Color(1.0, 0.6, 0.2)
+## What floats under a damage number: nothing, "¡Débil!" or "¡Resiste!".
+enum Tag { NONE, WEAK, RESIST }
+## Damage numbers: font px of a normal number and a critical one, and the world height each
+## drew at before the design system (pixel_size = old height / font px).
+const NUMBER_FONT := 48
+const NUMBER_CRIT_FONT := 62
+const NUMBER_WORLD := 0.32
+const NUMBER_CRIT_WORLD := 0.48
+const TAG_WORLD := 0.2
 const GOLD := Color(1.0, 0.8, 0.2)
 const KNIGHT := preload("res://assets/characters/Knight.glb")
 const MAGE := preload("res://assets/characters/Mage.glb")
@@ -149,6 +154,8 @@ const JAW_REST := 0.3
 const JAW_OPEN := 0.95
 ## The map hero's rim of light (set_map_readable()): one material for him, as an overlay.
 const RIM_SHADER := preload("res://shaders/hero_rim.gdshader")
+## The trees' shader, for the pot's vertex colours (NatureModels meshes have no material).
+const TREE_SHADER := preload("res://shaders/tree.gdshader")
 ## The hero as a person, not a suit of steel: the KayKit Knight's helmet is hidden and its
 ## armor meshes (one grey palette cell) are tinted bare arms, a blue tunic and leather
 ## legs. Multiplied over a grey that peaks near 0.42 linear, hence the values above 1.
@@ -341,6 +348,15 @@ const LOOKS := {
 			"Knight_Body": Color(1.2, 0.85, 0.55), "Knight_LegLeft": Color(0.7, 0.5, 0.35),
 			"Knight_LegRight": Color(0.7, 0.5, 0.35)},
 		"cape": Color(0.16, 0.32, 0.18), "anims": CHARACTER_ANIMS,
+	},
+	# The Coleccionista in the Caravana: a person, in the purple of his Villaclaro robes.
+	Look.CARAVAN_COLLECTOR: {
+		"scene": KNIGHT, "scale": CHARACTER_SCALE, "top": 1.9, "hide": PERSON_HIDE,
+		"head_texture": HEAD_BROWN_PALE, "hair": {"style": "bun", "color": HAIR_BROWN},
+		"mesh_tints": {"Knight_ArmLeft": SKIN_PALE, "Knight_ArmRight": SKIN_PALE,
+			"Knight_Body": Color(1.3, 0.8, 1.9), "Knight_LegLeft": Color(0.75, 0.6, 0.9),
+			"Knight_LegRight": Color(0.75, 0.6, 0.9)},
+		"cape": Color(0.5, 0.25, 0.7), "anims": CHARACTER_ANIMS,
 	},
 	Look.CARAVAN_MERCHANT: {
 		"scene": KNIGHT, "scale": CHARACTER_SCALE, "top": 1.9, "hide": PERSON_HIDE,
@@ -751,6 +767,11 @@ const LOOKS := {
 		"sand_color": Color(0.56, 0.44, 0.28),
 		"top": 0.8,
 	},
+	# The Posadera's big pot (the olla quest's figure): the refugio's Kenney pot, still.
+	Look.POT: {
+		"model_scale": 1.0,
+		"top": 0.9,
+	},
 	# The Gusano de las dunas: a segmented worm rising out of a ring of sand.
 	Look.SAND_WORM: {
 		"color": Color(0.78, 0.55, 0.36),
@@ -1007,6 +1028,8 @@ func _ready() -> void:
 		_build_worm(data)
 	elif look == Look.CANTEEN:
 		_build_canteen(data)
+	elif look == Look.POT:
+		_build_pot(data)
 	elif look == Look.BOARD:
 		_build_board(data)
 	elif look == Look.CAT:
@@ -1055,6 +1078,15 @@ func set_walking(on: bool) -> void:
 func set_faded(on: bool) -> void:
 	for mi in _meshes:
 		mi.transparency = FADED_TRANSPARENCY if on else 0.0
+
+
+## A group coming back on the map: every mesh from invisible to solid in seconds.
+func play_fade_in(seconds: float) -> void:
+	for mi in _meshes:
+		mi.transparency = 1.0
+	var t := create_tween().set_parallel()
+	for mi in _meshes:
+		t.tween_property(mi, "transparency", 0.0, seconds)
 
 
 ## Map hero only (Player): a soft rim of light and a faint light of his own on every mesh
@@ -1217,9 +1249,9 @@ func top_height() -> float:
 
 
 ## Hit animation, white flash, small knockback and a floating damage number; tag
-## ("¡Débil!", "¡Resiste!") floats under the number.
-func play_hit(amount: int, crit: bool, tag := "") -> void:
-	_spawn_number(amount, crit, Color.WHITE, tag)
+## (weak, resist) floats under the number and a crit adds "¡Crítico!".
+func play_hit(amount: int, crit: bool, tag := Tag.NONE, number := &"text-primary") -> void:
+	_spawn_number(amount, crit, number, tag)
 	var timer := _start("hit")
 	var base := global_position
 	var knockback := global_basis.z.normalized() * (0.5 if crit else 0.3)
@@ -1268,7 +1300,7 @@ func play_defeat() -> void:
 
 ## Glow in the spell's color with the cast animation (characters) or a small hop
 ## (slimes), before a spell.
-func play_cast(color := FIRE_COLOR) -> void:
+func play_cast(color := UiTokens.color(&"element-fire")) -> void:
 	_set_flash(true, color)
 	var timer := _start("cast")
 	if timer:
@@ -1280,7 +1312,8 @@ func play_cast(color := FIRE_COLOR) -> void:
 
 
 ## A ball in the spell's color grows on the actor and fades while the hit plays.
-func play_burn(amount: int, color := FIRE_COLOR, tag := "") -> void:
+func play_burn(amount: int, color := UiTokens.color(&"element-fire"), tag := Tag.NONE,
+		number := &"text-primary") -> void:
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -1296,24 +1329,25 @@ func play_burn(amount: int, color := FIRE_COLOR, tag := "") -> void:
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	t.parallel().tween_property(mat, "albedo_color:a", 0.0, 0.3).set_delay(0.1)
 	t.tween_callback(ball.queue_free)
-	await play_hit(amount, false, tag)
+	await play_hit(amount, false, tag, number)
 	if t.is_running():
 		await t.finished
 
 
 ## Glow and a number going up, green by default (HP); an MP heal passes its own color.
-func play_heal(amount: int, color := HEAL_COLOR) -> void:
-	_spawn_number(amount, false, color)
+func play_heal(amount: int, color := UiTokens.color(&"element-heal"),
+		number := &"element-heal") -> void:
+	_spawn_number(amount, false, number)
 	_set_flash(true, color)
 	await get_tree().create_timer(0.35).timeout
 	_set_flash(false)
 
 
 ## Glow in a status color (poison, sleep, defend...); amount > 0 also floats a number of
-## that color (poison damage).
-func play_status(color: Color, amount := 0) -> void:
+## that color (poison damage, the only damaging status), whose token the caller names.
+func play_status(color: Color, amount := 0, number := &"text-primary") -> void:
 	if amount > 0:
-		_spawn_number(amount, false, color)
+		_spawn_number(amount, false, number)
 	_set_flash(true, color)
 	await get_tree().create_timer(0.35).timeout
 	_set_flash(false)
@@ -2120,6 +2154,23 @@ func _build_canteen(data: Dictionary) -> void:
 	_add_mesh(flask, strap, data.strap_color, Vector3(0, 0.0, 0.0))
 
 
+## The Posadera's pot: the Kenney pot of the mine's refuge (NatureModels "pot", vertex
+## colours through the tree shader, as on the map), a little tipped over.
+func _build_pot(data: Dictionary) -> void:
+	var mi := MeshInstance3D.new()
+	# The refugio's own green (ZoneData.decor_green's default): the pot has no green part,
+	# and the same key reuses NatureModels' cached mesh.
+	mi.mesh = NatureModels.mesh("pot", ZoneData.by_id("mina_1").decor_green)
+	var mat := ShaderMaterial.new()
+	mat.shader = TREE_SHADER
+	mat.set_shader_parameter("use_texture", false)
+	mat.set_shader_parameter("use_vertex_color", true)
+	mi.material_override = mat
+	mi.scale = Vector3.ONE * float(data.model_scale)
+	mi.rotation_degrees = Vector3(0, 0, 12)
+	_body.add_child(mi)
+
+
 ## A spider: a round abdomen behind a small head with red eyes, on eight bent legs
 ## (four a side, each a thigh going up and out and a shin going down to the ground).
 func _build_spider(data: Dictionary) -> void:
@@ -2167,7 +2218,7 @@ func _build_specter(data: Dictionary) -> void:
 ## specter floats, the rest squash and stretch (the wolf, the golems and the spider only
 ## breathe).
 func _start_idle() -> void:
-	if look in [Look.BOARD, Look.CANTEEN]:
+	if look in [Look.BOARD, Look.CANTEEN, Look.POT]:
 		return
 	if not _wings.is_empty():
 		_start_flap()
@@ -2260,28 +2311,42 @@ func _end(timer: SceneTreeTimer) -> void:
 	_anim.play(_anims.idle, BLEND_TIME)
 
 
-func _spawn_number(amount: int, crit: bool, color := Color.WHITE, tag := "") -> void:
-	if tag != "":
-		_float_label(tag, 40, TAG_COLOR, _top - 0.3)
-	_float_label(str(amount), 96 if crit else 64, Color(1.0, 0.85, 0.2) if crit else color,
-		_top)
+## A damage number over the actor; color_token names its colour (a critical one is always
+## text-display); tag floats under it.
+func _spawn_number(amount: int, crit: bool, color_token := &"text-primary", tag := Tag.NONE) -> void:
+	var tag_y := _top - 0.3
+	if crit:
+		_float_label("¡Crítico!", &"label", &"text-accent", TAG_WORLD, tag_y)
+		tag_y -= 0.3  # a weak or resist tag goes under the crit one
+	match tag:
+		Tag.WEAK:
+			_float_label("¡Débil!", &"label", &"element-weak", TAG_WORLD, tag_y)
+		Tag.RESIST:
+			_float_label("¡Resiste!", &"label", &"text-secondary", TAG_WORLD, tag_y)
+	if crit:
+		_float_label(str(amount), &"display-m", &"text-display", NUMBER_CRIT_WORLD, _top,
+			NUMBER_CRIT_FONT)
+	else:
+		_float_label(str(amount), &"display-m", color_token, NUMBER_WORLD, _top, NUMBER_FONT)
 
 
 ## A billboard text drawn over everything that floats up from height y and fades out.
-func _float_label(text: String, font_size: int, color: Color, y: float) -> void:
+## world_height is how tall a font px-height text stands in the world (pixel_size is set so).
+func _float_label(text: String, style: StringName, color_token: StringName,
+		world_height: float, y: float, font_size := 0) -> void:
 	var label := Label3D.new()
 	label.text = text
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.no_depth_test = true
-	label.pixel_size = 0.005
-	label.font_size = font_size
-	label.outline_size = 16
-	label.modulate = color
+	UiTheme.style_3d(label, style, color_token, UiTokens.OUTLINE_M)
+	if font_size > 0:
+		label.font_size = font_size
+	label.pixel_size = world_height / float(label.font_size)
 	label.position = Vector3(0, y, 0)
 	add_child(label)
 	var t := label.create_tween().set_parallel()
-	t.tween_property(label, "position:y", y + 0.8, 0.9)
-	t.tween_property(label, "modulate:a", 0.0, 0.6).set_delay(0.3)
+	t.tween_property(label, "position:y", y + 0.8, 0.8)
+	t.tween_property(label, "modulate:a", 0.0, 0.6).set_delay(0.2)
 	t.chain().tween_callback(label.queue_free)
 
 

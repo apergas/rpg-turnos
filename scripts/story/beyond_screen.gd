@@ -12,7 +12,6 @@ class_name BeyondScreen extends Node3D
 signal _advanced
 
 const TEXT := "Al otro lado del portal, otro mundo espera..."
-const TEXT_SIZE := 34
 const CLOSE_TIME := 14.0
 const TEXT_DELAY := 3.0
 const TEXT_FADE := 2.0
@@ -343,16 +342,13 @@ func _build_figures() -> void:
 
 func _build_text() -> void:
 	var layer := CanvasLayer.new()
-	layer.layer = 9  # under Game's fade (10)
+	layer.layer = UiTokens.LAYER_CINEMATIC  # under Game's fade (10)
 	add_child(layer)
 	_label = Label.new()
 	_label.text = TEXT
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_label.add_theme_font_size_override("font_size", TEXT_SIZE)
-	_label.add_theme_color_override("font_color", Color.WHITE)
-	_label.add_theme_color_override("font_outline_color", Color.BLACK)
-	_label.add_theme_constant_override("outline_size", 8)
+	UiTheme.style_label(_label, &"title-l", &"text-primary", UiTokens.OUTLINE_M)
 	_label.modulate.a = 0.0
 	layer.add_child(_label)
 	_label.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)

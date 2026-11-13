@@ -9,10 +9,8 @@ class_name NameEntry extends Control
 signal accepted(hero_name: String)
 signal cancelled
 
-const FONT_SIZE := 26
-const NAME_SIZE := 44
-const TITLE_COLOR := UiStyle.TITLE_COLOR
-const HINT_COLOR := Color(0.7, 0.72, 0.8)
+## The name's opacity while nothing is typed and the default name shows.
+const EMPTY_ALPHA := 0.45
 const KEY_SIZE := Vector2(58, 50)
 const COLUMNS := 8
 ## Phone: wider and shorter, so the grid and its buttons fit a landscape screen.
@@ -50,28 +48,30 @@ func _ready() -> void:
 	var window := BattleHud.make_window()
 	center.add_child(window)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 10)
+	box.add_theme_constant_override("separation", UiTokens.SPACE_3)
 	window.add_child(box)
-	box.add_child(_label("¿Cómo te llamas?", TITLE_COLOR, FONT_SIZE))
-	_name_label = _label("", Color.WHITE, NAME_SIZE)
+	box.add_child(_label("¿Cómo te llamas?", UiTheme.TITLE))
+	_name_label = _label("", UiTheme.DISPLAY)
 	_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_name_label)
 	var hint := "Toca las letras" if Device.is_touch() else "Escribe o toca las letras"
 	box.add_child(_label("%s (máximo %d)." % [hint, StoryState.MAX_NAME_LENGTH],
-		HINT_COLOR, 20))
+		UiTheme.CAPTION))
 	var grid := GridContainer.new()
 	grid.columns = TOUCH_COLUMNS if Device.is_touch() else COLUMNS
-	grid.add_theme_constant_override("h_separation", 4)
-	grid.add_theme_constant_override("v_separation", 4)
+	grid.add_theme_constant_override("h_separation", UiTokens.SPACE_1)
+	grid.add_theme_constant_override("v_separation", UiTokens.SPACE_1)
 	box.add_child(grid)
 	for letter in LETTERS:
 		var key := _button(letter)
+		key.theme_type_variation = UiTheme.KEY
+		key.remove_theme_font_size_override("font_size")
 		key.custom_minimum_size = KEY_SIZE
 		key.pressed.connect(func() -> void: _add(key.text))
 		grid.add_child(key)
 		_keys.append(key)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
+	row.add_theme_constant_override("separation", UiTokens.SPACE_2)
 	box.add_child(row)
 	_case_button = _button("Aa")
 	_case_button.pressed.connect(func() -> void: _set_upper(not _upper))
@@ -86,6 +86,7 @@ func _ready() -> void:
 	_accept_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_accept_button.pressed.connect(_accept)
 	row.add_child(_accept_button)
+	UiTheme.add_cursor(window)
 	if preset != "":
 		_typed = preset
 	_refresh()
@@ -185,7 +186,7 @@ func _set_upper(upper: bool) -> void:
 func _refresh() -> void:
 	if _typed == "":
 		_name_label.text = StoryState.DEFAULT_NAME
-		_name_label.modulate = Color(1, 1, 1, 0.45)
+		_name_label.modulate = Color(1, 1, 1, EMPTY_ALPHA)
 		return
 	_name_label.modulate = Color.WHITE
 	_name_label.text = _typed + "_".repeat(StoryState.MAX_NAME_LENGTH - _typed.length())
@@ -194,18 +195,17 @@ func _refresh() -> void:
 func _button(text: String) -> Button:
 	var button := Button.new()
 	button.text = text
-	button.add_theme_font_size_override("font_size", FONT_SIZE)
+	UiTheme.menu_row(button)
 	button.focus_entered.connect(func() -> void:
 		if not _quiet_focus:
 			_sfx(SfxLibrary.CURSOR))
 	return button
 
 
-func _label(text: String, color: Color, size: int) -> Label:
+func _label(text: String, variation: StringName) -> Label:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", size)
-	label.add_theme_color_override("font_color", color)
+	label.theme_type_variation = variation
 	return label
 
 

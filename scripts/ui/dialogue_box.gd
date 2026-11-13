@@ -6,25 +6,31 @@ class_name DialogueBox extends Control
 
 signal _advanced
 
-const FONT_SIZE := 24
-const SPEAKER_COLOR := Color(1.0, 0.85, 0.3)
 const AUTOPLAY_DELAY := 0.8
-const MAX_WIDTH := 1000.0
-const BOTTOM := 24.0
+## Seconds the continue mark is shown and hidden.
+const MORE_BLINK := 0.5
+const MAX_WIDTH := float(UiTokens.WINDOW_W_MAX)
+const BOTTOM := float(UiTokens.SPACE_6)
 ## Screen margins and window margins: what a line can't use of the screen's width.
-const SIDE_ROOM := 76.0
+const SIDE_ROOM := float(2 * UiTokens.SPACE_6 + 2 * UiTokens.SPACE_4)
 
 var _autoplay := false
 var _listening := false
 var _speaker: Label
 var _line: Label
 var _audio: AudioDirector
+## The ▼ that says "press to go on": drawn, in its own row at the right, blinking while a line waits.
+var _more: Control
+var _blinking := false
+## When the mark started blinking, so every new line begins with it visible.
+var _blink_start := 0
 
 
 func _ready() -> void:
 	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	set_process(false)
 	var panel := BattleHud.make_window()
 	panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	panel.offset_left = 0
@@ -36,10 +42,18 @@ func _ready() -> void:
 	add_child(panel)
 	var box := VBoxContainer.new()
 	panel.add_child(box)
-	_speaker = _label(SPEAKER_COLOR)
+	_speaker = Label.new()
+	_speaker.theme_type_variation = UiTheme.TITLE
 	box.add_child(_speaker)
-	_line = _label(Color.WHITE)
+	_line = Label.new()
 	box.add_child(_line)
+	_more = Control.new()
+	_more.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_more.custom_minimum_size = Vector2(UiTokens.CURSOR_SIZE, UiTokens.CURSOR_SIZE)
+	_more.size_flags_horizontal = Control.SIZE_SHRINK_END
+	_more.draw.connect(_draw_more)
+	_more.modulate.a = 0.0
+	box.add_child(_more)
 	hide()
 
 
@@ -65,9 +79,28 @@ func say(speaker: String, lines: Array[String]) -> void:
 			# Skip a frame so the key press that opened or advanced the dialogue is not reused.
 			await get_tree().process_frame
 			_listening = true
+			_blink_start = Time.get_ticks_msec()
+			_more.modulate.a = 1.0
+			_blinking = true
+			set_process(true)
 			await _advanced
 			_listening = false
+			_blinking = false
+			set_process(false)
+			_more.modulate.a = 0.0
 	hide()
+
+
+## The mark blinks every MORE_BLINK seconds while a line waits.
+func _process(_delta: float) -> void:
+	if _blinking:
+		_more.modulate.a = 1.0 if int((Time.get_ticks_msec() - _blink_start) / (MORE_BLINK * 1000.0)) % 2 == 0 else 0.0
+
+
+func _draw_more() -> void:
+	var s := float(UiTokens.CURSOR_SIZE)
+	_more.draw_colored_polygon(PackedVector2Array([Vector2(0, 0), Vector2(s, 0), Vector2(s / 2.0, s * 0.8)]),
+			UiTokens.color(&"border-focus"))
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -93,10 +126,3 @@ func _fit_to(lines: Array[String]) -> void:
 	var room := minf(MAX_WIDTH, get_viewport_rect().size.x - SIDE_ROOM)
 	BattleHud.fit_label(_line, longest, room)
 	_line.custom_minimum_size.x = minf(width, room)
-
-
-func _label(color: Color) -> Label:
-	var label := Label.new()
-	label.add_theme_font_size_override("font_size", FONT_SIZE)
-	label.add_theme_color_override("font_color", color)
-	return label

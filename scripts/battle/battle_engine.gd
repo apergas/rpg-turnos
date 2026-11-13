@@ -88,6 +88,14 @@ var drops_won: Array[String] = []
 ## Quest item -> how many its quest asks for (QuestLog.wanted_items(), set before the first
 ## round): such an item always drops while the bag holds fewer, and never otherwise.
 var quest_items := {}
+## Small medals the hero carries (GameState.medals.size(), set before the first round; -1:
+## none drop, the battle run on its own). A common enemy beaten leaves one with medal_chance
+## (the Slime de Metal always, a boss never) while fewer than Medals.MEDALS are carried.
+var medals_carried := -1
+var medal_chance := Medals.DROP_CHANCE
+## Medals left in this won battle (Game takes them: Medals.take()). Each is also in drops_won
+## as Inventory.MEDAL, for the victory window, but never in the inventory.
+var medals_won := 0
 ## The difficulty: what the hero's damage and the EXP won are multiplied by.
 var damage_mult := 1.0
 var exp_mult := 1.0
@@ -430,7 +438,8 @@ func _cast(who: int, cmd: Dictionary, events: Array[Dictionary]) -> void:
 	var skill: Skill = cmd.skill
 	caster.mp -= skill.mp_cost
 	var targets := _skill_targets(who, skill, cmd.target)
-	events.append(BattleEvent.skill(who, targets, skill.display_name, caster.mp, skill.color))
+	events.append(BattleEvent.skill(who, targets, skill.display_name, caster.mp, skill.color,
+		skill.element))
 	if skill.kind == Skill.HEAL:
 		var amount := mini(skill.power, caster.max_hp - caster.hp)
 		caster.hp += amount
@@ -645,6 +654,20 @@ func _win(events: Array[Dictionary]) -> void:
 				drops_won.append(id)
 				var progress := "(%d/%d)" % [inventory.count(id), goal] if goal > 0 else ""
 				events.append(BattleEvent.drop(id, i, progress))
+	if medals_carried >= 0:
+		for i in enemies.size():
+			var enemy := enemies[i]
+			if enemy.is_boss:
+				continue
+			var total := medals_carried + medals_won
+			if total >= Medals.MEDALS.size():
+				break
+			var chance := 1.0 if enemy.id == EnemyLibrary.METAL_SLIME else medal_chance
+			if _rng.randf() < chance:
+				medals_won += 1
+				drops_won.append(Inventory.MEDAL)
+				events.append(BattleEvent.drop(Inventory.MEDAL, i,
+					"(%d/%d)" % [total + 1, Medals.MEDALS.size()]))
 
 
 ## What the difficulty leaves of damage to the hero, at least 1.

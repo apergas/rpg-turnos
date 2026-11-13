@@ -1,0 +1,205 @@
+class_name UiTokens extends RefCounted
+## GENERADO desde tokens.json del Villaclaro Design System. No editar a mano:
+## cambia el design system y vuelve a generarlo.
+
+## true con la opción «Alto contraste» (GameOptions); UiTheme.build() la lee.
+static var high_contrast := false
+
+const JUEGO := {
+	&"navy-950": Color("#05050f"),
+	&"navy-900": Color("#0a0a1f"),
+	&"navy-800": Color("#151536"),
+	&"navy-700": Color("#22224d"),
+	&"navy-600": Color("#34346b"),
+	&"white": Color("#ffffff"),
+	&"grey-200": Color("#d9d9e6"),
+	&"grey-300": Color("#b8b8cc"),
+	&"grey-400": Color("#9999ad"),
+	&"grey-500": Color("#80809a"),
+	&"grey-600": Color("#666673"),
+	&"black": Color("#000000"),
+	&"gold-100": Color("#fff2cc"),
+	&"gold-200": Color("#ffe673"),
+	&"gold-300": Color("#ffd94d"),
+	&"gold-400": Color("#ffcc40"),
+	&"brown-950": Color("#1a0d00"),
+	&"red-300": Color("#ff7066"),
+	&"red-500": Color("#cc2929"),
+	&"red-700": Color("#990000"),
+	&"blue-300": Color("#85a8ff"),
+	&"blue-500": Color("#3366eb"),
+	&"blue-600": Color("#3359cc"),
+	&"green-300": Color("#66e67a"),
+	&"green-500": Color("#2e9e42"),
+	&"green-600": Color("#237a33"),
+	&"orange-300": Color("#ff9933"),
+	&"orange-500": Color("#ff731a"),
+	&"orange-700": Color("#a64200"),
+	&"purple-300": Color("#b380ff"),
+	&"purple-500": Color("#8033a6"),
+	&"cyan-300": Color("#8cd9ff"),
+	&"mint-300": Color("#4dff66"),
+	&"surface-window": Color("#0a0a1fe6"),
+	&"surface-window-solid": Color("#0a0a1f"),
+	&"surface-selected": Color("#151536"),
+	&"surface-track": Color("#0000008c"),
+	&"surface-map": Color("#0a0a1f73"),
+	&"surface-scrim": Color("#00000080"),
+	&"border-window": Color("#ffffff"),
+	&"border-map": Color("#ffffffb3"),
+	&"border-subtle": Color("#34346b"),
+	&"border-focus": Color("#ffd94d"),
+	&"text-primary": Color("#ffffff"),
+	&"text-secondary": Color("#b8b8cc"),
+	&"text-disabled": Color("#80809a"),
+	&"text-accent": Color("#ffd94d"),
+	&"text-money": Color("#ffcc40"),
+	&"text-positive": Color("#66e67a"),
+	&"text-negative": Color("#ff7066"),
+	&"text-danger": Color("#ff9933"),
+	&"text-info": Color("#85a8ff"),
+	&"text-on-fill": Color("#ffffff"),
+	&"text-outline": Color("#000000"),
+	&"text-outline-warm": Color("#1a0d00"),
+	&"text-display": Color("#ffe673"),
+	&"text-display-soft": Color("#fff2cc"),
+	&"stat-hp": Color("#cc2929"),
+	&"stat-mp": Color("#3366eb"),
+	&"stat-exp": Color("#237a33"),
+	&"status-poison": Color("#8033a6"),
+	&"status-sleep": Color("#3359cc"),
+	&"status-silence": Color("#666673"),
+	&"status-stun": Color("#a64200"),
+	&"element-fire": Color("#ff731a"),
+	&"element-ice": Color("#8cd9ff"),
+	&"element-thunder": Color("#b380ff"),
+	&"element-heal": Color("#4dff66"),
+	&"element-weak": Color("#ff9933"),
+	&"quest-mark": Color("#ffd94d"),
+	&"map-shop": Color("#ffcc33"),
+	&"map-inn": Color("#ff99d9"),
+	&"map-well-hp": Color("#ff4040"),
+	&"map-well-mp": Color("#4080ff"),
+	&"map-well-dry": Color("#8c8c8c"),
+	&"map-exit": Color("#59ff73"),
+	&"map-stairs-up": Color("#4df2ff"),
+	&"map-stairs-down": Color("#b366ff"),
+	&"map-lever": Color("#ff8c1a"),
+	&"map-lever-down": Color("#734d26"),
+	&"map-door": Color("#990000"),
+	&"map-door-open": Color("#666680"),
+	&"map-key": Color("#ffff8c"),
+	&"map-hero": Color("#ffffff"),
+	&"world-sky": Color("#5285e0"),
+	&"world-meadow": Color("#4d8c2e"),
+	&"world-path": Color("#c7ad7a"),
+	&"world-wood": Color("#5c381a"),
+}
+
+const ALTO_CONTRASTE := {
+	&"surface-window": Color("#05050f"),
+	&"surface-window-solid": Color("#05050f"),
+	&"surface-selected": Color("#22224d"),
+	&"surface-track": Color("#000000"),
+	&"surface-map": Color("#05050fd9"),
+	&"surface-scrim": Color("#000000b3"),
+	&"border-map": Color("#ffffff"),
+	&"border-subtle": Color("#9999ad"),
+	&"text-secondary": Color("#d9d9e6"),
+	&"text-disabled": Color("#9999ad"),
+	&"status-sleep": Color("#29439e"),
+	&"status-silence": Color("#525260"),
+	&"status-stun": Color("#803300"),
+}
+
+## Color de un token por su nombre: UiTokens.color(&"text-accent").
+static func color(token: StringName) -> Color:
+	if high_contrast and ALTO_CONTRASTE.has(token):
+		return ALTO_CONTRASTE[token]
+	return JUEGO[token]
+
+# spacing
+const SPACE_1 := 4
+const SPACE_2 := 8
+const SPACE_3 := 12
+const SPACE_4 := 16
+const SPACE_5 := 20
+const SPACE_6 := 24
+const SPACE_8 := 32
+const SPACE_12 := 48
+
+# radius
+const RADIUS_S := 4
+const RADIUS_M := 8
+const RADIUS_L := 12
+const RADIUS_FULL := 999
+
+# border
+const BORDER_1 := 1
+const BORDER_2 := 2
+const BORDER_3 := 3
+
+# outline
+const OUTLINE_S := 4
+const OUTLINE_M := 8
+const OUTLINE_L := 12
+const OUTLINE_XL := 18
+
+# size
+const TOUCH_TARGET := 56
+const TOUCH_MIN_WIDTH := 120
+const ROW_HEIGHT := 40
+const CURSOR_SIZE := 14
+const ICON_M := 24
+const BAR_WIDTH := 220
+const BAR_HEIGHT := 30
+const ENEMY_BAR_WIDTH := 96
+const ENEMY_BAR_HEIGHT := 8
+const MAP_SIZE := 150
+const MENU_BUTTON := 64
+const WINDOW_W_S := 240
+const WINDOW_W_M := 360
+const WINDOW_W_L := 480
+const WINDOW_W_XL := 640
+const WINDOW_W_MAX := 1000
+
+# layer
+const LAYER_HUD := 1
+const LAYER_SHOP := 4
+const LAYER_PAUSE := 5
+const LAYER_DEBUG := 6
+const LAYER_CINEMATIC := 9
+const LAYER_FADE := 10
+const LAYER_OVERLAY := 11
+const LAYER_TITLE_FADE := 20
+const LAYER_SYSTEM := 100
+
+# opacity
+const OPACITY_WINDOW := 0.9
+const OPACITY_MAP := 0.45
+const OPACITY_FADED := 0.5
+
+# Tipografía: tamaño en px y peso (wght) de cada estilo.
+const TYPE_DISPLAY_XL_SIZE := 96
+const TYPE_DISPLAY_XL_WEIGHT := 800
+const TYPE_DISPLAY_L_SIZE := 64
+const TYPE_DISPLAY_L_WEIGHT := 800
+const TYPE_DISPLAY_M_SIZE := 48
+const TYPE_DISPLAY_M_WEIGHT := 700
+const TYPE_TITLE_L_SIZE := 36
+const TYPE_TITLE_L_WEIGHT := 700
+const TYPE_TITLE_M_SIZE := 30
+const TYPE_TITLE_M_WEIGHT := 700
+const TYPE_TITLE_S_SIZE := 26
+const TYPE_TITLE_S_WEIGHT := 800
+const TYPE_BODY_SIZE := 24
+const TYPE_BODY_WEIGHT := 700
+const TYPE_LABEL_SIZE := 20
+const TYPE_LABEL_WEIGHT := 700
+const TYPE_CAPTION_SIZE := 18
+const TYPE_CAPTION_WEIGHT := 600
+const TYPE_MICRO_SIZE := 16
+const TYPE_MICRO_WEIGHT := 800
+
+const FONT_DISPLAY_PATH := "res://assets/fonts/Baloo2-Variable.ttf"
+const FONT_UI_PATH := "res://assets/fonts/Nunito-Variable.ttf"
