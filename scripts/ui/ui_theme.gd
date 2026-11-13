@@ -27,6 +27,8 @@ const KEY := &"KeyButton"
 const CARD_HIT := &"CardHitButton"
 const MENU_BUTTON := &"MenuButtonWindow"
 const ACTION_BUTTON := &"ActionButton"
+## The 1 px line of the map's status window between the bars and the gold.
+const STATUS_LINE := &"StatusLine"
 
 static var _applied := false
 static var _high_contrast := false
@@ -75,6 +77,12 @@ static func build() -> Theme:
 	_rows(theme)
 	_buttons(theme)
 	_labels(theme)
+	_variation(theme, STATUS_LINE, &"HSeparator")
+	var line := StyleBoxLine.new()
+	line.color = UiTokens.color(&"border-subtle")
+	line.thickness = UiTokens.BORDER_1
+	theme.set_stylebox(&"separator", STATUS_LINE, line)
+	theme.set_constant(&"separation", STATUS_LINE, UiTokens.SPACE_1)
 	_sliders(theme)
 	return theme
 

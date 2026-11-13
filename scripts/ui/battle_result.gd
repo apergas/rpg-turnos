@@ -22,6 +22,7 @@ func _ready() -> void:
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(center)
 	var panel := BattleHud.make_window()
+	panel.theme_type_variation = UiTheme.CARD
 	center.add_child(panel)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", UiTokens.SPACE_2)

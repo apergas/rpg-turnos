@@ -69,6 +69,9 @@ func _ready() -> void:
 	_choice_row("Textos grandes", YES_NO, 0 if _options.large_text else 1, func(i: int) -> void:
 		_options.large_text = i == 0
 		_apply_display())
+	_choice_row("Alto contraste", YES_NO, 0 if _options.high_contrast else 1, func(i: int) -> void:
+		_options.high_contrast = i == 0
+		_apply_display())
 	if not OS.has_feature("web"):
 		_choice_row("Pantalla completa", YES_NO, 0 if _options.fullscreen else 1,
 			func(i: int) -> void:

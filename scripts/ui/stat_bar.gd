@@ -7,6 +7,11 @@ const HP := &"stat-hp"
 const MP := &"stat-mp"
 const EXP := &"stat-exp"
 const BAR_SIZE := Vector2(UiTokens.BAR_WIDTH, UiTokens.BAR_HEIGHT)
+## Below this share of its bar the HP is critical: red text and a fill that pulses.
+const CRITICAL_RATIO := 0.25
+## Seconds of one pulse (the fill's alpha goes 1.0 -> 0.6 -> 1.0).
+const CRITICAL_PULSE := 1.0
+const PULSE_LOW := 0.6
 
 var _token: StringName
 var _text := ""
@@ -17,6 +22,7 @@ func _init(token: StringName, width := float(UiTokens.BAR_WIDTH)) -> void:
 	_token = token
 	custom_minimum_size = Vector2(width, BAR_SIZE.y)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	set_process(false)
 
 
 ## "Héroe Nv 3", the name every window gives the hero.
@@ -41,6 +47,16 @@ func _show(text: String, ratio: float) -> void:
 		return
 	_text = text
 	_ratio = ratio
+	# Only a critical HP bar needs a repaint every frame.
+	set_process(_is_critical())
+	queue_redraw()
+
+
+func _is_critical() -> bool:
+	return _token == HP and _ratio > 0.0 and _ratio < CRITICAL_RATIO
+
+
+func _process(_delta: float) -> void:
 	queue_redraw()
 
 
@@ -51,12 +67,16 @@ func _notification(what: int) -> void:
 
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), UiTokens.color(&"surface-track"))
-	draw_rect(Rect2(Vector2.ZERO, Vector2(size.x * clampf(_ratio, 0.0, 1.0), size.y)),
-		UiTokens.color(_token))
+	var fill := UiTokens.color(_token)
+	var critical := _is_critical()
+	if critical:
+		var phase := 0.5 + 0.5 * cos(Time.get_ticks_msec() / 1000.0 / CRITICAL_PULSE * TAU)
+		fill.a = lerpf(PULSE_LOW, 1.0, phase)
+	draw_rect(Rect2(Vector2.ZERO, Vector2(size.x * clampf(_ratio, 0.0, 1.0), size.y)), fill)
 	var font := UiTheme.font_for(&"label")
 	var font_size := UiTokens.TYPE_LABEL_SIZE
 	var at := Vector2(8, (size.y + font.get_ascent(font_size) - font.get_descent(font_size)) / 2.0)
 	draw_string_outline(font, at, _text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size,
-		UiTokens.OUTLINE_S, UiTokens.color(&"text-outline"))
+		UiTokens.OUTLINE_M, UiTokens.color(&"text-outline"))
 	draw_string(font, at, _text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size,
-		UiTokens.color(&"text-on-fill"))
+		UiTokens.color(&"text-danger" if critical else &"text-on-fill"))

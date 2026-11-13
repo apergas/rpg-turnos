@@ -54,6 +54,7 @@ const BADGES := {
 	BattleEngine.POISON: ["Veneno", &"status-poison"],
 	BattleEngine.SLEEP: ["Sueño", &"status-sleep"],
 	BattleEngine.SILENCE: ["Silencio", &"status-silence"],
+	BattleEngine.STUN: ["Aturdido", &"status-stun"],
 }
 
 ## Returns the enemy index under a screen point, or -1. Set by BattleScene.

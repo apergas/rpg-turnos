@@ -56,7 +56,9 @@ signal map_requested
 const PLAYER_SCENE := preload("res://scenes/world/player.tscn")
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
 const HERO_DATA := preload("res://data/hero.tres")
-const NOTICE_TIME := 2.0
+const NOTICE_TIME := 4.0
+## Fade in and out of the notice window.
+const NOTICE_FADE := 0.2
 ## Seconds "Misión cumplida" stays in the status window.
 const MISSION_DONE_TIME := 4.0
 ## The notice window, top centre (clear of the status window and the ☰ button).
@@ -238,6 +240,8 @@ var _has_explored := false
 var _repelled := false
 var _dry_wells: Array[String] = []
 var _notice: Label
+var _notice_word: Label
+var _notice_tween: Tween
 var _notice_window: PanelContainer
 var _place_label: Label
 var _hint_window: PanelContainer
@@ -247,6 +251,8 @@ var _banner_tween: Tween
 var _banner_shown := false
 var _notice_serial := 0
 var _prompt: Label
+var _prompt_box: VBoxContainer
+var _prompt_key: Label
 ## Phones: the button that replaces the prompt, and the pad that reads the fingers.
 var _use_button: Button
 var _pad: TouchPad
@@ -271,6 +277,8 @@ var _quest_marks := {}
 var _hidden_figures: Array[String] = []
 var _mark_labels := {}
 var _figure_signs: Array[Label3D] = []
+## The figure signs the prompt is covering right now (hidden until it goes).
+var _signs_under_prompt: Array[Label3D] = []
 ## The zone's ZoneParticles (null: none, or low quality), carried with the hero.
 var _particles: Node3D
 ## The groups of monsters on the map (MonsterGroups), each {"node": Node3D (no collider),
@@ -484,19 +492,53 @@ func _show_prompt(near: Dictionary) -> void:
 	if _use_button:
 		_use_button.text = text
 		_use_button.show()
+		_clear_signs_under(_use_button.get_global_rect())
 		return
 	_prompt.text = text
-	_prompt.show()
+	_prompt_key.text = _action_key_name()
+	_prompt_box.show()
+	_clear_signs_under(_prompt_box.get_global_rect())
+
+
+## Hides the figure signs that would sit under the prompt (or the use button), so the two
+## never overlap; they come back with the prompt.
+func _clear_signs_under(rect: Rect2) -> void:
+	var area := rect.grow(8.0)
+	for label in _figure_signs:
+		var covered := not _camera.is_position_behind(label.global_position) \
+			and area.has_point(_camera.unproject_position(label.global_position))
+		if covered and label.visible:
+			label.hide()
+			_signs_under_prompt.append(label)
+		elif not covered and label in _signs_under_prompt:
+			label.show()
+			_signs_under_prompt.erase(label)
+
+
+func _restore_signs() -> void:
+	for label in _signs_under_prompt:
+		if is_instance_valid(label):
+			label.show()
+	_signs_under_prompt.clear()
+
+
+## The key shown under the prompt: E while it is one of the accept keys, else the first one.
+func _action_key_name() -> String:
+	var codes := KeyMap.keys_of("accept")
+	if codes.is_empty() or KEY_E in codes:
+		return KeyMap.keys_text("accept") if codes.is_empty() else "E"
+	return KeyMap.key_name(codes[0])
 
 
 func _hide_prompt() -> void:
-	_prompt.hide()
+	_restore_signs()
+	_prompt_box.hide()
 	if _use_button:
 		_use_button.hide()
 
 
 func _prompt_showing() -> bool:
-	return _use_button.visible if _use_button else _prompt.visible
+	return _use_button.visible if _use_button else _prompt_box.visible
 
 
 ## Forgets the fingers on the map (a window, a battle or a cutscene took over).
@@ -937,6 +979,7 @@ func begin_cutscene() -> void:
 		_banner_tween.kill()
 	_banner.hide()
 	_show_quest_marks()
+	_signs_under_prompt.clear()
 	for label in _figure_signs:
 		label.hide()
 
@@ -1179,15 +1222,29 @@ func _show_missions(lines: Array[String], done := false) -> void:
 		BattleHud.fit_label(label, line, width)
 
 
-## Shows a short line in its own window for NOTICE_TIME seconds (a newer one replaces it).
-func show_notice(text: String) -> void:
+## Shows a short line in its own window for NOTICE_TIME seconds (a newer one replaces it),
+## under a small tone word ("Guardado", "Cerrado"...) in the colour of `tone`. Only the text is printed.
+func show_notice(text: String, word := "Aviso", tone := &"text-info") -> void:
 	_notice_serial += 1
 	var serial := _notice_serial
+	_notice_word.text = word
+	UiTheme.style_label(_notice_word, &"label", tone)
 	BattleHud.fit_label(_notice, text, NOTICE_MAX_WIDTH)
 	_notice_window.show()
+	if _notice_tween:
+		_notice_tween.kill()
+	_notice_window.modulate.a = 0.0
+	_notice_tween = create_tween()
+	_notice_tween.tween_property(_notice_window, "modulate:a", 1.0, NOTICE_FADE)
 	if _autoplay:
 		print(text)
-	await get_tree().create_timer(NOTICE_TIME).timeout
+	await get_tree().create_timer(NOTICE_TIME - NOTICE_FADE).timeout
+	if serial != _notice_serial:
+		return
+	_notice_tween = create_tween()
+	_notice_tween.tween_property(_notice_window, "modulate:a", 0.0, NOTICE_FADE)
+	# A newer notice kills this tween, and a killed tween never emits finished: wait on a timer.
+	await get_tree().create_timer(NOTICE_FADE).timeout
 	if serial == _notice_serial:
 		_notice_window.hide()
 
@@ -1230,7 +1287,7 @@ func _check_exits(pos: Vector3) -> bool:
 		return false
 	_exits_armed = false
 	if not _is_open(nearest):
-		show_notice(nearest.lock_text)
+		show_notice(nearest.lock_text, "Cerrado")
 		return false
 	_waiting = true
 	_player.input_enabled = false
@@ -1612,6 +1669,9 @@ func _build_ui() -> void:
 	if Device.is_touch():
 		# Estado in the pause menu says the same.
 		_exp_bar.hide()
+	var line := HSeparator.new()
+	line.theme_type_variation = UiTheme.STATUS_LINE
+	box.add_child(line)
 	_gold_label = Label.new()
 	_gold_label.theme_type_variation = UiTheme.MONEY
 	box.add_child(_gold_label)
@@ -1627,16 +1687,48 @@ func _build_ui() -> void:
 	_notice_window.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_notice_window.hide()
 	_ui.add_child(_notice_window)
+	var notice_box := VBoxContainer.new()
+	notice_box.add_theme_constant_override("separation", UiTokens.SPACE_1)
+	_notice_window.add_child(notice_box)
+	_notice_word = _label()
+	notice_box.add_child(_notice_word)
 	_notice = _label()
-	_notice_window.add_child(_notice)
+	notice_box.add_child(_notice)
 	_build_banner()
+	_prompt_box = VBoxContainer.new()
+	_prompt_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	_prompt_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui.add_child(_prompt_box)
 	_prompt = Label.new()
 	_prompt.theme_type_variation = UiTheme.OUTLINED
 	_prompt.text = PROMPTS[TALK]
-	_ui.add_child(_prompt)
-	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, \
+	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_prompt_box.add_child(_prompt)
+	# The key of the action, on a badge that is not a status colour.
+	_prompt_key = Label.new()
+	_prompt_key.theme_type_variation = UiTheme.NOTE
+	_prompt_key.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_prompt_key.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_prompt_key.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var key_panel := PanelContainer.new()
+	var cap := StyleBoxFlat.new()
+	cap.bg_color = UiTokens.color(&"surface-window")
+	cap.border_color = UiTokens.color(&"border-subtle")
+	cap.set_border_width_all(UiTokens.BORDER_2)
+	cap.set_corner_radius_all(UiTokens.RADIUS_S)
+	cap.content_margin_left = UiTokens.SPACE_2
+	cap.content_margin_right = UiTokens.SPACE_2
+	cap.content_margin_top = UiTokens.SPACE_1
+	cap.content_margin_bottom = UiTokens.SPACE_1
+	key_panel.add_theme_stylebox_override(&"panel", cap)
+	key_panel.custom_minimum_size = Vector2(UiTokens.ICON_M, UiTokens.ICON_M)
+	key_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	key_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	key_panel.add_child(_prompt_key)
+	_prompt_box.add_child(key_panel)
+	_prompt_box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, \
 		Control.PRESET_MODE_MINSIZE, 200)
-	_prompt.hide()
+	_prompt_box.hide()
 	if Device.is_touch():
 		_build_touch_controls()
 	_dialogue = DialogueBox.new()

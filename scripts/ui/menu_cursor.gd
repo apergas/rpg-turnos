@@ -90,7 +90,7 @@ func _set_backing(shown: bool) -> void:
 			wanted = Panel.new()
 			wanted.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			wanted.show_behind_parent = true
-			wanted.add_theme_stylebox_override(&"panel", UiTheme.selected_style())
+			wanted.theme_type_variation = UiTheme.SELECTED_ROW
 			wanted.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 			button.add_child(wanted)
 			button.set_meta(&"focus_backing", wanted)
