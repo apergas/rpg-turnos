@@ -50,7 +50,8 @@ func combat_scale() -> float:
 func to_dict() -> Dictionary:
 	return {"music": music_volume, "sfx": sfx_volume, "text_speed": text_speed,
 		"combat_speed": combat_speed, "quality": quality, "camera_shake": camera_shake,
-		"fullscreen": fullscreen, "large_text": large_text, "high_contrast": high_contrast, "touch_hint_seen": touch_hint_seen,
+		"fullscreen": fullscreen, "large_text": large_text, "high_contrast": high_contrast,
+		"touch_hint_seen": touch_hint_seen,
 		"keys": keys}
 
 
