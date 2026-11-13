@@ -277,6 +277,8 @@ var _quest_marks := {}
 var _hidden_figures: Array[String] = []
 var _mark_labels := {}
 var _figure_signs: Array[Label3D] = []
+## The figure signs the prompt is covering right now (hidden until it goes).
+var _signs_under_prompt: Array[Label3D] = []
 ## The zone's ZoneParticles (null: none, or low quality), carried with the hero.
 var _particles: Node3D
 ## The groups of monsters on the map (MonsterGroups), each {"node": Node3D (no collider),
@@ -490,10 +492,34 @@ func _show_prompt(near: Dictionary) -> void:
 	if _use_button:
 		_use_button.text = text
 		_use_button.show()
+		_clear_signs_under(_use_button.get_global_rect())
 		return
 	_prompt.text = text
 	_prompt_key.text = _action_key_name()
 	_prompt_box.show()
+	_clear_signs_under(_prompt_box.get_global_rect())
+
+
+## Hides the figure signs that would sit under the prompt (or the use button), so the two
+## never overlap; they come back with the prompt.
+func _clear_signs_under(rect: Rect2) -> void:
+	var area := rect.grow(8.0)
+	for label in _figure_signs:
+		var covered := not _camera.is_position_behind(label.global_position) \
+			and area.has_point(_camera.unproject_position(label.global_position))
+		if covered and label.visible:
+			label.hide()
+			_signs_under_prompt.append(label)
+		elif not covered and label in _signs_under_prompt:
+			label.show()
+			_signs_under_prompt.erase(label)
+
+
+func _restore_signs() -> void:
+	for label in _signs_under_prompt:
+		if is_instance_valid(label):
+			label.show()
+	_signs_under_prompt.clear()
 
 
 ## The key shown under the prompt: E while it is one of the accept keys, else the first one.
@@ -505,6 +531,7 @@ func _action_key_name() -> String:
 
 
 func _hide_prompt() -> void:
+	_restore_signs()
 	_prompt_box.hide()
 	if _use_button:
 		_use_button.hide()
@@ -952,6 +979,7 @@ func begin_cutscene() -> void:
 		_banner_tween.kill()
 	_banner.hide()
 	_show_quest_marks()
+	_signs_under_prompt.clear()
 	for label in _figure_signs:
 		label.hide()
 
@@ -1215,7 +1243,8 @@ func show_notice(text: String, word := "Aviso", tone := &"text-info") -> void:
 		return
 	_notice_tween = create_tween()
 	_notice_tween.tween_property(_notice_window, "modulate:a", 0.0, NOTICE_FADE)
-	await _notice_tween.finished
+	# A newer notice kills this tween, and a killed tween never emits finished: wait on a timer.
+	await get_tree().create_timer(NOTICE_FADE).timeout
 	if serial == _notice_serial:
 		_notice_window.hide()
 

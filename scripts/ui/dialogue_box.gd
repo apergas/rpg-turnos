@@ -22,12 +22,15 @@ var _audio: AudioDirector
 ## The ▼ that says "press to go on": drawn, in its own row at the right, blinking while a line waits.
 var _more: Control
 var _blinking := false
+## When the mark started blinking, so every new line begins with it visible.
+var _blink_start := 0
 
 
 func _ready() -> void:
 	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	set_process(false)
 	var panel := BattleHud.make_window()
 	panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	panel.offset_left = 0
@@ -76,10 +79,14 @@ func say(speaker: String, lines: Array[String]) -> void:
 			# Skip a frame so the key press that opened or advanced the dialogue is not reused.
 			await get_tree().process_frame
 			_listening = true
+			_blink_start = Time.get_ticks_msec()
+			_more.modulate.a = 1.0
 			_blinking = true
+			set_process(true)
 			await _advanced
 			_listening = false
 			_blinking = false
+			set_process(false)
 			_more.modulate.a = 0.0
 	hide()
 
@@ -87,7 +94,7 @@ func say(speaker: String, lines: Array[String]) -> void:
 ## The mark blinks every MORE_BLINK seconds while a line waits.
 func _process(_delta: float) -> void:
 	if _blinking:
-		_more.modulate.a = 1.0 if int(Time.get_ticks_msec() / (MORE_BLINK * 1000.0)) % 2 == 0 else 0.0
+		_more.modulate.a = 1.0 if int((Time.get_ticks_msec() - _blink_start) / (MORE_BLINK * 1000.0)) % 2 == 0 else 0.0
 
 
 func _draw_more() -> void:
