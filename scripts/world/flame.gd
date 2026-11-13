@@ -13,6 +13,7 @@ const EMBERS := 6
 const FIRE_EMBERS := 14
 ## From this size on it is a campfire (more embers).
 const FIRE_SIZE := 1.8
+const FIRE_GROWTH := 1.25
 const EMBER_COLOR := Color(1.0, 0.6, 0.2)
 const FLICKER := 0.14
 const FLICKER_SPEED := 9.0
@@ -36,11 +37,19 @@ func _ready() -> void:
 	quads.mesh = _quads_mesh()
 	var mat := ShaderMaterial.new()
 	mat.shader = FLAME_SHADER
+	if size >= FIRE_SIZE:
+		# A campfire is seen from above: lean it to the camera and warm the white core.
+		mat.set_shader_parameter("tilt", 0.5)
+		mat.set_shader_parameter("strength", 1.0)
+		mat.set_shader_parameter("base_color", Vector3(1.0, 0.75, 0.3))
+		mat.set_shader_parameter("mid_color", Vector3(1.0, 0.42, 0.08))
+		mat.set_shader_parameter("tip_color", Vector3(0.9, 0.12, 0.04))
 	quads.material_override = mat
 	quads.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	quads.scale = Vector3.ONE * size
+	# A campfire's flame is drawn bigger than its size so it reads from the map's camera.
+	quads.scale = Vector3.ONE * size * (FIRE_GROWTH if size >= FIRE_SIZE else 1.0)
 	# The old sphere was centred on the node: keep the flame's visual centre there.
-	quads.position.y = -QUAD.y * size * 0.35
+	quads.position.y = (0.25 * size if size >= FIRE_SIZE else -QUAD.y * size * 0.35)
 	add_child(quads)
 	_add_embers()
 	if light_on:
@@ -79,7 +88,7 @@ func _add_embers() -> void:
 		return
 	var count := FIRE_EMBERS if size >= FIRE_SIZE else EMBERS
 	if ZoneParticles.half:
-		count = maxi(1, count / 2)
+		count = maxi(1, int(count * 0.5))
 	var embers := CPUParticles3D.new()
 	embers.amount = count
 	embers.lifetime = 1.1

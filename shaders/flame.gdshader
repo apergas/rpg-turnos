@@ -10,6 +10,8 @@ uniform vec3 mid_color : source_color = vec3(1.0, 0.55, 0.12);
 uniform vec3 tip_color : source_color = vec3(0.85, 0.15, 0.05);
 uniform float speed = 1.6;
 uniform float strength = 1.6;
+// 0 stands upright (torches); 1 faces the camera fully, so a campfire seen from above keeps its height.
+uniform float tilt = 0.0;
 
 varying float seed;
 
@@ -27,8 +29,11 @@ float noise(vec2 p) {
 
 void vertex() {
 	// Billboard around Y, keeping the node's scale (Godot's own Y-billboard).
-	MODELVIEW_MATRIX = VIEW_MATRIX * mat4(INV_VIEW_MATRIX[0], MODEL_MATRIX[1],
-		vec4(normalize(cross(INV_VIEW_MATRIX[0].xyz, MODEL_MATRIX[1].xyz)), 0.0), MODEL_MATRIX[3]);
+	vec3 up = normalize(mix(normalize(MODEL_MATRIX[1].xyz), INV_VIEW_MATRIX[1].xyz, tilt))
+		* length(MODEL_MATRIX[1].xyz);
+	vec3 right = normalize(cross(up, INV_VIEW_MATRIX[2].xyz));
+	MODELVIEW_MATRIX = VIEW_MATRIX * mat4(vec4(right, 0.0), vec4(up, 0.0),
+		vec4(normalize(cross(right, up)), 0.0), MODEL_MATRIX[3]);
 	MODELVIEW_MATRIX = MODELVIEW_MATRIX * mat4(vec4(length(MODEL_MATRIX[0].xyz), 0.0, 0.0, 0.0),
 		vec4(0.0, 1.0, 0.0, 0.0), vec4(0.0, 0.0, length(MODEL_MATRIX[2].xyz), 0.0),
 		vec4(0.0, 0.0, 0.0, 1.0));
