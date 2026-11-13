@@ -216,9 +216,14 @@ func _sync_web_fullscreen() -> void:
 
 
 func _named_row(title: String) -> HBoxContainer:
-	var row := HBoxContainer.new()
+	var row := FocusRow.new()
 	row.add_theme_constant_override("separation", 8)
 	_rows.add_child(row)
+	# The gap of the cursor: the gold arrow lands before the name.
+	var indent := Control.new()
+	indent.custom_minimum_size.x = UiTheme.row_indent()
+	indent.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(indent)
 	var name_label := _label(title, Color.WHITE)
 	name_label.custom_minimum_size = Vector2(NAME_WIDTH, 0)
 	row.add_child(name_label)
@@ -228,8 +233,7 @@ func _named_row(title: String) -> HBoxContainer:
 func _button(text: String) -> Button:
 	var button := Button.new()
 	button.text = text
-	UiStyle.fit_finger(button)
-	button.add_theme_font_size_override("font_size", FONT_SIZE)
+	UiTheme.menu_row(button)
 	return button
 
 

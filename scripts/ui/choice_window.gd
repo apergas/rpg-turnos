@@ -45,10 +45,12 @@ func ask(question: String, options: Array[String], focus := 0) -> int:
 	for i in options.size():
 		var button := Button.new()
 		button.text = options[i]
-		UiStyle.fit_finger(button)
+		UiTheme.menu_row(button)
+		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.pressed.connect(func() -> void: _give(i))
 		box.add_child(button)
 		buttons.append(button)
+	UiTheme.add_cursor(window)
 	await get_tree().process_frame
 	window.position = (size - window.size) / 2.0
 	buttons[focus].grab_focus()

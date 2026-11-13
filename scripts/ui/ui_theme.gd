@@ -105,7 +105,7 @@ static func map_style() -> StyleBoxFlat:
 	return style
 
 
-## Background of the chosen row (MenuCursor paints it at the row's size, so no margins).
+## Background of the chosen row (a button's focus style, a FocusRow's own paint).
 static func selected_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = UiTokens.color(&"surface-selected")
@@ -208,9 +208,9 @@ static func menu_row(button: Button) -> Button:
 	return button
 
 
-## Filled in by MenuCursor (A4).
-static func add_cursor(_window: Control) -> void:
-	pass
+## One cursor (and the chosen row's background) per window with rows.
+static func add_cursor(window: Control) -> void:
+	window.add_child(MenuCursor.new())
 
 
 static func _variation(theme: Theme, type: StringName, base: StringName) -> void:
@@ -242,7 +242,8 @@ static func row_style() -> StyleBoxEmpty:
 static func _rows(theme: Theme) -> void:
 	for box_name in [&"normal", &"hover", &"pressed", &"hover_pressed", &"disabled"]:
 		theme.set_stylebox(box_name, &"Button", row_style())
-	theme.set_stylebox(&"focus", &"Button", StyleBoxEmpty.new())
+	# The chosen row's background: drawn by the button under its text (MenuCursor adds the ▶).
+	theme.set_stylebox(&"focus", &"Button", selected_style())
 	theme.set_color(&"font_color", &"Button", UiTokens.color(&"text-primary"))
 	theme.set_color(&"font_hover_color", &"Button", UiTokens.color(&"text-primary"))
 	theme.set_color(&"font_focus_color", &"Button", UiTokens.color(&"text-primary"))

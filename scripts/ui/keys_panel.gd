@@ -117,8 +117,8 @@ func _say(text: String) -> void:
 func _button(text: String) -> Button:
 	var button := Button.new()
 	button.text = text
+	UiTheme.menu_row(button)
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	button.add_theme_font_size_override("font_size", FONT_SIZE)
 	return button
 
 

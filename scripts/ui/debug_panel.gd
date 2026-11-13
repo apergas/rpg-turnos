@@ -90,6 +90,7 @@ func _ready() -> void:
 	_build_rows(list.content)
 	_result = _line(stack)
 	_button(stack, "close", "Cerrar").pressed.connect(close)
+	UiTheme.add_cursor(window)
 	hide()
 
 
@@ -208,7 +209,7 @@ func _button(parent: Control, node_name: String, text: String) -> Button:
 	var button := Button.new()
 	button.name = node_name
 	button.text = text
-	UiStyle.fit_finger(button)
+	UiTheme.menu_row(button)
 	parent.add_child(button)
 	return button
 

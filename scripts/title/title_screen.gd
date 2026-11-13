@@ -439,6 +439,7 @@ func _build_menu() -> void:
 			get_window().mode = Window.MODE_FULLSCREEN)
 		menu.add_child(_fullscreen_button)
 		_sync_fullscreen_row()
+	UiTheme.add_cursor(_menu_window)
 	# A tap outside the options window goes back; under the centred windows, shown only while open.
 	_options_backdrop = Control.new()
 	_options_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -459,6 +460,7 @@ func _build_menu() -> void:
 	_options_panel.setup(_options, _audio)
 	_options_panel.closed.connect(_close_options)
 	_options_window.add_child(_options_panel)
+	UiTheme.add_cursor(_options_window)
 	_slot_window = BattleHud.make_window()
 	_slot_window.hide()
 	center.add_child(_slot_window)
@@ -472,6 +474,7 @@ func _build_menu() -> void:
 	_options_panel.transfer_requested.connect(func() -> void:
 		_open_slots(SlotList.Mode.MANAGE))
 	_slot_window.add_child(_slot_list)
+	UiTheme.add_cursor(_slot_window)
 	_focus(_continue_button if not _continue_button.disabled else start)
 
 
@@ -506,8 +509,7 @@ func _focus(button: Button) -> void:
 func _button(text: String) -> Button:
 	var button := Button.new()
 	button.text = text
-	button.flat = true
-	UiStyle.fit_finger(button)
+	UiTheme.menu_row(button)
 	button.add_theme_font_size_override("font_size", FONT_SIZE)
 	button.focus_entered.connect(func() -> void:
 		if not _quiet_focus:

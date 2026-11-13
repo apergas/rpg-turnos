@@ -34,9 +34,10 @@ func _ready() -> void:
 	box.add_child(_exp_bar)
 	_continue = Button.new()
 	_continue.text = "Continuar"
-	_continue.add_theme_font_size_override("font_size", 24)
+	UiTheme.menu_row(_continue)
 	_continue.pressed.connect(_on_continue_pressed)
 	box.add_child(_continue)
+	UiTheme.add_cursor(panel)
 	hide()
 
 

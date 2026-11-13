@@ -146,6 +146,7 @@ func _ready() -> void:
 	_build_bestiary_entry(stack)
 	_build_options(stack)
 	_build_confirm(stack)
+	UiTheme.add_cursor(_window)
 	available = available
 
 
@@ -565,6 +566,7 @@ func _main_window() -> VBoxContainer:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
 	window.add_child(box)
+	UiTheme.add_cursor(window)
 	return box
 
 
@@ -843,10 +845,8 @@ func _first_button(node: Node) -> Button:
 func _button(text: String) -> Button:
 	var button := Button.new()
 	button.text = text
-	button.flat = true
-	UiStyle.fit_finger(button)
+	UiTheme.menu_row(button)
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	button.add_theme_font_size_override("font_size", FONT_SIZE)
 	button.focus_entered.connect(func() -> void:
 		if not _quiet_focus:
 			_sfx(SfxLibrary.CURSOR))

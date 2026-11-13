@@ -87,6 +87,7 @@ func _ready() -> void:
 	_accept_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_accept_button.pressed.connect(_accept)
 	row.add_child(_accept_button)
+	UiTheme.add_cursor(window)
 	if preset != "":
 		_typed = preset
 	_refresh()
@@ -195,6 +196,7 @@ func _refresh() -> void:
 func _button(text: String) -> Button:
 	var button := Button.new()
 	button.text = text
+	UiTheme.menu_row(button)
 	button.add_theme_font_size_override("font_size", FONT_SIZE)
 	button.focus_entered.connect(func() -> void:
 		if not _quiet_focus:

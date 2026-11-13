@@ -453,12 +453,10 @@ func _with_reason(text: String, why: String) -> String:
 func _add_row(text: String, enabled: bool) -> void:
 	var button := Button.new()
 	button.text = text
-	button.flat = true
-	UiStyle.fit_finger(button)
+	UiTheme.menu_row(button)
 	if Device.is_touch() and get_window().content_scale_factor >= DisplaySettings.TOUCH_LARGE_SCALE:
 		_shrink_row(button)
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	button.add_theme_font_size_override("font_size", FONT_SIZE)
 	button.add_theme_color_override("font_disabled_color", Color(0.5, 0.5, 0.55))
 	var index := _rows.size()
 	button.pressed.connect(func() -> void: _press(index))
@@ -677,6 +675,7 @@ func _build_bottom() -> void:
 	_list.add_theme_constant_override("separation", 0)
 	_list.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_menu.add_child(_list)
+	UiTheme.add_cursor(_menu)
 
 	var message_window := make_window()
 	message_window.size_flags_vertical = Control.SIZE_SHRINK_END

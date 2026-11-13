@@ -320,10 +320,8 @@ func _focus(button: Button) -> void:
 func _button(text: String) -> Button:
 	var button := Button.new()
 	button.text = text
-	button.flat = true
+	UiTheme.menu_row(button)
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	UiStyle.fit_finger(button)
-	button.add_theme_font_size_override("font_size", FONT_SIZE)
 	button.focus_entered.connect(func() -> void:
 		if not _quiet_focus:
 			_sfx(SfxLibrary.CURSOR))

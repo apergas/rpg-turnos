@@ -113,6 +113,7 @@ func _ready() -> void:
 	box.add_child(_footer)
 	_message = _label("", Color.WHITE)
 	box.add_child(_message)
+	UiTheme.add_cursor(window)
 	hide()
 
 
@@ -446,10 +447,8 @@ func _focus_id(id: String) -> bool:
 func _button(text: String) -> Button:
 	var button := Button.new()
 	button.text = text
-	button.flat = true
-	UiStyle.fit_finger(button)
+	UiTheme.menu_row(button)
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	button.add_theme_font_size_override("font_size", FONT_SIZE)
 	button.focus_entered.connect(func() -> void:
 		if not _quiet_focus:
 			_sfx(SfxLibrary.CURSOR))

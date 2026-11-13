@@ -41,6 +41,7 @@ func _ready() -> void:
 	var back := _button("Volver")
 	back.pressed.connect(_cancel)
 	box.add_child(back)
+	UiTheme.add_cursor(window)
 	first.grab_focus()
 
 
@@ -65,8 +66,7 @@ func _cancel() -> void:
 func _button(text: String) -> Button:
 	var button := Button.new()
 	button.text = text
-	button.flat = true
-	UiStyle.fit_finger(button)
+	UiTheme.menu_row(button)
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.add_theme_font_size_override("font_size", FONT_SIZE)
 	return button
