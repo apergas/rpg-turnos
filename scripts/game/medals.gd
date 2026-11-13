@@ -11,8 +11,9 @@ const MEDALS: Array[String] = ["pradera_casa", "pradera_rincon", "pradera_rocas"
 	"bosque_claro_sur", "bosque_claro_oeste", "bosque_rincon", "mina_1_fondo", "mina_2_fondo",
 	"mina_3_fondo", "castillo_patio_oeste", "castillo_patio_este", "castillo_trono_rincon"]
 ## Chance that a common enemy beaten leaves a medal, while fewer than MEDALS are carried
-## (tuned in Task 10 of the 2.5.0 plan: 8-12 medals in a v1 game of about 200 battles).
-const DROP_CHANCE := 0.02
+## (tuned in Task 10 of the 2.5.0 plan: autoplay beats about 82 common enemies in the v1 and a
+## player by hand about twice that, so 5 % gives about 8 medals by hand; the v2 keeps dropping).
+const DROP_CHANCE := 0.05
 ## Said in the dialogue window when one is taken (taken so far / all of them).
 const FOUND_TEXT := "¡Encuentras una Medalla pequeña! (%d/%d)"
 ## The figure that counts the medals (ZoneData.npcs of Villaclaro) and where he stands.
