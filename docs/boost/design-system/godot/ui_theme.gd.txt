@@ -1,0 +1,142 @@
+class_name UiTheme extends RefCounted
+## El Theme de Villaclaro, construido en código desde UiTokens (propuesta del design system).
+## Se aplica una vez al arrancar, sobre el tema por defecto, que es el único que llega a los
+## controles bajo un CanvasLayer:
+##     ThemeDB.get_default_theme().merge_with(UiTheme.build())
+## Con él, una ventana es un PanelContainer sin overrides y un botón de menú es un Button
+## plano: los colores, la letra, el foco y el cursor salen de aquí, no de cada script.
+
+## Variaciones de tipo (Control.theme_type_variation).
+const WINDOW_MAP := &"MapWindow"          # PanelContainer: cuadro del mapa
+const TITLE := &"TitleLabel"              # Label: título de ventana en dorado
+const CAPTION := &"CaptionLabel"          # Label: descripción pequeña y gris
+const MONEY := &"MoneyLabel"              # Label: cantidades de oro
+const OUTLINED := &"OutlinedLabel"        # Label: texto blanco sobre el mundo
+const DISPLAY := &"DisplayLabel"          # Label: rótulo dorado sobre el mundo
+const BADGE := &"BadgeLabel"              # Label: texto de insignia
+
+
+static func build() -> Theme:
+	var theme := Theme.new()
+	var ui := font(UiTokens.FONT_UI_PATH, UiTokens.TYPE_BODY_WEIGHT)
+	theme.default_font = ui
+	theme.default_font_size = UiTokens.TYPE_BODY_SIZE
+
+	# Ventanas
+	theme.set_stylebox(&"panel", &"PanelContainer", window_style())
+	theme.set_type_variation(WINDOW_MAP, &"PanelContainer")
+	theme.set_stylebox(&"panel", WINDOW_MAP, map_style())
+
+	# Filas de menú: Button plano. La fila elegida se ve igual con teclado, ratón o dedo.
+	var empty := StyleBoxEmpty.new()
+	var row := StyleBoxEmpty.new()
+	row.content_margin_left = UiTokens.SPACE_2 + UiTokens.CURSOR_SIZE + UiTokens.SPACE_2
+	row.content_margin_right = UiTokens.SPACE_2
+	row.content_margin_top = UiTokens.SPACE_1
+	row.content_margin_bottom = UiTokens.SPACE_1
+	theme.set_stylebox(&"normal", &"Button", row)
+	theme.set_stylebox(&"disabled", &"Button", row)
+	theme.set_stylebox(&"hover", &"Button", selected_style())
+	theme.set_stylebox(&"pressed", &"Button", selected_style())
+	theme.set_stylebox(&"focus", &"Button", empty)  # el cursor lo dibuja MenuCursor
+	theme.set_color(&"font_color", &"Button", UiTokens.color(&"text-primary"))
+	theme.set_color(&"font_hover_color", &"Button", UiTokens.color(&"text-primary"))
+	theme.set_color(&"font_focus_color", &"Button", UiTokens.color(&"text-primary"))
+	theme.set_color(&"font_pressed_color", &"Button", UiTokens.color(&"text-accent"))
+	theme.set_color(&"font_disabled_color", &"Button", UiTokens.color(&"text-disabled"))
+	theme.set_constant(&"h_separation", &"Button", UiTokens.SPACE_2)
+
+	# Texto
+	theme.set_color(&"font_color", &"Label", UiTokens.color(&"text-primary"))
+	_label(theme, TITLE, UiTokens.TYPE_TITLE_S_SIZE, &"text-accent")
+	_label(theme, CAPTION, UiTokens.TYPE_CAPTION_SIZE, &"text-secondary")
+	_label(theme, MONEY, UiTokens.TYPE_BODY_SIZE, &"text-money")
+	_label(theme, BADGE, UiTokens.TYPE_MICRO_SIZE, &"text-on-fill")
+	_label(theme, OUTLINED, UiTokens.TYPE_CAPTION_SIZE, &"text-primary")
+	theme.set_color(&"font_outline_color", OUTLINED, UiTokens.color(&"text-outline"))
+	theme.set_constant(&"outline_size", OUTLINED, UiTokens.OUTLINE_M)
+	_label(theme, DISPLAY, UiTokens.TYPE_DISPLAY_M_SIZE, &"text-display")
+	theme.set_font(&"font", DISPLAY, font(UiTokens.FONT_DISPLAY_PATH, UiTokens.TYPE_DISPLAY_M_WEIGHT))
+	theme.set_color(&"font_outline_color", DISPLAY, UiTokens.color(&"text-outline-warm"))
+	theme.set_constant(&"outline_size", DISPLAY, UiTokens.OUTLINE_L)
+
+	# Deslizadores de Opciones
+	var track := StyleBoxFlat.new()
+	track.bg_color = UiTokens.color(&"surface-track")
+	track.set_corner_radius_all(UiTokens.RADIUS_S)
+	track.content_margin_top = 4
+	track.content_margin_bottom = 4
+	var fill := track.duplicate() as StyleBoxFlat
+	fill.bg_color = UiTokens.color(&"border-focus")
+	theme.set_stylebox(&"slider", &"HSlider", track)
+	theme.set_stylebox(&"grabber_area", &"HSlider", fill)
+	theme.set_stylebox(&"grabber_area_highlight", &"HSlider", fill)
+	return theme
+
+
+## Ventana: azul al 90 %, marco blanco de 3 px, esquinas de 8 px, sombra suave.
+static func window_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = UiTokens.color(&"surface-window")
+	style.border_color = UiTokens.color(&"border-window")
+	style.set_border_width_all(UiTokens.BORDER_3)
+	style.set_corner_radius_all(UiTokens.RADIUS_M)
+	style.content_margin_left = UiTokens.SPACE_4
+	style.content_margin_right = UiTokens.SPACE_4
+	style.content_margin_top = UiTokens.SPACE_3
+	style.content_margin_bottom = UiTokens.SPACE_3
+	style.shadow_color = Color(0, 0, 0, 0.45)
+	style.shadow_size = 6
+	style.shadow_offset = Vector2(0, 4)
+	return style
+
+
+static func map_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = UiTokens.color(&"surface-map")
+	style.border_color = UiTokens.color(&"border-map")
+	style.set_border_width_all(UiTokens.BORDER_2)
+	style.set_corner_radius_all(UiTokens.RADIUS_S)
+	return style
+
+
+## Fondo de la fila elegida (el cursor dorado va a su izquierda).
+static func selected_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = UiTokens.color(&"surface-selected")
+	style.set_corner_radius_all(UiTokens.RADIUS_S)
+	style.content_margin_left = UiTokens.SPACE_2 + UiTokens.CURSOR_SIZE + UiTokens.SPACE_2
+	style.content_margin_right = UiTokens.SPACE_2
+	style.content_margin_top = UiTokens.SPACE_1
+	style.content_margin_bottom = UiTokens.SPACE_1
+	return style
+
+
+## Insignia de estado: status es &"status-poison", &"status-sleep", &"status-silence" o &"status-stun".
+static func badge_style(status: StringName) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = UiTokens.color(status)
+	style.set_corner_radius_all(UiTokens.RADIUS_S)
+	style.content_margin_left = UiTokens.SPACE_2
+	style.content_margin_right = UiTokens.SPACE_2
+	return style
+
+
+## Una letra variable a un peso dado; la del motor si el archivo no está.
+static func font(path: String, weight: int) -> Font:
+	var base: FontFile = null
+	if ResourceLoader.exists(path):
+		base = load(path) as FontFile
+	if base == null:
+		return ThemeDB.fallback_font
+	var variation := FontVariation.new()
+	variation.base_font = base
+	var tag := TextServerManager.get_primary_interface().name_to_tag("wght")
+	variation.variation_opentype = {tag: weight}
+	return variation
+
+
+static func _label(theme: Theme, type: StringName, size: int, color_token: StringName) -> void:
+	theme.set_type_variation(type, &"Label")
+	theme.set_font_size(&"font_size", type, size)
+	theme.set_color(&"font_color", type, UiTokens.color(color_token))
