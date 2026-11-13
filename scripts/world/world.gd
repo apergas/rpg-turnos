@@ -347,7 +347,7 @@ func _ready() -> void:
 	for id in Chests.of_zone(zone.id):
 		_chest_lids[id] = build_chest(self, Chests.CHESTS[id])
 	for id in Medals.of_zone(zone.id):
-		_medals[id] = _build_medal(Medals.MEDALS[id].pos)
+		_medals[id] = _build_medal(Medals.pos_of(id))
 	for well: Dictionary in zone.wells:
 		_build_well(well)
 	_exits = zone.all_exits()
@@ -1323,7 +1323,7 @@ func _uses() -> Array[Dictionary]:
 			uses.append({"kind": CHEST, "id": id, "index": -1, "pos": Chests.CHESTS[id].pos,
 				"radius": CHEST_RADIUS})
 	for id: String in _medals:
-		uses.append({"kind": MEDAL, "id": id, "index": -1, "pos": Medals.MEDALS[id].pos,
+		uses.append({"kind": MEDAL, "id": id, "index": -1, "pos": Medals.pos_of(id),
 			"radius": MEDAL_RADIUS})
 	if _portal != null:
 		uses.append({"kind": PORTAL, "id": "", "index": -1, "pos": zone.portal_pos,

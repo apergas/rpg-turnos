@@ -170,7 +170,7 @@ static func _clear(zone: ZoneData, pos: Vector3, avoid: Array[Vector3]) -> bool:
 	for id in Chests.of_zone(zone.id):
 		near.append(Chests.CHESTS[id].pos)
 	for id in Medals.of_zone(zone.id):
-		near.append(Medals.MEDALS[id].pos)
+		near.append(Medals.pos_of(id))
 	for well: Dictionary in zone.wells:
 		near.append(well.pos)
 	for npc: Dictionary in zone.npcs:

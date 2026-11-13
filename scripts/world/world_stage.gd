@@ -683,7 +683,7 @@ static func _near_medal(zone: ZoneData, pos: Vector3, margin := MEDAL_GRASS_MARG
 		_medal_zone = zone.id
 		_medal_spots.clear()
 		for id in Medals.of_zone(zone.id):
-			var spot: Vector3 = Medals.MEDALS[id].pos
+			var spot: Vector3 = Medals.pos_of(id)
 			_medal_spots.append(Vector2(spot.x, spot.z))
 	var p := Vector2(pos.x, pos.z)
 	for spot in _medal_spots:
