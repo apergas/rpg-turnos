@@ -249,10 +249,10 @@ var _hint: Label
 var _banner: VBoxContainer
 var _banner_tween: Tween
 var _banner_shown := false
-var _notice_serial := 0
 var _prompt: Label
 var _prompt_box: VBoxContainer
 var _prompt_key: Label
+var _prompt_cap: StyleBoxFlat
 ## Phones: the button that replaces the prompt, and the pad that reads the fingers.
 var _use_button: Button
 var _pad: TouchPad
@@ -496,6 +496,7 @@ func _show_prompt(near: Dictionary) -> void:
 		return
 	_prompt.text = text
 	_prompt_key.text = _action_key_name()
+	_paint_prompt_cap()
 	_prompt_box.show()
 	_clear_signs_under(_prompt_box.get_global_rect())
 
@@ -515,6 +516,12 @@ func _clear_signs_under(rect: Rect2) -> void:
 			_signs_under_prompt.erase(label)
 
 
+## The keycap's colours, read again each time it shows so it follows the high contrast option.
+func _paint_prompt_cap() -> void:
+	_prompt_cap.bg_color = UiTokens.color(&"surface-window")
+	_prompt_cap.border_color = UiTokens.color(&"border-subtle")
+
+
 func _restore_signs() -> void:
 	for label in _signs_under_prompt:
 		if is_instance_valid(label):
@@ -526,7 +533,7 @@ func _restore_signs() -> void:
 func _action_key_name() -> String:
 	var codes := KeyMap.keys_of("accept")
 	if codes.is_empty() or KEY_E in codes:
-		return KeyMap.keys_text("accept") if codes.is_empty() else "E"
+		return KeyMap.keys_text("accept") if codes.is_empty() else KeyMap.key_name(KEY_E)
 	return KeyMap.key_name(codes[0])
 
 
@@ -1225,28 +1232,21 @@ func _show_missions(lines: Array[String], done := false) -> void:
 ## Shows a short line in its own window for NOTICE_TIME seconds (a newer one replaces it),
 ## under a small tone word ("Guardado", "Cerrado"...) in the colour of `tone`. Only the text is printed.
 func show_notice(text: String, word := "Aviso", tone := &"text-info") -> void:
-	_notice_serial += 1
-	var serial := _notice_serial
 	_notice_word.text = word
 	UiTheme.style_label(_notice_word, &"label", tone)
 	BattleHud.fit_label(_notice, text, NOTICE_MAX_WIDTH)
 	_notice_window.show()
+	if _autoplay:
+		print(text)
+	# One tween owned by the map: a newer notice kills it, and it dies with the map.
 	if _notice_tween:
 		_notice_tween.kill()
 	_notice_window.modulate.a = 0.0
 	_notice_tween = create_tween()
 	_notice_tween.tween_property(_notice_window, "modulate:a", 1.0, NOTICE_FADE)
-	if _autoplay:
-		print(text)
-	await get_tree().create_timer(NOTICE_TIME - NOTICE_FADE).timeout
-	if serial != _notice_serial:
-		return
-	_notice_tween = create_tween()
+	_notice_tween.tween_interval(NOTICE_TIME - 2.0 * NOTICE_FADE)
 	_notice_tween.tween_property(_notice_window, "modulate:a", 0.0, NOTICE_FADE)
-	# A newer notice kills this tween, and a killed tween never emits finished: wait on a timer.
-	await get_tree().create_timer(NOTICE_FADE).timeout
-	if serial == _notice_serial:
-		_notice_window.hide()
+	_notice_tween.tween_callback(_notice_window.hide)
 
 
 func _trigger(boss: bool) -> void:
@@ -1712,8 +1712,8 @@ func _build_ui() -> void:
 	_prompt_key.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var key_panel := PanelContainer.new()
 	var cap := StyleBoxFlat.new()
-	cap.bg_color = UiTokens.color(&"surface-window")
-	cap.border_color = UiTokens.color(&"border-subtle")
+	_prompt_cap = cap
+	_paint_prompt_cap()
 	cap.set_border_width_all(UiTokens.BORDER_2)
 	cap.set_corner_radius_all(UiTokens.RADIUS_S)
 	cap.content_margin_left = UiTokens.SPACE_2
