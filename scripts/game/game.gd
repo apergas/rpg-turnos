@@ -15,7 +15,8 @@ class_name Game extends Node
 ## it open). Talking to the old woman heals, moves the
 ## quest on and, once the slimes are reported, brings out the Rey Slime; the other
 ## villagers say their ZoneData lines. The Coleccionista of Villaclaro trades the small medals for
-## prizes (Medals.talk()); a battle's medal drops go to GameState.medals (Medals.take()). The merchant opens the ShopWindow; the innkeeper
+## prizes (Medals.talk()); a battle's medal drops go to GameState.medals (Medals.take()).
+## The merchant opens the ShopWindow; the innkeeper
 ## offers a free night (Inn.stay(): fade to black, full HP and MP, autosave); a chest gives
 ## what it holds (Chests.open()) and stays open. The hero's figure on the map and in
 ## battle shows the weapon and shield worn. On a dungeon floor the lever sets its world
@@ -127,7 +128,7 @@ const ECHO_START := "eco"
 ## Villaclaro and in the forest village.
 const MEDAL_TOUR := "medallas"
 const MEDAL_TOUR_CHANCE := 0.25
-const MEDAL_TOUR_TIME := 900.0
+const MEDAL_TOUR_TIME := 1800.0
 ## --autoplay-zone=ngplus: the hero of ECHO_START with the Yelmo de bruma, and a first
 ## Partida nueva + from the prologue.
 const NG_PLUS_START := "ngplus"
@@ -1544,6 +1545,8 @@ func _on_medal_tour_timeout() -> void:
 		return
 	while _busy:
 		await get_tree().create_timer(1.0).timeout
+	if not _medal_tour:  # the tour finished by itself while this waited
+		return
 	print("Medallas: tiempo agotado (%d/%d)" % [state.medals.size(), Medals.MEDALS.size()])
 	await _finish_medal_tour()
 
