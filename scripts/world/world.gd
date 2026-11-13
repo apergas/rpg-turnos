@@ -92,11 +92,6 @@ const EXIT_RADIUS := 1.2
 ## After arriving (or after a closed exit's notice) exits wait until the player is this
 ## much farther than EXIT_RADIUS from all of them.
 const EXIT_REARM := 0.8
-## The return portal: an upright glowing oval on a ring, pulsing, with its sign. The spot
-## it leads back to is the same ring alone, flat on the ground.
-const PORTAL_COLOR := Color(0.2, 0.45, 1.0, 0.7)
-const PORTAL_SIZE := Vector3(0.95, 1.35, 0.7)
-const PORTAL_PULSE := 1.08
 ## How close the player must be to a lever, a key or a gate (its centre) to use it.
 const MECHANISM_RADIUS := 2.2
 ## A click or tap this close to a figure or a chest means "go there and use it".
@@ -1457,49 +1452,14 @@ func _build_exit(exit: Dictionary) -> Node3D:
 	return fog
 
 
-## A ring on the ground at pos and, for the portal itself, a pulsing see-through oval over
-## it with its sign. Nothing to bump into.
+## The Ala de viaje's return portal at pos (full: the standing portal with its sign), or only
+## the glowing ring on the ground of the spot it leads back to (TravelPortal).
 func _build_portal(pos: Vector3, full: bool) -> Node3D:
-	var root := Node3D.new()
-	root.position = pos
-	add_child(root)
-	var material := StandardMaterial3D.new()
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	material.albedo_color = PORTAL_COLOR
-	var ring := TorusMesh.new()
-	ring.inner_radius = 0.9
-	ring.outer_radius = 1.05
-	ring.rings = 24
-	ring.ring_segments = 6
-	var base := MeshInstance3D.new()
-	base.mesh = ring
-	base.material_override = material
-	base.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	base.position.y = 0.05
-	root.add_child(base)
-	if not full:
-		return root
-	var oval := MeshInstance3D.new()
-	oval.mesh = BattleStage.unit_sphere()
-	oval.material_override = material
-	oval.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	oval.position.y = PORTAL_SIZE.y
-	oval.scale = PORTAL_SIZE
-	root.add_child(oval)
-	var label := Label3D.new()
-	label.text = "Portal"
-	label.font_size = 48
-	label.pixel_size = 0.008
-	label.outline_size = 10
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.position.y = PORTAL_SIZE.y * 2.0 + 0.4
-	root.add_child(label)
-	var pulse := root.create_tween().set_loops()
-	pulse.tween_property(oval, "scale", PORTAL_SIZE * PORTAL_PULSE, 0.6) \
-		.set_trans(Tween.TRANS_SINE)
-	pulse.tween_property(oval, "scale", PORTAL_SIZE, 0.6).set_trans(Tween.TRANS_SINE)
-	return root
+	var portal := TravelPortal.new()
+	portal.ring_only = not full
+	portal.position = pos
+	add_child(portal)
+	return portal
 
 
 ## Hides the water and the light of the wells in dry.
