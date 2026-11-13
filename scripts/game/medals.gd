@@ -37,20 +37,6 @@ const PRIZES: Array[Dictionary] = [
 	{"medals": 12, "equipment": Equipment.MEDAL_AMULET},
 ]
 
-## Gone in Task 4 (medals are no longer on the ground).
-const AUTOPLAY_ROUTE := {}
-
-
-## Gone in Task 4.
-static func pos_of(_id: String) -> Vector3:
-	return Vector3.ZERO
-
-
-## Gone in Task 4.
-static func of_zone(_zone_id: String) -> Array[String]:
-	return []
-
-
 ## Takes medal id for state. Returns FOUND_TEXT with the count, or "" if it was taken
 ## already (or does not exist).
 static func take(state: GameState, id: String) -> String:
@@ -66,11 +52,6 @@ static func next_missing(state: GameState) -> String:
 		if not id in state.medals:
 			return id
 	return ""
-
-
-## Gone in Task 4.
-static func taken_in(_state: GameState, _zone_id: String) -> int:
-	return 0
 
 
 ## How many PRIZES count medals reach (the most the Coleccionista may have given).

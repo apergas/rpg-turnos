@@ -4,8 +4,7 @@ class_name PauseMenu extends Control
 ## Main page: two windows side by side. The hero's ("Héroe Nv X", the pages of
 ## HERO_PAGES and the missions under way) and the system's (Guardar, Opciones, Volver al
 ## título, Cerrar). Other pages: Estado (hero stats, gold, spells), Objetos (items usable
-## outside battle, the Ala de viaje too, and the key items, each with what it does, and the
-## small medals, "Medalla pequeña ×n"),
+## outside battle, the Ala de viaje too, and the key items, each with what it does),
 ## Equipo (the six slots; choosing one lists the pieces of that slot in the bag, with
 ## the comparison, and Quitar), Diario (JournalPage: what to do now, the missions in progress
 ## and the finished ones), Opciones (OptionsPanel) and a confirmation before going

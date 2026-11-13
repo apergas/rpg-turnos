@@ -653,21 +653,20 @@ func _win(events: Array[Dictionary]) -> void:
 				drops_won.append(id)
 				var progress := "(%d/%d)" % [inventory.count(id), goal] if goal > 0 else ""
 				events.append(BattleEvent.drop(id, i, progress))
-	if medals_carried < 0:
-		return
-	for i in enemies.size():
-		var enemy := enemies[i]
-		if enemy.is_boss:
-			continue
-		var total := medals_carried + medals_won
-		if total >= Medals.MEDALS.size():
-			break
-		var chance := 1.0 if enemy.id == EnemyLibrary.METAL_SLIME else medal_chance
-		if _rng.randf() < chance:
-			medals_won += 1
-			drops_won.append(Inventory.MEDAL)
-			events.append(BattleEvent.drop(Inventory.MEDAL, i,
-				"(%d/%d)" % [total + 1, Medals.MEDALS.size()]))
+	if medals_carried >= 0:
+		for i in enemies.size():
+			var enemy := enemies[i]
+			if enemy.is_boss:
+				continue
+			var total := medals_carried + medals_won
+			if total >= Medals.MEDALS.size():
+				break
+			var chance := 1.0 if enemy.id == EnemyLibrary.METAL_SLIME else medal_chance
+			if _rng.randf() < chance:
+				medals_won += 1
+				drops_won.append(Inventory.MEDAL)
+				events.append(BattleEvent.drop(Inventory.MEDAL, i,
+					"(%d/%d)" % [total + 1, Medals.MEDALS.size()]))
 
 
 ## What the difficulty leaves of damage to the hero, at least 1.
