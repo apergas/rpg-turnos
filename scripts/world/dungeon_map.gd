@@ -508,7 +508,8 @@ func _add_stairs(cell: Vector2i, up: bool) -> void:
 	var label := Label3D.new()
 	label.text = "Subir" if up else "Bajar"
 	UiTheme.style_3d(label, &"display-m", &"text-display-soft", UiTokens.OUTLINE_L)
-	label.pixel_size = 0.008
+	label.pixel_size = 0.01
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED  # upright: flat it was foreshortened by the camera
 	label.position = center + Vector3(0, 2.6, 0)
 	add_child(label)
 
