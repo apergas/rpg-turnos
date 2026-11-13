@@ -1401,7 +1401,7 @@ func _choose_companion() -> void:
 ## The Coleccionista (Medals.talk()): every prize the medals reach, at once, with a sound;
 ## then how many are carried. Saves silently (he has met the hero, maybe given something).
 func _talk_to_collector() -> void:
-	var talk := Medals.talk(state)
+	var talk := Medals.talk(state, _zone.id)
 	var lines: Array[String] = []
 	for line: String in talk.lines:
 		lines.append(StoryState.fill(line, state.hero.display_name))

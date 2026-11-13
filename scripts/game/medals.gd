@@ -26,6 +26,9 @@ const PRIZE_LINE := "¡%d medallas! Esto es para ti."
 const NONE_LINE := "Aún no llevas ninguna. Con %d te daré algo bueno."
 const ONE_LINE := "Llevas 1 medalla. Con %d te daré algo bueno."
 const NEXT_LINE := "Llevas %d medallas. Con %d te daré algo bueno."
+## His joke the first time he is met again in another village (a world flag per village).
+const AWAY_LINE := "¿Que si nos hemos visto en Villaclaro? Imposible: allí vive mi hermano gemelo. ...Es broma, soy yo. Viajo mucho."
+const AWAY_FLAG := "coleccionista_%s"
 const ALL_LINE := "¡Las doce! Ya no me queda nada que darte, {nombre}. Gracias."
 ## What the Coleccionista gives, in order, once the hero carries "medals" of them: "items"
 ## (Inventory id -> amount) or "equipment" (an Equipment id, never sold).
@@ -63,15 +66,22 @@ static func prizes_for(count: int) -> int:
 	return reached
 
 
-## The Coleccionista: INTRO the first time; then, at once, every prize the medals carried
+## The Coleccionista in zone_id (he stands in every village, the same man with the same
+## count): INTRO the first time he is met anywhere; AWAY_LINE the first time he is met again
+## in a village other than Villaclaro; then, at once, every prize the medals carried
 ## reach and he has not given yet (they are counted, never spent); then how many medals are
 ## carried and how many the next prize asks, or ALL_LINE once the five are given. Returns
 ## {"lines": Array[String], "given": int (prizes given now)}.
-static func talk(state: GameState) -> Dictionary:
+static func talk(state: GameState, zone_id: String) -> Dictionary:
 	var lines: Array[String] = []
+	var away := zone_id != COLLECTOR_ZONE
 	if not state.collector_met:
 		state.collector_met = true
 		lines.append(INTRO)
+	elif away and not state.has_flag(AWAY_FLAG % zone_id):
+		lines.append(AWAY_LINE)
+	if away:
+		state.world_flags[AWAY_FLAG % zone_id] = true
 	var given := 0
 	while state.medal_prizes < prizes_for(state.medals.size()):
 		var prize: Dictionary = PRIZES[state.medal_prizes]
