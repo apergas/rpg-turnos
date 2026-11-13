@@ -56,7 +56,9 @@ signal map_requested
 const PLAYER_SCENE := preload("res://scenes/world/player.tscn")
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
 const HERO_DATA := preload("res://data/hero.tres")
-const NOTICE_TIME := 2.0
+const NOTICE_TIME := 4.0
+## Fade in and out of the notice window.
+const NOTICE_FADE := 0.2
 ## Seconds "Misión cumplida" stays in the status window.
 const MISSION_DONE_TIME := 4.0
 ## The notice window, top centre (clear of the status window and the ☰ button).
@@ -238,6 +240,8 @@ var _has_explored := false
 var _repelled := false
 var _dry_wells: Array[String] = []
 var _notice: Label
+var _notice_word: Label
+var _notice_tween: Tween
 var _notice_window: PanelContainer
 var _place_label: Label
 var _hint_window: PanelContainer
@@ -1179,15 +1183,28 @@ func _show_missions(lines: Array[String], done := false) -> void:
 		BattleHud.fit_label(label, line, width)
 
 
-## Shows a short line in its own window for NOTICE_TIME seconds (a newer one replaces it).
-func show_notice(text: String) -> void:
+## Shows a short line in its own window for NOTICE_TIME seconds (a newer one replaces it),
+## under a small tone word ("Guardado", "Cerrado"...) in the colour of `tone`. Only the text is printed.
+func show_notice(text: String, word := "Aviso", tone := &"text-info") -> void:
 	_notice_serial += 1
 	var serial := _notice_serial
+	_notice_word.text = word
+	UiTheme.style_label(_notice_word, &"label", tone)
 	BattleHud.fit_label(_notice, text, NOTICE_MAX_WIDTH)
 	_notice_window.show()
+	if _notice_tween:
+		_notice_tween.kill()
+	_notice_window.modulate.a = 0.0
+	_notice_tween = create_tween()
+	_notice_tween.tween_property(_notice_window, "modulate:a", 1.0, NOTICE_FADE)
 	if _autoplay:
 		print(text)
-	await get_tree().create_timer(NOTICE_TIME).timeout
+	await get_tree().create_timer(NOTICE_TIME - NOTICE_FADE).timeout
+	if serial != _notice_serial:
+		return
+	_notice_tween = create_tween()
+	_notice_tween.tween_property(_notice_window, "modulate:a", 0.0, NOTICE_FADE)
+	await _notice_tween.finished
 	if serial == _notice_serial:
 		_notice_window.hide()
 
@@ -1230,7 +1247,7 @@ func _check_exits(pos: Vector3) -> bool:
 		return false
 	_exits_armed = false
 	if not _is_open(nearest):
-		show_notice(nearest.lock_text)
+		show_notice(nearest.lock_text, "Cerrado")
 		return false
 	_waiting = true
 	_player.input_enabled = false
@@ -1627,8 +1644,13 @@ func _build_ui() -> void:
 	_notice_window.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_notice_window.hide()
 	_ui.add_child(_notice_window)
+	var notice_box := VBoxContainer.new()
+	notice_box.add_theme_constant_override("separation", UiTokens.SPACE_1)
+	_notice_window.add_child(notice_box)
+	_notice_word = _label()
+	notice_box.add_child(_notice_word)
 	_notice = _label()
-	_notice_window.add_child(_notice)
+	notice_box.add_child(_notice)
 	_build_banner()
 	_prompt = Label.new()
 	_prompt.theme_type_variation = UiTheme.OUTLINED

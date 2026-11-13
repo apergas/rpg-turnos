@@ -788,7 +788,7 @@ func _on_encounter(boss: bool) -> void:
 		if not reward_lines.is_empty():
 			await _world.show_dialogue("", reward_lines)
 		elif notice != "":
-			_world.show_notice(notice)
+			_world.show_notice(notice, "Premio", &"text-positive")
 	if not family_lines.is_empty():
 		_audio.play_sfx(SfxLibrary.LEVEL_UP)
 		await _world.show_dialogue("", family_lines)
@@ -796,7 +796,7 @@ func _on_encounter(boss: bool) -> void:
 		_world.show_mission_done(QuestLog.done_text(Quest.TITLE))
 	for finished: Dictionary in finished_quests:
 		_world.show_mission_done(QuestLog.done_text(finished.title))
-		_world.show_notice(" ".join(finished.lines))
+		_world.show_notice(" ".join(finished.lines), "Misión cumplida", &"text-positive")
 	if ending_v2:
 		await _finish_v2()
 		return
@@ -1028,7 +1028,7 @@ func _on_travel_requested() -> void:
 	await _fade_to(0.0)
 	await _world.freeze(false)
 	var place := _to_place(_zone.village_name)
-	_world.show_notice((PORTAL_REPLACED_NOTICE if replaced else PORTAL_OPEN_NOTICE) % place)
+	_world.show_notice((PORTAL_REPLACED_NOTICE if replaced else PORTAL_OPEN_NOTICE) % place, "Viaje")
 	_autosave(false)
 	_set_busy(false)
 
@@ -1056,7 +1056,7 @@ func _on_portal() -> void:
 	_update_boss()
 	await _fade_to(0.0)
 	await _world.freeze(false)
-	_world.show_notice(PORTAL_BACK_NOTICE)
+	_world.show_notice(PORTAL_BACK_NOTICE, "Viaje")
 	_autosave(false)
 	_set_busy(false)
 
@@ -1137,7 +1137,7 @@ func _play_prologue() -> void:
 	_set_busy(false)
 	_show_touch_hint()
 	if _load_failed:
-		_world.show_notice(LOAD_FAILED_NOTICE)
+		_world.show_notice(LOAD_FAILED_NOTICE, "Cuidado", &"text-danger")
 
 
 ## After the ending: the save is marked finished (the hero is back in Villaclaro), the
@@ -1592,7 +1592,7 @@ func _on_key() -> void:
 	state.key_items.append(_zone.floor_key)
 	_audio.play_sfx(SfxLibrary.LEVEL_UP)
 	_world.set_world_flags(state.world_flags)
-	_world.show_notice(KEY_NOTICE % Inventory.KEY_ITEMS[_zone.floor_key])
+	_world.show_notice(KEY_NOTICE % Inventory.KEY_ITEMS[_zone.floor_key], "Hallazgo", &"text-positive")
 	_autosave(false)
 	_refresh_status()
 
@@ -1603,7 +1603,7 @@ func _on_door() -> void:
 		return
 	var key := _zone.door_key
 	if key == "" or not key in state.key_items:
-		_world.show_notice(_zone.door_text)
+		_world.show_notice(_zone.door_text, "Cerrado")
 		return
 	state.key_items.erase(key)
 	state.world_flags[_zone.door_flag] = true
@@ -1622,7 +1622,7 @@ func _autosave(notice: bool) -> Dictionary:
 		return {}
 	if notice:
 		_audio.play_sfx(SfxLibrary.SAVE)
-		_world.show_notice(SAVED_NOTICE)
+		_world.show_notice(SAVED_NOTICE, "Guardado", &"text-positive")
 	return data
 
 

@@ -7,6 +7,8 @@ class_name DialogueBox extends Control
 signal _advanced
 
 const AUTOPLAY_DELAY := 0.8
+## Seconds the continue mark is shown and hidden.
+const MORE_BLINK := 0.5
 const MAX_WIDTH := float(UiTokens.WINDOW_W_MAX)
 const BOTTOM := float(UiTokens.SPACE_6)
 ## Screen margins and window margins: what a line can't use of the screen's width.
@@ -17,6 +19,9 @@ var _listening := false
 var _speaker: Label
 var _line: Label
 var _audio: AudioDirector
+## The ▼ that says "press to go on": drawn, in its own row at the right, blinking while a line waits.
+var _more: Control
+var _blinking := false
 
 
 func _ready() -> void:
@@ -39,6 +44,13 @@ func _ready() -> void:
 	box.add_child(_speaker)
 	_line = Label.new()
 	box.add_child(_line)
+	_more = Control.new()
+	_more.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_more.custom_minimum_size = Vector2(UiTokens.CURSOR_SIZE, UiTokens.CURSOR_SIZE)
+	_more.size_flags_horizontal = Control.SIZE_SHRINK_END
+	_more.draw.connect(_draw_more)
+	_more.modulate.a = 0.0
+	box.add_child(_more)
 	hide()
 
 
@@ -64,9 +76,24 @@ func say(speaker: String, lines: Array[String]) -> void:
 			# Skip a frame so the key press that opened or advanced the dialogue is not reused.
 			await get_tree().process_frame
 			_listening = true
+			_blinking = true
 			await _advanced
 			_listening = false
+			_blinking = false
+			_more.modulate.a = 0.0
 	hide()
+
+
+## The mark blinks every MORE_BLINK seconds while a line waits.
+func _process(_delta: float) -> void:
+	if _blinking:
+		_more.modulate.a = 1.0 if int(Time.get_ticks_msec() / (MORE_BLINK * 1000.0)) % 2 == 0 else 0.0
+
+
+func _draw_more() -> void:
+	var s := float(UiTokens.CURSOR_SIZE)
+	_more.draw_colored_polygon(PackedVector2Array([Vector2(0, 0), Vector2(s, 0), Vector2(s / 2.0, s * 0.8)]),
+			UiTokens.color(&"border-focus"))
 
 
 func _unhandled_input(event: InputEvent) -> void:
