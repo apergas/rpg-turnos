@@ -53,7 +53,7 @@ func _show(text: String, ratio: float) -> void:
 
 
 func _is_critical() -> bool:
-	return _token == HP and _ratio < CRITICAL_RATIO
+	return _token == HP and _ratio > 0.0 and _ratio < CRITICAL_RATIO
 
 
 func _process(_delta: float) -> void:
