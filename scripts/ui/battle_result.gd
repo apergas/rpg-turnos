@@ -14,7 +14,7 @@ var _continue: Button
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	var shade := ColorRect.new()
-	shade.color = Color(0, 0, 0, 0.55)
+	shade.color = UiTokens.color(&"surface-scrim")
 	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(shade)
 	var center := CenterContainer.new()
@@ -24,9 +24,10 @@ func _ready() -> void:
 	var panel := BattleHud.make_window()
 	center.add_child(panel)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 10)
+	box.add_theme_constant_override("separation", UiTokens.SPACE_2)
 	panel.add_child(box)
-	_title = _label(40)
+	_title = _label()
+	UiTheme.style_label(_title, &"title-l", &"text-accent")
 	box.add_child(_title)
 	_detail = VBoxContainer.new()
 	box.add_child(_detail)
@@ -34,9 +35,10 @@ func _ready() -> void:
 	box.add_child(_exp_bar)
 	_continue = Button.new()
 	_continue.text = "Continuar"
-	_continue.add_theme_font_size_override("font_size", 24)
+	UiTheme.menu_row(_continue)
 	_continue.pressed.connect(_on_continue_pressed)
 	box.add_child(_continue)
+	UiTheme.add_cursor(panel)
 	hide()
 
 
@@ -45,13 +47,13 @@ func show_victory(exp_gained: int, hero: Combatant, new_level: int, gold: int,
 		drops: Array[String]) -> void:
 	_title.text = "¡Victoria!"
 	_clear_detail()
-	_add_line("+%d EXP" % exp_gained, StatBar.EXP_TEXT)
+	_add_line("+%d EXP" % exp_gained, UiTheme.POSITIVE)
 	if new_level > 0:
-		_add_line("¡Nivel %d!" % new_level, Color.WHITE)
+		_add_line("¡Nivel %d!" % new_level)
 	if gold > 0:
-		_add_line("+%d G" % gold, StatBar.GOLD)
+		_add_line("+%d G" % gold, UiTheme.MONEY)
 	for id in drops:
-		_add_line("+1 %s" % Inventory.display_name(id), Color.WHITE)
+		_add_line("+1 %s" % Inventory.display_name(id))
 	_exp_bar.show_exp(hero)
 	_exp_bar.show()
 	_open()
@@ -62,8 +64,8 @@ func show_defeat(gold_lost := 0) -> void:
 	_title.text = "Has caído"
 	_clear_detail()
 	if gold_lost > 0:
-		_add_line("Pierdes %d G." % gold_lost, StatBar.GOLD)
-	_add_line("Volverás al último lugar seguro.", Color.WHITE)
+		_add_line("Pierdes %d G." % gold_lost, UiTheme.MONEY)
+	_add_line("Volverás al último lugar seguro.")
 	_exp_bar.hide()
 	_open()
 
@@ -74,10 +76,11 @@ func _clear_detail() -> void:
 		child.queue_free()
 
 
-func _add_line(text: String, color: Color) -> void:
-	var label := _label(24)
+func _add_line(text: String, variation := &"") -> void:
+	var label := _label()
 	label.text = text
-	label.add_theme_color_override("font_color", color)
+	if variation != &"":
+		label.theme_type_variation = variation
 	_detail.add_child(label)
 
 
@@ -89,11 +92,9 @@ func _open() -> void:
 	_continue.grab_focus()
 
 
-func _label(size: int) -> Label:
+func _label() -> Label:
 	var label := Label.new()
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", size)
-	label.add_theme_color_override("font_color", Color.WHITE)
 	return label
 
 

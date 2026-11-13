@@ -438,7 +438,8 @@ func _cast(who: int, cmd: Dictionary, events: Array[Dictionary]) -> void:
 	var skill: Skill = cmd.skill
 	caster.mp -= skill.mp_cost
 	var targets := _skill_targets(who, skill, cmd.target)
-	events.append(BattleEvent.skill(who, targets, skill.display_name, caster.mp, skill.color))
+	events.append(BattleEvent.skill(who, targets, skill.display_name, caster.mp, skill.color,
+		skill.element))
 	if skill.kind == Skill.HEAL:
 		var amount := mini(skill.power, caster.max_hp - caster.hp)
 		caster.hp += amount

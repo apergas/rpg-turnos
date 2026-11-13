@@ -1,5 +1,16 @@
 # Registro de cambios
 
+## 2.6.0 (2026)
+
+La interfaz se pone al día.
+
+- Una sola letra en todas partes, la misma en el ordenador, el navegador y el móvil: Nunito para las ventanas y Baloo 2 para el título, los nombres de los lugares, los letreros y los números del combate.
+- En todos los menús se ve qué fila tienes elegida: un cursor dorado ▶ y un fondo, también en el móvil.
+- Las ventanas tienen sombra y se leen mejor sobre el cielo, la nieve o la arena.
+- La barra de EXP es de un verde más oscuro y el texto gris es más claro: los dos se leen mejor.
+- Cada color tiene un solo significado: el dorado es para lo importante y el oro, el verde para lo bueno, el rojo para lo malo.
+- Los números de los hechizos tienen el color de su elemento, y la página de Teclas cabe en el móvil.
+
 ## 2.5.0 (2026)
 
 Las ideas que apuntaste.

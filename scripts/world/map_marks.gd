@@ -21,21 +21,28 @@ const KEY := "key"
 ## Every kind, in the order of the Mapa page's legend.
 const KINDS: Array[String] = [SHOP, INN, WELL_HP, WELL_MP, WELL_DRY, EXIT, STAIRS_UP,
 	STAIRS_DOWN, LEVER, LEVER_DOWN, DOOR, DOOR_OPEN, KEY]
+## The token (UiTokens) that colours each kind.
 const COLORS := {
-	SHOP: Color(1.0, 0.8, 0.2),
-	INN: Color(1.0, 0.6, 0.85),
-	WELL_HP: Color(1.0, 0.25, 0.25),
-	WELL_MP: Color(0.25, 0.5, 1.0),
-	WELL_DRY: Color(0.55, 0.55, 0.55),
-	EXIT: Color(0.35, 1.0, 0.45),
-	STAIRS_UP: Color(0.3, 0.95, 1.0),
-	STAIRS_DOWN: Color(0.7, 0.4, 1.0),
-	LEVER: Color(1.0, 0.55, 0.1),
-	LEVER_DOWN: Color(0.45, 0.3, 0.15),
-	DOOR: Color(0.6, 0.0, 0.0),
-	DOOR_OPEN: Color(0.4, 0.4, 0.5),
-	KEY: Color(1.0, 1.0, 0.55),
+	SHOP: &"map-shop",
+	INN: &"map-inn",
+	WELL_HP: &"map-well-hp",
+	WELL_MP: &"map-well-mp",
+	WELL_DRY: &"map-well-dry",
+	EXIT: &"map-exit",
+	STAIRS_UP: &"map-stairs-up",
+	STAIRS_DOWN: &"map-stairs-down",
+	LEVER: &"map-lever",
+	LEVER_DOWN: &"map-lever-down",
+	DOOR: &"map-door",
+	DOOR_OPEN: &"map-door-open",
+	KEY: &"map-key",
 }
+
+## The colour of one kind.
+static func color_of(kind: String) -> Color:
+	return UiTokens.color(COLORS[kind])
+
+
 const NAMES := {
 	SHOP: "Tienda",
 	INN: "Posada",
@@ -112,4 +119,4 @@ static func kinds_in(marks: Array[Dictionary]) -> Array[String]:
 
 
 static func _add(marks: Array[Dictionary], pos: Vector3, kind: String) -> void:
-	marks.append({"pos": pos, "kind": kind, "color": COLORS[kind]})
+	marks.append({"pos": pos, "kind": kind, "color": color_of(kind)})

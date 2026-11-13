@@ -8,14 +8,10 @@ class_name CreditsScreen extends Control
 
 signal _advanced
 
-const HEADING_COLOR := Color(1.0, 0.85, 0.3)
-const HEADING_SIZE := 30
-const LINE_SIZE := 26
-const END_SIZE := 72
 ## Pixels per second the credits roll up, and how much faster while held.
 const SCROLL_SPEED := 70.0
 const SPEED_UP := 5.0
-const SECTION_GAP := 48
+const SECTION_GAP := UiTokens.SPACE_12
 const END_FADE := 1.2
 const AUTOPLAY_END := 2.0
 ## What fades in after the credits: "Fin" for the v1, TO_BE_CONTINUED for the v2 (set before
@@ -35,16 +31,16 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	var black := ColorRect.new()
-	black.color = Color.BLACK
+	black.color = UiTokens.color(&"surface-window-solid")
 	black.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(black)
 	black.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_column = VBoxContainer.new()
-	_column.add_theme_constant_override("separation", 6)
+	_column.add_theme_constant_override("separation", UiTokens.SPACE_1)
 	_column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_column)
 	_column.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	_end = _label(end_text, HEADING_COLOR, END_SIZE)
+	_end = _label(end_text, &"display-l", &"text-display", UiTokens.OUTLINE_L, &"text-outline-warm")
 	_end.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_end.modulate.a = 0.0
 	add_child(_end)
@@ -54,11 +50,11 @@ func _ready() -> void:
 ## Rolls sections ([heading, [lines...]] each) and returns once "Fin" is dismissed.
 func run(sections: Array) -> void:
 	for section: Array in sections:
-		_column.add_child(_label(section[0], HEADING_COLOR, HEADING_SIZE))
+		_column.add_child(_label(section[0], &"title-m", &"text-accent"))
 		if _autoplay:
 			print("Créditos: %s" % section[0])
 		for line: String in section[1]:
-			_column.add_child(_label(line, Color.WHITE, LINE_SIZE))
+			_column.add_child(_label(line, &"title-s", &"text-primary"))
 			if _autoplay:
 				print("  %s" % line)
 		var gap := Control.new()
@@ -104,12 +100,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		_advanced.emit()
 
 
-func _label(text: String, color: Color, font_size: int) -> Label:
+func _label(text: String, style: StringName, color: StringName, outline := 0,
+		outline_color := &"text-outline") -> Label:
 	var label := Label.new()
 	label.text = text
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.add_theme_font_size_override("font_size", font_size)
-	label.add_theme_color_override("font_color", color)
+	UiTheme.style_label(label, style, color, outline, outline_color)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return label

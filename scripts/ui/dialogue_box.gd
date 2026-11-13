@@ -6,13 +6,11 @@ class_name DialogueBox extends Control
 
 signal _advanced
 
-const FONT_SIZE := 24
-const SPEAKER_COLOR := Color(1.0, 0.85, 0.3)
 const AUTOPLAY_DELAY := 0.8
-const MAX_WIDTH := 1000.0
-const BOTTOM := 24.0
+const MAX_WIDTH := float(UiTokens.WINDOW_W_MAX)
+const BOTTOM := float(UiTokens.SPACE_6)
 ## Screen margins and window margins: what a line can't use of the screen's width.
-const SIDE_ROOM := 76.0
+const SIDE_ROOM := float(2 * UiTokens.SPACE_6 + 2 * UiTokens.SPACE_4)
 
 var _autoplay := false
 var _listening := false
@@ -36,9 +34,10 @@ func _ready() -> void:
 	add_child(panel)
 	var box := VBoxContainer.new()
 	panel.add_child(box)
-	_speaker = _label(SPEAKER_COLOR)
+	_speaker = Label.new()
+	_speaker.theme_type_variation = UiTheme.TITLE
 	box.add_child(_speaker)
-	_line = _label(Color.WHITE)
+	_line = Label.new()
 	box.add_child(_line)
 	hide()
 
@@ -93,10 +92,3 @@ func _fit_to(lines: Array[String]) -> void:
 	var room := minf(MAX_WIDTH, get_viewport_rect().size.x - SIDE_ROOM)
 	BattleHud.fit_label(_line, longest, room)
 	_line.custom_minimum_size.x = minf(width, room)
-
-
-func _label(color: Color) -> Label:
-	var label := Label.new()
-	label.add_theme_font_size_override("font_size", FONT_SIZE)
-	label.add_theme_color_override("font_color", color)
-	return label

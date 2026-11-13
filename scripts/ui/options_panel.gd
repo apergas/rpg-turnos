@@ -11,9 +11,9 @@ signal closed
 ## Title only: the player wants to copy a slot to or from a file.
 signal transfer_requested
 
-const FONT_SIZE := 24
 const VOLUME_STEP := 10.0
-const NAME_WIDTH := 220.0
+## Wide enough for "Velocidad de combate" in Nunito, so every row's choices line up.
+const NAME_WIDTH := 260.0
 ## What the title, Volver and the margins leave for the rows.
 const ROWS_RESERVED := 150.0
 const YES_NO := ["Sí", "No"]
@@ -44,16 +44,16 @@ func setup(options: GameOptions, audio: AudioDirector, state: GameState = null) 
 
 func _ready() -> void:
 	_main = VBoxContainer.new()
-	_main.add_theme_constant_override("separation", 8)
+	_main.add_theme_constant_override("separation", UiTokens.SPACE_2)
 	add_child(_main)
-	_main.add_child(_label("Opciones", UiStyle.TITLE_COLOR))
+	_main.add_child(_label("Opciones", UiTheme.TITLE))
 	var scroll := ScrollBox.new(ROWS_RESERVED)
 	_main.add_child(scroll)
 	_rows = scroll.content
-	_rows.add_theme_constant_override("separation", 6)
-	_music_value = _label("", Color.WHITE)
+	_rows.add_theme_constant_override("separation", UiTokens.SPACE_1)
+	_music_value = _label("", UiTheme.NOTE)
 	_music_slider = _volume_row("Música", _options.music_volume, _music_value)
-	_sfx_value = _label("", Color.WHITE)
+	_sfx_value = _label("", UiTheme.NOTE)
 	_sfx_slider = _volume_row("Efectos", _options.sfx_volume, _sfx_value)
 	_music_slider.value_changed.connect(_on_music_changed)
 	_sfx_slider.value_changed.connect(_on_sfx_changed)
@@ -191,6 +191,7 @@ func _choice_row(title: String, names: Array, current: int, chosen: Callable) ->
 	var buttons: Array[Button] = []
 	for i in names.size():
 		var button := _button(names[i])
+		button.theme_type_variation = UiTheme.SELECTOR
 		button.toggle_mode = true
 		button.button_group = group
 		button.button_pressed = i == current
@@ -214,10 +215,15 @@ func _sync_web_fullscreen() -> void:
 
 
 func _named_row(title: String) -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
+	var row := FocusRow.new()
+	row.add_theme_constant_override("separation", UiTokens.SPACE_2)
 	_rows.add_child(row)
-	var name_label := _label(title, Color.WHITE)
+	# The gap of the cursor: the gold arrow lands before the name.
+	var indent := Control.new()
+	indent.custom_minimum_size.x = UiTheme.row_indent()
+	indent.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(indent)
+	var name_label := _label(title)
 	name_label.custom_minimum_size = Vector2(NAME_WIDTH, 0)
 	row.add_child(name_label)
 	return row
@@ -226,14 +232,14 @@ func _named_row(title: String) -> HBoxContainer:
 func _button(text: String) -> Button:
 	var button := Button.new()
 	button.text = text
-	UiStyle.fit_finger(button)
-	button.add_theme_font_size_override("font_size", FONT_SIZE)
+	UiTheme.menu_row(button)
+	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	return button
 
 
-func _label(text: String, color: Color) -> Label:
+func _label(text: String, variation := &"") -> Label:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", FONT_SIZE)
-	label.add_theme_color_override("font_color", color)
+	if variation != &"":
+		label.theme_type_variation = variation
 	return label

@@ -28,4 +28,9 @@ Lo que se ha hecho y lo que queda por hacer en Villaclaro. Una fila por versión
 | 2.5.0 · M-59 | Un portal del Ala de viaje más bonito | hecho |
 | 2.5.0 · M-60 | Una misión opcional más en la mina y otra en el castillo | hecho |
 | 2.5.0 · M-61 | Un fuego más realista en antorchas y hogueras | hecho |
+| 2.6.0 · M-62 | Una sola fuente de verdad para la interfaz: `UiTokens` y `UiTheme`, desde el [design system](design-system/README.md) ([spec](specs/2026-11-13-version-2-6-0-design.md) · [plan](plans/2026-11-13-version-2-6-0.md)) | hecho |
+| 2.6.0 · M-63 | La fila elegida y el cursor ▶ en todos los menús, igual con teclado, ratón o dedo | hecho |
+| 2.6.0 · M-64 | Tipografía: Nunito y Baloo 2 en todas las plataformas, diez estilos de texto | hecho |
+| 2.6.1 · M-65 | Accesibilidad y tono: más contraste, sombra de ventana, opción «Alto contraste» y repaso de textos | plan |
+| 2.6.1 · M-66 | Componentes del design system: aviso con tono, PV críticos, insignia «Aturdido», indicador de diálogo, botón de acción… | plan |
 | v3 | La siguiente parte: el pueblo al otro lado del portal ([guiones posibles](v3-guiones.md)) | idea |

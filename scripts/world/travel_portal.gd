@@ -44,9 +44,8 @@ func _ready() -> void:
 	add_child(_light)
 	var label := Label3D.new()
 	label.text = "Portal"
-	label.font_size = 48
+	UiTheme.style_3d(label, &"display-m", &"text-display-soft", UiTokens.OUTLINE_L)
 	label.pixel_size = 0.008
-	label.outline_size = 10
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.position.y = CENTER_Y + SURFACE.y * CORONA_SCALE / 2.0 + 0.4
 	add_child(label)
