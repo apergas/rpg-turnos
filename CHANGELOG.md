@@ -1,5 +1,18 @@
 # Registro de cambios
 
+## 2.5.0 (2026)
+
+Las ideas que apuntaste.
+
+- Las medallas pequeñas ya no están escondidas por el suelo: algunos monstruos las llevan encima y las sueltan de vez en cuando. El Slime de Metal siempre deja una.
+- El Coleccionista viaja: está en todos los pueblos, y en la caravana cuando ya tienes compañero. Lleva la misma cuenta en todos.
+- Más monstruos en la pradera, el bosque, la mina y el castillo.
+- Los monstruos vencidos vuelven poco a poco, lejos de ti: ya no hace falta salir del mapa para que reaparezcan.
+- El Slime de Metal corre la mitad: ahora se le puede alcanzar.
+- El portal del Ala de viaje es un remolino azul con una corona de rayos, chispas y una luz.
+- Una misión más en la mina (a la Minera le sobran arañas) y otra en el castillo (a la Posadera le falta una olla).
+- El fuego de las antorchas y las hogueras parece fuego, con brasas y una luz que tiembla.
+
 ## 2.4.1 (2026)
 
 - El sol de la pantalla del más allá ya no es un eclipse: es un sol rojo oscuro y apagado.
