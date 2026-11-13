@@ -251,6 +251,8 @@ var _banner_tween: Tween
 var _banner_shown := false
 var _notice_serial := 0
 var _prompt: Label
+var _prompt_box: VBoxContainer
+var _prompt_key: Label
 ## Phones: the button that replaces the prompt, and the pad that reads the fingers.
 var _use_button: Button
 var _pad: TouchPad
@@ -490,17 +492,26 @@ func _show_prompt(near: Dictionary) -> void:
 		_use_button.show()
 		return
 	_prompt.text = text
-	_prompt.show()
+	_prompt_key.text = _action_key_name()
+	_prompt_box.show()
+
+
+## The key shown under the prompt: E while it is one of the accept keys, else the first one.
+func _action_key_name() -> String:
+	var codes := KeyMap.keys_of("accept")
+	if codes.is_empty() or KEY_E in codes:
+		return KeyMap.keys_text("accept") if codes.is_empty() else "E"
+	return KeyMap.key_name(codes[0])
 
 
 func _hide_prompt() -> void:
-	_prompt.hide()
+	_prompt_box.hide()
 	if _use_button:
 		_use_button.hide()
 
 
 func _prompt_showing() -> bool:
-	return _use_button.visible if _use_button else _prompt.visible
+	return _use_button.visible if _use_button else _prompt_box.visible
 
 
 ## Forgets the fingers on the map (a window, a battle or a cutscene took over).
@@ -1655,13 +1666,26 @@ func _build_ui() -> void:
 	_notice = _label()
 	notice_box.add_child(_notice)
 	_build_banner()
+	_prompt_box = VBoxContainer.new()
+	_prompt_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	_prompt_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui.add_child(_prompt_box)
 	_prompt = Label.new()
 	_prompt.theme_type_variation = UiTheme.OUTLINED
 	_prompt.text = PROMPTS[TALK]
-	_ui.add_child(_prompt)
-	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, \
+	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_prompt_box.add_child(_prompt)
+	# The key of the action, on a badge that is not a status colour.
+	_prompt_key = Label.new()
+	_prompt_key.theme_type_variation = UiTheme.BADGE
+	var key_panel := PanelContainer.new()
+	key_panel.add_theme_stylebox_override(&"panel", UiTheme.selected_style())
+	key_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	key_panel.add_child(_prompt_key)
+	_prompt_box.add_child(key_panel)
+	_prompt_box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, \
 		Control.PRESET_MODE_MINSIZE, 200)
-	_prompt.hide()
+	_prompt_box.hide()
 	if Device.is_touch():
 		_build_touch_controls()
 	_dialogue = DialogueBox.new()

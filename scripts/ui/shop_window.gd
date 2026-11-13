@@ -258,7 +258,7 @@ func _add_buy_row(id: String) -> void:
 		return
 	var info := Shop.compare(_state, id)
 	if not info.is_empty():
-		row.add_child(_label("%s +%d" % [info.stat, info.bonus]))
+		row.add_child(_label("%s +%d" % [info.stat, info.bonus], UiTheme.REASON if why != "" else &""))
 		row.add_child(comparison(info.diff))
 	else:
 		var bulk := _button("×%d" % Shop.BULK)

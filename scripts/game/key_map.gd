@@ -76,12 +76,12 @@ static func keys_of(action: String) -> Array[int]:
 static func keys_text(action: String) -> String:
 	var names := PackedStringArray()
 	for code in keys_of(action):
-		names.append(_key_name(code))
+		names.append(key_name(code))
 	return ", ".join(names)
 
 
 ## What the key at that physical position says on the player's keyboard layout.
-static func _key_name(code: int) -> String:
+static func key_name(code: int) -> String:
 	if OS.has_feature("web") or DisplayServer.get_name() == "headless":
 		return KEY_NAMES.get(code, OS.get_keycode_string(code))  # the web and headless runs can't tell
 	var key := DisplayServer.keyboard_get_keycode_from_physical(code as Key)

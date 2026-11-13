@@ -344,9 +344,13 @@ func _fill_items() -> void:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", UiTokens.SPACE_4)
 		_items_box.add_child(row)
-		var label := _label("%s ×%d" % [Inventory.display_name(id), inventory.count(id)])
-		label.custom_minimum_size = Vector2(260, 0)
+		var label := _label(Inventory.display_name(id))
+		label.custom_minimum_size = Vector2(200, 0)
 		row.add_child(label)
+		var count := _label("×%d" % inventory.count(id))
+		count.custom_minimum_size = Vector2(60, 0)
+		count.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		row.add_child(count)
 		var use := _button("Usar")
 		var why := _use_problem(id)
 		use.disabled = why != ""
@@ -354,7 +358,8 @@ func _fill_items() -> void:
 		row.add_child(use)
 		if why != "":
 			row.add_child(_label(why, UiTheme.REASON))
-		UiStyle.add_description(_items_box, id)
+		else:
+			UiStyle.add_description(_items_box, id)
 	if not any:
 		_items_box.add_child(_label("No llevas objetos."))
 
