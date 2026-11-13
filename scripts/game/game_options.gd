@@ -28,6 +28,8 @@ var quality := Quality.HIGH
 var camera_shake := true
 var fullscreen := false
 var large_text := false
+## High contrast palette of the menus (UiTokens.ALTO_CONTRASTE).
+var high_contrast := false
 ## The phone's line on how to walk was shown once (World.show_touch_hint()).
 var touch_hint_seen := false
 ## What the player reassigned: KeyMap action -> key codes.
@@ -48,7 +50,7 @@ func combat_scale() -> float:
 func to_dict() -> Dictionary:
 	return {"music": music_volume, "sfx": sfx_volume, "text_speed": text_speed,
 		"combat_speed": combat_speed, "quality": quality, "camera_shake": camera_shake,
-		"fullscreen": fullscreen, "large_text": large_text, "touch_hint_seen": touch_hint_seen,
+		"fullscreen": fullscreen, "large_text": large_text, "high_contrast": high_contrast, "touch_hint_seen": touch_hint_seen,
 		"keys": keys}
 
 
@@ -73,6 +75,8 @@ static func from_dict(data: Dictionary) -> GameOptions:
 		options.fullscreen = data.fullscreen
 	if data.get("large_text") is bool:
 		options.large_text = data.large_text
+	if data.get("high_contrast") is bool:
+		options.high_contrast = data.high_contrast
 	if data.get("touch_hint_seen") is bool:
 		options.touch_hint_seen = data.touch_hint_seen
 	options.keys = _valid_keys(data.get("keys"))

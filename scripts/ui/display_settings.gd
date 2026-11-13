@@ -16,7 +16,7 @@ const BUTTON_STYLES := ["normal", "hover", "pressed", "disabled"]
 
 
 static func apply(window: Window, options: GameOptions) -> void:
-	UiTheme.apply(window)
+	UiTheme.apply(window, options.high_contrast)
 	window.title = ProjectSettings.get_setting("application/config/name")
 	window.content_scale_factor = GameOptions.LARGE_TEXT_SCALE if options.large_text else 1.0
 	if Device.is_touch():
