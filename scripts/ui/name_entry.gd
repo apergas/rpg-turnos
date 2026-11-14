@@ -15,8 +15,6 @@ const COLUMNS := 8
 const TOUCH_COLUMNS := 11
 ## The grid, in capitals (lower-cased when the case is switched).
 const LETTERS := "ABCDEFGHIJKLMNÑOPQRSTUVWXYZÁÉÍÓÚ"
-## --autoplay: seconds between two key presses of demo().
-const DEMO_STEP := 0.15
 
 var _audio: AudioDirector
 ## The name already typed when it opens (Volver from the difficulty); set before add_child.
@@ -29,6 +27,11 @@ var _case_button: Button
 var _accept_button: Button
 var _quiet_focus := false
 var _done := false
+
+#region Autoplay
+## --autoplay: seconds between two key presses of demo().
+const DEMO_STEP := 0.15
+#endregion
 
 
 ## Cursor and accept sounds; without it the window is silent.
@@ -115,26 +118,6 @@ func _input(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 
 
-## --autoplay: types hero_name on the grid key by key (switching the case when needed)
-## and accepts it.
-func demo(hero_name: String) -> void:
-	for letter in hero_name:
-		var wanted_upper := letter == letter.to_upper()
-		if wanted_upper != _upper:
-			await _demo_press(_case_button)
-		for key in _keys:
-			if key.text == letter:
-				await _demo_press(key)
-				break
-	await _demo_press(_accept_button)
-
-
-func _demo_press(button: Button) -> void:
-	button.grab_focus()
-	await get_tree().create_timer(DEMO_STEP).timeout
-	button.pressed.emit()
-
-
 func _add(letter: String) -> void:
 	if _done or _typed.length() >= StoryState.MAX_NAME_LENGTH:
 		return
@@ -211,3 +194,25 @@ func _label(text: String, variation: StringName) -> Label:
 func _sfx(id: String) -> void:
 	if _audio:
 		_audio.play_sfx(id)
+
+
+#region Autoplay
+## --autoplay: types hero_name on the grid key by key (switching the case when needed)
+## and accepts it.
+func demo(hero_name: String) -> void:
+	for letter in hero_name:
+		var wanted_upper := letter == letter.to_upper()
+		if wanted_upper != _upper:
+			await _demo_press(_case_button)
+		for key in _keys:
+			if key.text == letter:
+				await _demo_press(key)
+				break
+	await _demo_press(_accept_button)
+
+
+func _demo_press(button: Button) -> void:
+	button.grab_focus()
+	await get_tree().create_timer(DEMO_STEP).timeout
+	button.pressed.emit()
+#endregion

@@ -36,14 +36,7 @@ const ARROW_GAP := 0.5
 ## A click this close (pixels) to an enemy aims at it.
 const PICK_RADIUS := 120.0
 const STANDALONE_LEVEL := 3
-## Autoplay flees from normal battle number AUTOPLAY_EVERY, 2 × AUTOPLAY_EVERY... and
-## defends in the first round of battle AUTOPLAY_DEFEND_AT, AUTOPLAY_DEFEND_AT +
-## AUTOPLAY_EVERY...
-const AUTOPLAY_EVERY := 5
-const AUTOPLAY_DEFEND_AT := 2
 
-## Normal battles started on autoplay in this run (for the flee and defend rules).
-static var _autoplay_battles := 0
 
 var engine: BattleEngine
 var hero: Combatant
@@ -74,10 +67,6 @@ var medals_carried := -1
 var medal_chance := Medals.DROP_CHANCE
 
 var _rng := RandomNumberGenerator.new()
-var _autoplay := false
-var _autoplay_flee := false
-var _autoplay_defend := false
-var _bot := BattleAutoplay.new()
 var _done := false
 var _new_level := 0
 ## Color of the last spell cast, used for the hit that follows it.
@@ -100,6 +89,20 @@ var _audio: AudioDirector
 var _weapon_id := Equipment.STICK
 var _shield_id := ""
 var _helmet_id := ""
+
+#region Autoplay
+## Autoplay flees from normal battle number AUTOPLAY_EVERY, 2 × AUTOPLAY_EVERY... and
+## defends in the first round of battle AUTOPLAY_DEFEND_AT, AUTOPLAY_DEFEND_AT +
+## AUTOPLAY_EVERY...
+const AUTOPLAY_EVERY := 5
+const AUTOPLAY_DEFEND_AT := 2
+## Normal battles started on autoplay in this run (for the flee and defend rules).
+static var _autoplay_battles := 0
+var _autoplay := false
+var _autoplay_flee := false
+var _autoplay_defend := false
+var _bot := BattleAutoplay.new()
+#endregion
 
 
 ## The hero and the inventory are used as is, so HP, MP, EXP and items stay with the
@@ -262,15 +265,6 @@ func _ask_command() -> void:
 		_on_command_chosen(cmd)
 	else:
 		_hud.show_menu()
-
-
-func _autoplay_command() -> Dictionary:
-	if _autoplay_flee:
-		return BattleEngine.cmd_flee()
-	if _autoplay_defend:
-		_autoplay_defend = false
-		return BattleEngine.cmd_defend()
-	return _bot.choose(engine)
 
 
 func _on_command_chosen(cmd: Dictionary) -> void:
@@ -770,3 +764,14 @@ func _fighter(who: int) -> Combatant:
 		BattleEvent.ALLY:
 			return ally
 	return engine.enemies[who]
+
+
+#region Autoplay
+func _autoplay_command() -> Dictionary:
+	if _autoplay_flee:
+		return BattleEngine.cmd_flee()
+	if _autoplay_defend:
+		_autoplay_defend = false
+		return BattleEngine.cmd_defend()
+	return _bot.choose(engine)
+#endregion

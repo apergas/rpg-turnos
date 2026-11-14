@@ -24,14 +24,11 @@ const WHY_WIDTH := 84.0
 const MESSAGE_WIDTH := float(UiTokens.WINDOW_W_XL)
 ## What the header, the title, a two-line message and the margins leave for the rows.
 const ROWS_RESERVED := 220.0
-## Seconds each step stays on screen on autoplay.
-const AUTOPLAY_STEP := 0.7
 
 var _state: GameState
 var _audio: AudioDirector
 var _shop_id := ""
 var _page := ""
-var _autoplay := false
 ## Piece just bought, waiting for the "¿Te lo equipas ahora?" answer.
 var _asking := ""
 var _quiet_focus := false
@@ -43,6 +40,12 @@ var _scroll: ScrollBox
 ## The Volver button of the lists, outside the part that scrolls.
 var _footer: VBoxContainer
 var _message: Label
+
+#region Autoplay
+## Seconds each step stays on screen on autoplay.
+const AUTOPLAY_STEP := 0.7
+var _autoplay := false
+#endregion
 
 
 ## A small triangle pointing up (green, better) or down (red, worse), drawn so it never
@@ -362,32 +365,6 @@ func _sell(id: String) -> void:
 	_show_page("sell", id)
 
 
-## Autoplay: shows the first page, buys and equips each pick on the buy page, and shows
-## the sell page (selling nothing) before leaving.
-func _autoplay_run() -> void:
-	await _wait()
-	_show_page("buy")
-	await _wait()
-	for id in Shop.autoplay_picks(_state, _shop_id):
-		_focus_row(Shop.display_name(id))
-		await _wait()
-		_buy(id)
-		if _page == "ask":
-			await _wait()
-			_answer(true)
-		await _wait()
-	if Shop.sells_ally(_shop_id):
-		return
-	_show_page("sell")
-	await _wait()
-	_show_page("menu")
-	await _wait()
-
-
-func _wait() -> void:
-	await get_tree().create_timer(AUTOPLAY_STEP).timeout
-
-
 ## Shows text under the list; on autoplay also prints it.
 func _say(text: String) -> void:
 	_set_message(text)
@@ -482,3 +459,31 @@ static func _make_label(text: String, variation := &"") -> Label:
 func _sfx(id: String) -> void:
 	if _audio:
 		_audio.play_sfx(id)
+
+
+#region Autoplay
+## Autoplay: shows the first page, buys and equips each pick on the buy page, and shows
+## the sell page (selling nothing) before leaving.
+func _autoplay_run() -> void:
+	await _wait()
+	_show_page("buy")
+	await _wait()
+	for id in Shop.autoplay_picks(_state, _shop_id):
+		_focus_row(Shop.display_name(id))
+		await _wait()
+		_buy(id)
+		if _page == "ask":
+			await _wait()
+			_answer(true)
+		await _wait()
+	if Shop.sells_ally(_shop_id):
+		return
+	_show_page("sell")
+	await _wait()
+	_show_page("menu")
+	await _wait()
+
+
+func _wait() -> void:
+	await get_tree().create_timer(AUTOPLAY_STEP).timeout
+#endregion

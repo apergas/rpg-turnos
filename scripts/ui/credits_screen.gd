@@ -13,7 +13,6 @@ const SCROLL_SPEED := 70.0
 const SPEED_UP := 5.0
 const SECTION_GAP := UiTokens.SPACE_12
 const END_FADE := 1.2
-const AUTOPLAY_END := 2.0
 ## What fades in after the credits: "Fin" for the v1, TO_BE_CONTINUED for the v2 (set before
 ## add_child).
 const TO_BE_CONTINUED := "Continuará"
@@ -23,7 +22,12 @@ var _column: VBoxContainer
 var _end: Label
 var _rolling := false
 var _waiting := false
+
+#region Autoplay
+## Seconds "Fin" stays on autoplay before the credits leave by themselves.
+const AUTOPLAY_END := 2.0
 var _autoplay := false
+#endregion
 
 
 func _ready() -> void:
