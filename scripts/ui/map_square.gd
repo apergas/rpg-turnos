@@ -10,7 +10,6 @@ signal pressed
 
 const SIDE := float(UiTokens.MAP_SIZE)
 const TOUCH_SIDE := 110.0
-const ALPHA := 0.8
 const MARKER_SIZE := 7.0
 const MARK_SIZE := 5.0
 
@@ -53,7 +52,7 @@ func _ready() -> void:
 	_picture = TextureRect.new()
 	_picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_picture.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_picture.modulate.a = ALPHA
+	_picture.modulate.a = UiTokens.OPACITY_MAP_PICTURE
 	_picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	inside.add_child(_picture)
 	_marker = ColorRect.new()

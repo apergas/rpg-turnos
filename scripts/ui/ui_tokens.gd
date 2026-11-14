@@ -75,6 +75,13 @@ const JUEGO := {
 	&"element-thunder": Color("#b380ff"),
 	&"element-heal": Color("#4dff66"),
 	&"element-weak": Color("#ff9933"),
+	&"effect-defend": Color("#99ccff"),
+	&"effect-charge": Color("#ff8c26"),
+	&"effect-wake": Color("#ffd959"),
+	&"effect-poison": Color("#9933cc"),
+	&"effect-sleep": Color("#5973ff"),
+	&"effect-silence": Color("#9999a6"),
+	&"effect-stun": Color("#ffd94d"),
 	&"quest-mark": Color("#ffd94d"),
 	&"map-shop": Color("#ffcc33"),
 	&"map-inn": Color("#ff99d9"),
@@ -180,6 +187,8 @@ const OPACITY_WINDOW := 0.9
 const OPACITY_MAP := 0.45
 const OPACITY_FADED := 0.5
 const OPACITY_PORTRAIT_DESATURATE := 0.85
+const OPACITY_PLACEHOLDER := 0.45
+const OPACITY_MAP_PICTURE := 0.8
 
 # Tipografía: tamaño en px y peso (wght) de cada estilo.
 const TYPE_DISPLAY_XL_SIZE := 96

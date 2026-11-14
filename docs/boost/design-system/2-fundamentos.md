@@ -13,7 +13,10 @@
 | PV / PM / EXP | `stat-hp`, `stat-mp`, `stat-exp` | cualquier otra cosa |
 | Estados | `status-*` | otra cosa que no sea la insignia |
 | Efectos | `element-*` | menús |
+| Brillo sobre la figura en combate (defender, cargar, Despertador, veneno, sueño, silencio, aturdido) | `effect-*` (no son `status-*`: esos son las insignias) | insignias, texto |
 | Retrato del bestiario visto, sin vencer | `portrait-seen` (color de lavado: retrato desaturado y aclarado) | texto |
+
+Opacidades: `opacity-placeholder` 0,45 (nombre aún sin escribir) y `opacity-map-picture` 0,8 (la imagen del mapa dentro de su cuadro), junto a `opacity-window`, `opacity-map`, `opacity-faded` y `opacity-portrait-desaturate`.
 
 Antes había seis dorados casi iguales. Ahora son cuatro tonos con papel propio: `gold-100` subtítulo, `gold-200` logotipo, `gold-300` acento y cursor, `gold-400` dinero.
 

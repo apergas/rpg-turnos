@@ -936,9 +936,6 @@ const LOOKS := {
 	},
 }
 
-## Map only: how see-through a group's figure is while it can't start a battle.
-const FADED_TRANSPARENCY := 0.5
-
 @export var look := Look.HERO
 
 ## Height of the floating damage numbers.
@@ -1077,7 +1074,7 @@ func set_walking(on: bool) -> void:
 ## Incienso burning), or whole again. Every mesh of the figure.
 func set_faded(on: bool) -> void:
 	for mi in _meshes:
-		mi.transparency = FADED_TRANSPARENCY if on else 0.0
+		mi.transparency = UiTokens.OPACITY_FADED if on else 0.0
 
 
 ## A group coming back on the map: every mesh from invisible to solid in seconds.

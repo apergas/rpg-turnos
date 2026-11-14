@@ -26,6 +26,8 @@ const SELECTOR := &"SelectorButton"
 const KEY := &"KeyButton"
 const CARD_HIT := &"CardHitButton"
 const MENU_BUTTON := &"MenuButtonWindow"
+## The title screen's menu rows: a row in the title-s font and size.
+const TITLE_ROW := &"TitleRowButton"
 const ACTION_BUTTON := &"ActionButton"
 ## The 1 px line of the map's status window between the bars and the gold.
 const STATUS_LINE := &"StatusLine"
@@ -310,6 +312,10 @@ static func _buttons(theme: Theme) -> void:
 	theme.set_stylebox(&"hover", MENU_BUTTON, menu_on)
 	theme.set_stylebox(&"pressed", MENU_BUTTON, menu_on)
 	theme.set_stylebox(&"focus", MENU_BUTTON, StyleBoxEmpty.new())
+	# TITLE_ROW: the title menu's rows; only the font differs from a plain Button.
+	_variation(theme, TITLE_ROW, &"Button")
+	theme.set_font(&"font", TITLE_ROW, font_for(&"title-s"))
+	theme.set_font_size(&"font_size", TITLE_ROW, UiTokens.TYPE_TITLE_S_SIZE)
 	# ACTION_BUTTON: a pill.
 	_variation(theme, ACTION_BUTTON, &"Button")
 	var pill := window_style()
