@@ -1,6 +1,6 @@
 class_name ActorLooks extends RefCounted
 ## Data only: every figure a BattleActor can be (enum Look) and what each is made of
-## (LOOKS), with the KayKit models, weapons, head textures, colours and animation tables
+## (LOOKS; the v3's figures are in ActorLooksV3.LOOKS: entry() reads both), with the KayKit models, weapons, head textures, colours and animation tables
 ## the entries name. Read by BattleActor, CreatureBuilder and CharacterBuilder; never
 ## touches nodes. BattleActor.Look is this enum (const Look = ActorLooks.Look).
 
@@ -12,7 +12,8 @@ enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPE
 	SNAKE, MONKEY, TRAP_PLANT, TROPICAL_MUSHROOM, CARAVAN_CHIEF, HEALER, JAGUAR,
 	SCORPION, SAND_SLIME, VULTURE, SAND_GOLEM, MUMMY, CANTEEN, SAND_WORM, SNOW_WOLF, ICE_GOLEM,
 	SUMMIT_SPIRIT, ICE_BAT, GOAT, GRIFFIN, HOLLOW_ARMOR, GARGOYLE, SHADOW, SENTINEL, RUIN_RAT, CITY_GUARDIAN,
-	PORTAL_DEVOURER, CARAVAN_MERCHANT, TRAVELLER_F, TRAVELLER_M, EXPLORER, SURVIVOR, POT, CARAVAN_COLLECTOR }
+	PORTAL_DEVOURER, CARAVAN_MERCHANT, TRAVELLER_F, TRAVELLER_M, EXPLORER, SURVIVOR, POT, CARAVAN_COLLECTOR,
+	ORVALLA, NEBLI, MIST_VILLAGER_M, MIST_VILLAGER_F, MIST_HEALER }
 const KNIGHT := preload("res://assets/characters/Knight.glb")
 const MAGE := preload("res://assets/characters/Mage.glb")
 const SKELETON_WARRIOR := preload("res://assets/characters/Skeleton_Warrior.glb")
@@ -822,3 +823,8 @@ const LOOKS := {
 		"tint": Color(1.0, 0.82, 0.38),
 	},
 }
+
+
+## What look is made of: its LOOKS entry, or ActorLooksV3's for a figure of the v3.
+static func entry(look: Look) -> Dictionary:
+	return LOOKS[look] if LOOKS.has(look) else ActorLooksV3.LOOKS[look]
