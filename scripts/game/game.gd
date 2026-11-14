@@ -78,20 +78,18 @@ const BATTLE_SCENE := preload("res://scenes/battle/battle_scene.tscn")
 const FADE_TIME := 0.3
 const TOUCH_HINT := "Toca el suelo para ir allí, o arrastra el dedo para andar."
 const REPEL_END_NOTICE := "El incienso se ha consumido."
-const HEAL_LINE := "Descansas un momento. PV y PM recuperados."
 const SAVED_NOTICE := "Partida guardada."
 const LEVER_NOTICE := "¡Tiras de la palanca! Se oye cómo se abre una reja."
 const KEY_NOTICE := "¡Encuentras la %s!"
 const DOOR_NOTICE := "Abres la reja con la %s."
 const MENU_TOUR_DELAY := 1.0
-## Seconds of black while the hero sleeps at the inn.
-const INN_NIGHT_TIME := 0.8
 
 var state: GameState
 var _ctx: SessionContext
 var _travel: ZoneTravel
 var _story: StoryFlow
 var _caravan: CaravanFlow
+var _talk: FigureTalk
 
 var _fade: ColorRect
 var _pause: PauseMenu
@@ -129,8 +127,6 @@ var _medal_tour := false
 ## tune Medals.DROP_CHANCE).
 var _common_beaten := 0
 var _shop: ShopWindow
-## Something was bought, sold or equipped since the shop opened.
-var _shop_changed := false
 ## The development panel, only with --debug (null otherwise).
 var _debug: DebugPanel
 
@@ -286,6 +282,7 @@ func _make_pieces() -> void:
 	_travel = ZoneTravel.new()
 	_story = StoryFlow.new()
 	_caravan = CaravanFlow.new()
+	_talk = FigureTalk.new()
 
 
 ## The pieces set up, wired and added, where Game used to build what they hold (node
@@ -316,6 +313,14 @@ func _add_pieces(load_failed: bool) -> void:
 	_caravan.autoplay_companion = _autoplay_companion
 	_caravan.autoplay_leaves = _autoplay_v2
 	add_child(_caravan)
+	_talk.setup(_ctx, _shop)
+	_talk.update_boss = _update_boss
+	_talk.choose_companion = _caravan.choose_companion
+	_talk.ask_departure = _caravan.ask_departure
+	_talk.check_village_scene = _story.check_village_scene
+	_talk.respawn_groups = _travel.respawn_groups
+	_talk.spawn_rare = _travel.spawn_rare
+	add_child(_talk)
 
 
 ## ZoneTravel built a new map: the old one goes, the new one is first in the tree and stays
@@ -330,10 +335,10 @@ func _on_world_replaced(world: World) -> void:
 	world.freeze(true)
 	world.set_audio(_audio)
 	world.encounter_triggered.connect(_on_encounter)
-	world.talk_requested.connect(_on_talk)
-	world.npc_requested.connect(_on_npc)
-	world.shop_requested.connect(_on_shop)
-	world.inn_requested.connect(_on_inn)
+	world.talk_requested.connect(_talk.on_talk)
+	world.npc_requested.connect(_talk.on_npc)
+	world.shop_requested.connect(_talk.on_shop)
+	world.inn_requested.connect(_talk.on_inn)
 	world.chest_opened.connect(_on_chest)
 	world.well_requested.connect(_on_well)
 	world.exit_requested.connect(_travel.on_exit)
@@ -638,27 +643,15 @@ func _boss_wanted() -> bool:
 	return BattleRewards.boss_wanted(_ctx.zone, state, not _autoplay or _autoplay_echo)
 
 
-## The index of the figure of this kind and id (a shop's or an inn's) with something about a
-## quest now: a report waiting or a new offer (QuestLog.markers(): "?" or "!"), -1 if none.
-## It is heard before the shop opens or the night is offered.
-func _figure_with_quest(kind: String, id: String) -> int:
-	var marks := state.quests.markers(_ctx.zone.id, state.inventory, state.world_flags)
-	for i in _ctx.zone.npcs.size():
-		var npc: Dictionary = _ctx.zone.npcs[i]
-		if npc.kind == kind and npc.get("id", "") == id and marks.has(npc.name):
-			return i
-	return -1
-
-
 ## Autoplay, in the village: a night at its inn and the shop's picks, as if the hero had
 ## walked up to the innkeeper and the merchant.
 func _autoplay_restock() -> void:
 	for npc: Dictionary in _ctx.zone.npcs:
 		if npc.kind == "inn":
-			await _on_inn(npc.id)
+			await _talk.on_inn(npc.id)
 	for npc: Dictionary in _ctx.zone.npcs:
 		if npc.kind == "shop":
-			await _on_shop(npc.id)
+			await _talk.on_shop(npc.id)
 	# On a caravan game the figures that offer a quest ("!") are visited too, or autoplay
 	# would never take the v2's quests; a v1 game keeps the reports only.
 	var marks := {}
@@ -668,7 +661,7 @@ func _autoplay_restock() -> void:
 		var npc_name: String = _ctx.zone.npcs[i].name
 		if npc_name in state.quests.reports_here(_ctx.zone.id, state.inventory) \
 				or marks.get(npc_name, "") == QuestLog.NEW_MARK:
-			await _on_npc(i)
+			await _talk.on_npc(i)
 
 
 ## Inside a village it becomes the last one visited; the music follows. The first
@@ -679,185 +672,6 @@ func _on_village_changed(inside: bool) -> void:
 	_play_map_music()
 	if inside:
 		_story.check_village_scene()
-
-
-## The old woman always heals; what she says and gives comes from the quest.
-func _on_talk() -> void:
-	if _ctx.busy:
-		return
-	_set_busy(true)
-	var done := state.quest.stage == Quest.Stage.DONE
-	var result := state.quest.talk()
-	var said: Array = result.lines
-	if done:
-		# Her quest over, the Abuela Rosa speaks of the story (her ZoneData lines).
-		var story_lines := _ctx.world.npc_lines(_quest_npc(), state.chapter())
-		if not story_lines.is_empty():
-			said = story_lines
-	var lines: Array[String] = []
-	for line: String in said:
-		lines.append(StoryState.fill(line, state.hero.display_name))
-	lines.append(HEAL_LINE)
-	state.heal_full()
-	if result.potions > 0:
-		state.inventory.add(Inventory.POTION, result.potions)
-	_refresh_status()
-	await _ctx.world.show_dialogue(Quest.NPC_NAME, lines)
-	_update_boss()
-	_autosave(true)
-	_set_busy(false)
-
-
-## The index of the zone's "quest" figure (the Abuela Rosa) in ZoneData.npcs.
-func _quest_npc() -> int:
-	for i in _ctx.zone.npcs.size():
-		if _ctx.zone.npcs[i].kind == "quest":
-			return i
-	return -1
-
-
-## A villager or a board: what it has about a quest (the log moves the quest on and pays),
-## or else its lines (World.npc_lines(): they change with the chapter).
-func _on_npc(index: int) -> void:
-	if _ctx.busy:
-		return
-	_set_busy(true)
-	var figure: String = _ctx.zone.npcs[index].name
-	if figure == Medals.COLLECTOR:
-		await _talk_to_collector()
-		_set_busy(false)
-		return
-	if figure == CaravanFlow.CARAVAN_CHIEF and _ctx.zone.id == "caravana" \
-			and not state.has_flag(StoryState.COMPANION_FLAG):
-		await _caravan.choose_companion()
-		_set_busy(false)
-		return
-	if figure == CaravanFlow.CARAVAN_CHIEF and _ctx.zone.id == "pradera":
-		await _caravan.ask_departure()
-		_set_busy(false)
-		_story.check_village_scene()  # the Caravana's first visit, if the hero left
-		return
-	var chief := figure == CaravanFlow.CARAVAN_CHIEF
-	var talk := state.quests.talk(state, _ctx.zone.id, figure, chief)
-	var said: Array = talk.get("lines", _ctx.world.npc_lines(index, state.chapter()))
-	if chief and talk.get("kind", "") == QuestLog.TALK_WAIT:
-		# The Jefe with quests under way and nothing to deliver: his chapter lines first (the
-		# way on, his joke), then one waiting line.
-		said = _ctx.world.npc_lines(index, state.chapter()) + talk.lines
-	var lines: Array[String] = []
-	for line: String in said:
-		lines.append(StoryState.fill(line, state.hero.display_name))
-	# A thing picked up (kind "item", the cantimplora) has no voice: the narrator says it.
-	var speaker := "" if _ctx.zone.npcs[index].kind == "item" else figure
-	await _ctx.world.show_dialogue(speaker, lines)
-	if not talk.is_empty():
-		var done: Array[String] = []
-		done.assign(talk.done)
-		_after_quest_talk(done)
-	_set_busy(false)
-
-
-## The Coleccionista (Medals.talk()): every prize the medals reach, at once, with a sound;
-## then how many are carried. Saves silently (he has met the hero, maybe given something).
-func _talk_to_collector() -> void:
-	var talk := Medals.talk(state, _ctx.zone.id)
-	var lines: Array[String] = []
-	for line: String in talk.lines:
-		lines.append(StoryState.fill(line, state.hero.display_name))
-	if talk.given > 0:
-		_audio.play_sfx(SfxLibrary.LEVEL_UP)
-		_refresh_status()
-	await _ctx.world.show_dialogue(Medals.COLLECTOR, lines)
-	_autosave(false)
-
-
-## The map shows what changed (a done_flag brings a figure back: Nara, the Superviviente);
-## the quests finished say so with one notice and one sound; the game is saved.
-func _after_quest_talk(done: Array[String]) -> void:
-	if _ctx.zone.rare_enemy in state.quests.wanted_enemies():
-		_travel.spawn_rare()  # its hunt was just taken: it is on this floor at once
-	if _autoplay:
-		for id in Inventory.SEEDS:
-			while state.inventory.count(id) > 0:
-				state.use_item(id)
-	_ctx.world.set_world_flags(state.world_flags)
-	_refresh_status()
-	if not done.is_empty():
-		_audio.play_sfx(SfxLibrary.LEVEL_UP)
-		_ctx.world.show_mission_done(_done_text(done))
-	_autosave(done.is_empty())
-
-
-## "Misión cumplida: <title>"; with several, all their titles on a desktop and how many on a
-## phone (its status window has one line of 300 px).
-func _done_text(done: Array[String]) -> String:
-	if done.size() == 1:
-		return QuestLog.done_text(done[0])
-	if Device.is_touch():
-		return QuestLog.done_count_text(done.size())
-	return QuestLog.done_text(" · ".join(done))
-
-
-## The merchant: the ShopWindow until the player leaves; autosaves if anything changed.
-## On autoplay it only opens when there is something to buy.
-func _on_shop(shop_id: String) -> void:
-	if _ctx.busy:
-		return
-	var waiting := _figure_with_quest("shop", shop_id)
-	if waiting >= 0:
-		await _on_npc(waiting)  # a report or an offer at the merchant goes first (pieles_mono)
-	if shop_id == Shop.CARAVAN_SHOP:
-		shop_id = Shop.caravan_shop(state.tramo())
-	if _ctx.busy or (_autoplay and Shop.autoplay_picks(state, shop_id).is_empty()):
-		return
-	_set_busy(true)
-	_shop_changed = false
-	_ctx.world.freeze(true)
-	await _shop.run(shop_id)
-	await _ctx.world.freeze(false)
-	_refresh_status()
-	if _shop_changed:
-		_autosave(true)
-	_set_busy(false)
-
-
-## The innkeeper speaks; if HP or MP are missing, the hero rests at once (fade to black and
-## back with HP and MP full, free) and the game saves, with no question asked. Full HP and
-## MP: the keeper just remarks on it. On autoplay it only stops there below
-## AUTOPLAY_INN_RATIO of max HP or MP, on GameState.needs_rest() or below the boss's
-## thresholds (or a retreat for the boss would come back unhealed).
-func _on_inn(inn_id: String) -> void:
-	if _ctx.busy:
-		return
-	var waiting := _figure_with_quest("inn", inn_id)
-	if waiting >= 0:
-		await _on_npc(waiting)  # a report or an offer at the keeper goes first, as at a shop
-	var hurt := state.hero.hp < state.hero.max_hp * AutoplayStarts.AUTOPLAY_INN_RATIO \
-		or state.hero.mp < state.hero.max_mp * AutoplayStarts.AUTOPLAY_INN_RATIO or state.needs_rest() \
-		or not AutoplayStarts.rested_for_boss(state.hero)
-	if _ctx.busy or (_autoplay and not hurt):
-		return
-	_set_busy(true)
-	var keeper := Inn.keeper(inn_id)
-	var lines: Array[String] = [Inn.full_line(inn_id) if Inn.is_rested(state)
-		else Inn.rest_line(inn_id)]
-	await _ctx.world.show_dialogue(keeper, lines)
-	if Inn.is_rested(state):
-		_set_busy(false)
-		return
-	_ctx.world.freeze(true)
-	Inn.stay(state)
-	await _fade_to(1.0)
-	_travel.respawn_groups()
-	_refresh_status()
-	_audio.play_sfx(SfxLibrary.HEAL)
-	await get_tree().create_timer(INN_NIGHT_TIME).timeout
-	await _fade_to(0.0)
-	await _ctx.world.freeze(false)
-	_refresh_status()
-	_update_boss()
-	_autosave(true)
-	_set_busy(false)
 
 
 ## The hero used a well: drinks if it is full and the hero is not. On autoplay only a full
@@ -922,7 +736,7 @@ func _finish_medal_tour() -> void:
 		_play_map_music()
 		await _fade_to(0.0)
 		await _ctx.world.freeze(false)
-		await _talk_to_collector()
+		await _talk.talk_to_collector()
 	print("Medallas: %d/%d · premios %d/%d" % [state.medals.size(), Medals.MEDALS.size(),
 		state.medal_prizes, Medals.PRIZES.size()])
 	quit_to_title.emit()
@@ -1083,9 +897,6 @@ func _build_shop() -> void:
 	_shop = ShopWindow.new()
 	_shop.setup(state, _audio)
 	layer.add_child(_shop)
-	_shop.changed.connect(func() -> void:
-		_shop_changed = true
-		_refresh_status())
 
 
 func _build_fade() -> void:
