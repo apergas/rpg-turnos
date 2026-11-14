@@ -15,4 +15,4 @@ Las filas (verbos o nombres cortos, solo mayúscula inicial), cuáles están act
 - Las elecciones se ignoran 0,3 s al abrir; mover el cursor suena.
 
 ## En Godot
-Un `Button` plano con el tema aplicado y un `MenuCursor` por ventana (`godot/menu_cursor.gd`).
+Un `Button` plano con el tema aplicado y un `MenuCursor` por ventana (`scripts/ui/menu_cursor.gd`).

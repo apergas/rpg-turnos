@@ -1,18 +1,18 @@
 # Implementación en Godot
 
-Hoy cada script escribe sus colores y tamaños a mano: `Color(0.04, 0.04, 0.12, 0.9)` aparece en varios sitios, cada página tiene su `FONT_SIZE` y los estilos de ventana se repiten. El design system propone una sola fuente de verdad, en tres archivos de `godot/` dentro de este sistema:
+Hoy cada script escribe sus colores y tamaños a mano: `Color(0.04, 0.04, 0.12, 0.9)` aparece en varios sitios, cada página tiene su `FONT_SIZE` y los estilos de ventana se repiten. El design system propone una sola fuente de verdad, en tres archivos de `scripts/ui/`:
 
-- **`godot/ui_tokens.gd`** (`UiTokens`): **generado** desde `tokens.json`. Contiene:
+- **`scripts/ui/ui_tokens.gd`** (`UiTokens`): **generado** desde `tokens.json`. Contiene:
   - todos los colores de los dos temas, con `UiTokens.color(&"text-accent")` (devuelve el de alto contraste si `UiTokens.high_contrast` es true);
   - las escalas como constantes: `SPACE_4`, `RADIUS_M`, `TYPE_BODY_SIZE`…
-- **`godot/ui_theme.gd`** (`UiTheme`): construye el `Theme` del juego en código, siguiendo la costumbre del proyecto de crearlo todo en código:
+- **`scripts/ui/ui_theme.gd`** (`UiTheme`): construye el `Theme` del juego en código, siguiendo la costumbre del proyecto de crearlo todo en código:
   - ventana para `PanelContainer`;
   - estilo `MapWindow` para el cuadro del mapa;
   - filas de menú para `Button`;
   - deslizadores;
   - variaciones de `Label`: `TitleLabel`, `CaptionLabel`, `MoneyLabel`, `OutlinedLabel`, `DisplayLabel`, `BadgeLabel`;
   - las dos letras como `FontVariation` de un archivo variable.
-- **`godot/menu_cursor.gd`** (`MenuCursor`): el cursor ▶ que sigue a la fila elegida.
+- **`scripts/ui/menu_cursor.gd`** (`MenuCursor`): el cursor ▶ que sigue a la fila elegida.
 
 ## Cómo se aplicaría
 
