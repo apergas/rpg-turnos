@@ -40,6 +40,6 @@ Lo que se ha hecho y lo que queda por hacer en Villaclaro. Una fila por versión
 | v3 | La siguiente parte: el pueblo al otro lado del portal ([guiones posibles](v3-guiones.md) · [desarrollo de la opción 1](v3-desarrollo.md)) | idea |
 | Sin versión · M-70 | Refactor de arquitectura, sin cambios en el juego: trocear `Game` ([spec](specs/2026-11-14-refactor-arquitectura-design.md) · [guía](specs/2026-11-14-refactor-arquitectura-guia.md) · [plan](plans/2026-11-14-refactor-4-game.md)) | plan |
 | Sin versión · M-71 | Refactor de arquitectura: trocear `World` ([plan](plans/2026-11-14-refactor-3-world.md)) | plan |
-| Sin versión · M-72 | Refactor de arquitectura: trocear `BattleActor` ([plan](plans/2026-11-14-refactor-2-battle-actor.md)) | plan |
+| Sin versión · M-72 | Refactor de arquitectura: `BattleActor` troceado en `ActorLooks`, `CreatureBuilder`, `CharacterBuilder` y las primitivas de `LowPoly` ([plan](plans/2026-11-14-refactor-2-battle-actor.md)) | hecho |
 | Sin versión · M-73 | Refactor de arquitectura: los constructores llevan `## Constructor:` y `CLAUDE.md` distingue reglas puras, constructores y nodos ([plan](plans/2026-11-14-refactor-1-runflags-builders.md)) | hecho |
 | Sin versión · M-74 | Refactor de arquitectura: la línea de órdenes solo se lee en `RunFlags`, y el piloto automático de cada clase va en su `#region Autoplay` ([plan](plans/2026-11-14-refactor-1-runflags-builders.md)) | hecho |
