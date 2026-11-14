@@ -120,13 +120,6 @@ const LANTERN_COLOR := Color(1.0, 0.85, 0.65)
 const LANTERN_ENERGY := 2.0
 const LANTERN_RANGE := 10.0
 const LANTERN_HEIGHT := 2.4
-## The "!" and "?" of the quests: over the figure, bobbing.
-const QUEST_MARK_GAP := 0.35
-const QUEST_MARK_BOB := 0.12
-## A quest mark over a figure with a sign ("Posada") goes above the sign.
-const FIGURE_SIGN_RISE := 0.65
-const FIGURE_SIGN_GAP := 0.25
-const FIGURE_SIGN_PIXEL := 0.012
 ## Groups of monsters farther than this from the hero neither move nor animate.
 const GROUP_ANIMATE_RADIUS := 30.0
 ## Seconds between two hops of a slime walking on the map.
@@ -158,8 +151,8 @@ var _grass: ShaderMaterial
 var _player: Player
 var _camera: FollowCamera
 var _boss: StaticBody3D
-## ZoneData.npcs "name" -> its figure (a StaticBody3D with the BattleActor under it).
-var _figures := {}
+## The figures (npcs and the boss), their signs and quest marks.
+var _figures: MapFigures
 ## What a cutscene's camera looks at (camera_to); null until the first one.
 var _camera_spot: Node3D
 ## ZoneData.all_exits(): the arches and, on a dungeon floor, the stairs.
@@ -187,11 +180,6 @@ var _autoplay_talked := {}
 var _audio: AudioDirector
 var _in_village := false
 var _step_m := 0.0
-## Figure name -> "!" or "?", the figures that are not on the map, and the labels so far.
-var _quest_marks := {}
-var _hidden_figures: Array[String] = []
-var _mark_labels := {}
-var _figure_signs: Array[Label3D] = []
 ## The figure signs the prompt is covering right now (hidden until it goes).
 var _signs_under_prompt: Array[Label3D] = []
 ## The zone's ZoneParticles (null: none, or low quality), carried with the hero.
@@ -235,14 +223,15 @@ func _ready() -> void:
 		add_child(_dungeon)
 	_hud = MapHud.new()
 	_hud.setup(zone)
-	for npc: Dictionary in zone.npcs:
-		_figures[npc.name] = _add_figure(BattleActor.Look[npc.look], npc.pos, npc.yaw, 0.4,
-			1.8)
-		_add_figure_sign(npc)
+	_player = PLAYER_SCENE.instantiate()
+	_figures = MapFigures.new()
+	_figures.setup(zone, _player)
+	add_child(_figures)
+	_figures.build()
 	if boss_id == "":
 		boss_id = zone.boss_id
 	if boss_id != "":
-		_boss = _add_figure(EnemyLibrary.look(boss_id), zone.boss_pos, 180.0, 1.0, 2.0)
+		_boss = _figures.add_figure(EnemyLibrary.look(boss_id), zone.boss_pos, 180.0, 1.0, 2.0)
 	_props = MapProps.new()
 	_props.setup(zone)
 	add_child(_props)
@@ -250,7 +239,6 @@ func _ready() -> void:
 	_exits = zone.all_exits()
 	set_boss_present(false)
 	set_world_flags({})
-	_player = PLAYER_SCENE.instantiate()
 	_player.route = zone.autoplay_route
 	add_child(_player)
 	if zone.underground:
@@ -333,7 +321,7 @@ func _physics_process(delta: float) -> void:
 		# mark over it says there is something new.
 		var chats: bool = near.kind in [NPC, BOARD, ITEM]
 		if not chats or not _autoplay_talked.has(near.index) \
-				or _quest_marks.has(zone.npcs[near.index].name):
+				or _figures.has_mark(zone.npcs[near.index].name):
 			_autoplay_talked[near.index] = true
 			_use(near)
 	_was_near = near
@@ -410,7 +398,7 @@ func _show_prompt(near: Dictionary) -> void:
 ## never overlap; they come back with the prompt.
 func _clear_signs_under(rect: Rect2) -> void:
 	var area := rect.grow(8.0)
-	for label in _figure_signs:
+	for label in _figures.signs:
 		var covered := not _camera.is_position_behind(label.global_position) \
 			and area.has_point(_camera.unproject_position(label.global_position))
 		if covered and label.visible:
@@ -821,16 +809,7 @@ func pull_lever() -> void:
 ## The lines figure zone.npcs[index] says in chapter (StoryState.Chapter): its
 ## lines_by_chapter entry with the highest chapter not past it, else its lines.
 func npc_lines(index: int, chapter: int) -> Array[String]:
-	var npc: Dictionary = zone.npcs[index]
-	var lines: Array[String] = []
-	lines.assign(npc.get("lines", []))
-	var by_chapter: Dictionary = npc.get("lines_by_chapter", {})
-	var best := -1
-	for key: int in by_chapter:
-		if key <= chapter and key > best:
-			best = key
-			lines.assign(by_chapter[key])
-	return lines
+	return _figures.npc_lines(index, chapter)
 
 
 ## Freezes the player and shows the lines one by one; returns when they are all read.
@@ -865,10 +844,9 @@ func begin_cutscene() -> void:
 	_player.model().set_walking(false)
 	_use_on_arrival = {}
 	_hud.begin_cutscene()
-	_show_quest_marks()
+	_figures.show_marks()
 	_signs_under_prompt.clear()
-	for label in _figure_signs:
-		label.hide()
+	_figures.set_signs_shown(false)
 
 
 ## Puts every figure back on its spot, gives the camera back to the hero and the
@@ -878,9 +856,8 @@ func end_cutscene() -> void:
 	_camera.follow(_player)
 	_player.scripted = false
 	_hud.end_cutscene()
-	_show_quest_marks()
-	for label in _figure_signs:
-		label.show()
+	_figures.show_marks()
+	_figures.set_signs_shown(true)
 	_calm()
 	_was_near = {}
 	await freeze(false)
@@ -893,40 +870,22 @@ func say_lines(speaker: String, lines: Array[String]) -> void:
 
 ## The node a cutscene moves for who ("hero" or a figure's name; null if none here).
 func figure_node(who: String) -> Node3D:
-	if who == Cutscene.HERO:
-		return _player
-	return _figures.get(who)
+	return _figures.figure_node(who)
 
 
 ## The node a cutscene turns for who: the hero's model, or the figure itself.
 func figure_turn(who: String) -> Node3D:
-	if who == Cutscene.HERO:
-		return _player.model()
-	return _figures.get(who)
+	return _figures.figure_turn(who)
 
 
 ## The BattleActor of who (walking and cheering), null if none here.
 func figure_actor(who: String) -> BattleActor:
-	if who == Cutscene.HERO:
-		return _player.model()
-	var body: Node3D = _figures.get(who)
-	if body == null:
-		return null
-	for child in body.get_children():
-		if child is BattleActor:
-			return child
-	return null
+	return _figures.figure_actor(who)
 
 
 ## Every figure back on its ZoneData spot and yaw, standing still.
 func reset_figures() -> void:
-	for npc: Dictionary in zone.npcs:
-		var body: Node3D = _figures[npc.name]
-		body.position = npc.pos
-		body.rotation_degrees.y = npc.yaw
-		var actor := figure_actor(npc.name)
-		if actor:
-			actor.set_walking(false)
+	_figures.reset_figures()
 
 
 ## The camera glides to look at point from at_distance metres (cutscenes).
@@ -965,71 +924,7 @@ func freeze(on: bool) -> void:
 ## name -> "!" or "?"; hidden_names are figures not on the map now, with no collider and
 ## nothing to use.
 func set_quest_view(marks: Dictionary, hidden_names: Array[String]) -> void:
-	_quest_marks = marks
-	_hidden_figures = hidden_names
-	for npc: Dictionary in zone.npcs:
-		var body: StaticBody3D = _figures[npc.name]
-		var shown := not hidden_names.has(npc.name)
-		body.visible = shown
-		body.process_mode = Node.PROCESS_MODE_INHERIT if shown else Node.PROCESS_MODE_DISABLED
-	_show_quest_marks()
-
-
-## One floating label per figure with a mark; none during a cutscene.
-func _show_quest_marks() -> void:
-	for npc: Dictionary in zone.npcs:
-		var text: String = _quest_marks.get(npc.name, "")
-		var label: Label3D = _mark_labels.get(npc.name)
-		if label == null:
-			if text == "":
-				continue
-			label = _build_mark(npc.name)
-		label.text = text
-		label.visible = text != "" and not _player.scripted
-
-
-## What a figure offers, over its head: its model alone doesn't tell.
-static func _figure_sign_text(npc: Dictionary) -> String:
-	match npc.kind:
-		"shop":
-			return "Criaturas" if Shop.sells_ally(npc.id) else "Tienda"
-		"inn":
-			return "Posada"
-	return ""
-
-
-func _add_figure_sign(npc: Dictionary) -> void:
-	var text := _figure_sign_text(npc)
-	if text == "":
-		return
-	var label := Label3D.new()
-	label.text = text
-	UiTheme.style_3d(label, &"display-m", &"text-display-soft", UiTokens.OUTLINE_L)
-	label.pixel_size = FIGURE_SIGN_PIXEL
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.no_depth_test = true
-	label.position.y = figure_actor(npc.name).top_height() + FIGURE_SIGN_GAP
-	(_figures[npc.name] as Node3D).add_child(label)
-	_figure_signs.append(label)
-
-
-func _build_mark(figure_name: String) -> Label3D:
-	var label := Label3D.new()
-	UiTheme.style_3d(label, &"display-xl", &"quest-mark", UiTokens.OUTLINE_M)
-	label.pixel_size = 0.01
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.no_depth_test = true
-	label.position.y = figure_actor(figure_name).top_height() + QUEST_MARK_GAP
-	for npc: Dictionary in zone.npcs:
-		if npc.name == figure_name and _figure_sign_text(npc) != "":
-			label.position.y += FIGURE_SIGN_RISE
-	(_figures[figure_name] as Node3D).add_child(label)
-	_mark_labels[figure_name] = label
-	var bob := label.create_tween().set_loops()
-	bob.tween_property(label, "position:y", label.position.y + QUEST_MARK_BOB, 0.5) \
-		.set_trans(Tween.TRANS_SINE)
-	bob.tween_property(label, "position:y", label.position.y, 0.5).set_trans(Tween.TRANS_SINE)
-	return label
+	_figures.set_quest_view(marks, hidden_names)
 
 
 ## Shows the weapon and shield worn on the hero (Equipment ids, "" for none).
@@ -1154,7 +1049,7 @@ func _uses() -> Array[Dictionary]:
 	var uses: Array[Dictionary] = []
 	for i in zone.npcs.size():
 		var npc: Dictionary = zone.npcs[i]
-		if _hidden_figures.has(npc.name):
+		if _figures.hidden.has(npc.name):
 			continue
 		uses.append({"kind": NPC_KINDS[npc.kind], "id": npc.get("id", ""), "index": i,
 			"pos": npc.pos, "radius": TALK_RADIUS})
@@ -1251,21 +1146,6 @@ func set_dry_wells(dry: Array[String]) -> void:
 ## a pivot at its back edge. Returns the lid pivot.
 static func build_chest(root: Node3D, chest: Dictionary) -> Node3D:
 	return MapProps.build_chest(root, chest)
-
-
-## A figure: a BattleActor on a cylinder collider, turned yaw_deg (180 faces south,
-## toward the camera).
-func _add_figure(look: BattleActor.Look, pos: Vector3, yaw_deg: float, radius: float, \
-		height: float) -> StaticBody3D:
-	var body := StaticBody3D.new()
-	body.position = pos
-	body.rotation_degrees.y = yaw_deg
-	add_child(body)
-	WorldStage.add_cylinder_shape(body, radius, height)
-	var actor: BattleActor = ACTOR_SCENE.instantiate()
-	actor.look = look
-	body.add_child(actor)
-	return body
 
 
 ## A line at the bottom until the hero first walks (phones, once: Game decides).
