@@ -33,4 +33,7 @@ Lo que se ha hecho y lo que queda por hacer en Villaclaro. Una fila por versión
 | 2.6.0 · M-64 | Tipografía: Nunito y Baloo 2 en todas las plataformas, diez estilos de texto | hecho |
 | 2.6.1 · M-65 | Accesibilidad y tono: más contraste, sombra de ventana, opción «Alto contraste» y repaso de textos | hecho |
 | 2.6.1 · M-66 | Componentes del design system: aviso con tono, PV críticos, insignia «Aturdido», indicador de diálogo, botón de acción… | hecho |
-| v3 | La siguiente parte: el pueblo al otro lado del portal ([guiones posibles](v3-guiones.md)) | idea |
+| 2.7.0 · M-67 | Partida nueva de verdad: se quita la Partida nueva + y empezar otra vez es empezar de cero ([spec](specs/2026-11-14-version-2-7-0-design.md) · [plan](plans/2026-11-14-version-2-7-0.md)) | plan |
+| 2.7.0 · M-68 | Bestiario en tres estados: no visto, visto sin vencer y vencido | plan |
+| 2.7.0 · M-69 | Sanación cura también al compañero, la mitad | plan |
+| v3 | La siguiente parte: el pueblo al otro lado del portal ([guiones posibles](v3-guiones.md) · [desarrollo de la opción 1](v3-desarrollo.md)) | idea |
