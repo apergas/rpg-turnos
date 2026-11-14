@@ -7,7 +7,8 @@ class_name AmbientLibrary extends RefCounted
 ## in the desert, whose bed is a low wind with the hiss of sand, a howl over the peaks on
 ## the mountain, whose bed is a strong wind that never stops, a softer wind whistling
 ## through the ruins with falling stones in the abandoned city, and the same wind with a deep
-## throbbing rumble and groans in the portal quarter). Streams
+## throbbing rumble and groans in the portal quarter), the Ciénaga's still water with insects and
+## the croak of its frogs (the v3). Streams
 ## are 22050 Hz, 16-bit mono (MusicLibrary.to_stream()) and cached.
 
 const MEADOW := "meadow"
@@ -19,7 +20,9 @@ const DESERT := "desert"
 const MOUNTAIN := "mountain"
 const CITY := "city"
 const PORTAL := "portal"
-const IDS: Array[String] = [MEADOW, FOREST, MINE, CASTLE, JUNGLE, DESERT, MOUNTAIN, CITY, PORTAL]
+const SWAMP := "swamp"
+const IDS: Array[String] = [MEADOW, FOREST, MINE, CASTLE, JUNGLE, DESERT, MOUNTAIN, CITY, PORTAL,
+	SWAMP]
 
 ## Seconds of each bed, and of the cross-fade that closes its loop.
 const LOOP := 8.0
@@ -29,11 +32,11 @@ const VARIANTS := 4
 ## Seconds between two short sounds: [least, most].
 const GAPS := {MEADOW: [2.0, 6.0], FOREST: [3.0, 7.0], MINE: [1.0, 4.0], CASTLE: [4.0, 9.0],
 	JUNGLE: [1.5, 4.0], DESERT: [3.0, 8.0], MOUNTAIN: [2.5, 6.0],
-	CITY: [3.0, 8.0], PORTAL: [4.0, 9.0]}
+	CITY: [3.0, 8.0], PORTAL: [4.0, 9.0], SWAMP: [2.0, 5.0]}
 ## Peak of each bed and of every short sound (AudioDirector plays them at the effects volume
 ## × its AMBIENT_SHARE).
 const BED_PEAK := {MEADOW: 0.35, FOREST: 0.4, MINE: 0.5, CASTLE: 0.35, JUNGLE: 0.35, DESERT: 0.4, MOUNTAIN: 0.45,
-	CITY: 0.35, PORTAL: 0.45}
+	CITY: 0.35, PORTAL: 0.45, SWAMP: 0.4}
 const SHOT_PEAK := 0.55
 ## The echoes of a drop in the mine: [delay in seconds, gain].
 const ECHOES := [[0.17, 0.45], [0.34, 0.2], [0.51, 0.08]]
@@ -93,6 +96,8 @@ static func bed(id: String) -> AudioStreamWAV:
 			raw = _mountain_wind(count + seam, rng)
 		CITY, PORTAL:
 			raw = _ruin_wind(count + seam, rng)
+		SWAMP:
+			raw = _bog(count + seam, rng)
 		_:
 			raw = _wind(count + seam, rng)
 	var samples := raw.slice(0, count)
@@ -136,6 +141,8 @@ static func shot(id: String, variant: int) -> AudioStreamWAV:
 			samples = _rubble(rng)
 		PORTAL:
 			samples = _groan(rng)
+		SWAMP:
+			samples = _croak(rng)
 		_:
 			samples = _gust(rng)
 	_normalize(samples, SHOT_PEAK)
@@ -200,6 +207,30 @@ static func _insects(count: int, rng: RandomNumberGenerator) -> PackedFloat32Arr
 		high += high_a * (low - high)
 		var pulse := 0.55 + 0.3 * sin(TAU * 0.25 * t) + 0.15 * sin(TAU * 0.61 * t + 1.0)
 		out[i] = (low - high) * pulse
+	return out
+
+
+## The Ciénaga: still water, noise low-passed twice at 260 Hz that laps slowly, and a thin
+## whine of insects over it (the jungle's band, much softer).
+static func _bog(count: int, rng: RandomNumberGenerator) -> PackedFloat32Array:
+	var out := PackedFloat32Array()
+	out.resize(count)
+	var low_a := _pole(260.0)
+	var high_a := _pole(6000.0)
+	var band_a := _pole(3800.0)
+	var l1 := 0.0
+	var l2 := 0.0
+	var high := 0.0
+	var band := 0.0
+	for i in count:
+		var t := float(i) / MusicLibrary.RATE
+		var x := rng.randf_range(-1.0, 1.0)
+		l1 += low_a * (x - l1)
+		l2 += low_a * (l1 - l2)
+		high += high_a * (x - high)
+		band += band_a * (high - band)
+		var lap := 0.6 + 0.4 * sin(TAU * 0.21 * t) * sin(TAU * 0.07 * t + 0.5)
+		out[i] = 3.0 * l2 * lap + 0.12 * (high - band)
 	return out
 
 
@@ -476,6 +507,22 @@ static func _jungle_bird(rng: RandomNumberGenerator) -> PackedFloat32Array:
 			var phase := fmod(hz * float(i) / MusicLibrary.RATE, 1.0)
 			out.append((1.0 if phase < 0.5 else -1.0) * 0.5 * sin(PI * u))
 		_rest(out, rng.randf_range(0.04, 0.08))
+	return out
+
+
+## A frog of the Ciénaga: two to four low croaks, a buzzing square wave that falls a little.
+static func _croak(rng: RandomNumberGenerator) -> PackedFloat32Array:
+	var out := PackedFloat32Array()
+	var base := rng.randf_range(110.0, 170.0)
+	for n in rng.randi_range(2, 4):
+		var count := int(rng.randf_range(0.07, 0.11) * MusicLibrary.RATE)
+		var phase := 0.0
+		for i in count:
+			var u := float(i) / count
+			phase += base * (1.0 - 0.15 * u) / MusicLibrary.RATE
+			var square := 1.0 if fmod(phase, 1.0) < 0.5 else -1.0
+			out.append(square * 0.5 * sin(PI * u) * (0.6 + 0.4 * sin(TAU * 30.0 * u)))
+		_rest(out, rng.randf_range(0.05, 0.09))
 	return out
 
 

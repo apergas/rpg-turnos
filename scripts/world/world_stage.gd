@@ -257,7 +257,8 @@ static func _add_disc(root: Node3D, center: Vector3, radius: float,
 static func _add_dune(root: Node3D, zone: ZoneData, dune: Array) -> void:
 	var center: Vector3 = dune[0]
 	var radii: Vector3 = dune[1]
-	BattleStage.add_mesh(root, BattleStage.unit_sphere(), zone.hill_color, center, radii)
+	var color: Color = dune[2] if dune.size() > 2 else zone.hill_color
+	BattleStage.add_mesh(root, BattleStage.unit_sphere(), color, center, radii)
 	var foot := dune_footprint(dune)
 	var along_x := foot.x >= foot.y
 	var long := maxf(foot.x, foot.y)

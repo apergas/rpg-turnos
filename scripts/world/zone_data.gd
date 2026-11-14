@@ -14,13 +14,13 @@ class_name ZoneData extends Resource
 ## Every zone, in world order (save validation and --autoplay-zone check against it).
 const IDS: Array[String] = ["pradera", "bosque", "mina_1", "mina_2", "mina_3",
 	"castillo_patio", "castillo_trono", "caravana", "jungla", "desierto", "montana_1", "montana_2",
-	"ciudad_1", "ciudad_2", "brumaclara"]
+	"ciudad_1", "ciudad_2", "brumaclara", "cienaga"]
 ## The zones of the v2 (the caravan), growing with each version; which zones a save may be on:
 ## zones_of_part().
 const V2_ZONES: Array[String] = ["caravana", "jungla", "desierto", "montana_1", "montana_2", "ciudad_1", "ciudad_2"]
 ## The zones of the v3 (Brumaclara), growing with each version like V2_ZONES (3.0.0:
 ## Brumaclara and the Ciénaga).
-const V3_ZONES: Array[String] = ["brumaclara"]
+const V3_ZONES: Array[String] = ["brumaclara", "cienaga"]
 ## Side of a dungeon cell, in metres.
 const CELL := 4.0
 ## Dungeon cells: rock (a wall in a castle), floor, stairs up and down, chest, lever,
@@ -70,7 +70,9 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var hill_color := Color(0.27, 0.47, 0.22)
 ## Dunes inside the field: [centre (y below 0: half buried), radii] of a flattened
 ## ellipsoid of hill_color. They are solid (WorldStage gives each a row of cylinders) and
-## everything keeps off them: trees, decoration, grass and the monster groups.
+## everything keeps off them: trees, decoration, grass and the monster groups. A third
+## element, a Color, draws it in that colour instead (the Ciénaga's still water: a dune almost
+## flat, a dark pool the hero walks round).
 @export var dunes: Array = []
 ## Patches of other ground: [centre, radius, colour] discs drawn on the ground under the
 ## path (the desert's green oasis).

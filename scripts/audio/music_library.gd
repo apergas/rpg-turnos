@@ -22,13 +22,14 @@ const MOUNTAIN := "mountain"
 const CITY := "city"
 const BEYOND := "beyond"
 const BRUMACLARA := "brumaclara"
+const SWAMP := "swamp"
 const BATTLE := "battle"
 const BOSS := "boss"
 const VICTORY := "victory"
 const DEFEAT := "defeat"
 const CARAVAN := "caravan"
 const IDS: Array[String] = [TITLE, MAP, VILLAGE, FOREST, MINE, CASTLE, BATTLE, BOSS, VICTORY,
-	DEFEAT, CARAVAN, JUNGLE, DESERT, MOUNTAIN, CITY, BEYOND, BRUMACLARA]
+	DEFEAT, CARAVAN, JUNGLE, DESERT, MOUNTAIN, CITY, BEYOND, BRUMACLARA, SWAMP]
 
 const LEAD_VOLUME := 0.2
 const BASS_VOLUME := 0.3
@@ -206,6 +207,19 @@ const TRACKS := {
 			"F2/8 C3/8", "C3/8 G2/8", "A#2/8 A2/8", "D3/16",
 		],
 		"drums": ["r/8 h/8"],
+	},
+	# The Ciénaga (3.0.0): a slow E minor that bubbles, a croak of a bass and a lazy beat.
+	SWAMP: {
+		"bpm": 88, "loop": true, "duty": 0.25,
+		"lead": [
+			"E4/4 G4/4 B4/6 A4/2", "G4/4 F#4/4 E4/8", "E4/4 G4/4 C5/6 B4/2", "A4/12 r/4",
+			"B4/4 A4/4 G4/4 F#4/4", "G4/6 A4/2 B4/8", "C5/4 B4/4 A4/4 F#4/4", "E4/12 r/4",
+		],
+		"bass": [
+			"E2/4 B2/4 E2/4 B2/4", "C2/4 G2/4 C2/4 G2/4", "A1/4 E2/4 A1/4 E2/4",
+			"B1/4 F#2/4 B1/4 F#2/4",
+		],
+		"drums": ["k/4 r/2 h/2 s/4 h/4", "k/2 k/2 r/2 h/2 s/4 r/4"],
 	},
 	# The castle: a slow march in E minor.
 	CASTLE: {

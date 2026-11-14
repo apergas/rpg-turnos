@@ -8,12 +8,19 @@ class_name Chests extends RefCounted
 ## desert's three behind the western dune, in the oasis and in the ruin; the mountain's three
 ## (two on the climb, one on the summit) and the city's three (the north-west and north-east
 ## rooms of the streets, the west room of the portal quarter) make 25 chests in a game with
-## the caravan. Pure: open() changes a GameState and returns the message.
+## the caravan; the Ciénaga's three, on its islets next to its route, 28 in Brumaclara's. Pure: open() changes a GameState and returns the message.
 
 ## id -> {"zone": ZoneData id, "pos": Vector3, "yaw": degrees (the lid opens toward -Z
 ## turned by yaw), and one of "gold": int, "item": Inventory id, "equipment": Equipment
 ## id}. Ids are unique across zones (the save lists the opened ones).
 const CHESTS := {
+	# The Ciénaga (the v3, 3.0.0): on its three islets, next to its route.
+	"cienaga_islote_oeste": {"zone": "cienaga", "pos": Vector3(-27, 0, 18), "yaw": -60.0,
+		"gold": 900},
+	"cienaga_islote_este": {"zone": "cienaga", "pos": Vector3(30, 0, 2), "yaw": 120.0,
+		"item": Inventory.BIG_ETHER},
+	"cienaga_islote_norte": {"zone": "cienaga", "pos": Vector3(-28, 0, -16), "yaw": -90.0,
+		"item": Inventory.PHOENIX},
 	"pradera_este": {"zone": "pradera", "pos": Vector3(13.1, 0, 12.7), "yaw": 30.0, "gold": 25},
 	"pradera_oeste": {"zone": "pradera", "pos": Vector3(-11.1, 0, 1.3), "yaw": -150.0,
 		"equipment": Equipment.WOODEN_SHIELD},

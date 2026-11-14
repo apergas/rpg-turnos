@@ -1,0 +1,90 @@
+[gd_resource type="Resource" script_class="ZoneData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/zone_data.gd" id="1_zone"]
+
+[resource]
+script = ExtResource("1_zone")
+id = "cienaga"
+display_name = "Ciénaga de Brumaclara"
+short_name = "Ciénaga"
+number = 11
+half_size = Vector2(40, 40)
+outer_margin = 6.0
+ground_color = Color(0.19, 0.22, 0.1, 1)
+has_grass = true
+grass_tips = PackedColorArray(0.34, 0.38, 0.15, 1, 0.46, 0.5, 0.2, 1)
+grass_seed = 29
+hills = [[Vector3(-46, -4, -46), Vector3(18, 8, 18)], [Vector3(0, -5, -54), Vector3(26, 9, 16)], [Vector3(46, -4, -46), Vector3(18, 7, 18)], [Vector3(54, -5, 0), Vector3(16, 8, 26)], [Vector3(46, -4, 46), Vector3(18, 7, 18)], [Vector3(0, -5, 54), Vector3(26, 8, 16)], [Vector3(-46, -4, 46), Vector3(18, 8, 18)], [Vector3(-54, -5, 0), Vector3(16, 7, 26)]]
+hill_color = Color(0.14, 0.17, 0.1, 1)
+dunes = [[Vector3(-14, -0.05, 24), Vector3(6.9, 0.1, 6.9), Color(0.07, 0.1, 0.09, 1)], [Vector3(16, -0.05, 10), Vector3(6.9, 0.1, 6.9), Color(0.07, 0.1, 0.09, 1)], [Vector3(-16, -0.05, -4), Vector3(6.9, 0.1, 6.9), Color(0.07, 0.1, 0.09, 1)], [Vector3(14, -0.05, -22), Vector3(6.9, 0.1, 6.9), Color(0.07, 0.1, 0.09, 1)], [Vector3(28, -0.05, 30), Vector3(5.8, 0.1, 5.8), Color(0.07, 0.1, 0.09, 1)]]
+ground_patches = [[Vector3(-27, 0, 18), 5.0, Color(0.3, 0.32, 0.16, 1)], [Vector3(30, 0, 2), 5.0, Color(0.3, 0.32, 0.16, 1)], [Vector3(-28, 0, -16), 5.0, Color(0.3, 0.32, 0.16, 1)], [Vector3(29, 0, -9), 4.0, Color(0.3, 0.32, 0.16, 1)]]
+path_points = Array[Vector3]([Vector3(0, 0, 36), Vector3(6, 0, 24), Vector3(-4, 0, 10), Vector3(4, 0, -4), Vector3(-6, 0, -18), Vector3(0, 0, -30)])
+path_half_width = 1.4
+path_color = Color(0.4, 0.28, 0.16, 1)
+safe_discs = [[Vector3(0, 0, 36), 5.0], [Vector3(0, 0, -35), 7.0]]
+village_name = ""
+village_radius = 0.0
+buildings = []
+wells = [{
+"id": "cienaga_vida",
+"kind": "hp",
+"pos": Vector3(-6, 0, 30)
+}, {
+"id": "cienaga_mana",
+"kind": "mp",
+"pos": Vector3(6, 0, -28)
+}]
+rocks = [[Vector3(-34, 0, -34), 2, 6.0, 20.0], [Vector3(34, 0, -32), 4, 6.0, 140.0], [Vector3(-33, 0, 32), 1, 6.0, 250.0], [Vector3(-31, 0, 4), 0, 5.0, 60.0]]
+tree_seed = 59
+tree_tries = 0
+tree_center_chance = 0.0
+glades = [[Vector3(-27, 0, 18), 5.0], [Vector3(30, 0, 2), 5.0], [Vector3(-28, 0, -16), 5.0], [Vector3(29, 0, -9), 4.0]]
+bush_seed = 37
+bush_tries = 260
+decor = []
+decor_scatter = {
+"dead_tree": 34,
+"log": 8,
+"mushrooms_tan": 12,
+"reeds": 80,
+"stump_tall": 10
+}
+decor_seed = 71
+decor_green = Color(0.32, 0.36, 0.2, 1)
+entries = {
+"brumaclara": [Vector3(0, 0, 36), 180.0]
+}
+start_entry = "brumaclara"
+town_entry = ""
+exits = [{
+"entry": "cienaga",
+"id": "sur",
+"label": "A Brumaclara",
+"lock": "",
+"lock_text": "",
+"pos": Vector3(0, 0, 39.5),
+"to": "brumaclara",
+"yaw": 0.0
+}]
+npcs = []
+boss_id = ""
+boss_pos = Vector3(0, 0, -35)
+formations = []
+start_formations = []
+start_pos = Vector3(0, 0, 36)
+start_radius = 14.0
+monster_count = 0
+exit_level = 43
+music = "swamp"
+village_music = ""
+ambient = "swamp"
+sky_top = Color(0.24, 0.16, 0.34, 1)
+haze = Color(0.46, 0.52, 0.42, 1)
+fog_density = 0.016
+sun_color = Color(0.7, 0.76, 1, 1)
+sun_energy = 0.45
+backdrop = "cienaga"
+particles = "bog"
+black_sun = true
+autoplay_route = Array[Vector3]([Vector3(0, 0, 35), Vector3(6, 0, 24), Vector3(-4, 0, 10), Vector3(-26.15, 0, 17.7), Vector3(-4, 0, 10), Vector3(4, 0, -4), Vector3(29.2, 0, 0.9), Vector3(26.5, 0, -8.5), Vector3(4, 0, -4), Vector3(-6, 0, -18), Vector3(-27.2, 0, -14.9), Vector3(-6, 0, -18), Vector3(0, 0, -30)])
+autoplay_boss_level = 42

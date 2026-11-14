@@ -51,6 +51,17 @@ town_entry = "pueblo"
 portal_pos = Vector3(-2.5, 0, 11)
 exits = [{
 "entry": "brumaclara",
+"gone": "garza_legamo",
+"id": "cienaga",
+"label": "A la Ciénaga",
+"lock": "",
+"lock_text": "",
+"needs": "brumaclara",
+"pos": Vector3(5, 0, -19.5),
+"to": "cienaga",
+"yaw": 0.0
+}, {
+"entry": "brumaclara",
 "id": "portal",
 "label": "Al portal",
 "lock": "",
