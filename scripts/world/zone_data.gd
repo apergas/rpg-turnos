@@ -153,7 +153,8 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## Each exit: {"id", "pos" (trigger, inside the walls), "yaw" (the arch's facing), "to"
 ## (zone id), "entry" (entry id there), "label" (sign text), "lock" (GameState.world_flags
 ## key that opens it, "" for always open), "lock_text" (notice while it is closed), and
-## optional "needs" / "gone": flags that make it exist (is_present())}.
+## optional "needs" / "gone": flags that make it exist (is_present()), and an optional "look":
+## "portal" (drawn as the Ala de viaje's portal, MapProps.PORTAL_LOOK)}.
 @export var exits: Array = []
 ## Each figure: {"kind": "quest" (the old woman), "shop", "inn", "npc" or "board" (a notice
 ## board: read, not talked to), "id" (Shop /

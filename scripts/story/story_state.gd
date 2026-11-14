@@ -17,7 +17,7 @@ const NAME_TAG := "{nombre}"
 ## Every cutscene, in story order.
 const SCENES: Array[String] = ["prologo", "rey_slime", "aldea_bosque", "bruja", "mina",
 	"golem", "castillo", "final", "caravana_llega", "caravana_parte", "caravana_campamento",
-	"jaguar", "gusano", "grifo", "guardian", "cruce"]
+	"jaguar", "gusano", "grifo", "guardian", "cruce", "brumaclara_llega"]
 ## The cutscene that follows beating each boss (its world flag).
 const AFTER_BOSS := {
 	"rey_slime": "rey_slime",
@@ -36,6 +36,7 @@ const ON_VILLAGE := {
 	"mina_1": "mina",
 	"castillo_patio": "castillo",
 	"caravana": "caravana_campamento",
+	"brumaclara": "brumaclara_llega",
 }
 ## The boss whose flag ends each chapter, from the meadow on.
 const CHAPTER_BOSSES: Array[String] = ["rey_slime", "bruja", "golem_piedra", "senor_niebla"]
@@ -206,6 +207,8 @@ func mark_seen_for_flags(flags: Dictionary) -> void:
 		mark_seen("caravana_parte")
 	if flags.get(COMPANION_FLAG, false):
 		mark_seen("caravana_campamento")
+	if flags.get(V3_FLAG, false):
+		mark_seen("brumaclara_llega")
 	finished = flags.get("senor_niebla", false)
 	finished_v2 = flags.get(V2_FINAL_BOSS, false)
 	finished_v3 = flags.get(V3_FINAL_BOSS, false)

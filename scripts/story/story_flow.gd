@@ -4,10 +4,10 @@ class_name StoryFlow extends Node
 ## (play_prologue()), the first visit's scene of each village (check_village_scene()), the
 ## companion's line the first time a land of the caravan is reached (check_arrival_line()),
 ## and the two endings: the v1's credits (finish_game()) and the v2's screen beyond the
-## portal and its credits (finish_v2()). Gets the session in setup(); never stores Game or a
+## portal and its credits, after which the game goes on in the Caravana (finish_v2()). Gets the session in setup(); never stores Game or a
 ## World.
 
-## Both endings are over: Game goes back to the title.
+## The v1's ending is over, or the v2's on autoplay: Game goes back to the title.
 signal quit_requested
 ## Autoplay: the v1's credits rolled (GameAutoplay prints the numbers of the run).
 signal game_completed(time_text: String)
@@ -16,6 +16,10 @@ signal v2_completed(numbers: Dictionary)
 
 const CUTSCENE_PATH := "res://data/cutscenes/%s.tres"
 const LOAD_FAILED_NOTICE := "No se pudo cargar la partida. Empiezas de nuevo."
+## After the v2's credits the game goes on in the Caravana, by the campfire (3.0.0), and the
+## Jefe de caravana says this.
+const CAMPFIRE_ENTRY := "hoguera"
+const PORTAL_STILL_LINE := "El portal se ha quedado quieto. Si quieres ver qué hay al otro lado, ya sabes dónde está."
 
 ## The save could not be read: the new game says so after the prologue (Game sets it).
 var load_failed := false
@@ -130,13 +134,15 @@ func finish_game() -> void:
 
 
 ## After the v2's ending (the cruce scene ends under black): the game is finished in the v2
-## and saved in the Caravana, which can still be walked; then the screen beyond the portal,
-## the v2's credits and "Continuará", and Game goes back to the title. Game stays busy, so no
-## window, ☰ or prompt shows over them.
+## and saved in the Caravana, by the campfire; then the screen beyond the portal, the v2's
+## credits and "Continuará". The game goes on there: from black, the Jefe de caravana points at
+## the calmed portal (the way to the v3, 3.0.0). On autoplay Game goes back to the title as
+## before: the v2's run ends with its credits. Game stays busy until the Jefe has spoken, so no
+## window, ☰ or prompt shows over the screens.
 func finish_v2() -> void:
 	MusicLibrary.build(MusicLibrary.BEYOND)  # under black
 	_ctx.state.story.finished_v2 = true
-	switch_zone.call("caravana", "")
+	switch_zone.call("caravana", CAMPFIRE_ENTRY)
 	_ctx.world.freeze(true)
 	_ctx.autosave.call(false)
 	var numbers := CreditsData.v2_numbers(_ctx.state, _ctx.play_time)
@@ -161,7 +167,16 @@ func finish_v2() -> void:
 	await credits.run(CreditsData.v2_credits_sections(_ctx.state, numbers))
 	if RunFlags.autoplay():
 		v2_completed.emit(numbers)
-	quit_requested.emit()
+		quit_requested.emit()
+		return
+	await _ctx.fade.call(1.0)
+	layer.queue_free()
+	_ctx.world.set_active(true)
+	_ctx.play_map_music.call()
+	await _ctx.fade.call(0.0)
+	await _ctx.world.freeze(false)
+	await _ctx.world.show_dialogue(CaravanFlow.CARAVAN_CHIEF, [PORTAL_STILL_LINE])
+	_ctx.set_busy.call(false)
 
 
 ## What CutscenePlayer's "travel" step does: builds zone_id at entry_id under black and

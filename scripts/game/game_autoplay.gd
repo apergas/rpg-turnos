@@ -98,6 +98,8 @@ func apply_start() -> void:
 	plays_v2 = start_id in AutoplayStarts.V2_STARTS
 	medal_tour = start_id == AutoplayStarts.MEDAL_TOUR
 	state.story.mark_seen_for_flags(state.world_flags)
+	if state.has_flag(StoryState.V3_FLAG):
+		state.story.v3_start = [0.0, 0]  # a start inside the v3 counts its numbers from here
 	if start.get("finished", false):
 		state.story.finished = true
 	state.sync_level_cap()

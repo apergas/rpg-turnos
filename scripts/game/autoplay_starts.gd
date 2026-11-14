@@ -201,6 +201,27 @@ const AUTOPLAY_ZONES := {
 			Inventory.PHOENIX: 1},
 		"finished": true,
 	},
+	# --autoplay-zone=brumaclara: the v2 finished: Lv 40 with the stellar gear and Brena, in the
+	# Caravana by the calmed portal. It buys the bruma gear from the Mercader, crosses the portal
+	# and plays the v3 as far as it goes.
+	"brumaclara": {
+		"zone": "caravana",
+		"experience": 24100,
+		"gold": 7200,
+		"gear": ["espada_estelar", "armadura_estelar", "escudo_estelar", "casco_estelar"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra", "senor_niebla", "caravana_vista", "caravana", "companero",
+			"jaguar_sombrio", "gusano_dunas", "montana_palanca", "grifo_cumbre",
+			"guardian_ciudad", "ciudad_reja", "devorador_portal", "portal_calmo"],
+		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo",
+			"insignia_jungla", "sello_desierto", "mapa_montana"],
+		"quest_done": true,
+		"town": "caravana",
+		"ally": "brena",
+		"items": {Inventory.BIG_POTION: 5, Inventory.BIG_ETHER: 4, Inventory.WING: 3,
+			Inventory.PHOENIX: 1},
+		"finished": true,
+	},
 	# Ready for the Señor de la Niebla: Lv 17 with the castle's gear.
 	"castillo_trono": {
 		"experience": 2244,
