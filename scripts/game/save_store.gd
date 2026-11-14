@@ -22,7 +22,7 @@ enum SlotKind { EMPTY, DAMAGED, USABLE }
 
 ## The file of slot (autoplay runs always use their own, whatever the slot).
 static func save_path(slot: int) -> String:
-	if OS.get_cmdline_user_args().has("--autoplay"):
+	if RunFlags.autoplay():
 		return AUTOPLAY_SAVE_PATH
 	return SLOT_PATH % clampi(slot, 1, SLOT_COUNT)
 
@@ -77,7 +77,7 @@ static func all_empty() -> bool:
 ## Moves the save of 1.2 and older to slot 1 as it is (a damaged file stays damaged), once:
 ## never on autoplay runs, and never over a slot 1 that already has a file.
 static func migrate_legacy() -> void:
-	if OS.get_cmdline_user_args().has("--autoplay"):
+	if RunFlags.autoplay():
 		return
 	var slot_1 := SLOT_PATH % 1
 	if not FileAccess.file_exists(LEGACY_SAVE_PATH) or FileAccess.file_exists(slot_1):

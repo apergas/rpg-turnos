@@ -38,5 +38,5 @@ static func _apply_touch(window: Window, options: GameOptions) -> void:
 	window.content_scale_factor = TOUCH_LARGE_SCALE if options.large_text else TOUCH_SCALE
 	window.scaling_3d_scale = TOUCH_3D_LOW if low else TOUCH_3D_HIGH
 	Engine.max_fps = TOUCH_LOW_FPS if low else 0
-	if OS.get_cmdline_user_args().has("--touch"):
+	if RunFlags.touch():
 		Input.emulate_touch_from_mouse = true

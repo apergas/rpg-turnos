@@ -82,7 +82,7 @@ func setup(weapon: String, shield: String, helmet: String, ally_id: String) -> v
 
 
 func _ready() -> void:
-	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
+	_autoplay = RunFlags.autoplay()
 	_build_camera()
 	_build_land()
 	_build_village()

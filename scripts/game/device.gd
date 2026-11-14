@@ -5,7 +5,7 @@ class_name Device extends RefCounted
 ## have no touch screen.
 
 static func is_touch() -> bool:
-	if OS.get_cmdline_user_args().has("--touch"):
+	if RunFlags.touch():
 		return true
 	if OS.has_feature("web_android") or OS.has_feature("web_ios"):
 		return true

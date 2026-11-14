@@ -11,7 +11,6 @@ const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
 const SPEED := 5.0
 ## How fast the model turns toward the walking direction (radians per second, roughly).
 const TURN_SPEED := 10.0
-const ROUTE_REACHED := 0.6
 ## How close to a move_to() point counts as arrived.
 const TARGET_REACHED := 0.3
 ## A move_to() walk gives up after this many frames moving under a quarter of SPEED
@@ -22,29 +21,33 @@ var input_enabled := true
 ## A cutscene moves the player (CutscenePlayer tweens its position): no physics, no
 ## keys, no route and no animation of its own meanwhile.
 var scripted := false
-## Points walked in a loop on --autoplay (ZoneData.autoplay_route); set by World.
-var route: Array[Vector3] = []
 ## Horizontal meters moved during the last physics frame.
 var last_step_m := 0.0
 ## Point being walked to after a click or tap (y = 0); null when there is none.
 var move_target: Variant = null
 ## Where the touch stick points (screen axes, set by World); keys win over it.
 var stick_direction := Vector2.ZERO
+
+var _model: BattleActor
+var _stuck_frames := 0
+var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
+
+#region Autoplay
+const ROUTE_REACHED := 0.6
+## Points walked in a loop on --autoplay (ZoneData.autoplay_route); set by World.
+var route: Array[Vector3] = []
 ## Autoplay: the group of monsters it walks to instead of its route (World picks it with
 ## hunt()), and the id of one it gave up on (stuck on the way) until World takes it.
 var _hunt: Node3D = null
 var _hunting := false
 var _failed_hunt_id := 0
-
-var _model: BattleActor
 var _autoplay := false
 var _route_index := 0
-var _stuck_frames := 0
-var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
+#endregion
 
 
 func _ready() -> void:
-	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
+	_autoplay = RunFlags.autoplay()
 	var capsule := CapsuleShape3D.new()
 	capsule.radius = 0.35
 	capsule.height = 1.6
@@ -157,6 +160,7 @@ func _target_direction() -> Vector3:
 	return to_goal.normalized()
 
 
+#region Autoplay
 func _route_direction() -> Vector3:
 	if route.is_empty():
 		return Vector3.ZERO
@@ -166,12 +170,6 @@ func _route_direction() -> Vector3:
 		_route_index = (_route_index + 1) % route.size()
 		return Vector3.ZERO
 	return to_goal.normalized()
-
-
-## Autoplay: walks its route from the first point again (World gave it a new one).
-func restart_route() -> void:
-	_route_index = 0
-	stop_hunt()
 
 
 ## Autoplay: walks to target (a group of monsters) instead of its route.
@@ -219,3 +217,4 @@ func _nearest_route_point(pos: Vector3) -> int:
 		if pos.distance_to(route[i]) < pos.distance_to(route[best]):
 			best = i
 	return best
+#endregion

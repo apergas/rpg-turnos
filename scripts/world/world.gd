@@ -23,6 +23,11 @@ class_name World extends Node3D
 ## quest has not brought out is not on the map (set_quest_view()). Run on its own
 ## (res://scenes/world/world.tscn) it prints each group touched (and takes it off), each talk, shop, inn, chest and exit
 ## and goes on.
+## Its jobs are split into pieces it owns and calls in a fixed order from _physics_process:
+## MapHud (the 2D layer), MapProps (exits, portal, wells, chests, the walk marker),
+## MapFigures (figures, signs, quest marks), MapMonsters (the groups), AutoplayHunter (the
+## autoplay's hunt) and MapUses (what is in reach, taps, exits). Its public methods are
+## façades of them and its signals are unchanged.
 
 signal encounter_triggered(boss: bool)
 signal talk_requested
@@ -54,103 +59,15 @@ signal stepped
 signal map_requested
 
 const PLAYER_SCENE := preload("res://scenes/world/player.tscn")
-const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
 const HERO_DATA := preload("res://data/hero.tres")
-const NOTICE_TIME := 4.0
-## Fade in and out of the notice window.
-const NOTICE_FADE := 0.2
-## Seconds "Misión cumplida" stays in the status window.
-const MISSION_DONE_TIME := 4.0
-## The notice window, top centre (clear of the status window and the ☰ button).
-const NOTICE_MAX_WIDTH := float(UiTokens.WINDOW_W_XL)
-const UI_EDGE := float(UiTokens.SPACE_6)
-## Phone: the mission line wraps here and the bars narrow to fit.
-const TOUCH_MISSION_WIDTH := 300.0
-## The use button of the phone interface.
-const USE_BUTTON_SIZE := Vector2(180, 72)
-## The phone's walking hint: wraps here and sits over the use button's row.
-const TOUCH_HINT_WIDTH := float(UiTokens.WINDOW_W_L)
-## The place's name, big, the first time the map is the player's (World.freeze(false)).
-const BANNER_TOP := 110.0
-const BANNER_FADE := 0.5
-const BANNER_TIME := 2.5
-## How close the player must be to talk to a figure / to open a chest / to run into the
-## boss / to take an exit.
-const TALK_RADIUS := 2.5
-const CHEST_RADIUS := 1.8
-const WELL_RADIUS := 2.2
+const BANNER_FADE := MapHud.BANNER_FADE
+## How close the player must be to run into the boss.
 const BOSS_RADIUS := 2.5
 ## After a boss battle the boss waits until the hero has been this far from it (a boss
 ## fought again and again, the Eco de la Niebla, must not start over at once).
 const BOSS_REARM_RADIUS := 5.0
-const EXIT_RADIUS := 1.2
-## After arriving (or after a closed exit's notice) exits wait until the player is this
-## much farther than EXIT_RADIUS from all of them.
-const EXIT_REARM := 0.8
-## How close the player must be to a lever, a key or a gate (its centre) to use it.
-const MECHANISM_RADIUS := 2.2
-## A click or tap this close to a figure or a chest means "go there and use it".
-const NPC_TAP_RADIUS := 1.2
-## A tap on a figure is measured at this height, so its feet and its head both count.
-const TAP_HEIGHT := 0.9
-## Height of a figure's head and hat, the other height a tap on one is measured at.
-const FIGURE_TOP_TAP_HEIGHT := 2.2
-## Narrow: the head is slim, and a wider circle up there takes taps on the ground behind it.
-const FIGURE_TOP_TAP_RADIUS := 0.7
 ## Taps on the map are ignored this long after a dialogue or a window closes.
 const TAP_GUARD_MS := 400
-## Kinds of the things the player can use on the map, and their prompts.
-const TALK := "talk"
-const NPC := "npc"
-const SHOP := "shop"
-const INN := "inn"
-const CHEST := "chest"
-const WELL := "well"
-const LEVER := "lever"
-const KEY := "key"
-const DOOR := "door"
-const PORTAL := "portal"
-const BOARD := "board"
-const ITEM := "item"
-## Between the verb and who it is done with: "Hablar · Granjero".
-const PROMPT_JOIN := " · "
-const PROMPTS := {
-	TALK: "Hablar",
-	NPC: "Hablar",
-	SHOP: "Comprar",
-	INN: "Descansar",
-	CHEST: "Abrir",
-	WELL: "Beber",
-	LEVER: "Tirar",
-	KEY: "Coger",
-	DOOR: "Abrir",
-	PORTAL: "Volver",
-	BOARD: "Leer",
-	ITEM: "Coger",
-}
-## ZoneData.npcs kinds -> use kinds.
-const NPC_KINDS := {"quest": TALK, "npc": NPC, "shop": SHOP, "inn": INN, "board": BOARD, "item": ITEM}
-## Chest model: wooden box with a gold band and a lid hinged at the back.
-const CHEST_SIZE := Vector3(0.9, 0.45, 0.6)
-const CHEST_LID_HEIGHT := 0.2
-const CHEST_WOOD := Color(0.5, 0.3, 0.14)
-const CHEST_BAND := Color(1.0, 0.78, 0.2)
-## Angle of an open lid (degrees about X: the front edge swings up and back).
-const CHEST_OPEN_ANGLE := 110.0
-## Wells: a collider the hero walks around, and a disc of coloured water with a light.
-const WELL_COLLIDER := 1.3
-const WATER_HP := Color(1.0, 0.25, 0.25)
-const WATER_MP := Color(0.25, 0.5, 1.0)
-const WATER_RADIUS := 0.95
-const WATER_HEIGHT := 1.2
-## Marks on the map square.
-## Exit arch: two posts and a beam of dark wood, a sign board with the exit's label
-## (always facing the camera, south) and, while closed, a bank of fog.
-const ARCH_WOOD := Color(0.36, 0.22, 0.1)
-const ARCH_WIDTH := 3.6
-const ARCH_HEIGHT := 3.0
-const SIGN_COLOR := Color(0.62, 0.45, 0.25)
-const FOG_COLOR := Color(0.92, 0.93, 0.97, 0.6)
 ## Meters walked between two footstep sounds.
 const STEP_DISTANCE := 1.6
 ## Underground the hero carries a lantern: a warm light over the head.
@@ -158,31 +75,6 @@ const LANTERN_COLOR := Color(1.0, 0.85, 0.65)
 const LANTERN_ENERGY := 2.0
 const LANTERN_RANGE := 10.0
 const LANTERN_HEIGHT := 2.4
-## The "!" and "?" of the quests: over the figure, bobbing.
-const QUEST_MARK_GAP := 0.35
-const QUEST_MARK_BOB := 0.12
-## A quest mark over a figure with a sign ("Posada") goes above the sign.
-const FIGURE_SIGN_RISE := 0.65
-const FIGURE_SIGN_GAP := 0.25
-const FIGURE_SIGN_PIXEL := 0.012
-## Mission lines wrap past this width, so the status window stays at the side of the screen.
-const MISSION_WIDTH := 420.0
-## Groups of monsters farther than this from the hero neither move nor animate.
-const GROUP_ANIMATE_RADIUS := 30.0
-## Seconds between two hops of a slime walking on the map.
-const HOP_TIME := 0.45
-## Seconds of play on this map between two groups coming back while it has fewer than
-## zone.monster_count (counted on _sim_ms, like the hunt's timers), and the fade they come in with.
-const REFILL_S := 45.0
-const REFILL_FADE := 0.5
-## Autoplay: below the zone's autoplay_boss_level the hero leaves the route for the
-## nearest group this close that can start a battle, gives up after AUTOPLAY_HUNT_MS (or
-## stuck on the way, Player.take_failed_hunt()) and leaves that one alone for
-## AUTOPLAY_HUNT_RETRY_MS.
-const AUTOPLAY_HUNT_RADIUS := 60.0
-const AUTOPLAY_HUNT_RADIUS_CAVE := 12.0  # walls: a straight line to a far group fails
-const AUTOPLAY_HUNT_MS := 15000
-const AUTOPLAY_HUNT_RETRY_MS := 20000
 
 ## The map to build; set before add_child.
 var zone: ZoneData
@@ -190,153 +82,84 @@ var zone: ZoneData
 ## zone.boss_id. Game passes the Eco de la Niebla once the game is finished.
 var boss_id := ""
 
-var _rng := RandomNumberGenerator.new()
+var _hud: MapHud
+var _props: MapProps
+var _monsters: MapMonsters
+var _uses: MapUses
+var _hunter: AutoplayHunter
+
 var _grass: ShaderMaterial
 var _player: Player
 var _camera: FollowCamera
 var _boss: StaticBody3D
-## ZoneData.npcs "name" -> its figure (a StaticBody3D with the BattleActor under it).
-var _figures := {}
+## The figures (npcs and the boss), their signs and quest marks.
+var _figures: MapFigures
 ## What a cutscene's camera looks at (camera_to); null until the first one.
 var _camera_spot: Node3D
-## The status window and the map square under it: a cutscene hides them together.
-var _status_column: VBoxContainer
-## chest id -> lid pivot (rotation.x opens it); a chest in _open_chests is open.
-var _chest_lids := {}
-## Well id -> its water and light, hidden while it is dry.
-var _well_waters := {}
-var _open_chests: Array[String] = []
-## exit id -> fog bank shown while the exit is closed.
-var _fogs := {}
-## exit id -> its root (arch, sign and fog): hidden while the exit is not present
-## (ZoneData.is_present()).
-var _arches := {}
-## ZoneData.all_exits(): the arches and, on a dungeon floor, the stairs.
-var _exits: Array = []
 ## The cells of a dungeon floor (null on an open map).
 var _dungeon: DungeonMap
 var _flags := {}
-var _exits_armed := false
-## The return portal and the mark of the spot it leads back to (null while not on this map).
-var _portal: Node3D
-var _return_mark: Node3D
 var _boss_present := false
 ## False from a boss battle until the hero walks BOSS_REARM_RADIUS away from the boss.
 var _boss_armed := true
-var _ui: CanvasLayer
-var _name_label: Label
-var _hp_bar: StatBar
-var _mp_bar: StatBar
-var _exp_bar: StatBar
-var _gold_label: Label
-var _mission_box: VBoxContainer
-## The lines of the status window, and the serial that lets "Misión cumplida" put them back.
-var _missions: Array[String] = []
-var _mission_done_serial := 0
-var _mission_done := false
-var _map_square: MapSquare
-var _has_explored := false
-## True while an Incienso keeps the monsters away (Game counts its metres).
-var _repelled := false
-var _dry_wells: Array[String] = []
-var _notice: Label
-var _notice_word: Label
-var _notice_tween: Tween
-var _notice_window: PanelContainer
-var _place_label: Label
-var _hint_window: PanelContainer
-var _hint: Label
-var _banner: VBoxContainer
-var _banner_tween: Tween
-var _banner_shown := false
-var _prompt: Label
-var _prompt_box: VBoxContainer
-var _prompt_key: Label
-var _prompt_cap: StyleBoxFlat
-## Phones: the button that replaces the prompt, and the pad that reads the fingers.
-var _use_button: Button
-var _pad: TouchPad
-var _dialogue: DialogueBox
 var _autoplay := false
 var _waiting := false
 var _talking := false
-## What was in reach last frame ({} for nothing), so autoplay acts once per approach.
-var _was_near := {}
-## Set by a click or tap on a figure or chest: use it as soon as it is in reach.
-var _use_on_arrival := {}
 ## Taps on the map count from this time on (Time.get_ticks_msec()).
 var _taps_from_ms := 0
-## Autoplay only: npc indexes already talked to on this map.
-var _autoplay_talked := {}
-var _marker: MeshInstance3D
 var _audio: AudioDirector
 var _in_village := false
 var _step_m := 0.0
-## Figure name -> "!" or "?", the figures that are not on the map, and the labels so far.
-var _quest_marks := {}
-var _hidden_figures: Array[String] = []
-var _mark_labels := {}
-var _figure_signs: Array[Label3D] = []
-## The figure signs the prompt is covering right now (hidden until it goes).
-var _signs_under_prompt: Array[Label3D] = []
 ## The zone's ZoneParticles (null: none, or low quality), carried with the hero.
 var _particles: Node3D
-## The groups of monsters on the map (MonsterGroups), each {"node": Node3D (no collider),
-## "actor": BattleActor (its first enemy's figure), "roam": MonsterRoam, "enemies":
-## Array[Combatant] (the formation, data), "armed": bool (false: fled from, it starts no
-## battle yet), "rare": bool (the Slime de Metal), "hop": seconds to its next hop}.
-var _groups: Array[Dictionary] = []
-## The hero is EncounterMeter.LEVEL_GAP levels past the zone: the moving groups keep away.
-var _shy := false
-## Index in _groups of the group whose battle is on (-1: none, or the boss's).
-var _contact := -1
-## No group starts a battle before this time (_sim_ms; _calm()).
-var _calm_until_ms := 0
-## Autoplay: hunt groups (Game: below the zone's autoplay_boss_level), until when the one
-## hunted now is followed, and group instance id -> the time until which it is left alone.
-var _hunt_on := false
-var _hunt_until_ms := 0
 ## Time of the simulation in ms (the hunt's timers count it, so a run with --fixed-fps keeps them).
 var _sim_ms := 0.0
-## Simulation ms counted toward the next group coming back (_tick_refill()).
-var _refill_ms := 0.0
-var _hunt_skip := {}
-## DebugPanel's Monstruos: while set, no map puts any group of monsters or rare enemy
-## (_add_group(), add_rare()). It lasts for the run; only DebugPanel changes it.
-static var debug_no_groups := false
+## DebugPanel's Monstruos (MapMonsters.debug_no_groups): Game and DebugPanel use this name.
+static var debug_no_groups: bool:
+	get:
+		return MapMonsters.debug_no_groups
+	set(value):
+		MapMonsters.debug_no_groups = value
 
 
 func _ready() -> void:
 	UiTheme.ensure(get_window())
 	if zone == null:
 		zone = ZoneData.by_id("pradera")
-	# The groups are placed with the zone and the clock: never twice the same.
-	_rng.seed = hash(zone.id) ^ Time.get_ticks_usec()
-	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
+	_autoplay = RunFlags.autoplay()
 	_grass = WorldStage.build(self, zone)
 	if zone.is_dungeon():
 		_dungeon = DungeonMap.new()
 		_dungeon.zone = zone
 		add_child(_dungeon)
-	for npc: Dictionary in zone.npcs:
-		_figures[npc.name] = _add_figure(BattleActor.Look[npc.look], npc.pos, npc.yaw, 0.4,
-			1.8)
-		_add_figure_sign(npc)
+	# Every piece exists from here on (set_world_flags() below reaches them all); each is
+	# added to the tree where its nodes used to be built, so the node order is unchanged.
+	_hud = MapHud.new()
+	_hud.setup(zone)
+	_player = PLAYER_SCENE.instantiate()
+	_camera = FollowCamera.new()
+	_figures = MapFigures.new()
+	_figures.setup(zone, _player)
+	_monsters = MapMonsters.new()
+	_monsters.setup(zone, _player)
+	_hunter = AutoplayHunter.new()
+	_hunter.setup(zone, _player, _monsters)
+	_monsters.groups_reset.connect(_hunter.forget)
+	_props = MapProps.new()
+	_props.setup(zone)
+	_uses = MapUses.new()
+	_uses.setup(zone, _player, _camera, _hud, _figures, _props, _dungeon)
+	_forward_use_signals()
+	add_child(_figures)
+	_figures.build()
 	if boss_id == "":
 		boss_id = zone.boss_id
 	if boss_id != "":
-		_boss = _add_figure(EnemyLibrary.look(boss_id), zone.boss_pos, 180.0, 1.0, 2.0)
-	for id in Chests.of_zone(zone.id):
-		_chest_lids[id] = build_chest(self, Chests.CHESTS[id])
-	for well: Dictionary in zone.wells:
-		_build_well(well)
-	_exits = zone.all_exits()
-	for exit: Dictionary in _exits:
-		if not exit.get("stairs", false):
-			_fogs[exit.id] = _build_exit(exit)
+		_boss = _figures.add_figure(EnemyLibrary.look(boss_id), zone.boss_pos, 180.0, 1.0, 2.0)
+	add_child(_props)
+	_props.build()
 	set_boss_present(false)
 	set_world_flags({})
-	_player = PLAYER_SCENE.instantiate()
 	_player.route = zone.autoplay_route
 	add_child(_player)
 	if zone.underground:
@@ -349,13 +172,17 @@ func _ready() -> void:
 	_particles = ZoneParticles.build(zone.particles)
 	if _particles:
 		add_child(_particles)
-	_camera = FollowCamera.new()
 	add_child(_camera)
 	_camera.target = _player
-	_marker = _build_marker()
-	_build_ui()
-	_place_label.text = zone.map_label()
+	_props.build_marker()
+	_hud.map_pressed.connect(_on_map_pressed)
+	_hud.tapped.connect(_on_tapped)
+	_hud.pinched.connect(_camera.zoom_by)
+	_hud.use_pressed.connect(_uses.use_nearest)
+	add_child(_hud)
+	add_child(_uses)
 	set_explored(ExploredMap.new(zone))
+	add_child(_monsters)
 	place_at_entry(zone.start_entry)
 	respawn_groups()
 	_camera.current = true
@@ -365,33 +192,32 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	_sim_ms += delta * 1000.0
-	if _pad:
-		_player.stick_direction = _pad.direction
-		if _pad.direction != Vector2.ZERO:
-			_use_on_arrival = {}  # walking off by hand drops the tap's errand
+	var pad := _hud.pad
+	if pad:
+		_player.stick_direction = pad.direction
+		if pad.direction != Vector2.ZERO:
+			_uses.drop_errand()  # walking off by hand drops the tap's errand
 	if _grass:
 		Vegetation.set_pusher(_grass, _player.global_position)
 	if _particles:
 		ZoneParticles.follow(_particles, _player.global_position)
-	_map_square.follow(_player.global_position)
-	if _hint_window and _hint_window.visible and _player.last_step_m > 0.0:
-		_hint_window.hide()
-	_marker.visible = _player.move_target != null
-	if _marker.visible:
-		_marker.position = _player.move_target
+	_hud.step(_player.global_position, _player.last_step_m)
+	_props.show_marker(_player.move_target)
 	if _dungeon:
 		_dungeon.see_through(_camera.global_position, _player.global_position)
-	_move_groups(delta)
+	_monsters.move_groups(delta)
 	if _waiting or _talking:
 		return
-	_tick_refill(delta)
+	_monsters.tick_refill(delta)
 	var pos := _player.global_position
 	var inside := _is_in_village(pos)
 	if inside != _in_village:
 		_in_village = inside
 		village_changed.emit(inside)
 	_play_steps()
-	if _check_exits(pos):
+	var exit := _uses.check_exits(pos)
+	if not exit.is_empty():
+		_take_exit(exit)
 		return
 	if _boss_present:
 		var boss_distance := _flat_distance(pos, zone.boss_pos)
@@ -400,40 +226,24 @@ func _physics_process(delta: float) -> void:
 		elif boss_distance <= BOSS_RADIUS:
 			_trigger(true)
 			return
-	if _check_groups(pos):
+	if _monsters.check_contact(pos, int(_sim_ms)):
+		_trigger(false)
 		return
-	if _autoplay and _hunt_on and not _repelled:
-		_update_hunt(pos)
-	var near := _nearest_use(pos)
-	if near.is_empty():
-		_hide_prompt()
-	else:
-		_show_prompt(near)
-	if not _use_on_arrival.is_empty() and _in_reach(_use_on_arrival):
-		var errand := _use_on_arrival
-		_use_on_arrival = {}
-		_player.move_target = null
-		_use(errand)
-	elif not near.is_empty() and near != _was_near and _autoplay and near.kind != PORTAL:
-		# Autoplay talks to each villager once per visit to the zone, and again when a
-		# mark over it says there is something new.
-		var chats: bool = near.kind in [NPC, BOARD, ITEM]
-		if not chats or not _autoplay_talked.has(near.index) \
-				or _quest_marks.has(zone.npcs[near.index].name):
-			_autoplay_talked[near.index] = true
-			_use(near)
-	_was_near = near
+	if _autoplay and _hunter.is_on() and not _monsters.is_repelled():
+		_hunter.step(pos, int(_sim_ms))
+	_uses.step(pos)
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _waiting or _talking:
 		return
-	if _prompt_showing() and event.is_action_pressed("ui_accept") and not event.is_echo():
+	if _uses.prompt_showing() and event.is_action_pressed("ui_accept") and not event.is_echo():
 		get_viewport().set_input_as_handled()
-		_use(_nearest_use(_player.global_position))
+		_uses.use_nearest()
 		return
-	if _pad:
-		if _pad.handle(event):
+	var pad := _hud.pad
+	if pad:
+		if pad.handle(event):
 			get_viewport().set_input_as_handled()
 		return  # the mouse events left are the touches again
 	var point: Variant = _pointer_on_ground(event)
@@ -441,7 +251,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	get_viewport().set_input_as_handled()
 	if event is InputEventMouseButton:
-		_use_on_arrival = _tapped_use((event as InputEventMouseButton).position)
+		_uses.aim_at((event as InputEventMouseButton).position)
 	_player.move_to(point)
 
 
@@ -474,91 +284,26 @@ func _on_tapped(screen: Vector2) -> void:
 	var point: Variant = _ground_point(screen)
 	if point == null:
 		return
-	_use_on_arrival = _tapped_use(screen)
+	_uses.aim_at(screen)
 	_player.move_to(point)
-
-
-## Shows what is in reach: the prompt, or on phones the use button.
-## What the prompt (or the phone's use button) says: the verb and, for a figure, its name.
-func _prompt_text(use: Dictionary) -> String:
-	var text: String = PROMPTS[use.kind]
-	if use.index >= 0:
-		text += PROMPT_JOIN + String(zone.npcs[use.index].name)
-	return text
-
-
-func _show_prompt(near: Dictionary) -> void:
-	var text := _prompt_text(near)
-	if _use_button:
-		_use_button.text = text
-		_use_button.show()
-		_clear_signs_under(_use_button.get_global_rect())
-		return
-	_prompt.text = text
-	_prompt_key.text = _action_key_name()
-	_paint_prompt_cap()
-	_prompt_box.show()
-	_clear_signs_under(_prompt_box.get_global_rect())
-
-
-## Hides the figure signs that would sit under the prompt (or the use button), so the two
-## never overlap; they come back with the prompt.
-func _clear_signs_under(rect: Rect2) -> void:
-	var area := rect.grow(8.0)
-	for label in _figure_signs:
-		var covered := not _camera.is_position_behind(label.global_position) \
-			and area.has_point(_camera.unproject_position(label.global_position))
-		if covered and label.visible:
-			label.hide()
-			_signs_under_prompt.append(label)
-		elif not covered and label in _signs_under_prompt:
-			label.show()
-			_signs_under_prompt.erase(label)
-
-
-## The keycap's colours, read again each time it shows so it follows the high contrast option.
-func _paint_prompt_cap() -> void:
-	_prompt_cap.bg_color = UiTokens.color(&"surface-window")
-	_prompt_cap.border_color = UiTokens.color(&"border-subtle")
-
-
-func _restore_signs() -> void:
-	for label in _signs_under_prompt:
-		if is_instance_valid(label):
-			label.show()
-	_signs_under_prompt.clear()
-
-
-## The key shown under the prompt: E while it is one of the accept keys, else the first one.
-func _action_key_name() -> String:
-	var codes := KeyMap.keys_of("accept")
-	if codes.is_empty() or KEY_E in codes:
-		return KeyMap.keys_text("accept") if codes.is_empty() else KeyMap.key_name(KEY_E)
-	return KeyMap.key_name(codes[0])
-
-
-func _hide_prompt() -> void:
-	_restore_signs()
-	_prompt_box.hide()
-	if _use_button:
-		_use_button.hide()
-
-
-func _prompt_showing() -> bool:
-	return _use_button.visible if _use_button else _prompt_box.visible
 
 
 ## Forgets the fingers on the map (a window, a battle or a cutscene took over).
 func _reset_pad() -> void:
-	if _pad:
-		_pad.reset()
+	_hud.reset_pad()
+
+
+## The map square was tapped: the Mapa page, unless a window or a battle holds the map.
+func _on_map_pressed() -> void:
+	if not _talking and not _waiting:
+		map_requested.emit()
 
 
 ## Hidden and frozen while a battle is on top; back on, no group starts a battle for MonsterGroups.CALM_MS.
 func set_active(active: bool) -> void:
 	process_mode = Node.PROCESS_MODE_INHERIT if active else Node.PROCESS_MODE_DISABLED
 	visible = active
-	_ui.visible = active
+	_hud.visible = active
 	_camera.current = active
 	_reset_pad()
 	if active:
@@ -582,10 +327,10 @@ func place_player(pos: Vector3, yaw_deg := 0.0) -> void:
 	if _particles:
 		ZoneParticles.follow(_particles, _player.global_position, true)
 	_calm()
-	_was_near = {}
-	_use_on_arrival = {}
+	_uses.forget_near()
+	_uses.drop_errand()
 	_step_m = 0.0
-	_exits_armed = false
+	_uses.disarm_exits()
 	_in_village = _is_in_village(pos)
 
 
@@ -600,7 +345,7 @@ func in_village() -> bool:
 ## Footsteps, encounter and dialogue sounds. Without it the map is silent.
 func set_audio(audio: AudioDirector) -> void:
 	_audio = audio
-	_dialogue.set_audio(audio)
+	_hud.dialogue.set_audio(audio)
 
 
 ## Shows or removes the zone's boss; when absent it has no collision.
@@ -616,12 +361,9 @@ func set_boss_present(present: bool) -> void:
 ## what the villagers say and, on a dungeon floor, the gates, the lever and the key.
 func set_world_flags(flags: Dictionary) -> void:
 	_flags = flags
-	for group in _groups:
-		(group.roam as MonsterRoam).set_flags(flags)
-	for exit: Dictionary in zone.exits:
-		var present := ZoneData.is_present(exit, flags)
-		(_arches[exit.id] as Node3D).visible = present
-		(_fogs[exit.id] as Node3D).visible = present and not _is_open(exit)
+	_monsters.set_flags(flags)
+	_props.set_flags(flags)
+	_uses.set_flags(flags)
 	if _dungeon:
 		_dungeon.set_flags(flags)
 	_refresh_map_marks()
@@ -630,298 +372,88 @@ func set_world_flags(flags: Dictionary) -> void:
 ## What has been seen of this zone, for the map square (Game passes GameState's; run on
 ## its own the map keeps its own).
 func set_explored(map: ExploredMap) -> void:
-	_map_square.set_map(map)
-	_has_explored = true
+	_hud.set_explored(map)
 	_refresh_map_marks()
 
 
 ## The map square's points of interest (MapMarks): they follow the dry wells and, on a
 ## dungeon floor, the lever, the gates and the key.
 func _refresh_map_marks() -> void:
-	if not _has_explored:
-		return
-	_map_square.set_marks(MapMarks.of_zone(zone, _flags, _dry_wells))
+	_hud.refresh_map_marks(_flags, _props.dry_wells)
 
 
 ## The hero is EncounterMeter.LEVEL_GAP levels past the zone (EncounterMeter.is_shy()): the
 ## groups that move keep away from him; the still ones stay. They can still be touched.
 func set_monsters_shy(on: bool) -> void:
-	_shy = on
+	_monsters.set_shy(on)
 
 
 ## An Incienso burning: touching a group starts no battle and every group shows half
 ## see-through (the boss still waits where it is).
 func set_repel(on: bool) -> void:
-	if _repelled == on:
-		return
-	_repelled = on
-	if on:
-		_player.stop_hunt()
-	for group in _groups:
-		_fade_group(group)
-	if not on:
-		_calm()
+	_monsters.set_repel(on, int(_sim_ms))
 
 
 ## Autoplay: hunt the groups (Game: while the hero is below the zone's autoplay_boss_level).
 func set_autoplay_hunt(on: bool) -> void:
-	_hunt_on = on
-	if not on:
-		_player.stop_hunt()
+	_hunter.set_on(on)
 
 
 ## Every group of the zone again (MonsterGroups.groups()), in new places, none within
 ## MonsterGroups.ENTRY_GAP of avoid (where the hero stands). On autoplay prints "Grupos: n".
 func respawn_groups(avoid: Array[Vector3] = []) -> void:
-	_refill_ms = 0.0
-	for group in _groups:
-		(group.node as Node3D).queue_free()
-	_groups.clear()
-	_contact = -1
-	_hunt_skip.clear()
-	_player.stop_hunt()
-	for spot: Dictionary in MonsterGroups.groups(zone, _rng, avoid):
-		_add_group(spot.pos, spot.enemies, false)
-	if _autoplay:
-		print("Grupos: %d" % group_count())
+	_monsters.respawn_groups(avoid)
 
 
 ## How many groups are on the map (the rare enemy apart).
 func group_count() -> int:
-	var count := 0
-	for group in _groups:
-		if not group.rare:
-			count += 1
-	return count
+	return _monsters.group_count()
 
 
 ## Debug only (DebugPanel's Monstruos): every group off the map, the rare one too. While
 ## debug_no_groups is set none comes back.
 func clear_groups() -> void:
-	for group in _groups:
-		(group.node as Node3D).queue_free()
-	_groups.clear()
-	_contact = -1
-	_hunt_skip.clear()
-	_player.stop_hunt()
+	_monsters.clear_groups()
 
 
 ## Puts the zone's rare enemy (the Slime de Metal) on this dungeon floor, away from the hero
 ## (MonsterGroups.rare_spot()), unless one is here already. It wanders the whole floor
 ## (MonsterRoam WANDER) and is touched like a group.
 func add_rare(enemy_id: String) -> void:
-	if debug_no_groups or has_rare() or not zone.is_dungeon():
-		return
-	var spot: Variant = MonsterGroups.rare_spot(zone, _rng, _player.global_position)
-	if spot == null:
-		return
-	_add_group(spot, EnemyLibrary.formation([enemy_id]), true)
-	if _autoplay:
-		print("%s en el mapa" % EnemyLibrary.data(enemy_id).display_name)
+	_monsters.add_rare(enemy_id)
 
 
 func has_rare() -> bool:
-	for group in _groups:
-		if group.rare:
-			return true
-	return false
-
-
-## A group at pos: the figure of its first enemy (no collider: nothing bumps into it),
-## facing the camera, and its MonsterRoam.
-func _add_group(pos: Vector3, enemies: Array[Combatant], rare: bool) -> Dictionary:
-	if debug_no_groups:
-		return {}
-	var node := Node3D.new()
-	node.position = pos
-	node.rotation_degrees.y = 180.0
-	add_child(node)
-	var actor: BattleActor = ACTOR_SCENE.instantiate()
-	actor.look = EnemyLibrary.look(enemies[0].id)
-	node.add_child(actor)
-	var roam := MonsterRoam.for_leader(enemies[0], pos, _rng,
-		zone if zone.is_dungeon() else null)
-	roam.set_flags(_flags)
-	var group := {"node": node, "actor": actor, "roam": roam, "enemies": enemies,
-		"armed": true, "rare": rare, "hop": 0.0}
-	_groups.append(group)
-	_fade_group(group)
-	return group
-
-
-## A beaten group comes back, one every REFILL_S seconds of play on this map while it has
-## fewer than zone.monster_count (MonsterGroups.refill_spot(): never near the hero), fading in.
-## Not during a cutscene or an Incienso, nor on a map without monsters (the Caravana).
-func _tick_refill(delta: float) -> void:
-	if debug_no_groups or zone.monster_count <= 0 or zone.formations.is_empty() \
-			or _player.scripted or _repelled or group_count() >= zone.monster_count:
-		_refill_ms = 0.0
-		return
-	_refill_ms += delta * 1000.0
-	if _refill_ms < REFILL_S * 1000.0:
-		return
-	_refill_ms = 0.0
-	var taken: Array[Vector3] = []
-	for g in _groups:
-		taken.append((g.node as Node3D).position)
-	var spot: Variant = MonsterGroups.refill_spot(zone, _rng, _player.global_position, taken)
-	if spot == null:
-		return
-	var group := _add_group(spot, EncounterTable.pick_group(zone, spot, _rng), false)
-	if group.is_empty():
-		return
-	(group.actor as BattleActor).play_fade_in(REFILL_FADE)
-	if _autoplay:
-		print("Grupo repuesto (%d)" % group_count())
-
-
-## Moves every group near the hero one physics tick (MonsterRoam), turned the way it walks,
-## with the walk animation and, for a slime, a hop now and then. Groups past
-## GROUP_ANIMATE_RADIUS stop moving and animating (their node stops processing).
-func _move_groups(delta: float) -> void:
-	var hero := _player.global_position
-	for group in _groups:
-		var node: Node3D = group.node
-		var near := _flat_distance(hero, node.position) <= GROUP_ANIMATE_RADIUS
-		var mode := Node.PROCESS_MODE_INHERIT if near else Node.PROCESS_MODE_DISABLED
-		if node.process_mode != mode:
-			node.process_mode = mode
-		if not near:
-			continue
-		var roam: MonsterRoam = group.roam
-		var actor: BattleActor = group.actor
-		var before := node.position
-		node.position = roam.step(before, delta, hero, _shy)
-		actor.set_walking(roam.moving)
-		if not roam.moving:
-			continue
-		var dir := node.position - before
-		node.rotation.y = lerp_angle(node.rotation.y, atan2(-dir.x, -dir.z),
-			minf(1.0, Player.TURN_SPEED * delta))
-		if actor.hops():
-			group["hop"] = float(group.hop) - delta
-			if group.hop <= 0.0:
-				group["hop"] = HOP_TIME
-				actor.play_hop()
-
-
-## A group shows half see-through while it can't start a battle: fled from, or an Incienso
-## burning.
-func _fade_group(group: Dictionary) -> void:
-	(group.actor as BattleActor).set_faded(_repelled or not group.armed)
+	return _monsters.has_rare()
 
 
 ## The enemies of the group whose battle is starting (its formation, data: BattleScene
 ## duplicates them); empty for the boss's battle.
 func contact_enemies() -> Array[Combatant]:
-	var enemies: Array[Combatant] = []
-	if _contact >= 0:
-		enemies.assign(_groups[_contact].enemies)
-	return enemies
+	return _monsters.contact_enemies()
 
 
 ## After the battle of the group touched (outcome: BattleEngine.State): WON takes it off the
-## map ("Grupo vencido (quedan n)" on autoplay; another comes back later, _tick_refill()),
+## map ("Grupo vencido (quedan n)" on autoplay; another comes back later, MapMonsters.tick_refill()),
 ## FLED leaves it half see-through, starting no battle until the hero is MonsterGroups.REARM_RADIUS away;
 ## LOST changes nothing (Game sends the hero back and the groups come back with the map).
 func end_contact(outcome: int) -> void:
-	if _contact < 0:
-		return
-	var index := _contact
-	_contact = -1
-	var group: Dictionary = _groups[index]
-	if outcome == BattleEngine.State.WON:
-		_groups.remove_at(index)
-		(group.node as Node3D).queue_free()
-		if _autoplay:
-			print("Grupo vencido (quedan %d)" % group_count())
-	elif outcome == BattleEngine.State.FLED:
-		group.armed = false
-		_fade_group(group)
+	_monsters.end_contact(outcome)
 
 
 ## No group starts a battle for MonsterGroups.CALM_MS from now.
 func _calm() -> void:
-	_calm_until_ms = int(_sim_ms) + MonsterGroups.CALM_MS
-
-
-## The hero within MonsterGroups.CONTACT_RADIUS of a group starts its battle (true: the
-## map waits for Game), unless it is calm (_calm()) or an Incienso burns. A group fled from
-## starts none until the hero is MonsterGroups.REARM_RADIUS away from it.
-func _check_groups(pos: Vector3) -> bool:
-	var calm := int(_sim_ms) < _calm_until_ms
-	for i in _groups.size():
-		var group: Dictionary = _groups[i]
-		var d := _flat_distance(pos, (group.node as Node3D).position)
-		if not group.armed:
-			if d > MonsterGroups.REARM_RADIUS:
-				group.armed = true
-				_fade_group(group)
-			continue
-		if d <= MonsterGroups.CONTACT_RADIUS and not calm and not _repelled:
-			_contact = i
-			_trigger(false)
-			return true
-	return false
-
-
-## Autoplay: leaves the route for the nearest group within AUTOPLAY_HUNT_RADIUS that can
-## start a battle, and goes back to it once that one is gone or fled from, after
-## AUTOPLAY_HUNT_MS, or when the hero got stuck on the way (that one is then left alone for
-## AUTOPLAY_HUNT_RETRY_MS).
-func _update_hunt(pos: Vector3) -> void:
-	var now := int(_sim_ms)
-	var failed := _player.take_failed_hunt()
-	if failed != 0:
-		_hunt_skip[failed] = now + AUTOPLAY_HUNT_RETRY_MS
-	if _player.is_hunting():
-		var current := _player.hunting()
-		var index := _group_index(current) if current != null else -1
-		if index < 0 or not _groups[index].armed:
-			_player.stop_hunt()
-		elif now > _hunt_until_ms:
-			_hunt_skip[current.get_instance_id()] = now + AUTOPLAY_HUNT_RETRY_MS
-			_player.stop_hunt()
-		return
-	var best: Node3D = null
-	var best_d := AUTOPLAY_HUNT_RADIUS_CAVE if zone.is_dungeon() else AUTOPLAY_HUNT_RADIUS
-	for group in _groups:
-		var node: Node3D = group.node
-		if not group.armed or now < int(_hunt_skip.get(node.get_instance_id(), 0)):
-			continue
-		var d := _flat_distance(pos, node.position)
-		if d < best_d:
-			best = node
-			best_d = d
-	if best != null:
-		_player.hunt(best)
-		_hunt_until_ms = now + AUTOPLAY_HUNT_MS
-
-
-## The index in _groups of the group on node (-1 if none).
-func _group_index(node: Node3D) -> int:
-	for i in _groups.size():
-		if _groups[i].node == node:
-			return i
-	return -1
+	_monsters.calm(int(_sim_ms))
 
 
 ## Shows or removes the return portal at the zone's portal_pos.
 func set_portal(on: bool) -> void:
-	if _portal != null:
-		_portal.queue_free()
-		_portal = null
-	if on:
-		_portal = _build_portal(zone.portal_pos, true)
+	_props.set_portal(on)
 
 
 ## Shows or removes the mark on the ground of the spot the portal leads back to.
 func set_return_mark(on: bool, pos: Vector3) -> void:
-	if _return_mark != null:
-		_return_mark.queue_free()
-		_return_mark = null
-	if on:
-		_return_mark = _build_portal(pos, false)
+	_props.set_return_mark(on, pos)
 
 
 ## Swings the lever down (Game sets its flag and calls set_world_flags()).
@@ -933,22 +465,13 @@ func pull_lever() -> void:
 ## The lines figure zone.npcs[index] says in chapter (StoryState.Chapter): its
 ## lines_by_chapter entry with the highest chapter not past it, else its lines.
 func npc_lines(index: int, chapter: int) -> Array[String]:
-	var npc: Dictionary = zone.npcs[index]
-	var lines: Array[String] = []
-	lines.assign(npc.get("lines", []))
-	var by_chapter: Dictionary = npc.get("lines_by_chapter", {})
-	var best := -1
-	for key: int in by_chapter:
-		if key <= chapter and key > best:
-			best = key
-			lines.assign(by_chapter[key])
-	return lines
+	return _figures.npc_lines(index, chapter)
 
 
 ## Freezes the player and shows the lines one by one; returns when they are all read.
 func show_dialogue(speaker: String, lines: Array[String]) -> void:
 	freeze(true)
-	await _dialogue.say(speaker, lines)
+	await _hud.dialogue.say(speaker, lines)
 	await freeze(false)
 
 
@@ -960,7 +483,7 @@ func ask(question: String, options: Array[String], focus := 0) -> int:
 		return 0
 	freeze(true)
 	var window := ChoiceWindow.new()
-	_ui.add_child(window)
+	_hud.add_child(window)
 	var chosen: int = await window.ask(question, options, focus)
 	await freeze(false)
 	return chosen
@@ -975,20 +498,11 @@ func begin_cutscene() -> void:
 	_player.move_target = null
 	_reset_pad()
 	_player.model().set_walking(false)
-	_use_on_arrival = {}
-	_status_column.hide()
-	_map_square.hide()
-	_place_label.hide()
-	if _hint_window:
-		_hint_window.hide()
-	_notice_window.hide()
-	if _banner_tween:
-		_banner_tween.kill()
-	_banner.hide()
-	_show_quest_marks()
-	_signs_under_prompt.clear()
-	for label in _figure_signs:
-		label.hide()
+	_uses.drop_errand()
+	_hud.begin_cutscene()
+	_figures.show_marks()
+	_uses.forget_covered_signs()
+	_figures.set_signs_shown(false)
 
 
 ## Puts every figure back on its spot, gives the camera back to the hero and the
@@ -997,58 +511,37 @@ func end_cutscene() -> void:
 	reset_figures()
 	_camera.follow(_player)
 	_player.scripted = false
-	_status_column.show()
-	_map_square.show()
-	_place_label.show()
-	_show_quest_marks()
-	for label in _figure_signs:
-		label.show()
+	_hud.end_cutscene()
+	_figures.show_marks()
+	_figures.set_signs_shown(true)
 	_calm()
-	_was_near = {}
+	_uses.forget_near()
 	await freeze(false)
 
 
 ## A dialogue inside a cutscene: like show_dialogue() but the map stays frozen.
 func say_lines(speaker: String, lines: Array[String]) -> void:
-	await _dialogue.say(speaker, lines)
+	await _hud.dialogue.say(speaker, lines)
 
 
 ## The node a cutscene moves for who ("hero" or a figure's name; null if none here).
 func figure_node(who: String) -> Node3D:
-	if who == Cutscene.HERO:
-		return _player
-	return _figures.get(who)
+	return _figures.figure_node(who)
 
 
 ## The node a cutscene turns for who: the hero's model, or the figure itself.
 func figure_turn(who: String) -> Node3D:
-	if who == Cutscene.HERO:
-		return _player.model()
-	return _figures.get(who)
+	return _figures.figure_turn(who)
 
 
 ## The BattleActor of who (walking and cheering), null if none here.
 func figure_actor(who: String) -> BattleActor:
-	if who == Cutscene.HERO:
-		return _player.model()
-	var body: Node3D = _figures.get(who)
-	if body == null:
-		return null
-	for child in body.get_children():
-		if child is BattleActor:
-			return child
-	return null
+	return _figures.figure_actor(who)
 
 
 ## Every figure back on its ZoneData spot and yaw, standing still.
 func reset_figures() -> void:
-	for npc: Dictionary in zone.npcs:
-		var body: Node3D = _figures[npc.name]
-		body.position = npc.pos
-		body.rotation_degrees.y = npc.yaw
-		var actor := figure_actor(npc.name)
-		if actor:
-			actor.set_walking(false)
+	_figures.reset_figures()
 
 
 ## The camera glides to look at point from at_distance metres (cutscenes).
@@ -1072,87 +565,22 @@ func freeze(on: bool) -> void:
 	if on:
 		_talking = true
 		_player.input_enabled = false
-		_hide_prompt()
+		_uses.hide_prompt()
 		_reset_pad()
 		return
 	await get_tree().process_frame
 	_player.input_enabled = true
 	_talking = false
 	_taps_from_ms = Time.get_ticks_msec() + TAP_GUARD_MS
-	if not _banner_shown and not _player.scripted:
-		_banner_shown = true
-		_show_banner()
+	if not _player.scripted:
+		_hud.show_banner_once()
 
 
 ## What the quests show on this map (Game passes GameState.quests' answers): marks is figure
 ## name -> "!" or "?"; hidden_names are figures not on the map now, with no collider and
 ## nothing to use.
 func set_quest_view(marks: Dictionary, hidden_names: Array[String]) -> void:
-	_quest_marks = marks
-	_hidden_figures = hidden_names
-	for npc: Dictionary in zone.npcs:
-		var body: StaticBody3D = _figures[npc.name]
-		var shown := not hidden_names.has(npc.name)
-		body.visible = shown
-		body.process_mode = Node.PROCESS_MODE_INHERIT if shown else Node.PROCESS_MODE_DISABLED
-	_show_quest_marks()
-
-
-## One floating label per figure with a mark; none during a cutscene.
-func _show_quest_marks() -> void:
-	for npc: Dictionary in zone.npcs:
-		var text: String = _quest_marks.get(npc.name, "")
-		var label: Label3D = _mark_labels.get(npc.name)
-		if label == null:
-			if text == "":
-				continue
-			label = _build_mark(npc.name)
-		label.text = text
-		label.visible = text != "" and not _player.scripted
-
-
-## What a figure offers, over its head: its model alone doesn't tell.
-static func _figure_sign_text(npc: Dictionary) -> String:
-	match npc.kind:
-		"shop":
-			return "Criaturas" if Shop.sells_ally(npc.id) else "Tienda"
-		"inn":
-			return "Posada"
-	return ""
-
-
-func _add_figure_sign(npc: Dictionary) -> void:
-	var text := _figure_sign_text(npc)
-	if text == "":
-		return
-	var label := Label3D.new()
-	label.text = text
-	UiTheme.style_3d(label, &"display-m", &"text-display-soft", UiTokens.OUTLINE_L)
-	label.pixel_size = FIGURE_SIGN_PIXEL
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.no_depth_test = true
-	label.position.y = figure_actor(npc.name).top_height() + FIGURE_SIGN_GAP
-	(_figures[npc.name] as Node3D).add_child(label)
-	_figure_signs.append(label)
-
-
-func _build_mark(figure_name: String) -> Label3D:
-	var label := Label3D.new()
-	UiTheme.style_3d(label, &"display-xl", &"quest-mark", UiTokens.OUTLINE_M)
-	label.pixel_size = 0.01
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.no_depth_test = true
-	label.position.y = figure_actor(figure_name).top_height() + QUEST_MARK_GAP
-	for npc: Dictionary in zone.npcs:
-		if npc.name == figure_name and _figure_sign_text(npc) != "":
-			label.position.y += FIGURE_SIGN_RISE
-	(_figures[figure_name] as Node3D).add_child(label)
-	_mark_labels[figure_name] = label
-	var bob := label.create_tween().set_loops()
-	bob.tween_property(label, "position:y", label.position.y + QUEST_MARK_BOB, 0.5) \
-		.set_trans(Tween.TRANS_SINE)
-	bob.tween_property(label, "position:y", label.position.y, 0.5).set_trans(Tween.TRANS_SINE)
-	return label
+	_figures.set_quest_view(marks, hidden_names)
 
 
 ## Shows the weapon and shield worn on the hero (Equipment ids, "" for none).
@@ -1163,90 +591,52 @@ func set_hero_equipment(weapon_id: String, shield_id: String, helmet_id := "") -
 ## Opens (lid tipped back, tweened unless instant) or closes a chest of this zone. An
 ## open chest can't be used any more; ids of other zones are ignored.
 func set_chest_open(chest_id: String, open: bool, instant := false) -> void:
-	if not _chest_lids.has(chest_id):
-		return
-	var lid: Node3D = _chest_lids[chest_id]
-	var angle := deg_to_rad(CHEST_OPEN_ANGLE) if open else 0.0
-	if open and not _open_chests.has(chest_id):
-		_open_chests.append(chest_id)
-	elif not open:
-		_open_chests.erase(chest_id)
-	if instant:
-		lid.rotation.x = angle
-	else:
-		lid.create_tween().tween_property(lid, "rotation:x", angle, 0.35) \
-			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_props.set_chest_open(chest_id, open, instant)
 
 
 ## The pause menu covers the middle of the screen and says the same as the status window,
 ## which goes away behind it (with the map square).
 func set_status_shown(on: bool) -> void:
-	_reset_pad()  # a finger's release is lost while the tree is paused
-	_status_column.visible = on
-	_map_square.visible = on
-	_place_label.visible = on
+	_hud.set_status_shown(on)
 
 
-func refresh_status(hero: Combatant, _potions: int, gold: int, missions: Array[String] = []) -> void:
-	_name_label.text = StatBar.hero_title(hero)
-	_hp_bar.show_hp(hero.hp, hero.max_hp)
-	_mp_bar.show_mp(hero.mp, hero.max_mp)
-	_exp_bar.show_exp(hero)
-	_gold_label.text = "%d G" % gold
-	_missions = missions
-	if not _mission_done:
-		_show_missions(missions)
+func refresh_status(hero: Combatant, potions: int, gold: int, missions: Array[String] = []) -> void:
+	_hud.refresh_status(hero, potions, gold, missions)
 
 
 ## Puts "Misión cumplida" (or text) in the mission list for a few seconds, then the
 ## missions under way come back.
 func show_mission_done(text: String) -> void:
-	_mission_done_serial += 1
-	var serial := _mission_done_serial
-	_mission_done = true
-	var lines: Array[String] = [text]
-	_show_missions(lines, true)
-	if _autoplay:
-		print(text)
-	await get_tree().create_timer(MISSION_DONE_TIME).timeout
-	if serial == _mission_done_serial:
-		_mission_done = false
-		_show_missions(_missions)
+	_hud.show_mission_done(text)
 
 
-func _show_missions(lines: Array[String], done := false) -> void:
-	for child in _mission_box.get_children():
-		_mission_box.remove_child(child)
-		child.queue_free()
-	var shown := lines.slice(0, 1) if Device.is_touch() else lines
-	var width := TOUCH_MISSION_WIDTH if Device.is_touch() else MISSION_WIDTH
-	for line in shown:
-		var label := Label.new()
-		label.theme_type_variation = UiTheme.CAPTION
-		if done:
-			UiTheme.style_label(label, &"caption", &"text-positive")
-		_mission_box.add_child(label)
-		BattleHud.fit_label(label, line, width)
-
-
-## Shows a short line in its own window for NOTICE_TIME seconds (a newer one replaces it),
+## Shows a short line in its own window for MapHud.NOTICE_TIME seconds (a newer one replaces it),
 ## under a small tone word ("Guardado", "Cerrado"...) in the colour of `tone`. Only the text is printed.
 func show_notice(text: String, word := "Aviso", tone := &"text-info") -> void:
-	_notice_word.text = word
-	UiTheme.style_label(_notice_word, &"label", tone)
-	BattleHud.fit_label(_notice, text, NOTICE_MAX_WIDTH)
-	_notice_window.show()
-	if _autoplay:
-		print(text)
-	# One tween owned by the map: a newer notice kills it, and it dies with the map.
-	if _notice_tween:
-		_notice_tween.kill()
-	_notice_window.modulate.a = 0.0
-	_notice_tween = create_tween()
-	_notice_tween.tween_property(_notice_window, "modulate:a", 1.0, NOTICE_FADE)
-	_notice_tween.tween_interval(NOTICE_TIME - 2.0 * NOTICE_FADE)
-	_notice_tween.tween_property(_notice_window, "modulate:a", 0.0, NOTICE_FADE)
-	_notice_tween.tween_callback(_notice_window.hide)
+	_hud.show_notice(text, word, tone)
+
+
+## The hero walked into an open exit (MapUses.check_exits()): the map waits for Game.
+func _take_exit(exit: Dictionary) -> void:
+	_waiting = true
+	_player.input_enabled = false
+	_uses.hide_prompt()
+	_reset_pad()
+	exit_requested.emit(exit.to, exit.entry)
+
+
+## The uses of MapUses go out under World's own signals: Game connects to those.
+func _forward_use_signals() -> void:
+	_uses.talk_requested.connect(talk_requested.emit)
+	_uses.npc_requested.connect(npc_requested.emit)
+	_uses.shop_requested.connect(shop_requested.emit)
+	_uses.inn_requested.connect(inn_requested.emit)
+	_uses.chest_opened.connect(chest_opened.emit)
+	_uses.well_requested.connect(well_requested.emit)
+	_uses.lever_pulled.connect(lever_pulled.emit)
+	_uses.key_taken.connect(key_taken.emit)
+	_uses.door_used.connect(door_used.emit)
+	_uses.portal_used.connect(portal_used.emit)
 
 
 func _trigger(boss: bool) -> void:
@@ -1256,141 +646,9 @@ func _trigger(boss: bool) -> void:
 		_audio.play_sfx(SfxLibrary.ENCOUNTER)
 	_waiting = true
 	_player.input_enabled = false
-	_hide_prompt()
+	_uses.hide_prompt()
 	_reset_pad()
 	encounter_triggered.emit(boss)
-
-
-func _is_open(exit: Dictionary) -> bool:
-	return exit.lock == "" or _flags.get(exit.lock, false)
-
-
-## Takes an open exit the player walked into (true: the map waits for Game), or shows a
-## closed one's notice once per approach. Exits only count once the player has stepped
-## away from all of them since arriving.
-func _check_exits(pos: Vector3) -> bool:
-	var nearest := {}
-	var nearest_d := INF
-	for exit: Dictionary in _exits:
-		if not ZoneData.is_present(exit, _flags):
-			continue
-		var d := _flat_distance(pos, exit.pos)
-		if d < nearest_d:
-			nearest = exit
-			nearest_d = d
-	if nearest.is_empty():
-		return false
-	if not _exits_armed:
-		_exits_armed = nearest_d > EXIT_RADIUS + EXIT_REARM
-		return false
-	if nearest_d > EXIT_RADIUS:
-		return false
-	_exits_armed = false
-	if not _is_open(nearest):
-		show_notice(nearest.lock_text, "Cerrado")
-		return false
-	_waiting = true
-	_player.input_enabled = false
-	_hide_prompt()
-	_reset_pad()
-	exit_requested.emit(nearest.to, nearest.entry)
-	return true
-
-
-## The nearest thing in reach of pos that can be used: {"kind": TALK / NPC / SHOP / INN
-## / CHEST / LEVER / KEY / DOOR, "id": shop, inn or chest id ("" otherwise), "index":
-## the npc's index}, or {}.
-func _nearest_use(pos: Vector3) -> Dictionary:
-	var best := {}
-	var best_d := INF
-	for use in _uses():
-		var d := _flat_distance(pos, use.pos)
-		if d <= use.radius and d < best_d:
-			best = {"kind": use.kind, "id": use.id, "index": use.index}
-			best_d = d
-	return best
-
-
-## The thing a click or tap at a screen point means ({} if none): within NPC_TAP_RADIUS of it
-## at TAP_HEIGHT, or, for a figure, at FIGURE_TOP_TAP_HEIGHT too.
-func _tapped_use(screen: Vector2) -> Dictionary:
-	var origin := _camera.project_ray_origin(screen)
-	var normal := _camera.project_ray_normal(screen)
-	var low: Variant = Plane(Vector3.UP, TAP_HEIGHT).intersects_ray(origin, normal)
-	var high: Variant = Plane(Vector3.UP, FIGURE_TOP_TAP_HEIGHT).intersects_ray(origin, normal)
-	if low == null or high == null:
-		return {}
-	for use in _uses():
-		var on_top: bool = use.kind in NPC_KINDS.values() \
-			and _flat_distance(high, use.pos) <= FIGURE_TOP_TAP_RADIUS
-		if on_top or _flat_distance(low, use.pos) <= NPC_TAP_RADIUS:
-			return {"kind": use.kind, "id": use.id, "index": use.index}
-	return {}
-
-
-## Whether a use asked for by a tap is in reach of the hero now.
-func _in_reach(wanted: Dictionary) -> bool:
-	for use in _uses():
-		if use.kind == wanted.kind and use.id == wanted.id and use.index == wanted.index:
-			return _flat_distance(_player.global_position, use.pos) <= use.radius
-	return false
-
-
-## Everything usable now: the zone's figures, its closed chests and, on a dungeon floor,
-## the lever until pulled, the key until taken and the gates while closed.
-func _uses() -> Array[Dictionary]:
-	var uses: Array[Dictionary] = []
-	for i in zone.npcs.size():
-		var npc: Dictionary = zone.npcs[i]
-		if _hidden_figures.has(npc.name):
-			continue
-		uses.append({"kind": NPC_KINDS[npc.kind], "id": npc.get("id", ""), "index": i,
-			"pos": npc.pos, "radius": TALK_RADIUS})
-	for id in _chest_lids:
-		if not _open_chests.has(id):
-			uses.append({"kind": CHEST, "id": id, "index": -1, "pos": Chests.CHESTS[id].pos,
-				"radius": CHEST_RADIUS})
-	if _portal != null:
-		uses.append({"kind": PORTAL, "id": "", "index": -1, "pos": zone.portal_pos,
-			"radius": MECHANISM_RADIUS})
-	for well: Dictionary in zone.wells:
-		uses.append({"kind": WELL, "id": well.id, "index": -1, "pos": well.pos,
-			"radius": WELL_RADIUS})
-	if _dungeon == null:
-		return uses
-	var mechanisms := [[ZoneData.LEVER, LEVER, zone.lever_flag],
-		[ZoneData.KEY, KEY, zone.floor_key], [ZoneData.DOOR, DOOR, zone.door_flag]]
-	for mechanism in mechanisms:
-		if mechanism[2] == "" or _flags.get(mechanism[2], false):
-			continue
-		for cell in zone.find_cells(mechanism[0]):
-			uses.append({"kind": mechanism[1], "id": "", "index": -1,
-				"pos": zone.cell_center(cell), "radius": MECHANISM_RADIUS})
-	return uses
-
-
-func _use(use: Dictionary) -> void:
-	match use.get("kind", ""):
-		TALK:
-			talk_requested.emit()
-		NPC, BOARD, ITEM:
-			npc_requested.emit(use.index)
-		SHOP:
-			shop_requested.emit(use.id)
-		INN:
-			inn_requested.emit(use.id)
-		CHEST:
-			chest_opened.emit(use.id)
-		WELL:
-			well_requested.emit(use.id, _well_kind(use.id))
-		LEVER:
-			lever_pulled.emit()
-		KEY:
-			key_taken.emit()
-		DOOR:
-			door_used.emit()
-		PORTAL:
-			portal_used.emit()
 
 
 func _connect_standalone() -> void:
@@ -1430,393 +688,21 @@ func _connect_standalone() -> void:
 	set_autoplay_hunt(true)
 
 
-## Flat ring on the spot the player walks to. Drawn on top of everything, so the tall
-## grass never hides it.
-func _build_marker() -> MeshInstance3D:
-	var ring := TorusMesh.new()
-	ring.inner_radius = 0.3
-	ring.outer_radius = 0.42
-	ring.rings = 16
-	ring.ring_segments = 4
-	var material := StandardMaterial3D.new()
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.albedo_color = UiTokens.color(&"border-focus")
-	material.no_depth_test = true
-	var marker := MeshInstance3D.new()
-	marker.mesh = ring
-	marker.material_override = material
-	marker.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	marker.visible = false
-	add_child(marker)
-	return marker
-
-
-## The arch of an exit (turned by its yaw) with its sign, which always faces the camera,
-## and the fog bank that closes it. Returns the fog bank.
-func _build_exit(exit: Dictionary) -> Node3D:
-	var root := Node3D.new()
-	root.position = exit.pos
-	add_child(root)
-	_arches[exit.id] = root
-	var arch := Node3D.new()
-	arch.rotation_degrees.y = exit.yaw
-	root.add_child(arch)
-	var post := BoxMesh.new()
-	post.size = Vector3(0.3, ARCH_HEIGHT, 0.3)
-	for x in [-ARCH_WIDTH / 2.0, ARCH_WIDTH / 2.0]:
-		BattleStage.add_mesh(arch, post, ARCH_WOOD, Vector3(x, ARCH_HEIGHT / 2.0, 0))
-	var beam := BoxMesh.new()
-	beam.size = Vector3(ARCH_WIDTH + 0.6, 0.35, 0.4)
-	BattleStage.add_mesh(arch, beam, ARCH_WOOD, Vector3(0, ARCH_HEIGHT, 0))
-	var board := BoxMesh.new()
-	board.size = Vector3(2.4, 0.55, 0.08)
-	BattleStage.add_mesh(root, board, SIGN_COLOR, Vector3(0, ARCH_HEIGHT + 0.5, 0.1))
-	var label := Label3D.new()
-	label.text = exit.label
-	UiTheme.style_3d(label, &"display-m", &"text-display-soft", UiTokens.OUTLINE_L)
-	label.pixel_size = 0.008
-	label.position = Vector3(0, ARCH_HEIGHT + 0.5, 0.15)
-	root.add_child(label)
-	var fog := Node3D.new()
-	root.add_child(fog)
-	var material := StandardMaterial3D.new()
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	material.albedo_color = FOG_COLOR
-	for puff in [Vector3(-1.2, 0.8, 0), Vector3(0, 1.1, 0.1), Vector3(1.2, 0.8, 0),
-			Vector3(-0.6, 1.9, -0.1), Vector3(0.7, 2.0, 0)]:
-		var mi := MeshInstance3D.new()
-		mi.mesh = BattleStage.unit_sphere()
-		mi.material_override = material
-		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		mi.position = puff
-		mi.scale = Vector3(1.1, 0.9, 0.7)
-		fog.add_child(mi)
-	return fog
-
-
-## The Ala de viaje's return portal at pos (full: the standing portal with its sign), or only
-## the glowing ring on the ground of the spot it leads back to (TravelPortal).
-func _build_portal(pos: Vector3, full: bool) -> Node3D:
-	var portal := TravelPortal.new()
-	portal.ring_only = not full
-	portal.position = pos
-	add_child(portal)
-	return portal
-
-
 ## Hides the water and the light of the wells in dry.
 func set_dry_wells(dry: Array[String]) -> void:
-	for id: String in _well_waters:
-		(_well_waters[id] as Node3D).visible = not dry.has(id)
-	_dry_wells = dry
+	_props.set_dry_wells(dry)
 	_refresh_map_marks()
-
-
-## The kind (Wells.HP or Wells.MP) of the well id of this zone.
-func _well_kind(id: String) -> String:
-	for well: Dictionary in zone.wells:
-		if well.id == id:
-			return well.kind
-	return Wells.HP
-
-
-## A well: its model (green in the forest village, red elsewhere) on a cylinder collider,
-## with a disc of coloured water inside the rim and a light over it.
-func _build_well(well: Dictionary) -> void:
-	var body := StaticBody3D.new()
-	body.position = well.pos
-	add_child(body)
-	WorldStage.add_cylinder_shape(body, WELL_COLLIDER, 2.0)
-	var model_id := "well_green" if zone.id == "bosque" else "well_red"
-	BattleStage.add_model(body, WorldStage.MODELS[model_id], Vector3.ZERO,
-		WorldStage.BUILDING_SCALE)
-	var water := Node3D.new()
-	water.position.y = WATER_HEIGHT
-	body.add_child(water)
-	var color := WATER_HP if well.kind == Wells.HP else WATER_MP
-	var disc := CylinderMesh.new()
-	disc.top_radius = WATER_RADIUS
-	disc.bottom_radius = WATER_RADIUS
-	disc.height = 0.05
-	var material := StandardMaterial3D.new()
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.albedo_color = color
-	var mesh := MeshInstance3D.new()
-	mesh.mesh = disc
-	mesh.material_override = material
-	mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	water.add_child(mesh)
-	var light := OmniLight3D.new()
-	light.light_color = color
-	light.light_energy = 1.5
-	light.omni_range = 4.0
-	light.shadow_enabled = false
-	light.position.y = 0.6
-	water.add_child(light)
-	_well_waters[well.id] = water
 
 
 ## A closed chest on a box collider under root: wooden box with a gold band around it and a lid on
 ## a pivot at its back edge. Returns the lid pivot.
 static func build_chest(root: Node3D, chest: Dictionary) -> Node3D:
-	var body := StaticBody3D.new()
-	body.position = chest.pos
-	body.rotation_degrees.y = chest.yaw
-	root.add_child(body)
-	var box := BoxShape3D.new()
-	box.size = CHEST_SIZE + Vector3(0, CHEST_LID_HEIGHT, 0)
-	var shape := CollisionShape3D.new()
-	shape.shape = box
-	shape.position.y = box.size.y / 2.0
-	body.add_child(shape)
-	var base := BoxMesh.new()
-	base.size = CHEST_SIZE
-	BattleStage.add_mesh(body, base, CHEST_WOOD, Vector3(0, CHEST_SIZE.y / 2.0, 0))
-	var band := BoxMesh.new()
-	band.size = Vector3(CHEST_SIZE.x + 0.04, 0.08, CHEST_SIZE.z + 0.04)
-	BattleStage.add_mesh(body, band, CHEST_BAND, Vector3(0, CHEST_SIZE.y * 0.7, 0))
-	var lid := Node3D.new()
-	lid.position = Vector3(0, CHEST_SIZE.y, CHEST_SIZE.z / 2.0)
-	body.add_child(lid)
-	var top := BoxMesh.new()
-	top.size = Vector3(CHEST_SIZE.x, CHEST_LID_HEIGHT, CHEST_SIZE.z)
-	BattleStage.add_mesh(lid, top, CHEST_WOOD,
-		Vector3(0, CHEST_LID_HEIGHT / 2.0, -CHEST_SIZE.z / 2.0))
-	var lock := BoxMesh.new()
-	lock.size = Vector3(0.14, 0.16, 0.05)
-	BattleStage.add_mesh(lid, lock, CHEST_BAND, Vector3(0, 0.0, -CHEST_SIZE.z - 0.02))
-	var lid_band := BoxMesh.new()
-	lid_band.size = Vector3(0.1, CHEST_LID_HEIGHT + 0.02, CHEST_SIZE.z + 0.02)
-	for x in [-0.3, 0.3]:
-		BattleStage.add_mesh(lid, lid_band, CHEST_BAND,
-			Vector3(x, CHEST_LID_HEIGHT / 2.0, -CHEST_SIZE.z / 2.0))
-	return lid
-
-
-## A figure: a BattleActor on a cylinder collider, turned yaw_deg (180 faces south,
-## toward the camera).
-func _add_figure(look: BattleActor.Look, pos: Vector3, yaw_deg: float, radius: float, \
-		height: float) -> StaticBody3D:
-	var body := StaticBody3D.new()
-	body.position = pos
-	body.rotation_degrees.y = yaw_deg
-	add_child(body)
-	WorldStage.add_cylinder_shape(body, radius, height)
-	var actor: BattleActor = ACTOR_SCENE.instantiate()
-	actor.look = look
-	body.add_child(actor)
-	return body
-
-
-func _build_ui() -> void:
-	_ui = CanvasLayer.new()
-	_ui.layer = UiTokens.LAYER_HUD
-	add_child(_ui)
-	# No size of its own: the column follows the status window as it grows and shrinks.
-	var column := VBoxContainer.new()
-	column.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	column.offset_left = UI_EDGE
-	column.offset_top = UI_EDGE
-	column.offset_right = UI_EDGE
-	column.offset_bottom = UI_EDGE
-	column.add_theme_constant_override("separation", UiTokens.SPACE_2)
-	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui.add_child(column)
-	_status_column = column
-	var panel := BattleHud.make_window()
-	column.add_child(panel)
-	_map_square = MapSquare.new(MapSquare.TOUCH_SIDE if Device.is_touch() else MapSquare.SIDE)
-	_map_square.clickable = true
-	_map_square.pressed.connect(func() -> void:
-		if not _talking and not _waiting:
-			map_requested.emit())
-	_place_label = Label.new()
-	_place_label.theme_type_variation = UiTheme.OUTLINED
-	_place_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if Device.is_touch():
-		# Under the menu button, top right.
-		_ui.add_child(_map_square)
-		_map_square.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-		_map_square.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-		_map_square.offset_right = -PauseMenu.MENU_BUTTON_MARGIN
-		_map_square.offset_left = _map_square.offset_right - MapSquare.TOUCH_SIDE
-		_map_square.offset_top = PauseMenu.MENU_BUTTON_MARGIN + PauseMenu.MENU_BUTTON_SIZE.y + UiTokens.SPACE_2
-		_map_square.offset_bottom = _map_square.offset_top + MapSquare.TOUCH_SIDE
-		_ui.add_child(_place_label)
-		_place_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		_place_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-		_place_label.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-		_place_label.offset_right = _map_square.offset_right
-		_place_label.offset_left = _map_square.offset_right
-		_place_label.offset_top = _map_square.offset_bottom + UiTokens.SPACE_1
-		_place_label.offset_bottom = _place_label.offset_top
-	else:
-		column.add_child(_place_label)
-		column.add_child(_map_square)
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", UiTokens.SPACE_1)
-	panel.add_child(box)
-	_name_label = Label.new()
-	_name_label.theme_type_variation = UiTheme.TITLE
-	box.add_child(_name_label)
-	_hp_bar = StatBar.new(StatBar.HP)
-	box.add_child(_hp_bar)
-	_mp_bar = StatBar.new(StatBar.MP)
-	box.add_child(_mp_bar)
-	_exp_bar = StatBar.new(StatBar.EXP)
-	box.add_child(_exp_bar)
-	if Device.is_touch():
-		# Estado in the pause menu says the same.
-		_exp_bar.hide()
-	var line := HSeparator.new()
-	line.theme_type_variation = UiTheme.STATUS_LINE
-	box.add_child(line)
-	_gold_label = Label.new()
-	_gold_label.theme_type_variation = UiTheme.MONEY
-	box.add_child(_gold_label)
-	_mission_box = VBoxContainer.new()
-	_mission_box.add_theme_constant_override("separation", 0)
-	box.add_child(_mission_box)
-	_notice_window = BattleHud.make_window()
-	_notice_window.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	_notice_window.offset_left = 0
-	_notice_window.offset_right = 0
-	_notice_window.offset_top = UI_EDGE
-	_notice_window.offset_bottom = UI_EDGE
-	_notice_window.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_notice_window.hide()
-	_ui.add_child(_notice_window)
-	var notice_box := VBoxContainer.new()
-	notice_box.add_theme_constant_override("separation", UiTokens.SPACE_1)
-	_notice_window.add_child(notice_box)
-	_notice_word = _label()
-	notice_box.add_child(_notice_word)
-	_notice = _label()
-	notice_box.add_child(_notice)
-	_build_banner()
-	_prompt_box = VBoxContainer.new()
-	_prompt_box.alignment = BoxContainer.ALIGNMENT_CENTER
-	_prompt_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui.add_child(_prompt_box)
-	_prompt = Label.new()
-	_prompt.theme_type_variation = UiTheme.OUTLINED
-	_prompt.text = PROMPTS[TALK]
-	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_prompt_box.add_child(_prompt)
-	# The key of the action, on a badge that is not a status colour.
-	_prompt_key = Label.new()
-	_prompt_key.theme_type_variation = UiTheme.NOTE
-	_prompt_key.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_prompt_key.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_prompt_key.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var key_panel := PanelContainer.new()
-	var cap := StyleBoxFlat.new()
-	_prompt_cap = cap
-	_paint_prompt_cap()
-	cap.set_border_width_all(UiTokens.BORDER_2)
-	cap.set_corner_radius_all(UiTokens.RADIUS_S)
-	cap.content_margin_left = UiTokens.SPACE_2
-	cap.content_margin_right = UiTokens.SPACE_2
-	cap.content_margin_top = UiTokens.SPACE_1
-	cap.content_margin_bottom = UiTokens.SPACE_1
-	key_panel.add_theme_stylebox_override(&"panel", cap)
-	key_panel.custom_minimum_size = Vector2(UiTokens.ICON_M, UiTokens.ICON_M)
-	key_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	key_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	key_panel.add_child(_prompt_key)
-	_prompt_box.add_child(key_panel)
-	_prompt_box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, \
-		Control.PRESET_MODE_MINSIZE, 200)
-	_prompt_box.hide()
-	if Device.is_touch():
-		_build_touch_controls()
-	_dialogue = DialogueBox.new()
-	_ui.add_child(_dialogue)
-
-
-## Phones: the pad behind every window, and the big use button.
-func _build_touch_controls() -> void:
-	_pad = TouchPad.new()
-	_ui.add_child(_pad)
-	_ui.move_child(_pad, 0)
-	_pad.tapped.connect(_on_tapped)
-	_pad.pinched.connect(_camera.zoom_by)
-	_use_button = Button.new()
-	_use_button.focus_mode = Control.FOCUS_NONE
-	_use_button.theme_type_variation = UiTheme.ACTION_BUTTON
-	_use_button.custom_minimum_size = USE_BUTTON_SIZE
-	_use_button.hide()
-	_ui.add_child(_use_button)
-	_use_button.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	_use_button.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	_use_button.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_use_button.offset_right = -UI_EDGE
-	_use_button.offset_bottom = -UI_EDGE
-	_use_button.offset_left = -UI_EDGE - USE_BUTTON_SIZE.x
-	_use_button.offset_top = -UI_EDGE - USE_BUTTON_SIZE.y
-	_use_button.pressed.connect(func() -> void: _use(_nearest_use(_player.global_position)))
+	return MapProps.build_chest(root, chest)
 
 
 ## A line at the bottom until the hero first walks (phones, once: Game decides).
 func show_touch_hint(text: String) -> void:
-	if _hint_window == null:
-		_hint_window = BattleHud.make_window()
-		_hint_window.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_ui.add_child(_hint_window)
-		_hint_window.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-		_hint_window.grow_horizontal = Control.GROW_DIRECTION_BOTH
-		_hint_window.grow_vertical = Control.GROW_DIRECTION_BEGIN
-		_hint_window.offset_left = 0.0
-		_hint_window.offset_right = 0.0
-		_hint_window.offset_bottom = -(UI_EDGE + USE_BUTTON_SIZE.y + UiTokens.SPACE_3)
-		_hint_window.offset_top = _hint_window.offset_bottom
-		_hint = _label()
-		_hint_window.add_child(_hint)
-	BattleHud.fit_label(_hint, text, TOUCH_HINT_WIDTH)
-	_hint_window.show()
-
-
-## Two lines centred near the top: the place and, under it, its floor.
-func _build_banner() -> void:
-	_banner = VBoxContainer.new()
-	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_banner.add_theme_constant_override("separation", 0)
-	_ui.add_child(_banner)
-	_banner.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	_banner.offset_top = BANNER_TOP
-	_banner.offset_bottom = BANNER_TOP
-	for variation in [UiTheme.DISPLAY, UiTheme.DISPLAY_SUB]:
-		var label := Label.new()
-		label.theme_type_variation = variation
-		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_banner.add_child(label)
-	_banner.hide()
-
-
-## Fades the place's name in, holds it and fades it out.
-func _show_banner() -> void:
-	var name_label := _banner.get_child(0) as Label
-	var floor_label := _banner.get_child(1) as Label
-	name_label.text = zone.display_name
-	floor_label.text = zone.floor_name
-	floor_label.visible = zone.floor_name != ""
-	if _autoplay:
-		print("Lugar: %s" % zone.banner_text())
-	if _banner_tween:
-		_banner_tween.kill()
-	_banner.modulate.a = 0.0
-	_banner.show()
-	_banner_tween = create_tween()
-	_banner_tween.tween_property(_banner, "modulate:a", 1.0, BANNER_FADE)
-	_banner_tween.tween_interval(BANNER_TIME)
-	_banner_tween.tween_property(_banner, "modulate:a", 0.0, BANNER_FADE)
-	_banner_tween.tween_callback(_banner.hide)
-
-
-func _label() -> Label:
-	return Label.new()
+	_hud.show_touch_hint(text)
 
 
 ## A soft footstep every STEP_DISTANCE meters walked.

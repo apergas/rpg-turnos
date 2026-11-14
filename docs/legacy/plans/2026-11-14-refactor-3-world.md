@@ -30,7 +30,7 @@
   - the owner's signals become the piece's signals.
   - A bug found while moving gets its own commit, never mixed in with the move.
 - **One task = one piece = one commit,** with the whole game working after each.
-- **`CLAUDE.md` *Layout* is updated in the same commit as the code.**
+- **`CLAUDE.md` changes only when the folder map or one of its gotchas changes; it never lists functions or per-file entries.**
 - **Branch:** `feature/refactor-3-world`, from `develop` (plans 1 and 2 already merged).
   - Merge back with `git merge --no-ff`.
   - Commit messages are in English, with no `Co-Authored-By` and no attribution of any kind.
@@ -132,7 +132,6 @@ Each piece is created with `.new()` and `setup()` early, so that `set_world_flag
 **Files:**
 - Create: `scripts/world/map_hud.gd` (and its `.gd.uid`, written by `--import`)
 - Modify: `scripts/world/world.gd`
-- Modify: `CLAUDE.md`
 
 **Interfaces:**
 - Consumes: `RunFlags.autoplay()` (plan 1).
@@ -568,22 +567,10 @@ APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cm
 rm -r C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p3/hud-frames
 ```
 
-- [ ] **Step 9: Update `CLAUDE.md` *Layout***
-
-  - In the `scenes/world/world.tscn + scripts/world/world.gd (World)` bullet, replace each text on the left with the text on the right, exactly:
-    - `` (`_build_touch_controls()`; its taps walk like clicks `` → `` (`MapHud._build_touch_controls()`; its taps walk like clicks ``
-    - `` (`_show_banner()`, printed on autoplay as `Lugar: ...` `` → `` (`MapHud._show_banner()`, printed on autoplay as `Lugar: ...` ``
-    - `` `_refresh_map_marks()` after `set_explored()` `` → `` `MapHud.refresh_map_marks()` after `set_explored()` ``
-  - Right after the end of that bullet, add this new bullet:
-
-```markdown
-- `scripts/world/map_hud.gd` (`MapHud`, `CanvasLayer`, `UiTokens.LAYER_HUD`) — the map's 2D layer, owned by `World` (refactor M-71): `setup(zone)` before `add_child`, it builds itself in `_ready()` (`_build_ui()`, `_build_banner()`, on a phone `_build_touch_controls()`). It holds the status window, the place line and the `MapSquare`, the notice window, the banner, the prompt and its keycap (`show_prompt(text, key_name)` returns the rect it covers, `hide_prompt()`, `prompt_showing()`), the phone's `TouchPad` (`pad`) and use button, the walking hint and the `DialogueBox` (`dialogue`). `step(hero_pos, last_step_m)` every physics tick, `reset_pad()`, `show_banner_once()`, `begin_cutscene()` / `end_cutscene()`, `set_explored()`, `refresh_map_marks(flags, dry_wells)`. Signals `map_pressed`, `tapped(screen)`, `pinched(ratio)`, `use_pressed`, which `World` turns into `map_requested`, a walk, a zoom and a use. `World.refresh_status()`, `set_status_shown()`, `show_mission_done()`, `show_notice()` and `show_touch_hint()` are façades of it; `World.BANNER_FADE` is `MapHud.BANNER_FADE`.
-```
-
-- [ ] **Step 10: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
-git add scripts/world/map_hud.gd scripts/world/map_hud.gd.uid scripts/world/world.gd CLAUDE.md
+git add scripts/world/map_hud.gd scripts/world/map_hud.gd.uid scripts/world/world.gd
 git commit -m "Move the map's 2D layer from World into MapHud"
 git status --short
 ```
@@ -597,7 +584,6 @@ git status --short
 **Files:**
 - Create: `scripts/world/map_props.gd`
 - Modify: `scripts/world/world.gd`
-- Modify: `CLAUDE.md`
 
 **Interfaces:**
 - Consumes: `MapHud.refresh_map_marks(flags, dry_wells)` (Task 1).
@@ -846,22 +832,10 @@ APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cm
 rm -r C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p3/props-frames
 ```
 
-- [ ] **Step 7: Update `CLAUDE.md` *Layout***
-
-  - In the World bullet, replace each text on the left with the text on the right:
-    - `` its wells (`_build_well()`: `` → `` its wells (`MapProps._build_well()`: ``
-    - `` (`_arches`, `set_world_flags()`) `` → `` (`MapProps._arches`, `set_world_flags()`) ``
-  - In the 2.5.0 bullet, `` `World._build_portal()` `` → `` `MapProps._build_portal()` ``.
-  - Add this bullet right after the `MapHud` bullet:
-
-```markdown
-- `scripts/world/map_props.gd` (`MapProps`, `Node3D`) — the props of a map that change with the game, owned by `World` (refactor M-71): `setup(zone)`, then `build()` (the chests, the wells and the exit arches with their sign and fog) and `build_marker()` (the walk ring; `show_marker(target)` every physics tick). `set_flags(flags)` (an exit not present hides, a closed one shows its fog; `static is_open(exit, flags)`), `set_portal()` / `set_return_mark()` / `has_portal()` (the Ala's `TravelPortal`), `set_dry_wells()` / `dry_wells` / `well_kind()`, `static build_chest()`, `set_chest_open()`, `closed_chests()`. `World.set_portal()`, `set_return_mark()`, `set_dry_wells()`, `set_chest_open()` and `build_chest()` are façades of it.
-```
-
-- [ ] **Step 8: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add scripts/world/map_props.gd scripts/world/map_props.gd.uid scripts/world/world.gd CLAUDE.md
+git add scripts/world/map_props.gd scripts/world/map_props.gd.uid scripts/world/world.gd
 git commit -m "Move exits, portal, wells, chests and the walk marker from World into MapProps"
 git status --short
 ```
@@ -875,7 +849,6 @@ git status --short
 **Files:**
 - Create: `scripts/world/map_figures.gd`
 - Modify: `scripts/world/world.gd`
-- Modify: `CLAUDE.md`
 
 **Interfaces:**
 - Consumes: nothing from earlier tasks.
@@ -1069,19 +1042,10 @@ APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cm
 rm -r C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p3/fig-frames
 ```
 
-- [ ] **Step 7: Update `CLAUDE.md` *Layout***
-
-  - In the World bullet, `` "Criaturas", `_add_figure_sign()`, `` → `` "Criaturas", `MapFigures._add_figure_sign()`, ``.
-  - Add this bullet after the `MapProps` one:
-
-```markdown
-- `scripts/world/map_figures.gd` (`MapFigures`, `Node3D`) — the figures of a map, owned by `World` (refactor M-71): `setup(zone, player)`, then `build()` (a `BattleActor` on a cylinder collider for each `ZoneData.npcs` entry, with its sign, `_add_figure_sign()`); `add_figure()` also builds the boss for `World`. `set_quest_view(marks, hidden_names)`, `show_marks()` (the "!" / "?" labels, none during a cutscene), `has_mark()`, `hidden`, `signs`, `set_signs_shown()`, `figure_node()` / `figure_turn()` / `figure_actor()` / `reset_figures()` (cutscenes), `npc_lines(index, chapter)`. `World`'s methods of those names are façades of it.
-```
-
-- [ ] **Step 8: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add scripts/world/map_figures.gd scripts/world/map_figures.gd.uid scripts/world/world.gd CLAUDE.md
+git add scripts/world/map_figures.gd scripts/world/map_figures.gd.uid scripts/world/world.gd
 git commit -m "Move the map's figures, signs and quest marks from World into MapFigures"
 git status --short
 ```
@@ -1095,7 +1059,6 @@ git status --short
 **Files:**
 - Create: `scripts/world/map_monsters.gd`
 - Modify: `scripts/world/world.gd`
-- Modify: `CLAUDE.md`
 
 **Interfaces:**
 - Consumes: `RunFlags.autoplay()`.
@@ -1362,24 +1325,10 @@ APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cm
 
   Press it again. Expected: the groups come back (another `Depuración:` line). Close the game.
 
-- [ ] **Step 7: Update `CLAUDE.md` *Layout***
-
-  - In the 2.5.0 bullet, replace each text on the left with the text on the right:
-    - `` `World._tick_refill()` every `REFILL_S` 45 s `` → `` `MapMonsters.tick_refill()` every `REFILL_S` 45 s ``
-    - `` `_add_group()` returns the group `` → `` `MapMonsters._add_group()` returns the group ``
-  - In the World bullet:
-    - `` (`_add_group()` and `add_rare()` put nothing while it is set `` → `` (`MapMonsters._add_group()` and `add_rare()` put nothing while it is set; `World.debug_no_groups` is an alias of `MapMonsters.debug_no_groups` ``
-    - `` a placing or a cutscene (`_calm()`) `` → `` a placing or a cutscene (`MapMonsters.calm()`) ``
-  - Add this bullet after the `MapFigures` one:
-
-```markdown
-- `scripts/world/map_monsters.gd` (`MapMonsters`, `Node3D`) — the groups of monsters of a map, owned by `World` (refactor M-71): `setup(zone, player)` (seeds its own `_rng`), `set_flags()`, `respawn_groups()` / `group_count()` / `clear_groups()` (signal `groups_reset`), `add_rare()` / `has_rare()`, and the per-tick calls `World` makes in order: `move_groups(delta)`, `tick_refill(delta)`, `check_contact(pos, now_ms)` (true: `World._trigger(false)`). Also `calm(now_ms)`, `contact_enemies()` / `end_contact()`, `group_index()`, `groups`, `set_shy()`, `set_repel(on, now_ms)` / `is_repelled()`, and `static var debug_no_groups`. The clock is `World._sim_ms`, passed as `int`. `World`'s methods of those names, and `set_monsters_shy()`, are façades of it.
-```
-
-- [ ] **Step 8: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add scripts/world/map_monsters.gd scripts/world/map_monsters.gd.uid scripts/world/world.gd CLAUDE.md
+git add scripts/world/map_monsters.gd scripts/world/map_monsters.gd.uid scripts/world/world.gd
 git commit -m "Move the groups of monsters from World into MapMonsters"
 git status --short
 ```
@@ -1393,7 +1342,6 @@ git status --short
 **Files:**
 - Create: `scripts/world/autoplay_hunter.gd`
 - Modify: `scripts/world/world.gd`
-- Modify: `CLAUDE.md`
 
 **Interfaces:**
 - Consumes: `MapMonsters.groups`, `MapMonsters.group_index(node)` and `MapMonsters.groups_reset` (Task 4).
@@ -1514,19 +1462,10 @@ APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cm
 
   The hunt in particular: `Grupo vencido` is counted in the hundreds on v1, as in the reference, and medallas reaches 12/12 within its `MEDAL_TOUR_TIME`.
 
-- [ ] **Step 6: Update `CLAUDE.md` *Layout***
-
-  - In the World bullet, `` these timers and the calm after a battle count `_sim_ms`, `` → `` these timers (`AutoplayHunter`) and the calm after a battle (`MapMonsters.calm()`) count `World._sim_ms`, ``.
-  - Add this bullet after the `MapMonsters` one:
-
-```markdown
-- `scripts/world/autoplay_hunter.gd` (`AutoplayHunter`, `RefCounted`) — autoplay only: the hunt for groups, owned by `World` (refactor M-71): `setup(zone, player, monsters)`, `set_on()` (what `World.set_autoplay_hunt()` calls), `is_on()`, `forget()` (on `MapMonsters.groups_reset`), `step(pos, now)` each physics tick while hunting and no Incienso burns (`AUTOPLAY_HUNT_RADIUS` 60 m, `_CAVE` 12 m, `AUTOPLAY_HUNT_MS` 15 s, `AUTOPLAY_HUNT_RETRY_MS` 20 s on `World._sim_ms`).
-```
-
-- [ ] **Step 7: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add scripts/world/autoplay_hunter.gd scripts/world/autoplay_hunter.gd.uid scripts/world/world.gd CLAUDE.md
+git add scripts/world/autoplay_hunter.gd scripts/world/autoplay_hunter.gd.uid scripts/world/world.gd
 git commit -m "Move the autoplay hunt for groups from World into AutoplayHunter"
 git status --short
 ```
@@ -1541,7 +1480,6 @@ git status --short
 - Create: `scripts/world/map_uses.gd`
 - Modify: `scripts/world/world.gd`
 - Modify: `scripts/world/map_hud.gd` (the prompt's sizing text)
-- Modify: `CLAUDE.md`
 
 **Interfaces:**
 - Consumes:
@@ -2054,23 +1992,10 @@ APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cm
 rm -r C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p3/uses-frames
 ```
 
-- [ ] **Step 7: Update `CLAUDE.md` *Layout***
-
-  - In the World bullet, replace each text on the left with the text on the right:
-    - `` (the verb and, for a figure, its name, `_prompt_text()`: `` → `` (the verb and, for a figure, its name, `MapUses._prompt_text()`: ``
-    - `` "Hablar" / "Comprar" / "Abrir"..., `_use_button`, that does what Enter does) `` → `` "Hablar" / "Comprar" / "Abrir"..., `MapHud._use_button`, that does what Enter does) ``
-    - `` with the accept key's name (`_action_key_name()`: `` → `` with the accept key's name (`MapUses._action_key_name()`: ``
-  - At the start of the World bullet, right after `` `scenes/world/world.tscn` + `scripts/world/world.gd` (`World`) — ``, insert this sentence: `the map scene: it builds the zone, the dungeon, the player, the camera, the lantern and the particles, keeps the freeze state, the boss, the steps, the village check and the clock `_sim_ms`, and calls its pieces in a fixed order from `_physics_process` (`MapHud`, `MapProps`, `MapFigures`, `MapMonsters`, `AutoplayHunter`, `MapUses`, below; refactor M-71); every public method of the pieces' jobs stays here as a façade and its signals are unchanged. `
-  - Add this bullet after the `AutoplayHunter` one:
-
-```markdown
-- `scripts/world/map_uses.gd` (`MapUses`, `Node`) — what the hero can use on a map, owned by `World` (refactor M-71): `setup(zone, player, camera, hud, figures, props, dungeon)`, `set_flags()`, `step(pos)` (last in `World`'s tick: the prompt for the nearest use, a tap's errand once in reach, autoplay's talks once per approach), `check_exits(pos)` (the open exit walked into, `{}` for none; a closed one's notice), `use_nearest()` (Enter, the use button), `aim_at(screen)` (a click or tap), `drop_errand()`, `forget_near()`, `disarm_exits()`, `forget_covered_signs()`, `hide_prompt()` / `prompt_showing()`. `PROMPTS`, `NPC_KINDS` and the radii live here. Its signals (`talk_requested`, `npc_requested`, `shop_requested`, `inn_requested`, `chest_opened`, `well_requested`, `lever_pulled`, `key_taken`, `door_used`, `portal_used`) are re-emitted by `World` under the same names (`_forward_use_signals()`).
-```
-
-- [ ] **Step 8: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add scripts/world/map_uses.gd scripts/world/map_uses.gd.uid scripts/world/map_hud.gd scripts/world/world.gd CLAUDE.md
+git add scripts/world/map_uses.gd scripts/world/map_uses.gd.uid scripts/world/map_hud.gd scripts/world/world.gd
 git commit -m "Move prompts, uses, taps and exits from World into MapUses"
 git status --short
 ```

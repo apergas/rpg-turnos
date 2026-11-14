@@ -1,4 +1,5 @@
 class_name Vegetation extends RefCounted
+## Constructor: static; builds the grass and flower MultiMesh nodes under the root it is given and returns their shared material. Its static var half_density is a setting DisplaySettings writes.
 ## Builds tall grass and flowers from code. Grass tufts (BLADES blades each) go on
 ## a jittered grid wherever is_free says so, split into CHUNK-sized MultiMeshes so the
 ## camera skips the ones it does not see. The same seed always gives the same layout.

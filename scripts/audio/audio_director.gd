@@ -43,7 +43,7 @@ var _autoplay := false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
+	_autoplay = RunFlags.autoplay()
 	_no_playback = DisplayServer.get_name() == "headless" \
 		or Engine.get_write_movie_path() != ""
 	_muted = _autoplay or _no_playback
@@ -104,17 +104,6 @@ func play_music(id: String) -> void:
 	_fade.tween_property(new, "volume_linear", _music_level(), CROSSFADE)
 	_fade.tween_property(old, "volume_linear", 0.0, CROSSFADE)
 	_fade.chain().tween_callback(old.stop)
-
-
-## Fades the music out.
-func stop_music() -> void:
-	_music_id = ""
-	_new_fade()
-	for player in _music:
-		_fade.tween_property(player, "volume_linear", 0.0, CROSSFADE)
-	_fade.chain().tween_callback(func() -> void:
-		for player in _music:
-			player.stop())
 
 
 ## Cross-fades over AMBIENT_CROSSFADE to the ambient (an AmbientLibrary id; "" stops it);

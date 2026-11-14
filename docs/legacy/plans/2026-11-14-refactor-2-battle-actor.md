@@ -18,7 +18,7 @@
 - **Every Godot run sets APPDATA inline to the literal scratch path** `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor`. Never use `$APPDATA` in `rm`, `mv` or `cp`. Reference logs live in `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/`.
 - **One task = one commit**, game working after each. Commit messages in English, no `Co-Authored-By`, no attribution of any kind. Never push.
 - Branch `feature/refactor-2-battle-actor` from `develop` (with plan 1 merged), merged back with `git merge --no-ff`.
-- `CLAUDE.md` *Layout* is updated in the same commit as the code.
+- `CLAUDE.md` changes only when the folder map or one of its gotchas changes; it never lists functions or per-file entries.
 - Every new `.gd` gets a `.gd.uid` from `--import`; the project commits `.uid` files, so each new one is added with its script.
 - Do not edit `scripts/tools/*` (`trim_animations.gd` is an import script: touching it would reimport the models). Their comments that name "BattleActor's CHARACTER_ANIMS" / "BattleActor's hair pieces" stay as they are.
 - Target (orientative): `battle_actor.gd` under 900 lines (the dry run of this plan ends at about 740).
@@ -92,7 +92,7 @@ Expected: `grep done`, then only `status done`. If PNGs show as modified: when i
 
 **Files:**
 - Create (scratch, outside the repo): `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/tools/move_members.awk`
-- Modify: `scripts/battle/low_poly.gd` (six new public static functions), `scripts/battle/battle_actor.gd` (the six private ones removed, 127 calls renamed), `CLAUDE.md`
+- Modify: `scripts/battle/low_poly.gd` (six new public static functions), `scripts/battle/battle_actor.gd` (the six private ones removed, 127 calls renamed)
 
 **Interfaces:**
 - Consumes: plan 1's references `ref/movie/`, `ref/movie.log`, `ref/movie-caravana/`, `ref/bestiary-unstable.txt`, `ref/eco.log`, `ref/v1.log` and `ref/v2.log`.
@@ -226,7 +226,7 @@ These bodies are the six `BattleActor` statics verbatim (`_disc` and `_cone` cal
 ## The primitives (sphere, cylinder, cone, hemisphere, disc) and merged() serve BattleActor's builders.
 ```
 
-- [ ] **Step 5: Remove the six statics from `BattleActor` and rename their calls**
+- [ ] **Step 4: Remove the six statics from `BattleActor` and rename their calls**
 
 ```bash
 cd /c/Users/peixe/Documents/rpg-turnos
@@ -248,24 +248,14 @@ Expected (no `NOT FOUND` line from awk):
 0
 ```
 
-- [ ] **Step 6: Verify**
+- [ ] **Step 5: Verify**
 
 Run H0; H1 on `scripts/battle/low_poly.gd` and `scripts/battle/battle_actor.gd`; H2; H3; H4. All as expected there.
 
-- [ ] **Step 7: Update `CLAUDE.md`**
-
-In the `scripts/battle/low_poly.gd` (`LowPoly`) entry, replace `(\`override\` becomes the instance's \`material_override\`).` with:
-
-```
-(`override` becomes the instance's `material_override`), and the primitives of `BattleActor`'s builders (M-72): `sphere(radius)`, `cylinder(radius, height)`, `cone(radius, height)`, `hemisphere(radius, height)`, `disc(radius)` and `merged(mesh, xforms)` (one mesh repeated at each transform, one draw call).
-```
-
-In the `scenes/battle/battle_actor.tscn` + `scripts/battle/battle_actor.gd` entry, replace `; \`_merged()\`)` with `; \`LowPoly.merged()\`)`.
-
-- [ ] **Step 8: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add scripts/battle/low_poly.gd scripts/battle/battle_actor.gd CLAUDE.md
+git add scripts/battle/low_poly.gd scripts/battle/battle_actor.gd
 git commit -m "Move BattleActor's mesh primitives into LowPoly"
 ```
 
@@ -275,7 +265,7 @@ git commit -m "Move BattleActor's mesh primitives into LowPoly"
 
 **Files:**
 - Create: `scripts/battle/actor_looks.gd` (+ its `.gd.uid` from `--import`)
-- Modify: `scripts/battle/battle_actor.gd`, `CLAUDE.md`
+- Modify: `scripts/battle/battle_actor.gd`
 
 **Interfaces:**
 - Consumes: Task 1's helper.
@@ -377,26 +367,10 @@ Run H0; H1 on `scripts/battle/actor_looks.gd`, `scripts/battle/battle_actor.gd`,
 
 Then H2, H3 and H4.
 
-- [ ] **Step 5: Update `CLAUDE.md`**
-
-In the `BattleActor` entry, replace `figure of a fighter or villager built from the \`LOOKS\` table (\`look\`:` with:
-
-```
-figure of a fighter or villager built from `ActorLooks.LOOKS` (`look`, an `ActorLooks.Look`, which `BattleActor.Look` aliases:
-```
-
-In the `scripts/tools/head_textures.gd` entry, replace `(see \`BattleActor\`)` with `(see \`ActorLooks\`)`.
-
-Add this entry right after the `BattleActor` entry:
-
-```
-- `scripts/battle/actor_looks.gd` (`ActorLooks`, `RefCounted`, data only, M-72) — every figure a `BattleActor` can be: `enum Look` (`BattleActor.Look` is its alias, `const Look = ActorLooks.Look`, so `BattleActor.Look.X` keeps working) and `LOOKS` (look → what it is made of: a KayKit `scene` with `scale`, `top`, `hide`, `anims`, `tint`, `mesh_tints`, `props`, `aura`, `head_texture`, `hair`, `cape` / `hide_cape`, `wrap_color`, `neck_glow`; or the colours, `scale`, `top`, `fly`, `flap_time`, `alpha`... of a figure built in code), with what the entries name: the KayKit models and the skeletons' weapons (`KNIGHT`, `MAGE`, `SKELETON_*`), `CHARACTER_SCALE`, the animation tables `CHARACTER_ANIMS` / `SKELETON_ANIMS` / `ROGUE_ANIMS`, the hand bones, the hero's and the caravan people's colours and heads (`HERO_*`, `HEAD_*`, `HAIR_*`, `SKIN_*`, `PERSON_HIDE`), the hair pieces (`HAIR_PIECES`, `HAIR_PROFILES`, `HAIR_SEGMENTS`) and the aura colours (`FOG_AURA_COLOR`, `ECHO_AURA_COLOR`). Never touches nodes.
-```
-
-- [ ] **Step 6: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add scripts/battle/actor_looks.gd scripts/battle/actor_looks.gd.uid scripts/battle/battle_actor.gd CLAUDE.md
+git add scripts/battle/actor_looks.gd scripts/battle/actor_looks.gd.uid scripts/battle/battle_actor.gd
 git status --short; echo "status done"
 git commit -m "Move BattleActor's look data into ActorLooks"
 ```
@@ -409,7 +383,7 @@ Expected before the commit: `status done` alone after the add (nothing left unst
 
 **Files:**
 - Create: `scripts/battle/creature_builder.gd` (+ `.gd.uid`)
-- Modify: `scripts/battle/battle_actor.gd`, `CLAUDE.md`
+- Modify: `scripts/battle/battle_actor.gd`
 
 **Interfaces:**
 - Consumes: `LowPoly.sphere/cylinder/cone/hemisphere/disc` (Task 1), `ActorLooks.Look` (Task 2).
@@ -595,28 +569,10 @@ func add_mesh(parent: Node3D, mesh: Mesh, color: Color, pos: Vector3, \
 
 Run H0; H1 on `scripts/battle/creature_builder.gd` and `scripts/battle/battle_actor.gd`; H2; H3; H4. In H4, the portraits of the looks built here are `SLIME`, `KING_SLIME`, `METAL_SLIME`, `RED_SLIME`, `SAND_SLIME`, `BOARD`, `CAT`, `BAT`, `CRYPT_BAT`, `VULTURE`, `ICE_BAT`, the four mushrooms, `WOLF`, `WOLF_CUB`, `JAGUAR`, `SNOW_WOLF`, `CHICKEN`, `GOBLIN`, `PLANT`, `TRAP_PLANT`, the five golems, `SPIDER` and the four specters: all must come out unchanged (`git status assets/bestiary` clean, or equal by eye if listed as unstable). The ones that are not enemies (`BOARD`, `CAT`, `CHICKEN`, `WOLF_CUB`) are seen in the H3 and H2 frames when they appear; otherwise `--check-only` and the unchanged code are the check.
 
-- [ ] **Step 6: Update `CLAUDE.md`**
-
-In the `BattleActor` entry:
-- replace `(the plant in green and pink, \`_build_plant()\`)` with `(the plant in green and pink, \`CreatureBuilder.build_plant()\`)`;
-- replace `(orange cap, \`_build_mushroom()\`)` with `(orange cap, \`CreatureBuilder.build_mushroom()\`)`;
-- replace `` `_build_wolf()` ×1.75 `` with `` `CreatureBuilder.build_wolf()` ×1.75 ``;
-- replace `` `hops()` (the slimes) and `play_hop()`; `reset()`. `` with:
-
-```
-`hops()` (the slimes) and `play_hop()`; `reset()`. Builder methods, for `CreatureBuilder` and `CharacterBuilder` only (M-72): `body()`, `add_mesh()`, `add_blob()`, `add_ghost()`, `add_wing()`, `set_sway()`, `set_jaw()`, `set_hover()`.
-```
-
-Add this entry right after the `ActorLooks` entry:
-
-```
-- `scripts/battle/creature_builder.gd` (`CreatureBuilder`, `RefCounted`, builder, M-72) — the `BattleActor` figures built in code from their `ActorLooks.LOOKS` entry, each a `static func build_x(actor: BattleActor, data: Dictionary)`: `build_slime` (the slimes and the Rey Slime's crown, `GOLD`), `build_board`, `build_cat`, `build_bat` (also the crypt and ice bats and the Buitre), `build_mushroom`, `build_wolf` (also the cub, the Jaguar and the snow wolf), `build_chicken`, `build_goblin`, `build_plant`, `build_golem`, `build_spider` and `build_specter`, with the profiles they lathe (`SLIME_PROFILE`, `WOLF_BODY_PROFILE`, `WOLF_HEAD_PROFILE`, `LEG_PROFILE`, `BLOCK_PROFILE`, `ABDOMEN_PROFILE`, `SPECTER_PROFILE`) and the specter's opacities (`SPECTER_ALPHA`, `AURA_ALPHA`). Static, no state: it hangs the meshes under `actor.body()` through `actor.add_mesh()` / `add_blob()` / `add_ghost()` and names the moving parts with `actor.add_wing()`, `set_sway()`, `set_jaw()` and `set_hover()`, never the actor's private members. The v2's figures built in code are still `BattleActor._build_*`.
-```
-
-- [ ] **Step 7: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add scripts/battle/creature_builder.gd scripts/battle/creature_builder.gd.uid scripts/battle/battle_actor.gd CLAUDE.md
+git add scripts/battle/creature_builder.gd scripts/battle/creature_builder.gd.uid scripts/battle/battle_actor.gd
 git commit -m "Move the v1 figures built in code from BattleActor into CreatureBuilder"
 ```
 
@@ -625,7 +581,7 @@ git commit -m "Move the v1 figures built in code from BattleActor into CreatureB
 ### Task 4: The v2 figures in `CreatureBuilder`, and `CreatureBuilder.build()`
 
 **Files:**
-- Modify: `scripts/battle/creature_builder.gd`, `scripts/battle/battle_actor.gd`, `CLAUDE.md`
+- Modify: `scripts/battle/creature_builder.gd`, `scripts/battle/battle_actor.gd`
 
 **Interfaces:**
 - Consumes: everything of Task 3; `LowPoly.merged()` (Task 1).
@@ -870,22 +826,12 @@ grep -E '^(Escena|Juego completado)|El ojo del Devorador se abre' C:/Users/peixe
 grep -E 'ERROR|WARNING' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/portal.log; echo "grep done"
 ```
 
-Expected: at least one line containing `El ojo del Devorador se abre`, then `Escena: cruce` and `Juego completado (v2): Nv 40, ...` (Nv 38 to 40 in about 13-15 minutes of play time, as in `CLAUDE.md`), and `grep done` with at most the known Jolt warning before it. If the run ends before the Devorador (a defeat loop), raise `--quit-after` to 150000.
+Expected: at least one line containing `El ojo del Devorador se abre`, then `Escena: cruce` and `Juego completado (v2): Nv 40, ...` (Nv 38 to 40 in about 13-15 minutes of play time), and `grep done` with at most the known Jolt warning before it. If the run ends before the Devorador (a defeat loop), raise `--quit-after` to 150000.
 
-- [ ] **Step 5: Update `CLAUDE.md`**
-
-In the `BattleActor` entry, replace `` `set_jaw()`, `set_hover()`. `` (end of the builder methods sentence of Task 3) with `` `set_jaw()`, `set_hover()`, `set_devourer()`. ``
-
-Replace the whole `scripts/battle/creature_builder.gd` entry with:
-
-```
-- `scripts/battle/creature_builder.gd` (`CreatureBuilder`, `RefCounted`, builder, M-72) — the `BattleActor` figures built in code from their `ActorLooks.LOOKS` entry: `build(actor, data)` picks one by `actor.look` (called by `BattleActor._ready()` for every look without a `scene`), each a `static func build_x(actor: BattleActor, data: Dictionary)`: `build_slime` (the slimes and the Rey Slime's crown, `GOLD`), `build_board`, `build_cat`, `build_bat` (also the crypt and ice bats and the Buitre), `build_mushroom`, `build_wolf` (also the cub, the Jaguar and the snow wolf), `build_chicken`, `build_goblin`, `build_plant`, `build_golem`, `build_spider`, `build_specter`, `build_goat`, `build_griffin`, `build_gargoyle`, `build_rat`, `build_devourer` (`DEVOURER_PROFILE`, `DEVOURER_LUMPS`, `DEVOURER_MOUTHS`, `EYELID_HALF`), `build_frog`, `build_snake`, `build_monkey`, `build_scorpion`, `build_worm`, `build_canteen` and `build_pot` (the Kenney pot through `TREE_SHADER`), with the profiles they lathe (`SLIME_PROFILE`, `WOLF_BODY_PROFILE`, `WOLF_HEAD_PROFILE`, `LEG_PROFILE`, `BLOCK_PROFILE`, `ABDOMEN_PROFILE`, `SPECTER_PROFILE`) and the specter's opacities (`SPECTER_ALPHA`, `AURA_ALPHA`). Static, no state: it hangs the meshes under `actor.body()` through `actor.add_mesh()` / `add_blob()` / `add_ghost()` and names the moving parts with `actor.add_wing()`, `set_sway()`, `set_jaw()`, `set_hover()` and `set_devourer()`, never the actor's private members.
-```
-
-- [ ] **Step 6: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add scripts/battle/creature_builder.gd scripts/battle/battle_actor.gd CLAUDE.md
+git add scripts/battle/creature_builder.gd scripts/battle/battle_actor.gd
 git commit -m "Move the v2 figures built in code into CreatureBuilder and let it pick the builder"
 ```
 
@@ -895,7 +841,7 @@ git commit -m "Move the v2 figures built in code into CreatureBuilder and let it
 
 **Files:**
 - Create: `scripts/battle/character_builder.gd` (+ `.gd.uid`)
-- Modify: `scripts/battle/battle_actor.gd`, `CLAUDE.md`
+- Modify: `scripts/battle/battle_actor.gd`, `CLAUDE.md` (*Conventions*)
 
 **Interfaces:**
 - Consumes: the builder methods of Tasks 3-4, `ActorLooks.HAIR_PIECES` / `HAIR_PROFILES` / `HAIR_SEGMENTS` (Task 2), `LowPoly.sphere/cylinder` (Task 1), `BattleActor.HAND_R`, `BattleActor.set_equipment()`, `BattleActor.top_height()`, `BattleActor.look`.
@@ -1109,21 +1055,9 @@ grep -E 'ERROR|WARNING' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/pl
 
 Expected: both print `Eco de la Niebla: victoria (...)` / `derrota (...)` lines (the counts vary with chance; the new run must print such lines), and `grep done` with at most the known Jolt warning.
 
-- [ ] **Step 5: Update `CLAUDE.md`**
+- [ ] **Step 5: `CLAUDE.md` *Conventions***
 
-In the `BattleActor` entry:
-- replace `` `set_devourer()`. `` (end of the builder methods sentence) with `` `set_devourer()`, `set_model()`, `set_aura()`, `set_animations()`. ``;
-- replace `(\`hair\` {style beard / bun / tail, color}, \`_add_hair()\`)` with `(\`hair\` {style beard / bun / tail, color}, built by \`CharacterBuilder\`)`;
-- replace `(linen wraps built on the bones, \`_add_mummy_wraps()\`)` with `(linen wraps built on the bones by \`CharacterBuilder\`)`;
-- replace `(the weapon and the shield tinted with \`Equipment.tint()\`:` with `(the weapon and the shield tinted with \`Equipment.tint()\` through \`CharacterBuilder.tint()\` / \`tint_mesh()\`:`.
-
-Add this entry right after the `CreatureBuilder` entry:
-
-```
-- `scripts/battle/character_builder.gd` (`CharacterBuilder`, `RefCounted`, builder, M-72) — the `BattleActor` figures that are KayKit models, from their `ActorLooks.LOOKS` entry: `build(actor, data)` (called by `BattleActor._ready()` for every look with a `scene`: the model turned to face -Z with its `hide` props hidden, the skeletons' weapons on `BoneAttachment3D`s of their hand bones (`SKELETON_PATH`), `tint` / `mesh_tints`, the Armadura hueca's ember (`neck_glow`), the Momia's wraps (`_add_mummy_wraps()`, `_hang_on_bone()`), `head_texture`, the cape (`cape` / `hide_cape`), the hair pieces (`_add_hair()`), an `aura` ball (`FOG_AURA_ALPHA`), the hero's wooden stick (`STICK_*`) and the looping idle and walk clips of `ANIM_PLAYER_PATH`), and `tint(model, color)` / `tint_mesh(mi, color)` (copies of the imported materials with the albedo multiplied; `BattleActor.set_equipment()` uses them too). Static, no state: it writes into the actor only through `actor.set_model()`, `set_aura()`, `set_animations()`, `add_mesh()`, `add_blob()`, `add_ghost()` and `set_equipment()`.
-```
-
-In *Conventions*, the line plan 1 wrote about the three kinds of script names the builders: run `grep -n 'CreatureBuilder' CLAUDE.md`. If none of its matches is in the *Conventions* section, add `` `CreatureBuilder`, `CharacterBuilder` `` to the list of builder classes in that line (after `UiStyle`).
+In *Conventions*, the **Constructors** line plan 1 wrote lists the builder classes, ending with `UiTheme`, `UiStyle`. Add `` `CreatureBuilder`, `CharacterBuilder` `` to that list, after `UiStyle`.
 
 - [ ] **Step 6: Commit**
 

@@ -6,7 +6,6 @@ class_name DialogueBox extends Control
 
 signal _advanced
 
-const AUTOPLAY_DELAY := 0.8
 ## Seconds the continue mark is shown and hidden.
 const MORE_BLINK := 0.5
 const MAX_WIDTH := float(UiTokens.WINDOW_W_MAX)
@@ -14,7 +13,6 @@ const BOTTOM := float(UiTokens.SPACE_6)
 ## Screen margins and window margins: what a line can't use of the screen's width.
 const SIDE_ROOM := float(2 * UiTokens.SPACE_6 + 2 * UiTokens.SPACE_4)
 
-var _autoplay := false
 var _listening := false
 var _speaker: Label
 var _line: Label
@@ -25,9 +23,15 @@ var _blinking := false
 ## When the mark started blinking, so every new line begins with it visible.
 var _blink_start := 0
 
+#region Autoplay
+## Seconds each line stays on autoplay before the next.
+const AUTOPLAY_DELAY := 0.8
+var _autoplay := false
+#endregion
+
 
 func _ready() -> void:
-	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
+	_autoplay = RunFlags.autoplay()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_process(false)
