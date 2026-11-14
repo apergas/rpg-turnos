@@ -9,8 +9,6 @@ class_name NameEntry extends Control
 signal accepted(hero_name: String)
 signal cancelled
 
-## The name's opacity while nothing is typed and the default name shows.
-const EMPTY_ALPHA := 0.45
 const KEY_SIZE := Vector2(58, 50)
 const COLUMNS := 8
 ## Phone: wider and shorter, so the grid and its buttons fit a landscape screen.
@@ -186,7 +184,8 @@ func _set_upper(upper: bool) -> void:
 func _refresh() -> void:
 	if _typed == "":
 		_name_label.text = StoryState.DEFAULT_NAME
-		_name_label.modulate = Color(1, 1, 1, EMPTY_ALPHA)
+		_name_label.modulate = UiTokens.color(&"white")
+		_name_label.modulate.a = UiTokens.OPACITY_PLACEHOLDER
 		return
 	_name_label.modulate = Color.WHITE
 	_name_label.text = _typed + "_".repeat(StoryState.MAX_NAME_LENGTH - _typed.length())

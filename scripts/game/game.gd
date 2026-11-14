@@ -1715,7 +1715,8 @@ func _build_fade() -> void:
 	layer.layer = UiTokens.LAYER_FADE
 	add_child(layer)
 	_fade = ColorRect.new()
-	_fade.color = Color(0, 0, 0, 0)
+	_fade.color = UiTokens.color(&"black")
+	_fade.color.a = 0.0
 	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_fade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	layer.add_child(_fade)
