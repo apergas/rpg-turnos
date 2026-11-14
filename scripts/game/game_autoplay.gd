@@ -139,6 +139,7 @@ func after_battle(outcome: int) -> void:
 		# back to Brumaclara for the reports and offers, and the run ends.
 		if not _ctx.world.in_village() and _ctx.state.inventory.count(Inventory.WING) > 0:
 			await fly_home()
+		if _ctx.world.in_village():
 			await restock()
 		print_v3_so_far()
 		quit_requested.emit()
