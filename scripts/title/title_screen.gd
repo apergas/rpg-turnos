@@ -490,8 +490,7 @@ func _button(text: String) -> Button:
 	var button := Button.new()
 	button.text = text
 	UiTheme.menu_row(button)
-	button.add_theme_font_override(&"font", UiTheme.font_for(&"title-s"))
-	button.add_theme_font_size_override(&"font_size", UiTokens.TYPE_TITLE_S_SIZE)
+	button.theme_type_variation = UiTheme.TITLE_ROW
 	# The row reserves room on the left for the cursor; the same on the right centres the text.
 	for box_name in [&"normal", &"hover", &"pressed", &"hover_pressed", &"disabled"]:
 		var box := UiTheme.row_style()
@@ -508,7 +507,8 @@ func _build_fade() -> void:
 	layer.layer = UiTokens.LAYER_TITLE_FADE
 	add_child(layer)
 	_fade = ColorRect.new()
-	_fade.color = Color(0, 0, 0, 0)
+	_fade.color = UiTokens.color(&"black")
+	_fade.color.a = 0.0
 	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_fade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	layer.add_child(_fade)

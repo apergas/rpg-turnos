@@ -35,17 +35,6 @@ const BAR_GAP := 0.15
 const ARROW_GAP := 0.5
 ## A click this close (pixels) to an enemy aims at it.
 const PICK_RADIUS := 120.0
-const DEFEND_COLOR := Color(0.6, 0.8, 1.0)
-## Glow of an enemy gathering strength for a charged blow.
-const CHARGE_COLOR := Color(1.0, 0.55, 0.15)
-## Glow of the hero when the Despertador works.
-const WAKE_COLOR := Color(1.0, 0.85, 0.35)
-const STATUS_COLORS := {
-	BattleEngine.POISON: Color(0.6, 0.2, 0.8),
-	BattleEngine.SLEEP: Color(0.35, 0.45, 1.0),
-	BattleEngine.SILENCE: Color(0.6, 0.6, 0.65),
-	BattleEngine.STUN: Color(1.0, 0.85, 0.3),
-}
 const STANDALONE_LEVEL := 3
 ## Autoplay flees from normal battle number AUTOPLAY_EVERY, 2 × AUTOPLAY_EVERY... and
 ## defends in the first round of battle AUTOPLAY_DEFEND_AT, AUTOPLAY_DEFEND_AT +
@@ -344,7 +333,7 @@ func _play_event(event: Dictionary) -> void:
 			await _actor(event.actor).play_attack(target.global_position)
 		BattleEvent.CHARGE:
 			_sfx(SfxLibrary.FIRE)
-			await _actor(event.actor).play_cast(CHARGE_COLOR)
+			await _actor(event.actor).play_cast(_charge_color())
 			await _say("%s acumula fuerza..." % _cap(_the(_fighter(event.actor))))
 		BattleEvent.SKILL:
 			if event.actor == BattleEvent.HERO:
@@ -387,7 +376,7 @@ func _play_event(event: Dictionary) -> void:
 			await _say("%s se tambalea." % _cap(_the(_fighter(event.actor))))
 		BattleEvent.DEFEND:
 			_sfx(SfxLibrary.CURSOR)
-			await _actor(event.actor).play_status(DEFEND_COLOR)
+			await _actor(event.actor).play_status(_defend_color())
 			await _say("¡%s se defiende!" % _fighter(event.actor).display_name)
 		BattleEvent.FLEE_OK:
 			_sfx(SfxLibrary.CANCEL)
@@ -405,17 +394,17 @@ func _play_event(event: Dictionary) -> void:
 			await _play_status_on(event)
 		BattleEvent.STATUS_TICK:
 			_sfx(SfxLibrary.HIT)
-			await _actor(event.target).play_status(STATUS_COLORS[event.status], event.amount, &"status-poison")
+			await _actor(event.target).play_status(_status_color(event.status), event.amount, &"status-poison")
 			_show_life(event.target, event.hp_left)
 			await _say("¡El veneno quita %d PV a %s!" % [event.amount,
 				_fighter(event.target).display_name])
 		BattleEvent.STATUS_OFF:
 			await _play_status_off(event)
 		BattleEvent.STUNNED:
-			await _actor(event.actor).play_status(STATUS_COLORS[BattleEngine.STUN])
+			await _actor(event.actor).play_status(_status_color(BattleEngine.STUN))
 			await _say("%s aún no se recupera del golpe." % _fighter(event.actor).display_name)
 		BattleEvent.ASLEEP:
-			await _actor(event.actor).play_status(STATUS_COLORS[BattleEngine.SLEEP])
+			await _actor(event.actor).play_status(_status_color(BattleEngine.SLEEP))
 			var sleeper := _fighter(event.actor)
 			await _say("%s duerme profundamente." % sleeper.display_name if sleeper == hero
 				else "%s está dormid%s." % [sleeper.display_name, _ending(sleeper)])
@@ -440,15 +429,15 @@ func _play_event(event: Dictionary) -> void:
 			_hud.update_status(hero.status)
 			await _say("¡La Pluma de fénix arde! %s se levanta." % hero.display_name)
 		BattleEvent.WAKE_GUARD:
-			await _actor(event.target).play_status(WAKE_COLOR)
+			await _actor(event.target).play_status(_wake_color())
 			await _say("%s no se dormirá en este combate." % _fighter(event.target).display_name)
 		BattleEvent.NO_SLEEP:
 			_sfx(SfxLibrary.MISS)
-			await _actor(event.target).play_status(WAKE_COLOR)
+			await _actor(event.target).play_status(_wake_color())
 			await _say("%s no se duerme." % _fighter(event.target).display_name)
 		BattleEvent.IMMUNE:
 			_sfx(SfxLibrary.MISS)
-			await _actor(event.target).play_status(STATUS_COLORS[event.status])
+			await _actor(event.target).play_status(_status_color(event.status))
 			await _say(_immune_text(event))
 		BattleEvent.DEFEATED:
 			_show_arrow(-1)
@@ -544,7 +533,7 @@ func _show_life(who: int, hp_left: int) -> void:
 
 func _play_status_on(event: Dictionary) -> void:
 	_sfx(SfxLibrary.MISS)
-	await _actor(event.target).play_status(STATUS_COLORS[event.status])
+	await _actor(event.target).play_status(_status_color(event.status))
 	var target := _fighter(event.target)
 	if event.target == BattleEvent.HERO:
 		_hud.update_status(hero.status)
@@ -630,6 +619,25 @@ func _to(c: Combatant) -> String:
 ## hero's lines avoid them: the player picks the name and the hero has no set gender.
 func _ending(c: Combatant) -> String:
 	return "a" if c.female else "o"
+
+
+## Glow of the hero defending, of an enemy gathering strength for a charged blow and of
+## the hero when the Despertador works (design-system `effect-*` tokens).
+static func _defend_color() -> Color:
+	return UiTokens.color(&"effect-defend")
+
+
+static func _charge_color() -> Color:
+	return UiTokens.color(&"effect-charge")
+
+
+static func _wake_color() -> Color:
+	return UiTokens.color(&"effect-wake")
+
+
+## Glow of a status landing on a fighter.
+static func _status_color(status: String) -> Color:
+	return UiTokens.color(StringName("effect-" + status))
 
 
 static func _cap(text: String) -> String:

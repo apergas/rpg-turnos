@@ -10,9 +10,6 @@ signal pinched(ratio: float)
 
 const DEAD_ZONE := 24.0
 const RADIUS := 90.0
-## The stick is the window border's colour, see-through.
-const RING_ALPHA := 0.35
-const KNOB_ALPHA := 0.6
 const KNOB_RADIUS := 34.0
 
 ## Where the stick points, screen axes, length 0..1.
@@ -113,5 +110,5 @@ func _draw() -> void:
 	if not _sliding:
 		return
 	var base := UiTokens.color(&"border-window")
-	draw_arc(_origin, RADIUS, 0.0, TAU, 48, Color(base, RING_ALPHA), 4.0, true)
-	draw_circle(_origin + direction * RADIUS, KNOB_RADIUS, Color(base, KNOB_ALPHA))
+	draw_arc(_origin, RADIUS, 0.0, TAU, 48, Color(base, UiTokens.OPACITY_TOUCH_RING), 4.0, true)
+	draw_circle(_origin + direction * RADIUS, KNOB_RADIUS, Color(base, UiTokens.OPACITY_TOUCH_KNOB))

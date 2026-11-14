@@ -22,6 +22,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
 
@@ -41,6 +42,8 @@ jobs:
       - name: Import and export
         run: |
           ./godot --headless --path . --import
+          ./godot --headless --path . --script res://scripts/tools/gen_ui_tokens.gd -- --check
+          ./godot --headless --path . --script res://scripts/tools/check_ui_values.gd
           mkdir -p build/web
           ./godot --headless --path . --export-release "Web" build/web/index.html
           test -f build/web/index.wasm
