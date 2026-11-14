@@ -19,3 +19,10 @@
 assets_src/
 
 
+
+# graphify (local tool: its hooks reinstall themselves; never versioned)
+graphify-out/
+/.githooks/post-checkout
+/.githooks/post-commit
+/.githooks/post-merge
+/.githooks/post-rewrite

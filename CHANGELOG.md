@@ -1,6 +1,6 @@
 # Registro de cambios
 
-## Sin publicar
+## 2.7.2 (2026)
 
 Por dentro, más ordenado. El juego no cambia.
 
