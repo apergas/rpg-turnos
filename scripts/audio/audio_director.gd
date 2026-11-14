@@ -43,7 +43,7 @@ var _autoplay := false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
+	_autoplay = RunFlags.autoplay()
 	_no_playback = DisplayServer.get_name() == "headless" \
 		or Engine.get_write_movie_path() != ""
 	_muted = _autoplay or _no_playback

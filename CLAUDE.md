@@ -36,6 +36,7 @@ What the code does not explain:
 - Scenes and scripts are written as text. The `.tscn` files only hold the root node and its script; every other node (stage, UI, actors) is created in code.
 - Game rules live in pure classes (`RefCounted` / `Resource`) that never touch nodes; scenes only play their results back.
 - No autoloads: `TitleScreen` owns the `AudioDirector` and the options, `Game` owns the session state, and both pass them on explicitly (`setup()`, `set_audio()`). If an autoload is ever added, a `class_name` script must not use its bare name (it compiles before autoloads exist, e.g. in `--script` runs); look it up at runtime with `get_node_or_null("/root/...")`.
+- Command-line flags are read only through `RunFlags` (`RunFlags.autoplay()`, `RunFlags.touch()`...); no other script calls `OS.get_cmdline_user_args()` or spells a `"--..."` string, except the offline tools of `scripts/tools/`.
 
 ## No tests — ever
 

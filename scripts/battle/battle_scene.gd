@@ -133,7 +133,7 @@ func _ready() -> void:
 	assert(hero != null and not enemies.is_empty() and inventory != null,
 		"Call setup() before adding BattleScene to the tree")
 	_rng.randomize()
-	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
+	_autoplay = RunFlags.autoplay()
 	Engine.time_scale = time_scale
 	BattleStage.build(self, zone)
 	_hero_actor = _spawn_actor(BattleActor.Look.HERO, HERO_POS, ENEMY_POS)

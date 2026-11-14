@@ -27,7 +27,7 @@ var _autoplay := false
 
 
 func _ready() -> void:
-	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
+	_autoplay = RunFlags.autoplay()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	var black := ColorRect.new()

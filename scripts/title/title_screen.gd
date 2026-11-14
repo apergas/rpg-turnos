@@ -72,9 +72,8 @@ var _update_window: PanelContainer
 
 
 func _ready() -> void:
-	var args := OS.get_cmdline_user_args()
-	_autoplay = args.has("--autoplay")
-	_autoplay_save = _autoplay and args.has("--autoplay-save")
+	_autoplay = RunFlags.autoplay()
+	_autoplay_save = RunFlags.autoplay_save()
 	_options = SaveStore.load_options()
 	DisplaySettings.apply(get_window(), _options)
 	if Device.is_touch():

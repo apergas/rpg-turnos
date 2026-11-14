@@ -161,7 +161,7 @@ func _accept() -> void:
 	_done = true
 	_sfx(SfxLibrary.ACCEPT)
 	var hero_name := StoryState.clean_name(_typed)
-	if OS.get_cmdline_user_args().has("--autoplay"):
+	if RunFlags.autoplay():
 		print("Nombre: %s" % hero_name)
 	accepted.emit(hero_name)
 

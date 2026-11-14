@@ -312,7 +312,7 @@ func _ready() -> void:
 		zone = ZoneData.by_id("pradera")
 	# The groups are placed with the zone and the clock: never twice the same.
 	_rng.seed = hash(zone.id) ^ Time.get_ticks_usec()
-	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
+	_autoplay = RunFlags.autoplay()
 	_grass = WorldStage.build(self, zone)
 	if zone.is_dungeon():
 		_dungeon = DungeonMap.new()

@@ -44,7 +44,7 @@ var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 
 
 func _ready() -> void:
-	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
+	_autoplay = RunFlags.autoplay()
 	var capsule := CapsuleShape3D.new()
 	capsule.radius = 0.35
 	capsule.height = 1.6
