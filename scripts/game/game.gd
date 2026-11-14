@@ -75,7 +75,6 @@ signal quit_to_title
 
 const HERO_DATA := preload("res://data/hero.tres")
 const BATTLE_SCENE := preload("res://scenes/battle/battle_scene.tscn")
-const CUTSCENE_PATH := "res://data/cutscenes/%s.tres"
 const FADE_TIME := 0.3
 const TOUCH_HINT := "Toca el suelo para ir allí, o arrastra el dedo para andar."
 ## The v2's Jefe de caravana: in Villaclaro once the caravan has come, then in the Caravana.
@@ -85,7 +84,6 @@ const LEAVE_QUESTION := "No podrás volver a Villaclaro, ni al bosque, la mina o
 const REPEL_END_NOTICE := "El incienso se ha consumido."
 const HEAL_LINE := "Descansas un momento. PV y PM recuperados."
 const SAVED_NOTICE := "Partida guardada."
-const LOAD_FAILED_NOTICE := "No se pudo cargar la partida. Empiezas de nuevo."
 const LEVER_NOTICE := "¡Tiras de la palanca! Se oye cómo se abre una reja."
 const KEY_NOTICE := "¡Encuentras la %s!"
 const DOOR_NOTICE := "Abres la reja con la %s."
@@ -96,6 +94,7 @@ const INN_NIGHT_TIME := 0.8
 var state: GameState
 var _ctx: SessionContext
 var _travel: ZoneTravel
+var _story: StoryFlow
 
 var _fade: ColorRect
 var _pause: PauseMenu
@@ -106,7 +105,6 @@ var _save := {}
 var _hero_name := ""
 ## The difficulty chosen for a new game.
 var _difficulty := Difficulty.NORMAL
-var _cutscenes: CutscenePlayer
 ## Autoplay: seconds since the last battle or change of map (AUTOPLAY_STALL_S).
 var _quiet_s := 0.0
 var _leaving := false
@@ -121,8 +119,6 @@ var _last_missions: Array[String] = []
 var _last_gear_text := ""
 ## The save slot this game writes to (SaveStore; ignored on autoplay runs).
 var _slot := 1
-## The save could not be read: the new game says so after the prologue.
-var _load_failed := false
 ## Autoplay: defeats so far (each prints "Derrota en <zone> (n)"; the credits say the total).
 var _defeats := 0
 ## --autoplay-zone=eco: autoplay goes for the Eco de la Niebla (never on any other run).
@@ -187,7 +183,6 @@ func _ready() -> void:
 			Allies.mark_arrivals(state.world_flags, state.zone_id)
 		else:
 			load_failed = true
-	_load_failed = load_failed
 	if _save.is_empty() or load_failed:
 		state.hero.display_name = StoryState.clean_name(_hero_name)
 		state.difficulty = _difficulty
@@ -204,8 +199,7 @@ func _ready() -> void:
 	_build_pause()
 	if RunFlags.debug():
 		_build_debug()
-	_build_cutscenes()
-	_add_pieces()
+	_add_pieces(load_failed)
 	if _autoplay_menu:
 		# The tour of the pause menu needs the map, not a scene.
 		state.story.mark_seen("prologo")
@@ -220,7 +214,7 @@ func _ready() -> void:
 	if prologue:
 		# Under black: the prologue fades in by itself.
 		_fade.color.a = 1.0
-		_play_prologue.call_deferred()
+		_story.play_prologue.call_deferred()
 	# Synthesize the tracks played later now, under black, so no first play stalls.
 	for id in [MusicLibrary.VILLAGE, MusicLibrary.VICTORY, MusicLibrary.DEFEAT]:
 		MusicLibrary.build(id)
@@ -234,10 +228,10 @@ func _ready() -> void:
 			await _ctx.world.show_dialogue("", family_lines)
 			_autosave(false)
 		if _save.is_empty():
-			await _check_arrival_line()  # an --autoplay-zone start in a land (the jungle)
+			await _story.check_arrival_line()  # an --autoplay-zone start in a land (the jungle)
 		_set_busy(false)
 		_show_touch_hint()
-		_check_village_scene()
+		_story.check_village_scene()
 		if _medal_tour:
 			print("Medallas: a cazar en %s" % _ctx.zone.id)
 			get_tree().create_timer(AutoplayStarts.MEDAL_TOUR_TIME).timeout.connect(_on_medal_tour_timeout)
@@ -293,21 +287,31 @@ func _make_context() -> void:
 ## wired to them); set up and added to the tree later, by _add_pieces().
 func _make_pieces() -> void:
 	_travel = ZoneTravel.new()
+	_story = StoryFlow.new()
 
 
 ## The pieces set up, wired and added, where Game used to build what they hold (node
 ## order matters for input and processing). Callables are what a piece awaits from another
 ## one; signals are what it only reports.
-func _add_pieces() -> void:
+func _add_pieces(load_failed: bool) -> void:
 	_travel.setup(_ctx)
-	_travel.check_arrival_line = _check_arrival_line
-	_travel.check_village_scene = _check_village_scene
+	_travel.check_arrival_line = _story.check_arrival_line
+	_travel.check_village_scene = _story.check_village_scene
 	_travel.update_boss = _update_boss
 	_travel.world_replaced.connect(_on_world_replaced)
 	_travel.zone_switched.connect(_on_zone_switched)
 	_travel.village_checked.connect(_on_village_changed)
 	_travel.portal_taken.connect(_on_portal_taken)
 	add_child(_travel)
+	_story.setup(_ctx)
+	_story.load_failed = load_failed
+	_story.switch_zone = _travel.switch_zone
+	_story.choose_companion = _choose_companion
+	_story.show_touch_hint = _show_touch_hint
+	_story.quit_requested.connect(func() -> void: quit_to_title.emit())
+	_story.game_completed.connect(_on_game_completed)
+	_story.v2_completed.connect(_on_v2_completed)
+	add_child(_story)
 
 
 ## ZoneTravel built a new map: the old one goes, the new one is first in the tree and stays
@@ -349,6 +353,29 @@ func _on_zone_switched(zone_id: String) -> void:
 ## The return portal was taken: autoplay's quiet clock starts over.
 func _on_portal_taken() -> void:
 	_quiet_s = 0.0
+
+
+## Autoplay: the numbers of the whole run after the v1's credits.
+func _on_game_completed(time_text: String) -> void:
+	print("Juego completado: Nv %d, tiempo de juego %s, misiones %d" % [state.hero.level,
+		time_text, state.quests_done()])
+	print("Familias completas: %d/%d" % [Bestiary.complete_count(state),
+		Bestiary.families(state).size()])
+	print("Derrotas: %d" % _defeats)
+	print("Medallas: %d/%d (enemigos comunes vencidos: %d)" % [state.medals.size(),
+		Medals.MEDALS.size(), _common_beaten])
+
+
+## Autoplay: the numbers of the v2 after its credits.
+func _on_v2_completed(numbers: Dictionary) -> void:
+	print("Juego completado (v2): Nv %d, tiempo en la caravana %s, tiempo de juego %s, misiones de la caravana %d/%d"
+		% [state.hero.level, numbers.time, CreditsData.clock(_ctx.play_time),
+		state.quests.done_of(true), QuestLog.total_of(true)])
+	print("Familias completas: %d/%d" % [Bestiary.complete_count(state),
+		Bestiary.families(state).size()])
+	print("Derrotas: %d" % _defeats)
+	print("Medallas: %d/%d (enemigos comunes vencidos: %d)" % [state.medals.size(),
+		Medals.MEDALS.size(), _common_beaten])
 
 
 ## --autoplay-zone=<id>: starts the new game in that zone with AUTOPLAY_ZONES' state.
@@ -509,7 +536,7 @@ func _on_encounter(boss: bool) -> void:
 	await _fade_to(0.0)
 	if scene != "":
 		# The boss's cutscene says what the notice would (the fragment, the open road).
-		await _play_scene(scene)
+		await _story.play_scene(scene)
 	else:
 		await _ctx.world.freeze(false)
 		if not reward_lines.is_empty():
@@ -525,10 +552,10 @@ func _on_encounter(boss: bool) -> void:
 		_ctx.world.show_mission_done(QuestLog.done_text(finished.title))
 		_ctx.world.show_notice(" ".join(finished.lines), "Misión cumplida", &"text-positive")
 	if ending_v2:
-		await _finish_v2()
+		await _story.finish_v2()
 		return
 	if won and state.is_finished() and not state.story.finished:
-		await _finish_game()
+		await _story.finish_game()
 		return
 	if outcome == BattleEngine.State.LOST:
 		_autosave(false)  # the gold lost sticks: going back to the title can't undo it
@@ -647,152 +674,7 @@ func _on_village_changed(inside: bool) -> void:
 		state.town_zone = _ctx.zone.id
 	_play_map_music()
 	if inside:
-		_check_village_scene()
-
-
-## The companion's line the first time the hero reaches a land of the caravan
-## (Allies.ARRIVALS), once the place's name is up; remembered with its llegada_<zone> flag.
-## Nothing without a companion. The caller is busy.
-func _check_arrival_line() -> void:
-	var line := Allies.arrival_line(state.ally_id, _ctx.zone.id)
-	var flag := Allies.arrival_flag(_ctx.zone.id)
-	if line == "" or state.has_flag(flag):
-		return
-	state.world_flags[flag] = true
-	_ctx.world.freeze(true)
-	await get_tree().create_timer(World.BANNER_FADE).timeout
-	if _autoplay:
-		print("Compañero: %s" % line)
-	await _ctx.world.show_dialogue(Allies.display_name(state.ally_id), [line])
-
-
-## Plays the cutscene of this zone's village if the hero is inside it and has not seen
-## it yet (only when nothing else is going on); autosaves after it.
-func _check_village_scene() -> void:
-	if _ctx.busy or not _ctx.world.in_village():
-		return
-	var scene := state.story.scene_on_village(_ctx.zone.id)
-	if scene == "" and _ctx.zone.id == "pradera" and state.can_meet_caravan() \
-			and not state.story.has_seen("caravana_llega"):
-		scene = "caravana_llega"
-	if scene == "":
-		return
-	_set_busy(true)
-	await _play_scene(scene)
-	if scene == "caravana_campamento":
-		await _choose_companion()
-	_autosave(false)
-	_set_busy(false)
-
-
-## Plays data/cutscenes/<scene_id>.tres on the current map and marks it seen. The
-## caller is busy; the map is the player's again when it returns.
-func _play_scene(scene_id: String) -> void:
-	var scene := load(CUTSCENE_PATH % scene_id) as Cutscene
-	state.story.mark_seen(scene_id)
-	_cutscenes.world = _ctx.world
-	_cutscenes.hero_name = state.hero.display_name
-	_cutscenes.companion_name = Allies.display_name(state.ally_id) if state.ally_id != "" else ""
-	await _cutscenes.play(scene)
-	_audio.play_ambient(_ctx.zone.ambient)  # a "music" step silenced it
-	_refresh_status()
-
-
-## A new game: the prologue (it fades in from black), then the slimes quest is on. A
-## save that could not be read also lands here, and says so now the map is visible.
-func _play_prologue() -> void:
-	await _play_scene("prologo")
-	state.quest.start()
-	_refresh_status()
-	_autosave(false)
-	_set_busy(false)
-	_show_touch_hint()
-	if _load_failed:
-		_ctx.world.show_notice(LOAD_FAILED_NOTICE, "Cuidado", &"text-danger")
-
-
-## After the ending: the save is marked finished (the hero is back in Villaclaro), the
-## credits roll with the numbers of the game and Game goes back to the title. They cover
-## everything, and Game stays busy, so no status window, map square, ☰ or prompt shows.
-func _finish_game() -> void:
-	state.story.finished = true
-	_ctx.world.freeze(true)
-	_autosave(false)
-	var time_text := CreditsData.clock(_ctx.play_time)
-	_audio.play_music(MusicLibrary.TITLE)
-	_audio.stop_ambient()
-	var layer := CanvasLayer.new()
-	layer.layer = UiTokens.LAYER_OVERLAY
-	add_child(layer)
-	var credits := CreditsScreen.new()
-	layer.add_child(credits)
-	await _fade_to(0.0)
-	await credits.run(CreditsData.credits_sections(state, time_text))
-	if _autoplay:
-		print("Juego completado: Nv %d, tiempo de juego %s, misiones %d" % [state.hero.level,
-			time_text, state.quests_done()])
-		print("Familias completas: %d/%d" % [Bestiary.complete_count(state),
-			Bestiary.families(state).size()])
-		print("Derrotas: %d" % _defeats)
-		print("Medallas: %d/%d (enemigos comunes vencidos: %d)" % [state.medals.size(),
-			Medals.MEDALS.size(), _common_beaten])
-	quit_to_title.emit()
-
-
-## After the v2's ending (the cruce scene ends under black): the game is finished in the v2
-## and saved in the Caravana, which can still be walked; then the screen beyond the portal,
-## the v2's credits and "Continuará", and Game goes back to the title. Game stays busy, so no
-## window, ☰ or prompt shows over them.
-func _finish_v2() -> void:
-	MusicLibrary.build(MusicLibrary.BEYOND)  # under black
-	state.story.finished_v2 = true
-	_travel.switch_zone("caravana", "")
-	_ctx.world.freeze(true)
-	_autosave(false)
-	var numbers := CreditsData.v2_numbers(state, _ctx.play_time)
-	_ctx.world.set_active(false)
-	_audio.stop_ambient()
-	_audio.play_music(MusicLibrary.BEYOND)
-	var beyond := BeyondScreen.new()
-	beyond.setup(state.loadout.worn(Equipment.WEAPON), state.loadout.worn(Equipment.SHIELD),
-		state.loadout.worn(Equipment.HELMET), state.ally_id)
-	add_child(beyond)
-	await _fade_to(0.0)
-	await beyond.run()
-	await _fade_to(1.0)
-	beyond.queue_free()
-	var layer := CanvasLayer.new()
-	layer.layer = UiTokens.LAYER_OVERLAY
-	add_child(layer)
-	var credits := CreditsScreen.new()
-	credits.end_text = CreditsScreen.TO_BE_CONTINUED
-	layer.add_child(credits)
-	await _fade_to(0.0)
-	await credits.run(CreditsData.v2_credits_sections(state, numbers))
-	if _autoplay:
-		print("Juego completado (v2): Nv %d, tiempo en la caravana %s, tiempo de juego %s, misiones de la caravana %d/%d"
-			% [state.hero.level, numbers.time, CreditsData.clock(_ctx.play_time), state.quests.done_of(true),
-			QuestLog.total_of(true)])
-		print("Familias completas: %d/%d" % [Bestiary.complete_count(state),
-			Bestiary.families(state).size()])
-		print("Derrotas: %d" % _defeats)
-		print("Medallas: %d/%d (enemigos comunes vencidos: %d)" % [state.medals.size(),
-			Medals.MEDALS.size(), _common_beaten])
-	quit_to_title.emit()
-
-
-## What CutscenePlayer's "travel" step does: builds zone_id at entry_id under black and
-## hands the new map over.
-func _scene_travel(zone_id: String, entry_id: String) -> World:
-	_travel.switch_zone(zone_id, entry_id)
-	return _ctx.world
-
-
-## What CutscenePlayer's "flag" step does.
-func _scene_flag(flag: String) -> void:
-	state.world_flags[flag] = true
-	_ctx.world.set_world_flags(state.world_flags)
-	_refresh_status()  # a figure may come with the flag (the Jefe de caravana)
+		_story.check_village_scene()
 
 
 ## The old woman always heals; what she says and gives comes from the quest.
@@ -849,7 +731,7 @@ func _on_npc(index: int) -> void:
 	if figure == CARAVAN_CHIEF and _ctx.zone.id == "pradera":
 		await _ask_departure()
 		_set_busy(false)
-		_check_village_scene()  # the Caravana's first visit, if the hero left
+		_story.check_village_scene()  # the Caravana's first visit, if the hero left
 		return
 	var chief := figure == CARAVAN_CHIEF
 	var talk := state.quests.talk(state, _ctx.zone.id, figure, chief)
@@ -880,7 +762,7 @@ func _ask_departure() -> void:
 		return
 	if await _ctx.world.ask(LEAVE_QUESTION, ["Partir", "Aún no"], 1) != 0:
 		return
-	await _play_scene("caravana_parte")  # ends under black
+	await _story.play_scene("caravana_parte")  # ends under black
 	state.leave_for_caravan()
 	state.story.v2_start = [_ctx.play_time, state.battles]  # the v2's credits count from here
 	_travel.switch_zone("caravana", "")
@@ -1243,15 +1125,6 @@ func _build_shop() -> void:
 		_refresh_status())
 
 
-func _build_cutscenes() -> void:
-	_cutscenes = CutscenePlayer.new()
-	_cutscenes.audio = _audio
-	_cutscenes.fade = _fade_to
-	_cutscenes.set_flag = _scene_flag
-	_cutscenes.travel = _scene_travel
-	add_child(_cutscenes)
-
-
 func _build_fade() -> void:
 	var layer := CanvasLayer.new()
 	layer.layer = UiTokens.LAYER_FADE
@@ -1374,7 +1247,7 @@ func _debug_go(zone_id: String) -> void:
 	await _ctx.world.freeze(false)
 	print("Depuración: a %s" % _ctx.zone.map_label())
 	_set_busy(false)
-	_check_village_scene()
+	_story.check_village_scene()
 
 
 func _fade_to(alpha: float) -> void:
