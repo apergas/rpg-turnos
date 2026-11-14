@@ -33,8 +33,8 @@ Lo que se ha hecho y lo que queda por hacer en Villaclaro. Una fila por versión
 | 2.6.0 · M-64 | Tipografía: Nunito y Baloo 2 en todas las plataformas, diez estilos de texto | hecho |
 | 2.6.1 · M-65 | Accesibilidad y tono: más contraste, sombra de ventana, opción «Alto contraste» y repaso de textos | hecho |
 | 2.6.1 · M-66 | Componentes del design system: aviso con tono, PV críticos, insignia «Aturdido», indicador de diálogo, botón de acción… | hecho |
-| 2.7.0 · M-67 | Partida nueva de verdad: se quita la Partida nueva + y empezar otra vez es empezar de cero ([spec](specs/2026-11-14-version-2-7-0-design.md) · [plan](plans/2026-11-14-version-2-7-0.md)) | plan |
-| 2.7.0 · M-68 | Bestiario en tres estados: no visto, visto sin vencer y vencido | plan |
-| 2.7.0 · M-69 | Sanación cura también al compañero, la mitad | plan |
+| 2.7.0 · M-67 | Partida nueva de verdad: se quita la Partida nueva + y empezar otra vez es empezar de cero ([spec](../legacy/specs/2026-11-14-version-2-7-0-design.md) · [plan](../legacy/plans/2026-11-14-version-2-7-0.md)) | hecho |
+| 2.7.0 · M-68 | Bestiario en tres estados: no visto, visto sin vencer y vencido | hecho |
+| 2.7.0 · M-69 | Sanación cura también al compañero, la mitad | hecho |
 | v3 | La siguiente parte: el pueblo al otro lado del portal ([guiones posibles](v3-guiones.md) · [desarrollo de la opción 1](v3-desarrollo.md)) | idea |
 | Sin versión · M-70 a M-74 | Refactor de arquitectura sin cambios en el juego: trocear `Game`, `World` y `BattleActor`, etiquetar los constructores y juntar el piloto automático en `RunFlags` ([spec](specs/2026-11-14-refactor-arquitectura-design.md) · [guía](specs/2026-11-14-refactor-arquitectura-guia.md)) | spec |

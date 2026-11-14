@@ -1,5 +1,14 @@
 # Registro de cambios
 
+## 2.7.0 (2026)
+
+Empezar de nuevo es empezar de cero.
+
+- Se quita la Partida nueva +. Una partida terminada se sigue pudiendo continuar, y para volver a empezar se elige «Nueva partida» en cualquier ranura: Villaclaro, nivel 1 y nada guardado.
+- Las partidas que estaban en una Partida nueva + siguen cargando, con los monstruos a su fuerza normal, y al terminar pueden encontrarse con la caravana.
+- El bestiario distingue tres estados: «??» si nunca has visto al enemigo, su dibujo apagado si lo has visto pero no lo has vencido, y el dibujo nítido cuando lo vences. El premio de una familia llega al vencerlos a todos.
+- Sanación cura también a tu compañero o criatura, la mitad que a ti. Se puede lanzar aunque tú estés lleno si él está herido.
+
 ## 2.6.1 (2026)
 
 Más fácil de leer.

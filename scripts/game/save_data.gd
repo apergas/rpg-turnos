@@ -44,7 +44,7 @@ const RING_VERSION := 11
 const OLD_ACCESSORY := "accessory"
 ## First version with the Slime de Metal's HP.
 const METAL_SLIME_VERSION := 12
-## First version with the small medals and the Partida nueva +.
+## First version with the small medals and the Partida nueva + (removed in 2.7.0).
 const MEDALS_VERSION := 13
 ## The caravan (2.0.0, the v2): no new field, but the v2's zones, the companions, level 40
 ## and the v2's cutscenes and quests only exist from here on. An older save has none.
@@ -568,8 +568,7 @@ static func is_caravan(data: Dictionary) -> bool:
 	return (data.get("flags", []) as Array).has(StoryState.CARAVAN_FLAG)
 
 
-## True if the save's v2 is finished: the Devorador beaten and the credits seen (no Partida
-## nueva + for it either: that is only for the v1).
+## True if the save's v2 is finished: the Devorador beaten and the credits seen.
 static func is_finished_v2(data: Dictionary) -> bool:
 	var story: Variant = data.get("story")
 	return is_caravan(data) and story is Dictionary and story.get("finished_v2", false) == true
