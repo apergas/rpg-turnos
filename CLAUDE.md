@@ -95,7 +95,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Conventions
 
 - Before adding or moving GDScript, use the global skill `structuring-godot-code`. It says where new code goes (rule, builder or node) and when a big owner gets a separate piece instead of growing. Here, the big owners are `game.gd`, `world.gd` and `battle_actor.gd`. The pieces planned for them are in `docs/boost/specs/2026-11-14-refactor-arquitectura-design.md`.
-- UI colors and sizes come from `UiTokens` / `UiTheme` (the design system in `docs/boost/design-system/`); no `Color(...)` or font size is written by hand in `scripts/ui/` or the 2D parts of the screens. A menu row is `UiTheme.menu_row(Button.new())`; a window with rows gets `UiTheme.add_cursor(window)`.
+- UI colours and sizes come from `UiTokens` / `UiTheme`. `UiTokens` is generated from `docs/boost/design-system/tokens.json` by `scripts/tools/gen_ui_tokens.gd`; a new value goes into `tokens.json` (and its docs) and is regenerated, never written by hand. `check_ui_values.gd` forbids literal colours and font sizes in UI code; the `.githooks/pre-commit` hook (enable once per clone with `git config core.hooksPath .githooks`) and the Pages workflow run both checks. A menu row is `UiTheme.menu_row(Button.new())`; a window with rows gets `UiTheme.add_cursor(window)`.
 - Scenes and scripts are written as text. The `.tscn` files only hold the root node and its script; every other node (stage, UI, actors) is created in code.
 - Game rules live in pure classes (`RefCounted` / `Resource`) that never touch nodes; scenes only play their results back.
 - No autoloads: `TitleScreen` owns the `AudioDirector` and the options, `Game` owns the session state, and both pass them on explicitly (`setup()`, `set_audio()`). If an autoload is ever added, a `class_name` script must not use its bare name (it compiles before autoloads exist, e.g. in `--script` runs); look it up at runtime with `get_node_or_null("/root/...")`.
@@ -110,6 +110,7 @@ Verify by hand instead: `--check-only` on changed scripts, run the game, read th
 
 `godot` is not on the system PATH. Use the wrapper `tools\godot.cmd` (forwards all arguments to the Godot 4.7.2 console exe in `Downloads`). `tools/` and `.mcp.json` are local and git-ignored (copied from `godot-example`).
 
+- Enable the pre-commit hook (once per clone): `git config core.hooksPath .githooks`. It runs the two checks below when `tokens.json` or a `.gd` is staged. Regenerate `UiTokens`: `.\tools\godot.cmd --headless --path . --script res://scripts/tools/gen_ui_tokens.gd` (add `-- --check` to only compare); hand-written UI values: `.\tools\godot.cmd --headless --path . --script res://scripts/tools/check_ui_values.gd`.
 - Import / refresh the class cache (after adding a `class_name` script): `.\tools\godot.cmd --headless --path . --import`
 - Validate a script: `.\tools\godot.cmd --headless --path . --check-only --script res://scripts/battle/battle_engine.gd`
 - Run the game (title screen): `.\tools\godot.cmd --path .`

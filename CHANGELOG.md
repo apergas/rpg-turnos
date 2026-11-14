@@ -1,5 +1,9 @@
 # Registro de cambios
 
+## 2.7.1 (2026)
+
+Por dentro: los colores, letras y medidas de la interfaz salen ahora siempre del design system, y una comprobación avisa si algo se escribe a mano. En pantalla no cambia nada.
+
 ## 2.7.0 (2026)
 
 Empezar de nuevo es empezar de cero.

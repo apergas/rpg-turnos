@@ -38,7 +38,7 @@ La interfaz de Villaclaro es una capa clásica de RPG de consola que flota sobre
 - Una ventana: `surface-window`, marco `border-3` `border-window`, `radius-m`, relleno `space-4` × `space-3`, `shadow-window`.
 - Separa ventanas con `space-4` y despégalas del borde de la pantalla con `space-6`.
 - Texto sobre el mundo: blanco con `outline-m` en `text-outline`, o dorado `text-display` con `outline-l` en `text-outline-warm`.
-- Nunca escribas un color o un tamaño a mano en un script: usa `UiTokens` (sección Implementación en Godot).
+- Nunca escribas un color o un tamaño a mano en un script: usa `UiTokens` ([Implementación en Godot](5-godot.md)).
 
 ## Iconografía
 
@@ -59,4 +59,4 @@ Las únicas imágenes de la interfaz son los retratos del bestiario (grupo **Bes
 - **Bestiario**: BestiaryCard.
 - **Mundo**: PlaceBanner, TitleLogo, InteractionPrompt, QuestMark, MapSquare.
 
-Las vistas previas son representaciones estáticas en HTML/CSS (`components/bundle.css`). En el juego, cada componente se construye en Godot con el tema de `scripts/ui/ui_theme.gd`.
+Las vistas previas son representaciones estáticas en HTML/CSS (`components/bundle.css`). En el juego, cada componente se construye en Godot con el tema de `scripts/ui/ui_theme.gd`; cómo se genera y se comprueba, en [5-godot.md](5-godot.md).

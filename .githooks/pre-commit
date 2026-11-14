@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Pre-commit: UiTokens al día con tokens.json y sin valores de interfaz a mano.
+# Se activa una vez por clon: git config core.hooksPath .githooks
+
+staged=$(git diff --cached --name-only)
+if ! echo "$staged" | grep -qE '^docs/boost/design-system/tokens\.json$|\.gd$'; then
+  exit 0
+fi
+
+if [ -f tools/godot.cmd ]; then
+  godot=(./tools/godot.cmd)
+elif command -v godot >/dev/null 2>&1; then
+  godot=(godot)
+else
+  echo "pre-commit: no hay Godot (tools/godot.cmd ni godot en el PATH); se salta la comprobación. La publicación la repite." >&2
+  exit 0
+fi
+
+failed=0
+if ! "${godot[@]}" --headless --path . --script res://scripts/tools/gen_ui_tokens.gd -- --check; then
+  echo "pre-commit: ui_tokens.gd no coincide con tokens.json. Ejecuta gen_ui_tokens.gd (godot --headless --path . --script res://scripts/tools/gen_ui_tokens.gd) y añade scripts/ui/ui_tokens.gd." >&2
+  failed=1
+fi
+if ! "${godot[@]}" --headless --path . --script res://scripts/tools/check_ui_values.gd; then
+  echo "pre-commit: hay valores de interfaz escritos a mano (las líneas de arriba). Pásalos a tokens.json y usa UiTokens / UiTheme." >&2
+  failed=1
+fi
+exit $failed
