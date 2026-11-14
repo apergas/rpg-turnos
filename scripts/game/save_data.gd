@@ -310,7 +310,8 @@ static func _valid_caravan(data: Dictionary) -> bool:
 	var in_v3 := StoryState.V3_FLAG in flags
 	if in_caravan and int(data.version) < CARAVAN_VERSION:
 		return false
-	if in_v3 and (int(data.version) < V3_VERSION or not in_caravan 			or not (StoryState.V2_FINAL_BOSS in flags)):
+	if in_v3 and (int(data.version) < V3_VERSION or not in_caravan \
+			or not (StoryState.V2_FINAL_BOSS in flags)):
 		return false
 	var part := 3 if in_v3 else (2 if in_caravan else 1)
 	if not _valid_part_content(data, part):
@@ -593,7 +594,8 @@ static func is_v3(data: Dictionary) -> bool:
 ## has not gone on into the v3.
 static func is_finished_v2(data: Dictionary) -> bool:
 	var story: Variant = data.get("story")
-	return is_caravan(data) and not is_v3(data) and story is Dictionary 		and story.get("finished_v2", false) == true
+	return is_caravan(data) and not is_v3(data) and story is Dictionary \
+		and story.get("finished_v2", false) == true
 
 
 const IMPORT_NOT_SAVE := "Ese archivo no es una partida de Villaclaro."
