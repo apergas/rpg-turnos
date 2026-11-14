@@ -25,7 +25,7 @@ What the code does not explain:
 - `scripts/ui/ui_tokens.gd` and `docs/boost/design-system/tokens.css` are generated from `tokens.json` (see Conventions); never edit them by hand.
 - The five character GLBs import through `scripts/tools/trim_animations.gd`, which drops every clip not in its `KEEP` list: a new animation `BattleActor` plays must be added there and the models reimported (`--headless --path . --import`).
 - `scripts/tools/bestiary_shots.gd` renders `assets/bestiary/<id>.png` and must run without `--headless` after a look changes; `scripts/tools/head_textures.gd` writes `assets/characters/head_*.png`, then run `--import` and set `mipmaps/generate=true` in each new `.import`. Both tools are excluded from the export.
-- The `--autoplay-zone=<id>` starts are `AUTOPLAY_ZONES` in `game.gd` (the v2 ones also in `V2_STARTS`); how to run and measure them is the `villaclaro-autoplay` skill.
+- The `--autoplay-zone=<id>` starts are `AUTOPLAY_ZONES` in `autoplay_starts.gd` (the v2 ones also in `V2_STARTS`); how to run and measure them is the `villaclaro-autoplay` skill.
 - On desktop `user://` is `%APPDATA%\Godot\app_userdata\rpg-turnos\`; autoplay runs save to `user://save_autoplay.json` and never touch the three slots, but `--debug` saves to the real slot.
 - The map hero's rim (`BattleActor.set_map_readable()`) does nothing on the headless renderer: check it with `--write-movie` or a window.
 

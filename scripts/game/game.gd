@@ -105,213 +105,6 @@ const PORTAL_BACK_NOTICE := "El portal te devuelve y se cierra tras de ti."
 const MENU_TOUR_DELAY := 1.0
 ## Seconds of black while the hero sleeps at the inn.
 const INN_NIGHT_TIME := 0.8
-## On autoplay the hero only stops at an inn below this share of max HP or MP.
-const AUTOPLAY_INN_RATIO := 0.5
-## Autoplay: seconds on a map without a battle, below the zone's autoplay_boss_level, after
-## which its groups are put back (the ones left may be out of reach of the route).
-const AUTOPLAY_STALL_S := 90.0
-## On autoplay the boss only comes out while the hero has these shares of max HP and MP.
-const AUTOPLAY_BOSS_HP := 0.7
-const AUTOPLAY_BOSS_MP := 0.4
-## --autoplay-zone=eco: a finished game in the throne room, ready for the Eco de la Niebla.
-const ECHO_START := "eco"
-## --autoplay-zone=medallas: the finished game of ECHO_START in Villaclaro; it hunts the
-## meadow's groups with MEDAL_TOUR_CHANCE (the real DROP_CHANCE would take hours) until it
-## carries every medal, or MEDAL_TOUR_TIME seconds pass, then talks to the Coleccionista in
-## Villaclaro and in the forest village.
-const MEDAL_TOUR := "medallas"
-const MEDAL_TOUR_CHANCE := 0.25
-const MEDAL_TOUR_TIME := 1800.0
-## The autoplay starts that play the v2: only they answer the Jefe de caravana's questions
-## with Sí (every other run, the finished-game ones included, stays in the v1).
-const V2_STARTS := ["caravana", "jungla", "desierto", "montana", "ciudad", "portal"]
-## --autoplay-zone=<id>: what a new game starting in each zone gets, as planned when
-## arriving there (zone 1 done: Lv 5, its shop's gear, the Rey Slime beaten).
-const AUTOPLAY_ZONES := {
-	"bosque": {
-		"experience": 136,
-		"gold": 150,
-		"gear": [Equipment.COPPER_SWORD, Equipment.LEATHER_MAIL, Equipment.WOODEN_SHIELD],
-		"flags": ["rey_slime"],
-		"quest_done": true,
-	},
-	# Zone 2 done: Lv 9 with the Bruja's EXP, the forest gear and the first fragment.
-	"mina_1": {
-		"experience": 541,
-		"gold": 250,
-		"gear": ["espada_hierro", "cota_malla", "escudo_hierro"],
-		"flags": ["rey_slime", "bruja"],
-		"key_items": ["fragmento_bosque"],
-		"quest_done": true,
-	},
-	# Ready for the Golem: Lv 13, the mine's gear, the gates of floors 2 and 3 open.
-	"mina_3": {
-		"experience": 1073,
-		"gold": 100,
-		"gear": ["espada_acero", "armadura_acero", "escudo_acero"],
-		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta"],
-		"key_items": ["fragmento_bosque"],
-		"quest_done": true,
-		"town": "mina_1",
-	},
-	# Zone 3 done: Lv 13 with the Golem's EXP and gold, the mine's gear and two fragments.
-	"castillo_patio": {
-		"experience": 1373,
-		"gold": 600,
-		"gear": ["espada_acero", "armadura_acero", "escudo_acero"],
-		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
-			"golem_piedra"],
-		"key_items": ["fragmento_bosque", "fragmento_mina"],
-		"quest_done": true,
-		"town": "mina_1",
-	},
-	# After the ending (--autoplay-zone=eco): Lv 20, the platinum gear with its helmet, the
-	# Esqueleto leal, every boss beaten and the story finished, in the throne room.
-	ECHO_START: {
-		"zone": "castillo_trono",
-		"experience": 3600,
-		"gold": 1000,
-		"gear": ["espada_platino", "armadura_platino", "escudo_platino", "casco_platino"],
-		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
-			"golem_piedra", "senor_niebla"],
-		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo"],
-		"quest_done": true,
-		"town": "castillo_patio",
-		"ally": "esqueleto_leal",
-		"items": {Inventory.POTION: 2, Inventory.ETHER: 3, Inventory.WING: 3},
-	},
-	# --autoplay-zone=medallas: the hero of ECHO_START, the game finished, in Villaclaro.
-	MEDAL_TOUR: {
-		"zone": "pradera",
-		"experience": 3600,
-		"gold": 1000,
-		"gear": ["espada_platino", "armadura_platino", "escudo_platino", "casco_platino"],
-		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
-			"golem_piedra", "senor_niebla"],
-		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo"],
-		"quest_done": true,
-		"town": "pradera",
-		"ally": "esqueleto_leal",
-		"items": {Inventory.POTION: 5, Inventory.ETHER: 3, Inventory.WING: 3},
-	},
-	# --autoplay-zone=caravana: the v1 finished, in Villaclaro: Lv 20, the platinum gear, the
-	# Esqueleto leal, every boss beaten and the credits seen. The caravan comes on arrival,
-	# the hero leaves with it (V2_STARTS answers the Jefe's questions) and plays the v2 on.
-	"caravana": {
-		"zone": "pradera",
-		"experience": 3600,
-		"gold": 1200,
-		"gear": ["espada_platino", "armadura_platino", "escudo_platino", "casco_platino"],
-		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
-			"golem_piedra", "senor_niebla"],
-		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo"],
-		"quest_done": true,
-		"town": "pradera",
-		"ally": "esqueleto_leal",
-		"items": {Inventory.POTION: 3, Inventory.ETHER: 3, Inventory.WING: 2},
-		"finished": true,
-	},
-	# --autoplay-zone=jungla: ready for the jungle: the caravan joined, Brena chosen, Lv 20 with
-	# the platinum gear, at the jungle's entrance.
-	"jungla": {
-		"experience": 3600,
-		"gold": 1500,
-		"gear": ["espada_platino", "armadura_platino", "escudo_platino", "casco_platino"],
-		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
-			"golem_piedra", "senor_niebla", "caravana_vista", "caravana", "companero"],
-		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo"],
-		"quest_done": true,
-		"town": "caravana",
-		"ally": "brena",
-		"items": {Inventory.BIG_POTION: 3, Inventory.ETHER: 3, Inventory.WING: 2},
-		"finished": true,
-	},
-	# --autoplay-zone=desierto: the jungle done: Lv 25 with the jade gear, Brena, the Jaguar
-	# beaten and its insignia, at the desert's entrance.
-	"desierto": {
-		"experience": 6850,
-		"gold": 900,
-		"gear": ["espada_jade", "armadura_jade", "escudo_jade", "casco_jade"],
-		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
-			"golem_piedra", "senor_niebla", "caravana_vista", "caravana", "companero",
-			"jaguar_sombrio"],
-		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo",
-			"insignia_jungla"],
-		"quest_done": true,
-		"town": "caravana",
-		"ally": "brena",
-		"items": {Inventory.BIG_POTION: 3, Inventory.BIG_ETHER: 2, Inventory.WING: 2},
-		"finished": true,
-	},
-	# --autoplay-zone=montana: the desert done: Lv 30 with the orichalcum gear, Brena, the
-	# Gusano beaten and its seal, at the mountain's entrance (its first floor).
-	"montana": {
-		"zone": "montana_1",
-		"experience": 11350,
-		"gold": 1000,
-		"gear": ["espada_oricalco", "armadura_oricalco", "escudo_oricalco", "casco_oricalco"],
-		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
-			"golem_piedra", "senor_niebla", "caravana_vista", "caravana", "companero",
-			"jaguar_sombrio", "gusano_dunas"],
-		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo",
-			"insignia_jungla", "sello_desierto"],
-		"quest_done": true,
-		"town": "caravana",
-		"ally": "brena",
-		"items": {Inventory.BIG_POTION: 3, Inventory.BIG_ETHER: 2, Inventory.WING: 2},
-		"finished": true,
-	},
-	# --autoplay-zone=ciudad: the mountain done: Lv 35 with the adamantite gear, Brena, the
-	# Grifo beaten and its map, at the city's entrance (its first floor).
-	"ciudad": {
-		"zone": "ciudad_1",
-		"experience": 17100,
-		"gold": 1200,
-		"gear": ["espada_adamantita", "armadura_adamantita", "escudo_adamantita",
-			"casco_adamantita"],
-		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
-			"golem_piedra", "senor_niebla", "caravana_vista", "caravana", "companero",
-			"jaguar_sombrio", "gusano_dunas", "montana_palanca", "grifo_cumbre"],
-		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo",
-			"insignia_jungla", "sello_desierto", "mapa_montana"],
-		"quest_done": true,
-		"town": "caravana",
-		"ally": "brena",
-		"items": {Inventory.BIG_POTION: 3, Inventory.BIG_ETHER: 2, Inventory.WING: 2},
-		"finished": true,
-	},
-	# --autoplay-zone=portal: the Guardián beaten: Lv 38 with the stellar gear, Brena and the
-	# Llave del portal, at the portal quarter's entrance (the city's second floor).
-	"portal": {
-		"zone": "ciudad_2",
-		"experience": 21150,
-		"gold": 800,
-		"gear": ["espada_estelar", "armadura_estelar", "escudo_estelar", "casco_estelar"],
-		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
-			"golem_piedra", "senor_niebla", "caravana_vista", "caravana", "companero",
-			"jaguar_sombrio", "gusano_dunas", "montana_palanca", "grifo_cumbre",
-			"guardian_ciudad"],
-		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo",
-			"insignia_jungla", "sello_desierto", "mapa_montana", "llave_portal"],
-		"quest_done": true,
-		"town": "caravana",
-		"ally": "brena",
-		"items": {Inventory.BIG_POTION: 4, Inventory.BIG_ETHER: 3, Inventory.WING: 2,
-			Inventory.PHOENIX: 1},
-		"finished": true,
-	},
-	# Ready for the Señor de la Niebla: Lv 17 with the castle's gear.
-	"castillo_trono": {
-		"experience": 2244,
-		"gold": 300,
-		"gear": ["espada_platino", "armadura_platino", "escudo_platino"],
-		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
-			"golem_piedra"],
-		"key_items": ["fragmento_bosque", "fragmento_mina"],
-		"quest_done": true,
-		"town": "castillo_patio",
-	},
-}
 
 var state: GameState
 var _ctx: SessionContext
@@ -381,12 +174,7 @@ func _ready() -> void:
 	_autoplay = RunFlags.autoplay()
 	_autoplay_save = RunFlags.autoplay_save()
 	_autoplay_menu = RunFlags.autoplay_menu()
-	var companion := RunFlags.autoplay_companion()
-	if companion != "":
-		if Allies.is_companion(companion):
-			_autoplay_companion = companion
-		else:
-			push_error("Not a companion for --autoplay-companion: %s" % companion)
+	_autoplay_companion = AutoplayStarts.companion()
 	_rng.randomize()
 	for line in QuestLog.problems():
 		push_warning(line)
@@ -465,7 +253,7 @@ func _ready() -> void:
 		_check_village_scene()
 		if _medal_tour:
 			print("Medallas: a cazar en %s" % _zone.id)
-			get_tree().create_timer(MEDAL_TOUR_TIME).timeout.connect(_on_medal_tour_timeout)
+			get_tree().create_timer(AutoplayStarts.MEDAL_TOUR_TIME).timeout.connect(_on_medal_tour_timeout)
 
 
 ## The first time a phone reaches the map (never on autoplay): how to walk, once for good.
@@ -481,11 +269,11 @@ func _process(delta: float) -> void:
 	_ctx.play_time += delta / Engine.time_scale  # a fast battle takes less play time, not more
 	if _autoplay and not _ctx.busy and _ctx.world != null and not _ctx.world.in_village():
 		_quiet_s += delta
-		if _quiet_s > AUTOPLAY_STALL_S and _autoplay_hunts():
+		if _quiet_s > AutoplayStarts.AUTOPLAY_STALL_S and _autoplay_hunts():
 			_quiet_s = 0.0
 			print("Grupos repuestos (partida automática, sin combates)")
 			_respawn_groups()
-		elif _quiet_s > AUTOPLAY_STALL_S and _boss_needs_rest() \
+		elif _quiet_s > AutoplayStarts.AUTOPLAY_STALL_S and _boss_needs_rest() \
 				and state.inventory.count(Inventory.WING) > 0:
 			# At the boss's level but too worn for it, with no battle coming that would bring
 			# the retreat: one Ala, made here (the quiet clock starts over).
@@ -519,7 +307,7 @@ func _apply_autoplay_zone() -> void:
 	var start_id := RunFlags.autoplay_zone()
 	if start_id == "":
 		return
-	var start: Dictionary = AUTOPLAY_ZONES.get(start_id, {})
+	var start: Dictionary = AutoplayStarts.AUTOPLAY_ZONES.get(start_id, {})
 	var zone_id: String = start.get("zone", start_id)
 	if not zone_id in ZoneData.IDS:
 		push_error("Unknown zone for --autoplay-zone: %s" % start_id)
@@ -556,9 +344,9 @@ func _apply_autoplay_zone() -> void:
 	var items: Dictionary = start.get("items", {})
 	for id: String in items:
 		state.inventory.add(id, items[id])
-	_autoplay_echo = start_id == ECHO_START
-	_autoplay_v2 = start_id in V2_STARTS
-	_medal_tour = start_id == MEDAL_TOUR
+	_autoplay_echo = start_id == AutoplayStarts.ECHO_START
+	_autoplay_v2 = start_id in AutoplayStarts.V2_STARTS
+	_medal_tour = start_id == AutoplayStarts.MEDAL_TOUR
 	state.story.mark_seen_for_flags(state.world_flags)
 	if start.get("finished", false):
 		state.story.finished = true
@@ -655,7 +443,7 @@ func _on_encounter(boss: bool) -> void:
 	battle.zone = _zone
 	battle.quest_items = state.quests.wanted_items(state)
 	battle.medals_carried = state.medals.size()
-	battle.medal_chance = MEDAL_TOUR_CHANCE if _medal_tour else Medals.DROP_CHANCE
+	battle.medal_chance = AutoplayStarts.MEDAL_TOUR_CHANCE if _medal_tour else Medals.DROP_CHANCE
 	if state.ally_id != "":
 		battle.ally = Allies.data(state.ally_id, state.tramo())
 	add_child(battle)
@@ -829,13 +617,7 @@ func _autoplay_hunts() -> bool:
 ## doesn't come back by walking, so without a rest the boss would never show up.
 func _boss_needs_rest() -> bool:
 	return _boss_wanted() and state.hero.level >= _zone.autoplay_boss_level \
-		and not _rested_for_boss()
-
-
-func _rested_for_boss() -> bool:
-	var hero := state.hero
-	return hero.hp >= hero.max_hp * AUTOPLAY_BOSS_HP \
-		and hero.mp >= hero.max_mp * AUTOPLAY_BOSS_MP
+		and not AutoplayStarts.rested_for_boss(state.hero)
 
 
 ## The boss of the current map: the zone's, or its postgame boss (ZoneData.postgame_boss_id)
@@ -1375,9 +1157,9 @@ func _on_inn(inn_id: String) -> void:
 	var waiting := _figure_with_quest("inn", inn_id)
 	if waiting >= 0:
 		await _on_npc(waiting)  # a report or an offer at the keeper goes first, as at a shop
-	var hurt := state.hero.hp < state.hero.max_hp * AUTOPLAY_INN_RATIO \
-		or state.hero.mp < state.hero.max_mp * AUTOPLAY_INN_RATIO or state.needs_rest() \
-		or not _rested_for_boss()
+	var hurt := state.hero.hp < state.hero.max_hp * AutoplayStarts.AUTOPLAY_INN_RATIO \
+		or state.hero.mp < state.hero.max_mp * AutoplayStarts.AUTOPLAY_INN_RATIO or state.needs_rest() \
+		or not AutoplayStarts.rested_for_boss(state.hero)
 	if _ctx.busy or (_autoplay and not hurt):
 		return
 	_set_busy(true)
@@ -1551,7 +1333,7 @@ func _update_boss() -> void:
 	if _boss_id() == "":
 		return
 	var strong_enough := not _autoplay or (state.hero.level >= _zone.autoplay_boss_level \
-		and _rested_for_boss())
+		and AutoplayStarts.rested_for_boss(state.hero))
 	_ctx.world.set_boss_present(_boss_wanted() and strong_enough)
 
 
