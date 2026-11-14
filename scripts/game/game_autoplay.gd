@@ -3,12 +3,12 @@ class_name GameAutoplay extends Node
 ## the zone of --autoplay-zone=<id> with AutoplayStarts' state (apply_start()) and plays it
 ## as a player would: after a won battle it flies back to the last village with an Ala de
 ## viaje when the hero needs rest, is too worn for the boss, has a report waiting or has no
-## group left (retreat(): the inn, the shop and the figures with a mark, restock(), then the
+## group left (retreat(): the inn (or the wells, with no inn open), the shop and the figures with a mark, restock(), then the
 ## portal back); after a defeat it restocks; an empty map, or one quiet for
 ## AutoplayStarts.AUTOPLAY_STALL_S, gets its groups back (step()); and it runs the medal tour
 ## of --autoplay-zone=medallas. It prints what a reader of the log follows: each zone, each
 ## change of mission line, gold or gear, each defeat, the Eco's results and the numbers after
-## the credits. Uses only the public functions of ZoneTravel and FigureTalk (use_pieces())
+## the credits, or where the v3 that exists ends. Uses only the public functions of ZoneTravel and FigureTalk (use_pieces())
 ## and the rules; never stores Game or a World.
 
 ## The medal tour is over: Game goes back to the title (which quits on autoplay).
@@ -134,6 +134,11 @@ func reset_quiet() -> void:
 ## of the medal tour, the retreat, the groups back, or a restock after a defeat.
 func after_battle(outcome: int) -> void:
 	var won := outcome == BattleEngine.State.WON
+	if won and _ctx.state.part() == 3 and not StoryState.v3_way_on(_ctx.state.world_flags):
+		# The last zone of the v3 there is so far is behind (3.0.0: the Garza): the run ends.
+		print_v3_so_far()
+		quit_requested.emit()
+		return
 	if medal_tour and won and _ctx.state.medals.size() >= Medals.MEDALS.size():
 		await finish_medal_tour()
 		return
@@ -202,11 +207,7 @@ func print_game_completed(time_text: String) -> void:
 	var state := _ctx.state
 	print("Juego completado: Nv %d, tiempo de juego %s, misiones %d" % [state.hero.level,
 		time_text, state.quests_done()])
-	print("Familias completas: %d/%d" % [Bestiary.complete_count(state),
-		Bestiary.families(state).size()])
-	print("Derrotas: %d" % _defeats)
-	print("Medallas: %d/%d (enemigos comunes vencidos: %d)" % [state.medals.size(),
-		Medals.MEDALS.size(), _common_beaten])
+	_print_run_tail()
 
 
 ## The numbers of the v2 after its credits (StoryFlow.v2_completed).
@@ -215,6 +216,23 @@ func print_v2_completed(numbers: Dictionary) -> void:
 	print("Juego completado (v2): Nv %d, tiempo en la caravana %s, tiempo de juego %s, misiones de la caravana %d/%d"
 		% [state.hero.level, numbers.time, CreditsData.clock(_ctx.play_time),
 		state.quests.done_of(2), QuestLog.total_of(2)])
+	_print_run_tail()
+
+
+## The numbers of the v3 so far, once its last zone that exists is behind (3.0.0: the Garza
+## beaten): the autoplay run of the v3 ends there.
+func print_v3_so_far() -> void:
+	var state := _ctx.state
+	var numbers := CreditsData.v3_numbers(state, _ctx.play_time)
+	print("Fin de la v3 por ahora: Nv %d, tiempo en Brumaclara %s, tiempo de juego %s, misiones de Brumaclara %d/%d"
+		% [state.hero.level, numbers.time, CreditsData.clock(_ctx.play_time),
+		state.quests.done_of(3), QuestLog.total_of(3)])
+	_print_run_tail()
+
+
+## The lines every end of a run prints: families, defeats, medals.
+func _print_run_tail() -> void:
+	var state := _ctx.state
 	print("Familias completas: %d/%d" % [Bestiary.complete_count(state),
 		Bestiary.families(state).size()])
 	print("Derrotas: %d" % _defeats)
@@ -279,11 +297,17 @@ func boss_needs_rest() -> bool:
 ## Autoplay, in the village: a night at its inn and the shop's picks, as if the hero had
 ## walked up to the innkeeper and the merchant.
 func restock() -> void:
+	var flags := _ctx.state.world_flags
+	var inn := false
 	for npc: Dictionary in _ctx.zone.npcs:
-		if npc.kind == "inn":
+		if npc.kind == "inn" and ZoneData.is_present(npc, flags):
+			inn = true
 			await _talk.on_inn(npc.id)
+	if not inn:
+		for well: Dictionary in _ctx.zone.wells:
+			await _talk.on_well(well.id, well.kind)
 	for npc: Dictionary in _ctx.zone.npcs:
-		if npc.kind == "shop":
+		if npc.kind == "shop" and ZoneData.is_present(npc, flags):
 			await _talk.on_shop(npc.id)
 	# On a caravan game the figures that offer a quest ("!") are visited too, or autoplay
 	# would never take the v2's quests; a v1 game keeps the reports only.

@@ -1,6 +1,6 @@
 class_name CreditsData extends RefCounted
 ## Rule: what the credits say, from a GameState: the v1's sections (credits_sections()), the
-## v2's (v2_credits_sections(), with v2_numbers()), the "h:mm:ss" text of a time (clock())
+## v2's (v2_credits_sections(), with v2_numbers()), the v3's numbers (v3_numbers()), the "h:mm:ss" text of a time (clock())
 ## and the one-line JSON of a save for --autoplay-save (summary()). Never touches nodes.
 
 ## The author shown in the credits.
@@ -32,6 +32,18 @@ static func credits_sections(state: GameState, time_text: String) -> Array:
 ## whole game's for a save that was already in the caravan before 2.3.0 ("since" false).
 static func v2_numbers(state: GameState, play_time: float) -> Dictionary:
 	var start: Array = state.story.v2_start
+	var since := not start.is_empty()
+	return {
+		"time": clock(play_time - (float(start[0]) if since else 0.0)),
+		"battles": state.battles - (int(start[1]) if since else 0),
+		"since": since,
+	}
+
+
+## The v3's time and battles: since the hero first stood in Brumaclara (story.v3_start), or the
+## whole game's if it has none ("since" false). The v3's credits (3.3.0) and the autoplay use it.
+static func v3_numbers(state: GameState, play_time: float) -> Dictionary:
+	var start: Array = state.story.v3_start
 	var since := not start.is_empty()
 	return {
 		"time": clock(play_time - (float(start[0]) if since else 0.0)),
