@@ -1,14 +1,13 @@
 class_name BattleActor extends Node3D
-## 3D figure of a fighter or a villager. The hero, the villagers, the witch and the
-## skeletons are KayKit models with their own animations (the skeletons get their
-## weapons from KayKit too, and the Señor de la Niebla a purple aura and the Eco de la Niebla a pale cyan one); the slimes, the
-## bat, the mushroom, the wolf,
-## the goblin, the carnivorous plant, the golems, the spider, the specter and the
-## creatures that fight beside the hero are low-poly figures built in code (see LOOKS).
-## The jungle's frog, snake, monkey, trap plant and tropical mushroom (the v2) come after.
-## Five of them are color variants of those (RED_SLIME, POISON_MUSHROOM, CAVE_MUSHROOM, CRYPT_BAT, FROST_SPECTER), built by the same functions.
-## Set look before add_child. The figure faces -Z, so look_at() the opponent. Every
-## play_* can be awaited: it returns when its animation and its tween are done.
+## 3D figure of a fighter or a villager, alive: its animations (play_*), the floating
+## numbers, the hero's equipment (set_equipment(), the Yelmo's horns), the flash, the
+## highlight and the see-through of the map. What it looks like is data in ActorLooks
+## (look, set before add_child); its meshes are built by CharacterBuilder (the KayKit
+## models) or CreatureBuilder (the figures built in code), which write into it only through
+## its builder methods (body(), add_mesh(), add_blob(), add_ghost(), add_wing(), set_sway(),
+## set_jaw(), set_hover(), set_devourer(), set_model(), set_aura(), set_animations()).
+## The figure faces -Z, so look_at() the opponent. Every play_* can be awaited: it returns
+## when its animation and its tween are done.
 
 ## Every figure a BattleActor can be: the enum lives in ActorLooks, and BattleActor.Look.X
 ## keeps working through this alias.
@@ -22,16 +21,12 @@ const NUMBER_CRIT_FONT := 62
 const NUMBER_WORLD := 0.32
 const NUMBER_CRIT_WORLD := 0.48
 const TAG_WORLD := 0.2
-## Bones the weapons hang from, under the model's Rig/Skeleton3D.
-const SKELETON_PATH := "Rig/Skeleton3D"
-const FOG_AURA_ALPHA := 0.2
+## The Señor de la Niebla's aura in his second phase (play_phase()): thicker.
 const FOG_AURA_PHASE_ALPHA := 0.38
 ## The Devorador del portal's second phase (_devourer_wakes()): the share its mass grows by
 ## and its eyelid's open angle.
 const DEVOURER_GROWTH := 1.25
 const EYELID_OPEN := 75.0
-## The AnimationPlayer inside a KayKit character scene.
-const ANIM_PLAYER_PATH := "AnimationPlayer"
 const BLEND_TIME := 0.15
 ## One-shot animations (attack, spell, hit, dodge, death, cheer) play this much faster.
 const ACTION_SPEED := 1.3
@@ -52,11 +47,6 @@ const RIM_SHADER := preload("res://shaders/hero_rim.gdshader")
 const HELMET_PATH := "Rig/Skeleton3D/head/Knight_Helmet"
 const HAND_R := "Rig/Skeleton3D/handslot_r"
 const HAND_L := "Rig/Skeleton3D/handslot_l"
-## The wooden stick built in code for Equipment.STICK_MESH: along the hand's +Y like the
-## Knight's swords, grip at the hand.
-const STICK_COLOR := Color(0.45, 0.3, 0.16)
-const STICK_RADIUS := 0.07
-const STICK_LENGTH := 1.3
 ## The Yelmo de bruma's horns (Equipment.has_horns()), built in code under the Knight's
 ## helmet mesh, in its own space (about 1.14 wide, brim at y -0.1, top at 1.25): bone
 ## colored, each from the side of the helmet out and then up, in HORN_SEGMENTS tapering
@@ -69,7 +59,6 @@ const HORN_RADIUS := 0.11
 ## Degrees about Z of the first piece: almost flat, pointing out of the helmet.
 const HORN_START_ANGLE := 75.0
 const HORN_BEND := 35.0
-const STICK_CENTER := 0.45
 
 @export var look := Look.HERO
 
@@ -117,7 +106,7 @@ func _ready() -> void:
 	var data: Dictionary = ActorLooks.LOOKS[look]
 	_top = data.top
 	if data.has("scene"):
-		_build_character(data)
+		CharacterBuilder.build(self, data)
 	else:
 		CreatureBuilder.build(self, data)
 	for node in _body.find_children("*", "MeshInstance3D", true, false):
@@ -231,9 +220,9 @@ func set_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> voi
 	if weapon_tint != Color.WHITE and weapon_mesh != "" and right.has_node(weapon_mesh):
 		var weapon := right.get_node(weapon_mesh)
 		if weapon is MeshInstance3D:
-			_tint_mesh(weapon as MeshInstance3D, weapon_tint)
+			CharacterBuilder.tint_mesh(weapon as MeshInstance3D, weapon_tint)
 		else:
-			_tint(weapon as Node3D, weapon_tint)
+			CharacterBuilder.tint(weapon as Node3D, weapon_tint)
 	# The shield's own tint (the Escudo de medallas is gold), the same way.
 	var left := _model.get_node(HAND_L)
 	for node in left.find_children("*", "MeshInstance3D", true, false):
@@ -244,9 +233,9 @@ func set_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> voi
 	if shield_tint != Color.WHITE and shield_mesh != "" and left.has_node(shield_mesh):
 		var shield := left.get_node(shield_mesh)
 		if shield is MeshInstance3D:
-			_tint_mesh(shield as MeshInstance3D, shield_tint)
+			CharacterBuilder.tint_mesh(shield as MeshInstance3D, shield_tint)
 		else:
-			_tint(shield as Node3D, shield_tint)
+			CharacterBuilder.tint(shield as Node3D, shield_tint)
 	var helmet := _model.get_node(HELMET_PATH) as MeshInstance3D
 	helmet.visible = helmet_id != ""
 	if Equipment.has_horns(helmet_id) and _horns == null:
@@ -254,10 +243,10 @@ func set_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> voi
 	if _horns:
 		_horns.visible = Equipment.has_horns(helmet_id)
 	if helmet_id != "":
-		# Drop the previous tint first, or _tint_mesh() would multiply onto it.
+		# Drop the previous tint first, or CharacterBuilder.tint_mesh() would multiply onto it.
 		for i in helmet.mesh.get_surface_count():
 			helmet.set_surface_override_material(i, null)
-		_tint_mesh(helmet, Equipment.helmet_tint(helmet_id))
+		CharacterBuilder.tint_mesh(helmet, Equipment.helmet_tint(helmet_id))
 	# The hand meshes, the helmet and the horns may have changed: the rim goes on them again.
 	if _map_overlay != null:
 		_apply_map_overlay()
@@ -487,146 +476,6 @@ func play_cheer() -> void:
 	await _end(timer)
 
 
-func _build_character(data: Dictionary) -> void:
-	var model: Node3D = (data.scene as PackedScene).instantiate()
-	model.scale = Vector3.ONE * data.scale
-	# KayKit characters face +Z; turned around they face -Z like every BattleActor.
-	model.rotation.y = PI
-	_body.add_child(model)
-	_model = model
-	for path in data.hide:
-		(model.get_node(path) as Node3D).hide()
-	var bones := model.get_node_or_null(SKELETON_PATH) as Skeleton3D
-	for bone: String in data.get("props", {}):
-		var slot := BoneAttachment3D.new()
-		slot.bone_name = bone
-		bones.add_child(slot)
-		slot.add_child((data.props[bone] as PackedScene).instantiate())
-	if data.has("tint"):
-		_tint(model, data.tint)
-	var mesh_tints: Dictionary = data.get("mesh_tints", {})
-	for mesh_name: String in mesh_tints:
-		_tint_mesh(bones.get_node(mesh_name) as MeshInstance3D, mesh_tints[mesh_name])
-	if data.has("neck_glow"):
-		# The Armadura hueca: an ember where its head should be, on the head bone.
-		var slot := BoneAttachment3D.new()
-		slot.bone_name = "head"
-		bones.add_child(slot)
-		add_mesh(slot, LowPoly.sphere(0.13), data.neck_glow, Vector3(0, 0.0, 0))
-		var ember := (slot.get_child(-1) as MeshInstance3D).material_override as StandardMaterial3D
-		ember.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	if data.has("wrap_color"):
-		_add_mummy_wraps(bones, data.wrap_color)
-	if data.has("head_texture"):
-		# The head's hair and skin share one mesh: a copy of its material with this atlas.
-		var head := bones.get_node("Knight_Head") as MeshInstance3D
-		var head_material := head.get_active_material(0).duplicate() as BaseMaterial3D
-		head_material.albedo_texture = data.head_texture
-		head.set_surface_override_material(0, head_material)
-	var cape := model.find_child("Knight_Cape", true, false) as MeshInstance3D
-	if cape != null and data.get("hide_cape", false):
-		cape.hide()
-	elif cape != null and data.has("cape"):
-		# One flat colour (the cape is one palette cell): a copy without the atlas.
-		var cape_material := cape.get_active_material(0).duplicate() as BaseMaterial3D
-		cape_material.albedo_texture = null
-		cape_material.albedo_color = data.cape
-		cape.set_surface_override_material(0, cape_material)
-	if data.has("hair"):
-		_add_hair(model, data.hair)
-	if data.has("aura"):
-		add_ghost(_body, LowPoly.sphere(0.5), data.aura, FOG_AURA_ALPHA, Vector3(0, _top * 0.45, 0),
-			Vector3(2.2, 3.2, 2.2))
-		_aura = _body.get_child(-1) as MeshInstance3D
-	if look == Look.HERO:
-		var stick := LowPoly.cylinder(STICK_RADIUS, STICK_LENGTH)
-		stick.top_radius = STICK_RADIUS * 0.7
-		add_mesh(model.get_node(HAND_R), stick, STICK_COLOR, Vector3(0, STICK_CENTER, 0))
-		var mi := model.get_node(HAND_R).get_child(-1) as MeshInstance3D
-		mi.name = Equipment.STICK_MESH
-		# The starting gear until set_equipment() says otherwise.
-		set_equipment(Equipment.STICK, "")
-	_anims = data.anims
-	_anim = model.get_node(ANIM_PLAYER_PATH) as AnimationPlayer
-	# The imported animations do not loop; idle and walk must.
-	for role in ["idle", "walk"]:
-		_anim.get_animation(_anims[role]).loop_mode = Animation.LOOP_LINEAR
-
-
-## A hair piece (ActorLooks.HAIR_PIECES: a beard, a bun or a ponytail), faceted like the slimes, in the
-## hair's colour, hung from the head bone's attachment so it follows every animation.
-func _add_hair(model: Node3D, hair: Dictionary) -> void:
-	var head := model.get_node("Rig/Skeleton3D/head") as Node3D
-	var piece: Dictionary = ActorLooks.HAIR_PIECES[hair.style]
-	var profile: Array[Vector2] = []
-	profile.assign(ActorLooks.HAIR_PROFILES[piece.profile])
-	add_blob(head, profile, ActorLooks.HAIR_SEGMENTS, hair.color, piece.pos, piece.rot, piece.scale)
-
-
-## The Momia's bandages: flat rings of linen (squashed cylinders, each a little tilted the
-## other way than the last) round the head, the chest and both arms, a gap at the eyes,
-## and loose strips hanging from the wrists and the hip. Each is placed in the rig's rest
-## pose and hung from its bone, so it follows the animation.
-func _add_mummy_wraps(bones: Skeleton3D, color: Color) -> void:
-	var rings := [
-		["head", Vector3(0, 1.28, 0.0), 0.0, 0.46, 0.1, 0.95],
-		["head", Vector3(0, 1.62, 0.0), 6.0, 0.45, 0.1, 0.98],
-		["head", Vector3(0, 1.78, 0.0), -8.0, 0.46, 0.1, 1.0],
-		["head", Vector3(0, 1.93, 0.0), 8.0, 0.44, 0.1, 1.0],
-		["head", Vector3(0, 2.06, 0.0), -6.0, 0.34, 0.1, 1.0],
-		["chest", Vector3(0, 0.62, 0.0), 6.0, 0.42, 0.14, 0.88],
-		["chest", Vector3(0, 0.78, 0.0), -8.0, 0.44, 0.14, 0.88],
-		["chest", Vector3(0, 0.94, 0.0), 7.0, 0.46, 0.14, 0.88],
-		["chest", Vector3(0, 1.1, 0.0), -7.0, 0.46, 0.14, 0.88],
-		["chest", Vector3(0, 1.24, 0.0), 6.0, 0.4, 0.12, 0.88],
-		["upperarm.l", Vector3(0.30, 1.1, 0.0), -6.0, 0.19, 0.2, 1.0],
-		["upperarm.l", Vector3(0.44, 1.1, 0.0), 6.0, 0.19, 0.2, 1.0],
-		["lowerarm.l", Vector3(0.56, 1.1, 0.0), -6.0, 0.19, 0.2, 1.0],
-		["lowerarm.l", Vector3(0.68, 1.1, 0.0), 6.0, 0.19, 0.2, 1.0],
-		["upperarm.r", Vector3(-0.30, 1.1, 0.0), -6.0, 0.19, 0.2, 1.0],
-		["upperarm.r", Vector3(-0.44, 1.1, 0.0), 6.0, 0.19, 0.2, 1.0],
-		["lowerarm.r", Vector3(-0.56, 1.1, 0.0), -6.0, 0.19, 0.2, 1.0],
-		["lowerarm.r", Vector3(-0.68, 1.1, 0.0), 6.0, 0.19, 0.2, 1.0],
-	]
-	for ring: Array in rings:
-		var bone: String = ring[0]
-		var pos: Vector3 = ring[1]
-		var tilt: float = ring[2]
-		var cylinder := LowPoly.cylinder(ring[3], ring[4])
-		var basis := Basis.from_euler(Vector3(deg_to_rad(tilt), 0, 0))
-		if bone.begins_with("upperarm") or bone.begins_with("lowerarm"):
-			basis = Basis.from_euler(Vector3(0, 0, PI / 2)) * Basis.from_euler(
-				Vector3(deg_to_rad(tilt), 0, 0))
-		basis = basis * Basis.from_scale(Vector3(1, 1, ring[5]))
-		_hang_on_bone(bones, bone, cylinder, color, Transform3D(basis, pos))
-	# Loose ends: a strip from each wrist and one from the hip.
-	var strip := BoxMesh.new()
-	strip.size = Vector3(0.1, 0.5, 0.02)
-	for end: Array in [["wrist.l", Vector3(0.7, 0.86, 0.04)], ["wrist.r", Vector3(-0.7, 0.8, -0.04)],
-			["hips", Vector3(0.2, 0.3, 0.2)]]:
-		_hang_on_bone(bones, end[0], strip, color * 0.92,
-			Transform3D(Basis.from_euler(Vector3(0.1, 0, 0.08)), end[1]))
-	# The eyes: a dim ember in the dark of the head wrap.
-	var eyes := bones.get_node("Skeleton_Warrior_Eyes") as MeshInstance3D
-	var glow := StandardMaterial3D.new()
-	glow.albedo_color = Color(0.2, 0.05, 0.02)
-	glow.emission_enabled = true
-	glow.emission = Color(1.0, 0.45, 0.12)
-	glow.emission_energy_multiplier = 1.4
-	eyes.set_surface_override_material(0, glow)
-
-
-## One piece of the wraps, placed by a transform in the rig's rest pose and hung from a bone.
-func _hang_on_bone(bones: Skeleton3D, bone: String, mesh: Mesh, color: Color,
-		rig_transform: Transform3D) -> void:
-	var slot := BoneAttachment3D.new()
-	slot.bone_name = bone
-	bones.add_child(slot)
-	add_mesh(slot, mesh, color, Vector3.ZERO, 0.95)
-	var mi := slot.get_child(-1) as MeshInstance3D
-	mi.transform = bones.get_bone_global_rest(bones.find_bone(bone)).affine_inverse() * rig_transform
-
-
 ## The Devorador wakes (its second phase): a red flash while its eye opens and the whole mass
 ## grows by DEVOURER_GROWTH; its bar goes up with it.
 func _devourer_wakes() -> void:
@@ -776,23 +625,6 @@ func _float_label(text: String, style: StringName, color_token: StringName,
 	t.chain().tween_callback(label.queue_free)
 
 
-## Gives every mesh of an imported model copies of its materials with albedo_color
-## multiplied by color (the texture is multiplied too).
-static func _tint(model: Node3D, color: Color) -> void:
-	for node in model.find_children("*", "MeshInstance3D", true, false):
-		_tint_mesh(node as MeshInstance3D, color)
-
-
-static func _tint_mesh(mi: MeshInstance3D, color: Color) -> void:
-	for i in mi.mesh.get_surface_count():
-		var source := mi.get_active_material(i) as BaseMaterial3D
-		if source == null:
-			continue
-		var tinted := source.duplicate() as BaseMaterial3D
-		tinted.albedo_color = source.albedo_color * color
-		mi.set_surface_override_material(i, tinted)
-
-
 ## Additive overlay on every mesh, so it works on the imported materials too. Off, the
 ## figure keeps its highlight if it is being aimed at.
 func _set_flash(on: bool, color := Color.WHITE) -> void:
@@ -846,6 +678,22 @@ func set_hover(node: Node3D) -> void:
 func set_devourer(mass: Node3D, eyelid: Node3D) -> void:
 	_devourer = mass
 	_eyelid = eyelid
+
+
+## Builders only: the imported KayKit model (its hand slots hold the equipment meshes).
+func set_model(model: Node3D) -> void:
+	_model = model
+
+
+## Builders only: the aura ball of the Señor de la Niebla and the Eco (play_phase() swells it).
+func set_aura(aura: MeshInstance3D) -> void:
+	_aura = aura
+
+
+## Builders only: the model's AnimationPlayer and the role -> clip table it plays.
+func set_animations(player: AnimationPlayer, anims: Dictionary) -> void:
+	_anim = player
+	_anims = anims
 
 
 ## Builders only: a mesh in one flat colour under parent; its material fades with the

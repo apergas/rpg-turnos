@@ -430,8 +430,8 @@ static func build_goat(actor: BattleActor, data: Dictionary) -> void:
 
 ## The Grifo de la cumbre: a lion's tawny body on four legs with a tufted tail, a white-
 ## feathered chest, an eagle's white head with a hooked golden beak and ear tufts, and two
-## broad wings on pivots (the bat's wings, BattleActor.add_wing(): they beat slowly, LOOKS "flap_time"), facing -Z.
-## About 3.1 m tall at its scale.
+## broad wings on pivots (the bat's wings, BattleActor.add_wing(): they beat slowly, LOOKS
+## "flap_time"), facing -Z. About 3.1 m tall at its scale.
 static func build_griffin(actor: BattleActor, data: Dictionary) -> void:
 	var root := Node3D.new()
 	root.scale = Vector3.ONE * data.scale
@@ -474,8 +474,8 @@ static func build_griffin(actor: BattleActor, data: Dictionary) -> void:
 
 ## The Gárgola: a crouching beast of stone: a hunched body on four short legs, a horned head
 ## with a wide snout and glowing red eyes, a pointed tail and two stone wings on pivots that
-## beat slowly (the bat's wings, BattleActor.add_wing(), LOOKS "flap_time"), facing -Z. About 1.9 m tall at its
-## scale.
+## beat slowly (the bat's wings, BattleActor.add_wing(), LOOKS "flap_time"), facing -Z.
+## About 1.9 m tall at its scale.
 static func build_gargoyle(actor: BattleActor, data: Dictionary) -> void:
 	var root := Node3D.new()
 	root.scale = Vector3.ONE * data.scale
