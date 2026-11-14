@@ -40,7 +40,7 @@ Lo que se arregla son los cuatro puntos donde el código se aparta de las guías
    - la sesión pasada con `setup()`;
    - nada de autoloads.
 5. **Una pieza no conoce a su dueño.** Recibe lo que necesita con `setup()` (estado, mundo, audio, `Callable`s como `fade` o `autosave`) y avisa con señales. No guarda una referencia a `Game` ni a `World`. Así se evitan las dependencias circulares y cada pieza se puede leer sola.
-6. **`CLAUDE.md` se actualiza en el mismo commit que el código.** Hoy describe cada función por su nombre, así que cada movimiento cambia su sección *Layout*.
+6. **`CLAUDE.md` solo cambia si cambia el mapa de carpetas o uno de sus avisos.** Nunca lista funciones ni una entrada por archivo, así que mover código casi nunca lo toca.
 
 ## M-70. Trocear `Game`
 
