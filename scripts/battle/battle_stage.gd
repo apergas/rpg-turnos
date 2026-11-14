@@ -1,4 +1,5 @@
 class_name BattleStage extends RefCounted
+## Constructor: static; builds the nodes of a battle backdrop and its environment under the root it is given. Its static var plain_light is a setting DisplaySettings writes, not game state.
 ## Builds the battle backdrop of a zone (ZoneData.backdrop): sky, sun and fog of the
 ## zone, grass field with tall grass (Vegetation) around the fighters, dirt path,
 ## low-poly rocks, trees and bushes, and distant hills. "pradera" is the open meadow;

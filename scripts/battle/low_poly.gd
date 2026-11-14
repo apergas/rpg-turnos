@@ -1,4 +1,5 @@
 class_name LowPoly extends RefCounted
+## Constructor: static; builds meshes and MultiMesh nodes for its caller and keeps no state.
 ## Faceted low-poly meshes built in code and a MultiMesh helper. A blob is a lathe of
 ## rings taken from a side profile, every other ring turned half a segment, with one
 ## normal per face (flat shading), so it reads as a cut gem instead of a smooth

@@ -1,4 +1,5 @@
 class_name ZoneParticles extends RefCounted
+## Constructor: static; builds the particle node of a zone for its caller and moves it with follow(). Its static vars enabled and half are settings DisplaySettings writes.
 ## The particles that float around the hero on a map (ZoneData.particles): pollen and
 ## dandelion seeds in the meadow, leaves falling slowly in the forest, dust motes that the
 ## lantern lights in the mine, flakes of violet mist in the castle, grains of sand blown in gusts in the desert, flakes of snow falling slowly and a little

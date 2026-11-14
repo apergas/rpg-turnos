@@ -1,4 +1,5 @@
 class_name UiStyle extends RefCounted
+## Constructor: static; adds the shared small labels and finger-sized rows to the controls it is given and keeps no state.
 ## What the menu windows share: their colors, the size of small text and the line that says
 ## what an item does.
 
