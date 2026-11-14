@@ -1,6 +1,6 @@
 # Refactor de arquitectura: trocear las clases grandes y aislar el piloto automático
 
-Fecha: 2026-11-14. Estado: spec, pendiente de revisión. Sin versión asignada. Se recomienda hacerlo **después de la 2.7.0 y antes de la v3**, porque la v3 añadirá zonas, escenas y figuras justo en `Game` y `World`. Cubre M-70 a M-74. El orden de trabajo y las comprobaciones de cada paso están en la [guía del refactor](2026-11-14-refactor-arquitectura-guia.md).
+Fecha: 2026-11-14. Estado: hecho (planes 1 a 4, fusionados en `develop` el 2026-11-14). Sin versión asignada. Se recomienda hacerlo **después de la 2.7.0 y antes de la v3**, porque la v3 añadirá zonas, escenas y figuras justo en `Game` y `World`. Cubre M-70 a M-74. El orden de trabajo y las comprobaciones de cada paso están en la [guía del refactor](2026-11-14-refactor-arquitectura-guia.md).
 
 ## Objetivo
 
