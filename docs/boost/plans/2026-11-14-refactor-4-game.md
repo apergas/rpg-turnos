@@ -17,7 +17,7 @@
 - **NO TESTS OF ANY KIND** (`CLAUDE.md`, *No tests — ever*). Each task is checked by hand:
   - `--import`;
   - `--check-only` on each changed script;
-  - the autoplay runs of the *Checks* section, compared with the reference;
+  - the autoplay runs named in each task, compared with plan 1's reference (*How to compare*);
   - screenshots where something is visual.
 - Every Godot run sets `APPDATA` inline to the literal scratch path `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor`. Never use `$APPDATA` in `rm`, `mv` or `cp`.
 - One task = one piece = one commit, and the game works after each.
@@ -65,39 +65,61 @@ Then read `move.gd` once:
 
 The recipe for moving a function: cut it from `game.gd`, paste it into `move.gd`, run the global perl, then the task's piece-local perl, and append `move.gd` to the piece after its skeleton.
 
-### Checks
+### How to compare a run with the reference (used by every task)
 
-Task 0 writes `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/check.sh`. Each task runs it as `bash C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/check.sh <run>`.
+Plan 1 recorded the references in `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/`. This plan writes its own logs to `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4/`. Each task names the runs it needs, from this table. `LOG` is the second column, `ARGS` the third:
 
-**What it does:**
+| Run | `LOG` | `ARGS` | Watch also |
+|---|---|---|---|
+| `v1` | `v1.log` | `--quit-after 150000 -- --autoplay` | `Juego completado: Nv 18` |
+| `v2` | `v2.log` | `--quit-after 500000 -- --autoplay --autoplay-zone=caravana` (about 20 min) | `Juego completado (v2): Nv 40` |
+| `caravana60` | `caravana60.log` | `--quit-after 60000 -- --autoplay --autoplay-zone=caravana` | `Pregunta: ... -> Sí`, `-> Partir`, `Zona: caravana`, `Escena: caravana_campamento`, `Compañero: Brena`, `Zona: jungla` |
+| `medallas` | `medallas.log` | `--quit-after 60000 -- --autoplay --autoplay-zone=medallas` | last line `Medallas: 12/12 · premios 5/5` |
+| `eco` | `eco.log` | `--quit-after 40000 -- --autoplay --autoplay-zone=eco` | at least one `Eco de la Niebla: victoria`; the line `Entre la bruma brilla algo.` once |
+| `save` | `save.log` | `--quit-after 6000 -- --autoplay --autoplay-save` | `Guardado:` and `Cargado:` identical |
+| `bosque`, `castillo_trono`, `jungla`, `mina_3` | `zone_<run>.log` | `--quit-after 40000 -- --autoplay --autoplay-zone=<run>` | |
+| `mina_1`, `castillo_patio`, `desierto`, `montana` | `zone_<run>.log` | `--quit-after 60000 -- --autoplay --autoplay-zone=<run>` | |
+| `portal` | `zone_portal.log` | `--quit-after 100000 -- --autoplay --autoplay-zone=portal` | `Escena: cruce`, `Juego completado (v2)` |
+| `ciudad` | `zone_ciudad.log` | `--quit-after 150000 -- --autoplay --autoplay-zone=ciudad` | `Escena: guardian`, `Escena: cruce`, `Juego completado (v2)` |
 
-- It runs the game headless with `--fixed-fps 10` and writes the log to `new/<run>.log`.
-- It keeps the milestones, with every number turned into `N` and only the first time each line appears, because retreats repeat zones. These go to `new/<run>.m`.
-- It prints the errors and warnings, without the known Jolt one.
-- It diffs the `Zona`, `Escena`, `Lugar`, `Pregunta`, `Juego completado` and `Compañero` milestones against `ref/<run>.m`.
-- It prints the last end lines of both logs.
+(The `--quit-after` values are the ones plan 1 recorded the references with: keep them, or the logs end at different points.)
 
-**Expected every time:**
+To run one (the long ones in the background):
 
-- nothing under `== errors and warnings`;
-- nothing under `== milestone diff`;
-- under `== end lines`, the same `Nv` in both. Times may differ by up to about 5 minutes.
-- for `save`, `1` under `== save round trip`.
+```bash
+cd /c/Users/peixe/Documents/rpg-turnos
+mkdir -p C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4
+APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --headless --path . --fixed-fps 10 ARGS > C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4/LOG 2>&1
+rm -f C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/Godot/app_userdata/rpg-turnos/save_autoplay.json
+```
 
-**If a diff shows only a last milestone missing**, it can be that the run hit `--quit-after` just before it. Run it once more. If two runs differ from the reference, stop: `git reset --hard HEAD` on this branch and rethink the piece (guide, *Cuándo parar*).
+Then compare the new log `NEW` (`p4/LOG`) with the reference `REF` (`ref/LOG`), both full paths:
 
-| Run | Arguments | Watch also |
-|---|---|---|
-| `v1` | `--quit-after 150000 -- --autoplay` | `Juego completado: Nv 18` |
-| `v2` | `--quit-after 500000 -- --autoplay --autoplay-zone=caravana` (about 20 min) | `Juego completado (v2): Nv 40` |
-| `caravana60` | `--quit-after 60000 -- --autoplay --autoplay-zone=caravana` | `Pregunta: ... -> Sí`, `-> Partir`, `Zona: caravana`, `Escena: caravana_campamento`, `Compañero: Brena`, `Zona: jungla` |
-| `medallas` | `--quit-after 60000 -- --autoplay --autoplay-zone=medallas` | last line `Medallas: 12/12 · premios 5/5` |
-| `eco` | `--quit-after 40000 -- --autoplay --autoplay-zone=eco` | at least one `Eco de la Niebla: victoria`; the line `Entre la bruma brilla algo.` once |
-| `save` | `--quit-after 6000 -- --autoplay --autoplay-save` | `Guardado:` and `Cargado:` identical |
-| `bosque`, `mina_1`, `mina_3`, `castillo_patio`, `castillo_trono`, `jungla` | `--quit-after 40000 -- --autoplay --autoplay-zone=<run>` | |
-| `desierto`, `montana` | `--quit-after 60000 -- --autoplay --autoplay-zone=<run>` | |
-| `portal` | `--quit-after 100000 -- --autoplay --autoplay-zone=portal` | `Escena: cruce`, `Juego completado (v2)` |
-| `ciudad` | `--quit-after 150000 -- --autoplay --autoplay-zone=ciudad` | `Escena: guardian`, `Escena: cruce`, `Juego completado (v2)` |
+1. Errors and warnings of the new run:
+
+   ```bash
+   grep -E 'ERROR|WARNING' NEW | grep -v 'Jolt Physics job system exceeded'
+   ```
+
+   Expected: no output.
+
+2. Milestones:
+
+   ```bash
+   diff <(grep -E '^(Zona|Escena|Lugar|Compañero|Pregunta|Misión cumplida|Juego completado|Medallas|Eco de la Niebla)' REF) <(grep -E '^(Zona|Escena|Lugar|Compañero|Pregunta|Misión cumplida|Juego completado|Medallas|Eco de la Niebla)' NEW)
+   ```
+
+   Expected, as in plan 1's *How to compare*: the `Zona:`, `Escena:`, `Lugar:`, `Pregunta:` and `Compañero:` lines are the same and in the same order; only the number and order of the `Misión cumplida:` lines, the time on `Juego completado` (about 5 minutes either way) and the counts on the `Eco de la Niebla:` lines may differ, within the spread plan 1 measured between `v1.log` and `v1b.log`. The level on `Juego completado` and the final `Medallas:` line are the same. A last milestone missing may be only the run hitting `--quit-after` just before it: run it once more.
+
+3. For `save` only:
+
+   ```bash
+   diff <(grep '^Guardado: ' NEW | cut -c11-) <(grep '^Cargado: ' NEW | cut -c10-) && echo IGUALES
+   ```
+
+   Expected: `IGUALES`.
+
+If a run differs from the reference beyond that twice in a row, stop: `git reset --hard HEAD` on this branch and rethink the piece (guide, *Cuándo parar*).
 
 Common commands, for reference (each task names its scripts):
 
@@ -135,105 +157,22 @@ Until a piece exists, the `Callable` fields of the pieces that are already in ar
 
 ---
 
-### Task 0: Branch, check script and extra references (no commit)
+### Task 0: Branch and references (no commit)
 
-**Files:**
-- Create (outside the repo): `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/check.sh`
+**Files:** none (nothing is created).
 
 **Interfaces:**
-- Consumes: plan 1's references in `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/` (`v1.log`, `v2.log`, `medallas.log`, `eco.log`, `save.log`).
-- Produces: `check.sh` and the `ref/<run>.m` files of every run in *Checks*.
+- Consumes: plan 1's references in `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/`: `v1.log`, `v2.log`, `caravana60.log`, `medallas.log`, `eco.log`, `save.log`, `zone_<id>.log` for the ten starts, `menu/` and `pck.size`.
+- Produces: the branch.
 
 - [ ] **Step 1: Branch**
 
 ```bash
 cd /c/Users/peixe/Documents/rpg-turnos && git checkout develop && git status --short && git checkout -b feature/refactor-4-game
+ls C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/ && cat C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/pck.size
 ```
 
-Expected: `git status --short` prints nothing, then `Switched to a new branch 'feature/refactor-4-game'`.
-
-- [ ] **Step 2: Write `check.sh`**
-
-```bash
-#!/usr/bin/env bash
-# Usage: check.sh <run> [ref|m]
-#   (none) run the game into new/ and compare with ref/
-#   ref    run the game into ref/ (a reference, from develop)
-#   m      only rebuild ref/<run>.m from an existing ref/<run>.log
-set -u
-R="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor"
-run="$1"
-mode="${2:-new}"
-out="$R/new"
-if [ "$mode" = ref ] || [ "$mode" = m ]; then out="$R/ref"; fi
-mkdir -p "$out"
-case "$run" in
-  v1) args="--quit-after 150000 -- --autoplay" ;;
-  v2) args="--quit-after 500000 -- --autoplay --autoplay-zone=caravana" ;;
-  caravana60) args="--quit-after 60000 -- --autoplay --autoplay-zone=caravana" ;;
-  medallas) args="--quit-after 60000 -- --autoplay --autoplay-zone=medallas" ;;
-  eco) args="--quit-after 40000 -- --autoplay --autoplay-zone=eco" ;;
-  save) args="--quit-after 6000 -- --autoplay --autoplay-save" ;;
-  bosque|mina_1|mina_3|castillo_patio|castillo_trono|jungla) args="--quit-after 40000 -- --autoplay --autoplay-zone=$run" ;;
-  desierto|montana) args="--quit-after 60000 -- --autoplay --autoplay-zone=$run" ;;
-  portal) args="--quit-after 100000 -- --autoplay --autoplay-zone=portal" ;;
-  ciudad) args="--quit-after 150000 -- --autoplay --autoplay-zone=ciudad" ;;
-  *) echo "unknown run: $run"; exit 2 ;;
-esac
-if [ "$mode" != m ]; then
-  cd /c/Users/peixe/Documents/rpg-turnos || exit 2
-  APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --headless --path . --fixed-fps 10 $args > "$out/$run.log" 2>&1
-  rm -f "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/Godot/app_userdata/rpg-turnos/save_autoplay.json"
-fi
-M='^(Zona|Escena|Lugar|Compañero|Pregunta|Misión cumplida|Juego completado|Medallas|Eco de la Niebla)'
-grep -E "$M" "$out/$run.log" | sed -E 's/[0-9]+/N/g' | awk '!seen[$0]++' > "$out/$run.m"
-echo "== errors and warnings"
-grep -E 'ERROR|WARNING' "$out/$run.log" | grep -v 'Jolt Physics job system'
-if [ "$mode" = new ]; then
-  echo "== milestone diff"
-  diff "$R/ref/$run.m" "$out/$run.m" | grep -E '^[<>] (Zona|Escena|Lugar|Pregunta|Juego completado|Compañero)'
-  echo "== end lines"
-  grep -hE '^(Juego completado|Medallas: [0-9]+/12 ·|Eco de la Niebla)' "$R/ref/$run.log" | tail -2
-  grep -hE '^(Juego completado|Medallas: [0-9]+/12 ·|Eco de la Niebla)' "$out/$run.log" | tail -2
-fi
-if [ "$run" = save ]; then
-  echo "== save round trip"
-  grep -E '^(Guardado|Cargado): ' "$out/$run.log" | sed -E 's/^(Guardado|Cargado): //' | uniq | wc -l
-fi
-```
-
-- [ ] **Step 3: Milestone files of plan 1's references**
-
-```bash
-ls C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/
-for r in v1 v2 medallas eco save; do bash C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/check.sh $r m; done
-```
-
-Expected:
-
-- `ls` lists at least `v1.log v2.log medallas.log eco.log save.log`.
-- Each `check.sh` prints only `== errors and warnings` with nothing under it. For `save` it also prints `== save round trip` and `1`.
-- If a log is missing, record it now with `check.sh <run> ref` (develop with plans 1-3 merged behaves as the original).
-
-- [ ] **Step 4: Extra references (on this branch, still equal to develop)**
-
-```bash
-for r in caravana60 bosque mina_1 mina_3 castillo_patio castillo_trono jungla desierto montana portal ciudad; do bash C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/check.sh $r ref; done
-```
-
-Expected: for each run, `== errors and warnings` with nothing under it. About an hour of real time.
-
-- [ ] **Step 5: Web size and menu frames of the reference**
-
-```bash
-cd /c/Users/peixe/Documents/rpg-turnos && mkdir -p build/web && APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --headless --path . --export-release "Web" build/web/index.html > C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/web.log 2>&1; ls -l build/web/index.pck | awk '{print $5}' > C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/pck.size; cat C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/pck.size
-mkdir -p C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/menu4 && APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --path . --write-movie C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/menu4/f.png --fixed-fps 10 --quit-after 140 -- --autoplay --autoplay-menu
-```
-
-Expected:
-
-- one number, the size of `index.pck` in bytes;
-- 140 PNG frames in `ref/menu4/`.
+Expected: `git status --short` prints nothing, then `Switched to a new branch 'feature/refactor-4-game'`. The listing shows plan 1's reference, and `pck.size` one number.
 
 ---
 
@@ -355,19 +294,16 @@ Expected: the `grep` prints nothing.
 
 - [ ] **Step 4: Import and validate**
 
-Run the import, then validate `res://scripts/game/session_context.gd` and `res://scripts/game/game.gd` (*Checks*). Expected: no `SCRIPT ERROR` / `Parse Error` / `ERROR`.
+Run the import, then validate `res://scripts/game/session_context.gd` and `res://scripts/game/game.gd` (*Common commands* above). Expected: no `SCRIPT ERROR` / `Parse Error` / `ERROR`.
 
 - [ ] **Step 5: Runs**
 
-```bash
-bash C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/check.sh save
-bash C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/check.sh v1
-```
+Run and compare `save`, `v1` (*How to compare*).
 
 Expected:
 
-- `save`: nothing under errors and the diff, and `1` under `== save round trip`.
-- `v1`: nothing under errors and the diff; both end lines say `Juego completado: Nv 18`.
+- `save`: no error lines and no milestone difference, and the `Guardado:` and `Cargado:` lines identical (`IGUALES`).
+- `v1`: no error lines and no milestone difference; both end lines (reference and new) say `Juego completado: Nv 18`.
 
 - [ ] **Step 6: `CLAUDE.md`**
 
@@ -511,17 +447,13 @@ Validate `res://scripts/story/credits_data.gd` and `res://scripts/game/game.gd`.
 
 - [ ] **Step 4: Runs**
 
-```bash
-bash C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/check.sh save
-bash C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/check.sh v1
-bash C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/check.sh v2
-```
+Run and compare `save`, `v1`, `v2` (*How to compare*).
 
 Expected:
 
-- `save`: `1`.
-- `v1`: no errors and an empty diff; `Juego completado: Nv 18` in both end lines.
-- `v2`: no errors and an empty diff; `Juego completado (v2): Nv 40` in both end lines.
+- `save`: `IGUALES`.
+- `v1`: no error lines and no milestone difference; `Juego completado: Nv 18` in both end lines.
+- `v2`: no error lines and no milestone difference; `Juego completado (v2): Nv 40` in both end lines.
 
 - [ ] **Step 5: `CLAUDE.md`**
 
@@ -629,13 +561,11 @@ Validate `res://scripts/game/autoplay_starts.gd` and `res://scripts/game/game.gd
 
 - [ ] **Step 4: Runs, every start once**
 
-```bash
-for r in bosque mina_1 mina_3 castillo_patio castillo_trono eco medallas jungla desierto montana portal ciudad caravana60; do echo "### $r"; bash C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/check.sh $r; done
-```
+Run and compare `bosque`, `mina_1`, `mina_3`, `castillo_patio`, `castillo_trono`, `eco`, `medallas`, `jungla`, `desierto`, `montana`, `portal`, `ciudad`, `caravana60` (*How to compare*).
 
 Expected for each run:
 
-- nothing under errors and the diff;
+- no error lines and no milestone difference;
 - `medallas` ends `Medallas: 12/12 · premios 5/5`;
 - `eco` has `Eco de la Niebla: victoria`.
 
@@ -881,18 +811,19 @@ Validate `res://scripts/game/battle_rewards.gd` and `res://scripts/game/game.gd`
 
 - [ ] **Step 5: Runs**
 
+Run and compare `v1`, `eco`, `ciudad`, `save` (*How to compare*). Then:
+
 ```bash
-for r in v1 eco ciudad save; do echo "### $r"; bash C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/check.sh $r; done
-grep -c 'Entre la bruma brilla algo.' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/new/eco.log
-grep -c 'Medalla:' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/new/v1.log C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/v1.log
+grep -c 'Entre la bruma brilla algo.' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4/eco.log
+grep -c 'Medalla:' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4/v1.log C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/v1.log
 ```
 
 Expected:
 
-- `v1`: no errors and an empty diff, `Juego completado: Nv 18`.
-- `eco`: no errors and an empty diff, at least one victory, and `1` for the reward line.
-- `ciudad`: no errors and an empty diff, `Juego completado (v2)`.
-- `save`: `1`.
+- `v1`: no error lines and no milestone difference, `Juego completado: Nv 18`.
+- `eco`: no error lines and no milestone difference, at least one victory, and `1` for the reward line.
+- `ciudad`: no error lines and no milestone difference, `Juego completado (v2)`.
+- `save`: `IGUALES`.
 - The `Medalla:` counts: a number of the same order in both logs (the drops are random).
 
 - [ ] **Step 6: `CLAUDE.md`**
@@ -1144,15 +1075,16 @@ Validate `res://scripts/game/zone_travel.gd` and `res://scripts/game/game.gd`. E
 
 - [ ] **Step 5: Runs**
 
+Run and compare `save`, `v1`, `medallas` (*How to compare*). Then:
+
 ```bash
-for r in save v1 medallas; do echo "### $r"; bash C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/check.sh $r; done
-grep -cE '^Retirada al pueblo|^Derrota en' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/new/v1.log
+grep -cE '^Retirada al pueblo|^Derrota en' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4/v1.log
 ```
 
 Expected:
 
-- each run: no errors and an empty diff;
-- `save`: `1`;
+- each run: no error lines and no milestone difference;
+- `save`: `IGUALES`;
 - `v1`: `Juego completado: Nv 18`;
 - `medallas`: `12/12 · premios 5/5`;
 - the count is above 0, so the Ala, its portal or a defeat's way back were played.
@@ -1368,17 +1300,18 @@ Validate `res://scripts/story/story_flow.gd` and `res://scripts/game/game.gd`. E
 
 - [ ] **Step 5: Runs**
 
+Run and compare `v1`, `v2`, `save` (*How to compare*). Then:
+
 ```bash
-for r in v1 v2 save; do echo "### $r"; bash C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/check.sh $r; done
-grep -E '^(Familias completas|Derrotas|Medallas: [0-9]+/12 \()' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/new/v1.log
+grep -E '^(Familias completas|Derrotas|Medallas: [0-9]+/12 \()' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4/v1.log
 ```
 
 Expected:
 
-- each run: no errors and an empty diff; every `Escena:` line as in the reference;
+- each run: no error lines and no milestone difference; every `Escena:` line as in the reference;
 - `v1`: `Juego completado: Nv 18`;
 - `v2`: `Juego completado (v2): Nv 40`;
-- `save`: `1`;
+- `save`: `IGUALES`;
 - the three end lines are there: `Familias completas: n/5`, `Derrotas: n`, `Medallas: n/12 (enemigos comunes vencidos: n)`.
 
 - [ ] **Step 6: `CLAUDE.md`**
@@ -1528,15 +1461,16 @@ Validate `res://scripts/game/caravan_flow.gd`, `res://scripts/story/story_flow.g
 
 - [ ] **Step 5: Runs**
 
+Run and compare `v1`, `caravana60` (*How to compare*). Then:
+
 ```bash
-for r in v1 caravana60; do echo "### $r"; bash C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/check.sh $r; done
-grep -E '^(Pregunta|Compañero|Escena: caravana)' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/new/caravana60.log | head
+grep -E '^(Pregunta|Compañero|Escena: caravana)' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4/caravana60.log | head
 cd /c/Users/peixe/Documents/rpg-turnos && APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --headless --path . --fixed-fps 10 --quit-after 60000 -- --autoplay --autoplay-zone=caravana --autoplay-companion=tadeo 2>&1 | grep -m1 '^Compañero: '
 ```
 
 Expected:
 
-- both runs: no errors and an empty diff;
+- both runs: no error lines and no milestone difference;
 - `v1` has no `Pregunta:` line;
 - the `grep` shows `Escena: caravana_llega`, the two `Pregunta: ... -> Sí` / `-> Partir` lines, `Escena: caravana_parte`, `Escena: caravana_campamento` and `Compañero: Brena`, in that order;
 - the last command prints `Compañero: Tadeo`.
@@ -1692,24 +1626,25 @@ Validate `res://scripts/game/figure_talk.gd` and `res://scripts/game/game.gd`. E
 
 - [ ] **Step 4: Runs**
 
+Run and compare `v1`, `caravana60`, `medallas` (*How to compare*). Then:
+
 ```bash
-for r in v1 caravana60 medallas; do echo "### $r"; bash C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/check.sh $r; done
-grep -cE '^Misión cumplida' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/new/v1.log C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/v1.log
+grep -cE '^Misión cumplida' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4/v1.log C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/v1.log
 ```
 
 Expected:
 
-- each run: no errors and an empty diff;
+- each run: no error lines and no milestone difference;
 - `medallas`: `12/12 · premios 5/5`, which proves the Coleccionista;
 - the `Misión cumplida` counts are close, within one or two (side quests vary).
 
 Then open the shop once in a window:
 
 ```bash
-cd /c/Users/peixe/Documents/rpg-turnos && APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --path . --write-movie C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/new/shop/f.png --fixed-fps 10 --quit-after 900 -- --autoplay
+cd /c/Users/peixe/Documents/rpg-turnos && APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --path . --write-movie C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4/shop/f.png --fixed-fps 10 --quit-after 900 -- --autoplay
 ```
 
-Look at the frames around the first `Comprar` the autoplay makes (the merchant of Villaclaro). The window shows "¿Comprar o vender?" and the buy page as before. Delete `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/new/shop` afterwards.
+Look at the frames around the first `Comprar` the autoplay makes (the merchant of Villaclaro). The window shows "¿Comprar o vender?" and the buy page as before. Delete `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4/shop` afterwards.
 
 - [ ] **Step 5: `CLAUDE.md`**
 
@@ -1787,14 +1722,15 @@ Validate `res://scripts/game/figure_talk.gd` and `res://scripts/game/game.gd`. E
 
 - [ ] **Step 4: Runs**
 
+Run and compare `v1`, `mina_1`, `jungla` (*How to compare*). Then:
+
 ```bash
-for r in v1 mina_1 jungla; do echo "### $r"; bash C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/check.sh $r; done
-grep -cE '¡Tiras de la palanca|Encuentras la Llave de la mina|Abres la reja con la' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/new/mina_1.log
+grep -cE '¡Tiras de la palanca|Encuentras la Llave de la mina|Abres la reja con la' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4/zone_mina_1.log
 ```
 
 Expected:
 
-- each run: no errors and an empty diff;
+- each run: no error lines and no milestone difference;
 - the count is `3` or more: the lever, the key and the gate notices are printed on autoplay.
 
 - [ ] **Step 5: `CLAUDE.md`**
@@ -2205,15 +2141,16 @@ Validate `res://scripts/game/game_autoplay.gd` and `res://scripts/game/game.gd`.
 
 - [ ] **Step 5: Runs, every start once**
 
+Run and compare `v1`, `save`, `medallas`, `eco`, `bosque`, `mina_1`, `mina_3`, `castillo_patio`, `castillo_trono`, `jungla`, `desierto`, `montana`, `portal`, `ciudad`, `caravana60` (*How to compare*). Then:
+
 ```bash
-for r in v1 save medallas eco bosque mina_1 mina_3 castillo_patio castillo_trono jungla desierto montana portal ciudad caravana60; do echo "### $r"; bash C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/check.sh $r; done
-grep -cE '^(Retirada al pueblo|Grupos repuestos)' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/new/v1.log C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/v1.log
-grep -c '^Oro ' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/new/v1.log C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/v1.log
+grep -cE '^(Retirada al pueblo|Grupos repuestos)' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4/v1.log C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/v1.log
+grep -c '^Oro ' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4/v1.log C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/v1.log
 ```
 
 Expected:
 
-- each run: no errors and an empty diff; `save` prints `1`; `medallas` ends `12/12 · premios 5/5`; `eco` has a victory;
+- each run: no error lines and no milestone difference; `save` prints `IGUALES`; `medallas` ends `12/12 · premios 5/5`; `eco` has a victory;
 - the retreat and refill counts are of the same order (both above 0);
 - the `Oro` counts are of the same order.
 
@@ -2548,15 +2485,16 @@ Validate `res://scripts/game/battle_flow.gd` and `res://scripts/game/game.gd`. E
 
 - [ ] **Step 4: Runs**
 
+Run and compare `save`, `v1`, `eco`, `ciudad`, `portal`, `mina_1` (*How to compare*). Then:
+
 ```bash
-for r in save v1 eco ciudad portal mina_1; do echo "### $r"; bash C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/check.sh $r; done
-grep -cE 'Slime de Metal' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/new/v1.log C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/v1.log
-grep -m1 'El ojo del Devorador se abre' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/new/portal.log
+grep -cE 'Slime de Metal' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4/v1.log C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/v1.log
+grep -m1 'El ojo del Devorador se abre' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4/zone_portal.log
 ```
 
 Expected:
 
-- each run: no errors and an empty diff; `save` prints `1`; `eco` has a victory and one `Entre la bruma brilla algo.`;
+- each run: no error lines and no milestone difference; `save` prints `IGUALES`; `eco` has a victory and one `Entre la bruma brilla algo.`;
 - `ciudad` and `portal` reach `Juego completado (v2)`;
 - the Slime de Metal lines appear in both logs, with counts of the same order;
 - the Devorador's second phase line is printed.
@@ -2564,10 +2502,10 @@ Expected:
 Then a battle in a window, checked by eye:
 
 ```bash
-cd /c/Users/peixe/Documents/rpg-turnos && APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --path . --write-movie C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/new/battle/f.png --fixed-fps 10 --quit-after 600 -- --autoplay
+cd /c/Users/peixe/Documents/rpg-turnos && APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --path . --write-movie C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4/battle/f.png --fixed-fps 10 --quit-after 600 -- --autoplay
 ```
 
-The frames of the first battle show the stage, the hero and the enemies, the menu, then the victory card and the map coming back. Delete `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/new/battle` afterwards.
+The frames of the first battle show the stage, the hero and the enemies, the menu, then the victory card and the map coming back. Delete `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4/battle` afterwards.
 
 - [ ] **Step 5: `CLAUDE.md`**
 
@@ -2727,11 +2665,9 @@ Close the game. Then run it once without `--debug` and check that F1 does nothin
 
 - [ ] **Step 5: Run**
 
-```bash
-bash C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/check.sh save
-```
+Run and compare `save` (*How to compare*).
 
-Expected: `1`.
+Expected: `IGUALES`.
 
 - [ ] **Step 6: `CLAUDE.md`**
 
@@ -2796,26 +2732,24 @@ Validate `res://scripts/game/game.gd`. Expected: no errors.
 
 - [ ] **Step 2: All the references**
 
-```bash
-for r in v1 v2 medallas eco save caravana60 bosque mina_1 mina_3 castillo_patio castillo_trono jungla desierto montana portal ciudad; do echo "### $r"; bash C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/check.sh $r; done
-```
+Run and compare `v1`, `v2`, `medallas`, `eco`, `save`, `caravana60`, `bosque`, `mina_1`, `mina_3`, `castillo_patio`, `castillo_trono`, `jungla`, `desierto`, `montana`, `portal`, `ciudad` (*How to compare*).
 
 Expected for each run:
 
-- nothing under errors and the diff;
+- no error lines and no milestone difference;
 - `v1` `Nv 18`, `v2` `Nv 40`;
 - `medallas` `12/12 · premios 5/5`;
 - `eco` a victory;
-- `save` `1`;
+- `save` `IGUALES`;
 - the times within about 5 minutes of the reference's.
 
 - [ ] **Step 3: The pause menu, the phone and the portraits**
 
 ```bash
-cd /c/Users/peixe/Documents/rpg-turnos && mkdir -p C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/new/menu4 && APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --path . --write-movie C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/new/menu4/f.png --fixed-fps 10 --quit-after 140 -- --autoplay --autoplay-menu
+cd /c/Users/peixe/Documents/rpg-turnos && mkdir -p C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4/menu && APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --path . --write-movie C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4/menu/f.png --fixed-fps 10 --quit-after 140 -- --autoplay --autoplay-menu
 ```
 
-Open frames `f00000030.png`, `f00000045.png`, `f00000060.png`, `f00000075.png`, `f00000090.png`, `f00000105.png` and `f00000120.png` of `ref/menu4/` and `new/menu4/` side by side with the Read tool. Expected: the same pages (main, Estado, Objetos, Equipo, Diario, Opciones) with the same layout. The map behind may differ.
+Open frames `f00000030.png`, `f00000045.png`, `f00000060.png`, `f00000075.png`, `f00000090.png`, `f00000105.png` and `f00000120.png` of `ref/menu/` and `p4/menu/` side by side with the Read tool. Expected: the same pages (main, Estado, Objetos, Equipo, Diario, Opciones) with the same layout. The map behind may differ.
 
 Phone, by hand:
 
@@ -2836,7 +2770,7 @@ Expected: `git status` prints nothing.
 - [ ] **Step 4: The web export**
 
 ```bash
-cd /c/Users/peixe/Documents/rpg-turnos && mkdir -p build/web && APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --headless --path . --export-release "Web" build/web/index.html > C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/new/web.log 2>&1; grep -E 'ERROR|WARNING' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/new/web.log; cat C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/pck.size; ls -l build/web/index.pck | awk '{print $5}'
+cd /c/Users/peixe/Documents/rpg-turnos && mkdir -p build/web && APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --headless --path . --export-release "Web" build/web/index.html > C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4/web.log 2>&1; grep -E 'ERROR|WARNING' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4/web.log; cat C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/pck.size; ls -l build/web/index.pck | awk '{print $5}'
 ```
 
 Expected:
@@ -2917,10 +2851,7 @@ Expected:
 - the merge commit on top;
 - `git status --short` empty, except `build/`, which is git-ignored.
 
-Do not push. Afterwards delete these scratch folders:
-
-- `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/new/menu4`
-- `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/menu4`
+Do not push. Afterwards delete this plan's scratch folder `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4`. Keep plan 1's `ref/`.
 
 ---
 

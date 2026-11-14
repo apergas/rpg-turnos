@@ -58,11 +58,11 @@ If a run's milestones differ beyond that twice in a row, stop: `git reset --hard
 Nothing in the repo changes. This task records how `develop` behaves today, so every later task (and plans 2 to 4) can compare against it.
 
 **Files:**
-- Create (outside the repo): `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/*.log`, `ref/menu/`, `ref/touch/`, `ref/phone/`
+- Create (outside the repo): `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/*.log`, `ref/menu/`, `ref/touch/`, `ref/phone/`, `ref/movie/`, `ref/movie-caravana/`, `ref/bestiary-unstable.txt`, `ref/pck.size`
 
 **Interfaces:**
 - Consumes: nothing.
-- Produces: the reference logs named below, which every later task and plans 2-4 compare against: `v1.log`, `v1b.log`, `v2.log`, `medallas.log`, `eco.log`, `save.log`, `battle.log`, `tadeo.log`, `zone_<id>.log` for each `--autoplay-zone` start, the frame folders `menu/` and `touch/`, and the phone screenshots in `phone/`.
+- Produces: the reference logs named below, which every later task and plans 2-4 compare against: `v1.log`, `v1b.log`, `v2.log`, `caravana60.log`, `medallas.log`, `eco.log`, `save.log`, `battle.log`, `tadeo.log`, `zone_<id>.log` for each `--autoplay-zone` start (`zone_jungla.log` is also plan 3's jungla reference), the frame folders `menu/`, `touch/`, `movie/` (the start of the v1, windowed: plans 2 and 3 compare frames with it) and `movie-caravana/` (the start of the v2 with the caravan people, windowed: plan 2 compares frames with it), the phone screenshots in `phone/`, `bestiary-unstable.txt` (plan 2) and `pck.size` (plan 4). Each reference is recorded here and nowhere else.
 
 - [ ] **Step 1: Branch and scratch folders**
 
@@ -71,7 +71,7 @@ cd /c/Users/peixe/Documents/rpg-turnos
 git checkout develop
 git status --short
 git checkout -b feature/refactor-1-runflags-builders
-mkdir -p "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/menu" "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/touch" "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/phone"
+mkdir -p "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/menu" "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/touch" "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/phone" "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/movie" "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/movie-caravana"
 ```
 
 Expected: `git status --short` prints nothing, or only this untracked plan file and the other refactor plans (`?? docs/boost/plans/...`). Then `Switched to a new branch 'feature/refactor-1-runflags-builders'`.
@@ -129,10 +129,12 @@ Expected, in order:
 - `IGUALES`;
 - `Fin del combate (estado N)`, with N a number.
 
-- [ ] **Step 6: The companion flag, and every `--autoplay-zone` start (for plans 3 and 4)**
+- [ ] **Step 6: The caravan start, the companion flag, and every `--autoplay-zone` start (for plans 3 and 4)**
 
 ```bash
 cd /c/Users/peixe/Documents/rpg-turnos
+APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --headless --path . --fixed-fps 10 --quit-after 60000 -- --autoplay --autoplay-zone=caravana > "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/caravana60.log" 2>&1
+grep -E '^(Pregunta|Compañero|Escena: caravana|Zona: jungla)' "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/caravana60.log"
 APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --headless --path . --fixed-fps 10 --quit-after 8000 -- --autoplay --autoplay-zone=jungla --autoplay-companion=tadeo > "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/tadeo.log" 2>&1
 grep -c 'Tadeo' "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/tadeo.log"; grep -c 'Brena' "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/tadeo.log"
 for z in bosque:40000 mina_1:60000 mina_3:40000 castillo_patio:60000 castillo_trono:40000 jungla:40000 desierto:60000 montana:60000 ciudad:150000 portal:100000; do id=${z%%:*}; n=${z##*:}; APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --headless --path . --fixed-fps 10 --quit-after $n -- --autoplay --autoplay-zone=$id > "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/zone_$id.log" 2>&1; done
@@ -142,6 +144,7 @@ grep -H '^Zona de inicio' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/
 The loop takes about an hour of real time: run it in the background.
 
 Expected:
+- The `caravana60.log` grep shows `Pregunta: ... -> Sí`, `-> Partir`, `Escena: caravana_campamento`, `Compañero: Brena` and `Zona: jungla`.
 - The first count is at least 1 and the second is `0`.
 - One `Zona de inicio: <zone> (Nv n)` line per file, ten in all: bosque Nv 5, mina_1 Nv 9, mina_3 Nv 13, castillo_patio Nv 13, castillo_trono Nv 17, jungla Nv 20, desierto Nv 25, montana Nv 30, ciudad Nv 35, portal Nv 38.
 
@@ -178,24 +181,52 @@ If no person can take them in this session, note that, and rely on the `touch/` 
 
 ```bash
 cd /c/Users/peixe/Documents/rpg-turnos
-APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --path . --script res://scripts/tools/bestiary_shots.gd > "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/shots1.log" 2>&1
+APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --path . --script res://scripts/tools/bestiary_shots.gd > /dev/null 2>&1
 git status --short assets/bestiary
-APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --path . --script res://scripts/tools/bestiary_shots.gd > "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/shots2.log" 2>&1
+git checkout -- assets/bestiary
+APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --path . --script res://scripts/tools/bestiary_shots.gd > /dev/null 2>&1
+git status --short assets/bestiary | tee "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/bestiary-unstable.txt"
+git checkout -- assets/bestiary
 git status --short assets/bestiary
 ```
 
-Expected: both `git status` print nothing, so the portraits come out the same pixel for pixel. If either lists changed PNGs, write down in `ref/NOTES.txt` that the portraits must be compared by eye (guide, point 5). Then restore them with `git checkout -- assets/bestiary` and check that `git status --short` is clean again.
+Expected: the first and second `git status` print nothing, so the portraits come out the same pixel for pixel, and `ref/bestiary-unstable.txt` is empty. If either lists changed PNGs, the portraits are not reproducible on this machine: the second listing stays in `ref/bestiary-unstable.txt` (plan 2 compares those by eye). The last `git status` must print nothing. These portraits are plan 2's visual check of the enemy figures: after each of its tasks `git status assets/bestiary` must be clean.
 
-- [ ] **Step 10: Notes**
+- [ ] **Step 10: The start of the v1 as frames (plans 2 and 3 compare them)**
 
-Write `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/NOTES.txt` with:
-- the `develop` commit (`git rev-parse develop`);
-- the `Juego completado` lines of `v1.log`, `v1b.log` and `v2.log`;
-- the milestone lines that differ between `v1.log` and `v1b.log`;
-- any error already present in a reference;
-- whether the portraits were stable.
+```bash
+cd /c/Users/peixe/Documents/rpg-turnos
+APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --path . --write-movie "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/movie/f.png" --fixed-fps 10 --quit-after 600 -- --autoplay > "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/movie.log" 2>&1
+find "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/movie" -name 'f*.png' ! -name 'f00000[0-5][05]0.png' -delete
+ls "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/movie" | wc -l
+grep -E 'ERROR|WARNING' "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/movie.log" | grep -v 'Jolt Physics job system exceeded'
+```
 
-No commit.
+Expected: `12` (frames 0, 50, ... 550) and no other output. The milestones of `ref/movie.log` are what plan 2 compares its own 600-frame movie with.
+
+- [ ] **Step 11: The start of the v2 as frames (plan 2 compares them: the Jefe de caravana, the hero with his gear and helmet)**
+
+```bash
+cd /c/Users/peixe/Documents/rpg-turnos
+APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --path . --write-movie "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/movie-caravana/f.png" --fixed-fps 10 --quit-after 900 -- --autoplay --autoplay-zone=caravana > "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/movie-caravana.log" 2>&1
+find "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/movie-caravana" -name 'f*.png' ! -name 'f00000[0-8][05]0.png' -delete
+ls "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/movie-caravana" | wc -l
+grep -E 'ERROR|WARNING' "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/movie-caravana.log" | grep -v 'Jolt Physics job system exceeded'
+```
+
+Expected: `18` (frames 0, 50, ... 850) and no other output. Open two or three frames with the Read tool to see what they show (the platinum hero, the Jefe de caravana on the meadow after `Escena: caravana_llega`).
+
+- [ ] **Step 12: The web build's size (plan 4)**
+
+```bash
+cd /c/Users/peixe/Documents/rpg-turnos
+mkdir -p build/web
+APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --headless --path . --export-release "Web" build/web/index.html 2>&1 | grep -E 'ERROR|WARNING'
+ls -l build/web/index.pck | awk '{print $5}' > "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/pck.size"
+cat "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/pck.size"
+```
+
+Expected: no `ERROR` or `WARNING` lines, then one number, the size of `index.pck` in bytes. No commit.
 
 ---
 
@@ -552,7 +583,7 @@ Make the folder `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/t2/`. In 
 - the long runs (v2, the zone loop) in the background.
 
 Then:
-- For `v1`, `v2`, `medallas`, `eco`, `jungla` and each `zone_<id>`: run both checks of *How to compare* with REF = `ref/<name>.log` and NEW = `t2/<name>.log`. Expected as described there.
+- For `v1`, `v2`, `caravana60`, `medallas`, `eco` and each `zone_<id>`: run both checks of *How to compare* with REF = `ref/<name>.log` and NEW = `t2/<name>.log`. Expected as described there.
 - Save: the `diff ... && echo IGUALES` of Task 1, step 5, on `t2/save.log`. Expected: `IGUALES`.
 - Battle: `grep -E '^Fin del combate' t2/battle.log`. Expected: `Fin del combate (estado N)`.
 - `--autoplay-companion=tadeo`: `grep -c Tadeo t2/tadeo.log` is at least 1 and `grep -c Brena t2/tadeo.log` is `0`.
@@ -623,7 +654,7 @@ The rule, the same for the six files:
 
 **Interfaces:**
 - Consumes: `RunFlags.autoplay()` (Task 2), already in these files.
-- Produces: no new names. The public functions `NameEntry.demo()`, `Player.restart_route()`, `Player.hunt()`, `Player.stop_hunt()`, `Player.is_hunting()`, `Player.hunting()`, `Player.take_failed_hunt()` and the public var `Player.route` keep their names and signatures (plan 3's `AutoplayHunter` and `World` call them).
+- Produces: no new names. The public functions `NameEntry.demo()`, `Player.hunt()`, `Player.stop_hunt()`, `Player.is_hunting()`, `Player.hunting()`, `Player.take_failed_hunt()` and the public var `Player.route` keep their names and signatures (plan 3's `AutoplayHunter` and `World` call them).
 
 - [ ] **Step 1: `BattleScene`**
 
@@ -705,7 +736,7 @@ var _route_index := 0
 #endregion
 ```
 
-The functions `_route_direction`, `restart_route`, `hunt`, `stop_hunt`, `is_hunting`, `hunting`, `take_failed_hunt`, `_hunt_direction` and `_nearest_route_point` are already the last ones in the file, in that order. Insert a line `#region Autoplay` right before `func _route_direction() -> Vector3:`, and a line `#endregion` after the last line of `_nearest_route_point`.
+The functions `_route_direction`, `restart_route` (deleted as unused in Task 5), `hunt`, `stop_hunt`, `is_hunting`, `hunting`, `take_failed_hunt`, `_hunt_direction` and `_nearest_route_point` are already the last ones in the file, in that order. Insert a line `#region Autoplay` right before `func _route_direction() -> Vector3:`, and a line `#endregion` after the last line of `_nearest_route_point`.
 
 - [ ] **Step 4: `DialogueBox`**
 
@@ -934,14 +965,111 @@ git commit -m "Label the builder classes as constructors and name the three scri
 
 ---
 
-### Task 5: The master document and the merge
+### Task 5: Delete unused code
+
+Three functions have no caller. Removing them changes nothing the player sees.
+
+**Files:**
+- Modify: `scripts/world/zone_data.gd` (`exit_by_id()`), `scripts/world/player.gd` (`restart_route()`), `scripts/audio/audio_director.gd` (`stop_music()`)
+- Modify: `CLAUDE.md`
+
+`scripts/ui/ui_tokens.gd` also has constants nothing reads. They stay: that file is generated from `docs/boost/design-system/tokens.json` and is not edited by hand.
+
+**Interfaces:**
+- Consumes: Tasks 2-4 committed (`restart_route()` now sits in `player.gd`'s `#region Autoplay`).
+- Produces: nothing used by plans 2-4.
+
+- [ ] **Step 1: Check that each name has only its definition**
+
+```bash
+cd /c/Users/peixe/Documents/rpg-turnos
+grep -rnE '\b(exit_by_id|restart_route|stop_music)\b' scripts scenes data
+grep -rn 'set_autoplay_route' scripts scenes data; echo "grep done"
+```
+
+Expected: exactly three lines, one per definition (the line numbers may differ):
+- `scripts/audio/audio_director.gd:<n>:func stop_music() -> void:`
+- `scripts/world/player.gd:<n>:func restart_route() -> void:`
+- `scripts/world/zone_data.gd:<n>:func exit_by_id(exit_id: String) -> Dictionary:`
+
+Then only `grep done` (`World.set_autoplay_route()` no longer exists). The `\b` pattern also catches a name written in a string (`call("stop_music")`), so a hit anywhere else means the function is used: stop. None of the three is an engine callback.
+
+- [ ] **Step 2: Delete the three functions, each with its `##` doc comment and the two blank lines before it**
+
+In `scripts/world/zone_data.gd`:
+
+```gdscript
+## The exit with that id, or an empty Dictionary.
+func exit_by_id(exit_id: String) -> Dictionary:
+	for exit: Dictionary in exits:
+		if exit.id == exit_id:
+			return exit
+	return {}
+```
+
+In `scripts/world/player.gd`:
+
+```gdscript
+## Autoplay: walks its route from the first point again (World gave it a new one).
+func restart_route() -> void:
+	_route_index = 0
+	stop_hunt()
+```
+
+In `scripts/audio/audio_director.gd`, `## Fades the music out.` and the whole `func stop_music() -> void:` body (it ends with the `_fade.chain().tween_callback(...)` that stops the players). `_music_id` and `_new_fade()` stay: `play_music()` uses them.
+
+- [ ] **Step 3: Check the three scripts**
+
+```bash
+cd /c/Users/peixe/Documents/rpg-turnos
+for s in scripts/world/zone_data.gd scripts/world/player.gd scripts/audio/audio_director.gd; do APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --headless --path . --check-only --script res://$s 2>&1 | grep -E 'ERROR|Parse Error|WARNING'; done; echo "check done"
+```
+
+Expected: only `check done`.
+
+- [ ] **Step 4: One autoplay run against the reference**
+
+```bash
+cd /c/Users/peixe/Documents/rpg-turnos
+mkdir -p C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/task5
+APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --headless --path . --fixed-fps 10 --quit-after 150000 -- --autoplay > "C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/task5/v1.log" 2>&1
+```
+
+Compare `task5/v1.log` with `ref/v1.log` as *How to compare a run with the reference* says (the errors `grep`, then the milestone `diff`; the level on `Juego completado` the same, Nv 18).
+
+- [ ] **Step 5: `CLAUDE.md`**
+
+Four edits, each only the words named:
+- *World* entry: remove `` `set_autoplay_route(points)` (autoplay: a copy of these points instead of the zone's route, from the first; `Player.restart_route()`), `` (the item and the comma after it), so `` `set_repel(on)` (...), `` is followed by `` `set_autoplay_hunt(on)` ``.
+- *ZoneData* entry: remove `` `exit_by_id(id)`, `` from "... the floor cell next to those stairs), `exit_by_id(id)`, `all_exits()` ...".
+- *Player* entry: remove the sentence `` `restart_route()` (from the first point, the hunt dropped).`` at its end.
+- *AudioDirector* entry: "(`play_music(id)`, `stop_music()`)" becomes "(`play_music(id)`)".
+
+```bash
+cd /c/Users/peixe/Documents/rpg-turnos
+grep -nE 'exit_by_id|restart_route|stop_music|set_autoplay_route' CLAUDE.md; echo "grep done"
+```
+
+Expected: only `grep done`.
+
+- [ ] **Step 6: Commit**
+
+```bash
+cd /c/Users/peixe/Documents/rpg-turnos
+git add scripts/world/zone_data.gd scripts/world/player.gd scripts/audio/audio_director.gd CLAUDE.md
+git commit -m "Delete three unused functions"
+```
+
+---
+
+### Task 6: The master document and the merge
 
 **Files:**
 - Modify: `docs/boost/documento-maestro.md` (the refactor row)
 - Add: `docs/boost/plans/2026-11-14-refactor-1-runflags-builders.md` (this plan, untracked until now)
 
 **Interfaces:**
-- Consumes: Tasks 2-4 committed.
+- Consumes: Tasks 2-5 committed.
 - Produces: rows M-70, M-71 and M-72 in state `spec`, which plans 2-4 move to `hecho`.
 
 - [ ] **Step 1: Split the refactor row**
@@ -971,8 +1099,9 @@ git commit -m "Mark M-73 and M-74 done in the master document"
 git log --oneline develop..HEAD
 ```
 
-Expected: four commits, newest first:
+Expected: five commits, newest first:
 - `Mark M-73 and M-74 done in the master document`;
+- `Delete three unused functions`;
 - `Label the builder classes as constructors and name the three script kinds in CLAUDE.md`;
 - `Group the autoplay code of six classes in #region Autoplay blocks`;
 - `Read the command line only through RunFlags`.
