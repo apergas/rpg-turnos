@@ -10,6 +10,9 @@ class_name FigureTalk extends Node
 const HEAL_LINE := "Descansas un momento. PV y PM recuperados."
 ## Seconds of black while the hero sleeps at the inn.
 const INN_NIGHT_TIME := 0.8
+const LEVER_NOTICE := "¡Tiras de la palanca! Se oye cómo se abre una reja."
+const KEY_NOTICE := "¡Encuentras la %s!"
+const DOOR_NOTICE := "Abres la reja con la %s."
 
 ## update_boss.call(): shows or hides the zone's boss (BattleFlow).
 var update_boss: Callable
@@ -227,3 +230,84 @@ func on_inn(inn_id: String) -> void:
 	update_boss.call()
 	_ctx.autosave.call(true)
 	_ctx.set_busy.call(false)
+
+
+## The hero used a well: drinks if it is full and the hero is not. On autoplay only a full
+## well and a hero in need.
+func on_well(id: String, kind: String) -> void:
+	if _ctx.busy or (RunFlags.autoplay() and (Wells.is_dry(_ctx.state, id) or Inn.is_rested(_ctx.state))):
+		return
+	_ctx.set_busy.call(true)
+	var was_dry := Wells.is_dry(_ctx.state, id)
+	var text := Wells.drink(_ctx.state, id, kind)
+	if not was_dry and Wells.is_dry(_ctx.state, id):
+		_ctx.audio.play_sfx(SfxLibrary.HEAL)
+		_ctx.refresh_status.call()
+		_ctx.world.set_dry_wells(Wells.dry_ids(_ctx.state))
+		_ctx.autosave.call(false)
+	var lines: Array[String] = [text]
+	await _ctx.world.show_dialogue("", lines)
+	_ctx.set_busy.call(false)
+
+
+## A closed chest: gives what it holds, opens the lid, saves without a notice and says what
+## was found in the dialogue window, which waits for Enter or a tap (on autoplay it goes on
+## by itself).
+func on_chest(chest_id: String) -> void:
+	if _ctx.busy:
+		return
+	var result := Chests.open(_ctx.state, chest_id)
+	if not result.opened:
+		return
+	_ctx.set_busy.call(true)
+	_ctx.state.gold_earned += Chests.CHESTS[chest_id].get("gold", 0)
+	_ctx.world.set_chest_open(chest_id, true)
+	_ctx.audio.play_sfx(SfxLibrary.LEVEL_UP)
+	_ctx.refresh_status.call()
+	_ctx.autosave.call(false)
+	var lines: Array[String] = [result.text]
+	await _ctx.world.show_dialogue("", lines)
+	_ctx.set_busy.call(false)
+
+
+## The dungeon floor's lever: sets its flag, which opens the gates it works.
+func on_lever() -> void:
+	if _ctx.busy or _ctx.zone.lever_flag == "":
+		return
+	_ctx.state.world_flags[_ctx.zone.lever_flag] = true
+	_ctx.world.pull_lever()
+	_ctx.audio.play_sfx(SfxLibrary.DOOR)
+	_ctx.world.set_world_flags(_ctx.state.world_flags)
+	_ctx.world.show_notice(LEVER_NOTICE)
+	_ctx.autosave.call(false)
+	_ctx.refresh_status.call()
+
+
+## The key lying on the floor: into the key items; its flag keeps it taken.
+func on_key() -> void:
+	if _ctx.busy or _ctx.zone.floor_key == "":
+		return
+	_ctx.state.world_flags[_ctx.zone.floor_key] = true
+	_ctx.state.key_items.append(_ctx.zone.floor_key)
+	_ctx.audio.play_sfx(SfxLibrary.LEVEL_UP)
+	_ctx.world.set_world_flags(_ctx.state.world_flags)
+	_ctx.world.show_notice(KEY_NOTICE % Inventory.KEY_ITEMS[_ctx.zone.floor_key], "Hallazgo", &"text-positive")
+	_ctx.autosave.call(false)
+	_ctx.refresh_status.call()
+
+
+## A closed gate: the key of the floor opens it (and is used up); otherwise its text.
+func on_door() -> void:
+	if _ctx.busy:
+		return
+	var key := _ctx.zone.door_key
+	if key == "" or not key in _ctx.state.key_items:
+		_ctx.world.show_notice(_ctx.zone.door_text, "Cerrado")
+		return
+	_ctx.state.key_items.erase(key)
+	_ctx.state.world_flags[_ctx.zone.door_flag] = true
+	_ctx.audio.play_sfx(SfxLibrary.DOOR)
+	_ctx.world.set_world_flags(_ctx.state.world_flags)
+	_ctx.world.show_notice(DOOR_NOTICE % Inventory.KEY_ITEMS[key])
+	_ctx.autosave.call(false)
+	_ctx.refresh_status.call()

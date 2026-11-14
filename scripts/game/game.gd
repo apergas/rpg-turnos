@@ -79,9 +79,6 @@ const FADE_TIME := 0.3
 const TOUCH_HINT := "Toca el suelo para ir allí, o arrastra el dedo para andar."
 const REPEL_END_NOTICE := "El incienso se ha consumido."
 const SAVED_NOTICE := "Partida guardada."
-const LEVER_NOTICE := "¡Tiras de la palanca! Se oye cómo se abre una reja."
-const KEY_NOTICE := "¡Encuentras la %s!"
-const DOOR_NOTICE := "Abres la reja con la %s."
 const MENU_TOUR_DELAY := 1.0
 
 var state: GameState
@@ -339,14 +336,14 @@ func _on_world_replaced(world: World) -> void:
 	world.npc_requested.connect(_talk.on_npc)
 	world.shop_requested.connect(_talk.on_shop)
 	world.inn_requested.connect(_talk.on_inn)
-	world.chest_opened.connect(_on_chest)
-	world.well_requested.connect(_on_well)
+	world.chest_opened.connect(_talk.on_chest)
+	world.well_requested.connect(_talk.on_well)
 	world.exit_requested.connect(_travel.on_exit)
 	world.map_requested.connect(_pause.open_map)
 	world.portal_used.connect(_travel.on_portal)
-	world.lever_pulled.connect(_on_lever)
-	world.key_taken.connect(_on_key)
-	world.door_used.connect(_on_door)
+	world.lever_pulled.connect(_talk.on_lever)
+	world.key_taken.connect(_talk.on_key)
+	world.door_used.connect(_talk.on_door)
 	world.village_changed.connect(_on_village_changed)
 	world.stepped.connect(_on_stepped)
 
@@ -674,44 +671,6 @@ func _on_village_changed(inside: bool) -> void:
 		_story.check_village_scene()
 
 
-## The hero used a well: drinks if it is full and the hero is not. On autoplay only a full
-## well and a hero in need.
-func _on_well(id: String, kind: String) -> void:
-	if _ctx.busy or (_autoplay and (Wells.is_dry(state, id) or Inn.is_rested(state))):
-		return
-	_set_busy(true)
-	var was_dry := Wells.is_dry(state, id)
-	var text := Wells.drink(state, id, kind)
-	if not was_dry and Wells.is_dry(state, id):
-		_audio.play_sfx(SfxLibrary.HEAL)
-		_refresh_status()
-		_ctx.world.set_dry_wells(Wells.dry_ids(state))
-		_autosave(false)
-	var lines: Array[String] = [text]
-	await _ctx.world.show_dialogue("", lines)
-	_set_busy(false)
-
-
-## A closed chest: gives what it holds, opens the lid, saves without a notice and says what
-## was found in the dialogue window, which waits for Enter or a tap (on autoplay it goes on
-## by itself).
-func _on_chest(chest_id: String) -> void:
-	if _ctx.busy:
-		return
-	var result := Chests.open(state, chest_id)
-	if not result.opened:
-		return
-	_set_busy(true)
-	state.gold_earned += Chests.CHESTS[chest_id].get("gold", 0)
-	_ctx.world.set_chest_open(chest_id, true)
-	_audio.play_sfx(SfxLibrary.LEVEL_UP)
-	_refresh_status()
-	_autosave(false)
-	var lines: Array[String] = [result.text]
-	await _ctx.world.show_dialogue("", lines)
-	_set_busy(false)
-
-
 ## --autoplay-zone=medallas: the time is up with medals still missing; it ends anyway.
 func _on_medal_tour_timeout() -> void:
 	if not _medal_tour:
@@ -740,49 +699,6 @@ func _finish_medal_tour() -> void:
 	print("Medallas: %d/%d · premios %d/%d" % [state.medals.size(), Medals.MEDALS.size(),
 		state.medal_prizes, Medals.PRIZES.size()])
 	quit_to_title.emit()
-
-
-## The dungeon floor's lever: sets its flag, which opens the gates it works.
-func _on_lever() -> void:
-	if _ctx.busy or _ctx.zone.lever_flag == "":
-		return
-	state.world_flags[_ctx.zone.lever_flag] = true
-	_ctx.world.pull_lever()
-	_audio.play_sfx(SfxLibrary.DOOR)
-	_ctx.world.set_world_flags(state.world_flags)
-	_ctx.world.show_notice(LEVER_NOTICE)
-	_autosave(false)
-	_refresh_status()
-
-
-## The key lying on the floor: into the key items; its flag keeps it taken.
-func _on_key() -> void:
-	if _ctx.busy or _ctx.zone.floor_key == "":
-		return
-	state.world_flags[_ctx.zone.floor_key] = true
-	state.key_items.append(_ctx.zone.floor_key)
-	_audio.play_sfx(SfxLibrary.LEVEL_UP)
-	_ctx.world.set_world_flags(state.world_flags)
-	_ctx.world.show_notice(KEY_NOTICE % Inventory.KEY_ITEMS[_ctx.zone.floor_key], "Hallazgo", &"text-positive")
-	_autosave(false)
-	_refresh_status()
-
-
-## A closed gate: the key of the floor opens it (and is used up); otherwise its text.
-func _on_door() -> void:
-	if _ctx.busy:
-		return
-	var key := _ctx.zone.door_key
-	if key == "" or not key in state.key_items:
-		_ctx.world.show_notice(_ctx.zone.door_text, "Cerrado")
-		return
-	state.key_items.erase(key)
-	state.world_flags[_ctx.zone.door_flag] = true
-	_audio.play_sfx(SfxLibrary.DOOR)
-	_ctx.world.set_world_flags(state.world_flags)
-	_ctx.world.show_notice(DOOR_NOTICE % Inventory.KEY_ITEMS[key])
-	_autosave(false)
-	_refresh_status()
 
 
 ## Writes the save file; shows SAVED_NOTICE if notice. Returns the saved data, or an
