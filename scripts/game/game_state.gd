@@ -328,6 +328,13 @@ func ally_step() -> int:
 	return 5 + etapa() if part() == 3 else tramo()
 
 
+## Which of the Caravana's shops its Mercader opens (Shop.caravan_shop()): the tramo in the v2
+## (5 once the Devorador is beaten: the bruma gear, for the other side of the portal), 4 + the
+## etapa in the v3.
+func shop_step() -> int:
+	return 4 + etapa() if part() == 3 else tramo()
+
+
 ## The story chapter now (StoryState.Chapter).
 func chapter() -> StoryState.Chapter:
 	return story.chapter(world_flags)

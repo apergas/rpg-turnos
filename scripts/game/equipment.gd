@@ -1,7 +1,7 @@
 class_name Equipment extends RefCounted
 ## The equipment catalog: every weapon, helmet, armor, shield, ring and amulet, with its
 ## slot, bonus (ATK for a weapon, VEL for a ring or an amulet, DEF for the rest), price in
-## gold, the zone whose shop sells it (0: no shop, the starting gear; -1: never sold, a
+## gold, the zone whose shop sells it (1-4 the v1's shops, 5-8 the v2's tramos, 9-12 the v3's etapas; 0: no shop, the starting gear; -1: never sold, a
 ## quest's or a bestiary family's reward, a boss's prize or the Coleccionista's), the mesh the hero
 ## shows for it
 ## (a handslot mesh of Knight.glb, STICK_MESH built in code, or "" for none) and, on some
@@ -134,6 +134,18 @@ const EQUIPMENT := {
 		"tint": Color(0.85, 0.95, 1.35)},
 	"casco_estelar": {"name": "Casco estelar", "article": "un", "slot": HELMET,
 		"bonus": 18, "price": 740, "zone": 8, "mesh": "", "tint": Color(0.88, 0.96, 1.35)},
+	# The v3's first set (3.0.0, etapa 1: the Caravana's Mercader, from the Devorador on): grey
+	# steel with the blue of the mist.
+	"espada_bruma": {"name": "Espada de bruma", "article": "una", "slot": WEAPON,
+		"bonus": 86, "price": 2600, "zone": 9, "mesh": "2H_Sword",
+		"tint": Color(0.7, 0.8, 1.05)},
+	"armadura_bruma": {"name": "Armadura de bruma", "article": "una", "slot": ARMOR,
+		"bonus": 62, "price": 2000, "zone": 9, "mesh": ""},
+	"escudo_bruma": {"name": "Escudo de bruma", "article": "un", "slot": SHIELD,
+		"bonus": 28, "price": 1150, "zone": 9, "mesh": "Spike_Shield",
+		"tint": Color(0.7, 0.8, 1.05)},
+	"casco_bruma": {"name": "Casco de bruma", "article": "un", "slot": HELMET,
+		"bonus": 20, "price": 880, "zone": 9, "mesh": "", "tint": Color(0.72, 0.82, 1.05)},
 	# The Eco de la Niebla's prize (the first time only): DEF like any helmet, plus ATK,
 	# dark grey with a blue cast and two bone horns (BattleActor builds them).
 	MIST_HELM: {"name": "Yelmo de bruma", "article": "un", "slot": HELMET, "bonus": 8,
