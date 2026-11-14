@@ -5,7 +5,9 @@ class_name ZoneParticles extends RefCounted
 ## lantern lights in the mine, flakes of violet mist in the castle, grains of sand blown in gusts in the desert, flakes of snow falling slowly and a little
 ## sideways (the wind) on the mountain, pale flakes of ash falling slowly and sideways in the
 ## abandoned city, as many as embers still glowing among them (each particle is born one of
-## the two colours, so half and half: dark ash alone vanished on the dark red ground). A CPUParticles3D (the
+## the two colours, so half and half: dark ash alone vanished on the dark red ground), a
+## knee-deep mist drifting south in Brumaclara and a greenish mist with fireflies in the
+## Ciénaga (the v3). A CPUParticles3D (the
 ## same on the Compatibility renderer and on the web) in world space: World carries its
 ## box (BOX, 30 × 20 m around the hero; the mine's is smaller, the lantern's reach) along
 ## every physics tick with follow(), and what is already floating stays where it is. Never
@@ -21,6 +23,11 @@ const FIREFLIES := "fireflies"
 const SAND := "sand"
 const SNOW := "snow"
 const ASH := "ash"
+## The v3 (3.0.0): a knee-deep mist drifting south (toward Brumaclara's portal, and in the
+## Caravana while the v3 is on), and the Ciénaga's greenish mist with its fireflies ("also": a
+## second kind born in the same box).
+const BRUMA := "bruma"
+const BOG := "bog"
 ## Half extents, along X and Z, of the box the particles are born in around the hero.
 const BOX := Vector3(15.0, 0.0, 10.0)
 ## Share of a particle's life spent fading in, and again fading out.
@@ -31,7 +38,8 @@ const FADE := 0.15
 ## it), spin in degrees a second (leaves), the two colours they are picked between, lit
 ## (shaded: only the light of the scene shows them) and round (a soft dot instead of a flat
 ## quad); "box" replaces BOX; "burst" (optional, 0 by default) is the particles' explosiveness:
-## near 1 they are all born at once each life, a gust every "lifetime" seconds.
+## near 1 they are all born at once each life, a gust every "lifetime" seconds; "also" (optional)
+## names a second kind the holder carries too.
 const KINDS := {
 	POLLEN: {"amount": 80, "lifetime": 9.0, "height": 1.4, "depth": 1.2, "size": 0.09,
 		"speed": [0.15, 0.35], "direction": Vector3(1.0, 0.15, 0.3), "spread": 60.0,
@@ -65,6 +73,14 @@ const KINDS := {
 		"speed": [0.3, 0.6], "direction": Vector3(0.3, -1.0, 0.15), "spread": 25.0,
 		"spin": 0.0, "colors": [Color(0.7, 0.64, 0.62, 0.8), Color(1.0, 0.5, 0.2, 0.75)],
 		"lit": false, "round": true},
+	BRUMA: {"amount": 50, "lifetime": 12.0, "height": 0.35, "depth": 0.25, "size": 0.9,
+		"speed": [0.25, 0.45], "direction": Vector3(0.1, 0.0, 1.0), "spread": 15.0,
+		"spin": 0.0, "colors": [Color(0.78, 0.82, 0.95, 0.3), Color(0.68, 0.74, 0.9, 0.22)],
+		"lit": false, "round": true},
+	BOG: {"amount": 36, "lifetime": 11.0, "height": 0.5, "depth": 0.35, "size": 0.8,
+		"speed": [0.15, 0.3], "direction": Vector3(1.0, 0.0, 0.3), "spread": 40.0,
+		"spin": 0.0, "colors": [Color(0.62, 0.72, 0.5, 0.28), Color(0.7, 0.78, 0.6, 0.2)],
+		"lit": false, "round": true, "also": FIREFLIES},
 }
 
 ## No particles at all while false (low quality). Set by DisplaySettings.
@@ -73,15 +89,22 @@ static var enabled := true
 static var half := false
 
 
-## The particles of kind for World to carry with follow(): a Node3D named "Particles" with
-## the CPUParticles3D as its only child, at the kind's height; already full (preprocess).
+## The particles of kind for World to carry with follow(): a Node3D named "Particles" with the
+## CPUParticles3D of the kind (and of its "also" kind) as children, already full (preprocess).
 ## null for "", an unknown kind, or while not enabled.
 static func build(kind: String) -> Node3D:
 	if not enabled or not KINDS.has(kind):
 		return null
-	var spec: Dictionary = KINDS[kind]
 	var holder := Node3D.new()
 	holder.name = "Particles"
+	holder.add_child(_particles(KINDS[kind]))
+	if KINDS[kind].has("also"):
+		holder.add_child(_particles(KINDS[KINDS[kind].also]))
+	return holder
+
+
+## One CPUParticles3D of a KINDS entry, at its height over the holder.
+static func _particles(spec: Dictionary) -> CPUParticles3D:
 	var parts := CPUParticles3D.new()
 	parts.position.y = spec.height
 	parts.amount = maxi(1, int(spec.amount) / (2 if half else 1))
@@ -109,8 +132,7 @@ static func build(kind: String) -> Node3D:
 	if spec.get("glow", false):
 		parts.scale_amount_curve = _blink()
 	parts.mesh = _mesh(spec)
-	holder.add_child(parts)
-	return holder
+	return parts
 
 
 ## Carries the box to pos (the hero's feet). jump: the hero was put somewhere else at once
@@ -118,7 +140,8 @@ static func build(kind: String) -> Node3D:
 static func follow(holder: Node3D, pos: Vector3, jump := false) -> void:
 	holder.global_position = pos
 	if jump:
-		(holder.get_child(0) as CPUParticles3D).restart()
+		for parts in holder.get_children():
+			(parts as CPUParticles3D).restart()
 
 
 ## A quad that always faces the camera, coloured by the particle, see-through; a soft round

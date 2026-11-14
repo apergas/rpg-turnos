@@ -21,13 +21,14 @@ const DESERT := "desert"
 const MOUNTAIN := "mountain"
 const CITY := "city"
 const BEYOND := "beyond"
+const BRUMACLARA := "brumaclara"
 const BATTLE := "battle"
 const BOSS := "boss"
 const VICTORY := "victory"
 const DEFEAT := "defeat"
 const CARAVAN := "caravan"
 const IDS: Array[String] = [TITLE, MAP, VILLAGE, FOREST, MINE, CASTLE, BATTLE, BOSS, VICTORY,
-	DEFEAT, CARAVAN, JUNGLE, DESERT, MOUNTAIN, CITY, BEYOND]
+	DEFEAT, CARAVAN, JUNGLE, DESERT, MOUNTAIN, CITY, BEYOND, BRUMACLARA]
 
 const LEAD_VOLUME := 0.2
 const BASS_VOLUME := 0.3
@@ -192,6 +193,19 @@ const TRACKS := {
 		],
 		"bass": ["A2/16", "A2/16", "F2/16", "E2/16", "F2/16", "D2/16", "E2/16", "A2/16"],
 		"drums": ["r/16"],
+	},
+	# Brumaclara (3.0.0): a slow, misty air in D minor, almost without drums.
+	BRUMACLARA: {
+		"bpm": 72, "loop": true, "duty": 0.5,
+		"lead": [
+			"D5/6 F5/2 A5/8", "G5/4 F5/4 E5/8", "F5/4 E5/4 D5/4 C5/4", "D5/12 r/4",
+			"A4/6 C5/2 D5/8", "E5/4 F5/4 G5/8", "F5/4 E5/4 C5/4 E5/4", "D5/12 r/4",
+		],
+		"bass": [
+			"D3/8 A2/8", "C3/8 G2/8", "A#2/8 F2/8", "A2/16",
+			"F2/8 C3/8", "C3/8 G2/8", "A#2/8 A2/8", "D3/16",
+		],
+		"drums": ["r/8 h/8"],
 	},
 	# The castle: a slow march in E minor.
 	CASTLE: {

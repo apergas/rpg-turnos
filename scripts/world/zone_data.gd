@@ -203,6 +203,20 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var backdrop := "pradera"
 ## ZoneParticles kind floating around the hero ("" for none).
 @export var particles := ""
+## The black sun in the sky (BlackSun; the v3's open zones): drawn over the map and its
+## battles, seen in the battles (the map camera looks down).
+@export var black_sun := false
+
+@export_group("Village look")
+## Every building's model in its own colours times this (Brumaclara's dark houses); white:
+## as the models come.
+@export var building_tint := Color.WHITE
+## Brumaclara's lighthouse (Lighthouse), ZERO for none, and whether it shines.
+@export var lighthouse_pos := Vector3.ZERO
+@export var lighthouse_lit := false
+## The lit windows: [position on the wall, yaw the wall faces] each (BrumaclaraStage: a warm
+## glow and a small light in front of it).
+@export var window_lights: Array = []
 
 @export_group("Dungeon")
 ## Rows of a dungeon floor, north (−Z) first, one character per CELL × CELL cell (see
