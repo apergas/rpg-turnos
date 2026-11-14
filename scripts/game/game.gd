@@ -33,7 +33,7 @@ class_name Game extends Node
 ## its cutscene (StoryState.AFTER_BOSS) and the first visit to each village its own
 ## (StoryState.ON_VILLAGE), through the CutscenePlayer; the villagers' lines follow the
 ## chapter. Beating the Señor de la Niebla (GameState.FINAL_BOSS) plays the ending (back
-## to Villaclaro), marks the save as finished (story.finished) and rolls the credits with
+## to Villaclaro), marks the save as finished (story.finished) and StoryFlow rolls the credits with
 ## the numbers of the game (CreditsScreen); then it goes back to the title. A finished
 ## save loads in Villaclaro and the world can still be walked.
 ## Each bestiary family beaten whole (Bestiary) gives its prize once, after the battle that completes it or when a game is loaded, in the dialogue window.
@@ -77,10 +77,6 @@ const HERO_DATA := preload("res://data/hero.tres")
 const BATTLE_SCENE := preload("res://scenes/battle/battle_scene.tscn")
 const FADE_TIME := 0.3
 const TOUCH_HINT := "Toca el suelo para ir allí, o arrastra el dedo para andar."
-## The v2's Jefe de caravana: in Villaclaro once the caravan has come, then in the Caravana.
-const CARAVAN_CHIEF := "Jefe de caravana"
-const JOIN_QUESTION := "Cuando partamos, no volverás por aquí en mucho tiempo. ¿Te unes a la caravana?"
-const LEAVE_QUESTION := "No podrás volver a Villaclaro, ni al bosque, la mina o el castillo. Las misiones que no hayas cumplido se quedan sin hacer."
 const REPEL_END_NOTICE := "El incienso se ha consumido."
 const HEAL_LINE := "Descansas un momento. PV y PM recuperados."
 const SAVED_NOTICE := "Partida guardada."
@@ -95,6 +91,7 @@ var state: GameState
 var _ctx: SessionContext
 var _travel: ZoneTravel
 var _story: StoryFlow
+var _caravan: CaravanFlow
 
 var _fade: ColorRect
 var _pause: PauseMenu
@@ -288,6 +285,7 @@ func _make_context() -> void:
 func _make_pieces() -> void:
 	_travel = ZoneTravel.new()
 	_story = StoryFlow.new()
+	_caravan = CaravanFlow.new()
 
 
 ## The pieces set up, wired and added, where Game used to build what they hold (node
@@ -306,12 +304,18 @@ func _add_pieces(load_failed: bool) -> void:
 	_story.setup(_ctx)
 	_story.load_failed = load_failed
 	_story.switch_zone = _travel.switch_zone
-	_story.choose_companion = _choose_companion
+	_story.choose_companion = _caravan.choose_companion
 	_story.show_touch_hint = _show_touch_hint
 	_story.quit_requested.connect(func() -> void: quit_to_title.emit())
 	_story.game_completed.connect(_on_game_completed)
 	_story.v2_completed.connect(_on_v2_completed)
 	add_child(_story)
+	_caravan.setup(_ctx, _shop)
+	_caravan.play_scene = _story.play_scene
+	_caravan.switch_zone = _travel.switch_zone
+	_caravan.autoplay_companion = _autoplay_companion
+	_caravan.autoplay_leaves = _autoplay_v2
+	add_child(_caravan)
 
 
 ## ZoneTravel built a new map: the old one goes, the new one is first in the tree and stays
@@ -723,17 +727,17 @@ func _on_npc(index: int) -> void:
 		await _talk_to_collector()
 		_set_busy(false)
 		return
-	if figure == CARAVAN_CHIEF and _ctx.zone.id == "caravana" \
+	if figure == CaravanFlow.CARAVAN_CHIEF and _ctx.zone.id == "caravana" \
 			and not state.has_flag(StoryState.COMPANION_FLAG):
-		await _choose_companion()
+		await _caravan.choose_companion()
 		_set_busy(false)
 		return
-	if figure == CARAVAN_CHIEF and _ctx.zone.id == "pradera":
-		await _ask_departure()
+	if figure == CaravanFlow.CARAVAN_CHIEF and _ctx.zone.id == "pradera":
+		await _caravan.ask_departure()
 		_set_busy(false)
 		_story.check_village_scene()  # the Caravana's first visit, if the hero left
 		return
-	var chief := figure == CARAVAN_CHIEF
+	var chief := figure == CaravanFlow.CARAVAN_CHIEF
 	var talk := state.quests.talk(state, _ctx.zone.id, figure, chief)
 	var said: Array = talk.get("lines", _ctx.world.npc_lines(index, state.chapter()))
 	if chief and talk.get("kind", "") == QuestLog.TALK_WAIT:
@@ -751,47 +755,6 @@ func _on_npc(index: int) -> void:
 		done.assign(talk.done)
 		_after_quest_talk(done)
 	_set_busy(false)
-
-
-## The Jefe de caravana in Villaclaro: two questions (focus on the answer that changes
-## nothing), then the farewell, the v1 left behind and the Caravana built under black.
-func _ask_departure() -> void:
-	if _autoplay and not _autoplay_v2:
-		return  # the v1 runs never leave with the caravan
-	if await _ctx.world.ask(JOIN_QUESTION, ["Sí", "No"], 1) != 0:
-		return
-	if await _ctx.world.ask(LEAVE_QUESTION, ["Partir", "Aún no"], 1) != 0:
-		return
-	await _story.play_scene("caravana_parte")  # ends under black
-	state.leave_for_caravan()
-	state.story.v2_start = [_ctx.play_time, state.battles]  # the v2's credits count from here
-	_travel.switch_zone("caravana", "")
-	_play_map_music()
-	await _fade_to(0.0)
-	await _ctx.world.freeze(false)
-	_autosave(false)
-
-
-## The Jefe de caravana's choice of companion: the Compañeros list (a shop at no cost).
-## Closing it without choosing leaves it for the next talk; once one is chosen, the jungle's
-## exit is there. Autoplay takes --autoplay-companion=<id> (Brena if none) at once.
-func _choose_companion() -> void:
-	if _autoplay:
-		state.ally_id = _autoplay_companion
-		print("Compañero: %s" % Allies.display_name(state.ally_id))
-	else:
-		_ctx.world.freeze(true)
-		await _shop.run(Shop.COMPANIONS_SHOP)
-		await _ctx.world.freeze(false)
-	if not Allies.is_companion(state.ally_id):
-		await _ctx.world.show_dialogue(CARAVAN_CHIEF, ["Piénsalo bien. Te espero aquí, que yo no tengo prisa."])
-		return
-	state.world_flags[StoryState.COMPANION_FLAG] = true
-	_ctx.world.set_world_flags(state.world_flags)
-	_refresh_status()
-	var who := Allies.display_name(state.ally_id)
-	await _ctx.world.show_dialogue(CARAVAN_CHIEF, ["%s irá contigo. La jungla está al norte." % who])
-	_autosave(false)
 
 
 ## The Coleccionista (Medals.talk()): every prize the medals reach, at once, with a sound;

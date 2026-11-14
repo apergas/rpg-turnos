@@ -69,9 +69,8 @@ func check_village_scene() -> void:
 	if _ctx.busy or not _ctx.world.in_village():
 		return
 	var scene := _ctx.state.story.scene_on_village(_ctx.zone.id)
-	if scene == "" and _ctx.zone.id == "pradera" and _ctx.state.can_meet_caravan() \
-			and not _ctx.state.story.has_seen("caravana_llega"):
-		scene = "caravana_llega"
+	if scene == "":
+		scene = CaravanFlow.arrival_scene(_ctx.state, _ctx.zone.id)
 	if scene == "":
 		return
 	_ctx.set_busy.call(true)
