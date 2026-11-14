@@ -12,7 +12,8 @@ class_name BattleStage extends RefCounted
 ## broken column. "montana" is snow with a grey track, white peaks and the Kenney pines, tall
 ## stones and snowy cliffs. "ciudad" is the ruined city's yard: the castle's walls half
 ## fallen, a reddish floor, the Kenney ruins and, in the portal quarter, the portal behind the
-## enemies. The environment, the mesh and model helpers and the rock and tree models
+## enemies. The v3's backdrops (the Ciénaga's) are V3Backdrops', after this one's sky, sun, fog
+## and black sun. The environment, the mesh and model helpers and the rock and tree models
 ## are shared with WorldStage.
 
 const GRASS := Color(0.32, 0.55, 0.22)
@@ -238,6 +239,9 @@ const BACKDROP_DECOR := {
 ## zone: whose sky, light and backdrop to use (null: the meadow's).
 static func build(root: Node3D, zone: ZoneData = null) -> void:
 	build_environment(root, zone)
+	if zone != null and V3Backdrops.has(zone.backdrop):
+		V3Backdrops.build(root, zone)
+		return
 	if zone != null and zone.backdrop == "mina":
 		_build_cave(root)
 		return
@@ -290,8 +294,14 @@ static func build(root: Node3D, zone: ZoneData = null) -> void:
 static func _add_backdrop_decor(root: Node3D, zone: ZoneData) -> void:
 	var backdrop := zone.backdrop if zone != null else "pradera"
 	var green := zone.decor_green if zone != null else NatureModels.MEADOW_GREEN
+	add_decor_pieces(root, BACKDROP_DECOR.get(backdrop, []), green)
+
+
+## Kenney pieces ([Decor id, position, yaw in degrees, scale] each) merged into one mesh with
+## the zone's green, no collision: a backdrop's decoration (BACKDROP_DECOR, V3Backdrops).
+static func add_decor_pieces(root: Node3D, pieces: Array, green: Color) -> void:
 	var items := []
-	for piece: Array in BACKDROP_DECOR.get(backdrop, []):
+	for piece: Array in pieces:
 		items.append({"id": piece[0], "xform": Transform3D(
 			Basis(Vector3.UP, deg_to_rad(piece[2])).scaled(Vector3.ONE * piece[3]), piece[1])})
 	if items.is_empty():
