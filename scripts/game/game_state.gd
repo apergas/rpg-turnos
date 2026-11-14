@@ -265,9 +265,15 @@ func is_finished_v2() -> bool:
 	return has_flag(StoryState.V2_FINAL_BOSS)
 
 
-## The level cap now: the v1's 20, Leveling.MAX_LEVEL once in the caravan.
+## The level cap now: the v1's 20, the v2's 40 in the caravan, Leveling.MAX_LEVEL in
+## Brumaclara (the v3).
 func level_cap() -> int:
-	return Leveling.MAX_LEVEL if in_caravan() else Leveling.V1_MAX_LEVEL
+	match part():
+		3:
+			return Leveling.MAX_LEVEL
+		2:
+			return Leveling.V2_MAX_LEVEL
+	return Leveling.V1_MAX_LEVEL
 
 
 ## Copies level_cap() into the hero (call after the flags change, a load, a battle start).
@@ -300,6 +306,26 @@ func in_caravan() -> bool:
 ## The caravan's stretch of road (StoryState.tramo()): 0 before the v2.
 func tramo() -> int:
 	return StoryState.tramo(world_flags)
+
+
+## The part of the game the hero is in: 1 the v1 (Villaclaro), 2 the v2 (the caravan), 3 the
+## v3 (Brumaclara). in_caravan() stays true in the part 3: the companion, the Caravana's shop
+## and the tramo still count.
+func part() -> int:
+	if has_flag(StoryState.V3_FLAG):
+		return 3
+	return 2 if in_caravan() else 1
+
+
+## The v3's stretch (StoryState.etapa()): 0 before the v3.
+func etapa() -> int:
+	return StoryState.etapa(world_flags)
+
+
+## How far a companion has grown (Allies.data()'s tramo): the tramo in the v2, 5 + the etapa
+## in the v3 (6 to 9: one more GROWTH step per etapa).
+func ally_step() -> int:
+	return 5 + etapa() if part() == 3 else tramo()
 
 
 ## The story chapter now (StoryState.Chapter).
