@@ -1,4 +1,5 @@
 class_name WorldStage extends RefCounted
+## Constructor: static; builds the nodes of one map under the root it is given and answers where things stand on it. Its static vars are caches of the last zone's layout (trees, chests), never game state.
 ## Builds one map of the world from its ZoneData: the sky and light of the zone, the
 ## ground, a field of tall grass (Vegetation) with a bare dirt path and safe discs,
 ## low-poly buildings and rocks with hand-made colliders, trees (denser toward the walls,

@@ -1,6 +1,6 @@
 class_name DebugPanel extends Control
 ## Development only. Game builds it only with `--debug` on the command line
-## (OS.get_cmdline_user_args(); the web has no way to pass it), and autoplay never uses it.
+## (RunFlags.debug(); the web has no way to pass it), and autoplay never uses it.
 ## F1 on the map, while `available` (nothing else going on, the tree not paused), opens it
 ## over everything and pauses the tree, like the pause menu; F1, Esc, Cerrar or a tap
 ## outside close it. Each button emits action_chosen(action, arg): Game does it, prints

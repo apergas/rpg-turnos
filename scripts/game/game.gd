@@ -383,17 +383,15 @@ func setup(audio: AudioDirector, options: GameOptions, save: Dictionary,
 
 func _ready() -> void:
 	UiTheme.ensure(get_window())
-	var args := OS.get_cmdline_user_args()
-	_autoplay = args.has("--autoplay")
-	_autoplay_save = _autoplay and args.has("--autoplay-save")
-	_autoplay_menu = _autoplay and args.has("--autoplay-menu")
-	for arg in args:
-		if arg.begins_with("--autoplay-companion="):
-			var companion := arg.trim_prefix("--autoplay-companion=")
-			if Allies.is_companion(companion):
-				_autoplay_companion = companion
-			else:
-				push_error("Not a companion for --autoplay-companion: %s" % companion)
+	_autoplay = RunFlags.autoplay()
+	_autoplay_save = RunFlags.autoplay_save()
+	_autoplay_menu = RunFlags.autoplay_menu()
+	var companion := RunFlags.autoplay_companion()
+	if companion != "":
+		if Allies.is_companion(companion):
+			_autoplay_companion = companion
+		else:
+			push_error("Not a companion for --autoplay-companion: %s" % companion)
 	_rng.randomize()
 	for line in QuestLog.problems():
 		push_warning(line)
@@ -423,10 +421,10 @@ func _ready() -> void:
 	if _save.is_empty() or load_failed:
 		state.hero.display_name = StoryState.clean_name(_hero_name)
 		state.difficulty = _difficulty
-		if _autoplay and OS.get_cmdline_user_args().has("--autoplay-easy"):
+		if RunFlags.autoplay_easy():
 			state.difficulty = Difficulty.EASY
 	if _save.is_empty() and _autoplay:
-		_apply_autoplay_zone(args)
+		_apply_autoplay_zone()
 	# A loaded game (or an --autoplay-zone start) may have a family complete already: a
 	# finished game gets the Espada del alba now. After the "Cargado:" line, so the save
 	# round trip still compares what was saved.
@@ -434,7 +432,7 @@ func _ready() -> void:
 	_build_shop()
 	_build_fade()
 	_build_pause()
-	if args.has("--debug"):
+	if RunFlags.debug():
 		_build_debug()
 	_build_cutscenes()
 	if _autoplay_menu:
@@ -507,56 +505,55 @@ func _exit_tree() -> void:
 
 
 ## --autoplay-zone=<id>: starts the new game in that zone with AUTOPLAY_ZONES' state.
-func _apply_autoplay_zone(args: PackedStringArray) -> void:
-	for arg in args:
-		if not arg.begins_with("--autoplay-zone="):
-			continue
-		var start_id := arg.trim_prefix("--autoplay-zone=")
-		var start: Dictionary = AUTOPLAY_ZONES.get(start_id, {})
-		var zone_id: String = start.get("zone", start_id)
-		if not zone_id in ZoneData.IDS:
-			push_error("Unknown zone for --autoplay-zone: %s" % start_id)
-			return
-		state.zone_id = zone_id
-		if start.is_empty():
-			return
-		state.hero.experience = start.experience
-		Leveling.apply(state.hero)
-		state.heal_full()
-		state.gold = start.gold
-		for id: String in start.gear:
-			state.bag_equipment.append(id)
-			state.equip(id)
-		for flag: String in start.flags:
-			state.world_flags[flag] = true
-			if Bestiary.has(flag):
-				# A boss of the flags was beaten on the way: the bestiary says so too.
-				state.defeat_enemy(flag)
-		for id: String in start.get("key_items", []):
-			state.key_items.append(id)
-		state.town_zone = start.get("town", state.town_zone)
-		if start.quest_done:
-			state.quest.stage = Quest.Stage.DONE
-		# The v2's level cap needs the "caravana" flag, set just above: levels again.
-		# (the first pass at the v1 cap clamped the EXP: give it back).
-		state.sync_level_cap()
-		state.hero.experience = start.experience
-		Leveling.apply(state.hero)
-		state.heal_full()
-		state.ally_id = start.get("ally", "")
-		if Allies.is_companion(state.ally_id):
-			state.ally_id = _autoplay_companion
-		var items: Dictionary = start.get("items", {})
-		for id: String in items:
-			state.inventory.add(id, items[id])
-		_autoplay_echo = start_id == ECHO_START
-		_autoplay_v2 = start_id in V2_STARTS
-		_medal_tour = start_id == MEDAL_TOUR
-		state.story.mark_seen_for_flags(state.world_flags)
-		if start.get("finished", false):
-			state.story.finished = true
-		state.sync_level_cap()
-		print("Zona de inicio: %s (Nv %d)" % [zone_id, state.hero.level])
+func _apply_autoplay_zone() -> void:
+	var start_id := RunFlags.autoplay_zone()
+	if start_id == "":
+		return
+	var start: Dictionary = AUTOPLAY_ZONES.get(start_id, {})
+	var zone_id: String = start.get("zone", start_id)
+	if not zone_id in ZoneData.IDS:
+		push_error("Unknown zone for --autoplay-zone: %s" % start_id)
+		return
+	state.zone_id = zone_id
+	if start.is_empty():
+		return
+	state.hero.experience = start.experience
+	Leveling.apply(state.hero)
+	state.heal_full()
+	state.gold = start.gold
+	for id: String in start.gear:
+		state.bag_equipment.append(id)
+		state.equip(id)
+	for flag: String in start.flags:
+		state.world_flags[flag] = true
+		if Bestiary.has(flag):
+			# A boss of the flags was beaten on the way: the bestiary says so too.
+			state.defeat_enemy(flag)
+	for id: String in start.get("key_items", []):
+		state.key_items.append(id)
+	state.town_zone = start.get("town", state.town_zone)
+	if start.quest_done:
+		state.quest.stage = Quest.Stage.DONE
+	# The v2's level cap needs the "caravana" flag, set just above: levels again.
+	# (the first pass at the v1 cap clamped the EXP: give it back).
+	state.sync_level_cap()
+	state.hero.experience = start.experience
+	Leveling.apply(state.hero)
+	state.heal_full()
+	state.ally_id = start.get("ally", "")
+	if Allies.is_companion(state.ally_id):
+		state.ally_id = _autoplay_companion
+	var items: Dictionary = start.get("items", {})
+	for id: String in items:
+		state.inventory.add(id, items[id])
+	_autoplay_echo = start_id == ECHO_START
+	_autoplay_v2 = start_id in V2_STARTS
+	_medal_tour = start_id == MEDAL_TOUR
+	state.story.mark_seen_for_flags(state.world_flags)
+	if start.get("finished", false):
+		state.story.finished = true
+	state.sync_level_cap()
+	print("Zona de inicio: %s (Nv %d)" % [zone_id, state.hero.level])
 
 
 ## Frees the current map and builds zone_id with the player at entry_id ("" for the

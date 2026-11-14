@@ -1,4 +1,5 @@
 class_name UiTheme extends RefCounted
+## Constructor: static; builds the game's Theme, its styleboxes and fonts, and styles the controls it is given. Its static vars cache the fonts and the theme applied, never game state.
 ## Villaclaro's Theme, built in code from UiTokens (the design system, M-62). apply() puts it on
 ## the default theme, the only one that reaches controls under a CanvasLayer: every type gets the
 ## ui font at body size, then build() is merged on top. A window is a PanelContainer with no

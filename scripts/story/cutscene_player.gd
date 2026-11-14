@@ -30,7 +30,7 @@ var _scene_id := ""
 
 
 func _ready() -> void:
-	_autoplay = OS.get_cmdline_user_args().has("--autoplay")
+	_autoplay = RunFlags.autoplay()
 
 
 ## Plays every step of scene in order; returns when the last one is done and the map is
