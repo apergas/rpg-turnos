@@ -113,27 +113,6 @@ const PROMPTS := {
 }
 ## ZoneData.npcs kinds -> use kinds.
 const NPC_KINDS := {"quest": TALK, "npc": NPC, "shop": SHOP, "inn": INN, "board": BOARD, "item": ITEM}
-## Chest model: wooden box with a gold band and a lid hinged at the back.
-const CHEST_SIZE := Vector3(0.9, 0.45, 0.6)
-const CHEST_LID_HEIGHT := 0.2
-const CHEST_WOOD := Color(0.5, 0.3, 0.14)
-const CHEST_BAND := Color(1.0, 0.78, 0.2)
-## Angle of an open lid (degrees about X: the front edge swings up and back).
-const CHEST_OPEN_ANGLE := 110.0
-## Wells: a collider the hero walks around, and a disc of coloured water with a light.
-const WELL_COLLIDER := 1.3
-const WATER_HP := Color(1.0, 0.25, 0.25)
-const WATER_MP := Color(0.25, 0.5, 1.0)
-const WATER_RADIUS := 0.95
-const WATER_HEIGHT := 1.2
-## Marks on the map square.
-## Exit arch: two posts and a beam of dark wood, a sign board with the exit's label
-## (always facing the camera, south) and, while closed, a bank of fog.
-const ARCH_WOOD := Color(0.36, 0.22, 0.1)
-const ARCH_WIDTH := 3.6
-const ARCH_HEIGHT := 3.0
-const SIGN_COLOR := Color(0.62, 0.45, 0.25)
-const FOG_COLOR := Color(0.92, 0.93, 0.97, 0.6)
 ## Meters walked between two footstep sounds.
 const STEP_DISTANCE := 1.6
 ## Underground the hero carries a lantern: a warm light over the head.
@@ -172,6 +151,7 @@ var zone: ZoneData
 var boss_id := ""
 
 var _hud: MapHud
+var _props: MapProps
 
 var _rng := RandomNumberGenerator.new()
 var _grass: ShaderMaterial
@@ -182,31 +162,17 @@ var _boss: StaticBody3D
 var _figures := {}
 ## What a cutscene's camera looks at (camera_to); null until the first one.
 var _camera_spot: Node3D
-## chest id -> lid pivot (rotation.x opens it); a chest in _open_chests is open.
-var _chest_lids := {}
-## Well id -> its water and light, hidden while it is dry.
-var _well_waters := {}
-var _open_chests: Array[String] = []
-## exit id -> fog bank shown while the exit is closed.
-var _fogs := {}
-## exit id -> its root (arch, sign and fog): hidden while the exit is not present
-## (ZoneData.is_present()).
-var _arches := {}
 ## ZoneData.all_exits(): the arches and, on a dungeon floor, the stairs.
 var _exits: Array = []
 ## The cells of a dungeon floor (null on an open map).
 var _dungeon: DungeonMap
 var _flags := {}
 var _exits_armed := false
-## The return portal and the mark of the spot it leads back to (null while not on this map).
-var _portal: Node3D
-var _return_mark: Node3D
 var _boss_present := false
 ## False from a boss battle until the hero walks BOSS_REARM_RADIUS away from the boss.
 var _boss_armed := true
 ## True while an Incienso keeps the monsters away (Game counts its metres).
 var _repelled := false
-var _dry_wells: Array[String] = []
 var _autoplay := false
 var _waiting := false
 var _talking := false
@@ -218,7 +184,6 @@ var _use_on_arrival := {}
 var _taps_from_ms := 0
 ## Autoplay only: npc indexes already talked to on this map.
 var _autoplay_talked := {}
-var _marker: MeshInstance3D
 var _audio: AudioDirector
 var _in_village := false
 var _step_m := 0.0
@@ -278,14 +243,11 @@ func _ready() -> void:
 		boss_id = zone.boss_id
 	if boss_id != "":
 		_boss = _add_figure(EnemyLibrary.look(boss_id), zone.boss_pos, 180.0, 1.0, 2.0)
-	for id in Chests.of_zone(zone.id):
-		_chest_lids[id] = build_chest(self, Chests.CHESTS[id])
-	for well: Dictionary in zone.wells:
-		_build_well(well)
+	_props = MapProps.new()
+	_props.setup(zone)
+	add_child(_props)
+	_props.build()
 	_exits = zone.all_exits()
-	for exit: Dictionary in _exits:
-		if not exit.get("stairs", false):
-			_fogs[exit.id] = _build_exit(exit)
 	set_boss_present(false)
 	set_world_flags({})
 	_player = PLAYER_SCENE.instantiate()
@@ -304,7 +266,7 @@ func _ready() -> void:
 	_camera = FollowCamera.new()
 	add_child(_camera)
 	_camera.target = _player
-	_marker = _build_marker()
+	_props.build_marker()
 	_hud.map_pressed.connect(_on_map_pressed)
 	_hud.tapped.connect(_on_tapped)
 	_hud.pinched.connect(_camera.zoom_by)
@@ -330,9 +292,7 @@ func _physics_process(delta: float) -> void:
 	if _particles:
 		ZoneParticles.follow(_particles, _player.global_position)
 	_hud.step(_player.global_position, _player.last_step_m)
-	_marker.visible = _player.move_target != null
-	if _marker.visible:
-		_marker.position = _player.move_target
+	_props.show_marker(_player.move_target)
 	if _dungeon:
 		_dungeon.see_through(_camera.global_position, _player.global_position)
 	_move_groups(delta)
@@ -560,10 +520,7 @@ func set_world_flags(flags: Dictionary) -> void:
 	_flags = flags
 	for group in _groups:
 		(group.roam as MonsterRoam).set_flags(flags)
-	for exit: Dictionary in zone.exits:
-		var present := ZoneData.is_present(exit, flags)
-		(_arches[exit.id] as Node3D).visible = present
-		(_fogs[exit.id] as Node3D).visible = present and not _is_open(exit)
+	_props.set_flags(flags)
 	if _dungeon:
 		_dungeon.set_flags(flags)
 	_refresh_map_marks()
@@ -579,7 +536,7 @@ func set_explored(map: ExploredMap) -> void:
 ## The map square's points of interest (MapMarks): they follow the dry wells and, on a
 ## dungeon floor, the lever, the gates and the key.
 func _refresh_map_marks() -> void:
-	_hud.refresh_map_marks(_flags, _dry_wells)
+	_hud.refresh_map_marks(_flags, _props.dry_wells)
 
 
 ## The hero is EncounterMeter.LEVEL_GAP levels past the zone (EncounterMeter.is_shy()): the
@@ -847,20 +804,12 @@ func _group_index(node: Node3D) -> int:
 
 ## Shows or removes the return portal at the zone's portal_pos.
 func set_portal(on: bool) -> void:
-	if _portal != null:
-		_portal.queue_free()
-		_portal = null
-	if on:
-		_portal = _build_portal(zone.portal_pos, true)
+	_props.set_portal(on)
 
 
 ## Shows or removes the mark on the ground of the spot the portal leads back to.
 func set_return_mark(on: bool, pos: Vector3) -> void:
-	if _return_mark != null:
-		_return_mark.queue_free()
-		_return_mark = null
-	if on:
-		_return_mark = _build_portal(pos, false)
+	_props.set_return_mark(on, pos)
 
 
 ## Swings the lever down (Game sets its flag and calls set_world_flags()).
@@ -1091,19 +1040,7 @@ func set_hero_equipment(weapon_id: String, shield_id: String, helmet_id := "") -
 ## Opens (lid tipped back, tweened unless instant) or closes a chest of this zone. An
 ## open chest can't be used any more; ids of other zones are ignored.
 func set_chest_open(chest_id: String, open: bool, instant := false) -> void:
-	if not _chest_lids.has(chest_id):
-		return
-	var lid: Node3D = _chest_lids[chest_id]
-	var angle := deg_to_rad(CHEST_OPEN_ANGLE) if open else 0.0
-	if open and not _open_chests.has(chest_id):
-		_open_chests.append(chest_id)
-	elif not open:
-		_open_chests.erase(chest_id)
-	if instant:
-		lid.rotation.x = angle
-	else:
-		lid.create_tween().tween_property(lid, "rotation:x", angle, 0.35) \
-			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_props.set_chest_open(chest_id, open, instant)
 
 
 ## The pause menu covers the middle of the screen and says the same as the status window,
@@ -1122,7 +1059,7 @@ func show_mission_done(text: String) -> void:
 	_hud.show_mission_done(text)
 
 
-## Shows a short line in its own window for NOTICE_TIME seconds (a newer one replaces it),
+## Shows a short line in its own window for MapHud.NOTICE_TIME seconds (a newer one replaces it),
 ## under a small tone word ("Guardado", "Cerrado"...) in the colour of `tone`. Only the text is printed.
 func show_notice(text: String, word := "Aviso", tone := &"text-info") -> void:
 	_hud.show_notice(text, word, tone)
@@ -1138,10 +1075,6 @@ func _trigger(boss: bool) -> void:
 	_hide_prompt()
 	_reset_pad()
 	encounter_triggered.emit(boss)
-
-
-func _is_open(exit: Dictionary) -> bool:
-	return exit.lock == "" or _flags.get(exit.lock, false)
 
 
 ## Takes an open exit the player walked into (true: the map waits for Game), or shows a
@@ -1165,7 +1098,7 @@ func _check_exits(pos: Vector3) -> bool:
 	if nearest_d > EXIT_RADIUS:
 		return false
 	_exits_armed = false
-	if not _is_open(nearest):
+	if not MapProps.is_open(nearest, _flags):
 		show_notice(nearest.lock_text, "Cerrado")
 		return false
 	_waiting = true
@@ -1225,11 +1158,10 @@ func _uses() -> Array[Dictionary]:
 			continue
 		uses.append({"kind": NPC_KINDS[npc.kind], "id": npc.get("id", ""), "index": i,
 			"pos": npc.pos, "radius": TALK_RADIUS})
-	for id in _chest_lids:
-		if not _open_chests.has(id):
-			uses.append({"kind": CHEST, "id": id, "index": -1, "pos": Chests.CHESTS[id].pos,
-				"radius": CHEST_RADIUS})
-	if _portal != null:
+	for id in _props.closed_chests():
+		uses.append({"kind": CHEST, "id": id, "index": -1, "pos": Chests.CHESTS[id].pos,
+			"radius": CHEST_RADIUS})
+	if _props.has_portal():
 		uses.append({"kind": PORTAL, "id": "", "index": -1, "pos": zone.portal_pos,
 			"radius": MECHANISM_RADIUS})
 	for well: Dictionary in zone.wells:
@@ -1261,7 +1193,7 @@ func _use(use: Dictionary) -> void:
 		CHEST:
 			chest_opened.emit(use.id)
 		WELL:
-			well_requested.emit(use.id, _well_kind(use.id))
+			well_requested.emit(use.id, _props.well_kind(use.id))
 		LEVER:
 			lever_pulled.emit()
 		KEY:
@@ -1309,168 +1241,16 @@ func _connect_standalone() -> void:
 	set_autoplay_hunt(true)
 
 
-## Flat ring on the spot the player walks to. Drawn on top of everything, so the tall
-## grass never hides it.
-func _build_marker() -> MeshInstance3D:
-	var ring := TorusMesh.new()
-	ring.inner_radius = 0.3
-	ring.outer_radius = 0.42
-	ring.rings = 16
-	ring.ring_segments = 4
-	var material := StandardMaterial3D.new()
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.albedo_color = UiTokens.color(&"border-focus")
-	material.no_depth_test = true
-	var marker := MeshInstance3D.new()
-	marker.mesh = ring
-	marker.material_override = material
-	marker.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	marker.visible = false
-	add_child(marker)
-	return marker
-
-
-## The arch of an exit (turned by its yaw) with its sign, which always faces the camera,
-## and the fog bank that closes it. Returns the fog bank.
-func _build_exit(exit: Dictionary) -> Node3D:
-	var root := Node3D.new()
-	root.position = exit.pos
-	add_child(root)
-	_arches[exit.id] = root
-	var arch := Node3D.new()
-	arch.rotation_degrees.y = exit.yaw
-	root.add_child(arch)
-	var post := BoxMesh.new()
-	post.size = Vector3(0.3, ARCH_HEIGHT, 0.3)
-	for x in [-ARCH_WIDTH / 2.0, ARCH_WIDTH / 2.0]:
-		BattleStage.add_mesh(arch, post, ARCH_WOOD, Vector3(x, ARCH_HEIGHT / 2.0, 0))
-	var beam := BoxMesh.new()
-	beam.size = Vector3(ARCH_WIDTH + 0.6, 0.35, 0.4)
-	BattleStage.add_mesh(arch, beam, ARCH_WOOD, Vector3(0, ARCH_HEIGHT, 0))
-	var board := BoxMesh.new()
-	board.size = Vector3(2.4, 0.55, 0.08)
-	BattleStage.add_mesh(root, board, SIGN_COLOR, Vector3(0, ARCH_HEIGHT + 0.5, 0.1))
-	var label := Label3D.new()
-	label.text = exit.label
-	UiTheme.style_3d(label, &"display-m", &"text-display-soft", UiTokens.OUTLINE_L)
-	label.pixel_size = 0.008
-	label.position = Vector3(0, ARCH_HEIGHT + 0.5, 0.15)
-	root.add_child(label)
-	var fog := Node3D.new()
-	root.add_child(fog)
-	var material := StandardMaterial3D.new()
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	material.albedo_color = FOG_COLOR
-	for puff in [Vector3(-1.2, 0.8, 0), Vector3(0, 1.1, 0.1), Vector3(1.2, 0.8, 0),
-			Vector3(-0.6, 1.9, -0.1), Vector3(0.7, 2.0, 0)]:
-		var mi := MeshInstance3D.new()
-		mi.mesh = BattleStage.unit_sphere()
-		mi.material_override = material
-		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		mi.position = puff
-		mi.scale = Vector3(1.1, 0.9, 0.7)
-		fog.add_child(mi)
-	return fog
-
-
-## The Ala de viaje's return portal at pos (full: the standing portal with its sign), or only
-## the glowing ring on the ground of the spot it leads back to (TravelPortal).
-func _build_portal(pos: Vector3, full: bool) -> Node3D:
-	var portal := TravelPortal.new()
-	portal.ring_only = not full
-	portal.position = pos
-	add_child(portal)
-	return portal
-
-
 ## Hides the water and the light of the wells in dry.
 func set_dry_wells(dry: Array[String]) -> void:
-	for id: String in _well_waters:
-		(_well_waters[id] as Node3D).visible = not dry.has(id)
-	_dry_wells = dry
+	_props.set_dry_wells(dry)
 	_refresh_map_marks()
-
-
-## The kind (Wells.HP or Wells.MP) of the well id of this zone.
-func _well_kind(id: String) -> String:
-	for well: Dictionary in zone.wells:
-		if well.id == id:
-			return well.kind
-	return Wells.HP
-
-
-## A well: its model (green in the forest village, red elsewhere) on a cylinder collider,
-## with a disc of coloured water inside the rim and a light over it.
-func _build_well(well: Dictionary) -> void:
-	var body := StaticBody3D.new()
-	body.position = well.pos
-	add_child(body)
-	WorldStage.add_cylinder_shape(body, WELL_COLLIDER, 2.0)
-	var model_id := "well_green" if zone.id == "bosque" else "well_red"
-	BattleStage.add_model(body, WorldStage.MODELS[model_id], Vector3.ZERO,
-		WorldStage.BUILDING_SCALE)
-	var water := Node3D.new()
-	water.position.y = WATER_HEIGHT
-	body.add_child(water)
-	var color := WATER_HP if well.kind == Wells.HP else WATER_MP
-	var disc := CylinderMesh.new()
-	disc.top_radius = WATER_RADIUS
-	disc.bottom_radius = WATER_RADIUS
-	disc.height = 0.05
-	var material := StandardMaterial3D.new()
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.albedo_color = color
-	var mesh := MeshInstance3D.new()
-	mesh.mesh = disc
-	mesh.material_override = material
-	mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	water.add_child(mesh)
-	var light := OmniLight3D.new()
-	light.light_color = color
-	light.light_energy = 1.5
-	light.omni_range = 4.0
-	light.shadow_enabled = false
-	light.position.y = 0.6
-	water.add_child(light)
-	_well_waters[well.id] = water
 
 
 ## A closed chest on a box collider under root: wooden box with a gold band around it and a lid on
 ## a pivot at its back edge. Returns the lid pivot.
 static func build_chest(root: Node3D, chest: Dictionary) -> Node3D:
-	var body := StaticBody3D.new()
-	body.position = chest.pos
-	body.rotation_degrees.y = chest.yaw
-	root.add_child(body)
-	var box := BoxShape3D.new()
-	box.size = CHEST_SIZE + Vector3(0, CHEST_LID_HEIGHT, 0)
-	var shape := CollisionShape3D.new()
-	shape.shape = box
-	shape.position.y = box.size.y / 2.0
-	body.add_child(shape)
-	var base := BoxMesh.new()
-	base.size = CHEST_SIZE
-	BattleStage.add_mesh(body, base, CHEST_WOOD, Vector3(0, CHEST_SIZE.y / 2.0, 0))
-	var band := BoxMesh.new()
-	band.size = Vector3(CHEST_SIZE.x + 0.04, 0.08, CHEST_SIZE.z + 0.04)
-	BattleStage.add_mesh(body, band, CHEST_BAND, Vector3(0, CHEST_SIZE.y * 0.7, 0))
-	var lid := Node3D.new()
-	lid.position = Vector3(0, CHEST_SIZE.y, CHEST_SIZE.z / 2.0)
-	body.add_child(lid)
-	var top := BoxMesh.new()
-	top.size = Vector3(CHEST_SIZE.x, CHEST_LID_HEIGHT, CHEST_SIZE.z)
-	BattleStage.add_mesh(lid, top, CHEST_WOOD,
-		Vector3(0, CHEST_LID_HEIGHT / 2.0, -CHEST_SIZE.z / 2.0))
-	var lock := BoxMesh.new()
-	lock.size = Vector3(0.14, 0.16, 0.05)
-	BattleStage.add_mesh(lid, lock, CHEST_BAND, Vector3(0, 0.0, -CHEST_SIZE.z - 0.02))
-	var lid_band := BoxMesh.new()
-	lid_band.size = Vector3(0.1, CHEST_LID_HEIGHT + 0.02, CHEST_SIZE.z + 0.02)
-	for x in [-0.3, 0.3]:
-		BattleStage.add_mesh(lid, lid_band, CHEST_BAND,
-			Vector3(x, CHEST_LID_HEIGHT / 2.0, -CHEST_SIZE.z / 2.0))
-	return lid
+	return MapProps.build_chest(root, chest)
 
 
 ## A figure: a BattleActor on a cylinder collider, turned yaw_deg (180 faces south,
