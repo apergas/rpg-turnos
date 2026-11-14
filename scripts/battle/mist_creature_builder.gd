@@ -2,7 +2,7 @@ class_name MistCreatureBuilder extends RefCounted
 ## Constructor: the v3's figures built in code (3.0.0), from their ActorLooksV3 entry, so
 ## CreatureBuilder does not grow: the variants of older figures (the Sapo de légamo is the
 ## frog, the Sanguijuela the snake, the Junco andante the plant, in their own colours) and the
-## new ones: the Fuego fatuo and the Caimán de bruma. Static only, keeps no state: like
+## new ones: the Fuego fatuo, the Caimán de bruma and the Garza de légamo. Static only, keeps no state: like
 ## CreatureBuilder, each build_x(actor, data) hangs its meshes under actor.body() through the
 ## actor's builder methods. build() says whether the look was one of its own.
 
@@ -15,6 +15,8 @@ const FLAME_PROFILE: Array[Vector2] = [
 ## Opacity of the flame, and of its bright core.
 const FLAME_ALPHA := 0.55
 const CORE_ALPHA := 0.9
+## The opacity of the lamp in the Garza's crop.
+const LAMP_ALPHA := 0.9
 
 
 ## Builds the figure of a look of the v3 and returns true; false (nothing built) for any other.
@@ -30,6 +32,8 @@ static func build(actor: BattleActor, data: Dictionary) -> bool:
 		build_wisp(actor, data)
 	elif look == Look.MIST_CAIMAN:
 		build_caiman(actor, data)
+	elif look == Look.SILT_HERON:
+		build_heron(actor, data)
 	else:
 		return false
 	return true
@@ -75,3 +79,35 @@ static func build_caiman(actor: BattleActor, data: Dictionary) -> void:
 				Vector3(side * 0.42, 0.0, z), Vector3(0, 0, side * 50.0), Vector3(1.5, 0.6, 1.5))
 	actor.add_ghost(root, LowPoly.sphere(1.0), data.mist_color, CreatureBuilder.AURA_ALPHA,
 		Vector3(0, 0.15, 0.1), Vector3(1.3, 0.35, 2.3))  # the mist it drags
+
+
+## The Garza de légamo, the Ciénaga's boss: a huge heron on two long thin legs, a muddy body
+## leaning forward with folded wings, the lamp of the lighthouse shining in its crop, an S of a
+## neck, a small head with a crest and a long yellow beak, facing -Z. About 4 m tall at its
+## scale.
+static func build_heron(actor: BattleActor, data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	actor.body().add_child(root)
+	for x in [-0.2, 0.2]:
+		actor.add_mesh(root, LowPoly.cylinder(0.05, 1.6), data.leg_color, Vector3(x, 0.8, 0.1))  # leg
+		actor.add_mesh(root, LowPoly.cone(0.16, 0.06), data.leg_color, Vector3(x, 0.03, -0.05))  # foot
+	actor.add_blob(root, CreatureBuilder.SLIME_PROFILE, 9, data.color, Vector3(0, 1.45, 0.25),
+		Vector3(-75, 0, 0), Vector3(0.9, 1.2, 0.8))  # body, leaning forward
+	actor.add_ghost(root, LowPoly.sphere(0.24), data.lamp_color, LAMP_ALPHA, Vector3(0, 1.6, -0.7),
+		Vector3.ONE)  # the lamp in its crop
+	for side in [-1.0, 1.0]:
+		actor.add_blob(root, CreatureBuilder.SPECTER_PROFILE, 6, data.dark_color,
+			Vector3(side * 0.42, 1.55, 0.35), Vector3(-100, 0, 0), Vector3(0.25, 1.3, 0.9))  # folded wing
+	var segments := 7
+	for i in segments:  # the neck: shrinking balls in an S, rising from the chest
+		var t := float(i) / (segments - 1)
+		actor.add_mesh(root, LowPoly.sphere(0.15 - t * 0.05), data.color,
+			Vector3(0, 1.85 + t * 1.15, -0.85 + 0.25 * sin(t * PI) - 0.15 * t))
+	actor.add_mesh(root, LowPoly.sphere(0.16), data.color, Vector3(0, 3.05, -1.05))  # head
+	for x in [-0.09, 0.09]:
+		actor.add_mesh(root, LowPoly.sphere(0.035), data.eye_color, Vector3(x, 3.1, -1.13))
+	actor.add_mesh(root, LowPoly.cone(0.06, 0.8), data.beak_color, Vector3(0, 3.0, -1.5))  # beak
+	(root.get_child(-1) as Node3D).rotation_degrees.x = -90.0
+	actor.add_mesh(root, LowPoly.cone(0.03, 0.35), data.dark_color, Vector3(0, 3.25, -0.95))  # crest
+	(root.get_child(-1) as Node3D).rotation_degrees.x = 30.0

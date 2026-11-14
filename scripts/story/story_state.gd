@@ -17,7 +17,7 @@ const NAME_TAG := "{nombre}"
 ## Every cutscene, in story order.
 const SCENES: Array[String] = ["prologo", "rey_slime", "aldea_bosque", "bruja", "mina",
 	"golem", "castillo", "final", "caravana_llega", "caravana_parte", "caravana_campamento",
-	"jaguar", "gusano", "grifo", "guardian", "cruce", "brumaclara_llega"]
+	"jaguar", "gusano", "grifo", "guardian", "cruce", "brumaclara_llega", "garza"]
 ## The cutscene that follows beating each boss (its world flag).
 const AFTER_BOSS := {
 	"rey_slime": "rey_slime",
@@ -28,6 +28,7 @@ const AFTER_BOSS := {
 	"gusano_dunas": "gusano",
 	"grifo_cumbre": "grifo",
 	"guardian_ciudad": "guardian",
+	"garza_legamo": "garza",
 	"devorador_portal": "cruce",
 }
 ## The cutscene of the first visit to each zone's village.
@@ -53,6 +54,13 @@ const V2_FINAL_BOSS := "devorador_portal"
 const V3_FLAG := "brumaclara"
 const V3_BOSSES: Array[String] = ["garza_legamo", "coloso_cuarzo", "vigia_bruma"]
 const V3_FINAL_BOSS := "eco_albor"
+## Brumaclara's lighthouse keeper: she says how the v3 goes on, and every mission of the v3 is
+## handed to her (as the v2's are to the Jefe de caravana).
+const V3_KEEPER := "Orvalla"
+## While Brumaclara has no exit open to another land of the v3 (each version of the v3 brings
+## the next one; the 3.0.0 ends with the Garza): what Orvalla adds and the goal.
+const V3_NOT_YET_LINE := "Todavía no sabemos cómo seguir. Descansa, y vuelve cuando la luz nos diga algo."
+const V3_WAIT_GOAL := "El faro vuelve a dar luz"
 ## The mine's flags (ZoneData lever_flag, floor_key, door_flag of its floors).
 const MINE_LEVER := "mina_palanca"
 const MINE_KEY := "llave_mina"
@@ -136,6 +144,18 @@ func chapter(flags: Dictionary) -> Chapter:
 			break
 		reached = (reached + 1) as Chapter
 	return reached
+
+
+## True while Brumaclara has an exit open, with these flags, to a land of the v3 (not the
+## portal back to the Caravana). False before the v3.
+static func v3_way_on(flags: Dictionary) -> bool:
+	var town := ZoneData.by_id(BrumaclaraLook.ZONE)
+	if town == null or not flags.get(V3_FLAG, false):
+		return false
+	for exit: Dictionary in town.exits:
+		if exit.to != CampLook.ZONE and ZoneData.is_present(exit, flags):
+			return true
+	return false
 
 
 ## The stretch of the caravan's road (the v2): 1 + the zone bosses beaten in order, 5 once
@@ -226,6 +246,8 @@ func goal_text(flags: Dictionary, zone_id := "") -> String:
 		return "Objetivo: habla con el Jefe de caravana"
 	if now == Chapter.CITY:
 		return CITY_GOALS[_city_step(flags, zone_id)]
+	if now > Chapter.V2_END and not v3_way_on(flags):
+		return V3_WAIT_GOAL
 	return GOALS[now]
 
 

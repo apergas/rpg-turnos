@@ -101,4 +101,17 @@ const LOOKS := {
 		"top": 1.0,
 		"gentle": true,
 	},
+	# The Garza de légamo, the Ciénaga's boss: a huge muddy heron with the lighthouse's lamp
+	# shining in its crop.
+	Look.SILT_HERON: {
+		"color": Color(0.5, 0.48, 0.44),
+		"dark_color": Color(0.3, 0.29, 0.27),
+		"leg_color": Color(0.55, 0.45, 0.25),
+		"beak_color": Color(0.82, 0.66, 0.3),
+		"eye_color": Color(0.95, 0.8, 0.2),
+		"lamp_color": Color(1.0, 0.85, 0.45),
+		"scale": 1.15,
+		"top": 4.0,
+		"gentle": true,
+	},
 }

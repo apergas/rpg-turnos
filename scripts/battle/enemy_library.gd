@@ -62,6 +62,7 @@ const ENEMIES := {
 	"fuego_fatuo": preload("res://data/enemies/fuego_fatuo.tres"),
 	"junco_andante": preload("res://data/enemies/junco_andante.tres"),
 	"caiman_bruma": preload("res://data/enemies/caiman_bruma.tres"),
+	"garza_legamo": preload("res://data/enemies/garza_legamo.tres"),
 }
 ## Figure of each enemy id; any other id is a slime.
 const LOOKS := {
@@ -118,6 +119,7 @@ const LOOKS := {
 	"fuego_fatuo": BattleActor.Look.WISP,
 	"junco_andante": BattleActor.Look.WALKING_REED,
 	"caiman_bruma": BattleActor.Look.MIST_CAIMAN,
+	"garza_legamo": BattleActor.Look.SILT_HERON,
 	# The creatures that fight beside the hero (data in Allies, not in ENEMIES).
 	"gallina": BattleActor.Look.CHICKEN,
 	"lobezno": BattleActor.Look.WOLF_CUB,

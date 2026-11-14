@@ -67,7 +67,7 @@ exits = [{
 "yaw": 0.0
 }]
 npcs = []
-boss_id = ""
+boss_id = "garza_legamo"
 boss_pos = Vector3(0, 0, -35)
 formations = [["sapo_legamo"], ["sanguijuela"], ["fuego_fatuo"], ["junco_andante"], ["caiman_bruma"], ["sapo_legamo", "sapo_legamo"], ["sanguijuela", "fuego_fatuo"], ["junco_andante", "caiman_bruma"], ["fuego_fatuo", "fuego_fatuo"]]
 start_formations = [["sapo_legamo"], ["junco_andante"]]
@@ -86,5 +86,5 @@ sun_energy = 0.45
 backdrop = "cienaga"
 particles = "bog"
 black_sun = true
-autoplay_route = Array[Vector3]([Vector3(0, 0, 35), Vector3(6, 0, 24), Vector3(-4, 0, 10), Vector3(-26.15, 0, 17.7), Vector3(-4, 0, 10), Vector3(4, 0, -4), Vector3(29.2, 0, 0.9), Vector3(26.5, 0, -8.5), Vector3(4, 0, -4), Vector3(-6, 0, -18), Vector3(-27.2, 0, -14.9), Vector3(-6, 0, -18), Vector3(0, 0, -30)])
+autoplay_route = Array[Vector3]([Vector3(0, 0, 35), Vector3(6, 0, 24), Vector3(-4, 0, 10), Vector3(-26.15, 0, 17.7), Vector3(-4, 0, 10), Vector3(4, 0, -4), Vector3(29.2, 0, 0.9), Vector3(26.5, 0, -8.5), Vector3(4, 0, -4), Vector3(-6, 0, -18), Vector3(-27.2, 0, -14.9), Vector3(-6, 0, -18), Vector3(0, 0, -34)])
 autoplay_boss_level = 42

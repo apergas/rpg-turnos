@@ -65,7 +65,8 @@ const ARRIVALS := {
 const ARRIVAL_PREFIX := "llegada_"
 ## Each arrival zone's tramo boss: a save past it has heard (or skipped) that line.
 const ARRIVAL_BOSSES := {"jungla": "jaguar_sombrio", "desierto": "gusano_dunas",
-	"montana_1": "grifo_cumbre", "ciudad_1": "guardian_ciudad"}
+	"montana_1": "grifo_cumbre", "ciudad_1": "guardian_ciudad",
+	"cienaga": "garza_legamo"}
 ## The upper floors count as their land's arrival zone.
 const ARRIVAL_REGIONS := {"montana_2": "montana_1", "ciudad_2": "ciudad_1"}
 

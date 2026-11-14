@@ -56,7 +56,7 @@ const V2_ENEMIES: Array[String] = ["rana_dardo", "serpiente_liana", "mono_aullad
 ## 3.3.0; until then they count, are seen and beaten like the rest, with no prize, on a game in
 ## the part 3 (GameState.part()).
 const V3_ENEMIES: Array[String] = ["sapo_legamo", "sanguijuela", "fuego_fatuo", "junco_andante",
-	"caiman_bruma"]
+	"caiman_bruma", "garza_legamo"]
 
 
 ## The families that count in this game: the v1's, and the v2's on a caravan game.

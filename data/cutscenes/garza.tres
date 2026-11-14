@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="Cutscene" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/cutscene.gd" id="1_cutscene"]
+
+[resource]
+script = ExtResource("1_cutscene")
+id = "garza"
+steps = [
+["wait", 0.4],
+["say", "", ["La Garza de légamo se desploma en el barro. De su buche rueda una lámpara que todavía brilla."]],
+["say", "", ["¡Consigues la Lámpara del faro!"]],
+["fade_out"],
+["travel", "brumaclara", "cienaga"],
+["fade_in"],
+["approach", "Orvalla", "hero", 1.8],
+["face", "hero", "Orvalla"],
+["face", "Orvalla", "hero"],
+["say", "Orvalla", ["¡La lámpara del faro! Esa garza se la tragó el invierno pasado, con farol y todo.", "Dámela. Esto tiene que verse desde la otra punta de la Ciénaga."]],
+["camera_to", Vector3(0, 0, -15), 16.0],
+["sfx", "level_up"],
+["say", "", ["Orvalla sube la escalera del faro. Al rato, una luz blanca barre la plaza y la niebla retrocede un paso."]],
+["camera_back"],
+["say", "Orvalla", ["Mira la gente asomarse a las ventanas. Hacía años que no veían su propia calle.", "La posada vuelve a abrir. Descansa allí cuando quieras."]],
+["approach", "Neblí", "hero", 2.2],
+["face", "Neblí", "hero"],
+["say", "Neblí", ["¿Eso es el sol?"]],
+["say", "Orvalla", ["No, Neblí. Pero se le parece un poco."]]
+]

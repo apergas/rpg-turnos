@@ -113,6 +113,7 @@ const KEY_ITEMS := {
 	"sello_desierto": "Sello del desierto",
 	"mapa_montana": "Mapa de la montaña",
 	"llave_portal": "Llave del portal",
+	"lampara_faro": "Lámpara del faro",
 }
 ## What each key item is, for Objetos.
 const KEY_TEXTS := {
@@ -125,6 +126,7 @@ const KEY_TEXTS := {
 	"sello_desierto": "Lo guardaba el Gusano de las dunas. Los guardas de la montaña lo reconocerán.",
 	"mapa_montana": "Lo guardaba el Grifo de la cumbre. Marca el camino hasta la ciudad abandonada.",
 	"llave_portal": "La guardaba el Guardián de la ciudad. Abre la reja del barrio del portal.",
+	"lampara_faro": "La guardaba la Garza de légamo en el buche. Devuelve la luz al faro de Brumaclara.",
 	MEDAL: "Algunos monstruos las llevan encima. El Coleccionista las colecciona.",
 }
 
