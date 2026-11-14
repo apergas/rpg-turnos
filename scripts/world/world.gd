@@ -23,6 +23,11 @@ class_name World extends Node3D
 ## quest has not brought out is not on the map (set_quest_view()). Run on its own
 ## (res://scenes/world/world.tscn) it prints each group touched (and takes it off), each talk, shop, inn, chest and exit
 ## and goes on.
+## Its jobs are split into pieces it owns and calls in a fixed order from _physics_process:
+## MapHud (the 2D layer), MapProps (exits, portal, wells, chests, the walk marker),
+## MapFigures (figures, signs, quest marks), MapMonsters (the groups), AutoplayHunter (the
+## autoplay's hunt) and MapUses (what is in reach, taps, exits). Its public methods are
+## façades of them and its signals are unchanged.
 
 signal encounter_triggered(boss: bool)
 signal talk_requested
@@ -56,62 +61,13 @@ signal map_requested
 const PLAYER_SCENE := preload("res://scenes/world/player.tscn")
 const HERO_DATA := preload("res://data/hero.tres")
 const BANNER_FADE := MapHud.BANNER_FADE
-## How close the player must be to talk to a figure / to open a chest / to run into the
-## boss / to take an exit.
-const TALK_RADIUS := 2.5
-const CHEST_RADIUS := 1.8
-const WELL_RADIUS := 2.2
+## How close the player must be to run into the boss.
 const BOSS_RADIUS := 2.5
 ## After a boss battle the boss waits until the hero has been this far from it (a boss
 ## fought again and again, the Eco de la Niebla, must not start over at once).
 const BOSS_REARM_RADIUS := 5.0
-const EXIT_RADIUS := 1.2
-## After arriving (or after a closed exit's notice) exits wait until the player is this
-## much farther than EXIT_RADIUS from all of them.
-const EXIT_REARM := 0.8
-## How close the player must be to a lever, a key or a gate (its centre) to use it.
-const MECHANISM_RADIUS := 2.2
-## A click or tap this close to a figure or a chest means "go there and use it".
-const NPC_TAP_RADIUS := 1.2
-## A tap on a figure is measured at this height, so its feet and its head both count.
-const TAP_HEIGHT := 0.9
-## Height of a figure's head and hat, the other height a tap on one is measured at.
-const FIGURE_TOP_TAP_HEIGHT := 2.2
-## Narrow: the head is slim, and a wider circle up there takes taps on the ground behind it.
-const FIGURE_TOP_TAP_RADIUS := 0.7
 ## Taps on the map are ignored this long after a dialogue or a window closes.
 const TAP_GUARD_MS := 400
-## Kinds of the things the player can use on the map, and their prompts.
-const TALK := "talk"
-const NPC := "npc"
-const SHOP := "shop"
-const INN := "inn"
-const CHEST := "chest"
-const WELL := "well"
-const LEVER := "lever"
-const KEY := "key"
-const DOOR := "door"
-const PORTAL := "portal"
-const BOARD := "board"
-const ITEM := "item"
-## Between the verb and who it is done with: "Hablar · Granjero".
-const PROMPT_JOIN := " · "
-const PROMPTS := {
-	TALK: "Hablar",
-	NPC: "Hablar",
-	SHOP: "Comprar",
-	INN: "Descansar",
-	CHEST: "Abrir",
-	WELL: "Beber",
-	LEVER: "Tirar",
-	KEY: "Coger",
-	DOOR: "Abrir",
-	PORTAL: "Volver",
-	BOARD: "Leer",
-	ITEM: "Coger",
-}
-## ZoneData.npcs kinds -> use kinds.
-const NPC_KINDS := {"quest": TALK, "npc": NPC, "shop": SHOP, "inn": INN, "board": BOARD, "item": ITEM}
 ## Meters walked between two footstep sounds.
 const STEP_DISTANCE := 1.6
 ## Underground the hero carries a lantern: a warm light over the head.
@@ -129,6 +85,7 @@ var boss_id := ""
 var _hud: MapHud
 var _props: MapProps
 var _monsters: MapMonsters
+var _uses: MapUses
 var _hunter: AutoplayHunter
 
 var _grass: ShaderMaterial
@@ -139,31 +96,20 @@ var _boss: StaticBody3D
 var _figures: MapFigures
 ## What a cutscene's camera looks at (camera_to); null until the first one.
 var _camera_spot: Node3D
-## ZoneData.all_exits(): the arches and, on a dungeon floor, the stairs.
-var _exits: Array = []
 ## The cells of a dungeon floor (null on an open map).
 var _dungeon: DungeonMap
 var _flags := {}
-var _exits_armed := false
 var _boss_present := false
 ## False from a boss battle until the hero walks BOSS_REARM_RADIUS away from the boss.
 var _boss_armed := true
 var _autoplay := false
 var _waiting := false
 var _talking := false
-## What was in reach last frame ({} for nothing), so autoplay acts once per approach.
-var _was_near := {}
-## Set by a click or tap on a figure or chest: use it as soon as it is in reach.
-var _use_on_arrival := {}
 ## Taps on the map count from this time on (Time.get_ticks_msec()).
 var _taps_from_ms := 0
-## Autoplay only: npc indexes already talked to on this map.
-var _autoplay_talked := {}
 var _audio: AudioDirector
 var _in_village := false
 var _step_m := 0.0
-## The figure signs the prompt is covering right now (hidden until it goes).
-var _signs_under_prompt: Array[Label3D] = []
 ## The zone's ZoneParticles (null: none, or low quality), carried with the hero.
 var _particles: Node3D
 ## Time of the simulation in ms (the hunt's timers count it, so a run with --fixed-fps keeps them).
@@ -186,9 +132,12 @@ func _ready() -> void:
 		_dungeon = DungeonMap.new()
 		_dungeon.zone = zone
 		add_child(_dungeon)
+	# Every piece exists from here on (set_world_flags() below reaches them all); each is
+	# added to the tree where its nodes used to be built, so the node order is unchanged.
 	_hud = MapHud.new()
 	_hud.setup(zone)
 	_player = PLAYER_SCENE.instantiate()
+	_camera = FollowCamera.new()
 	_figures = MapFigures.new()
 	_figures.setup(zone, _player)
 	_monsters = MapMonsters.new()
@@ -196,17 +145,19 @@ func _ready() -> void:
 	_hunter = AutoplayHunter.new()
 	_hunter.setup(zone, _player, _monsters)
 	_monsters.groups_reset.connect(_hunter.forget)
+	_props = MapProps.new()
+	_props.setup(zone)
+	_uses = MapUses.new()
+	_uses.setup(zone, _player, _camera, _hud, _figures, _props, _dungeon)
+	_forward_use_signals()
 	add_child(_figures)
 	_figures.build()
 	if boss_id == "":
 		boss_id = zone.boss_id
 	if boss_id != "":
 		_boss = _figures.add_figure(EnemyLibrary.look(boss_id), zone.boss_pos, 180.0, 1.0, 2.0)
-	_props = MapProps.new()
-	_props.setup(zone)
 	add_child(_props)
 	_props.build()
-	_exits = zone.all_exits()
 	set_boss_present(false)
 	set_world_flags({})
 	_player.route = zone.autoplay_route
@@ -221,15 +172,15 @@ func _ready() -> void:
 	_particles = ZoneParticles.build(zone.particles)
 	if _particles:
 		add_child(_particles)
-	_camera = FollowCamera.new()
 	add_child(_camera)
 	_camera.target = _player
 	_props.build_marker()
 	_hud.map_pressed.connect(_on_map_pressed)
 	_hud.tapped.connect(_on_tapped)
 	_hud.pinched.connect(_camera.zoom_by)
-	_hud.use_pressed.connect(func() -> void: _use(_nearest_use(_player.global_position)))
+	_hud.use_pressed.connect(_uses.use_nearest)
 	add_child(_hud)
+	add_child(_uses)
 	set_explored(ExploredMap.new(zone))
 	add_child(_monsters)
 	place_at_entry(zone.start_entry)
@@ -245,7 +196,7 @@ func _physics_process(delta: float) -> void:
 	if pad:
 		_player.stick_direction = pad.direction
 		if pad.direction != Vector2.ZERO:
-			_use_on_arrival = {}  # walking off by hand drops the tap's errand
+			_uses.drop_errand()  # walking off by hand drops the tap's errand
 	if _grass:
 		Vegetation.set_pusher(_grass, _player.global_position)
 	if _particles:
@@ -264,7 +215,9 @@ func _physics_process(delta: float) -> void:
 		_in_village = inside
 		village_changed.emit(inside)
 	_play_steps()
-	if _check_exits(pos):
+	var exit := _uses.check_exits(pos)
+	if not exit.is_empty():
+		_take_exit(exit)
 		return
 	if _boss_present:
 		var boss_distance := _flat_distance(pos, zone.boss_pos)
@@ -278,33 +231,15 @@ func _physics_process(delta: float) -> void:
 		return
 	if _autoplay and _hunter.is_on() and not _monsters.is_repelled():
 		_hunter.step(pos, int(_sim_ms))
-	var near := _nearest_use(pos)
-	if near.is_empty():
-		_hide_prompt()
-	else:
-		_show_prompt(near)
-	if not _use_on_arrival.is_empty() and _in_reach(_use_on_arrival):
-		var errand := _use_on_arrival
-		_use_on_arrival = {}
-		_player.move_target = null
-		_use(errand)
-	elif not near.is_empty() and near != _was_near and _autoplay and near.kind != PORTAL:
-		# Autoplay talks to each villager once per visit to the zone, and again when a
-		# mark over it says there is something new.
-		var chats: bool = near.kind in [NPC, BOARD, ITEM]
-		if not chats or not _autoplay_talked.has(near.index) \
-				or _figures.has_mark(zone.npcs[near.index].name):
-			_autoplay_talked[near.index] = true
-			_use(near)
-	_was_near = near
+	_uses.step(pos)
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _waiting or _talking:
 		return
-	if _prompt_showing() and event.is_action_pressed("ui_accept") and not event.is_echo():
+	if _uses.prompt_showing() and event.is_action_pressed("ui_accept") and not event.is_echo():
 		get_viewport().set_input_as_handled()
-		_use(_nearest_use(_player.global_position))
+		_uses.use_nearest()
 		return
 	var pad := _hud.pad
 	if pad:
@@ -316,7 +251,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	get_viewport().set_input_as_handled()
 	if event is InputEventMouseButton:
-		_use_on_arrival = _tapped_use((event as InputEventMouseButton).position)
+		_uses.aim_at((event as InputEventMouseButton).position)
 	_player.move_to(point)
 
 
@@ -349,60 +284,8 @@ func _on_tapped(screen: Vector2) -> void:
 	var point: Variant = _ground_point(screen)
 	if point == null:
 		return
-	_use_on_arrival = _tapped_use(screen)
+	_uses.aim_at(screen)
 	_player.move_to(point)
-
-
-## Shows what is in reach: the prompt, or on phones the use button.
-## What the prompt (or the phone's use button) says: the verb and, for a figure, its name.
-func _prompt_text(use: Dictionary) -> String:
-	var text: String = PROMPTS[use.kind]
-	if use.index >= 0:
-		text += PROMPT_JOIN + String(zone.npcs[use.index].name)
-	return text
-
-
-func _show_prompt(near: Dictionary) -> void:
-	_clear_signs_under(_hud.show_prompt(_prompt_text(near), _action_key_name()))
-
-
-## Hides the figure signs that would sit under the prompt (or the use button), so the two
-## never overlap; they come back with the prompt.
-func _clear_signs_under(rect: Rect2) -> void:
-	var area := rect.grow(8.0)
-	for label in _figures.signs:
-		var covered := not _camera.is_position_behind(label.global_position) \
-			and area.has_point(_camera.unproject_position(label.global_position))
-		if covered and label.visible:
-			label.hide()
-			_signs_under_prompt.append(label)
-		elif not covered and label in _signs_under_prompt:
-			label.show()
-			_signs_under_prompt.erase(label)
-
-
-func _restore_signs() -> void:
-	for label in _signs_under_prompt:
-		if is_instance_valid(label):
-			label.show()
-	_signs_under_prompt.clear()
-
-
-## The key shown under the prompt: E while it is one of the accept keys, else the first one.
-func _action_key_name() -> String:
-	var codes := KeyMap.keys_of("accept")
-	if codes.is_empty() or KEY_E in codes:
-		return KeyMap.keys_text("accept") if codes.is_empty() else KeyMap.key_name(KEY_E)
-	return KeyMap.key_name(codes[0])
-
-
-func _hide_prompt() -> void:
-	_restore_signs()
-	_hud.hide_prompt()
-
-
-func _prompt_showing() -> bool:
-	return _hud.prompt_showing()
 
 
 ## Forgets the fingers on the map (a window, a battle or a cutscene took over).
@@ -444,10 +327,10 @@ func place_player(pos: Vector3, yaw_deg := 0.0) -> void:
 	if _particles:
 		ZoneParticles.follow(_particles, _player.global_position, true)
 	_calm()
-	_was_near = {}
-	_use_on_arrival = {}
+	_uses.forget_near()
+	_uses.drop_errand()
 	_step_m = 0.0
-	_exits_armed = false
+	_uses.disarm_exits()
 	_in_village = _is_in_village(pos)
 
 
@@ -480,6 +363,7 @@ func set_world_flags(flags: Dictionary) -> void:
 	_flags = flags
 	_monsters.set_flags(flags)
 	_props.set_flags(flags)
+	_uses.set_flags(flags)
 	if _dungeon:
 		_dungeon.set_flags(flags)
 	_refresh_map_marks()
@@ -614,10 +498,10 @@ func begin_cutscene() -> void:
 	_player.move_target = null
 	_reset_pad()
 	_player.model().set_walking(false)
-	_use_on_arrival = {}
+	_uses.drop_errand()
 	_hud.begin_cutscene()
 	_figures.show_marks()
-	_signs_under_prompt.clear()
+	_uses.forget_covered_signs()
 	_figures.set_signs_shown(false)
 
 
@@ -631,7 +515,7 @@ func end_cutscene() -> void:
 	_figures.show_marks()
 	_figures.set_signs_shown(true)
 	_calm()
-	_was_near = {}
+	_uses.forget_near()
 	await freeze(false)
 
 
@@ -681,7 +565,7 @@ func freeze(on: bool) -> void:
 	if on:
 		_talking = true
 		_player.input_enabled = false
-		_hide_prompt()
+		_uses.hide_prompt()
 		_reset_pad()
 		return
 	await get_tree().process_frame
@@ -732,6 +616,29 @@ func show_notice(text: String, word := "Aviso", tone := &"text-info") -> void:
 	_hud.show_notice(text, word, tone)
 
 
+## The hero walked into an open exit (MapUses.check_exits()): the map waits for Game.
+func _take_exit(exit: Dictionary) -> void:
+	_waiting = true
+	_player.input_enabled = false
+	_uses.hide_prompt()
+	_reset_pad()
+	exit_requested.emit(exit.to, exit.entry)
+
+
+## The uses of MapUses go out under World's own signals: Game connects to those.
+func _forward_use_signals() -> void:
+	_uses.talk_requested.connect(talk_requested.emit)
+	_uses.npc_requested.connect(npc_requested.emit)
+	_uses.shop_requested.connect(shop_requested.emit)
+	_uses.inn_requested.connect(inn_requested.emit)
+	_uses.chest_opened.connect(chest_opened.emit)
+	_uses.well_requested.connect(well_requested.emit)
+	_uses.lever_pulled.connect(lever_pulled.emit)
+	_uses.key_taken.connect(key_taken.emit)
+	_uses.door_used.connect(door_used.emit)
+	_uses.portal_used.connect(portal_used.emit)
+
+
 func _trigger(boss: bool) -> void:
 	if boss:
 		_boss_armed = false
@@ -739,136 +646,9 @@ func _trigger(boss: bool) -> void:
 		_audio.play_sfx(SfxLibrary.ENCOUNTER)
 	_waiting = true
 	_player.input_enabled = false
-	_hide_prompt()
+	_uses.hide_prompt()
 	_reset_pad()
 	encounter_triggered.emit(boss)
-
-
-## Takes an open exit the player walked into (true: the map waits for Game), or shows a
-## closed one's notice once per approach. Exits only count once the player has stepped
-## away from all of them since arriving.
-func _check_exits(pos: Vector3) -> bool:
-	var nearest := {}
-	var nearest_d := INF
-	for exit: Dictionary in _exits:
-		if not ZoneData.is_present(exit, _flags):
-			continue
-		var d := _flat_distance(pos, exit.pos)
-		if d < nearest_d:
-			nearest = exit
-			nearest_d = d
-	if nearest.is_empty():
-		return false
-	if not _exits_armed:
-		_exits_armed = nearest_d > EXIT_RADIUS + EXIT_REARM
-		return false
-	if nearest_d > EXIT_RADIUS:
-		return false
-	_exits_armed = false
-	if not MapProps.is_open(nearest, _flags):
-		show_notice(nearest.lock_text, "Cerrado")
-		return false
-	_waiting = true
-	_player.input_enabled = false
-	_hide_prompt()
-	_reset_pad()
-	exit_requested.emit(nearest.to, nearest.entry)
-	return true
-
-
-## The nearest thing in reach of pos that can be used: {"kind": TALK / NPC / SHOP / INN
-## / CHEST / LEVER / KEY / DOOR, "id": shop, inn or chest id ("" otherwise), "index":
-## the npc's index}, or {}.
-func _nearest_use(pos: Vector3) -> Dictionary:
-	var best := {}
-	var best_d := INF
-	for use in _uses():
-		var d := _flat_distance(pos, use.pos)
-		if d <= use.radius and d < best_d:
-			best = {"kind": use.kind, "id": use.id, "index": use.index}
-			best_d = d
-	return best
-
-
-## The thing a click or tap at a screen point means ({} if none): within NPC_TAP_RADIUS of it
-## at TAP_HEIGHT, or, for a figure, at FIGURE_TOP_TAP_HEIGHT too.
-func _tapped_use(screen: Vector2) -> Dictionary:
-	var origin := _camera.project_ray_origin(screen)
-	var normal := _camera.project_ray_normal(screen)
-	var low: Variant = Plane(Vector3.UP, TAP_HEIGHT).intersects_ray(origin, normal)
-	var high: Variant = Plane(Vector3.UP, FIGURE_TOP_TAP_HEIGHT).intersects_ray(origin, normal)
-	if low == null or high == null:
-		return {}
-	for use in _uses():
-		var on_top: bool = use.kind in NPC_KINDS.values() \
-			and _flat_distance(high, use.pos) <= FIGURE_TOP_TAP_RADIUS
-		if on_top or _flat_distance(low, use.pos) <= NPC_TAP_RADIUS:
-			return {"kind": use.kind, "id": use.id, "index": use.index}
-	return {}
-
-
-## Whether a use asked for by a tap is in reach of the hero now.
-func _in_reach(wanted: Dictionary) -> bool:
-	for use in _uses():
-		if use.kind == wanted.kind and use.id == wanted.id and use.index == wanted.index:
-			return _flat_distance(_player.global_position, use.pos) <= use.radius
-	return false
-
-
-## Everything usable now: the zone's figures, its closed chests and, on a dungeon floor,
-## the lever until pulled, the key until taken and the gates while closed.
-func _uses() -> Array[Dictionary]:
-	var uses: Array[Dictionary] = []
-	for i in zone.npcs.size():
-		var npc: Dictionary = zone.npcs[i]
-		if _figures.hidden.has(npc.name):
-			continue
-		uses.append({"kind": NPC_KINDS[npc.kind], "id": npc.get("id", ""), "index": i,
-			"pos": npc.pos, "radius": TALK_RADIUS})
-	for id in _props.closed_chests():
-		uses.append({"kind": CHEST, "id": id, "index": -1, "pos": Chests.CHESTS[id].pos,
-			"radius": CHEST_RADIUS})
-	if _props.has_portal():
-		uses.append({"kind": PORTAL, "id": "", "index": -1, "pos": zone.portal_pos,
-			"radius": MECHANISM_RADIUS})
-	for well: Dictionary in zone.wells:
-		uses.append({"kind": WELL, "id": well.id, "index": -1, "pos": well.pos,
-			"radius": WELL_RADIUS})
-	if _dungeon == null:
-		return uses
-	var mechanisms := [[ZoneData.LEVER, LEVER, zone.lever_flag],
-		[ZoneData.KEY, KEY, zone.floor_key], [ZoneData.DOOR, DOOR, zone.door_flag]]
-	for mechanism in mechanisms:
-		if mechanism[2] == "" or _flags.get(mechanism[2], false):
-			continue
-		for cell in zone.find_cells(mechanism[0]):
-			uses.append({"kind": mechanism[1], "id": "", "index": -1,
-				"pos": zone.cell_center(cell), "radius": MECHANISM_RADIUS})
-	return uses
-
-
-func _use(use: Dictionary) -> void:
-	match use.get("kind", ""):
-		TALK:
-			talk_requested.emit()
-		NPC, BOARD, ITEM:
-			npc_requested.emit(use.index)
-		SHOP:
-			shop_requested.emit(use.id)
-		INN:
-			inn_requested.emit(use.id)
-		CHEST:
-			chest_opened.emit(use.id)
-		WELL:
-			well_requested.emit(use.id, _props.well_kind(use.id))
-		LEVER:
-			lever_pulled.emit()
-		KEY:
-			key_taken.emit()
-		DOOR:
-			door_used.emit()
-		PORTAL:
-			portal_used.emit()
 
 
 func _connect_standalone() -> void:

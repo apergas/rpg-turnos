@@ -347,7 +347,7 @@ func _build_ui() -> void:
 	add_child(_prompt_box)
 	_prompt = Label.new()
 	_prompt.theme_type_variation = UiTheme.OUTLINED
-	_prompt.text = World.PROMPTS[World.TALK]
+	_prompt.text = MapUses.PROMPTS[MapUses.TALK]
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_prompt_box.add_child(_prompt)
 	# The key of the action, on a badge that is not a status colour.
