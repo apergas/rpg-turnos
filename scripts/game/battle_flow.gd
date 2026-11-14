@@ -47,7 +47,8 @@ func setup(ctx: SessionContext) -> void:
 	_ctx = ctx
 
 
-## The boss of the current map (BattleRewards.boss_id()).
+## The boss of the current map (BattleRewards.boss_id()), or its postgame boss once the game
+## is finished.
 func boss_id() -> String:
 	return BattleRewards.boss_id(_ctx.zone, _ctx.state)
 
