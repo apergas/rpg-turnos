@@ -361,14 +361,6 @@ func _beside(cell: Vector2i) -> Array:
 	return [cell_center(cell), 0.0]
 
 
-## The exit with that id, or an empty Dictionary.
-func exit_by_id(exit_id: String) -> Dictionary:
-	for exit: Dictionary in exits:
-		if exit.id == exit_id:
-			return exit
-	return {}
-
-
 ## An exit or a figure of exits / npcs exists only while its optional "needs" flag is set
 ## and its optional "gone" flag is not (GameState.world_flags). Without them it is always
 ## there, like before the v2.

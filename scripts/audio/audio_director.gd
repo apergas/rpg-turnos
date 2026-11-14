@@ -106,17 +106,6 @@ func play_music(id: String) -> void:
 	_fade.chain().tween_callback(old.stop)
 
 
-## Fades the music out.
-func stop_music() -> void:
-	_music_id = ""
-	_new_fade()
-	for player in _music:
-		_fade.tween_property(player, "volume_linear", 0.0, CROSSFADE)
-	_fade.chain().tween_callback(func() -> void:
-		for player in _music:
-			player.stop())
-
-
 ## Cross-fades over AMBIENT_CROSSFADE to the ambient (an AmbientLibrary id; "" stops it);
 ## does nothing if it already plays. Prints "Ambiente: <id>" on autoplay.
 func play_ambient(id: String) -> void:

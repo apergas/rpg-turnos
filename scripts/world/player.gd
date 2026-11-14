@@ -172,12 +172,6 @@ func _route_direction() -> Vector3:
 	return to_goal.normalized()
 
 
-## Autoplay: walks its route from the first point again (World gave it a new one).
-func restart_route() -> void:
-	_route_index = 0
-	stop_hunt()
-
-
 ## Autoplay: walks to target (a group of monsters) instead of its route.
 func hunt(target: Node3D) -> void:
 	_hunt = target
