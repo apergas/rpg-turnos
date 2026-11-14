@@ -45,11 +45,11 @@ De menos a más riesgo. Los pequeños y transversales van primero porque dejan e
 | Paso | ID | Riesgo | Qué |
 |---|---|---|---|
 | 1 | M-74 | bajo | `RunFlags` y las regiones de autoplay |
-| 2 | M-73 | nulo | Cabeceras `## Constructor:` y la convención en `CLAUDE.md` |
+| 2 | M-73 | nulo | Cabeceras `## Constructor:` y la convención en *Conventions* de `CLAUDE.md` |
 | 3 | M-72 | medio | `BattleActor`: datos, constructores y primitivas |
 | 4 | M-71 | alto | `World`, de pieza en pieza |
 | 5 | M-70 | alto | `Game`, de pieza en pieza (necesita a `World` estable) |
-| 6 | | | La pasada final: las cinco comprobaciones de la referencia, más `CLAUDE.md` y `CHANGELOG.md` |
+| 6 | | | La pasada final: las cinco comprobaciones de la referencia, más `CHANGELOG.md` y el documento maestro |
 
 Cada fila de las tablas del spec es **un commit**, como mucho. Si una pieza sale grande (`MapUses`, `FigureTalk`), se parte en dos commits, y el juego tiene que funcionar entre los dos.
 
@@ -83,7 +83,7 @@ Es la misma receta para todas.
 
    La validación se pasa a la pieza y también a su dueño.
 7. **Ejecutar la partida automática que pasa por esa pieza** (ver la tabla siguiente) y compararla con la referencia.
-8. **Actualizar `CLAUDE.md`:** la entrada del dueño pierde las funciones que se fueron y gana una línea que lo dice («... en `MapHud`»), y la pieza nueva tiene su propia entrada en *Layout*.
+8. **`CLAUDE.md`:** solo se toca si la pieza cambia el mapa de carpetas o uno de sus avisos (por ejemplo, dónde están los arranques de `--autoplay-zone`). Nunca lista funciones ni una entrada por archivo.
 9. **Commit**, con un mensaje que diga qué se movió y adónde, sin atribuciones.
 
 ## Qué ejecutar después de cada pieza

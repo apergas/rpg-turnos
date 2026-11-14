@@ -22,7 +22,7 @@
 - The only accepted WARNING is `Jolt Physics job system exceeded the maximum number of jobs`. Any other `ERROR` or `WARNING` is a real problem.
 - Branch `feature/refactor-1-runflags-builders` from `develop`. It is merged back with `git merge --no-ff`. One task = one commit (Task 1 commits nothing: its files live outside the repo).
 - Commit messages are in English, with no `Co-Authored-By` and no attribution of any kind. Never push.
-- `CLAUDE.md` is updated in the same commit as the code it describes.
+- `CLAUDE.md` changes only when the folder map or one of its gotchas changes; it never lists functions or per-file entries.
 
 ### How to compare a run with the reference (used by every task)
 
@@ -242,7 +242,7 @@ Expected: no `ERROR` or `WARNING` lines, then one number, the size of `index.pck
 - Modify: `scripts/ui/name_entry.gd` (`_accept`)
 - Modify: the `_ready()` of `scripts/story/cutscene_player.gd`, `scripts/story/beyond_screen.gd`, `scripts/ui/credits_screen.gd`, `scripts/battle/battle_scene.gd`, `scripts/ui/dialogue_box.gd`, `scripts/world/player.gd`, `scripts/audio/audio_director.gd`, `scripts/world/world.gd` and `scripts/ui/shop_window.gd`
 - Modify: `scripts/ui/debug_panel.gd` (header comment only)
-- Modify: `CLAUDE.md` (*Layout*: new entry after the `device.gd` one; *Conventions*: one new bullet)
+- Modify: `CLAUDE.md` (*Conventions*: one new bullet)
 
 **Interfaces:**
 - Consumes: nothing.
@@ -606,13 +606,7 @@ APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cm
 
 Expected: the same layout as the `ref/phone/` screenshots. The title is at its phone sizes, the map shows the ☰ button and the use button, and a click on the ground walks there.
 
-- [ ] **Step 13: `CLAUDE.md`**
-
-In *Layout*, right after the line that starts with ``- `scripts/game/device.gd` (`Device`, `RefCounted`)``, insert:
-
-```markdown
-- `scripts/game/run_flags.gd` (`RunFlags`, `RefCounted`) — the only script of the game that reads the command line (`OS.get_cmdline_user_args()`, once, kept in a `static var`; the offline tools of `scripts/tools/` read their own): `autoplay()`, `autoplay_save()`, `autoplay_menu()` and `autoplay_easy()` (these three only with `--autoplay`), `autoplay_zone()` and `autoplay_companion()` (the text after `=`, "" when absent; `Game` keeps its default companion and checks the id), `debug()`, `touch()` (`Device.is_touch()` and `DisplaySettings` ask it). The web build gets no flags.
-```
+- [ ] **Step 13: `CLAUDE.md` *Conventions***
 
 In *Conventions*, after the bullet that starts with `- No autoloads:`, insert:
 
@@ -971,7 +965,6 @@ Three functions have no caller. Removing them changes nothing the player sees.
 
 **Files:**
 - Modify: `scripts/world/zone_data.gd` (`exit_by_id()`), `scripts/world/player.gd` (`restart_route()`), `scripts/audio/audio_director.gd` (`stop_music()`)
-- Modify: `CLAUDE.md`
 
 `scripts/ui/ui_tokens.gd` also has constants nothing reads. They stay: that file is generated from `docs/boost/design-system/tokens.json` and is not edited by hand.
 
@@ -1037,26 +1030,11 @@ APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cm
 
 Compare `task5/v1.log` with `ref/v1.log` as *How to compare a run with the reference* says (the errors `grep`, then the milestone `diff`; the level on `Juego completado` the same, Nv 18).
 
-- [ ] **Step 5: `CLAUDE.md`**
-
-Four edits, each only the words named:
-- *World* entry: remove `` `set_autoplay_route(points)` (autoplay: a copy of these points instead of the zone's route, from the first; `Player.restart_route()`), `` (the item and the comma after it), so `` `set_repel(on)` (...), `` is followed by `` `set_autoplay_hunt(on)` ``.
-- *ZoneData* entry: remove `` `exit_by_id(id)`, `` from "... the floor cell next to those stairs), `exit_by_id(id)`, `all_exits()` ...".
-- *Player* entry: remove the sentence `` `restart_route()` (from the first point, the hunt dropped).`` at its end.
-- *AudioDirector* entry: "(`play_music(id)`, `stop_music()`)" becomes "(`play_music(id)`)".
+- [ ] **Step 5: Commit**
 
 ```bash
 cd /c/Users/peixe/Documents/rpg-turnos
-grep -nE 'exit_by_id|restart_route|stop_music|set_autoplay_route' CLAUDE.md; echo "grep done"
-```
-
-Expected: only `grep done`.
-
-- [ ] **Step 6: Commit**
-
-```bash
-cd /c/Users/peixe/Documents/rpg-turnos
-git add scripts/world/zone_data.gd scripts/world/player.gd scripts/audio/audio_director.gd CLAUDE.md
+git add scripts/world/zone_data.gd scripts/world/player.gd scripts/audio/audio_director.gd
 git commit -m "Delete three unused functions"
 ```
 

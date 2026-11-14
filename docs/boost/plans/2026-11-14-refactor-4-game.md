@@ -24,7 +24,7 @@
   - Branch `feature/refactor-4-game` from `develop`, merged back with `git merge --no-ff`.
   - Commit messages in English, with no `Co-Authored-By` and no attribution of any kind.
   - Never push.
-- `CLAUDE.md` *Layout* is updated in the same commit as the code.
+- `CLAUDE.md` changes only when the folder map or one of its gotchas changes; it never lists functions or per-file entries.
 - Conventions of the repo:
   - `.tscn` files stay as they are;
   - no autoloads;
@@ -181,7 +181,6 @@ Expected: `git status --short` prints nothing, then `Switched to a new branch 'f
 **Files:**
 - Create: `scripts/game/session_context.gd`
 - Modify: `scripts/game/game.gd` (members `play_time`, `_busy`, `_world`, `_potion_count`; `_ready()`)
-- Modify: `CLAUDE.md` (*Layout*, *Conventions*)
 
 **Interfaces:**
 - Produces, for every later task:
@@ -305,20 +304,10 @@ Expected:
 - `save`: no error lines and no milestone difference, and the `Guardado:` and `Cargado:` lines identical (`IGUALES`).
 - `v1`: no error lines and no milestone difference; both end lines (reference and new) say `Juego completado: Nv 18`.
 
-- [ ] **Step 6: `CLAUDE.md`**
-
-Insert this entry right after the `scripts/game/game.gd` (`Game`) entry of *Layout*:
-
-```markdown
-- `scripts/game/session_context.gd` (`SessionContext`, `RefCounted`, M-70) — what the pieces of `Game` share, built by `Game._make_context()`: `state`, `world` (the current map; `Game` sets it each time a map is built), `zone` (read-only, `world.zone`), `audio`, `options`, `slot` (set once), `play_time` (seconds played, counted by `Game._process()`), `busy` (written only by `Game._set_busy()`), the Callables `fade` (`await fade.call(alpha)`), `autosave` (`autosave.call(notice) -> Dictionary`, empty if not written), `set_busy`, `refresh_status`, `play_map_music`, and `potion_count()`. A piece reads the map through it every time and never keeps a `World` of its own.
-```
-
-At the end of the `Game` entry, append: ` M-70: the play time, the busy flag and the current map live in its SessionContext (_ctx).`
-
-- [ ] **Step 7: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/session_context.gd scripts/game/game.gd CLAUDE.md && git commit -m "Add SessionContext and move play time, busy and the current map into it"
+cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/session_context.gd scripts/game/game.gd && git commit -m "Add SessionContext and move play time, busy and the current map into it"
 ```
 
 ---
@@ -328,7 +317,6 @@ cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/session_context.g
 **Files:**
 - Create: `scripts/story/credits_data.gd`
 - Modify: `scripts/game/game.gd` (remove `AUTHOR`, `_credits_sections`, `_v2_credits_sections`, `_v2_numbers`, `_clock`, `_summary`)
-- Modify: `CLAUDE.md`
 
 **Interfaces:**
 - Produces:
@@ -455,22 +443,10 @@ Expected:
 - `v1`: no error lines and no milestone difference; `Juego completado: Nv 18` in both end lines.
 - `v2`: no error lines and no milestone difference; `Juego completado (v2): Nv 40` in both end lines.
 
-- [ ] **Step 5: `CLAUDE.md`**
+- [ ] **Step 5: Commit**
 
 ```bash
-cd /c/Users/peixe/Documents/rpg-turnos && perl -pi -e 's/`_credits_sections\(/`CreditsData.credits_sections(/g; s/`_v2_credits_sections\(/`CreditsData.v2_credits_sections(/g; s/`_v2_numbers\(/`CreditsData.v2_numbers(/g; s/`AUTHOR`/`CreditsData.AUTHOR`/g' CLAUDE.md
-```
-
-Insert after the `scripts/story/cutscene.gd` (`Cutscene`) entry:
-
-```markdown
-- `scripts/story/credits_data.gd` (`CreditsData`, `RefCounted`, M-70) — pure: what the credits say, from a `GameState`: `credits_sections(state, time_text)` (the v1's), `v2_numbers(state, play_time)` (`{time, battles, since}`: the v2's time and battles since `story.v2_start`), `v2_credits_sections(state, numbers)`, `clock(seconds)` ("h:mm:ss"), `summary(data)` (the one-line JSON of `--autoplay-save`) and `AUTHOR`.
-```
-
-- [ ] **Step 6: Commit**
-
-```bash
-cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/story/credits_data.gd scripts/game/game.gd CLAUDE.md && git commit -m "Move the credits' sections, the clock and the save summary from Game to CreditsData"
+cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/story/credits_data.gd scripts/game/game.gd && git commit -m "Move the credits' sections, the clock and the save summary from Game to CreditsData"
 ```
 
 ---
@@ -480,7 +456,7 @@ cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/story/credits_data.gd 
 **Files:**
 - Create: `scripts/game/autoplay_starts.gd`
 - Modify: `scripts/game/game.gd` (consts `ECHO_START`, `MEDAL_TOUR`, `MEDAL_TOUR_CHANCE`, `MEDAL_TOUR_TIME`, `V2_STARTS`, `AUTOPLAY_ZONES`, `AUTOPLAY_INN_RATIO`, `AUTOPLAY_STALL_S`, `AUTOPLAY_BOSS_HP`, `AUTOPLAY_BOSS_MP`; func `_rested_for_boss`; the companion block of `_ready()`)
-- Modify: `CLAUDE.md`
+- Modify: `CLAUDE.md` (*Layout*: the line on the `--autoplay-zone=<id>` starts)
 
 **Interfaces:**
 - Consumes: `RunFlags.autoplay_companion() -> String` ("" when absent).
@@ -579,15 +555,7 @@ Expected: `Zona de inicio: jungla (Nv 20)` and no `ERROR`.
 
 - [ ] **Step 5: `CLAUDE.md`**
 
-```bash
-cd /c/Users/peixe/Documents/rpg-turnos && perl -pi -e 's/`(AUTOPLAY_ZONES|ECHO_START|MEDAL_TOUR_CHANCE|MEDAL_TOUR_TIME|MEDAL_TOUR|V2_STARTS|AUTOPLAY_STALL_S|AUTOPLAY_INN_RATIO|AUTOPLAY_BOSS_HP|AUTOPLAY_BOSS_MP)`/`AutoplayStarts.$1`/g' CLAUDE.md
-```
-
-Insert after the `SessionContext` entry:
-
-```markdown
-- `scripts/game/autoplay_starts.gd` (`AutoplayStarts`, `RefCounted`, M-70) — pure data: the starts of `--autoplay-zone=<id>` (`AUTOPLAY_ZONES`, `ECHO_START`, `MEDAL_TOUR` with `MEDAL_TOUR_CHANCE` / `MEDAL_TOUR_TIME`, `V2_STARTS`), the autoplay thresholds (`AUTOPLAY_INN_RATIO`, `AUTOPLAY_STALL_S`, `AUTOPLAY_BOSS_HP`, `AUTOPLAY_BOSS_MP`; `rested_for_boss(hero)`) and `companion()` (`--autoplay-companion=<id>`, `DEFAULT_COMPANION` "brena" if none or not a companion).
-```
+In *Layout*, in the line that starts with ``- The `--autoplay-zone=<id>` starts are `AUTOPLAY_ZONES` in``, change `` in `game.gd` `` to `` in `autoplay_starts.gd` ``. Nothing else in `CLAUDE.md` changes.
 
 - [ ] **Step 6: Commit**
 
@@ -602,7 +570,6 @@ cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/autoplay_starts.g
 **Files:**
 - Create: `scripts/game/battle_rewards.gd`
 - Modify: `scripts/game/game.gd` (consts `BOSS_NOTICES`, `REWARD_LINE`, `KEY_ITEM_NOTICE`; funcs `_note_enemies`, `_give_family_rewards`, `_boss_notice`; bodies of `_boss_id`, `_boss_wanted`; the won block of `_on_encounter`)
-- Modify: `CLAUDE.md`
 
 **Interfaces:**
 - Produces:
@@ -826,22 +793,10 @@ Expected:
 - `save`: `IGUALES`.
 - The `Medalla:` counts: a number of the same order in both logs (the drops are random).
 
-- [ ] **Step 6: `CLAUDE.md`**
+- [ ] **Step 6: Commit**
 
 ```bash
-cd /c/Users/peixe/Documents/rpg-turnos && perl -pi -e 's/`_give_family_rewards\(/`BattleRewards.family_rewards(/g; s/`_note_enemies\(/`BattleRewards.note_enemies(/g; s/`(BOSS_NOTICES|REWARD_LINE)`/`BattleRewards.$1`/g' CLAUDE.md
-```
-
-Insert after the `AutoplayStarts` entry:
-
-```markdown
-- `scripts/game/battle_rewards.gd` (`BattleRewards`, `RefCounted`, M-70) — pure: `boss_id(zone, state)` (the zone's boss, or its `postgame_boss_id` once the game is finished), `boss_wanted(zone, state, postgame_allowed)`, `note_enemies(state, enemies, beaten)` (only the enemies with a bestiary card), `family_rewards(state)` (every family newly complete: its flag, its piece and the lines), `boss_notice(state, boss)` (`BOSS_NOTICES`, `KEY_ITEM_NOTICE`), and `after_victory(state, zone, enemies, gold_won, medals_won, boss)`: everything a won battle gives, returned as `{notice, reward_lines, scene, mission_done, finished_quests, family_lines, ending_v2}` (`REWARD_LINE` before a boss's first-victory prize; no family prize after the Devorador's first fall).
-```
-
-- [ ] **Step 7: Commit**
-
-```bash
-cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/battle_rewards.gd scripts/game/game.gd CLAUDE.md && git commit -m "Move what a victory gives, the boss rules and the bestiary notes from Game to BattleRewards"
+cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/battle_rewards.gd scripts/game/game.gd && git commit -m "Move what a victory gives, the boss rules and the bestiary notes from Game to BattleRewards"
 ```
 
 ---
@@ -855,7 +810,7 @@ cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/battle_rewards.gd
   - vars `_zone`, `_rng`;
   - funcs `_switch_zone`, `_on_exit`, `_on_travel_requested`, `_on_portal`, `_show_portal`, `_go_to_town`, `_respawn_groups`, `_spawn_rare`, `_to_place`;
   - new `_make_pieces`, `_add_pieces`, `_on_world_replaced`, `_on_zone_switched`, `_on_portal_taken`.
-- Modify: `CLAUDE.md`
+- Modify: `CLAUDE.md` (*Conventions*)
 
 **Interfaces:**
 - Consumes: `SessionContext` (Task 1), `BattleRewards.boss_id()` (Task 4), `CreditsData.clock()` (Task 2).
@@ -1089,25 +1044,13 @@ Expected:
 - `medallas`: `12/12 · premios 5/5`;
 - the count is above 0, so the Ala, its portal or a defeat's way back were played.
 
-- [ ] **Step 6: `CLAUDE.md`**
-
-```bash
-cd /c/Users/peixe/Documents/rpg-turnos && perl -pi -e 's/`_switch_zone\(/`ZoneTravel.switch_zone(/g; s/`_respawn_groups\(/`ZoneTravel.respawn_groups(/g; s/`_spawn_rare\(/`ZoneTravel.spawn_rare(/g; s/`_go_to_town\(/`ZoneTravel.go_to_town(/g; s/`_on_portal\(/`ZoneTravel.on_portal(/g; s/`_to_place\(/`ZoneTravel.to_place(/g' CLAUDE.md
-```
-
-Insert after the `BattleRewards` entry:
-
-```markdown
-- `scripts/game/zone_travel.gd` (`ZoneTravel`, `Node`, a piece of `Game`, M-70) — the change of map: `switch_zone(zone_id, entry_id)` (builds the zone's `World`, the Caravana dressed by `CampLook`, and hands it to `Game` with `world_replaced(world)` before touching it; then wells, entry, chests, explored map, flags, portal, boss (`update_boss`), the Slime de Metal, the status, the music and ambient prepared under black, `village_checked(true)` inside a village and `zone_switched(zone_id)`), `on_exit()` (an arch or stairs), `on_travel_requested()` (the Ala de viaje and its portal), `on_portal()` (the way back, `portal_taken`), `show_portal()`, `go_to_town()` (a defeat), `respawn_groups()`, `spawn_rare()` and the static `to_place(place)` ("a Villaclaro", "al refugio de la mina"). It awaits `check_arrival_line` and calls `check_village_scene` and `update_boss`, Callables `Game` wires.
-```
+- [ ] **Step 6: `CLAUDE.md` *Conventions***
 
 Append to the *Conventions* list:
 
 ```markdown
 - `Game` is a coordinator: each job of a session is a piece (`ZoneTravel`, `StoryFlow`, `CaravanFlow`, `FigureTalk`, `BattleFlow`, `GameAutoplay`, `GameDebug`), a `Node` child of `Game` (never of the `World`, which is freed on every change of zone, taking any `await` with it) that gets a `SessionContext` in `setup()`. A piece never stores `Game`. What it must have another piece do, and wait for, is a public `Callable` field (`await play_scene.call(id)`) that `Game` wires in `_add_pieces()`; what it only reports is a signal that `Game` connects. Only `GameAutoplay` and `GameDebug` are handed other pieces, and they use only their public functions.
 ```
-
-At the end of the `Game` entry, append: ` The zone changes, exits, the Ala and its portal, the way back to the village and the groups' respawn are in ZoneTravel.`
 
 - [ ] **Step 7: Commit**
 
@@ -1126,7 +1069,6 @@ cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/zone_travel.gd sc
   - vars `_cutscenes`, `_load_failed`;
   - funcs `_play_scene`, `_play_prologue`, `_check_village_scene`, `_check_arrival_line`, `_scene_travel`, `_scene_flag`, `_finish_game`, `_finish_v2`, `_build_cutscenes`;
   - new `_on_game_completed`, `_on_v2_completed`.
-- Modify: `CLAUDE.md`
 
 **Interfaces:**
 - Consumes: `ZoneTravel.switch_zone()`, `CreditsData`, `SessionContext`.
@@ -1314,24 +1256,10 @@ Expected:
 - `save`: `IGUALES`;
 - the three end lines are there: `Familias completas: n/5`, `Derrotas: n`, `Medallas: n/12 (enemigos comunes vencidos: n)`.
 
-- [ ] **Step 6: `CLAUDE.md`**
+- [ ] **Step 6: Commit**
 
 ```bash
-cd /c/Users/peixe/Documents/rpg-turnos && perl -pi -e 's/`_play_scene\(/`StoryFlow.play_scene(/g; s/`_play_prologue\(/`StoryFlow.play_prologue(/g; s/`_check_village_scene\(/`StoryFlow.check_village_scene(/g; s/`_check_arrival_line\(/`StoryFlow.check_arrival_line(/g; s/`_scene_travel\(/`StoryFlow._scene_travel(/g; s/`_scene_flag\(/`StoryFlow._scene_flag(/g; s/`_finish_game\(/`StoryFlow.finish_game(/g; s/`_finish_v2\(/`StoryFlow.finish_v2(/g' CLAUDE.md
-```
-
-Insert after the `CreditsData` entry:
-
-```markdown
-- `scripts/story/story_flow.gd` (`StoryFlow`, `Node`, a piece of `Game`, M-70) — the story on the map: owns the `CutscenePlayer` (`fade` from the context, `set_flag` and `travel` its own `_scene_flag()` / `_scene_travel()`), `play_scene(id)` (marks it seen, fills the hero's and the companion's names, the ambient back after it), `play_prologue()` (the slimes quest, `LOAD_FAILED_NOTICE` when a save could not be read: `load_failed`), `check_village_scene()` (the first visit's scene, the caravan's arrival in Villaclaro, then `choose_companion` after `caravana_campamento`), `check_arrival_line()`, `finish_game()` and `finish_v2()` (the credits through `CreditsData`, then `quit_requested`; on autoplay `game_completed(time_text)` / `v2_completed(numbers)` first, so the numbers are printed before the title). Callables `switch_zone`, `choose_companion`, `show_touch_hint`, wired by `Game`.
-```
-
-At the end of the `Game` entry, append: ` The cutscenes, the prologue and the endings are in StoryFlow.`
-
-- [ ] **Step 7: Commit**
-
-```bash
-cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/story/story_flow.gd scripts/game/game.gd CLAUDE.md && git commit -m "Move the cutscenes, the prologue and both endings from Game to StoryFlow"
+cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/story/story_flow.gd scripts/game/game.gd && git commit -m "Move the cutscenes, the prologue and both endings from Game to StoryFlow"
 ```
 
 ---
@@ -1342,7 +1270,6 @@ cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/story/story_flow.gd sc
 - Create: `scripts/game/caravan_flow.gd`
 - Modify: `scripts/game/game.gd` (consts `CARAVAN_CHIEF`, `JOIN_QUESTION`, `LEAVE_QUESTION`; funcs `_ask_departure`, `_choose_companion`)
 - Modify: `scripts/story/story_flow.gd` (`check_village_scene()`)
-- Modify: `CLAUDE.md`
 
 **Interfaces:**
 - Consumes: `StoryFlow.play_scene()`, `ZoneTravel.switch_zone()`, `AutoplayStarts.DEFAULT_COMPANION`.
@@ -1475,24 +1402,10 @@ Expected:
 - the `grep` shows `Escena: caravana_llega`, the two `Pregunta: ... -> Sí` / `-> Partir` lines, `Escena: caravana_parte`, `Escena: caravana_campamento` and `Compañero: Brena`, in that order;
 - the last command prints `Compañero: Tadeo`.
 
-- [ ] **Step 6: `CLAUDE.md`**
+- [ ] **Step 6: Commit**
 
 ```bash
-cd /c/Users/peixe/Documents/rpg-turnos && perl -pi -e 's/`_ask_departure\(/`CaravanFlow.ask_departure(/g; s/`_choose_companion\(/`CaravanFlow.choose_companion(/g; s/`CARAVAN_CHIEF`/`CaravanFlow.CARAVAN_CHIEF`/g' CLAUDE.md
-```
-
-Insert after the `ZoneTravel` entry:
-
-```markdown
-- `scripts/game/caravan_flow.gd` (`CaravanFlow`, `Node`, a piece of `Game`, M-70) — the caravan of the v2: the static `arrival_scene(state, zone_id)` ("caravana_llega" in Villaclaro once the v1 is finished, until seen; `StoryFlow.check_village_scene()` asks it), `ask_departure()` (the Jefe's two questions `JOIN_QUESTION` / `LEAVE_QUESTION` with the focus on the answer that changes nothing, `caravana_parte`, `GameState.leave_for_caravan()`, `story.v2_start`, the Caravana under black) and `choose_companion()` (the `Compañeros` shop through the `ShopWindow` given in `setup()`; autoplay takes `autoplay_companion` at once); `autoplay_leaves` (only the `AutoplayStarts.V2_STARTS` answer Sí). `CARAVAN_CHIEF` "Jefe de caravana". Callables `play_scene` and `switch_zone`.
-```
-
-At the end of the `Game` entry, append: ` The Jefe de caravana's questions and the choice of companion are in CaravanFlow.`
-
-- [ ] **Step 7: Commit**
-
-```bash
-cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/caravan_flow.gd scripts/story/story_flow.gd scripts/game/game.gd CLAUDE.md && git commit -m "Move the caravan's questions and the choice of companion from Game to CaravanFlow"
+cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/caravan_flow.gd scripts/story/story_flow.gd scripts/game/game.gd && git commit -m "Move the caravan's questions and the choice of companion from Game to CaravanFlow"
 ```
 
 ---
@@ -1506,7 +1419,6 @@ cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/caravan_flow.gd s
   - var `_shop_changed`;
   - funcs `_on_talk`, `_quest_npc`, `_on_npc`, `_talk_to_collector`, `_after_quest_talk`, `_done_text`, `_figure_with_quest`, `_on_shop`, `_on_inn`;
   - `_build_shop()`.
-- Modify: `CLAUDE.md`
 
 **Interfaces:**
 - Consumes: `CaravanFlow.CARAVAN_CHIEF`, `CaravanFlow.choose_companion()` / `ask_departure()`, `StoryFlow.check_village_scene()`, `ZoneTravel.respawn_groups()` / `spawn_rare()`, `AutoplayStarts.AUTOPLAY_INN_RATIO` / `rested_for_boss()`.
@@ -1646,24 +1558,10 @@ cd /c/Users/peixe/Documents/rpg-turnos && APPDATA="C:/Users/peixe/AppData/Local/
 
 Look at the frames around the first `Comprar` the autoplay makes (the merchant of Villaclaro). The window shows "¿Comprar o vender?" and the buy page as before. Delete `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4/shop` afterwards.
 
-- [ ] **Step 5: `CLAUDE.md`**
+- [ ] **Step 5: Commit**
 
 ```bash
-cd /c/Users/peixe/Documents/rpg-turnos && perl -pi -e 's/`_on_shop\(/`FigureTalk.on_shop(/g; s/`_on_inn\(/`FigureTalk.on_inn(/g; s/`_talk_to_collector\(/`FigureTalk.talk_to_collector(/g; s/`_after_quest_talk\(/`FigureTalk._after_quest_talk(/g; s/`_done_text\(/`FigureTalk._done_text(/g; s/`_figure_with_quest\(/`FigureTalk._figure_with_quest(/g; s/`INN_NIGHT_TIME`/`FigureTalk.INN_NIGHT_TIME`/g' CLAUDE.md
-```
-
-Insert after the `CaravanFlow` entry:
-
-```markdown
-- `scripts/game/figure_talk.gd` (`FigureTalk`, `Node`, a piece of `Game`, M-70) — what the figures do when used: `on_talk()` (the Abuela Rosa: `HEAL_LINE`, the village quest, her potions), `on_npc(index)` (the QuestLog first, else the chapter lines; the Coleccionista through `talk_to_collector()`, the Jefe de caravana through `choose_companion` / `ask_departure`), `_after_quest_talk(done)` and `_done_text(done)` (one notice for every quest delivered; the seeds used at once on autoplay), `_figure_with_quest(kind, id)`, `on_shop(shop_id)` (the `ShopWindow` given in `setup()`, autosaving when `changed`) and `on_inn(inn_id)` (the keeper's line, the free night, `INN_NIGHT_TIME`). Callables `update_boss`, `choose_companion`, `ask_departure`, `check_village_scene`, `respawn_groups`, `spawn_rare`.
-```
-
-At the end of the `Game` entry, append: ` Talking, shops, inns and the Coleccionista are in FigureTalk.`
-
-- [ ] **Step 6: Commit**
-
-```bash
-cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/figure_talk.gd scripts/game/game.gd CLAUDE.md && git commit -m "Move talking, shops, inns and the Coleccionista from Game to FigureTalk"
+cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/figure_talk.gd scripts/game/game.gd && git commit -m "Move talking, shops, inns and the Coleccionista from Game to FigureTalk"
 ```
 
 ---
@@ -1673,7 +1571,6 @@ cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/figure_talk.gd sc
 **Files:**
 - Modify: `scripts/game/figure_talk.gd`
 - Modify: `scripts/game/game.gd` (consts `LEVER_NOTICE`, `KEY_NOTICE`, `DOOR_NOTICE`; funcs `_on_well`, `_on_chest`, `_on_lever`, `_on_key`, `_on_door`)
-- Modify: `CLAUDE.md`
 
 **Interfaces:**
 - Produces:
@@ -1733,14 +1630,10 @@ Expected:
 - each run: no error lines and no milestone difference;
 - the count is `3` or more: the lever, the key and the gate notices are printed on autoplay.
 
-- [ ] **Step 5: `CLAUDE.md`**
-
-In the `FigureTalk` entry, before ` Callables`, add: `on_well(id, kind)` (`Wells.drink()`), `on_chest(chest_id)`, `on_lever()`, `on_key()` and `on_door()` (`LEVER_NOTICE`, `KEY_NOTICE`, `DOOR_NOTICE`, each with a silent autosave);. At the end of the `Game` entry, change ` Talking, shops, inns and the Coleccionista are in FigureTalk.` to ` Talking, shops, inns, the Coleccionista, wells, chests, the lever, the key and the gates are in FigureTalk.`
-
-- [ ] **Step 6: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/figure_talk.gd scripts/game/game.gd CLAUDE.md && git commit -m "Move wells, chests, the lever, the key and the gates from Game to FigureTalk"
+cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/figure_talk.gd scripts/game/game.gd && git commit -m "Move wells, chests, the lever, the key and the gates from Game to FigureTalk"
 ```
 
 ---
@@ -1753,7 +1646,6 @@ cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/figure_talk.gd sc
   - vars `_quiet_s`, `_autoplay_companion`, `_autoplay_v2`, `_defeats`, `_autoplay_echo`, `_echo_fights`, `_echo_wins`, `_medal_tour`, `_common_beaten`, `_last_missions`, `_last_gear_text`, and `_autoplay` / `_autoplay_save` / `_autoplay_menu` if plan 1 kept them;
   - funcs `_apply_autoplay_zone`, `_autoplay_retreat`, `_wants_retreat`, `_needs_groups`, `_autoplay_hunts`, `_boss_needs_rest`, `_autoplay_restock`, `_on_medal_tour_timeout`, `_finish_medal_tour`, `_on_zone_switched`, `_on_portal_taken`, `_on_game_completed`, `_on_v2_completed`;
   - the autoplay parts of `_process()`, `_ready()`, `_on_encounter()` and `_refresh_status()`.
-- Modify: `CLAUDE.md`
 
 **Interfaces:**
 - Consumes: `ZoneTravel` (`switch_zone`, `respawn_groups`, `on_travel_requested`, `on_portal`), `FigureTalk` (`on_inn`, `on_shop`, `on_npc`, `talk_to_collector`), `BattleRewards.boss_wanted()`, `AutoplayStarts`, `CreditsData.clock()`.
@@ -2162,24 +2054,10 @@ cd /c/Users/peixe/Documents/rpg-turnos && APPDATA="C:/Users/peixe/AppData/Local/
 
 Expected: no output.
 
-- [ ] **Step 6: `CLAUDE.md`**
+- [ ] **Step 6: Commit**
 
 ```bash
-cd /c/Users/peixe/Documents/rpg-turnos && perl -pi -e 's/`_autoplay_restock\(/`GameAutoplay.restock(/g; s/`_wants_retreat\(/`GameAutoplay.wants_retreat(/g; s/`_needs_groups\(/`GameAutoplay.needs_groups(/g; s/`_autoplay_hunts\(/`GameAutoplay.hunts(/g; s/`_boss_needs_rest\(/`GameAutoplay.boss_needs_rest(/g; s/`_autoplay_retreat\(/`GameAutoplay.retreat(/g; s/`_autoplay_v2`/`GameAutoplay.plays_v2`/g; s/`_common_beaten`/`GameAutoplay._common_beaten`/g' CLAUDE.md
-```
-
-Insert after the `FigureTalk` entry:
-
-```markdown
-- `scripts/game/game_autoplay.gd` (`GameAutoplay`, `Node`, a piece of `Game` only with `--autoplay`, M-70) — the self-playing run: `apply_start()` (the start of `--autoplay-zone=<id>` from `AutoplayStarts.AUTOPLAY_ZONES`, before the first map; sets `echo`, `plays_v2`, `medal_tour`), `step(delta)` (called by `Game._process()`: a quiet map's groups back, or a retreat for the boss), `after_battle(outcome)` (awaited by `BattleFlow`: the medal tour's end, `retreat()`, the groups back, `restock()` after a defeat), `wants_retreat()`, `needs_groups()`, `hunts()`, `boss_needs_rest()`, `start_medal_tour()` / `finish_medal_tour()`, and the prints a reader of the log follows (`on_zone_switched()` "Zona: ...", `note_status()` the missions, gold and gear, `on_battle_lost()` "Derrota en ...", `on_echo_fought()`, `on_enemies_beaten()` "Medalla: ...", `print_game_completed()` / `print_v2_completed()` after the credits). `companion` comes from `AutoplayStarts.companion()`. It is handed `ZoneTravel` and `FigureTalk` (`use_pieces()`) and uses only their public functions.
-```
-
-At the end of the `Game` entry, append: ` The self-playing run is in GameAutoplay; Game only calls step() and passes echo, plays_v2 and companion on.`
-
-- [ ] **Step 7: Commit**
-
-```bash
-cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/game_autoplay.gd scripts/game/game.gd CLAUDE.md && git commit -m "Move the self-playing run from Game to GameAutoplay"
+cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/game_autoplay.gd scripts/game/game.gd && git commit -m "Move the self-playing run from Game to GameAutoplay"
 ```
 
 ---
@@ -2189,7 +2067,6 @@ cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/game_autoplay.gd 
 **Files:**
 - Create: `scripts/game/battle_flow.gd`
 - Modify: `scripts/game/game.gd` (const `BATTLE_SCENE`; funcs `_on_encounter`, `_update_boss`, `_boss_id`, `_boss_wanted`)
-- Modify: `CLAUDE.md`
 
 **Interfaces:**
 - Consumes: `BattleRewards`, `ZoneTravel.go_to_town()` / `to_place()`, `StoryFlow.play_scene()` / `finish_game()` / `finish_v2()`, `GameAutoplay.after_battle()` and its handlers, `CreditsData.summary()`, `AutoplayStarts.rested_for_boss()`.
@@ -2507,24 +2384,10 @@ cd /c/Users/peixe/Documents/rpg-turnos && APPDATA="C:/Users/peixe/AppData/Local/
 
 The frames of the first battle show the stage, the hero and the enemies, the menu, then the victory card and the map coming back. Delete `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p4/battle` afterwards.
 
-- [ ] **Step 5: `CLAUDE.md`**
+- [ ] **Step 5: Commit**
 
 ```bash
-cd /c/Users/peixe/Documents/rpg-turnos && perl -pi -e 's/`_update_boss\(/`BattleFlow.update_boss(/g; s/`_boss_id\(/`BattleFlow.boss_id(/g' CLAUDE.md
-```
-
-Insert after the `GameAutoplay` entry:
-
-```markdown
-- `scripts/game/battle_flow.gd` (`BattleFlow`, `Node`, a piece of `Game`, M-70) — a battle on top of the map: `on_encounter(boss)` (the formation touched or `boss_id()`'s boss, the `BattleScene` added under this piece with the options, the creature and `medal_chance`; then `BattleRewards.after_victory()` or a defeat's way back (`go_to_town`, "Has vuelto ..."), the boss's cutscene (`play_scene`) or notice, the families, the missions done, `finish_v2` / `finish_game` when due, the save; `print_save` is the `--autoplay-save` exit, `quit_requested`), `update_boss()`, `boss_id()`, `boss_wanted()` (`echo_wanted`: autoplay meets the Eco only on `--autoplay-zone=eco`). Signals `battle_started`, `enemies_beaten(enemies, medals_won)`, `battle_lost(zone_id)`, `echo_fought(won)` (the autoplay's prints) and the Callable `after_battle` (`GameAutoplay.after_battle()`, awaited once the map is the player's).
-```
-
-At the end of the `Game` entry, append: ` The battles and the boss on the map are in BattleFlow.`
-
-- [ ] **Step 6: Commit**
-
-```bash
-cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/battle_flow.gd scripts/game/game.gd CLAUDE.md && git commit -m "Move the battle on the map and the boss's presence from Game to BattleFlow"
+cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/battle_flow.gd scripts/game/game.gd && git commit -m "Move the battle on the map and the boss's presence from Game to BattleFlow"
 ```
 
 ---
@@ -2534,7 +2397,6 @@ cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/battle_flow.gd sc
 **Files:**
 - Create: `scripts/game/game_debug.gd`
 - Modify: `scripts/game/game.gd` (funcs `_build_debug`, `_on_debug`, `_debug_go`; var `_debug`; `_set_busy()`)
-- Modify: `CLAUDE.md`
 
 **Interfaces:**
 - Consumes: `ZoneTravel.switch_zone()` / `respawn_groups()`, `BattleFlow.update_boss()`, `StoryFlow.check_village_scene()`, `BattleRewards.family_rewards()`, `World.debug_no_groups`.
@@ -2669,24 +2531,10 @@ Run and compare `save` (*How to compare*).
 
 Expected: `IGUALES`.
 
-- [ ] **Step 6: `CLAUDE.md`**
+- [ ] **Step 6: Commit**
 
 ```bash
-cd /c/Users/peixe/Documents/rpg-turnos && perl -pi -e 's/`_on_debug\(/`GameDebug._on_debug(/g; s/`_debug_go\(/`GameDebug._debug_go(/g' CLAUDE.md
-```
-
-Insert after the `BattleFlow` entry:
-
-```markdown
-- `scripts/game/game_debug.gd` (`GameDebug`, `Node`, a piece of `Game` only with `--debug`, M-70, `PROCESS_MODE_ALWAYS`) — owns the `DebugPanel` (layer `UiTokens.LAYER_DEBUG`; open: busy, status hidden) and does its actions in `_on_debug()`, each printed as `Depuración: ...`; Ir a is `_debug_go()` (under black, no autosave). `set_available(on)` from `Game._set_busy()`. Handed `ZoneTravel`, `BattleFlow` and `StoryFlow` in `setup()`.
-```
-
-At the end of the `Game` entry, append: ` The debug panel's actions are in GameDebug.`
-
-- [ ] **Step 7: Commit**
-
-```bash
-cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/game_debug.gd scripts/game/game.gd CLAUDE.md && git commit -m "Move the debug panel's actions from Game to GameDebug"
+cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/game_debug.gd scripts/game/game.gd && git commit -m "Move the debug panel's actions from Game to GameDebug"
 ```
 
 ---
@@ -2695,7 +2543,7 @@ cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/game_debug.gd scr
 
 **Files:**
 - Modify: `scripts/game/game.gd` (header comment only)
-- Modify: `CLAUDE.md`, `CHANGELOG.md`, `docs/boost/documento-maestro.md`
+- Modify: `CHANGELOG.md`, `docs/boost/documento-maestro.md`
 
 **Interfaces:**
 - Consumes: everything above.
@@ -2780,30 +2628,7 @@ Expected:
 
 Then serve `build/web` with any static server (for example `python -I -m http.server 8000 --directory build/web`) and open it in the browser pane. Start a new game, play the prologue and reach the map. Expected: no new errors in the browser console.
 
-- [ ] **Step 5: `CLAUDE.md`**
-
-1. Check that no reference to a moved name is left:
-
-```bash
-cd /c/Users/peixe/Documents/rpg-turnos && grep -nE '`_(switch_zone|respawn_groups|spawn_rare|go_to_town|on_portal|to_place|play_scene|play_prologue|check_village_scene|check_arrival_line|finish_game|finish_v2|ask_departure|choose_companion|on_shop|on_inn|talk_to_collector|autoplay_restock|wants_retreat|needs_groups|autoplay_hunts|boss_needs_rest|autoplay_retreat|update_boss|boss_id|give_family_rewards|note_enemies|credits_sections|v2_credits_sections|v2_numbers|on_debug|debug_go)\(' CLAUDE.md
-```
-
-Expected: no output.
-
-2. In the `scripts/game/game.gd` (`Game`) entry, right after `(`Game`) — `, insert: `the session coordinator (M-70: what follows is the session as a whole; each name says which piece holds it, and the entries of the pieces follow this one): `
-3. Check the *Conventions* note on scenes that are almost empty (the spec's decision):
-
-```bash
-cd /c/Users/peixe/Documents/rpg-turnos && grep -n 'almost empty' CLAUDE.md
-```
-
-If it prints nothing, append to *Conventions*:
-
-```markdown
-- Scenes stay almost empty on purpose: the work is done without the editor, and a hand-written `.tscn` with dozens of nodes is more fragile than code. The Godot equivalent of small reusable scenes here is a node class with one job, a piece (`MapHud`, `ZoneTravel`...), created in code by its owner.
-```
-
-- [ ] **Step 6: `CHANGELOG.md`**
+- [ ] **Step 5: `CHANGELOG.md`**
 
 ```bash
 cd /c/Users/peixe/Documents/rpg-turnos && sed -n 1,5p CHANGELOG.md
@@ -2822,7 +2647,7 @@ Por dentro, más ordenado. El juego no cambia.
 
 When adding to an existing section, add only the last line (the bullet).
 
-- [ ] **Step 7: `docs/boost/documento-maestro.md`**
+- [ ] **Step 6: `docs/boost/documento-maestro.md`**
 
 ```bash
 cd /c/Users/peixe/Documents/rpg-turnos && grep -n 'M-70' docs/boost/documento-maestro.md
@@ -2839,10 +2664,10 @@ Expected: one line.
 | Sin versión · M-70 | Trocear `Game`: `SessionContext` y las piezas `ZoneTravel`, `BattleFlow`, `BattleRewards`, `FigureTalk`, `CaravanFlow`, `StoryFlow`, `CreditsData`, `GameAutoplay`, `AutoplayStarts` y `GameDebug`; `Game` queda como coordinador de la sesión ([spec](specs/2026-11-14-refactor-arquitectura-design.md) · [guía](specs/2026-11-14-refactor-arquitectura-guia.md) · [plan](plans/2026-11-14-refactor-4-game.md)) | hecho |
 ```
 
-- [ ] **Step 8: Commit and merge**
+- [ ] **Step 7: Commit and merge**
 
 ```bash
-cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/game.gd CLAUDE.md CHANGELOG.md docs/boost/documento-maestro.md && git commit -m "Finish splitting Game: header, CLAUDE.md, changelog and master document"
+cd /c/Users/peixe/Documents/rpg-turnos && git add scripts/game/game.gd CHANGELOG.md docs/boost/documento-maestro.md && git commit -m "Finish splitting Game: header, changelog and master document"
 git checkout develop && git merge --no-ff feature/refactor-4-game -m "Merge feature/refactor-4-game into develop" && git log --oneline -3
 ```
 
