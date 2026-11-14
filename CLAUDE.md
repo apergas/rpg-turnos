@@ -94,7 +94,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Conventions
 
-- Before adding or moving GDScript, read the project skill `.claude/skills/structuring-godot-code/`. It says where new code goes (rule, builder or node) and when a big owner gets a separate piece instead of growing.
+- Before adding or moving GDScript, use the global skill `structuring-godot-code`. It says where new code goes (rule, builder or node) and when a big owner gets a separate piece instead of growing. Here, the big owners are `game.gd`, `world.gd` and `battle_actor.gd`. The pieces planned for them are in `docs/boost/specs/2026-11-14-refactor-arquitectura-design.md`.
 - UI colors and sizes come from `UiTokens` / `UiTheme` (the design system in `docs/boost/design-system/`); no `Color(...)` or font size is written by hand in `scripts/ui/` or the 2D parts of the screens. A menu row is `UiTheme.menu_row(Button.new())`; a window with rows gets `UiTheme.add_cursor(window)`.
 - Scenes and scripts are written as text. The `.tscn` files only hold the root node and its script; every other node (stage, UI, actors) is created in code.
 - Game rules live in pure classes (`RefCounted` / `Resource`) that never touch nodes; scenes only play their results back.
