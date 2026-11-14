@@ -46,7 +46,7 @@ class_name Game extends Node
 ## On autoplay it prints the gold and the equipment each time they change, the level and
 ## the play time on every change of zone and, after the credits, the play time of the
 ## whole run (TitleScreen then quits). After a won battle, when the hero needs rest
-## (GameState.needs_rest()) or the map has no group left (_needs_groups()) away from a
+## (GameState.needs_rest()) or the map has no group left (GameAutoplay.needs_groups()) away from a
 ## village, it flies back with an Ala de viaje, sleeps at the inn, restocks at the shop
 ## and goes back through the portal; after a defeat it
 ## sleeps and restocks too. With no Ala de viaje an empty map gets its groups back at once.
@@ -97,33 +97,12 @@ var _save := {}
 var _hero_name := ""
 ## The difficulty chosen for a new game.
 var _difficulty := Difficulty.NORMAL
-## Autoplay: seconds since the last battle or change of map (AUTOPLAY_STALL_S).
-var _quiet_s := 0.0
 var _leaving := false
-var _autoplay := false
-var _autoplay_save := false
-var _autoplay_menu := false
-## --autoplay-companion=<id>: the companion autoplay chooses at the Caravana (Brena if none).
-var _autoplay_companion := "brena"
-## --autoplay-zone=caravana / jungla: autoplay leaves with the caravan and plays the v2.
-var _autoplay_v2 := false
-var _last_missions: Array[String] = []
-var _last_gear_text := ""
 ## The save slot this game writes to (SaveStore; ignored on autoplay runs).
 var _slot := 1
-## Autoplay: defeats so far (each prints "Derrota en <zone> (n)"; the credits say the total).
-var _defeats := 0
-## --autoplay-zone=eco: autoplay goes for the Eco de la Niebla (never on any other run).
-var _autoplay_echo := false
-## --autoplay-zone=eco: fights with the Eco and how many were won, printed after each.
-var _echo_fights := 0
-var _echo_wins := 0
-## --autoplay-zone=medallas: the tour is on.
-var _medal_tour := false
-## Autoplay: common enemies beaten in won battles (the credits print it with the medals, to
-## tune Medals.DROP_CHANCE).
-var _common_beaten := 0
 var _shop: ShopWindow
+## The self-playing run, only with --autoplay (null otherwise).
+var _autopilot: GameAutoplay
 ## The development panel, only with --debug (null otherwise).
 var _debug: DebugPanel
 
@@ -143,10 +122,6 @@ func setup(audio: AudioDirector, options: GameOptions, save: Dictionary,
 
 func _ready() -> void:
 	UiTheme.ensure(get_window())
-	_autoplay = RunFlags.autoplay()
-	_autoplay_save = RunFlags.autoplay_save()
-	_autoplay_menu = RunFlags.autoplay_menu()
-	_autoplay_companion = AutoplayStarts.companion()
 	for line in QuestLog.problems():
 		push_warning(line)
 	if _options == null:
@@ -165,7 +140,7 @@ func _ready() -> void:
 		if info.valid:
 			start_pos = info.position
 			_ctx.play_time = info.play_time
-			if _autoplay_save:
+			if RunFlags.autoplay() and RunFlags.autoplay_save():
 				print("Cargado: %s" % CreditsData.summary(SaveData.from_state(state, info.position,
 					info.play_time)))
 			# The arrival lines of the lands already passed (and of this one) are not said
@@ -178,8 +153,8 @@ func _ready() -> void:
 		state.difficulty = _difficulty
 		if RunFlags.autoplay_easy():
 			state.difficulty = Difficulty.EASY
-	if _save.is_empty() and _autoplay:
-		_apply_autoplay_zone()
+	if _save.is_empty() and _autopilot:
+		_autopilot.apply_start()
 	# A loaded game (or an --autoplay-zone start) may have a family complete already: a
 	# finished game gets the Espada del alba now. After the "Cargado:" line, so the save
 	# round trip still compares what was saved.
@@ -190,7 +165,7 @@ func _ready() -> void:
 	if RunFlags.debug():
 		_build_debug()
 	_add_pieces(load_failed)
-	if _autoplay_menu:
+	if RunFlags.autoplay() and RunFlags.autoplay_menu():
 		# The tour of the pause menu needs the map, not a scene.
 		state.story.mark_seen("prologo")
 	# Busy until the map is ready (no ☰ either): arriving inside a village must not start its
@@ -209,7 +184,7 @@ func _ready() -> void:
 	for id in [MusicLibrary.VILLAGE, MusicLibrary.VICTORY, MusicLibrary.DEFEAT]:
 		MusicLibrary.build(id)
 	_play_map_music()
-	if _autoplay_menu:
+	if RunFlags.autoplay() and RunFlags.autoplay_menu():
 		get_tree().create_timer(MENU_TOUR_DELAY).timeout.connect(_pause.tour)
 	if not prologue:
 		await _ctx.world.freeze(false)
@@ -222,14 +197,13 @@ func _ready() -> void:
 		_set_busy(false)
 		_show_touch_hint()
 		_story.check_village_scene()
-		if _medal_tour:
-			print("Medallas: a cazar en %s" % _ctx.zone.id)
-			get_tree().create_timer(AutoplayStarts.MEDAL_TOUR_TIME).timeout.connect(_on_medal_tour_timeout)
+		if _autopilot:
+			_autopilot.start_medal_tour()
 
 
 ## The first time a phone reaches the map (never on autoplay): how to walk, once for good.
 func _show_touch_hint() -> void:
-	if not Device.is_touch() or _autoplay or _options.touch_hint_seen:
+	if not Device.is_touch() or RunFlags.autoplay() or _options.touch_hint_seen:
 		return
 	_options.touch_hint_seen = true
 	SaveStore.save_options(_options)
@@ -238,18 +212,8 @@ func _show_touch_hint() -> void:
 
 func _process(delta: float) -> void:
 	_ctx.play_time += delta / Engine.time_scale  # a fast battle takes less play time, not more
-	if _autoplay and not _ctx.busy and _ctx.world != null and not _ctx.world.in_village():
-		_quiet_s += delta
-		if _quiet_s > AutoplayStarts.AUTOPLAY_STALL_S and _autoplay_hunts():
-			_quiet_s = 0.0
-			print("Grupos repuestos (partida automática, sin combates)")
-			_travel.respawn_groups()
-		elif _quiet_s > AutoplayStarts.AUTOPLAY_STALL_S and _boss_needs_rest() \
-				and state.inventory.count(Inventory.WING) > 0:
-			# At the boss's level but too worn for it, with no battle coming that would bring
-			# the retreat: one Ala, made here (the quiet clock starts over).
-			_quiet_s = 0.0
-			_autoplay_retreat()
+	if _autopilot:
+		_autopilot.step(delta)
 
 
 ## Back to the title: the map's ambient stops with the game. A Game run on its own frees its
@@ -280,6 +244,9 @@ func _make_pieces() -> void:
 	_story = StoryFlow.new()
 	_caravan = CaravanFlow.new()
 	_talk = FigureTalk.new()
+	if RunFlags.autoplay():
+		_autopilot = GameAutoplay.new()
+		_autopilot.setup(_ctx)
 
 
 ## The pieces set up, wired and added, where Game used to build what they hold (node
@@ -291,9 +258,7 @@ func _add_pieces(load_failed: bool) -> void:
 	_travel.check_village_scene = _story.check_village_scene
 	_travel.update_boss = _update_boss
 	_travel.world_replaced.connect(_on_world_replaced)
-	_travel.zone_switched.connect(_on_zone_switched)
 	_travel.village_checked.connect(_on_village_changed)
-	_travel.portal_taken.connect(_on_portal_taken)
 	add_child(_travel)
 	_story.setup(_ctx)
 	_story.load_failed = load_failed
@@ -301,14 +266,10 @@ func _add_pieces(load_failed: bool) -> void:
 	_story.choose_companion = _caravan.choose_companion
 	_story.show_touch_hint = _show_touch_hint
 	_story.quit_requested.connect(func() -> void: quit_to_title.emit())
-	_story.game_completed.connect(_on_game_completed)
-	_story.v2_completed.connect(_on_v2_completed)
 	add_child(_story)
 	_caravan.setup(_ctx, _shop)
 	_caravan.play_scene = _story.play_scene
 	_caravan.switch_zone = _travel.switch_zone
-	_caravan.autoplay_companion = _autoplay_companion
-	_caravan.autoplay_leaves = _autoplay_v2
 	add_child(_caravan)
 	_talk.setup(_ctx, _shop)
 	_talk.update_boss = _update_boss
@@ -318,6 +279,16 @@ func _add_pieces(load_failed: bool) -> void:
 	_talk.respawn_groups = _travel.respawn_groups
 	_talk.spawn_rare = _travel.spawn_rare
 	add_child(_talk)
+	if _autopilot:
+		_autopilot.use_pieces(_travel, _talk)
+		_travel.zone_switched.connect(_autopilot.on_zone_switched)
+		_travel.portal_taken.connect(_autopilot.reset_quiet)
+		_story.game_completed.connect(_autopilot.print_game_completed)
+		_story.v2_completed.connect(_autopilot.print_v2_completed)
+		_autopilot.quit_requested.connect(func() -> void: quit_to_title.emit())
+		_caravan.autoplay_companion = _autopilot.companion
+		_caravan.autoplay_leaves = _autopilot.plays_v2
+		add_child(_autopilot)
 
 
 ## ZoneTravel built a new map: the old one goes, the new one is first in the tree and stays
@@ -348,99 +319,12 @@ func _on_world_replaced(world: World) -> void:
 	world.stepped.connect(_on_stepped)
 
 
-## A map was built: autoplay's quiet clock starts over, and on autoplay the zone is printed.
-func _on_zone_switched(zone_id: String) -> void:
-	_quiet_s = 0.0
-	if RunFlags.autoplay():
-		print("Zona: %s (Nv %d, %s)" % [zone_id, state.hero.level,
-			CreditsData.clock(_ctx.play_time)])
-
-
-## The return portal was taken: autoplay's quiet clock starts over.
-func _on_portal_taken() -> void:
-	_quiet_s = 0.0
-
-
-## Autoplay: the numbers of the whole run after the v1's credits.
-func _on_game_completed(time_text: String) -> void:
-	print("Juego completado: Nv %d, tiempo de juego %s, misiones %d" % [state.hero.level,
-		time_text, state.quests_done()])
-	print("Familias completas: %d/%d" % [Bestiary.complete_count(state),
-		Bestiary.families(state).size()])
-	print("Derrotas: %d" % _defeats)
-	print("Medallas: %d/%d (enemigos comunes vencidos: %d)" % [state.medals.size(),
-		Medals.MEDALS.size(), _common_beaten])
-
-
-## Autoplay: the numbers of the v2 after its credits.
-func _on_v2_completed(numbers: Dictionary) -> void:
-	print("Juego completado (v2): Nv %d, tiempo en la caravana %s, tiempo de juego %s, misiones de la caravana %d/%d"
-		% [state.hero.level, numbers.time, CreditsData.clock(_ctx.play_time),
-		state.quests.done_of(true), QuestLog.total_of(true)])
-	print("Familias completas: %d/%d" % [Bestiary.complete_count(state),
-		Bestiary.families(state).size()])
-	print("Derrotas: %d" % _defeats)
-	print("Medallas: %d/%d (enemigos comunes vencidos: %d)" % [state.medals.size(),
-		Medals.MEDALS.size(), _common_beaten])
-
-
-## --autoplay-zone=<id>: starts the new game in that zone with AUTOPLAY_ZONES' state.
-func _apply_autoplay_zone() -> void:
-	var start_id := RunFlags.autoplay_zone()
-	if start_id == "":
-		return
-	var start: Dictionary = AutoplayStarts.AUTOPLAY_ZONES.get(start_id, {})
-	var zone_id: String = start.get("zone", start_id)
-	if not zone_id in ZoneData.IDS:
-		push_error("Unknown zone for --autoplay-zone: %s" % start_id)
-		return
-	state.zone_id = zone_id
-	if start.is_empty():
-		return
-	state.hero.experience = start.experience
-	Leveling.apply(state.hero)
-	state.heal_full()
-	state.gold = start.gold
-	for id: String in start.gear:
-		state.bag_equipment.append(id)
-		state.equip(id)
-	for flag: String in start.flags:
-		state.world_flags[flag] = true
-		if Bestiary.has(flag):
-			# A boss of the flags was beaten on the way: the bestiary says so too.
-			state.defeat_enemy(flag)
-	for id: String in start.get("key_items", []):
-		state.key_items.append(id)
-	state.town_zone = start.get("town", state.town_zone)
-	if start.quest_done:
-		state.quest.stage = Quest.Stage.DONE
-	# The v2's level cap needs the "caravana" flag, set just above: levels again.
-	# (the first pass at the v1 cap clamped the EXP: give it back).
-	state.sync_level_cap()
-	state.hero.experience = start.experience
-	Leveling.apply(state.hero)
-	state.heal_full()
-	state.ally_id = start.get("ally", "")
-	if Allies.is_companion(state.ally_id):
-		state.ally_id = _autoplay_companion
-	var items: Dictionary = start.get("items", {})
-	for id: String in items:
-		state.inventory.add(id, items[id])
-	_autoplay_echo = start_id == AutoplayStarts.ECHO_START
-	_autoplay_v2 = start_id in AutoplayStarts.V2_STARTS
-	_medal_tour = start_id == AutoplayStarts.MEDAL_TOUR
-	state.story.mark_seen_for_flags(state.world_flags)
-	if start.get("finished", false):
-		state.story.finished = true
-	state.sync_level_cap()
-	print("Zona de inicio: %s (Nv %d)" % [zone_id, state.hero.level])
-
-
 func _on_encounter(boss: bool) -> void:
 	if _ctx.busy:
 		return
 	_set_busy(true)
-	_quiet_s = 0.0
+	if _autopilot:
+		_autopilot.reset_quiet()
 	state.battles += 1
 	var enemies: Array[Combatant] = []
 	if boss:
@@ -449,7 +333,7 @@ func _on_encounter(boss: bool) -> void:
 		enemies = _ctx.world.contact_enemies()
 	if not boss:
 		var kept := state.give_metal_slime_hp(enemies)
-		if _autoplay and kept > 0:
+		if RunFlags.autoplay() and kept > 0:
 			print("Slime de Metal con PV %d" % kept)
 	BattleRewards.note_enemies(state, enemies, false)
 	var echo := boss and _boss_id() == _ctx.zone.postgame_boss_id
@@ -471,7 +355,7 @@ func _on_encounter(boss: bool) -> void:
 	battle.zone = _ctx.zone
 	battle.quest_items = state.quests.wanted_items(state)
 	battle.medals_carried = state.medals.size()
-	battle.medal_chance = AutoplayStarts.MEDAL_TOUR_CHANCE if _medal_tour else Medals.DROP_CHANCE
+	battle.medal_chance = AutoplayStarts.MEDAL_TOUR_CHANCE if _autopilot and _autopilot.medal_tour else Medals.DROP_CHANCE
 	if state.ally_id != "":
 		battle.ally = Allies.data(state.ally_id, state.tramo())
 	add_child(battle)
@@ -480,11 +364,8 @@ func _on_encounter(boss: bool) -> void:
 	# A call for help adds enemies during the fight.
 	BattleRewards.note_enemies(state, battle.engine.enemies, false)
 	var won := outcome == BattleEngine.State.WON
-	if _autoplay and echo:
-		_echo_fights += 1
-		_echo_wins += 1 if won else 0
-		print("Eco de la Niebla: %s (%d de %d ganados)" % ["victoria" if won else "derrota",
-			_echo_wins, _echo_fights])
+	if _autopilot and echo:
+		_autopilot.on_echo_fought(won)
 	if won or outcome == BattleEngine.State.LOST:
 		Wells.on_battle(state)
 		_ctx.world.set_dry_wells(Wells.dry_ids(state))
@@ -493,7 +374,7 @@ func _on_encounter(boss: bool) -> void:
 		# Under black: a beaten group leaves the map, one fled from stays half see-through.
 		_ctx.world.end_contact(outcome)
 	if state.keep_metal_slime_hp(battle.engine.enemies, outcome) > 0:
-		if _autoplay:
+		if RunFlags.autoplay():
 			print("Slime de Metal: PV %d guardados" % state.metal_slime_hp)
 		_autosave(false)  # a fled battle saves nothing else: quitting now must not lose them
 	var notice := ""
@@ -513,16 +394,11 @@ func _on_encounter(boss: bool) -> void:
 		finished_quests.assign(rewards.finished_quests)
 		family_lines.assign(rewards.family_lines)
 		ending_v2 = rewards.ending_v2
-		if _autoplay:
-			for enemy in battle.engine.enemies:
-				if not enemy.is_boss:
-					_common_beaten += 1
-			if battle.engine.medals_won > 0:
-				print("Medalla: %d/%d" % [state.medals.size(), Medals.MEDALS.size()])
+		if _autopilot:
+			_autopilot.on_enemies_beaten(battle.engine.enemies, battle.engine.medals_won)
 	elif outcome == BattleEngine.State.LOST:
-		if _autoplay:
-			_defeats += 1
-			print("Derrota en %s (%d)" % [_ctx.zone.id, _defeats])
+		if _autopilot:
+			_autopilot.on_battle_lost(_ctx.zone.id)
 		state.gold -= battle.gold_lost
 		state.heal_full()
 		_travel.go_to_town()
@@ -567,67 +443,13 @@ func _on_encounter(boss: bool) -> void:
 		_autosave(false)  # the gold lost sticks: going back to the title can't undo it
 	if won:
 		var data := _autosave(not boss and finished_quests.is_empty())  # keep its reward readable
-		if _autoplay_save and _save.is_empty() and not data.is_empty():
+		if RunFlags.autoplay() and RunFlags.autoplay_save() and _save.is_empty() and not data.is_empty():
 			print("Guardado: %s" % CreditsData.summary(data))
 			quit_to_title.emit()
 			return
 	_set_busy(false)
-	if _medal_tour and won and state.medals.size() >= Medals.MEDALS.size():
-		await _finish_medal_tour()
-		return
-	if _autoplay and won and _wants_retreat():
-		await _autoplay_retreat()
-	elif _autoplay and won and _needs_groups():
-		# No Ala de viaje (or in a village): the groups come back as if it had flown away
-		# and back. Only the autoplay does this.
-		print("Grupos repuestos (partida automática)")
-		_travel.respawn_groups()
-	elif _autoplay and outcome == BattleEngine.State.LOST:
-		await _autoplay_restock()
-
-
-## Autoplay: flies back to the last village with an Ala de viaje, rests and shops there and
-## comes back through the portal.
-func _autoplay_retreat() -> void:
-	state.inventory.take(Inventory.WING)
-	print("Retirada al pueblo (PV %d/%d, PM %d, pociones %d)" % [state.hero.hp,
-		state.hero.max_hp, state.hero.mp, _ctx.potion_count()])
-	await _travel.on_travel_requested()
-	await _autoplay_restock()
-	await _travel.on_portal()
-
-
-## Autoplay: needs rest (GameState.needs_rest()), is only kept from the zone's boss by its
-## HP or MP, has a report waiting in the last village or has no group left to fight
-## (_needs_groups(): the portal back brings them), away from a village, with an Ala de
-## viaje (the night at the inn is free). The route may never pass the one who waits.
-func _wants_retreat() -> bool:
-	if _medal_tour:
-		return false  # the medal tour never flies back: it hunts where it is
-	var report := not state.quests.reports_here(state.town_zone, state.inventory).is_empty()
-	return (state.needs_rest() or _boss_needs_rest() or report or _needs_groups()) \
-		and not _ctx.world.in_village() and state.inventory.count(Inventory.WING) > 0
-
-
-## Autoplay: no group left on this map while the hero still has levels to win before its
-## boss (they only come back when the map is built again).
-func _needs_groups() -> bool:
-	return _ctx.world.group_count() == 0 and _autoplay_hunts()
-
-
-## Autoplay: the hero goes after the groups while he has levels to win before the zone's
-## boss. The medal tour hunts until it carries every medal.
-func _autoplay_hunts() -> bool:
-	if _medal_tour:
-		return state.medals.size() < Medals.MEDALS.size()
-	return state.hero.level < _ctx.zone.autoplay_boss_level
-
-
-## Autoplay: the zone's boss is due at this level but the hero is too worn for it. MP
-## doesn't come back by walking, so without a rest the boss would never show up.
-func _boss_needs_rest() -> bool:
-	return _boss_wanted() and state.hero.level >= _ctx.zone.autoplay_boss_level \
-		and not AutoplayStarts.rested_for_boss(state.hero)
+	if _autopilot:
+		await _autopilot.after_battle(outcome)
 
 
 ## The boss of the current map: the zone's, or its postgame boss (ZoneData.postgame_boss_id)
@@ -637,28 +459,7 @@ func _boss_id() -> String:
 
 
 func _boss_wanted() -> bool:
-	return BattleRewards.boss_wanted(_ctx.zone, state, not _autoplay or _autoplay_echo)
-
-
-## Autoplay, in the village: a night at its inn and the shop's picks, as if the hero had
-## walked up to the innkeeper and the merchant.
-func _autoplay_restock() -> void:
-	for npc: Dictionary in _ctx.zone.npcs:
-		if npc.kind == "inn":
-			await _talk.on_inn(npc.id)
-	for npc: Dictionary in _ctx.zone.npcs:
-		if npc.kind == "shop":
-			await _talk.on_shop(npc.id)
-	# On a caravan game the figures that offer a quest ("!") are visited too, or autoplay
-	# would never take the v2's quests; a v1 game keeps the reports only.
-	var marks := {}
-	if state.in_caravan():
-		marks = state.quests.markers(_ctx.zone.id, state.inventory, state.world_flags)
-	for i in _ctx.zone.npcs.size():
-		var npc_name: String = _ctx.zone.npcs[i].name
-		if npc_name in state.quests.reports_here(_ctx.zone.id, state.inventory) \
-				or marks.get(npc_name, "") == QuestLog.NEW_MARK:
-			await _talk.on_npc(i)
+	return BattleRewards.boss_wanted(_ctx.zone, state, not RunFlags.autoplay() or (_autopilot != null and _autopilot.echo))
 
 
 ## Inside a village it becomes the last one visited; the music follows. The first
@@ -669,36 +470,6 @@ func _on_village_changed(inside: bool) -> void:
 	_play_map_music()
 	if inside:
 		_story.check_village_scene()
-
-
-## --autoplay-zone=medallas: the time is up with medals still missing; it ends anyway.
-func _on_medal_tour_timeout() -> void:
-	if not _medal_tour:
-		return
-	while _ctx.busy:
-		await get_tree().create_timer(1.0).timeout
-	if not _medal_tour:  # the tour finished by itself while this waited
-		return
-	print("Medallas: tiempo agotado (%d/%d)" % [state.medals.size(), Medals.MEDALS.size()])
-	await _finish_medal_tour()
-
-
-## --autoplay-zone=medallas: under black to Villaclaro, the Coleccionista; then the forest
-## village's (his joke); the counts printed and back to the title (which quits on autoplay).
-func _finish_medal_tour() -> void:
-	_medal_tour = false
-	_set_busy(true)
-	for zone_id in [Medals.COLLECTOR_ZONE, "bosque"]:
-		await _fade_to(1.0)
-		var town := ZoneData.by_id(zone_id)
-		_travel.switch_zone(town.id, town.town_entry)
-		_play_map_music()
-		await _fade_to(0.0)
-		await _ctx.world.freeze(false)
-		await _talk.talk_to_collector()
-	print("Medallas: %d/%d · premios %d/%d" % [state.medals.size(), Medals.MEDALS.size(),
-		state.medal_prizes, Medals.PRIZES.size()])
-	quit_to_title.emit()
 
 
 ## Writes the save file; shows SAVED_NOTICE if notice. Returns the saved data, or an
@@ -737,7 +508,7 @@ func _on_title_requested() -> void:
 func _update_boss() -> void:
 	if _boss_id() == "":
 		return
-	var strong_enough := not _autoplay or (state.hero.level >= _ctx.zone.autoplay_boss_level \
+	var strong_enough := not RunFlags.autoplay() or (state.hero.level >= _ctx.zone.autoplay_boss_level \
 		and AutoplayStarts.rested_for_boss(state.hero))
 	_ctx.world.set_boss_present(_boss_wanted() and strong_enough)
 
@@ -753,7 +524,7 @@ func _play_map_music() -> void:
 ## else going on.
 func _set_busy(busy: bool) -> void:
 	_ctx.busy = busy
-	_pause.available = not busy and not _autoplay
+	_pause.available = not busy and not RunFlags.autoplay()
 	if _debug:
 		_debug.available = not busy
 
@@ -779,7 +550,7 @@ func _refresh_status() -> void:
 		missions)
 	_ctx.world.set_monsters_shy(EncounterMeter.is_shy(state.hero.level, _ctx.zone.exit_level))
 	_ctx.world.set_repel(state.repel_m > 0.0)
-	_ctx.world.set_autoplay_hunt(_autoplay and _autoplay_hunts())
+	_ctx.world.set_autoplay_hunt(_autopilot != null and _autopilot.hunts())
 	var hidden := state.quests.hidden_figures(_ctx.zone.id)
 	hidden.append_array(_ctx.zone.absent_figures(state.world_flags))
 	# The companions not chosen never show (the figures of the cruce scene in ciudad_2).
@@ -791,19 +562,8 @@ func _refresh_status() -> void:
 	var loadout := state.loadout
 	_ctx.world.set_hero_equipment(loadout.worn(Equipment.WEAPON), loadout.worn(Equipment.SHIELD),
 		loadout.worn(Equipment.HELMET))
-	if _autoplay and missions != _last_missions:
-		print(" · ".join(missions))
-	_last_missions = missions
-	var worn := PackedStringArray()
-	for slot in Equipment.SLOTS:
-		if loadout.worn(slot) != "":
-			worn.append(Equipment.display_name(loadout.worn(slot)))
-	var gear_text := "Oro %d G · Equipo: %s · ATK %d DEF %d VEL %d" % [state.gold,
-		", ".join(worn), state.hero.total_attack(), state.hero.total_defense(),
-		state.hero.total_speed()]
-	if _autoplay and gear_text != _last_gear_text:
-		print(gear_text)
-	_last_gear_text = gear_text
+	if _autopilot:
+		_autopilot.note_status(missions)
 
 
 func _build_shop() -> void:
@@ -842,7 +602,7 @@ func _build_pause() -> void:
 	_pause.state_changed.connect(_refresh_status)
 	_pause.open_changed.connect(func(is_open: bool) -> void:
 		_ctx.world.set_status_shown(not is_open))
-	_pause.available = not _autoplay
+	_pause.available = not RunFlags.autoplay()
 
 
 ## --debug: the panel over the pause menu, under the fade. While it is open Game is busy (no
