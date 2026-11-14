@@ -13,7 +13,7 @@
 - Spec: `docs/boost/specs/2026-11-14-refactor-arquitectura-design.md` (M-72). Guide: `docs/boost/specs/2026-11-14-refactor-arquitectura-guia.md`. Brief rules apply.
 - **Behaviour must not change:** no rules, texts, balance, look, save format (version 14) or autoplay output.
 - **NO TESTS OF ANY KIND** (`CLAUDE.md` overrides every TDD step). Checks are by hand: `--import`, `--check-only`, autoplay runs compared with the reference, screenshots.
-- **`BattleActor.Look` keeps working** through `const Look = ActorLooks.Look` in `BattleActor` (64 uses in six scripts are not touched).
+- **`BattleActor.Look` keeps working** through `const Look = ActorLooks.Look` in `BattleActor` (64 uses in six scripts are not touched). Verified in Godot 4.7.2: the alias works as a type hint too (`var x: BattleActor.Look`, parameters, return types), so no type hint is changed.
 - **Builders keep no state and never touch `BattleActor` privates;** they call its builder methods. The builders are `class_name X extends RefCounted` with only `static` functions and a header that starts with `## Constructor:` (the M-73 convention of plan 1).
 - **Every Godot run sets APPDATA inline to the literal scratch path** `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor`. Never use `$APPDATA` in `rm`, `mv` or `cp`. Reference logs live in `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/`.
 - **One task = one commit**, game working after each. Commit messages in English, no `Co-Authored-By`, no attribution of any kind. Never push.
@@ -45,21 +45,17 @@ APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cm
 
 Expected: only `check done`.
 
-**H2 — look sheet** (every `BattleActor.Look` plus three equipped heroes, byte-compared with the reference made in Task 1):
+**H2 — movie of the caravan start** (windowed, 900 frames, compared by eye with plan 1's `ref/movie-caravana/`; it shows the hero with the platinum gear and helmet, the Jefe de caravana and the other people the builders make):
 
 ```bash
-rm -rf C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/looks
-APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --path . --fixed-fps 10 --script C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/tools/look_sheet.gd -- C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/looks > C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/looks.log 2>&1
-ls C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/looks/*.png | wc -l
-grep -E 'ERROR|WARNING' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/looks.log; echo "grep done"
-cd C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor
-for f in ref/looks-a/*.png; do cmp -s "$f" "plan2/looks/$(basename "$f")" || echo "DIFF $(basename "$f")"; done; echo "cmp done"
-cd /c/Users/peixe/Documents/rpg-turnos
+rm -rf C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/movie-caravana
+mkdir -p C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/movie-caravana
+APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --path . --write-movie C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/movie-caravana/f.png --fixed-fps 10 --quit-after 900 -- --autoplay --autoplay-zone=caravana > C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/movie-caravana.log 2>&1
+find C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/movie-caravana -name 'f*.png' ! -name 'f00000[0-8][05]0.png' -delete
+grep -E 'ERROR|WARNING' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/movie-caravana.log | grep -v 'Jolt Physics job system exceeded'; echo "grep done"
 ```
 
-Expected: `78`, `grep done`, and only `cmp done` (or, besides it, only names listed in `ref/looks-unstable.txt`, see Task 1 Step 3; open those with the Read tool next to `ref/looks-a/<name>` and compare by eye). Any other `DIFF <NAME>.png` is a regression: open both images, find the look's builder and fix the renamed access before committing.
-
-If Godot prints `Can't load script` / `Failed loading resource` for the absolute script path in Task 1, use the fallback written there for every H2 run (the `res://scripts/tools/look_sheet.gd` copy).
+Expected: only `grep done`. Open with the Read tool the frames of `plan2/movie-caravana/` next to the same names in `ref/movie-caravana/` (frames 0, 50, ... 850; the randomness of the run may move the scene, the figures must not look different): the hero with his gear and helmet, the Jefe de caravana and any other caravan person on screen. The Yelmo de bruma's horns are built by `BattleActor._build_horns()`, which this plan does not move; they are covered by H1 on `battle_actor.gd` and by the Eco run of Task 5. Then free the space: `rm -rf C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/movie-caravana`.
 
 **H3 — movie of the start of the v1** (600 frames, windowed):
 
@@ -68,13 +64,13 @@ rm -rf C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/movie
 mkdir -p C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/movie
 APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --path . --write-movie C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/movie/f.png --fixed-fps 10 --quit-after 600 -- --autoplay > C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/movie.log 2>&1
 M='^(Zona|Escena|Lugar|Compañero|Pregunta|Misión cumplida|Juego completado|Medallas|Eco de la Niebla)'
-grep -E "$M" C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/actor-movie.log > C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/ref-milestones.txt
+grep -E "$M" C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/movie.log > C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/ref-milestones.txt
 grep -E "$M" C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/movie.log > C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/new-milestones.txt
 diff C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/ref-milestones.txt C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/new-milestones.txt && echo SAME
 grep -E 'ERROR|WARNING' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/movie.log; echo "grep done"
 ```
 
-Expected: `SAME`, then `grep done`, with at most the known line `WARNING: Jolt Physics job system exceeded the maximum number of jobs` before it. Then open with the Read tool `plan2/movie/f00000150.png`, `f00000300.png`, `f00000450.png` and `f00000550.png` next to the same names in `ref/actor-movie/`: the hero (with its stick or the bought gear), the villagers and the notice board, the slimes and groups on the map look the same (the autoplay is random, so the scene may differ; the figures must not). Then free the space:
+Expected: `SAME`, then `grep done`, with at most the known line `WARNING: Jolt Physics job system exceeded the maximum number of jobs` before it. Then open with the Read tool `plan2/movie/f00000150.png`, `f00000300.png`, `f00000450.png` and `f00000550.png` next to the same names in `ref/movie/`: the hero (with its stick or the bought gear), the villagers and the notice board, the slimes and groups on the map look the same (the autoplay is random, so the scene may differ; the figures must not). Then free the space:
 
 ```bash
 rm -rf C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/movie
@@ -88,18 +84,18 @@ grep -E 'ERROR|WARNING' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/pl
 git status --short assets/bestiary; echo "status done"
 ```
 
-Expected: `grep done`, then only `status done`. If PNGs show as modified: when the look sheet (H2) of the same look was byte-identical and plan 1's reference found the portraits not reproducible, it is the known noise; else it is a regression. Either way restore them before committing: `git checkout -- assets/bestiary`.
+Expected: `grep done`, then only `status done`. If PNGs show as modified: when it is listed in plan 1's `ref/bestiary-unstable.txt`, it is the known noise (compare it by eye); else it is a regression: open the PNG, find the look's builder and fix the renamed access. Either way restore them before committing: `git checkout -- assets/bestiary`.
 
 ---
 
-### Task 1: Reference, helpers and the primitives in `LowPoly`
+### Task 1: Helper and the primitives in `LowPoly`
 
 **Files:**
-- Create (scratch, outside the repo): `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/tools/move_members.awk`, `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/tools/look_sheet.gd`
+- Create (scratch, outside the repo): `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/tools/move_members.awk`
 - Modify: `scripts/battle/low_poly.gd` (six new public static functions), `scripts/battle/battle_actor.gd` (the six private ones removed, 127 calls renamed), `CLAUDE.md`
 
 **Interfaces:**
-- Consumes: nothing.
+- Consumes: plan 1's references `ref/movie/`, `ref/movie.log`, `ref/movie-caravana/`, `ref/bestiary-unstable.txt`, `ref/eco.log`, `ref/v1.log` and `ref/v2.log`.
 - Produces (used by Tasks 3-5):
   - `static func LowPoly.sphere(radius: float) -> SphereMesh`
   - `static func LowPoly.cylinder(radius: float, height: float) -> CylinderMesh`
@@ -107,7 +103,7 @@ Expected: `grep done`, then only `status done`. If PNGs show as modified: when t
   - `static func LowPoly.hemisphere(radius: float, height: float) -> SphereMesh`
   - `static func LowPoly.disc(radius: float) -> CylinderMesh`
   - `static func LowPoly.merged(mesh: Mesh, xforms: Array[Transform3D]) -> ArrayMesh`
-  - the helper `move_members.awk` and the reference `ref/looks-a/`, `ref/actor-movie.log`, `ref/actor-movie/`.
+  - the helper `move_members.awk`.
 
 - [ ] **Step 1: Branch from develop**
 
@@ -120,9 +116,9 @@ ls C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/
 git checkout -b feature/refactor-2-battle-actor
 ```
 
-Expected: `status done` alone (clean tree), `plan 1 merged`, the listing shows at least `v1.log`, `v2.log` and `eco.log` (plan 1's reference), then `Switched to a new branch 'feature/refactor-2-battle-actor'`. If `plan 1 merged` is missing, stop: plan 1 must be merged first.
+Expected: `status done` alone (clean tree), `plan 1 merged`, the listing shows plan 1's reference (at least `v1.log`, `v2.log`, `eco.log`, `movie/`, `movie-caravana/`), then `Switched to a new branch 'feature/refactor-2-battle-actor'`. If `plan 1 merged` is missing, stop: plan 1 must be merged first.
 
-- [ ] **Step 2: Write the two scratch helpers**
+- [ ] **Step 2: Write the scratch helper**
 
 `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/tools/move_members.awk` (cuts named top-level members, each with the `##` lines right above it, out of a GDScript file; it was dry-run on the real `battle_actor.gd` while writing this plan):
 
@@ -163,121 +159,7 @@ END {
 }
 ```
 
-`C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/tools/look_sheet.gd` (a screenshot tool, not a test: one 128 px portrait per look, framed like `bestiary_shots.gd`):
-
-```gdscript
-extends SceneTree
-## Scratch check tool for the BattleActor refactor (never in the repo): renders every
-## BattleActor.Look, plus three equipped heroes, to <out>/<NAME>.png at 128 px, framed like
-## scripts/tools/bestiary_shots.gd. Run it windowed (the headless renderer draws nothing):
-## tools/godot.cmd --path . --fixed-fps 10 --script <this file> -- <out dir>
-
-const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
-const SIZE := Vector2i(128, 128)
-## Shot name -> [weapon, shield, helmet] put on the hero (the helmet tints, the Yelmo's horns).
-const HEROES := {
-	"HERO_cobre": ["espada_cobre", "escudo_madera", "casco_cobre"],
-	"HERO_alba": ["espada_alba", "escudo_medallas", "yelmo_bruma"],
-	"HERO_jade": ["espada_jade", "escudo_jade", "casco_jade"],
-}
-
-
-func _initialize() -> void:
-	_run()
-
-
-func _run() -> void:
-	await process_frame
-	var out: String = OS.get_cmdline_user_args()[0]
-	DirAccess.make_dir_recursive_absolute(out)
-	var shots: Array = []
-	for look_name: String in BattleActor.Look.keys():
-		shots.append([look_name, BattleActor.Look[look_name], []])
-	for shot_name: String in HEROES:
-		shots.append([shot_name, BattleActor.Look.HERO, HEROES[shot_name]])
-	for shot: Array in shots:
-		var view := SubViewport.new()
-		view.size = SIZE
-		view.transparent_bg = true
-		view.own_world_3d = true
-		view.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-		root.add_child(view)
-		var sun := DirectionalLight3D.new()
-		sun.rotation_degrees = Vector3(-50, 30, 0)
-		view.add_child(sun)
-		var environment := Environment.new()
-		environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-		environment.ambient_light_color = Color.WHITE
-		environment.ambient_light_energy = 0.7
-		var world := WorldEnvironment.new()
-		world.environment = environment
-		view.add_child(world)
-		var actor := ACTOR_SCENE.instantiate() as BattleActor
-		actor.look = shot[1]
-		view.add_child(actor)
-		var gear: Array = shot[2]
-		if not gear.is_empty():
-			actor.set_equipment(gear[0], gear[1], gear[2])
-		var camera := Camera3D.new()
-		var top := actor.top_height()
-		camera.position = Vector3(0, top * 0.55, -maxf(2.2, top * 1.9))
-		camera.fov = 40.0
-		view.add_child(camera)
-		camera.look_at(Vector3(0, top * 0.45, 0))
-		camera.current = true
-		for frame in 8:
-			await process_frame
-		await RenderingServer.frame_post_draw
-		view.get_texture().get_image().save_png(out.path_join("%s.png" % shot[0]))
-		view.queue_free()
-	quit()
-```
-
-- [ ] **Step 3: Record the reference on the unchanged code**
-
-The look sheet, twice, to learn whether it is reproducible:
-
-```bash
-cd /c/Users/peixe/Documents/rpg-turnos
-for run in a b; do APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --path . --fixed-fps 10 --script C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/tools/look_sheet.gd -- C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/looks-$run > C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/looks-$run.log 2>&1; done
-ls C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/looks-a/*.png | wc -l
-cd C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor
-for f in ref/looks-a/*.png; do cmp -s "$f" "ref/looks-b/$(basename "$f")" || basename "$f"; done > ref/looks-unstable.txt
-cat ref/looks-unstable.txt; echo "unstable done"
-cd /c/Users/peixe/Documents/rpg-turnos
-```
-
-Expected: `78`, then `unstable done` (ideally with no names before it: every portrait is reproducible). Names listed in `ref/looks-unstable.txt` are compared by eye in H2 from now on.
-
-Fallback, only if `ref/looks-a.log` says `Can't load script` or `Failed loading resource` (Godot did not take the absolute script path): copy the tool into the project's tools folder, which is excluded from the export, and use `res://scripts/tools/look_sheet.gd` instead of the absolute path in this step and in every H2 run. Never `git add` it or its `.uid`; Task 6 deletes both.
-
-```bash
-cp C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/tools/look_sheet.gd scripts/tools/look_sheet.gd
-```
-
-The movie of the start of the v1, keeping one frame in fifty:
-
-```bash
-mkdir -p C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/actor-movie
-APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --path . --write-movie C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/actor-movie/f.png --fixed-fps 10 --quit-after 600 -- --autoplay > C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/actor-movie.log 2>&1
-find C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/actor-movie -name 'f*.png' ! -name 'f00000[0-5][05]0.png' -delete
-ls C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/actor-movie | wc -l
-grep -E 'ERROR|WARNING' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/actor-movie.log; echo "grep done"
-```
-
-Expected: `12` (frames 0, 50, ... 550), then `grep done`, at most after the known Jolt warning.
-
-The portraits on the unchanged code:
-
-```bash
-APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --path . --script res://scripts/tools/bestiary_shots.gd > C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/bestiary.log 2>&1
-git status --short assets/bestiary; echo "status done"
-git checkout -- assets/bestiary
-```
-
-Expected: `status done` alone. If PNGs are listed, the portraits are not reproducible on this machine: write that down in `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/bestiary-unstable.txt` (`git status --short assets/bestiary > ...` before the checkout) and in H4 compare those by eye.
-
-- [ ] **Step 4: Add the primitives to `LowPoly`**
+- [ ] **Step 3: Add the primitives to `LowPoly`**
 
 With the Edit tool in `scripts/battle/low_poly.gd`, insert this block right above the line `## Skips triangles that collapse at the profile's tips (radius 0).` (public functions go before the private `_triangle`):
 
@@ -493,14 +375,6 @@ and `leftovers done` alone from the second.
 
 Run H0; H1 on `scripts/battle/actor_looks.gd`, `scripts/battle/battle_actor.gd`, `scripts/battle/enemy_library.gd`, `scripts/battle/battle_scene.gd`, `scripts/world/world.gd`, `scripts/world/player.gd`, `scripts/world/zone_data.gd`, `scripts/story/beyond_screen.gd`.
 
-Fallback, only if one of these reports a parse error about the type `Look` / `BattleActor.Look` (an enum reached through a constant alias not accepted as a type hint): keep the alias and change only the type hints, which changes no behaviour:
-- `scripts/battle/battle_actor.gd`: `@export var look := Look.HERO` → `@export var look: ActorLooks.Look = ActorLooks.Look.HERO`
-- `scripts/battle/enemy_library.gd`: `static func look(enemy_id: String) -> BattleActor.Look:` → `static func look(enemy_id: String) -> ActorLooks.Look:`
-- `scripts/battle/battle_scene.gd`: `func _spawn_actor(look: BattleActor.Look, pos: Vector3, facing: Vector3) -> BattleActor:` → `func _spawn_actor(look: ActorLooks.Look, pos: Vector3, facing: Vector3) -> BattleActor:`
-- `scripts/world/world.gd`: in `func _add_figure(look: BattleActor.Look, ...` the type `BattleActor.Look` → `ActorLooks.Look`
-
-Re-run H1 on the edited scripts, and add them to this task's `git add` and its `CLAUDE.md` note ("type hints use `ActorLooks.Look`").
-
 Then H2, H3 and H4.
 
 - [ ] **Step 5: Update `CLAUDE.md`**
@@ -527,7 +401,7 @@ git status --short; echo "status done"
 git commit -m "Move BattleActor's look data into ActorLooks"
 ```
 
-Expected before the commit: `status done` alone after the add (nothing left unstaged except, if the Task 1 fallback was used, `?? scripts/tools/look_sheet.gd` and its `.uid`, which are never added). Add the fallback's edited scripts if Step 4 needed them.
+Expected before the commit: `status done` alone after the add (nothing left unstaged).
 
 ---
 
@@ -719,7 +593,7 @@ func add_mesh(parent: Node3D, mesh: Mesh, color: Color, pos: Vector3, \
 
 - [ ] **Step 5: Verify**
 
-Run H0; H1 on `scripts/battle/creature_builder.gd` and `scripts/battle/battle_actor.gd`; H2; H3; H4. In H2, the looks built here are `SLIME`, `KING_SLIME`, `METAL_SLIME`, `RED_SLIME`, `SAND_SLIME`, `BOARD`, `CAT`, `BAT`, `CRYPT_BAT`, `VULTURE`, `ICE_BAT`, the four mushrooms, `WOLF`, `WOLF_CUB`, `JAGUAR`, `SNOW_WOLF`, `CHICKEN`, `GOBLIN`, `PLANT`, `TRAP_PLANT`, the five golems, `SPIDER` and the four specters: all must be byte-identical (or, if unstable, equal by eye).
+Run H0; H1 on `scripts/battle/creature_builder.gd` and `scripts/battle/battle_actor.gd`; H2; H3; H4. In H4, the portraits of the looks built here are `SLIME`, `KING_SLIME`, `METAL_SLIME`, `RED_SLIME`, `SAND_SLIME`, `BOARD`, `CAT`, `BAT`, `CRYPT_BAT`, `VULTURE`, `ICE_BAT`, the four mushrooms, `WOLF`, `WOLF_CUB`, `JAGUAR`, `SNOW_WOLF`, `CHICKEN`, `GOBLIN`, `PLANT`, `TRAP_PLANT`, the five golems, `SPIDER` and the four specters: all must come out unchanged (`git status assets/bestiary` clean, or equal by eye if listed as unstable). The ones that are not enemies (`BOARD`, `CAT`, `CHICKEN`, `WOLF_CUB`) are seen in the H3 and H2 frames when they appear; otherwise `--check-only` and the unchanged code are the check.
 
 - [ ] **Step 6: Update `CLAUDE.md`**
 
@@ -988,7 +862,7 @@ func _build_character(data: Dictionary) -> void:
 
 - [ ] **Step 4: Verify**
 
-Run H0; H1 on `scripts/battle/creature_builder.gd` and `scripts/battle/battle_actor.gd`; H2; H3; H4. H2 now covers every look built in code; H4 covers the v2 creatures (the griffin's and the gargoyle's wings, the Devorador's eye and lid, the worm, the scorpion, the goat, the rat, the frog, the snake and the monkey). Also check the Devorador's second phase once (its eye opens, `_devourer_wakes()` reads `_devourer` / `_eyelid` set by `set_devourer()`):
+Run H0; H1 on `scripts/battle/creature_builder.gd` and `scripts/battle/battle_actor.gd`; H2; H3; H4. H4 covers the v2 creatures (the griffin's and the gargoyle's wings, the Devorador's eye and lid, the worm, the scorpion, the goat, the rat, the frog, the snake and the monkey). Also check the Devorador's second phase once (its eye opens, `_devourer_wakes()` reads `_devourer` / `_eyelid` set by `set_devourer()`):
 
 ```bash
 APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --headless --path . --fixed-fps 10 --quit-after 100000 -- --autoplay --autoplay-zone=portal > C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2/portal.log 2>&1
@@ -1222,7 +1096,7 @@ Expected: `battle_actor.gd` under 900 lines (about 740), `actor_looks.gd` about 
 
 - [ ] **Step 4: Verify**
 
-Run H0; H1 on `scripts/battle/character_builder.gd`, `scripts/battle/creature_builder.gd`, `scripts/battle/actor_looks.gd` and `scripts/battle/battle_actor.gd`; H2; H3; H4. In H2 the KayKit looks (`HERO`, the three `HERO_*` shots with the copper, dawn and jade gear and the Yelmo's horns, `VILLAGER`, `MERCHANT`, `INNKEEPER`, `FARMER`, `TAMER`, `COLLECTOR`, `CHILD`, `WITCH`, the skeletons with their weapons, `FOG_LORD` and `FOG_ECHO` with their auras, `LOYAL_SKELETON`, `BRENA`, `TADEO`, `ULMA`, `MUMMY` with its wraps, `HOLLOW_ARMOR` with its ember, `SENTINEL`, `CITY_GUARDIAN` and the caravan people with their heads, hair and capes) must be byte-identical (or, if unstable, equal by eye).
+Run H0; H1 on `scripts/battle/character_builder.gd`, `scripts/battle/creature_builder.gd`, `scripts/battle/actor_looks.gd` and `scripts/battle/battle_actor.gd`; H2; H3; H4. H2 shows the KayKit figures that matter here (the hero with his gear and helmet, the Jefe de caravana and the caravan people with their heads, hair and capes, the companion); H4 covers the skeletons, `FOG_LORD`, `FOG_ECHO`, `MUMMY`, `HOLLOW_ARMOR`, `SENTINEL` and `CITY_GUARDIAN` with their weapons, auras, wraps and embers. Both must look unchanged.
 
 Then the Eco run (a KayKit boss with an aura, the platinum hero, the Yelmo put on in battle) against the reference:
 
@@ -1264,7 +1138,6 @@ git commit -m "Move the KayKit figures from BattleActor into CharacterBuilder"
 
 **Files:**
 - Modify: `docs/boost/documento-maestro.md`
-- Delete (if the Task 1 fallback created them, never committed): `scripts/tools/look_sheet.gd`, `scripts/tools/look_sheet.gd.uid`
 
 **Interfaces:**
 - Consumes: Tasks 1-5.
@@ -1290,16 +1163,7 @@ done
 
 Expected: `v1 SAME` and `v2 SAME` (a `Lugar:` or `Zona:` line repeated or missing after a defeat is chance, not a regression: check it against the reference by eye); the `Juego completado:` lines of each pair at the same level (v1: Nv 18; v2: Nv 40) with play times within about 5 minutes of each other; each `grep done` with at most the known Jolt warning before it.
 
-- [ ] **Step 2: Clean the scratch copy**
-
-```bash
-rm -f scripts/tools/look_sheet.gd scripts/tools/look_sheet.gd.uid
-git status --short; echo "status done"
-```
-
-Expected: `status done` alone.
-
-- [ ] **Step 3: Mark M-72 done in the master document**
+- [ ] **Step 2: Mark M-72 done in the master document**
 
 In `docs/boost/documento-maestro.md`, the refactor row is either still the single row `| Sin versión · M-70 a M-74 | ... | spec |` or (after plan 1) split per M-id.
 
@@ -1314,7 +1178,7 @@ In `docs/boost/documento-maestro.md`, the refactor row is either still the singl
 | Sin versión · M-74 | Refactor de arquitectura: `RunFlags` y las regiones de autoplay ([spec](specs/2026-11-14-refactor-arquitectura-design.md) · [plan](plans/2026-11-14-refactor-1-runflags-builders.md)) | hecho |
 ```
 
-- [ ] **Step 4: Commit and merge**
+- [ ] **Step 3: Commit and merge**
 
 ```bash
 git add docs/boost/documento-maestro.md
@@ -1326,11 +1190,10 @@ git log --oneline -8
 
 Expected: the merge commit on top of the six commits of this plan (Tasks 1-6). Do not push.
 
-- [ ] **Step 5: Free the scratch space**
+- [ ] **Step 4: Free the scratch space**
 
 ```bash
 rm -rf C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/plan2
-rm -rf C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/looks-b C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/actor-movie
 ```
 
-Keep `ref/looks-a`, `ref/looks-unstable.txt` and `tools/` for plans 3 and 4 (the look sheet still works with them: the figures do not change), and every log of plan 1's reference.
+Keep plan 1's whole `ref/` folder: plans 3 and 4 compare against it.

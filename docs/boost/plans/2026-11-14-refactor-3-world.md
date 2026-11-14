@@ -20,7 +20,7 @@
   - the autoplay runs named in each task, compared with the reference;
   - screenshots and frames for visuals.
 - **Every Godot run sets `APPDATA` inline to the literal scratch path** `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor`. Never write `$APPDATA` in `rm`, `mv` or `cp`.
-  - Reference logs: `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/` (plan 1 wrote `v1.log`, `v2.log`, `medallas.log` and `eco.log`; Task 1 adds `jungla.log` and `hud-frames/`).
+  - Reference logs: `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/` (plan 1 recorded all of them: `v1.log`, `v2.log`, `medallas.log`, `eco.log`, `save.log`, `zone_jungla.log` (the jungla run, 40000 frames) and the frames of the start of the v1 in `movie/`).
   - This plan's logs: `C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p3/`.
 - **Commands run from Git Bash** in `C:/Users/peixe/Documents/rpg-turnos`, with `./tools/godot.cmd` (the Godot 4.7.2 console wrapper).
 - **The known Jolt warning is the only accepted noise:** `WARNING: Jolt Physics job system exceeded the maximum number of jobs`. Any other `ERROR` or `WARNING` is a real problem.
@@ -154,27 +154,21 @@ Each piece is created with `.new()` and `setup()` early, so that `set_world_flag
   - `func show_notice(text: String, word := "Aviso", tone := &"text-info") -> void`
   - `func show_touch_hint(text: String) -> void`
 
-- [ ] **Step 1: Record the extra references on `develop` (once, before branching)**
+- [ ] **Step 1: Check the references on `develop` (before branching)**
 
-  Plan 1 did not record these two, so they are taken here. Run them on `develop` with plans 1 and 2 merged and nothing of this plan applied:
+  Plan 1 recorded every reference this plan compares with. Make this plan's scratch folder and check them:
 
 ```bash
 cd C:/Users/peixe/Documents/rpg-turnos
 git checkout develop
 git status --short
-mkdir -p C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/hud-frames C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p3
-APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --headless --path . --fixed-fps 10 --quit-after 40000 -- --autoplay --autoplay-zone=jungla > C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/jungla.log 2>&1
-APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --path . --write-movie C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/hud-frames/f.png --fixed-fps 10 --quit-after 600 -- --autoplay
-ls C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/
+mkdir -p C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p3
+ls C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/ C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/movie
 ```
 
   Expected:
   - `git status --short` prints nothing.
-  - `ref/jungla.log` contains `Zona: jungla`, a `Compañero:` line and `Escena: jaguar`.
-  - `ref/hud-frames/` holds about 600 PNGs.
-  - The listing shows `v1.log`, `v2.log`, `medallas.log`, `eco.log`, `jungla.log` and `hud-frames`.
-
-  If `ref/v1.log` is missing, record it now with the v1 command of Step 7, sending its output to `ref/v1.log` instead of `p3/`.
+  - The listing shows `v1.log`, `v2.log`, `medallas.log`, `eco.log`, `save.log`, `zone_jungla.log` and `movie`, which holds 12 PNGs (`f00000000.png` to `f00000550.png`, every 50th frame).
 
 - [ ] **Step 2: Create the branch**
 
@@ -544,7 +538,7 @@ mkdir -p C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p3/hud-frames
 APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --path . --write-movie C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p3/hud-frames/f.png --fixed-fps 10 --quit-after 600 -- --autoplay
 ```
 
-  Open the same frame numbers in `ref/hud-frames/` and `p3/hud-frames/` (for example `f00000100.png`, `f00000300.png` and `f00000550.png`) with the Read tool. Expected:
+  Open the same frame numbers in `ref/movie/` and `p3/hud-frames/` (for example `f00000100.png`, `f00000300.png` and `f00000550.png`) with the Read tool. Expected:
   - the status window in the top left, with the name, PV, PM, EXP, gold and the missions;
   - the place line and the map square under it;
   - a notice window at the top centre;
@@ -816,7 +810,7 @@ APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cm
 APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --headless --path . --fixed-fps 10 --quit-after 40000 -- --autoplay --autoplay-zone=jungla > C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p3/jungla.log 2>&1
 grep -E '^(Zona|Escena|Lugar|Compañero|Pregunta|Misión cumplida|Juego completado|Medallas|Eco de la Niebla)' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p3/v1.log > C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p3/v1.new.m
 diff C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p3/v1.ref.m C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p3/v1.new.m
-grep -E '^(Zona|Escena|Lugar|Compañero|Pregunta|Misión cumplida|Juego completado|Medallas|Eco de la Niebla)' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/jungla.log > C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p3/jungla.ref.m
+grep -E '^(Zona|Escena|Lugar|Compañero|Pregunta|Misión cumplida|Juego completado|Medallas|Eco de la Niebla)' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/ref/zone_jungla.log > C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p3/jungla.ref.m
 grep -E '^(Zona|Escena|Lugar|Compañero|Pregunta|Misión cumplida|Juego completado|Medallas|Eco de la Niebla)' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p3/jungla.log > C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p3/jungla.new.m
 diff C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p3/jungla.ref.m C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p3/jungla.new.m
 grep -E 'ERROR|WARNING' C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p3/v1.log C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p3/jungla.log
@@ -840,7 +834,7 @@ mkdir -p C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p3/props-frames
 APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cmd --path . --write-movie C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor/p3/props-frames/f.png --fixed-fps 10 --quit-after 600 -- --autoplay
 ```
 
-  Compare a few frames with the same numbers in `ref/hud-frames/`. Expected:
+  Compare a few frames with the same numbers in `ref/movie/`. Expected:
   - the village's wells, with their red or blue water;
   - the 25 G chest near the route, with its lid opening when it is used;
   - the north exit's arch with its sign and its fog bank;
@@ -1067,7 +1061,7 @@ APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cm
   - "Tienda", "Posada" and "Criaturas" over the merchant, the innkeeper and the Domadora;
   - a yellow "!" or "?" bobbing over the Abuela Rosa;
   - neither of them during the prologue's frames;
-  - the same figures in the same places as `ref/hud-frames/`.
+  - the same figures in the same places as `ref/movie/`.
 
   Then delete the frames:
 
@@ -1232,7 +1226,7 @@ static func _flat_distance(a: Vector3, b: Vector3) -> float:
 
 - [ ] **Step 3: Leave the façades and wire `MapMonsters` in `world.gd`**
 
-  Add `var _monsters: MapMonsters`. Replace `World`'s `static var debug_no_groups := false` with the alias, because `Game` and `DebugPanel` read and write `World.debug_no_groups`:
+  Add `var _monsters: MapMonsters`. Replace `World`'s `static var debug_no_groups := false` with the alias, because `Game` and `DebugPanel` read and write `World.debug_no_groups` (verified in Godot 4.7.2: a static var with a getter and a setter that forward to another class's static var works, and both read and write the same value):
 
 ```gdscript
 ## DebugPanel's Monstruos (MapMonsters.debug_no_groups): Game and DebugPanel use this name.
@@ -1242,12 +1236,6 @@ static var debug_no_groups: bool:
 	set(value):
 		MapMonsters.debug_no_groups = value
 ```
-
-  **If `--check-only` rejects a static variable with a getter and a setter,** do this instead. It is the guide's "alias only if someone outside reads it", done the other way:
-  - delete the alias;
-  - change the four `World.debug_no_groups` in `scripts/game/game.gd` (`_on_debug()`) and `scripts/ui/debug_panel.gd` to `MapMonsters.debug_no_groups`;
-  - add both files to this task's `git add`;
-  - note the change in the commit message.
 
   The façades keep their doc comments:
 
@@ -2044,7 +2032,7 @@ APPDATA="C:/Users/peixe/AppData/Local/Temp/villaclaro-refactor" ./tools/godot.cm
   Expected:
   - the prompt "Hablar · Abuela Rosa" with its keycap near her;
   - a figure sign under the prompt hides while the prompt shows;
-  - the same as `ref/hud-frames/` otherwise.
+  - the same as `ref/movie/` otherwise.
 
   Then the phone by hand:
 
