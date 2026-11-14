@@ -35,23 +35,6 @@ const BAR_GAP := 0.15
 const ARROW_GAP := 0.5
 ## A click this close (pixels) to an enemy aims at it.
 const PICK_RADIUS := 120.0
-## Glow of the hero defending, of an enemy gathering strength for a charged blow and of
-## the hero when the Despertador works (design-system `effect-*` tokens).
-static func _defend_color() -> Color:
-	return UiTokens.color(&"effect-defend")
-
-
-static func _charge_color() -> Color:
-	return UiTokens.color(&"effect-charge")
-
-
-static func _wake_color() -> Color:
-	return UiTokens.color(&"effect-wake")
-
-
-## Glow of a status landing on a fighter.
-static func _status_color(status: String) -> Color:
-	return UiTokens.color(StringName("effect-" + status))
 const STANDALONE_LEVEL := 3
 ## Autoplay flees from normal battle number AUTOPLAY_EVERY, 2 × AUTOPLAY_EVERY... and
 ## defends in the first round of battle AUTOPLAY_DEFEND_AT, AUTOPLAY_DEFEND_AT +
@@ -636,6 +619,25 @@ func _to(c: Combatant) -> String:
 ## hero's lines avoid them: the player picks the name and the hero has no set gender.
 func _ending(c: Combatant) -> String:
 	return "a" if c.female else "o"
+
+
+## Glow of the hero defending, of an enemy gathering strength for a charged blow and of
+## the hero when the Despertador works (design-system `effect-*` tokens).
+static func _defend_color() -> Color:
+	return UiTokens.color(&"effect-defend")
+
+
+static func _charge_color() -> Color:
+	return UiTokens.color(&"effect-charge")
+
+
+static func _wake_color() -> Color:
+	return UiTokens.color(&"effect-wake")
+
+
+## Glow of a status landing on a fighter.
+static func _status_color(status: String) -> Color:
+	return UiTokens.color(StringName("effect-" + status))
 
 
 static func _cap(text: String) -> String:

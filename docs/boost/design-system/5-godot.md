@@ -5,6 +5,9 @@ Un solo camino lleva un valor de la interfaz hasta la pantalla:
 ```
 tokens.json  →  gen_ui_tokens.gd  →  UiTokens  →  UiTheme  →  pantallas
 (fuente)        (generador)          (generado)   (el Theme)   (variaciones y UiTokens.color())
+                      ↓
+                 tokens.css  →  components/bundle.css
+                 (generado)     (las maquetas)
 ```
 
 ## Las piezas
@@ -12,7 +15,8 @@ tokens.json  →  gen_ui_tokens.gd  →  UiTokens  →  UiTheme  →  pantallas
 | Pieza | Archivo | Qué es |
 | --- | --- | --- |
 | `tokens.json` | `docs/boost/design-system/tokens.json` | La única fuente: paleta, semánticos de los dos temas, escalas, tipografía y sombra. Cada token lleva su `usage`. |
-| Generador | `scripts/tools/gen_ui_tokens.gd` | Escribe `ui_tokens.gd` entero desde `tokens.json`. No usa clases del juego. |
+| Generador | `scripts/tools/gen_ui_tokens.gd` | Escribe `ui_tokens.gd` y `tokens.css` enteros desde `tokens.json`. No usa clases del juego. |
+| `tokens.css` | `docs/boost/design-system/tokens.css` | **Generado: no se edita a mano.** Las variables CSS (`--text-accent`, `--space-4`…) que lee `components/bundle.css`: colores del tema `juego` en `:root` y, en `[data-theme="alto-contraste"]`, los que cambian en alto contraste. |
 | `UiTokens` | `scripts/ui/ui_tokens.gd` | **Generado: no se edita a mano.** Colores de los dos temas (`UiTokens.color(&"text-accent")`; con `UiTokens.high_contrast` devuelve el de alto contraste), escalas como constantes (`SPACE_4`, `RADIUS_M`, `BORDER_3`, `OUTLINE_M`, `TOUCH_TARGET`, `LAYER_HUD`, `OPACITY_WINDOW`, `TYPE_BODY_SIZE`…), `TYPE`, rutas de las fuentes y la sombra de ventana. |
 | `UiTheme` | `scripts/ui/ui_theme.gd` | El único `Theme` del juego, construido desde `UiTokens`. `apply()` lo pone sobre el tema por defecto (lo llama `DisplaySettings.apply()`; `ensure()` para escenas que corren solas) y lo rehace en vivo si cambia «Alto contraste». |
 | Pantallas | `scripts/ui/`, `scripts/title/`… | Piden estilo al tema; no escriben valores. |
@@ -49,21 +53,23 @@ Sí son del design system:
 
 | Qué | Comando | Falla si… |
 | --- | --- | --- |
-| `gen_ui_tokens.gd -- --check` | `godot --headless --path . --script res://scripts/tools/gen_ui_tokens.gd -- --check` | `ui_tokens.gd` no es idéntico a lo que escribiría el generador (dice la primera línea distinta). |
+| `gen_ui_tokens.gd -- --check` | `godot --headless --path . --script res://scripts/tools/gen_ui_tokens.gd -- --check` | `ui_tokens.gd` o `tokens.css` no son idénticos a lo que escribiría el generador (dice la primera línea distinta); un token de `tokens.json` no aparece escrito como `` `nombre` `` en `2-fundamentos.md` ni en `components/*.md` (lista los nombres); o `components/bundle.css` usa un `var(--x)` que `tokens.css` no define (lista las variables). |
 | `check_ui_values.gd` | `godot --headless --path . --script res://scripts/tools/check_ui_values.gd` | hay `Color(` en `scripts/ui/` o `scripts/title/` (salvo `ui_tokens.gd`), un `add_theme_color_override` con `Color(`, o un tamaño de letra literal en cualquier script. Lista cada `archivo:línea`. |
 
-Para regenerar: `godot --headless --path . --script res://scripts/tools/gen_ui_tokens.gd`.
+Para regenerar (escribe `ui_tokens.gd` y `tokens.css`): `godot --headless --path . --script res://scripts/tools/gen_ui_tokens.gd`.
 
 Las dos se ejecutan:
-- **Antes de cada commit**, con `.githooks/pre-commit`, solo si lo preparado incluye `tokens.json` o algún `.gd`. Se activa una vez por clon con `git config core.hooksPath .githooks`. Usa `tools/godot.cmd` si existe o `godot` del PATH; sin Godot avisa y deja pasar.
-- **Antes de publicar**, en el paso «Import and export» de `.github/workflows/pages.yml`, justo después de `--import`. Si fallan, no se publica nada.
+- **Antes de cada commit**, con `.githooks/pre-commit`, solo si lo preparado incluye `tokens.json`, `tokens.css`, una página de `2-fundamentos.md` o `components/`, o algún `.gd`. Si `tokens.json`, `ui_tokens.gd` o `tokens.css` tienen cambios sin añadir, falla antes de nada («añade los tres al commit»), porque las comprobaciones leen el árbol de trabajo y no lo preparado. Cada llamada a Godot lleva `timeout 120` si existe `timeout`. Se activa una vez por clon con `git config core.hooksPath .githooks`. Usa `tools/godot.cmd` si existe o `godot` del PATH; sin Godot avisa y deja pasar.
+- **Antes de publicar**, en el paso «Import and export» de `.github/workflows/pages.yml`, justo después de `--import`. Si fallan, no se publica nada. El trabajo `build` tiene `timeout-minutes: 15`.
+
+Si un script de las herramientas falla por dentro (un `tokens.json` roto), Godot no sale solo: por eso las dos herramientas empiezan `_init` con `quit(1)` (la salida diferida que sustituye el `quit(código)` de una ejecución normal).
 
 Ambas herramientas son de desarrollo y quedan fuera de la exportación.
 
 ## Cómo añadir un token
 
 1. Edita `tokens.json`: añade el token (y su color en la paleta si hace falta) con su `usage`, y el valor de `alto-contraste` si es un semántico.
-2. Documéntalo en `2-fundamentos.md` y en la página del componente que lo usa.
+2. Documéntalo en `2-fundamentos.md` y en la página del componente que lo usa, escrito como `` `nombre` ``: `--check` falla si falta.
 3. Regenera: `godot --headless --path . --script res://scripts/tools/gen_ui_tokens.gd`.
 4. Úsalo: `UiTokens.color(&"nuevo")` o `UiTokens.NUEVO`. Nunca escribas el valor en un script.
-5. Añade `tokens.json` y `scripts/ui/ui_tokens.gd` al mismo commit: el hook lo exige.
+5. Añade `tokens.json`, `scripts/ui/ui_tokens.gd` y `docs/boost/design-system/tokens.css` al mismo commit: el hook lo exige.

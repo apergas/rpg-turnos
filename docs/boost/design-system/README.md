@@ -59,4 +59,4 @@ Las únicas imágenes de la interfaz son los retratos del bestiario (grupo **Bes
 - **Bestiario**: BestiaryCard.
 - **Mundo**: PlaceBanner, TitleLogo, InteractionPrompt, QuestMark, MapSquare.
 
-Las vistas previas son representaciones estáticas en HTML/CSS (`components/bundle.css`). En el juego, cada componente se construye en Godot con el tema de `scripts/ui/ui_theme.gd`; cómo se genera y se comprueba, en [5-godot.md](5-godot.md).
+Las vistas previas son representaciones estáticas en HTML/CSS (`components/bundle.css`, que lee las variables de `tokens.css`, generado desde `tokens.json` como `ui_tokens.gd`: no se edita a mano). En el juego, cada componente se construye en Godot con el tema de `scripts/ui/ui_theme.gd`; cómo se genera y se comprueba, en [5-godot.md](5-godot.md).

@@ -1074,7 +1074,7 @@ func set_walking(on: bool) -> void:
 ## Incienso burning), or whole again. Every mesh of the figure.
 func set_faded(on: bool) -> void:
 	for mi in _meshes:
-		mi.transparency = UiTokens.OPACITY_FADED if on else 0.0
+		mi.transparency = 1.0 - UiTokens.OPACITY_FADED if on else 0.0
 
 
 ## A group coming back on the map: every mesh from invisible to solid in seconds.

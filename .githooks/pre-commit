@@ -1,10 +1,19 @@
 #!/usr/bin/env bash
-# Pre-commit: UiTokens al día con tokens.json y sin valores de interfaz a mano.
+# Pre-commit: UiTokens y tokens.css al día con tokens.json, tokens documentados y sin valores de interfaz a mano.
 # Se activa una vez por clon: git config core.hooksPath .githooks
 
 staged=$(git diff --cached --name-only)
-if ! echo "$staged" | grep -qE '^docs/boost/design-system/tokens\.json$|\.gd$'; then
+if ! echo "$staged" | grep -qE '^docs/boost/design-system/(tokens\.json|tokens\.css|2-fundamentos\.md|components/.*)$|^scripts/ui/ui_tokens\.gd$|\.gd$'; then
   exit 0
+fi
+
+# Las comprobaciones leen el árbol de trabajo, no lo preparado: si los tres archivos
+# generados tienen cambios sin añadir, lo que se comprueba no es lo que se confirma.
+unstaged=$(git diff --name-only -- docs/boost/design-system/tokens.json scripts/ui/ui_tokens.gd docs/boost/design-system/tokens.css)
+if [ -n "$unstaged" ]; then
+  echo "pre-commit: Hay cambios sin añadir en tokens.json / ui_tokens.gd / tokens.css: añade los tres al commit. Sin añadir:" >&2
+  echo "$unstaged" >&2
+  exit 1
 fi
 
 if [ -f tools/godot.cmd ]; then
@@ -16,9 +25,14 @@ else
   exit 0
 fi
 
+# Un script de Godot que falla por dentro puede quedarse colgado: con `timeout`, 120 s como máximo.
+if command -v timeout >/dev/null 2>&1; then
+  godot=(timeout 120 "${godot[@]}")
+fi
+
 failed=0
 if ! "${godot[@]}" --headless --path . --script res://scripts/tools/gen_ui_tokens.gd -- --check; then
-  echo "pre-commit: ui_tokens.gd no coincide con tokens.json. Ejecuta gen_ui_tokens.gd (godot --headless --path . --script res://scripts/tools/gen_ui_tokens.gd) y añade scripts/ui/ui_tokens.gd." >&2
+  echo "pre-commit: ui_tokens.gd / tokens.css no coinciden con tokens.json, un token no está documentado o bundle.css usa una variable sin definir (las líneas de arriba). Ejecuta gen_ui_tokens.gd (godot --headless --path . --script res://scripts/tools/gen_ui_tokens.gd) y añade scripts/ui/ui_tokens.gd y docs/boost/design-system/tokens.css." >&2
   failed=1
 fi
 if ! "${godot[@]}" --headless --path . --script res://scripts/tools/check_ui_values.gd; then

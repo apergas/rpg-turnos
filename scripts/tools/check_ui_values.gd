@@ -15,9 +15,12 @@ var _hits := 0
 
 
 func _init() -> void:
+	# A runtime error below would hang a --script run; this deferred quit(1) ends it, and
+	# the quit(code) at the end replaces it.
+	quit(1)
 	_color_literal.compile("\\bColor\\(")
 	_font_size_literal.compile("add_theme_font_size_override\\(\\s*[^,]+,\\s*-?\\d")
-	_font_size_assign.compile("\\bfont_size\\s*=\\s*-?\\d")
+	_font_size_assign.compile("(\\b|default_)font_size\\s*=\\s*-?\\d")
 	_scan(ROOT)
 	if _hits == 0:
 		print("Valores de interfaz: sin valores a mano")
