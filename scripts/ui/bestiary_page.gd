@@ -1,8 +1,9 @@
 class_name BestiaryPage extends VBoxContainer
 ## The album of enemies by family (Bestiary.FAMILIES): each family's title with how many of
 ## its enemies have been beaten ("Plantas 3/4"; complete, in green and with its prize:
-## "Plantas 4/4 · Anillo de savia"), and under it its cards: portrait and name once met in
-## battle, a dark silhouette and "???" until then. fill() rebuilds it from the GameState.
+## "Plantas 4/4 · Anillo de savia"), and under it its cards in three states
+## (CardState): "??" until met in battle, the portrait greyed (the portrait-seen token) and the
+## name once met, the portrait as it is once beaten. fill() rebuilds it from the GameState.
 ## A card of an enemy seen is pressed (tap, or arrows and Enter) and emits card_chosen(id).
 
 signal card_chosen(id: String)
@@ -13,7 +14,10 @@ const ELEMENT_NAMES := {Skill.FIRE: "Fuego", Skill.ICE: "Hielo", Skill.THUNDER: 
 const COLUMNS := 6
 const CARD_SIDE := 96.0
 const TOUCH_CARD_SIDE := 84.0
-const UNKNOWN := "???"
+const UNKNOWN := "??"
+## How a card shows: never met (only "??"), met but not beaten (its portrait greyed,
+## the portrait-seen token) and beaten at least once (its portrait as it is).
+enum CardState {UNSEEN, SEEN, BEATEN}
 ## On a caravan game the album has two parts, each under its own title: the v1's families
 ## and the v2's.
 const PART_TITLES := ["Villaclaro", "La caravana"]
@@ -83,7 +87,7 @@ func _add_section(state: GameState, ids: Array, text: String, complete: bool) ->
 	grid.add_theme_constant_override("v_separation", UiTokens.SPACE_2)
 	_box.add_child(grid)
 	for id: String in ids:
-		grid.add_child(_card(id, state.seen_enemies.has(id)))
+		grid.add_child(_card(id, card_state(state, id)))
 	return title
 
 
@@ -133,19 +137,37 @@ static func _elements(ids: Array[String]) -> String:
 	return ", ".join(names)
 
 
-func _card(id: String, seen: bool) -> Control:
+static func card_state(state: GameState, id: String) -> CardState:
+	if state.defeated_enemies.has(id):
+		return CardState.BEATEN
+	if state.seen_enemies.has(id):
+		return CardState.SEEN
+	return CardState.UNSEEN
+
+
+func _card(id: String, shown: CardState) -> Control:
 	var side := TOUCH_CARD_SIDE if Device.is_touch() else CARD_SIDE
+	var seen := shown != CardState.UNSEEN
 	var panel := PanelContainer.new()
 	var box := VBoxContainer.new()
 	panel.add_child(box)
-	var picture := TextureRect.new()
-	picture.texture = load("res://assets/bestiary/%s.png" % id)
-	picture.custom_minimum_size = Vector2(side, side)
-	picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	if not seen:
-		picture.modulate = UiTokens.color(&"surface-window-solid")
-	box.add_child(picture)
+	if seen:
+		var picture := TextureRect.new()
+		picture.texture = load("res://assets/bestiary/%s.png" % id)
+		picture.custom_minimum_size = Vector2(side, side)
+		picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		if shown == CardState.SEEN:
+			picture.modulate = UiTokens.color(&"portrait-seen")
+		box.add_child(picture)
+	else:
+		var unknown := Label.new()
+		unknown.text = UNKNOWN
+		unknown.custom_minimum_size = Vector2(side, side)
+		unknown.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		unknown.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		UiTheme.style_label(unknown, &"title-m", &"text-disabled")
+		box.add_child(unknown)
 	var label := Label.new()
 	label.text = EnemyLibrary.data(id).display_name if seen else UNKNOWN
 	label.custom_minimum_size.x = side
