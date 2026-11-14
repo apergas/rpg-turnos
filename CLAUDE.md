@@ -11,10 +11,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 The code says what each script does; this is the map, plus what the code can't tell you.
 
 - `scenes/title/` + `scripts/title/` — `TitleScreen`, the main scene: loads and applies the options, owns the only `AudioDirector`, the save slots, then creates a `Game`.
-- `scenes/game/` + `scripts/game/` — `Game` (one play session: zones, battles, cutscenes, autosaves, autoplay) and the pure rules it owns (`GameState`, `SaveData` / `SaveStore`, shop, inn, quests, bestiary, equipment, leveling...).
+- `scenes/game/` + `scripts/game/` — `Game` (one play session, a coordinator over its pieces: zones, battles, cutscenes, autosaves, autoplay) and the pure rules it owns (`GameState`, `SaveData` / `SaveStore`, shop, inn, quests, bestiary, equipment, leveling...).
 - `scripts/story/` — `StoryState`, `Cutscene` (`data/cutscenes/<id>.tres`) and `CutscenePlayer`.
-- `scenes/world/` + `scripts/world/` — `World` (one map built from `data/zones/<id>.tres`, `ZoneData`), `Player`, the `WorldStage` / `DungeonMap` builders and the monster groups.
-- `scenes/battle/` + `scripts/battle/` — `BattleScene` (plays a battle back) over `BattleEngine` (pure rules), `BattleActor` (every figure, its `LOOKS` table) and `EnemyLibrary` (`data/enemies/`).
+- `scenes/world/` + `scripts/world/` — `World` (one map built from `data/zones/<id>.tres`, `ZoneData`; a thin owner over its `Map*` pieces and `AutoplayHunter`), `Player`, the `WorldStage` / `DungeonMap` builders and the monster groups.
+- `scenes/battle/` + `scripts/battle/` — `BattleScene` (plays a battle back) over `BattleEngine` (pure rules), `BattleActor` (every figure, alive; what it looks like is `ActorLooks`, built by `CreatureBuilder` / `CharacterBuilder`) and `EnemyLibrary` (`data/enemies/`).
 - `scripts/ui/` — windows and menus; `scripts/audio/` — music, effects and ambient, all synthesized in code.
 - `data/` — `.tres` resources: hero, enemies, skills, allies, zones, quests, cutscenes.
 - `assets/` — only the models in use (KayKit and Kenney, CC0; `assets/CREDITS.md`); the full packs stay in the git-ignored `assets_src/`.
@@ -31,7 +31,7 @@ What the code does not explain:
 
 ## Conventions
 
-- Before adding or moving GDScript, use the global skill `structuring-godot-code`. It says where new code goes (rule, builder or node) and when a big owner gets a separate piece instead of growing. Here, the big owners are `game.gd`, `world.gd` and `battle_actor.gd`. The pieces planned for them are in `docs/boost/specs/2026-11-14-refactor-arquitectura-design.md`.
+- Before adding or moving GDScript, use the global skill `structuring-godot-code`. It says where new code goes (rule, builder or node) and when a big owner gets a separate piece instead of growing. Here, the big owners are `game.gd`, `world.gd` and `battle_actor.gd`. The pieces they were split into are described in `docs/boost/specs/2026-11-14-refactor-arquitectura-design.md`.
 - UI colours and sizes come from `UiTokens` / `UiTheme`. `UiTokens` is generated from `docs/boost/design-system/tokens.json` by `scripts/tools/gen_ui_tokens.gd`; a new value goes into `tokens.json` (and its docs) and is regenerated, never written by hand. `check_ui_values.gd` forbids literal colours and font sizes (`font_size =` and `default_font_size =` too) in UI code; the `.githooks/pre-commit` hook (enable once per clone with `git config core.hooksPath .githooks`) and the Pages workflow run both checks. A menu row is `UiTheme.menu_row(Button.new())`; a window with rows gets `UiTheme.add_cursor(window)`.
 - Scenes and scripts are written as text. The `.tscn` files only hold the root node and its script; every other node (stage, UI, actors) is created in code. This is on purpose: the work is done without the editor, and a hand-written `.tscn` with dozens of nodes is more fragile than code. The Godot equivalent of small reusable scenes here is a node class with one job, created in code by its owner.
 - Three kinds of script:

@@ -1,75 +1,24 @@
 class_name Game extends Node
-## One play session, created by TitleScreen (setup() before add_child). Owns the
-## GameState and the map of the current zone (a World built from its ZoneData), and puts
-## a battle on top of the map when the hero touches a group of monsters on it (its
-## formation, World.contact_enemies()) or the zone's boss. The map stays while battles
-## come and go, so the hero's position, the camera and the groups survive them; walking
-## into an open exit fades to black, frees the map and builds the next zone at the exit's
-## entry (GameState.zone_id), every group back. A victory adds the gold and counts
-## every enemy defeated for the quest; a boss also sets its world flag (the Rey Slime
-## lifts the fog of the meadow's north exit) and gives its key item. Fleeing just goes
-## back to the map; a defeat takes half the gold (GameState.defeat_gold_loss()), heals the
-## hero and sends them to the last village visited (GameState.town_zone), EXP kept, like
-## the Ala de viaje used from the pause menu, which also leaves a portal in that village
-## that leads back once (GameState.open_portal(); a second Ala replaces it, a defeat leaves
-## it open). Talking to the old woman heals, moves the
-## quest on and, once the slimes are reported, brings out the Rey Slime; the other
-## villagers say their ZoneData lines. The Coleccionista of Villaclaro trades the small medals for
-## prizes (Medals.talk()); a battle's medal drops go to GameState.medals (Medals.take()).
-## The merchant opens the ShopWindow; the innkeeper
-## offers a free night (Inn.stay(): fade to black, full HP and MP, autosave); a chest gives
-## what it holds (Chests.open()) and stays open. The hero's figure on the map and in
-## battle shows the weapon and shield worn. On a dungeon floor the lever sets its world
-## flag (and opens the gates it works), the key goes to the key items (and its flag is
-## set, so it stays taken) and a locked gate opens with the key, which is used up; all
-## three autosave silently. Picks the zone's music (map, village, battle,
-## boss), autosaves after talking, after every won battle, after shopping, (silently)
-## after opening a chest, after a defeat and after every change of zone, and opens the
-## pause menu. Emits quit_to_title when the player goes back to the title.
-## With `--debug` on the command line (never otherwise) it owns a GameDebug: F1 on the map
-## opens the debug panel, and GameDebug does what its buttons ask (printed as "Depuración: ...").
-## The story (GameState.story): a new game opens with the prologue in the hero's house
-## (data/cutscenes/prologo.tres, which starts the slimes quest); each boss beaten plays
-## its cutscene (StoryState.AFTER_BOSS) and the first visit to each village its own
-## (StoryState.ON_VILLAGE), through the CutscenePlayer; the villagers' lines follow the
-## chapter. Beating the Señor de la Niebla (GameState.FINAL_BOSS) plays the ending (back
-## to Villaclaro), marks the save as finished (story.finished) and StoryFlow rolls the credits with
-## the numbers of the game (CreditsScreen); then it goes back to the title. A finished
-## save loads in Villaclaro and the world can still be walked.
-## Each bestiary family beaten whole (Bestiary) gives its prize once, after the battle that completes it or when a game is loaded, in the dialogue window.
-## The side quests (GameState.quests): a villager or a board asks the QuestLog first (a
-## report, a figure found, a new offer) and says its chapter lines if it has nothing about
-## any; the map shows the marks and the sought figures it says. Each finished quest shows
-## for a few seconds (World.show_mission_done()) and no quest holds anything back. On
-## autoplay it reads and talks like a player on its route, uses the seeds at once and flies
-## back to report to whoever is waiting in the last village.
-## On autoplay it prints the gold and the equipment each time they change, the level and
-## the play time on every change of zone and, after the credits, the play time of the
-## whole run (TitleScreen then quits). After a won battle, when the hero needs rest
-## (GameState.needs_rest()) or the map has no group left (GameAutoplay.needs_groups()) away from a
-## village, it flies back with an Ala de viaje, sleeps at the inn, restocks at the shop
-## and goes back through the portal; after a defeat it
-## sleeps and restocks too. With no Ala de viaje an empty map gets its groups back at once.
-## Run on its own (res://scenes/game/game.tscn) it starts a new game with its own
-## AudioDirector and default options.
+## One play session, created by TitleScreen (setup() before add_child); run on its own
+## (res://scenes/game/game.tscn) it starts a new game with its own AudioDirector and default
+## options. A coordinator: it owns the GameState, the current map (in its SessionContext,
+## which it passes to every piece), the fade, the saving (_autosave(), the pause menu's
+## Guardar), the busy flag (_set_busy(): the pause menu and the debug panel only open on the
+## map with nothing else going on), the map's status (_refresh_status()), the map music, the
+## pause menu and the ShopWindow; it loads a save or starts a new game (the prologue), and
+## emits quit_to_title when the player goes back to the title or an ending is over.
+## Each job of the session is a piece, a child Node wired in _add_pieces(): ZoneTravel (the
+## change of map, exits, the Ala and its portal), StoryFlow (the cutscenes and the endings),
+## CaravanFlow (the v2's departure and companion), FigureTalk (figures, shops, inns, wells,
+## chests, the lever, the key, the gates), BattleFlow (the battles and the boss on the map),
+## GameAutoplay (only with --autoplay) and GameDebug (only with --debug). What a piece awaits
+## from another is a Callable Game wires; what it reports is a signal Game connects.
 ##
-## `-- --autoplay --autoplay-save`: after the first autosave that follows a won battle
-## it prints the saved values ("Guardado: ...") and goes back to the title, which loads
-## the save at once; the loaded game prints the same values ("Cargado: ...").
-## `-- --autoplay --autoplay-menu`: MENU_TOUR_DELAY seconds into the map (before any group
-## is in reach) it shows every page of the pause menu (PauseMenu.tour()), to
-## record frames of it.
-## `-- --autoplay --autoplay-zone=<id>`: a new game that starts in that zone with the
-## level, gold, gear and progress AUTOPLAY_ZONES gives it.
-## `-- --autoplay --autoplay-zone=ciudad` / `portal`: the v2's last stretch: Lv 35 at the city's
-## first floor (the Grifo beaten), or Lv 38 at the portal quarter (the Guardián beaten, its
-## key); they play on to the Devorador, the ending, the v2's credits and "Continuará".
-## `-- --autoplay --autoplay-zone=medallas`: the finished game of ECHO_START in Villaclaro;
-## it hunts the meadow's groups until it carries every medal dropped (MEDAL_TOUR_CHANCE),
-## then talks to the Coleccionista and prints "Medallas: n/12 · premios n/5".
-## `-- --autoplay --autoplay-zone=eco`: a finished game in the throne room at Lv 20 that
-## fights the Eco de la Niebla again and again, printing each result.
-## `-- --autoplay --autoplay-easy`: a new game on Fácil.
+## `-- --autoplay --autoplay-save`: the first save after a won battle is printed
+## ("Guardado: ...") and the title loads it at once ("Cargado: ...", printed here).
+## `-- --autoplay --autoplay-menu`: MENU_TOUR_DELAY seconds into the map it shows every page
+## of the pause menu (PauseMenu.tour()), to record frames of it.
+## The other autoplay starts are in AutoplayStarts and GameAutoplay.
 
 signal quit_to_title
 

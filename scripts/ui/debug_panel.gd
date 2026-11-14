@@ -1,10 +1,10 @@
 class_name DebugPanel extends Control
-## Development only. Game builds it only with `--debug` on the command line
+## Development only. GameDebug builds it only with `--debug` on the command line
 ## (RunFlags.debug(); the web has no way to pass it), and autoplay never uses it.
 ## F1 on the map, while `available` (nothing else going on, the tree not paused), opens it
 ## over everything and pauses the tree, like the pause menu; F1, Esc, Cerrar or a tap
-## outside close it. Each button emits action_chosen(action, arg): Game does it, prints
-## "Depuración: ..." and answers with show_result(). Ir a closes the panel first: Game takes
+## outside close it. Each button emits action_chosen(action, arg): GameDebug does it, prints
+## "Depuración: ..." and answers with show_result(). Ir a closes the panel first: GameDebug takes
 ## the hero there under black. Every button has a name (zone_<id>, level_up, gold_100,
 ## boss_<id>...), so a script can press it.
 
@@ -29,7 +29,7 @@ const ROW_WIDTH := 720.0
 ## Room the title, the two lines, Cerrar and the margins leave the scrolling list.
 const LIST_RESERVED := 200.0
 
-## False while a battle, a dialogue, a fade or a menu is on (Game._set_busy()).
+## False while a battle, a dialogue, a fade or a menu is on (Game._set_busy() through GameDebug.set_available()).
 var available := false
 
 var _state: GameState
@@ -143,7 +143,7 @@ func close() -> void:
 	open_changed.emit(false)
 
 
-## Game's answer to an action: what was done (also printed), and the panel brought up to
+## GameDebug's answer to an action: what was done (also printed), and the panel brought up to
 ## date.
 func show_result(text: String) -> void:
 	_result.text = text
