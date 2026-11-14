@@ -77,11 +77,11 @@ static func of_zone(zone_id: String) -> Array[String]:
 	return ids
 
 
-## The chests of this game: the v1's, plus the v2's once the caravan has been joined.
+## How many chests the game has so far: those of the parts reached (GameState.part()).
 static func total(state: GameState) -> int:
 	var count := 0
 	for id: String in CHESTS:
-		if state.in_caravan() or not (CHESTS[id].zone in ZoneData.V2_ZONES):
+		if ZoneData.part_of(CHESTS[id].zone) <= state.part():
 			count += 1
 	return count
 
@@ -90,7 +90,7 @@ static func total(state: GameState) -> int:
 static func opened_count(state: GameState) -> int:
 	var count := 0
 	for id in state.opened_chests:
-		if CHESTS.has(id) and (state.in_caravan() or not (CHESTS[id].zone in ZoneData.V2_ZONES)):
+		if CHESTS.has(id) and ZoneData.part_of(CHESTS[id].zone) <= state.part():
 			count += 1
 	return count
 

@@ -15,9 +15,12 @@ class_name ZoneData extends Resource
 const IDS: Array[String] = ["pradera", "bosque", "mina_1", "mina_2", "mina_3",
 	"castillo_patio", "castillo_trono", "caravana", "jungla", "desierto", "montana_1", "montana_2",
 	"ciudad_1", "ciudad_2"]
-## The zones of the v2 (the caravan), growing with each version: a save with the caravan's
-## flag is only valid on one of these, and a save without it only on the others.
+## The zones of the v2 (the caravan), growing with each version; which zones a save may be on:
+## zones_of_part().
 const V2_ZONES: Array[String] = ["caravana", "jungla", "desierto", "montana_1", "montana_2", "ciudad_1", "ciudad_2"]
+## The zones of the v3 (Brumaclara), growing with each version like V2_ZONES (3.0.0:
+## Brumaclara and the Ciénaga).
+const V3_ZONES: Array[String] = []
 ## Side of a dungeon cell, in metres.
 const CELL := 4.0
 ## Dungeon cells: rock (a wall in a castle), floor, stairs up and down, chest, lever,
@@ -259,6 +262,33 @@ static func by_id(zone_id: String) -> ZoneData:
 	if not zone_id in IDS:
 		return null
 	return load("res://data/zones/%s.tres" % zone_id) as ZoneData
+
+
+## The part of the game a zone belongs to (GameState.part()): 3 for V3_ZONES, 2 for V2_ZONES
+## (the Caravana among them), 1 for the rest. What a quest or a chest of that zone counts for.
+static func part_of(zone_id: String) -> int:
+	if zone_id in V3_ZONES:
+		return 3
+	return 2 if zone_id in V2_ZONES else 1
+
+
+## The zones a save of that part may stand in or have as its last village: the v1's, the
+## v2's, and in the part 3 the Caravana, the v3's and the meadow (the visit to Villaclaro of
+## the 3.2.0).
+static func zones_of_part(part: int) -> Array[String]:
+	var zones: Array[String] = []
+	match part:
+		3:
+			zones.append("caravana")
+			zones.append_array(V3_ZONES)
+			zones.append("pradera")
+		2:
+			zones.assign(V2_ZONES)
+		_:
+			for id in IDS:
+				if part_of(id) == 1:
+					zones.append(id)
+	return zones
 
 
 ## Where entry_id puts the player: [position, yaw in degrees]. On a dungeon floor "S"

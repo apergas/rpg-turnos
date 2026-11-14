@@ -212,7 +212,7 @@ func print_v2_completed(numbers: Dictionary) -> void:
 	var state := _ctx.state
 	print("Juego completado (v2): Nv %d, tiempo en la caravana %s, tiempo de juego %s, misiones de la caravana %d/%d"
 		% [state.hero.level, numbers.time, CreditsData.clock(_ctx.play_time),
-		state.quests.done_of(true), QuestLog.total_of(true)])
+		state.quests.done_of(2), QuestLog.total_of(2)])
 	print("Familias completas: %d/%d" % [Bestiary.complete_count(state),
 		Bestiary.families(state).size()])
 	print("Derrotas: %d" % _defeats)

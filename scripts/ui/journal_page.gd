@@ -36,20 +36,23 @@ func fill(state: GameState) -> void:
 		_line(line, UiTheme.SMALL)
 
 
-## The Colección: each count on its own line, never a total percentage.
+## The Colección: each count on its own line, never a total percentage. From the caravan on,
+## the story and the missions of each part.
 static func collection_lines(state: GameState) -> Array[String]:
-	var missions: Array[String] = ["Misiones: %d/%d" % [state.quests.done_of(false),
-		QuestLog.total_of(false)]]
-	if state.in_caravan():
-		missions = ["Misiones de Villaclaro: %d/%d" % [state.quests.done_of(false),
-			QuestLog.total_of(false)],
-			"Misiones de la caravana: %d/%d" % [state.quests.done_of(true),
-			QuestLog.total_of(true)]]
-	var lines: Array[String] = ["Historia: %s" % ("terminada" if state.is_finished() else "sin terminar")]
-	if state.in_caravan():
-		lines = ["Historia de Villaclaro: terminada",
-			"La caravana: %s" % ("terminada" if state.is_finished_v2() else "en camino")]
-	lines.append_array(missions)
+	var part := state.part()
+	var lines: Array[String] = []
+	if part == 1:
+		lines.append("Historia: %s" % ("terminada" if state.is_finished() else "sin terminar"))
+		lines.append("Misiones: %d/%d" % [state.quests.done_of(1), QuestLog.total_of(1)])
+	else:
+		lines.append("Historia de Villaclaro: terminada")
+		lines.append("La caravana: %s" % ("terminada" if state.is_finished_v2() else "en camino"))
+		if part == 3:
+			lines.append("Brumaclara: %s" % ("terminada" if state.story.finished_v3 else "en camino"))
+		lines.append("Misiones de Villaclaro: %d/%d" % [state.quests.done_of(1), QuestLog.total_of(1)])
+		lines.append("Misiones de la caravana: %d/%d" % [state.quests.done_of(2), QuestLog.total_of(2)])
+		if part == 3:
+			lines.append("Misiones de Brumaclara: %d/%d" % [state.quests.done_of(3), QuestLog.total_of(3)])
 	lines.append_array([
 		"Bestiario: %d/%d" % [Bestiary.seen_count(state), Bestiary.total_count(state)],
 		"Familias: %d/%d" % [Bestiary.complete_count(state), Bestiary.families(state).size()],

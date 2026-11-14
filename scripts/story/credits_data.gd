@@ -49,8 +49,8 @@ static func v2_credits_sections(state: GameState, numbers: Dictionary) -> Array:
 		% numbers.time)
 	journey.append(("Combates en la caravana: %d" if numbers.since else "Combates: %d")
 		% numbers.battles)
-	journey.append("Misiones de la caravana: %d/%d" % [state.quests.done_of(true),
-		QuestLog.total_of(true)])
+	journey.append("Misiones de la caravana: %d/%d" % [state.quests.done_of(2),
+		QuestLog.total_of(2)])
 	journey.append("Nivel: %d" % state.hero.level)
 	return [
 		["La caravana del portal", ["La historia de %s" % state.hero.display_name]],
