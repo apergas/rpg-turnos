@@ -127,6 +127,14 @@ npcs = [{
 "pos": Vector3(7, 0, 8.5),
 "yaw": -120.0
 }, {
+"kind": "npc",
+"lines": ["Me he secado. Por fuera. Por dentro sigo oyendo ranas."],
+"look": "MIST_VILLAGER_M",
+"name": "Pescador",
+"needs": "pescador_vuelve",
+"pos": Vector3(-8.5, 0, -1),
+"yaw": 90.0
+}, {
 "gone": "brumaclara_vista",
 "kind": "npc",
 "lines": ["Voy contigo."],

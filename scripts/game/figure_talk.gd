@@ -97,12 +97,14 @@ func on_npc(index: int) -> void:
 		_ctx.set_busy.call(false)
 		check_village_scene.call()  # the Caravana's first visit, if the hero left
 		return
-	var chief := figure == CaravanFlow.CARAVAN_CHIEF
-	var talk := _ctx.state.quests.talk(_ctx.state, _ctx.zone.id, figure, chief)
+	# The figure the missions of its part are handed to (the v2's Jefe de caravana, the v3's
+	# Orvalla): every report at once, and only one waiting line after its chapter lines.
+	var receiver := figure in [CaravanFlow.CARAVAN_CHIEF, StoryState.V3_KEEPER]
+	var talk := _ctx.state.quests.talk(_ctx.state, _ctx.zone.id, figure, receiver)
 	var said: Array = talk.get("lines", _ctx.world.npc_lines(index, _ctx.state.chapter()))
-	if chief and talk.get("kind", "") == QuestLog.TALK_WAIT:
-		# The Jefe with quests under way and nothing to deliver: his chapter lines first (the
-		# way on, his joke), then one waiting line.
+	if receiver and talk.get("kind", "") == QuestLog.TALK_WAIT:
+		# The receiver with quests under way and nothing to deliver: its chapter lines first (the
+		# way on, a joke), then one waiting line.
 		said = _ctx.world.npc_lines(index, _ctx.state.chapter()) + talk.lines
 	if figure == StoryState.V3_KEEPER and not StoryState.v3_way_on(_ctx.state.world_flags) \
 			and talk.get("kind", QuestLog.TALK_WAIT) == QuestLog.TALK_WAIT:

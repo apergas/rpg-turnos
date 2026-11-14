@@ -24,6 +24,8 @@ const QUESTS := {
 	"cristales_hielo": preload("res://data/quests/cristales_hielo.tres"),
 	"centinelas": preload("res://data/quests/centinelas.tres"),
 	"superviviente": preload("res://data/quests/superviviente.tres"),
+	"juncos": preload("res://data/quests/juncos.tres"),
+	"pescador": preload("res://data/quests/pescador.tres"),
 }
 const VILLAGE_ZONE := "pradera"
 ## Ends the waiting lines of a HUNT or GATHER of several, so the progress is said aloud.
@@ -42,10 +44,11 @@ const TALK_OFFER := "offer"
 const TALK_WAIT := "wait"
 ## The notice of several missions finished at once on a phone (one line of 300 px).
 const DONE_MANY_TEXT := "Misiones cumplidas: %d"
-## The v2's flags in the order a game sets them: a turn-in figure that needs a flag earlier
+## The v2's and v3's flags in the order a game sets them: a turn-in figure that needs a flag earlier
 ## than its quest's is always there when the quest can be finished (problems()).
 const FLAG_ORDER := ["caravana_vista", "caravana", "companero", "jaguar_sombrio",
-	"gusano_dunas", "grifo_cumbre", "guardian_ciudad", "devorador_portal"]
+	"gusano_dunas", "grifo_cumbre", "guardian_ciudad", "devorador_portal", "brumaclara",
+	"garza_legamo"]
 
 ## The village quest, the same object as GameState.quest.
 var village: Quest
