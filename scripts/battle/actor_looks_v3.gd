@@ -110,8 +110,8 @@ const LOOKS := {
 		"beak_color": Color(0.82, 0.66, 0.3),
 		"eye_color": Color(0.95, 0.8, 0.2),
 		"lamp_color": Color(1.0, 0.85, 0.45),
-		"scale": 1.15,
-		"top": 4.0,
+		"scale": 0.95,
+		"top": 3.5,
 		"gentle": true,
 	},
 }

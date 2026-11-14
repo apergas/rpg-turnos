@@ -3,8 +3,8 @@ class_name FigureTalk extends Node
 ## them. The Abuela Rosa heals and moves the village quest on (on_talk()); a villager, a
 ## board or a thing picked up says what the QuestLog has about a quest, or its chapter lines
 ## (on_npc(); the Coleccionista: talk_to_collector(); the Jefe de caravana: CaravanFlow;
-## Orvalla says when the v3 has no way on yet); a shop opens the ShopWindow (on_shop()) and an inn offers the free night (on_inn()), each
-## after the quest waiting at its figure; a well, a chest, the lever, the key and a gate.
+## Orvalla says when the v3 has no way on yet); a shop opens the ShopWindow (on_shop()) and an
+## inn offers the free night (on_inn()), each after the quest waiting at its figure; a well, a chest, the lever, the key and a gate.
 ## Gets the session and the ShopWindow in setup(); never stores Game or a World.
 
 const HEAL_LINE := "Descansas un momento. PV y PM recuperados."

@@ -2,9 +2,9 @@ class_name MistCreatureBuilder extends RefCounted
 ## Constructor: the v3's figures built in code (3.0.0), from their ActorLooksV3 entry, so
 ## CreatureBuilder does not grow: the variants of older figures (the Sapo de légamo is the
 ## frog, the Sanguijuela the snake, the Junco andante the plant, in their own colours) and the
-## new ones: the Fuego fatuo, the Caimán de bruma and the Garza de légamo. Static only, keeps no state: like
-## CreatureBuilder, each build_x(actor, data) hangs its meshes under actor.body() through the
-## actor's builder methods. build() says whether the look was one of its own.
+## new ones: the Fuego fatuo, the Caimán de bruma and the Garza de légamo. Static only, keeps no
+## state: like CreatureBuilder, each build_x(actor, data) hangs its meshes under actor.body()
+## through the actor's builder methods. build() says whether the look was one of its own.
 
 const Look = ActorLooks.Look
 ## Side profile of the Fuego fatuo's flame (lathed around +Y): round below, a tip above.
@@ -83,7 +83,7 @@ static func build_caiman(actor: BattleActor, data: Dictionary) -> void:
 
 ## The Garza de légamo, the Ciénaga's boss: a huge heron on two long thin legs, a muddy body
 ## leaning forward with folded wings, the lamp of the lighthouse shining in its crop, an S of a
-## neck, a small head with a crest and a long yellow beak, facing -Z. About 4 m tall at its
+## neck, a small head with a crest and a long yellow beak, facing -Z. About 3.3 m tall at its
 ## scale.
 static func build_heron(actor: BattleActor, data: Dictionary) -> void:
 	var root := Node3D.new()
