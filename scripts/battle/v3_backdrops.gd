@@ -7,14 +7,14 @@ class_name V3Backdrops extends RefCounted
 
 const CIENAGA := "cienaga"
 ## The still water of the pools.
-const POND := Color(0.07, 0.1, 0.09)
+const POND := Color(0.04, 0.07, 0.12)
 ## [centre, radius] of the pools: behind and beside the fighters, never under them.
 const CIENAGA_PONDS := [[Vector3(-9, 0, -11), 4.0], [Vector3(8, 0, -15), 5.0],
 	[Vector3(-14, 0, -4), 3.0], [Vector3(12, 0, -4), 2.5]]
 ## [Decor id, position, yaw in degrees, scale] (BattleStage.add_decor_pieces()), out of the
 ## fighters' ellipse and the camera's way.
 const CIENAGA_DECOR := [
-	["dead_tree", Vector3(-4, 0, -10), 20.0, 1.0],
+	["dead_tree", Vector3(6, 0, -14), 20.0, 1.0],
 	["dead_tree", Vector3(11, 0, -9), 140.0, 1.2],
 	["dead_tree", Vector3(-13, 0, -17), 70.0, 1.1],
 	["dead_tree", Vector3(15, 0, -19), 200.0, 1.0],
