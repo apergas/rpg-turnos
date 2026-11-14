@@ -135,7 +135,11 @@ func reset_quiet() -> void:
 func after_battle(outcome: int) -> void:
 	var won := outcome == BattleEngine.State.WON
 	if won and _ctx.state.part() == 3 and not StoryState.v3_way_on(_ctx.state.world_flags):
-		# The last zone of the v3 there is so far is behind (3.0.0: the Garza): the run ends.
+		# The last zone of the v3 there is so far is behind (3.0.0: the Garza): the hero goes
+		# back to Brumaclara for the reports and offers, and the run ends.
+		if not _ctx.world.in_village() and _ctx.state.inventory.count(Inventory.WING) > 0:
+			await fly_home()
+			await restock()
 		print_v3_so_far()
 		quit_requested.emit()
 		return
@@ -253,12 +257,17 @@ func start_medal_tour() -> void:
 ## Autoplay: flies back to the last village with an Ala de viaje, rests and shops there and
 ## comes back through the portal.
 func retreat() -> void:
+	await fly_home()
+	await restock()
+	await _travel.on_portal()
+
+
+## Autoplay: uses an Ala de viaje to fly back to the last village.
+func fly_home() -> void:
 	_ctx.state.inventory.take(Inventory.WING)
 	print("Retirada al pueblo (PV %d/%d, PM %d, pociones %d)" % [_ctx.state.hero.hp,
 		_ctx.state.hero.max_hp, _ctx.state.hero.mp, _ctx.potion_count()])
 	await _travel.on_travel_requested()
-	await restock()
-	await _travel.on_portal()
 
 
 ## Autoplay: needs rest (GameState.needs_rest()), is only kept from the zone's boss by its
