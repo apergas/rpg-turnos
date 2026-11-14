@@ -1,6 +1,6 @@
 # Versión 2.7.0: partida nueva de verdad, bestiario en tres estados y Sanación compartida
 
-Fecha: 2026-11-14. Estado: spec, pendiente de revisión. Va antes de la v3 ([desarrollo](../../boost/v3-desarrollo.md)), porque cambia cosas de la v1 que también afectan a las partidas de ahora. La partida guardada sigue en la versión 14 y no gana ni pierde campos.
+Fecha: 2026-11-14. Estado: hecho (publicada en 2.7.0). Va antes de la v3 ([desarrollo](../../boost/v3-desarrollo.md)), porque cambia cosas de la v1 que también afectan a las partidas de ahora. La partida guardada sigue en la versión 14 y no gana ni pierde campos.
 
 ## Objetivo
 

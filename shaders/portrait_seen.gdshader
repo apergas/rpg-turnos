@@ -5,8 +5,8 @@
 shader_type canvas_item;
 
 // rgb: the wash colour; a: how much of it is blended in.
-uniform vec4 wash : source_color = vec4(0.72, 0.72, 0.8, 0.45);
-uniform float desaturate = 0.8;
+uniform vec4 wash : source_color = vec4(0.722, 0.722, 0.8, 0.549); // defaults = the tokens; BestiaryPage sets them from UiTokens
+uniform float desaturate = 0.85;
 
 void fragment() {
 	vec4 tex = COLOR; // the texture, already sampled
