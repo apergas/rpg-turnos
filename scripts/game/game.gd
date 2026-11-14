@@ -74,7 +74,6 @@ class_name Game extends Node
 signal quit_to_title
 
 const HERO_DATA := preload("res://data/hero.tres")
-const BATTLE_SCENE := preload("res://scenes/battle/battle_scene.tscn")
 const FADE_TIME := 0.3
 const TOUCH_HINT := "Toca el suelo para ir allí, o arrastra el dedo para andar."
 const REPEL_END_NOTICE := "El incienso se ha consumido."
@@ -87,6 +86,7 @@ var _travel: ZoneTravel
 var _story: StoryFlow
 var _caravan: CaravanFlow
 var _talk: FigureTalk
+var _battle: BattleFlow
 
 var _fade: ColorRect
 var _pause: PauseMenu
@@ -244,6 +244,7 @@ func _make_pieces() -> void:
 	_story = StoryFlow.new()
 	_caravan = CaravanFlow.new()
 	_talk = FigureTalk.new()
+	_battle = BattleFlow.new()
 	if RunFlags.autoplay():
 		_autopilot = GameAutoplay.new()
 		_autopilot.setup(_ctx)
@@ -256,7 +257,7 @@ func _add_pieces(load_failed: bool) -> void:
 	_travel.setup(_ctx)
 	_travel.check_arrival_line = _story.check_arrival_line
 	_travel.check_village_scene = _story.check_village_scene
-	_travel.update_boss = _update_boss
+	_travel.update_boss = _battle.update_boss
 	_travel.world_replaced.connect(_on_world_replaced)
 	_travel.village_checked.connect(_on_village_changed)
 	add_child(_travel)
@@ -272,13 +273,21 @@ func _add_pieces(load_failed: bool) -> void:
 	_caravan.switch_zone = _travel.switch_zone
 	add_child(_caravan)
 	_talk.setup(_ctx, _shop)
-	_talk.update_boss = _update_boss
+	_talk.update_boss = _battle.update_boss
 	_talk.choose_companion = _caravan.choose_companion
 	_talk.ask_departure = _caravan.ask_departure
 	_talk.check_village_scene = _story.check_village_scene
 	_talk.respawn_groups = _travel.respawn_groups
 	_talk.spawn_rare = _travel.spawn_rare
 	add_child(_talk)
+	_battle.setup(_ctx)
+	_battle.play_scene = _story.play_scene
+	_battle.finish_game = _story.finish_game
+	_battle.finish_v2 = _story.finish_v2
+	_battle.go_to_town = _travel.go_to_town
+	_battle.print_save = RunFlags.autoplay() and RunFlags.autoplay_save() and _save.is_empty()
+	_battle.quit_requested.connect(func() -> void: quit_to_title.emit())
+	add_child(_battle)
 	if _autopilot:
 		_autopilot.use_pieces(_travel, _talk)
 		_travel.zone_switched.connect(_autopilot.on_zone_switched)
@@ -288,6 +297,14 @@ func _add_pieces(load_failed: bool) -> void:
 		_autopilot.quit_requested.connect(func() -> void: quit_to_title.emit())
 		_caravan.autoplay_companion = _autopilot.companion
 		_caravan.autoplay_leaves = _autopilot.plays_v2
+		_battle.echo_wanted = _autopilot.echo
+		_battle.medal_chance = AutoplayStarts.MEDAL_TOUR_CHANCE if _autopilot.medal_tour \
+			else Medals.DROP_CHANCE
+		_battle.after_battle = _autopilot.after_battle
+		_battle.battle_started.connect(_autopilot.reset_quiet)
+		_battle.enemies_beaten.connect(_autopilot.on_enemies_beaten)
+		_battle.battle_lost.connect(_autopilot.on_battle_lost)
+		_battle.echo_fought.connect(_autopilot.on_echo_fought)
 		add_child(_autopilot)
 
 
@@ -302,7 +319,7 @@ func _on_world_replaced(world: World) -> void:
 	move_child(world, 0)
 	world.freeze(true)
 	world.set_audio(_audio)
-	world.encounter_triggered.connect(_on_encounter)
+	world.encounter_triggered.connect(_battle.on_encounter)
 	world.talk_requested.connect(_talk.on_talk)
 	world.npc_requested.connect(_talk.on_npc)
 	world.shop_requested.connect(_talk.on_shop)
@@ -317,149 +334,6 @@ func _on_world_replaced(world: World) -> void:
 	world.door_used.connect(_talk.on_door)
 	world.village_changed.connect(_on_village_changed)
 	world.stepped.connect(_on_stepped)
-
-
-func _on_encounter(boss: bool) -> void:
-	if _ctx.busy:
-		return
-	_set_busy(true)
-	if _autopilot:
-		_autopilot.reset_quiet()
-	state.battles += 1
-	var enemies: Array[Combatant] = []
-	if boss:
-		enemies.append(EnemyLibrary.data(_boss_id()))
-	else:
-		enemies = _ctx.world.contact_enemies()
-	if not boss:
-		var kept := state.give_metal_slime_hp(enemies)
-		if RunFlags.autoplay() and kept > 0:
-			print("Slime de Metal con PV %d" % kept)
-	BattleRewards.note_enemies(state, enemies, false)
-	var echo := boss and _boss_id() == _ctx.zone.postgame_boss_id
-	await _fade_to(1.0)
-	_ctx.world.set_active(false)
-	_audio.play_music(MusicLibrary.BOSS if boss else MusicLibrary.BATTLE)
-	_audio.stop_ambient()
-	var battle: BattleScene = BATTLE_SCENE.instantiate()
-	battle.setup(state.hero, enemies, state.inventory)
-	battle.set_audio(_audio)
-	battle.set_equipment(state.loadout.worn(Equipment.WEAPON),
-		state.loadout.worn(Equipment.SHIELD), state.loadout.worn(Equipment.HELMET))
-	battle.gold_lost = state.defeat_gold_loss()
-	battle.char_time = _options.char_time()
-	battle.time_scale = _options.combat_scale()
-	battle.camera_shake = _options.camera_shake
-	state.sync_level_cap()
-	battle.difficulty = state.difficulty
-	battle.zone = _ctx.zone
-	battle.quest_items = state.quests.wanted_items(state)
-	battle.medals_carried = state.medals.size()
-	battle.medal_chance = AutoplayStarts.MEDAL_TOUR_CHANCE if _autopilot and _autopilot.medal_tour else Medals.DROP_CHANCE
-	if state.ally_id != "":
-		battle.ally = Allies.data(state.ally_id, state.tramo())
-	add_child(battle)
-	await _fade_to(0.0)
-	var outcome: int = await battle.finished
-	# A call for help adds enemies during the fight.
-	BattleRewards.note_enemies(state, battle.engine.enemies, false)
-	var won := outcome == BattleEngine.State.WON
-	if _autopilot and echo:
-		_autopilot.on_echo_fought(won)
-	if won or outcome == BattleEngine.State.LOST:
-		Wells.on_battle(state)
-		_ctx.world.set_dry_wells(Wells.dry_ids(state))
-	await _fade_to(1.0)
-	if not boss:
-		# Under black: a beaten group leaves the map, one fled from stays half see-through.
-		_ctx.world.end_contact(outcome)
-	if state.keep_metal_slime_hp(battle.engine.enemies, outcome) > 0:
-		if RunFlags.autoplay():
-			print("Slime de Metal: PV %d guardados" % state.metal_slime_hp)
-		_autosave(false)  # a fled battle saves nothing else: quitting now must not lose them
-	var notice := ""
-	var reward_lines: Array[String] = []
-	var scene := ""
-	var mission_done := false
-	var finished_quests: Array[Dictionary] = []
-	var family_lines: Array[String] = []
-	var ending_v2 := false
-	if won:
-		var rewards := BattleRewards.after_victory(state, _ctx.zone, battle.engine.enemies,
-			battle.engine.gold_won, battle.engine.medals_won, boss)
-		notice = rewards.notice
-		reward_lines.assign(rewards.reward_lines)
-		scene = rewards.scene
-		mission_done = rewards.mission_done
-		finished_quests.assign(rewards.finished_quests)
-		family_lines.assign(rewards.family_lines)
-		ending_v2 = rewards.ending_v2
-		if _autopilot:
-			_autopilot.on_enemies_beaten(battle.engine.enemies, battle.engine.medals_won)
-	elif outcome == BattleEngine.State.LOST:
-		if _autopilot:
-			_autopilot.on_battle_lost(_ctx.zone.id)
-		state.gold -= battle.gold_lost
-		state.heal_full()
-		_travel.go_to_town()
-		notice = "Has vuelto %s." % ZoneTravel.to_place(_ctx.zone.village_name)
-	battle.queue_free()
-	_ctx.world.set_world_flags(state.world_flags)
-	_update_boss()
-	_refresh_status()
-	_ctx.world.set_active(true)
-	# Frozen until the fade is over: an exit or an encounter while Game is busy would be
-	# ignored and leave the map waiting forever.
-	_ctx.world.freeze(true)
-	_play_map_music()
-	if scene != "":
-		# Under black: no status window or map square while the map fades in.
-		_ctx.world.begin_cutscene()
-	await _fade_to(0.0)
-	if scene != "":
-		# The boss's cutscene says what the notice would (the fragment, the open road).
-		await _story.play_scene(scene)
-	else:
-		await _ctx.world.freeze(false)
-		if not reward_lines.is_empty():
-			await _ctx.world.show_dialogue("", reward_lines)
-		elif notice != "":
-			_ctx.world.show_notice(notice, "Premio", &"text-positive")
-	if not family_lines.is_empty():
-		_audio.play_sfx(SfxLibrary.LEVEL_UP)
-		await _ctx.world.show_dialogue("", family_lines)
-	if mission_done:
-		_ctx.world.show_mission_done(QuestLog.done_text(Quest.TITLE))
-	for finished: Dictionary in finished_quests:
-		_ctx.world.show_mission_done(QuestLog.done_text(finished.title))
-		_ctx.world.show_notice(" ".join(finished.lines), "Misión cumplida", &"text-positive")
-	if ending_v2:
-		await _story.finish_v2()
-		return
-	if won and state.is_finished() and not state.story.finished:
-		await _story.finish_game()
-		return
-	if outcome == BattleEngine.State.LOST:
-		_autosave(false)  # the gold lost sticks: going back to the title can't undo it
-	if won:
-		var data := _autosave(not boss and finished_quests.is_empty())  # keep its reward readable
-		if RunFlags.autoplay() and RunFlags.autoplay_save() and _save.is_empty() and not data.is_empty():
-			print("Guardado: %s" % CreditsData.summary(data))
-			quit_to_title.emit()
-			return
-	_set_busy(false)
-	if _autopilot:
-		await _autopilot.after_battle(outcome)
-
-
-## The boss of the current map: the zone's, or its postgame boss (ZoneData.postgame_boss_id)
-## once the game is finished.
-func _boss_id() -> String:
-	return BattleRewards.boss_id(_ctx.zone, state)
-
-
-func _boss_wanted() -> bool:
-	return BattleRewards.boss_wanted(_ctx.zone, state, not RunFlags.autoplay() or (_autopilot != null and _autopilot.echo))
 
 
 ## Inside a village it becomes the last one visited; the music follows. The first
@@ -501,18 +375,6 @@ func _on_title_requested() -> void:
 	quit_to_title.emit()
 
 
-## The zone's boss is on the map until beaten: the Rey Slime only while the quest asks
-## for it; on autoplay only from the zone's autoplay_boss_level on, and only while the
-## hero has AUTOPLAY_BOSS_HP of his max HP and AUTOPLAY_BOSS_MP of his max MP (a worn-out
-## hero fights on, or rests, first).
-func _update_boss() -> void:
-	if _boss_id() == "":
-		return
-	var strong_enough := not RunFlags.autoplay() or (state.hero.level >= _ctx.zone.autoplay_boss_level \
-		and AutoplayStarts.rested_for_boss(state.hero))
-	_ctx.world.set_boss_present(_boss_wanted() and strong_enough)
-
-
 ## The zone's map music, or its village one inside the village, and the zone's ambient
 ## under it (after a battle or a cutscene that silenced it, it comes back here).
 func _play_map_music() -> void:
@@ -529,9 +391,6 @@ func _set_busy(busy: bool) -> void:
 		_debug.available = not busy
 
 
-## Updates the map's status window, the quests' marks and sought figures and the hero's
-## weapon and shield; on autoplay also prints each new quest line and each change of gold
-## or equipment.
 ## Every STEP_DISTANCE metres walked: two steps for the credits, and the Incienso burns.
 func _on_stepped() -> void:
 	state.steps += 2
@@ -543,6 +402,8 @@ func _on_stepped() -> void:
 		_ctx.world.show_notice(REPEL_END_NOTICE)
 
 
+## Updates the map's status window, the quests' marks and sought figures and the hero's
+## weapon and shield.
 func _refresh_status() -> void:
 	state.sync_level_cap()
 	var missions := state.current_missions()
@@ -677,7 +538,7 @@ func _on_debug(action: String, arg: String) -> void:
 			var data := SaveData.from_state(state, _ctx.world.player_position(), _ctx.play_time)
 			text = "guardado en la ranura %d" % _slot if SaveStore.save_game(_slot, data) \
 				else "no se pudo guardar"
-	_update_boss()
+	_battle.update_boss()
 	_refresh_status()
 	print("Depuración: %s" % text)
 	_debug.show_result(text)
