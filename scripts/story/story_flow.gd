@@ -172,9 +172,9 @@ func finish_v2() -> void:
 	await _ctx.fade.call(1.0)
 	layer.queue_free()
 	_ctx.world.set_active(true)
+	_ctx.world.freeze(true)
 	_ctx.play_map_music.call()
 	await _ctx.fade.call(0.0)
-	await _ctx.world.freeze(false)
 	await _ctx.world.show_dialogue(CaravanFlow.CARAVAN_CHIEF, [PORTAL_STILL_LINE])
 	_ctx.set_busy.call(false)
 
