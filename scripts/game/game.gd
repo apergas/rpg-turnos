@@ -87,15 +87,6 @@ const REPEL_END_NOTICE := "El incienso se ha consumido."
 const HEAL_LINE := "Descansas un momento. PV y PM recuperados."
 const SAVED_NOTICE := "Partida guardada."
 const LOAD_FAILED_NOTICE := "No se pudo cargar la partida. Empiezas de nuevo."
-## Notice after beating a boss (by id); other bosses announce their key item.
-const BOSS_NOTICES := {
-	"rey_slime": "¡Villaclaro está a salvo! La niebla deja libre el camino del norte.",
-	"senor_niebla": "¡Consigues el último Fragmento del amuleto! La niebla se levanta.",
-	"eco_niebla": "El Eco de la Niebla se deshace en la bruma... por ahora.",
-}
-## Said before a boss's first-victory prize (Combatant.reward_equipment).
-const REWARD_LINE := "Entre la bruma brilla algo."
-const KEY_ITEM_NOTICE := "¡Consigues un %s!"
 const LEVER_NOTICE := "¡Tiras de la palanca! Se oye cómo se abre una reja."
 const KEY_NOTICE := "¡Encuentras la %s!"
 const DOOR_NOTICE := "Abres la reja con la %s."
@@ -212,7 +203,7 @@ func _ready() -> void:
 	# A loaded game (or an --autoplay-zone start) may have a family complete already: a
 	# finished game gets the Espada del alba now. After the "Cargado:" line, so the save
 	# round trip still compares what was saved.
-	var family_lines := _give_family_rewards()
+	var family_lines := BattleRewards.family_rewards(state)
 	_build_shop()
 	_build_fade()
 	_build_pause()
@@ -423,7 +414,7 @@ func _on_encounter(boss: bool) -> void:
 		var kept := state.give_metal_slime_hp(enemies)
 		if _autoplay and kept > 0:
 			print("Slime de Metal con PV %d" % kept)
-	_note_enemies(enemies, false)
+	BattleRewards.note_enemies(state, enemies, false)
 	var echo := boss and _boss_id() == _zone.postgame_boss_id
 	await _fade_to(1.0)
 	_ctx.world.set_active(false)
@@ -450,7 +441,7 @@ func _on_encounter(boss: bool) -> void:
 	await _fade_to(0.0)
 	var outcome: int = await battle.finished
 	# A call for help adds enemies during the fight.
-	_note_enemies(battle.engine.enemies, false)
+	BattleRewards.note_enemies(state, battle.engine.enemies, false)
 	var won := outcome == BattleEngine.State.WON
 	if _autoplay and echo:
 		_echo_fights += 1
@@ -476,39 +467,21 @@ func _on_encounter(boss: bool) -> void:
 	var family_lines: Array[String] = []
 	var ending_v2 := false
 	if won:
-		state.gold += battle.engine.gold_won
-		state.gold_earned += battle.engine.gold_won
-		var quest_was_on := state.quest.stage != Quest.Stage.DONE
-		_note_enemies(battle.engine.enemies, true)
-		for n in battle.engine.medals_won:
-			Medals.take(state, Medals.next_missing(state))
+		var rewards := BattleRewards.after_victory(state, _zone, battle.engine.enemies,
+			battle.engine.gold_won, battle.engine.medals_won, boss)
+		notice = rewards.notice
+		reward_lines.assign(rewards.reward_lines)
+		scene = rewards.scene
+		mission_done = rewards.mission_done
+		finished_quests.assign(rewards.finished_quests)
+		family_lines.assign(rewards.family_lines)
+		ending_v2 = rewards.ending_v2
 		if _autoplay:
 			for enemy in battle.engine.enemies:
 				if not enemy.is_boss:
 					_common_beaten += 1
 			if battle.engine.medals_won > 0:
 				print("Medalla: %d/%d" % [state.medals.size(), Medals.MEDALS.size()])
-		for enemy in battle.engine.enemies:
-			state.quest.on_victory(enemy.id)
-			if enemy.is_boss:
-				var first := not state.has_flag(enemy.id)
-				notice = _boss_notice(enemy)
-				scene = state.story.scene_after_boss(enemy.id)
-				if first and enemy.reward_equipment != "":
-					reward_lines.append(REWARD_LINE)
-					reward_lines.append_array(QuestRewards.wear_prize(state,
-						enemy.reward_equipment))
-		mission_done = quest_was_on and state.quest.stage == Quest.Stage.DONE
-		for enemy in battle.engine.enemies:
-			finished_quests.append_array(state.quests.on_victory(state, enemy.id))
-		# The enemies are noted as beaten above: a family may be complete now.
-		# The v2's last boss (the first time): its ending follows. It also completes the Jefes
-		# de la caravana, but no map is left to show the prize on: it comes when the game is
-		# next loaded, in the Caravana (_ready() gives it).
-		ending_v2 = boss and _boss_id() == StoryState.V2_FINAL_BOSS \
-			and not state.story.finished_v2
-		if not ending_v2:
-			family_lines = _give_family_rewards()
 	elif outcome == BattleEngine.State.LOST:
 		if _autoplay:
 			_defeats += 1
@@ -623,19 +596,11 @@ func _boss_needs_rest() -> bool:
 ## The boss of the current map: the zone's, or its postgame boss (ZoneData.postgame_boss_id)
 ## once the game is finished.
 func _boss_id() -> String:
-	if _zone.postgame_boss_id != "" and state.is_finished():
-		return _zone.postgame_boss_id
-	return _zone.boss_id
+	return BattleRewards.boss_id(_zone, state)
 
 
 func _boss_wanted() -> bool:
-	var boss := _boss_id()
-	if boss == "":
-		return false
-	if boss == _zone.postgame_boss_id:
-		# It can always be fought again; autoplay only meets it on --autoplay-zone=eco.
-		return not _autoplay or _autoplay_echo
-	return state.quest.boss_available() if boss == Quest.BOSS_ID else not state.has_flag(boss)
+	return BattleRewards.boss_wanted(_zone, state, not _autoplay or _autoplay_echo)
 
 
 ## The index of the figure of this kind and id (a shop's or an inn's) with something about a
@@ -669,37 +634,6 @@ func _autoplay_restock() -> void:
 		if npc_name in state.quests.reports_here(_zone.id, state.inventory) \
 				or marks.get(npc_name, "") == QuestLog.NEW_MARK:
 			await _on_npc(i)
-
-
-## Notes enemies in the bestiary: seen, or beaten too after a won battle. Only those with a
-## card (Bestiary.has()): the Eco de la Niebla never counts.
-func _note_enemies(enemies: Array[Combatant], beaten: bool) -> void:
-	for enemy in enemies:
-		if not Bestiary.has(enemy.id):
-			continue
-		if beaten:
-			state.defeat_enemy(enemy.id)
-		else:
-			state.see_enemy(enemy.id)
-
-
-## Gives the prize of every bestiary family completed and not paid yet (Bestiary): its
-## flag and its piece. Returns the lines that say so, for the dialogue window.
-func _give_family_rewards() -> Array[String]:
-	var lines: Array[String] = []
-	for family_id in Bestiary.new_rewards(state):
-		lines.append(Bestiary.give(state, family_id))
-	return lines
-
-
-## Sets the boss's world flag, gives its key item and says so.
-func _boss_notice(boss: Combatant) -> String:
-	var key_item := state.on_boss_defeated(boss)
-	if BOSS_NOTICES.has(boss.id):
-		return BOSS_NOTICES[boss.id]
-	if key_item != "":
-		return KEY_ITEM_NOTICE % Inventory.KEY_ITEMS[key_item]
-	return ""
 
 
 ## Puts the player at the town entry of the last village visited, switching zones if
@@ -1520,7 +1454,7 @@ func _on_debug(action: String, arg: String) -> void:
 			text = "%s %s" % [boss.display_name, "vencida" if boss.female else "vencido"]
 			if item != "":
 				text += " (+%s)" % Inventory.KEY_ITEMS[item]
-			for line in _give_family_rewards():
+			for line in BattleRewards.family_rewards(state):
 				text += " · " + line
 		DebugPanel.QUEST:
 			state.quest.skip_stage()
