@@ -2,7 +2,7 @@ class_name BestiaryPage extends VBoxContainer
 ## The album of enemies by family (Bestiary.FAMILIES): each family's title with how many of
 ## its enemies have been beaten ("Plantas 3/4"; complete, in green and with its prize:
 ## "Plantas 4/4 · Anillo de savia"), and under it its cards in three states
-## (CardState): "??" until met in battle, the portrait greyed (the portrait-seen token) and the
+## (CardState): "??" until met in battle, the portrait greyed (the portrait-seen wash) and the
 ## name once met, the portrait as it is once beaten. fill() rebuilds it from the GameState.
 ## A card of an enemy seen is pressed (tap, or arrows and Enter) and emits card_chosen(id).
 
@@ -16,7 +16,7 @@ const CARD_SIDE := 96.0
 const TOUCH_CARD_SIDE := 84.0
 const UNKNOWN := "??"
 ## How a card shows: never met (only "??"), met but not beaten (its portrait greyed,
-## the portrait-seen token) and beaten at least once (its portrait as it is).
+## the portrait-seen wash) and beaten at least once (its portrait as it is).
 enum CardState {UNSEEN, SEEN, BEATEN}
 ## On a caravan game the album has two parts, each under its own title: the v1's families
 ## and the v2's.
@@ -30,6 +30,9 @@ var _box: VBoxContainer
 var _cards := {}
 ## family id -> the Label of its title, rebuilt by fill().
 var _titles := {}
+## The one wash shared by the cards of enemies seen but not beaten, set by fill() so high
+## contrast follows.
+var _seen_material: ShaderMaterial
 
 
 func _ready() -> void:
@@ -41,6 +44,11 @@ func _ready() -> void:
 
 
 func fill(state: GameState) -> void:
+	if _seen_material == null:
+		_seen_material = ShaderMaterial.new()
+		_seen_material.shader = load("res://shaders/portrait_seen.gdshader")
+	_seen_material.set_shader_parameter(&"wash", UiTokens.color(&"portrait-seen"))
+	_seen_material.set_shader_parameter(&"desaturate", UiTokens.OPACITY_PORTRAIT_DESATURATE)
 	_cards.clear()
 	_titles.clear()
 	for child in _box.get_children():
@@ -158,7 +166,7 @@ func _card(id: String, shown: CardState) -> Control:
 		picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		if shown == CardState.SEEN:
-			picture.modulate = UiTokens.color(&"portrait-seen")
+			picture.material = _seen_material
 		box.add_child(picture)
 	else:
 		var unknown := Label.new()
