@@ -56,4 +56,49 @@ const LOOKS := {
 			"Knight_LegRight": Color(0.9, 1.0, 1.2)},
 		"cape": Color(0.4, 0.55, 0.7), "anims": ActorLooks.CHARACTER_ANIMS,
 	},
+	# The Ciénaga (3.0.0). Variants of older figures, in the swamp's colours (CreatureBuilder
+	# builds them: the frog, the snake, the plant), and two new ones (MistCreatureBuilder).
+	# The Sapo de légamo: the Rana dardo, greyish green and 1.4 times its size.
+	Look.MUD_TOAD: {
+		"color": Color(0.36, 0.44, 0.3),
+		"spot_color": Color(0.2, 0.24, 0.16),
+		"belly_color": Color(0.62, 0.6, 0.42),
+		"scale": 1.96,
+		"top": 1.55,
+	},
+	# The Sanguijuela: the vine snake, short and purple.
+	Look.LEECH: {
+		"color": Color(0.42, 0.2, 0.46),
+		"dark_color": Color(0.26, 0.1, 0.3),
+		"eye_color": Color(0.95, 0.6, 0.2),
+		"scale": 0.8,
+		"top": 1.05,
+	},
+	# The Fuego fatuo: a blue flame that floats, with a bright core and two dark eyes.
+	Look.WISP: {
+		"color": Color(0.3, 0.55, 1.0),
+		"core_color": Color(0.8, 0.95, 1.0),
+		"fly": 0.9,
+		"scale": 1.0,
+		"top": 2.1,
+	},
+	# The Junco andante: the plant, in the ochres of the reeds.
+	Look.WALKING_REED: {
+		"stem_color": Color(0.62, 0.5, 0.24),
+		"leaf_color": Color(0.5, 0.42, 0.2),
+		"head_color": Color(0.72, 0.6, 0.32),
+		"inner_color": Color(0.35, 0.28, 0.12),
+		"scale": 1.25,
+		"top": 1.9,
+	},
+	# The Caimán de bruma: long and low, grey green, a ridge of scutes, dragging a little mist.
+	Look.MIST_CAIMAN: {
+		"color": Color(0.3, 0.36, 0.34),
+		"dark_color": Color(0.18, 0.22, 0.22),
+		"eye_color": Color(0.85, 0.9, 0.4),
+		"mist_color": Color(0.75, 0.85, 0.95),
+		"scale": 1.1,
+		"top": 1.0,
+		"gentle": true,
+	},
 }

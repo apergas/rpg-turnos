@@ -56,6 +56,12 @@ const ENEMIES := {
 	"rata_ruinas": preload("res://data/enemies/rata_ruinas.tres"),
 	"guardian_ciudad": preload("res://data/enemies/guardian_ciudad.tres"),
 	"devorador_portal": preload("res://data/enemies/devorador_portal.tres"),
+	# The Ciénaga (the v3, 3.0.0; Bestiary.V3_ENEMIES).
+	"sapo_legamo": preload("res://data/enemies/sapo_legamo.tres"),
+	"sanguijuela": preload("res://data/enemies/sanguijuela.tres"),
+	"fuego_fatuo": preload("res://data/enemies/fuego_fatuo.tres"),
+	"junco_andante": preload("res://data/enemies/junco_andante.tres"),
+	"caiman_bruma": preload("res://data/enemies/caiman_bruma.tres"),
 }
 ## Figure of each enemy id; any other id is a slime.
 const LOOKS := {
@@ -107,6 +113,11 @@ const LOOKS := {
 	"rata_ruinas": BattleActor.Look.RUIN_RAT,
 	"guardian_ciudad": BattleActor.Look.CITY_GUARDIAN,
 	"devorador_portal": BattleActor.Look.PORTAL_DEVOURER,
+	"sapo_legamo": BattleActor.Look.MUD_TOAD,
+	"sanguijuela": BattleActor.Look.LEECH,
+	"fuego_fatuo": BattleActor.Look.WISP,
+	"junco_andante": BattleActor.Look.WALKING_REED,
+	"caiman_bruma": BattleActor.Look.MIST_CAIMAN,
 	# The creatures that fight beside the hero (data in Allies, not in ENEMIES).
 	"gallina": BattleActor.Look.CHICKEN,
 	"lobezno": BattleActor.Look.WOLF_CUB,

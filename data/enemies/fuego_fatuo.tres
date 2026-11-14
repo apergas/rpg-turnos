@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+[ext_resource type="Script" path="res://scripts/battle/skill.gd" id="2_skill"]
+[ext_resource type="Resource" path="res://data/skills/fuego_azul.tres" id="3_sk"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "fuego_fatuo"
+display_name = "Fuego fatuo"
+max_hp = 180
+hp = 180
+max_mp = 40
+mp = 40
+attack = 86
+defense = 50
+speed = 54
+skills = Array[ExtResource("2_skill")]([ExtResource("3_sk")])
+map_roam = 3.0
+map_speed = 2.4
+exp_reward = 150
+gold_reward = 70
+ai_weights = {
+"attack": 65,
+"fuego_azul": 35
+}
+weak = Array[String](["ice"])
+resist = Array[String](["fire"])
+drops = {
+"eter_grande": 0.06
+}

@@ -1,8 +1,8 @@
 class_name CreatureBuilder extends RefCounted
 ## Constructor: the BattleActor figures built in code (the slimes, the bat, the mushroom,
 ## the wolf, the golems, the spider, the specter, the plant, the creatures that fight beside
-## the hero...), each from its ActorLooks.LOOKS entry. Static only, keeps no state: each
-## build_x(actor, data) hangs its meshes under actor.body() through the actor's builder
+## the hero...; the v3's are MistCreatureBuilder's, which build() asks first), each from its
+## ActorLooks.LOOKS entry. Static only, keeps no state: each build_x(actor, data) hangs its meshes under actor.body() through the actor's builder
 ## methods (add_mesh, add_blob, add_ghost) and names its moving parts with add_wing,
 ## set_sway, set_jaw and set_hover, never the actor's private members.
 
@@ -66,6 +66,8 @@ const AURA_ALPHA := 0.22
 ## Builds the figure of a look without a KayKit scene: picks its build_x from actor.look.
 static func build(actor: BattleActor, data: Dictionary) -> void:
 	var look: int = actor.look
+	if MistCreatureBuilder.build(actor, data):
+		return  # a figure of the v3
 	if look in [Look.BAT, Look.CRYPT_BAT, Look.VULTURE, Look.ICE_BAT]:
 		build_bat(actor, data)
 	elif look in [Look.MUSHROOM, Look.POISON_MUSHROOM, Look.CAVE_MUSHROOM,

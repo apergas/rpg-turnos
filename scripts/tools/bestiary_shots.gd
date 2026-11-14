@@ -1,6 +1,6 @@
 extends SceneTree
 ## Renders one portrait per enemy of the bestiary to assets/bestiary/<id>.png: the ids given
-## after "--", or every one of the bestiary (the v2 enemies too) without any. Run it not headless:
+## after "--", or every one of the bestiary (the v2 and v3 enemies too) without any. Run it not headless:
 ## tools/godot.cmd --path . --script res://scripts/tools/bestiary_shots.gd [-- id id ...]
 ## then --headless --path . --import. Excluded from the exports (scripts/tools/*).
 
@@ -8,6 +8,8 @@ const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
 const SIZE := Vector2i(128, 128)
 ## Ambient light by id for the very dark figures (the default is 0.7).
 const AMBIENT := {"jaguar_sombrio": 5.0, "armadura_hueca": 1.8}
+## Figures too long to show head on: the turn of the figure (degrees) and the camera's distance.
+const VIEWS := {"caiman_bruma": {"turn": 55.0, "distance": 5.0}}
 
 
 func _initialize() -> void:
@@ -21,7 +23,7 @@ func _run() -> void:
 	var ids: Array[String] = []
 	ids.assign(OS.get_cmdline_user_args())
 	if ids.is_empty():
-		ids = Bestiary.all_ids() + Bestiary.V2_ENEMIES
+		ids = Bestiary.all_ids() + Bestiary.V2_ENEMIES + Bestiary.V3_ENEMIES
 	for id: String in ids:
 		var view := SubViewport.new()
 		view.size = SIZE
@@ -45,7 +47,10 @@ func _run() -> void:
 		view.add_child(actor)
 		var camera := Camera3D.new()
 		var top := actor.top_height()
-		camera.position = Vector3(0, top * 0.55, -maxf(2.2, top * 1.9))
+		var view_data: Dictionary = VIEWS.get(id, {})
+		actor.rotation_degrees.y = view_data.get("turn", 0.0)
+		camera.position = Vector3(0, top * 0.55,
+			-view_data.get("distance", maxf(2.2, top * 1.9)))
 		camera.fov = 40.0
 		view.add_child(camera)
 		camera.look_at(Vector3(0, top * 0.45, 0))
