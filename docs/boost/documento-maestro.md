@@ -37,3 +37,4 @@ Lo que se ha hecho y lo que queda por hacer en Villaclaro. Una fila por versión
 | 2.7.0 · M-68 | Bestiario en tres estados: no visto, visto sin vencer y vencido | plan |
 | 2.7.0 · M-69 | Sanación cura también al compañero, la mitad | plan |
 | v3 | La siguiente parte: el pueblo al otro lado del portal ([guiones posibles](v3-guiones.md) · [desarrollo de la opción 1](v3-desarrollo.md)) | idea |
+| Sin versión · M-70 a M-74 | Refactor de arquitectura sin cambios en el juego: trocear `Game`, `World` y `BattleActor`, etiquetar los constructores y juntar el piloto automático en `RunFlags` ([spec](specs/2026-11-14-refactor-arquitectura-design.md) · [guía](specs/2026-11-14-refactor-arquitectura-guia.md)) | spec |
