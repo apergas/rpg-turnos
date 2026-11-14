@@ -23,13 +23,10 @@ var bag_equipment: Array[String] = []
 ## Ids of the chests already opened (Chests.CHESTS keys).
 var opened_chests: Array[String] = []
 ## Small medals taken (Medals ids, in the order found), the Coleccionista's prizes given
-## so far (Medals.PRIZES in order) and whether he has spoken to the hero. A Partida nueva +
-## keeps them.
+## so far (Medals.PRIZES in order) and whether he has spoken to the hero.
 var medals: Array[String] = []
 var medal_prizes := 0
 var collector_met := false
-## Rounds of the Partida nueva + (NgPlus): 0 in a first game, 1 in the first one, and so on.
-var ng_plus := 0
 ## Enemy ids met in battle (EnemyLibrary ids), for the bestiary.
 var seen_enemies: Array[String] = []
 ## Enemy ids beaten in a won battle (EnemyLibrary ids), for the bestiary's cards.
@@ -279,9 +276,9 @@ func sync_level_cap() -> void:
 
 
 ## The caravan (the v2) comes to Villaclaro once the v1 is over: the ending's credits seen,
-## a first round (no Partida nueva +), and the hero has not left with it yet.
+## and the hero has not left with it yet.
 func can_meet_caravan() -> bool:
-	return story.finished and ng_plus == 0 and not in_caravan()
+	return story.finished and not in_caravan()
 
 
 ## The hero joins the caravan: the v1's creature stays behind, an open portal closes and the
