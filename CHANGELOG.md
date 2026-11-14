@@ -1,5 +1,11 @@
 # Registro de cambios
 
+## Sin publicar
+
+Por dentro, más ordenado. El juego no cambia.
+
+- La partida se reparte en piezas pequeñas: los viajes entre zonas, los combates, las charlas con la gente, la caravana, la historia, la partida automática y el panel de depuración. Las reglas, los textos y las partidas guardadas son los mismos de antes.
+
 ## 2.7.1 (2026)
 
 Por dentro: los colores, letras y medidas de la interfaz salen ahora siempre del design system, y una comprobación avisa si algo se escribe a mano. En pantalla no cambia nada.
