@@ -35,10 +35,7 @@ class_name Game extends Node
 ## chapter. Beating the Señor de la Niebla (GameState.FINAL_BOSS) plays the ending (back
 ## to Villaclaro), marks the save as finished (story.finished) and rolls the credits with
 ## the numbers of the game (CreditsScreen); then it goes back to the title. A finished
-## save loads in Villaclaro and the world can still be walked. On a finished save the title may
-## start a Partida nueva + (setup(..., new_cycle)): NgPlus.begin() keeps the hero and starts the
-## story again, and every enemy of every battle is a stronger copy (NgPlus.scaled(), by the zone's
-## number); the credits add its round.
+## save loads in Villaclaro and the world can still be walked.
 ## Each bestiary family beaten whole (Bestiary) gives its prize once, after the battle that completes it or when a game is loaded, in the dialogue window.
 ## The side quests (GameState.quests): a villager or a board asks the QuestLog first (a
 ## report, a figure found, a new offer) and says its chapter lines if it has nothing about
@@ -70,8 +67,6 @@ class_name Game extends Node
 ## `-- --autoplay --autoplay-zone=medallas`: the finished game of ECHO_START in Villaclaro;
 ## it hunts the meadow's groups until it carries every medal dropped (MEDAL_TOUR_CHANCE),
 ## then talks to the Coleccionista and prints "Medallas: n/12 · premios n/5".
-## `-- --autoplay --autoplay-zone=ngplus`: a first Partida nueva + with the hero of ECHO_START
-## and the Yelmo de bruma, the whole story again.
 ## `-- --autoplay --autoplay-zone=eco`: a finished game in the throne room at Lv 20 that
 ## fights the Eco de la Niebla again and again, printing each result.
 ## `-- --autoplay --autoplay-easy`: a new game on Fácil.
@@ -129,9 +124,6 @@ const ECHO_START := "eco"
 const MEDAL_TOUR := "medallas"
 const MEDAL_TOUR_CHANCE := 0.25
 const MEDAL_TOUR_TIME := 1800.0
-## --autoplay-zone=ngplus: the hero of ECHO_START with the Yelmo de bruma, and a first
-## Partida nueva + from the prologue.
-const NG_PLUS_START := "ngplus"
 ## The autoplay starts that play the v2: only they answer the Jefe de caravana's questions
 ## with Sí (every other run, the finished-game ones included, stays in the v1).
 const V2_STARTS := ["caravana", "jungla", "desierto", "montana", "ciudad", "portal"]
@@ -203,22 +195,6 @@ const AUTOPLAY_ZONES := {
 		"town": "pradera",
 		"ally": "esqueleto_leal",
 		"items": {Inventory.POTION: 5, Inventory.ETHER: 3, Inventory.WING: 3},
-	},
-	# --autoplay-zone=ngplus: the hero of ECHO_START with the Yelmo de bruma (the Eco beaten
-	# once: its flag stays), then NgPlus.begin().
-	NG_PLUS_START: {
-		"zone": "pradera",
-		"experience": 3600,
-		"gold": 1000,
-		"gear": ["espada_platino", "armadura_platino", "escudo_platino", Equipment.MIST_HELM],
-		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
-			"golem_piedra", "senor_niebla", "eco_niebla"],
-		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo"],
-		"quest_done": true,
-		"town": "castillo_patio",
-		"ally": "esqueleto_leal",
-		"items": {Inventory.POTION: 2, Inventory.ETHER: 3, Inventory.WING: 3},
-		"new_cycle": true,
 	},
 	# --autoplay-zone=caravana: the v1 finished, in Villaclaro: Lv 20, the platinum gear, the
 	# Esqueleto leal, every boss beaten and the credits seen. The caravan comes on arrival,
@@ -370,8 +346,6 @@ var _last_missions: Array[String] = []
 var _last_gear_text := ""
 ## The save slot this game writes to (SaveStore; ignored on autoplay runs).
 var _slot := 1
-## A Partida nueva + on the save given (TitleScreen): NgPlus.begin() once it is loaded.
-var _new_cycle := false
 ## The save could not be read: the new game says so after the prologue.
 var _load_failed := false
 ## Autoplay: defeats so far (each prints "Derrota en <zone> (n)"; the credits say the total).
@@ -396,16 +370,15 @@ var _debug: DebugPanel
 
 ## audio and options come from the title screen; save is the Dictionary read by
 ## SaveStore.load_game(), empty for a new game, which gets hero_name and difficulty; slot is
-## the save slot it writes to; new_cycle starts a Partida nueva + on that (finished) save.
+## the save slot it writes to.
 func setup(audio: AudioDirector, options: GameOptions, save: Dictionary,
-		hero_name := "", difficulty := Difficulty.NORMAL, slot := 1, new_cycle := false) -> void:
+		hero_name := "", difficulty := Difficulty.NORMAL, slot := 1) -> void:
 	_slot = slot
 	_audio = audio
 	_options = options
 	_save = save
 	_hero_name = hero_name
 	_difficulty = difficulty
-	_new_cycle = new_cycle
 
 
 func _ready() -> void:
@@ -444,12 +417,6 @@ func _ready() -> void:
 			# The arrival lines of the lands already passed (and of this one) are not said
 			# again on loading.
 			Allies.mark_arrivals(state.world_flags, state.zone_id)
-			if _new_cycle:
-				# Partida nueva +: the hero as he is, the story from the prologue again, in the
-				# hero's house, with the clock at 0.
-				NgPlus.begin(state)
-				start_pos = null
-				play_time = 0.0
 		else:
 			load_failed = true
 	_load_failed = load_failed
@@ -589,9 +556,6 @@ func _apply_autoplay_zone(args: PackedStringArray) -> void:
 		if start.get("finished", false):
 			state.story.finished = true
 		state.sync_level_cap()
-		if start.get("new_cycle", false):
-			NgPlus.begin(state)
-			print("Partida nueva + %d" % state.ng_plus)
 		print("Zona de inicio: %s (Nv %d)" % [zone_id, state.hero.level])
 
 
@@ -660,19 +624,10 @@ func _on_encounter(boss: bool) -> void:
 		enemies.append(EnemyLibrary.data(_boss_id()))
 	else:
 		enemies = _world.contact_enemies()
-	# Partida nueva +: stronger copies of every enemy, the boss too (a first game: as is).
-	enemies = NgPlus.scaled(enemies, state.ng_plus, _zone.number)
 	if not boss:
 		var kept := state.give_metal_slime_hp(enemies)
 		if _autoplay and kept > 0:
 			print("Slime de Metal con PV %d" % kept)
-	if _autoplay and state.ng_plus > 0:
-		var shown := PackedStringArray()
-		for enemy in enemies:
-			shown.append("%s PV %d ATK %d DEF %d" % [enemy.display_name, enemy.max_hp,
-				enemy.attack, enemy.defense])
-		print("Partida nueva + %d (×%.1f): %s" % [state.ng_plus,
-			NgPlus.stat_mult(state.ng_plus, _zone.number), ", ".join(shown)])
 	_note_enemies(enemies, false)
 	var echo := boss and _boss_id() == _zone.postgame_boss_id
 	await _fade_to(1.0)
@@ -856,14 +811,11 @@ func _needs_groups() -> bool:
 
 
 ## Autoplay: the hero goes after the groups while he has levels to win before the zone's
-## boss or, in a Partida nueva + (he is at the top already), while the village quest wants
-## its slimes (or the Rey Slime would never come out). The medal tour hunts until it carries
-## every medal.
+## boss. The medal tour hunts until it carries every medal.
 func _autoplay_hunts() -> bool:
 	if _medal_tour:
 		return state.medals.size() < Medals.MEDALS.size()
-	return state.hero.level < _zone.autoplay_boss_level \
-		or (state.ng_plus > 0 and state.quest.stage == Quest.Stage.HUNT)
+	return state.hero.level < _zone.autoplay_boss_level
 
 
 ## Autoplay: the zone's boss is due at this level but the hero is too worn for it. MP
@@ -1245,8 +1197,7 @@ func _v2_credits_sections(numbers: Dictionary) -> Array:
 	]
 
 
-## The credits: who made the game, with what, and the numbers of this game (and its round,
-## in a Partida nueva +).
+## The credits: who made the game, with what, and the numbers of this game.
 func _credits_sections(time_text: String) -> Array:
 	var numbers: Array[String] = [
 		"Tiempo de juego: %s" % time_text,
@@ -1256,8 +1207,6 @@ func _credits_sections(time_text: String) -> Array:
 		"Misiones cumplidas: %d" % state.quests_done(),
 		"Nivel: %d" % state.hero.level,
 	]
-	if state.ng_plus > 0:
-		numbers.append("Partida nueva + %d" % state.ng_plus)
 	return [
 		["Villaclaro", ["La historia de %s" % state.hero.display_name]],
 		["Creado por", [AUTHOR]],

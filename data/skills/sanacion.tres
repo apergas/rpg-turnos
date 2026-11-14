@@ -6,7 +6,7 @@
 script = ExtResource("1_skill")
 id = "sanacion"
 display_name = "Sanación"
-description = "Cura 150 PV."
+description = "Cura 150 PV, y la mitad a tu compañero."
 mp_cost = 12
 power = 150
 color = Color(0.6, 1, 0.75, 1)
@@ -16,3 +16,4 @@ targets = "one"
 status = ""
 status_chance = 0.0
 replaces = "curar_mas"
+ally_share = 0.5

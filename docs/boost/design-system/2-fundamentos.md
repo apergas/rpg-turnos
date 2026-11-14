@@ -13,6 +13,7 @@
 | PV / PM / EXP | `stat-hp`, `stat-mp`, `stat-exp` | cualquier otra cosa |
 | Estados | `status-*` | otra cosa que no sea la insignia |
 | Efectos | `element-*` | menús |
+| Retrato del bestiario visto, sin vencer | `portrait-seen` (color de lavado: retrato desaturado y aclarado) | texto |
 
 Antes había seis dorados casi iguales. Ahora son cuatro tonos con papel propio: `gold-100` subtítulo, `gold-200` logotipo, `gold-300` acento y cursor, `gold-400` dinero.
 

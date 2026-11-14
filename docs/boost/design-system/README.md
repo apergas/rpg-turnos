@@ -56,6 +56,7 @@ Las únicas imágenes de la interfaz son los retratos del bestiario (grupo **Bes
 - **Menús**: MenuList, ItemRow, ShopRow, OptionRow.
 - **Héroe**: StatBar, StatusBadge, HeroPanel.
 - **Combate**: EnemyBar, DamageNumber.
+- **Bestiario**: BestiaryCard.
 - **Mundo**: PlaceBanner, TitleLogo, InteractionPrompt, QuestMark, MapSquare.
 
 Las vistas previas son representaciones estáticas en HTML/CSS (`components/bundle.css`). En el juego, cada componente se construye en Godot con el tema de `godot/ui_theme.gd`.

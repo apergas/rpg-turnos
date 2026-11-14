@@ -3,7 +3,7 @@ class_name Medals extends RefCounted
 ## leaves one now and then (DROP_CHANCE, BattleEngine), the Slime de Metal always, a boss
 ## never. The Coleccionista, in every village (ZoneData.npcs named COLLECTOR), counts them
 ## (they are never spent) and gives PRIZES as their number grows. GameState.medals remembers
-## the ones carried, by id, also across a Partida nueva +. Pure: works on a GameState.
+## the ones carried, by id. Pure: works on a GameState.
 
 ## The ids, in the order they are found (a medal dropped takes the first one not carried).
 ## Kept from the medals on the ground of 1.8.0-2.4.1, so older saves stay valid.

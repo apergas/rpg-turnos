@@ -49,7 +49,7 @@ Los valores salen de `data/` y `scripts/` en `develop`.
 Si algo de abajo lo contradice, manda esto.
 
 - **Casco:** una casilla nueva de equipo, con uno en cada tienda (DEF +2, +3, +5, +7).
-- **Bestiario:** página de la pausa con los 17 enemigos: retrato y nombre los vistos, silueta y "???" el resto.
+- **Bestiario:** página de la pausa con los enemigos (22 en una partida de la v1, 47 con la caravana), en tres estados: no visto, "??" sin retrato; visto sin vencer, retrato desaturado y aclarado con su nombre; vencido, retrato nítido. El premio de la familia solo llega al vencerlos a todos.
 - **Hechizos:** Llama se llama Ascuas. Llamarada sustituye a Ascuas y Curar+ a Curar.
 - **Pozos:** cada mapa tiene uno de vida y otro de maná. Llenan y se secan durante 10 combates, ganados o perdidos.
 - **Marcas del mapa:** tiendas amarillas, posadas rosas, pozos rojos o azules (grises si están secos), salidas verdes.
@@ -422,7 +422,7 @@ Marca cada prueba: **OK**, **Falla** (con el ID del hallazgo), **Parcial** o **N
 | T-91 | Guardado roto o con oro negativo | "Continuar (partida dañada)" desactivado, y "Nueva partida" pasa por nombre y dificultad |
 | T-92 | Volver desde la dificultad | Regresa al nombre con lo escrito |
 | T-93 | Equipar y quitar un casco | Cambia la DEF y se ve en el héroe, en el mapa y en combate |
-| T-94 | Bestiario tras varios combates | Los vistos con retrato, el resto en silueta. Cuenta n/17 |
+| T-94 | Bestiario tras varios combates | Los no vistos en "??" sin retrato, los vistos sin vencer con retrato desaturado y aclarado, los vencidos con retrato nítido. Cuenta n/22 (n/47 con la caravana) |
 | T-95 | Beber de un pozo con PV o PM a medias | Llena y se seca; vuelve tras 10 combates. Con todo lleno no se gasta |
 | T-96 | Comprar dos criaturas | La segunda avisa de "Sustituye a...". Una inferior sale como "Ya tienes una mejor" |
 | T-97 | Criatura en combate hasta que caiga | Ataca sola, recibe golpes, caer no acaba el combate, vuelve curada al siguiente |

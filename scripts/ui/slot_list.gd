@@ -4,8 +4,8 @@ class_name SlotList extends VBoxContainer
 ## (" · terminada" once the game is finished: the v1's or, in the caravan, the v2's), "Vacía" or "Partida dañada". LOAD
 ## (Continuar) only lets usable saves be picked; NEW (Nueva partida) takes any slot and
 ## asks first, focus on "No", when it holds a usable save. On a finished game
-## (SaveData.is_finished()) LOAD opens a page with "Continuar" and "Partida nueva +", which asks
-## first, focus on "No", and emits ng_plus_chosen(slot). Emits chosen(slot) once a slot is
+## (SaveData.is_finished()) LOAD opens a page with "Continuar" (focused) and "Volver".
+## Emits chosen(slot) once a slot is
 ## settled and closed on Volver. back() is what Esc and a tap outside do. MANAGE (the title's
 ## Opciones, Exportar o importar partida) opens a page per slot with Exportar and Importar,
 ## and emits changed when an import filled the slot.
@@ -14,8 +14,6 @@ signal chosen(slot: int)
 signal closed
 ## A slot was filled from a file (MANAGE).
 signal changed
-## A finished game's slot asks for a Partida nueva + on it (LOAD).
-signal ng_plus_chosen(slot: int)
 
 enum Mode { LOAD, NEW, MANAGE }
 
@@ -29,11 +27,8 @@ const NEW_CONFIRM := "La partida de la ranura %d se borrará.\n¿Empezar una nue
 const NEW_YES := "Sí, empezar de nuevo"
 const IMPORT_CONFIRM := "La partida de la ranura %d se sustituirá\npor la del archivo. ¿Seguir?"
 const IMPORT_YES := "Sí, sustituir"
-## LOAD on a finished game: its page and the question before a Partida nueva +.
+## LOAD on a finished game: its page.
 const CYCLE_CONTINUE := "Continuar"
-const NG_PLUS := "Partida nueva +"
-const NG_PLUS_CONFIRM := "Empiezas de nuevo la historia con tu héroe,\nsu equipo y su oro. Los monstruos serán\nmás fuertes. ¿Seguro?"
-const NG_PLUS_YES := "Sí, Partida nueva +"
 const IMPORTED_TEXT := "Partida importada en la ranura %d."
 const SAVE_FAILED_TEXT := "No se pudo guardar la partida."
 ## Messages wrap past this width.
@@ -118,10 +113,6 @@ func _ready() -> void:
 	_cycle_continue = _button(CYCLE_CONTINUE)
 	_cycle_continue.pressed.connect(func() -> void: chosen.emit(_slot))
 	cycle.add_child(_cycle_continue)
-	var plus := _button(NG_PLUS)
-	plus.pressed.connect(func() -> void:
-		_ask(NG_PLUS_CONFIRM, NG_PLUS_YES, func() -> void: ng_plus_chosen.emit(_slot)))
-	cycle.add_child(plus)
 	var cycle_back := _button("Volver")
 	cycle_back.pressed.connect(back)
 	cycle.add_child(cycle_back)
@@ -227,8 +218,8 @@ func _focus_page(page: String) -> void:
 		_focus(_cycle_continue)
 
 
-## A finished game: "Continuar" (the game as it is, the world after the ending) or
-## "Partida nueva +" (asked first, focus on "No"); "Continuar" is focused.
+## A finished game: "Continuar" (the game as it is, the world after the ending), focused,
+## or "Volver".
 func _show_cycle() -> void:
 	_sfx(SfxLibrary.ACCEPT)
 	_title.text = SLOT_TEXT % _slot

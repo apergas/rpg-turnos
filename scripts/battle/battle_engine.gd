@@ -211,7 +211,8 @@ func problem(cmd: Dictionary) -> String:
 				return "Silencio"
 			if hero.mp < skill.mp_cost:
 				return "Faltan PM"
-			if skill.kind == Skill.HEAL and hero.hp >= hero.max_hp:
+			if skill.kind == Skill.HEAL and hero.hp >= hero.max_hp \
+					and _ally_heal(skill) == 0:
 				return "PV al máximo"
 		CMD_ITEM:
 			var why := inventory.problem(cmd.item, hero, true)
@@ -442,8 +443,14 @@ func _cast(who: int, cmd: Dictionary, events: Array[Dictionary]) -> void:
 		skill.element))
 	if skill.kind == Skill.HEAL:
 		var amount := mini(skill.power, caster.max_hp - caster.hp)
-		caster.hp += amount
-		events.append(BattleEvent.heal(who, amount, caster.hp))
+		var shared := _ally_heal(skill) if who == BattleEvent.HERO else 0
+		# A full hero healing only his ally says nothing about himself.
+		if amount > 0 or shared == 0:
+			caster.hp += amount
+			events.append(BattleEvent.heal(who, amount, caster.hp))
+		if shared > 0:
+			ally.hp += shared
+			events.append(BattleEvent.heal(BattleEvent.ALLY, shared, ally.hp))
 		return
 	for target in targets:
 		if not _fighter(target).is_alive():
@@ -695,6 +702,14 @@ func _fighter(who: int) -> Combatant:
 
 func _ally_stands() -> bool:
 	return ally != null and ally.is_alive()
+
+
+## The ally's share of a heal the hero casts (Skill.ally_share), up to what it is missing:
+## 0 without an ally standing or when it is full.
+func _ally_heal(skill: Skill) -> int:
+	if skill.ally_share <= 0.0 or not _ally_stands():
+		return 0
+	return mini(ceili(skill.power * skill.ally_share), ally.max_hp - ally.hp)
 
 
 ## Whom an enemy aims a one-target blow or spell at.
