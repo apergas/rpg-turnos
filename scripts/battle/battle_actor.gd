@@ -22,7 +22,6 @@ const NUMBER_CRIT_FONT := 62
 const NUMBER_WORLD := 0.32
 const NUMBER_CRIT_WORLD := 0.48
 const TAG_WORLD := 0.2
-const GOLD := Color(1.0, 0.8, 0.2)
 ## Bones the weapons hang from, under the model's Rig/Skeleton3D.
 const SKELETON_PATH := "Rig/Skeleton3D"
 const FOG_AURA_ALPHA := 0.2
@@ -54,43 +53,6 @@ const FLASH_ALPHA := 0.6
 ## The soft glow over a figure being aimed at (set_highlight()).
 const HIGHLIGHT_COLOR := Color(1.0, 0.95, 0.6)
 const HIGHLIGHT_ALPHA := 0.22
-## Side profile of a slime (x = radius, y = height), bottom to top: a drop with a tip.
-const SLIME_PROFILE: Array[Vector2] = [
-	Vector2(0.0, 0.0), Vector2(0.48, 0.0), Vector2(0.62, 0.18), Vector2(0.58, 0.42),
-	Vector2(0.44, 0.64), Vector2(0.24, 0.8), Vector2(0.08, 0.9), Vector2(0.0, 0.98),
-]
-const SLIME_SEGMENTS := 9
-## Side profiles of the wolf's body (tail to chest) and head (neck to snout), lathed
-## around +Y and laid along -Z, and of a leg.
-const WOLF_BODY_PROFILE: Array[Vector2] = [
-	Vector2(0.0, 0.0), Vector2(0.18, 0.05), Vector2(0.27, 0.3), Vector2(0.3, 0.7),
-	Vector2(0.26, 1.0), Vector2(0.0, 1.1),
-]
-const WOLF_HEAD_PROFILE: Array[Vector2] = [
-	Vector2(0.0, 0.0), Vector2(0.2, 0.02), Vector2(0.22, 0.18), Vector2(0.14, 0.4),
-	Vector2(0.05, 0.55), Vector2(0.0, 0.56),
-]
-const LEG_PROFILE: Array[Vector2] = [
-	Vector2(0.0, 0.0), Vector2(0.07, 0.0), Vector2(0.08, 0.3), Vector2(0.06, 0.55),
-	Vector2(0.0, 0.56),
-]
-## Side profiles (lathed around +Y) of a golem's chunk (4 sides: a faceted block), of the
-## spider's abdomen and of the specter (a drop with its tip down).
-const BLOCK_PROFILE: Array[Vector2] = [
-	Vector2(0.0, 0.0), Vector2(0.42, 0.0), Vector2(0.5, 0.15), Vector2(0.5, 0.75),
-	Vector2(0.4, 0.95), Vector2(0.0, 1.0),
-]
-const ABDOMEN_PROFILE: Array[Vector2] = [
-	Vector2(0.0, 0.0), Vector2(0.22, 0.04), Vector2(0.36, 0.25), Vector2(0.34, 0.5),
-	Vector2(0.2, 0.68), Vector2(0.0, 0.72),
-]
-const SPECTER_PROFILE: Array[Vector2] = [
-	Vector2(0.0, 0.0), Vector2(0.14, 0.18), Vector2(0.34, 0.42), Vector2(0.42, 0.68),
-	Vector2(0.36, 0.92), Vector2(0.18, 1.06), Vector2(0.0, 1.1),
-]
-## Opacity of the specter's body and of its aura.
-const SPECTER_ALPHA := 0.6
-const AURA_ALPHA := 0.22
 ## Angle (radians about X) of the plant's upper jaw: resting, and wide open to bite.
 const JAW_REST := 0.3
 const JAW_OPEN := 0.95
@@ -169,18 +131,18 @@ func _ready() -> void:
 	if data.has("scene"):
 		_build_character(data)
 	elif look in [Look.BAT, Look.CRYPT_BAT, Look.VULTURE, Look.ICE_BAT]:
-		_build_bat(data)
+		CreatureBuilder.build_bat(self, data)
 	elif look in [Look.MUSHROOM, Look.POISON_MUSHROOM, Look.CAVE_MUSHROOM,
 			Look.TROPICAL_MUSHROOM]:
-		_build_mushroom(data)
+		CreatureBuilder.build_mushroom(self, data)
 	elif look in [Look.WOLF, Look.WOLF_CUB, Look.JAGUAR, Look.SNOW_WOLF]:
-		_build_wolf(data)
+		CreatureBuilder.build_wolf(self, data)
 	elif look == Look.CHICKEN:
-		_build_chicken(data)
+		CreatureBuilder.build_chicken(self, data)
 	elif look == Look.GOBLIN:
-		_build_goblin(data)
+		CreatureBuilder.build_goblin(self, data)
 	elif look == Look.PLANT or look == Look.TRAP_PLANT:
-		_build_plant(data)
+		CreatureBuilder.build_plant(self, data)
 	elif look == Look.FROG:
 		_build_frog(data)
 	elif look == Look.SNAKE:
@@ -189,11 +151,11 @@ func _ready() -> void:
 		_build_monkey(data)
 	elif look in [Look.MUD_GOLEM, Look.STONE_GOLEM, Look.MINI_GOLEM, Look.SAND_GOLEM,
 			Look.ICE_GOLEM]:
-		_build_golem(data)
+		CreatureBuilder.build_golem(self, data)
 	elif look == Look.SPIDER:
-		_build_spider(data)
+		CreatureBuilder.build_spider(self, data)
 	elif look in [Look.SPECTER, Look.FROST_SPECTER, Look.SUMMIT_SPIRIT, Look.SHADOW]:
-		_build_specter(data)
+		CreatureBuilder.build_specter(self, data)
 	elif look == Look.GOAT:
 		_build_goat(data)
 	elif look == Look.GRIFFIN:
@@ -213,11 +175,11 @@ func _ready() -> void:
 	elif look == Look.POT:
 		_build_pot(data)
 	elif look == Look.BOARD:
-		_build_board(data)
+		CreatureBuilder.build_board(self, data)
 	elif look == Look.CAT:
-		_build_cat(data)
+		CreatureBuilder.build_cat(self, data)
 	else:
-		_build_slime(data)
+		CreatureBuilder.build_slime(self, data)
 	for node in _body.find_children("*", "MeshInstance3D", true, false):
 		_meshes.append(node as MeshInstance3D)
 	_flash = StandardMaterial3D.new()
@@ -610,7 +572,7 @@ func _build_character(data: Dictionary) -> void:
 		var slot := BoneAttachment3D.new()
 		slot.bone_name = "head"
 		bones.add_child(slot)
-		_add_mesh(slot, LowPoly.sphere(0.13), data.neck_glow, Vector3(0, 0.0, 0))
+		add_mesh(slot, LowPoly.sphere(0.13), data.neck_glow, Vector3(0, 0.0, 0))
 		var ember := (slot.get_child(-1) as MeshInstance3D).material_override as StandardMaterial3D
 		ember.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	if data.has("wrap_color"):
@@ -633,13 +595,13 @@ func _build_character(data: Dictionary) -> void:
 	if data.has("hair"):
 		_add_hair(model, data.hair)
 	if data.has("aura"):
-		_add_ghost(_body, LowPoly.sphere(0.5), data.aura, FOG_AURA_ALPHA, Vector3(0, _top * 0.45, 0),
+		add_ghost(_body, LowPoly.sphere(0.5), data.aura, FOG_AURA_ALPHA, Vector3(0, _top * 0.45, 0),
 			Vector3(2.2, 3.2, 2.2))
 		_aura = _body.get_child(-1) as MeshInstance3D
 	if look == Look.HERO:
 		var stick := LowPoly.cylinder(STICK_RADIUS, STICK_LENGTH)
 		stick.top_radius = STICK_RADIUS * 0.7
-		_add_mesh(model.get_node(HAND_R), stick, STICK_COLOR, Vector3(0, STICK_CENTER, 0))
+		add_mesh(model.get_node(HAND_R), stick, STICK_COLOR, Vector3(0, STICK_CENTER, 0))
 		var mi := model.get_node(HAND_R).get_child(-1) as MeshInstance3D
 		mi.name = Equipment.STICK_MESH
 		# The starting gear until set_equipment() says otherwise.
@@ -658,7 +620,7 @@ func _add_hair(model: Node3D, hair: Dictionary) -> void:
 	var piece: Dictionary = ActorLooks.HAIR_PIECES[hair.style]
 	var profile: Array[Vector2] = []
 	profile.assign(ActorLooks.HAIR_PROFILES[piece.profile])
-	_add_blob(head, profile, ActorLooks.HAIR_SEGMENTS, hair.color, piece.pos, piece.rot, piece.scale)
+	add_blob(head, profile, ActorLooks.HAIR_SEGMENTS, hair.color, piece.pos, piece.rot, piece.scale)
 
 
 ## The Momia's bandages: flat rings of linen (squashed cylinders, each a little tilted the
@@ -720,145 +682,9 @@ func _hang_on_bone(bones: Skeleton3D, bone: String, mesh: Mesh, color: Color,
 	var slot := BoneAttachment3D.new()
 	slot.bone_name = bone
 	bones.add_child(slot)
-	_add_mesh(slot, mesh, color, Vector3.ZERO, 0.95)
+	add_mesh(slot, mesh, color, Vector3.ZERO, 0.95)
 	var mi := slot.get_child(-1) as MeshInstance3D
 	mi.transform = bones.get_bone_global_rest(bones.find_bone(bone)).affine_inverse() * rig_transform
-
-
-func _build_slime(data: Dictionary) -> void:
-	var color: Color = data.color
-	var blob := Node3D.new()
-	blob.scale = Vector3.ONE * data.scale
-	_body.add_child(blob)
-	_add_mesh(blob, LowPoly.blob(SLIME_PROFILE, SLIME_SEGMENTS), color, Vector3.ZERO, 0.6)
-	for x in [-0.2, 0.2]:
-		_add_mesh(blob, LowPoly.sphere(0.12), Color.WHITE, Vector3(x, 0.5, -0.44))  # eye
-		_add_mesh(blob, LowPoly.sphere(0.055), Color(0.05, 0.05, 0.05), Vector3(x, 0.5, -0.55))  # pupil
-	if data.crown:
-		var band := LowPoly.cylinder(0.27, 0.14)
-		band.top_radius = 0.22
-		_add_mesh(blob, band, GOLD, Vector3(0, 0.86, 0), 0.4)
-		for i in 5:
-			var angle := TAU * i / 5.0
-			_add_mesh(blob, LowPoly.cone(0.06, 0.16), GOLD,
-				Vector3(cos(angle) * 0.19, 1.01, sin(angle) * 0.19), 0.4)  # spike
-
-
-## A notice board on two posts, with its papers on the side it faces (-Z).
-func _build_board(data: Dictionary) -> void:
-	var post := BoxMesh.new()
-	post.size = Vector3(0.12, 1.7, 0.12)
-	for x in [-0.6, 0.6]:
-		_add_mesh(_body, post, data.dark_color, Vector3(x, 0.85, 0))
-	var board := BoxMesh.new()
-	board.size = Vector3(1.5, 0.9, 0.08)
-	_add_mesh(_body, board, data.color, Vector3(0, 1.3, 0))
-	var paper := BoxMesh.new()
-	paper.size = Vector3(0.32, 0.4, 0.01)
-	for spot in [Vector3(-0.42, 1.32, -0.05), Vector3(0.02, 1.26, -0.05),
-			Vector3(0.44, 1.36, -0.05)]:
-		_add_mesh(_body, paper, data.paper_color, spot)
-
-
-## A sitting cat: a rounded body, a head with pointed ears and eyes, and a tail.
-func _build_cat(data: Dictionary) -> void:
-	var root := Node3D.new()
-	root.scale = Vector3.ONE * data.scale
-	_body.add_child(root)
-	_add_blob(root, SLIME_PROFILE, SLIME_SEGMENTS, data.color, Vector3.ZERO, Vector3.ZERO,
-		Vector3(0.5, 0.6, 0.65))
-	_add_mesh(root, LowPoly.sphere(0.2), data.color, Vector3(0, 0.62, -0.1))
-	for x in [-0.11, 0.11]:
-		_add_mesh(root, LowPoly.cone(0.07, 0.16), data.dark_color, Vector3(x, 0.84, -0.1))  # ear
-		_add_mesh(root, LowPoly.sphere(0.04), data.eye_color, Vector3(x * 0.8, 0.66, -0.28))  # eye
-	_add_mesh(root, LowPoly.cylinder(0.04, 0.5), data.dark_color, Vector3(0, 0.22, 0.4))  # tail
-	(root.get_child(-1) as Node3D).rotation_degrees.x = 60.0
-
-
-## A bat: round body with ears and eyes, hovering at data.fly, with two wings on pivots
-## that the idle loop flaps.
-func _build_bat(data: Dictionary) -> void:
-	var color: Color = data.color
-	var root := Node3D.new()
-	root.position.y = data.fly
-	_body.add_child(root)
-	_add_mesh(root, LowPoly.sphere(0.32), color, Vector3.ZERO, 0.7)
-	if data.has("beak_color"):  # the Buitre: a ruff, a bald head on it and a hooked beak
-		_add_mesh(root, LowPoly.sphere(0.2), data.ruff_color, Vector3(0, 0.2, -0.16))
-		_add_mesh(root, LowPoly.sphere(0.12), data.head_color, Vector3(0, 0.36, -0.34))
-		_add_mesh(root, LowPoly.cone(0.05, 0.16), data.beak_color, Vector3(0, 0.33, -0.48))
-		(root.get_child(-1) as Node3D).rotation_degrees.x = -100.0
-		for x in [-0.06, 0.06]:
-			_add_mesh(root, LowPoly.sphere(0.025), Color(0.05, 0.05, 0.05), Vector3(x, 0.4, -0.43))
-	else:
-		for x in [-0.14, 0.14]:
-			_add_mesh(root, LowPoly.cone(0.08, 0.22), color, Vector3(x, 0.36, 0))  # ear
-			_add_mesh(root, LowPoly.sphere(0.08), Color(1.0, 0.85, 0.3),
-				Vector3(x * 0.9, 0.08, -0.27))  # eye
-			_add_mesh(root, LowPoly.sphere(0.035), Color(0.05, 0.05, 0.05),
-				Vector3(x * 0.9, 0.08, -0.34))  # pupil
-	for side in [-1.0, 1.0]:
-		var pivot := Node3D.new()
-		pivot.position = Vector3(0.22 * side, 0.05, 0)
-		root.add_child(pivot)
-		var wing := BoxMesh.new()
-		wing.size = data.get("wing_size", Vector3(0.75, 0.04, 0.42))
-		_add_mesh(pivot, wing, data.wing_color, Vector3(wing.size.x / 2.0 * side, 0, 0.05))
-		_wings.append(pivot)
-
-
-## A mushroom: pale stem with eyes and a red hemisphere cap with white spots.
-func _build_mushroom(data: Dictionary) -> void:
-	var root := Node3D.new()
-	root.scale = Vector3.ONE * data.scale
-	_body.add_child(root)
-	var stem := LowPoly.cylinder(0.2, 0.55)
-	stem.top_radius = 0.16
-	_add_mesh(root, stem, data.stem_color, Vector3(0, 0.275, 0))
-	for x in [-0.08, 0.08]:
-		_add_mesh(root, LowPoly.sphere(0.05), Color(0.05, 0.05, 0.05), Vector3(x, 0.32, -0.18))  # eye
-	var cap := SphereMesh.new()
-	cap.radius = 0.5
-	cap.height = 0.42
-	cap.is_hemisphere = true
-	cap.radial_segments = 9
-	cap.rings = 3
-	_add_mesh(root, cap, data.cap_color, Vector3(0, 0.5, 0), 0.6)
-	for i in 5:
-		var angle := TAU * i / 5.0 + 0.3
-		_add_mesh(root, LowPoly.sphere(0.07), Color.WHITE,
-			Vector3(cos(angle) * 0.32, 0.83, sin(angle) * 0.32))  # spot
-	_add_mesh(root, LowPoly.sphere(0.08), Color.WHITE, Vector3(0, 0.92, 0))  # top spot
-
-
-## A wolf: a faceted body and a wedge head along -Z on four legs, with ears, yellow
-## eyes and a tail.
-func _build_wolf(data: Dictionary) -> void:
-	var root := Node3D.new()
-	root.scale = Vector3.ONE * data.scale
-	_body.add_child(root)
-	_add_blob(root, WOLF_BODY_PROFILE, 6, data.color, Vector3(0, 0.62, 0.55),
-		Vector3(-90, 0, 0))
-	_add_blob(root, WOLF_HEAD_PROFILE, 5, data.color, Vector3(0, 0.82, -0.48),
-		Vector3(-100, 0, 0))
-	for x in [-0.1, 0.1]:
-		_add_mesh(root, LowPoly.cone(0.06, 0.18), data.dark_color, Vector3(x, 1.06, -0.6))  # ear
-		_add_mesh(root, LowPoly.sphere(0.045), data.eye_color, Vector3(x * 1.1, 0.92, -0.72))  # eye
-		_add_mesh(root, LowPoly.sphere(0.022), Color(0.05, 0.05, 0.05),
-			Vector3(x * 1.1, 0.92, -0.765))  # pupil
-	_add_mesh(root, LowPoly.sphere(0.04), Color(0.05, 0.05, 0.05), Vector3(0, 0.74, -1.03))  # nose
-	for x in [-0.17, 0.17]:
-		for z in [-0.32, 0.34]:
-			_add_blob(root, LEG_PROFILE, 4, data.dark_color, Vector3(x, 0.0, z))
-	_add_mesh(root, LowPoly.cone(0.07, 0.45), data.color, Vector3(0, 0.8, 0.72))  # tail
-	(root.get_child(-1) as Node3D).rotation_degrees.x = 55.0
-	if data.has("spot_color"):  # the Jaguar sombrío: glowing rosettes on its back
-		for spot in [Vector3(-0.12, 0.9, 0.35), Vector3(0.14, 0.92, 0.5), Vector3(0.0, 0.95, 0.1),
-				Vector3(-0.16, 0.85, 0.72), Vector3(0.12, 0.88, -0.1)]:
-			_add_mesh(root, LowPoly.sphere(0.055), data.spot_color, spot)
-			var mat := _materials.back() as StandardMaterial3D
-			mat.emission_enabled = true
-			mat.emission = data.spot_color * 0.6
 
 
 ## A mountain goat: a stocky body on four thin legs, a wedge head tilted down with a pale
@@ -868,28 +694,28 @@ func _build_goat(data: Dictionary) -> void:
 	var root := Node3D.new()
 	root.scale = Vector3.ONE * data.scale
 	_body.add_child(root)
-	_add_blob(root, WOLF_BODY_PROFILE, 6, data.color, Vector3(0, 0.7, 0.45),
+	add_blob(root, CreatureBuilder.WOLF_BODY_PROFILE, 6, data.color, Vector3(0, 0.7, 0.45),
 		Vector3(-90, 0, 0), Vector3(1.15, 1.0, 1.1))  # body
-	_add_mesh(root, LowPoly.sphere(0.2), data.belly_color, Vector3(0, 0.58, 0.05))  # belly
-	_add_mesh(root, LowPoly.cylinder(0.14, 0.5), data.color, Vector3(0, 1.0, -0.32))  # neck
+	add_mesh(root, LowPoly.sphere(0.2), data.belly_color, Vector3(0, 0.58, 0.05))  # belly
+	add_mesh(root, LowPoly.cylinder(0.14, 0.5), data.color, Vector3(0, 1.0, -0.32))  # neck
 	(root.get_child(-1) as Node3D).rotation_degrees.x = -35.0
-	_add_blob(root, WOLF_HEAD_PROFILE, 5, data.color, Vector3(0, 1.12, -0.5),
+	add_blob(root, CreatureBuilder.WOLF_HEAD_PROFILE, 5, data.color, Vector3(0, 1.12, -0.5),
 		Vector3(-115, 0, 0), Vector3(0.9, 0.9, 0.9))  # head, tilted down
-	_add_mesh(root, LowPoly.sphere(0.08), data.belly_color, Vector3(0, 0.98, -0.84))  # muzzle
-	_add_mesh(root, LowPoly.cone(0.05, 0.18), data.belly_color, Vector3(0, 0.84, -0.78))  # beard
+	add_mesh(root, LowPoly.sphere(0.08), data.belly_color, Vector3(0, 0.98, -0.84))  # muzzle
+	add_mesh(root, LowPoly.cone(0.05, 0.18), data.belly_color, Vector3(0, 0.84, -0.78))  # beard
 	(root.get_child(-1) as Node3D).rotation_degrees.x = 180.0
 	for side in [-1.0, 1.0]:
-		_add_mesh(root, LowPoly.sphere(0.035), data.eye_color, Vector3(side * 0.1, 1.17, -0.68))
+		add_mesh(root, LowPoly.sphere(0.035), data.eye_color, Vector3(side * 0.1, 1.17, -0.68))
 		for i in 7:  # a horn: shrinking balls rising from the head, curling back and down
 			var t := i / 6.0
-			_add_mesh(root, LowPoly.sphere(0.085 - t * 0.05), data.horn_color,
+			add_mesh(root, LowPoly.sphere(0.085 - t * 0.05), data.horn_color,
 				Vector3(side * (0.1 + t * 0.08), 1.2 + 0.2 * sin(t * PI) - 0.1 * t,
 					-0.5 + t * 0.55))
 	for x in [-0.16, 0.16]:
 		for z in [-0.25, 0.35]:
-			_add_blob(root, LEG_PROFILE, 4, data.dark_color, Vector3(x, 0.0, z), Vector3.ZERO,
+			add_blob(root, CreatureBuilder.LEG_PROFILE, 4, data.dark_color, Vector3(x, 0.0, z), Vector3.ZERO,
 				Vector3(0.8, 1.15, 0.8))
-	_add_mesh(root, LowPoly.cone(0.05, 0.15), data.color, Vector3(0, 0.85, 0.72))  # tail
+	add_mesh(root, LowPoly.cone(0.05, 0.15), data.color, Vector3(0, 0.85, 0.72))  # tail
 	(root.get_child(-1) as Node3D).rotation_degrees.x = 40.0
 
 
@@ -901,23 +727,23 @@ func _build_griffin(data: Dictionary) -> void:
 	var root := Node3D.new()
 	root.scale = Vector3.ONE * data.scale
 	_body.add_child(root)
-	_add_blob(root, WOLF_BODY_PROFILE, 6, data.color, Vector3(0, 0.62, 0.55),
+	add_blob(root, CreatureBuilder.WOLF_BODY_PROFILE, 6, data.color, Vector3(0, 0.62, 0.55),
 		Vector3(-90, 0, 0), Vector3(1.25, 1.15, 1.1))  # lion body
 	for x in [-0.18, 0.18]:
 		for z in [-0.3, 0.38]:
-			_add_blob(root, LEG_PROFILE, 4, data.dark_color, Vector3(x, 0.0, z))
-		_add_mesh(root, LowPoly.cone(0.04, 0.1), data.beak_color, Vector3(x, 0.02, -0.42))  # talons
-	_add_mesh(root, LowPoly.sphere(0.3), data.feather_color, Vector3(0, 0.95, -0.32))  # chest
+			add_blob(root, CreatureBuilder.LEG_PROFILE, 4, data.dark_color, Vector3(x, 0.0, z))
+		add_mesh(root, LowPoly.cone(0.04, 0.1), data.beak_color, Vector3(x, 0.02, -0.42))  # talons
+	add_mesh(root, LowPoly.sphere(0.3), data.feather_color, Vector3(0, 0.95, -0.32))  # chest
 	(root.get_child(-1) as Node3D).scale = Vector3(1.0, 1.15, 0.9)
-	_add_mesh(root, LowPoly.sphere(0.2), data.feather_color, Vector3(0, 1.3, -0.5))  # head
-	_add_mesh(root, LowPoly.cone(0.07, 0.22), data.beak_color, Vector3(0, 1.26, -0.74))  # beak
+	add_mesh(root, LowPoly.sphere(0.2), data.feather_color, Vector3(0, 1.3, -0.5))  # head
+	add_mesh(root, LowPoly.cone(0.07, 0.22), data.beak_color, Vector3(0, 1.26, -0.74))  # beak
 	(root.get_child(-1) as Node3D).rotation_degrees.x = -100.0
 	for x in [-0.09, 0.09]:
-		_add_mesh(root, LowPoly.sphere(0.035), data.eye_color, Vector3(x, 1.36, -0.64))
-		_add_mesh(root, LowPoly.cone(0.04, 0.14), data.feather_color, Vector3(x, 1.5, -0.42))  # tuft
-	_add_mesh(root, LowPoly.cylinder(0.03, 0.6), data.color, Vector3(0, 0.75, 1.0))  # tail
+		add_mesh(root, LowPoly.sphere(0.035), data.eye_color, Vector3(x, 1.36, -0.64))
+		add_mesh(root, LowPoly.cone(0.04, 0.14), data.feather_color, Vector3(x, 1.5, -0.42))  # tuft
+	add_mesh(root, LowPoly.cylinder(0.03, 0.6), data.color, Vector3(0, 0.75, 1.0))  # tail
 	(root.get_child(-1) as Node3D).rotation_degrees.x = 60.0
-	_add_mesh(root, LowPoly.sphere(0.08), data.dark_color, Vector3(0, 0.98, 1.24))  # tail tuft
+	add_mesh(root, LowPoly.sphere(0.08), data.dark_color, Vector3(0, 0.98, 1.24))  # tail tuft
 	for side in [-1.0, 1.0]:
 		var pivot := Node3D.new()
 		pivot.position = Vector3(0.22 * side, 1.05, 0.1)
@@ -927,12 +753,12 @@ func _build_griffin(data: Dictionary) -> void:
 		pivot.add_child(spread)
 		var arm := BoxMesh.new()
 		arm.size = Vector3(1.25, 0.09, 0.34)
-		_add_mesh(spread, arm, data.wing_color, Vector3(0.62 * side, 0, 0))
+		add_mesh(spread, arm, data.wing_color, Vector3(0.62 * side, 0, 0))
 		for i in 6:  # feathers lighter toward the tip of the wing, side by side
 			var feather := BoxMesh.new()
 			var length := 0.5 + 0.1 * i
 			feather.size = Vector3(0.22, 0.04, length)
-			_add_mesh(spread, feather, data.wing_color.lerp(data.feather_color, i / 5.0),
+			add_mesh(spread, feather, data.wing_color.lerp(data.feather_color, i / 5.0),
 				Vector3((0.15 + 0.2 * i) * side, -0.01, 0.17 + length / 2.0))
 		_wings.append(pivot)
 
@@ -945,20 +771,20 @@ func _build_gargoyle(data: Dictionary) -> void:
 	var root := Node3D.new()
 	root.scale = Vector3.ONE * data.scale
 	_body.add_child(root)
-	_add_blob(root, WOLF_BODY_PROFILE, 5, data.color, Vector3(0, 0.55, 0.35),
+	add_blob(root, CreatureBuilder.WOLF_BODY_PROFILE, 5, data.color, Vector3(0, 0.55, 0.35),
 		Vector3(-70, 0, 0), Vector3(1.3, 1.1, 1.2))  # hunched body, chest up
 	for x in [-0.2, 0.2]:
 		for z in [-0.15, 0.35]:
-			_add_blob(root, LEG_PROFILE, 4, data.dark_color, Vector3(x, 0.0, z), Vector3.ZERO,
+			add_blob(root, CreatureBuilder.LEG_PROFILE, 4, data.dark_color, Vector3(x, 0.0, z), Vector3.ZERO,
 				Vector3(1.3, 0.9, 1.3))
-		_add_mesh(root, LowPoly.cone(0.05, 0.12), data.horn_color, Vector3(x, 0.03, -0.3))  # claws
-	_add_blob(root, WOLF_HEAD_PROFILE, 5, data.color, Vector3(0, 1.15, -0.25),
+		add_mesh(root, LowPoly.cone(0.05, 0.12), data.horn_color, Vector3(x, 0.03, -0.3))  # claws
+	add_blob(root, CreatureBuilder.WOLF_HEAD_PROFILE, 5, data.color, Vector3(0, 1.15, -0.25),
 		Vector3(-100, 0, 0), Vector3(1.2, 1.0, 1.1))  # head
 	for side in [-1.0, 1.0]:
-		_add_mesh(root, LowPoly.sphere(0.05), data.eye_color, Vector3(side * 0.1, 1.24, -0.52))
+		add_mesh(root, LowPoly.sphere(0.05), data.eye_color, Vector3(side * 0.1, 1.24, -0.52))
 		var eye := (root.get_child(-1) as MeshInstance3D).material_override as StandardMaterial3D
 		eye.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		_add_mesh(root, LowPoly.cone(0.06, 0.32), data.horn_color, Vector3(side * 0.14, 1.42, -0.2))
+		add_mesh(root, LowPoly.cone(0.06, 0.32), data.horn_color, Vector3(side * 0.14, 1.42, -0.2))
 		(root.get_child(-1) as Node3D).rotation_degrees = Vector3(-25, 0, side * -20)  # horn
 		var pivot := Node3D.new()
 		pivot.position = Vector3(0.25 * side, 0.95, 0.4)
@@ -969,14 +795,14 @@ func _build_gargoyle(data: Dictionary) -> void:
 		var spread := Node3D.new()
 		spread.rotation_degrees.z = 22.0 * side
 		pivot.add_child(spread)
-		_add_mesh(spread, sail, data.wing_color, Vector3(0.5 * side, 0.45, 0.0))
+		add_mesh(spread, sail, data.wing_color, Vector3(0.5 * side, 0.45, 0.0))
 		var bone := BoxMesh.new()  # the arm along the top edge
 		bone.size = Vector3(0.95, 0.09, 0.1)
-		_add_mesh(spread, bone, data.dark_color, Vector3(0.5 * side, 0.3, 0.0))
+		add_mesh(spread, bone, data.dark_color, Vector3(0.5 * side, 0.3, 0.0))
 		(spread.get_child(-1) as Node3D).rotation_degrees.z = 28.0 * side
-		_add_mesh(spread, LowPoly.cone(0.05, 0.3), data.horn_color, Vector3(1.0 * side, 0.9, 0.0))  # claw
+		add_mesh(spread, LowPoly.cone(0.05, 0.3), data.horn_color, Vector3(1.0 * side, 0.9, 0.0))  # claw
 		_wings.append(pivot)
-	_add_mesh(root, LowPoly.cone(0.05, 0.6), data.dark_color, Vector3(0, 0.45, 0.95))  # tail
+	add_mesh(root, LowPoly.cone(0.05, 0.6), data.dark_color, Vector3(0, 0.45, 0.95))  # tail
 	(root.get_child(-1) as Node3D).rotation_degrees.x = 70.0
 
 
@@ -987,21 +813,21 @@ func _build_rat(data: Dictionary) -> void:
 	var root := Node3D.new()
 	root.scale = Vector3.ONE * data.scale
 	_body.add_child(root)
-	_add_blob(root, WOLF_BODY_PROFILE, 6, data.color, Vector3(0, 0.38, 0.4),
+	add_blob(root, CreatureBuilder.WOLF_BODY_PROFILE, 6, data.color, Vector3(0, 0.38, 0.4),
 		Vector3(-90, 0, 0), Vector3(1.05, 0.85, 0.95))  # body
-	_add_blob(root, WOLF_HEAD_PROFILE, 5, data.color, Vector3(0, 0.45, -0.38),
+	add_blob(root, CreatureBuilder.WOLF_HEAD_PROFILE, 5, data.color, Vector3(0, 0.45, -0.38),
 		Vector3(-95, 0, 0), Vector3(0.8, 0.85, 0.95))  # pointed head
-	_add_mesh(root, LowPoly.sphere(0.035), data.ear_color, Vector3(0, 0.43, -0.92))  # nose
+	add_mesh(root, LowPoly.sphere(0.035), data.ear_color, Vector3(0, 0.43, -0.92))  # nose
 	for side in [-1.0, 1.0]:
-		_add_mesh(root, LowPoly.sphere(0.1), data.ear_color, Vector3(side * 0.14, 0.68, -0.38))
+		add_mesh(root, LowPoly.sphere(0.1), data.ear_color, Vector3(side * 0.14, 0.68, -0.38))
 		(root.get_child(-1) as Node3D).scale = Vector3(1.0, 1.0, 0.35)  # ear
-		_add_mesh(root, LowPoly.sphere(0.035), data.eye_color, Vector3(side * 0.09, 0.56, -0.66))
+		add_mesh(root, LowPoly.sphere(0.035), data.eye_color, Vector3(side * 0.09, 0.56, -0.66))
 		for z in [-0.15, 0.4]:
-			_add_blob(root, LEG_PROFILE, 4, data.dark_color, Vector3(side * 0.15, 0.0, z),
+			add_blob(root, CreatureBuilder.LEG_PROFILE, 4, data.dark_color, Vector3(side * 0.15, 0.0, z),
 				Vector3.ZERO, Vector3(0.9, 0.55, 0.9))
 	for i in 6:  # the tail: thin rods curving back and up
 		var a := i * 0.25
-		_add_mesh(root, LowPoly.cylinder(0.025 - i * 0.003, 0.22), data.ear_color.darkened(0.2),
+		add_mesh(root, LowPoly.cylinder(0.025 - i * 0.003, 0.22), data.ear_color.darkened(0.2),
 			Vector3(0, 0.3 + sin(a) * 0.25, 0.95 + i * 0.18))
 		(root.get_child(-1) as Node3D).rotation_degrees.x = 80.0 - i * 12.0
 
@@ -1014,13 +840,13 @@ func _build_devourer(data: Dictionary) -> void:
 	_devourer = Node3D.new()
 	_devourer.scale = Vector3.ONE * data.scale
 	_body.add_child(_devourer)
-	_add_mesh(_devourer, LowPoly.blob(DEVOURER_PROFILE, 7), data.color, Vector3.ZERO, 0.9)
+	add_mesh(_devourer, LowPoly.blob(DEVOURER_PROFILE, 7), data.color, Vector3.ZERO, 0.9)
 	var lumps: Array[Transform3D] = []
 	for lump: Array in DEVOURER_LUMPS:  # [degrees from the front, height, size]
 		var a := deg_to_rad(lump[0])
 		lumps.append(Transform3D(Basis.from_scale(Vector3.ONE * lump[2]),
 			Vector3(sin(a) * 1.05, lump[1], -cos(a) * 1.05)))
-	_add_mesh(_devourer, LowPoly.merged(LowPoly.sphere(1.0), lumps), data.dark_color, Vector3.ZERO, 0.9)
+	add_mesh(_devourer, LowPoly.merged(LowPoly.sphere(1.0), lumps), data.dark_color, Vector3.ZERO, 0.9)
 	var lips: Array[Transform3D] = []
 	var throats: Array[Transform3D] = []
 	var teeth: Array[Transform3D] = []
@@ -1036,35 +862,35 @@ func _build_devourer(data: Dictionary) -> void:
 		for x in [-0.3, -0.1, 0.1, 0.3]:
 			teeth.append(frame * Transform3D(Basis(Vector3.RIGHT, PI), Vector3(x, 0.14, -0.2)))
 			teeth.append(frame * Transform3D(Basis(), Vector3(x + 0.1, -0.14, -0.2)))
-	_add_mesh(_devourer, LowPoly.merged(LowPoly.sphere(1.0), lips), data.lip_color, Vector3.ZERO, 0.7)
-	_add_mesh(_devourer, LowPoly.merged(LowPoly.sphere(1.0), throats), Color(0.02, 0.0, 0.02), Vector3.ZERO)
-	_add_mesh(_devourer, LowPoly.merged(LowPoly.cone(0.06, 0.2), teeth), data.tooth_color, Vector3.ZERO, 0.5)
+	add_mesh(_devourer, LowPoly.merged(LowPoly.sphere(1.0), lips), data.lip_color, Vector3.ZERO, 0.7)
+	add_mesh(_devourer, LowPoly.merged(LowPoly.sphere(1.0), throats), Color(0.02, 0.0, 0.02), Vector3.ZERO)
+	add_mesh(_devourer, LowPoly.merged(LowPoly.cone(0.06, 0.2), teeth), data.tooth_color, Vector3.ZERO, 0.5)
 	var tentacles: Array[Transform3D] = []
 	for i in 6:
 		var a := TAU * i / 6.0 + 0.3
 		var out := Vector3(sin(a), 0, -cos(a))
 		tentacles.append(Transform3D(Basis.looking_at(out, Vector3.UP)
 			* Basis(Vector3.RIGHT, deg_to_rad(-80.0)), out * 1.45 + Vector3(0, 0.15, 0)))
-	_add_mesh(_devourer, LowPoly.merged(LowPoly.cone(0.26, 1.5), tentacles), data.dark_color, Vector3.ZERO)
+	add_mesh(_devourer, LowPoly.merged(LowPoly.cone(0.26, 1.5), tentacles), data.dark_color, Vector3.ZERO)
 	var crown: Array[Transform3D] = []  # a crown of horns on top of the mass
 	for i in 6:
 		var a := TAU * i / 6.0
 		var out := Vector3(sin(a), 0, -cos(a))
 		crown.append(Transform3D(Basis.looking_at(out, Vector3.UP)
 			* Basis(Vector3.RIGHT, deg_to_rad(-65.0)), out * 0.4 + Vector3(0, 3.0, 0)))
-	_add_mesh(_devourer, LowPoly.merged(LowPoly.cone(0.16, 0.9), crown), data.dark_color, Vector3.ZERO)
+	add_mesh(_devourer, LowPoly.merged(LowPoly.cone(0.16, 0.9), crown), data.dark_color, Vector3.ZERO)
 	var eye := Vector3(0, 1.75, -1.1)
-	_add_mesh(_devourer, LowPoly.sphere(0.62), data.sclera_color, eye, 0.4)
-	_add_mesh(_devourer, LowPoly.sphere(0.33), data.iris_color, eye + Vector3(0, 0, -0.48))
+	add_mesh(_devourer, LowPoly.sphere(0.62), data.sclera_color, eye, 0.4)
+	add_mesh(_devourer, LowPoly.sphere(0.33), data.iris_color, eye + Vector3(0, 0, -0.48))
 	var iris := (_devourer.get_child(-1) as MeshInstance3D)
 	(iris.material_override as StandardMaterial3D).shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	iris.scale = Vector3(1.0, 1.0, 0.4)
-	_add_mesh(_devourer, LowPoly.sphere(0.13), Color(0.02, 0.0, 0.02), eye + Vector3(0, 0, -0.56))
+	add_mesh(_devourer, LowPoly.sphere(0.13), Color(0.02, 0.0, 0.02), eye + Vector3(0, 0, -0.56))
 	(_devourer.get_child(-1) as Node3D).scale = Vector3(0.4, 1.0, 0.4)  # the slit
 	_eyelid = Node3D.new()
 	_eyelid.position = eye
 	_devourer.add_child(_eyelid)
-	_add_mesh(_eyelid, LowPoly.hemisphere(0.7, 0.7), data.color, Vector3.ZERO, 0.9)
+	add_mesh(_eyelid, LowPoly.hemisphere(0.7, 0.7), data.color, Vector3.ZERO, 0.9)
 	_eyelid.rotation_degrees.x = EYELID_HALF
 	var glow := OmniLight3D.new()
 	glow.light_color = data.glow_color
@@ -1093,18 +919,18 @@ func _build_frog(data: Dictionary) -> void:
 	var root := Node3D.new()
 	root.scale = Vector3.ONE * data.scale
 	_body.add_child(root)
-	_add_blob(root, SLIME_PROFILE, SLIME_SEGMENTS, data.color, Vector3(0, 0.08, 0),
+	add_blob(root, CreatureBuilder.SLIME_PROFILE, CreatureBuilder.SLIME_SEGMENTS, data.color, Vector3(0, 0.08, 0),
 		Vector3.ZERO, Vector3(0.55, 0.38, 0.62))  # body
-	_add_blob(root, SLIME_PROFILE, SLIME_SEGMENTS, data.belly_color, Vector3(0, 0.04, -0.12),
+	add_blob(root, CreatureBuilder.SLIME_PROFILE, CreatureBuilder.SLIME_SEGMENTS, data.belly_color, Vector3(0, 0.04, -0.12),
 		Vector3.ZERO, Vector3(0.42, 0.22, 0.42))  # belly
 	for spot in [Vector3(-0.14, 0.33, 0.1), Vector3(0.16, 0.3, 0.02), Vector3(0.0, 0.36, 0.22)]:
-		_add_mesh(root, LowPoly.sphere(0.06), data.spot_color, spot)
+		add_mesh(root, LowPoly.sphere(0.06), data.spot_color, spot)
 	for x in [-0.15, 0.15]:
-		_add_mesh(root, LowPoly.sphere(0.1), data.color, Vector3(x, 0.42, -0.2))  # eye bump
-		_add_mesh(root, LowPoly.sphere(0.065), Color(0.05, 0.05, 0.05), Vector3(x, 0.45, -0.27))
-		_add_blob(root, LEG_PROFILE, 4, data.color, Vector3(x * 2.0, 0.0, 0.18),
+		add_mesh(root, LowPoly.sphere(0.1), data.color, Vector3(x, 0.42, -0.2))  # eye bump
+		add_mesh(root, LowPoly.sphere(0.065), Color(0.05, 0.05, 0.05), Vector3(x, 0.45, -0.27))
+		add_blob(root, CreatureBuilder.LEG_PROFILE, 4, data.color, Vector3(x * 2.0, 0.0, 0.18),
 			Vector3(0, 0, 40.0 if x > 0 else -40.0), Vector3(1.2, 0.6, 1.2))  # back leg
-		_add_blob(root, LEG_PROFILE, 4, data.color, Vector3(x * 1.6, 0.0, -0.2),
+		add_blob(root, CreatureBuilder.LEG_PROFILE, 4, data.color, Vector3(x * 1.6, 0.0, -0.2),
 			Vector3.ZERO, Vector3(0.8, 0.5, 0.8))  # front leg
 
 
@@ -1119,16 +945,16 @@ func _build_snake(data: Dictionary) -> void:
 		var angle := TAU * i / coil * 1.3
 		var radius := 0.32 - i * 0.012
 		var color: Color = data.color if i % 2 == 0 else data.dark_color
-		_add_mesh(root, LowPoly.sphere(0.13 - i * 0.004),
+		add_mesh(root, LowPoly.sphere(0.13 - i * 0.004),
 			color, Vector3(cos(angle) * radius, 0.12, sin(angle) * radius + 0.15))
 	for i in 4:  # the neck rises toward the front
-		_add_mesh(root, LowPoly.sphere(0.12 - i * 0.008), data.color,
+		add_mesh(root, LowPoly.sphere(0.12 - i * 0.008), data.color,
 			Vector3(0, 0.25 + i * 0.18, -0.05 - i * 0.07))
-	_add_blob(root, WOLF_HEAD_PROFILE, 5, data.color, Vector3(0, 0.98, -0.32),
+	add_blob(root, CreatureBuilder.WOLF_HEAD_PROFILE, 5, data.color, Vector3(0, 0.98, -0.32),
 		Vector3(-100, 0, 0), Vector3(0.85, 0.85, 0.85))  # head
 	for x in [-0.07, 0.07]:
-		_add_mesh(root, LowPoly.sphere(0.05), data.eye_color, Vector3(x * 1.5, 1.08, -0.55))
-	_add_mesh(root, LowPoly.cone(0.015, 0.12), Color(0.9, 0.1, 0.15), Vector3(0, 0.95, -0.6))  # tongue
+		add_mesh(root, LowPoly.sphere(0.05), data.eye_color, Vector3(x * 1.5, 1.08, -0.55))
+	add_mesh(root, LowPoly.cone(0.015, 0.12), Color(0.9, 0.1, 0.15), Vector3(0, 0.95, -0.6))  # tongue
 	(root.get_child(-1) as Node3D).rotation_degrees.x = -90.0
 
 
@@ -1138,114 +964,18 @@ func _build_monkey(data: Dictionary) -> void:
 	var root := Node3D.new()
 	root.scale = Vector3.ONE * data.scale
 	_body.add_child(root)
-	_add_blob(root, SLIME_PROFILE, SLIME_SEGMENTS, data.color, Vector3(0, 0.25, 0),
+	add_blob(root, CreatureBuilder.SLIME_PROFILE, CreatureBuilder.SLIME_SEGMENTS, data.color, Vector3(0, 0.25, 0),
 		Vector3.ZERO, Vector3(0.42, 0.62, 0.4))  # body
-	_add_mesh(root, LowPoly.sphere(0.26), data.color, Vector3(0, 1.0, -0.02))  # head
-	_add_mesh(root, LowPoly.sphere(0.17), data.face_color, Vector3(0, 0.97, -0.17))  # face
+	add_mesh(root, LowPoly.sphere(0.26), data.color, Vector3(0, 1.0, -0.02))  # head
+	add_mesh(root, LowPoly.sphere(0.17), data.face_color, Vector3(0, 0.97, -0.17))  # face
 	for x in [-0.07, 0.07]:
-		_add_mesh(root, LowPoly.sphere(0.035), Color(0.05, 0.05, 0.05), Vector3(x, 1.03, -0.3))
-		_add_mesh(root, LowPoly.sphere(0.07), data.color, Vector3(x * 3.4, 1.1, -0.02))  # ear
+		add_mesh(root, LowPoly.sphere(0.035), Color(0.05, 0.05, 0.05), Vector3(x, 1.03, -0.3))
+		add_mesh(root, LowPoly.sphere(0.07), data.color, Vector3(x * 3.4, 1.1, -0.02))  # ear
 	for x in [-0.25, 0.25]:
-		_add_mesh(root, LowPoly.cylinder(0.06, 0.7), data.color, Vector3(x, 0.52, -0.08))  # arm
-		_add_mesh(root, LowPoly.sphere(0.08), data.face_color, Vector3(x, 0.15, -0.08))  # hand
-	_add_mesh(root, LowPoly.cylinder(0.045, 0.7), data.color, Vector3(0, 0.45, 0.42))  # tail
+		add_mesh(root, LowPoly.cylinder(0.06, 0.7), data.color, Vector3(x, 0.52, -0.08))  # arm
+		add_mesh(root, LowPoly.sphere(0.08), data.face_color, Vector3(x, 0.15, -0.08))  # hand
+	add_mesh(root, LowPoly.cylinder(0.045, 0.7), data.color, Vector3(0, 0.45, 0.42))  # tail
 	(root.get_child(-1) as Node3D).rotation_degrees.x = 60.0
-
-
-## A chicken: a white round body with a red comb and wattle, an orange beak, two thin
-## legs and black eyes, facing -Z. About 0.7 m tall.
-func _build_chicken(data: Dictionary) -> void:
-	var root := Node3D.new()
-	root.scale = Vector3.ONE * data.scale
-	_body.add_child(root)
-	_add_blob(root, SLIME_PROFILE, SLIME_SEGMENTS, data.color, Vector3(0, 0.2, 0.05),
-		Vector3.ZERO, Vector3(0.4, 0.55, 0.5))  # body
-	_add_mesh(root, LowPoly.sphere(0.17), data.color, Vector3(0, 0.62, -0.18))  # head
-	_add_mesh(root, LowPoly.cone(0.1, 0.22), data.color, Vector3(0, 0.45, 0.32))  # tail
-	(root.get_child(-1) as Node3D).rotation_degrees.x = -35.0
-	_add_mesh(root, LowPoly.cone(0.05, 0.14), data.comb_color, Vector3(0, 0.82, -0.18))  # comb
-	_add_mesh(root, LowPoly.sphere(0.045), data.comb_color, Vector3(0, 0.5, -0.3))  # wattle
-	_add_mesh(root, LowPoly.cone(0.05, 0.14), data.beak_color, Vector3(0, 0.62, -0.38))  # beak
-	(root.get_child(-1) as Node3D).rotation_degrees.x = -90.0
-	for x in [-0.08, 0.08]:
-		_add_mesh(root, LowPoly.sphere(0.025), Color(0.05, 0.05, 0.05),
-			Vector3(x * 1.2, 0.67, -0.31))  # eye
-		_add_mesh(root, LowPoly.cylinder(0.018, 0.2), data.leg_color, Vector3(x * 1.3, 0.1, 0.0))  # leg
-
-
-## A goblin: a small green slime with pointed ears and a red pointed hat.
-func _build_goblin(data: Dictionary) -> void:
-	var blob := Node3D.new()
-	blob.scale = Vector3.ONE * data.scale
-	_body.add_child(blob)
-	_add_mesh(blob, LowPoly.blob(SLIME_PROFILE, SLIME_SEGMENTS), data.color, Vector3.ZERO, 0.7)
-	for side in [-1.0, 1.0]:
-		_add_mesh(blob, LowPoly.sphere(0.11), Color.WHITE, Vector3(side * 0.19, 0.52, -0.45))  # eye
-		_add_mesh(blob, LowPoly.sphere(0.05), Color(0.05, 0.05, 0.05),
-			Vector3(side * 0.19, 0.52, -0.55))  # pupil
-		_add_mesh(blob, LowPoly.cone(0.12, 0.5), data.color, Vector3(side * 0.66, 0.62, 0))  # ear
-		(blob.get_child(-1) as Node3D).rotation_degrees.z = -70.0 * side
-	var hat := LowPoly.cone(0.34, 0.6)
-	hat.radial_segments = 7
-	_add_mesh(blob, hat, data.hat_color, Vector3(0, 1.08, 0.04))
-	(blob.get_child(-1) as Node3D).rotation_degrees.x = 12.0
-
-
-## A carnivorous plant: leaves at the foot of a stem with a round head of two jaws
-## (the upper one on a pivot at the back, slightly open, with white teeth and spots).
-func _build_plant(data: Dictionary) -> void:
-	_sway = Node3D.new()
-	_sway.scale = Vector3.ONE * data.scale
-	_body.add_child(_sway)
-	for i in 3:
-		var leaf := Node3D.new()
-		leaf.rotation.y = TAU * i / 3.0
-		_sway.add_child(leaf)
-		_add_blob(leaf, LowPoly.BUSH_PROFILE, 5, data.leaf_color, Vector3(0, 0, 0.32),
-			Vector3.ZERO, Vector3(0.45, 0.22, 0.6))
-	_add_mesh(_sway, LowPoly.cylinder(0.08, 0.95), data.stem_color, Vector3(0, 0.47, 0))
-	var head := Node3D.new()
-	head.position = Vector3(0, 0.98, 0)
-	_sway.add_child(head)
-	_add_mesh(head, LowPoly.hemisphere(0.36, 0.24), data.head_color, Vector3.ZERO)
-	(head.get_child(-1) as Node3D).rotation_degrees.x = 180.0
-	_add_mesh(head, LowPoly.disc(0.33), data.inner_color, Vector3(0, 0.01, 0))
-	_jaw = Node3D.new()
-	_jaw.position = Vector3(0, 0, 0.3)
-	head.add_child(_jaw)
-	_add_mesh(_jaw, LowPoly.hemisphere(0.36, 0.3), data.head_color, Vector3(0, 0, -0.3))
-	_add_mesh(_jaw, LowPoly.disc(0.33), data.inner_color, Vector3(0, -0.01, -0.3))
-	for i in 6:
-		var angle := PI * (0.15 + 0.7 * i / 5.0)
-		var rim := Vector3(cos(angle) * 0.3, 0, -sin(angle) * 0.3)
-		_add_mesh(head, LowPoly.cone(0.035, 0.09), Color.WHITE, rim + Vector3(0, 0.04, 0))  # tooth
-		_add_mesh(_jaw, LowPoly.cone(0.035, 0.09), Color.WHITE, rim + Vector3(0, -0.04, -0.3))
-		(_jaw.get_child(-1) as Node3D).rotation_degrees.x = 180.0
-	for spot in [Vector3(-0.15, 0.2, -0.45), Vector3(0.17, 0.22, -0.4), Vector3(0, 0.27, -0.2)]:
-		_add_mesh(_jaw, LowPoly.sphere(0.05), Color(1.0, 0.95, 0.8), spot)
-	_jaw.rotation.x = JAW_REST
-
-
-## A golem: faceted blocks for the legs, the body, the head and two long arms, with
-## glowing eyes and two loose stones on the shoulders.
-func _build_golem(data: Dictionary) -> void:
-	var root := Node3D.new()
-	root.scale = Vector3.ONE * data.scale
-	_body.add_child(root)
-	for x in [-0.22, 0.22]:
-		_add_blob(root, BLOCK_PROFILE, 4, data.dark_color, Vector3(x, 0, 0), Vector3(0, 45, 0),
-			Vector3(0.36, 0.42, 0.36))  # leg
-	_add_blob(root, BLOCK_PROFILE, 4, data.color, Vector3(0, 0.38, 0), Vector3(0, 45, 0),
-		Vector3(1.05, 0.72, 0.8))  # body
-	_add_blob(root, BLOCK_PROFILE, 4, data.color, Vector3(0, 1.08, -0.06), Vector3(0, 45, 0),
-		Vector3(0.5, 0.36, 0.46))  # head
-	for x in [-0.12, 0.12]:
-		_add_mesh(root, LowPoly.sphere(0.055), data.eye_color, Vector3(x, 1.24, -0.29), 0.2)  # eye
-	for side in [-1.0, 1.0]:
-		_add_blob(root, BLOCK_PROFILE, 4, data.dark_color, Vector3(side * 0.62, 0.12, -0.05),
-			Vector3(0, 45, side * 8.0), Vector3(0.34, 0.86, 0.34))  # arm
-		_add_blob(root, BLOCK_PROFILE, 4, data.color, Vector3(side * 0.42, 1.0, 0.05),
-			Vector3(0, 20, 0), Vector3(0.22, 0.16, 0.22))  # loose stone
 
 
 ## A desert scorpion: a flat body of four plates low on eight short legs, two arms with big
@@ -1257,18 +987,18 @@ func _build_scorpion(data: Dictionary) -> void:
 	_body.add_child(root)
 	for i in 4:  # the body plates, front to back
 		var color: Color = data.color if i % 2 == 0 else data.dark_color
-		_add_mesh(root, LowPoly.sphere(0.2 - i * 0.015), color, Vector3(0, 0.2, -0.18 + i * 0.17))
+		add_mesh(root, LowPoly.sphere(0.2 - i * 0.015), color, Vector3(0, 0.2, -0.18 + i * 0.17))
 		(root.get_child(-1) as Node3D).scale = Vector3(1.25, 0.55, 1.0)
 	for x in [-0.07, 0.07]:
-		_add_mesh(root, LowPoly.sphere(0.03), data.eye_color, Vector3(x, 0.29, -0.36))
+		add_mesh(root, LowPoly.sphere(0.03), data.eye_color, Vector3(x, 0.29, -0.36))
 	for side in [-1.0, 1.0]:
 		for i in 4:  # legs: thin sticks going out and down from the body
-			_add_mesh(root, LowPoly.cylinder(0.022, 0.3), data.dark_color,
+			add_mesh(root, LowPoly.cylinder(0.022, 0.3), data.dark_color,
 				Vector3(side * 0.34, 0.1, -0.12 + i * 0.15))
 			(root.get_child(-1) as Node3D).rotation_degrees = Vector3(0, 0, side * 60.0)
-		_add_mesh(root, LowPoly.sphere(0.06), data.color, Vector3(side * 0.22, 0.2, -0.5))  # arm
-		_add_mesh(root, LowPoly.sphere(0.06), data.color, Vector3(side * 0.24, 0.2, -0.6))
-		_add_mesh(root, LowPoly.sphere(0.11), data.dark_color, Vector3(side * 0.27, 0.2, -0.74))
+		add_mesh(root, LowPoly.sphere(0.06), data.color, Vector3(side * 0.22, 0.2, -0.5))  # arm
+		add_mesh(root, LowPoly.sphere(0.06), data.color, Vector3(side * 0.24, 0.2, -0.6))
+		add_mesh(root, LowPoly.sphere(0.11), data.dark_color, Vector3(side * 0.27, 0.2, -0.74))
 		(root.get_child(-1) as Node3D).scale = Vector3(0.8, 0.6, 1.3)  # pincer
 	var segments := 10
 	var tip := Vector3.ZERO
@@ -1276,8 +1006,8 @@ func _build_scorpion(data: Dictionary) -> void:
 		var a := PI * 0.9 * i / (segments - 1)
 		tip = Vector3(0, 0.25 + sin(a) * 0.55, 0.42 + cos(a) * 0.3)
 		var color: Color = data.color if i % 2 == 0 else data.dark_color
-		_add_mesh(root, LowPoly.sphere(0.1 - i * 0.006), color, tip)
-	_add_mesh(root, LowPoly.cone(0.04, 0.16), data.sting_color, tip + Vector3(0, -0.02, -0.08))
+		add_mesh(root, LowPoly.sphere(0.1 - i * 0.006), color, tip)
+	add_mesh(root, LowPoly.cone(0.04, 0.16), data.sting_color, tip + Vector3(0, -0.02, -0.08))
 	(root.get_child(-1) as Node3D).rotation_degrees.x = -120.0
 
 
@@ -1285,7 +1015,7 @@ func _build_scorpion(data: Dictionary) -> void:
 ## of it and bending forward, and a round mouth ringed with teeth looking at the hero,
 ## facing -Z. About 3.4 m tall at its scale. It sways (_sway) like the plant.
 func _build_worm(data: Dictionary) -> void:
-	_add_blob(_body, SLIME_PROFILE, SLIME_SEGMENTS, data.sand_color, Vector3.ZERO,
+	add_blob(_body, CreatureBuilder.SLIME_PROFILE, CreatureBuilder.SLIME_SEGMENTS, data.sand_color, Vector3.ZERO,
 		Vector3.ZERO, Vector3(1.3, 0.22, 1.3) * data.scale)  # the sand: it stays still
 	_sway = Node3D.new()
 	_sway.scale = Vector3.ONE * data.scale
@@ -1294,17 +1024,17 @@ func _build_worm(data: Dictionary) -> void:
 	for i in segments:
 		var u := float(i) / (segments - 1)
 		var color: Color = data.color if i % 2 == 0 else data.dark_color
-		_add_mesh(_sway, LowPoly.sphere(0.42 - u * 0.12), color, Vector3(0, 0.15 + u * 1.55, -u * u * 0.55))
+		add_mesh(_sway, LowPoly.sphere(0.42 - u * 0.12), color, Vector3(0, 0.15 + u * 1.55, -u * u * 0.55))
 		(_sway.get_child(-1) as Node3D).scale = Vector3(1.0, 0.7, 1.0)
 	var head := Node3D.new()
 	head.position = Vector3(0, 1.78, -0.62)
 	head.rotation_degrees.x = -70.0  # its local up points forward and a little up
 	_sway.add_child(head)
-	_add_mesh(head, LowPoly.sphere(0.3), data.color, Vector3.ZERO)
-	_add_mesh(head, LowPoly.disc(0.22), data.mouth_color, Vector3(0, 0.2, 0))
+	add_mesh(head, LowPoly.sphere(0.3), data.color, Vector3.ZERO)
+	add_mesh(head, LowPoly.disc(0.22), data.mouth_color, Vector3(0, 0.2, 0))
 	for i in 10:
 		var a := TAU * i / 10.0
-		_add_mesh(head, LowPoly.cone(0.035, 0.1), data.teeth_color,
+		add_mesh(head, LowPoly.cone(0.035, 0.1), data.teeth_color,
 			Vector3(cos(a) * 0.2, 0.2, sin(a) * 0.2))
 		(head.get_child(-1) as Node3D).rotation = Vector3(0, -a, deg_to_rad(-140.0))
 
@@ -1312,19 +1042,19 @@ func _build_worm(data: Dictionary) -> void:
 ## The Jefe de caravana's canteen, half buried in the sand: a flat leather flask lying on
 ## its side with a cork and a strap, on a low mound. It stands still.
 func _build_canteen(data: Dictionary) -> void:
-	_add_blob(_body, SLIME_PROFILE, SLIME_SEGMENTS, data.sand_color, Vector3.ZERO,
+	add_blob(_body, CreatureBuilder.SLIME_PROFILE, CreatureBuilder.SLIME_SEGMENTS, data.sand_color, Vector3.ZERO,
 		Vector3.ZERO, Vector3(1.0, 0.16, 1.0))  # the mound
 	var flask := Node3D.new()
 	flask.scale = Vector3.ONE * 2.2
 	flask.position = Vector3(0, 0.38, 0)
 	flask.rotation_degrees = Vector3(0, 30, 70)
 	_body.add_child(flask)
-	_add_mesh(flask, LowPoly.sphere(0.2), data.color, Vector3.ZERO)
+	add_mesh(flask, LowPoly.sphere(0.2), data.color, Vector3.ZERO)
 	(flask.get_child(-1) as Node3D).scale = Vector3(1.0, 1.0, 0.45)
-	_add_mesh(flask, LowPoly.cylinder(0.05, 0.1), data.cork_color, Vector3(0, 0.22, 0))
+	add_mesh(flask, LowPoly.cylinder(0.05, 0.1), data.cork_color, Vector3(0, 0.22, 0))
 	var strap := BoxMesh.new()
 	strap.size = Vector3(0.44, 0.03, 0.1)
-	_add_mesh(flask, strap, data.strap_color, Vector3(0, 0.0, 0.0))
+	add_mesh(flask, strap, data.strap_color, Vector3(0, 0.0, 0.0))
 
 
 ## The Posadera's pot: the Kenney pot of the mine's refuge (NatureModels "pot", vertex
@@ -1342,49 +1072,6 @@ func _build_pot(data: Dictionary) -> void:
 	mi.scale = Vector3.ONE * float(data.model_scale)
 	mi.rotation_degrees = Vector3(0, 0, 12)
 	_body.add_child(mi)
-
-
-## A spider: a round abdomen behind a small head with red eyes, on eight bent legs
-## (four a side, each a thigh going up and out and a shin going down to the ground).
-func _build_spider(data: Dictionary) -> void:
-	var root := Node3D.new()
-	root.scale = Vector3.ONE * data.scale
-	_body.add_child(root)
-	_add_blob(root, ABDOMEN_PROFILE, 7, data.color, Vector3(0, 0.42, 0.32), Vector3(-75, 0, 0),
-		Vector3(1.1, 1.0, 1.0))  # abdomen
-	_add_mesh(root, LowPoly.sphere(0.2), data.color, Vector3(0, 0.42, -0.12))  # head
-	for x in [-0.07, 0.07]:
-		_add_mesh(root, LowPoly.sphere(0.045), data.eye_color, Vector3(x, 0.5, -0.3), 0.2)  # eye
-		_add_mesh(root, LowPoly.sphere(0.03), data.eye_color, Vector3(x * 2.0, 0.45, -0.28), 0.2)
-	for side in [-1.0, 1.0]:
-		for i in 4:
-			var leg := Node3D.new()
-			leg.position = Vector3(side * 0.14, 0.42, -0.2 + i * 0.13)
-			# Each leg reaches out to +X of its pivot: the left ones are turned around.
-			leg.rotation.y = deg_to_rad(40.0 - i * 27.0) * side + (PI if side < 0.0 else 0.0)
-			root.add_child(leg)
-			_add_mesh(leg, LowPoly.cylinder(0.03, 0.42), data.leg_color, Vector3(0.18, 0.13, 0))
-			(leg.get_child(-1) as Node3D).rotation_degrees.z = -60.0  # thigh, up and out
-			_add_mesh(leg, LowPoly.cylinder(0.025, 0.62), data.leg_color, Vector3(0.44, -0.12, 0))
-			(leg.get_child(-1) as Node3D).rotation_degrees.z = 22.0  # shin, down to the ground
-
-
-## A specter: a see-through pale drop with its tip down, floating at data.fly, with dark
-## eyes and a wide blue aura around it.
-func _build_specter(data: Dictionary) -> void:
-	_hover = Node3D.new()
-	_hover.position.y = data.fly
-	_hover.scale = Vector3.ONE * data.scale
-	_body.add_child(_hover)
-	_add_ghost(_hover, LowPoly.blob(SPECTER_PROFILE, 8), data.color,
-			data.get("alpha", SPECTER_ALPHA),
-		Vector3.ZERO, Vector3.ONE)
-	_add_ghost(_hover, LowPoly.sphere(0.5), data.aura_color, AURA_ALPHA, Vector3(0, 0.62, 0),
-		Vector3(1.5, 1.7, 1.5))
-	for x in [-0.12, 0.12]:
-		_add_mesh(_hover, LowPoly.sphere(0.07), data.get("eye_color", Color(0.05, 0.05, 0.12)),
-			Vector3(x, 0.8, -0.34))  # eye
-	_add_mesh(_hover, LowPoly.sphere(0.06), Color(0.05, 0.05, 0.12), Vector3(0, 0.6, -0.36))  # mouth
 
 
 ## The waiting loop of the figures built in code: the bat flaps, the plant sways, the
@@ -1563,7 +1250,35 @@ func _set_alpha(alpha: float) -> void:
 		(ghost[0] as StandardMaterial3D).albedo_color.a = ghost[1] * alpha
 
 
-func _add_mesh(parent: Node3D, mesh: Mesh, color: Color, pos: Vector3, \
+## Builders only (CreatureBuilder, CharacterBuilder): the visual root the figure hangs
+## from; the tweens move and scale it, the actor node itself stays put.
+func body() -> Node3D:
+	return _body
+
+
+## Builders only: a wing pivot the idle loop flaps (the bat, the griffin, the gargoyle).
+func add_wing(pivot: Node3D) -> void:
+	_wings.append(pivot)
+
+
+## Builders only: the node the idle loop sways (the plant, the worm).
+func set_sway(node: Node3D) -> void:
+	_sway = node
+
+
+## Builders only: the plant's upper jaw, which play_attack() opens to bite.
+func set_jaw(node: Node3D) -> void:
+	_jaw = node
+
+
+## Builders only: the node the specter's idle loop floats up and down.
+func set_hover(node: Node3D) -> void:
+	_hover = node
+
+
+## Builders only: a mesh in one flat colour under parent; its material fades with the
+## figure on defeat.
+func add_mesh(parent: Node3D, mesh: Mesh, color: Color, pos: Vector3, \
 		roughness := 0.8) -> void:
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = color
@@ -1576,9 +1291,9 @@ func _add_mesh(parent: Node3D, mesh: Mesh, color: Color, pos: Vector3, \
 	parent.add_child(mi)
 
 
-## A see-through glowing mesh (the specter): its opacity rests at alpha and fades with
-## the rest of the figure on defeat. It casts no shadow.
-func _add_ghost(parent: Node3D, mesh: Mesh, color: Color, alpha: float, pos: Vector3, \
+## Builders only: a see-through glowing mesh (the specter): its opacity rests at alpha and
+## fades with the rest of the figure on defeat. It casts no shadow.
+func add_ghost(parent: Node3D, mesh: Mesh, color: Color, alpha: float, pos: Vector3, \
 		scl: Vector3) -> void:
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = Color(color, alpha)
@@ -1596,10 +1311,10 @@ func _add_ghost(parent: Node3D, mesh: Mesh, color: Color, alpha: float, pos: Vec
 	parent.add_child(mi)
 
 
-## A faceted lathe (LowPoly.blob) of profile at pos, turned rot_deg and scaled scl.
-func _add_blob(parent: Node3D, profile: Array[Vector2], segments: int, color: Color, \
+## Builders only: a faceted lathe (LowPoly.blob) of profile at pos, turned rot_deg and scaled scl.
+func add_blob(parent: Node3D, profile: Array[Vector2], segments: int, color: Color, \
 		pos: Vector3, rot_deg := Vector3.ZERO, scl := Vector3.ONE) -> void:
-	_add_mesh(parent, LowPoly.blob(profile, segments), color, pos, 0.8)
+	add_mesh(parent, LowPoly.blob(profile, segments), color, pos, 0.8)
 	var mi := parent.get_child(-1) as MeshInstance3D
 	mi.rotation_degrees = rot_deg
 	mi.scale = scl
