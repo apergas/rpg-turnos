@@ -11,3 +11,7 @@ Estado: Pendiente | Pasada al maestro | Descartada
 ```
 
 ---
+
+## 2026-11-14 · Acompañante visible en el mapa
+que el acompañante, ya sea el de la v1 (criatura) como el de la v2 (compañero) se vean en el mapa. que no se pueda interactuar con ellos, pero que se vean. que vayan andando a poca distancia, y que si el personaje esta quieto, esten quietos tambien.
+Estado: Pendiente
