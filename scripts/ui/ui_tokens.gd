@@ -51,6 +51,7 @@ const JUEGO := {
 	&"text-primary": Color("#ffffff"),
 	&"text-secondary": Color("#b8b8cc"),
 	&"text-disabled": Color("#80809a"),
+	&"portrait-seen": Color("#b8b8cc8c"),
 	&"text-accent": Color("#ffd94d"),
 	&"text-money": Color("#ffcc40"),
 	&"text-positive": Color("#66e67a"),
@@ -106,6 +107,7 @@ const ALTO_CONTRASTE := {
 	&"border-subtle": Color("#9999ad"),
 	&"text-secondary": Color("#d9d9e6"),
 	&"text-disabled": Color("#9999ad"),
+	&"portrait-seen": Color("#d0d0e0bf"),
 	&"status-sleep": Color("#29439e"),
 	&"status-silence": Color("#525260"),
 	&"status-stun": Color("#803300"),
@@ -177,6 +179,7 @@ const LAYER_SYSTEM := 100
 const OPACITY_WINDOW := 0.9
 const OPACITY_MAP := 0.45
 const OPACITY_FADED := 0.5
+const OPACITY_PORTRAIT_DESATURATE := 0.85
 
 # Tipografía: tamaño en px y peso (wght) de cada estilo.
 const TYPE_DISPLAY_XL_SIZE := 96

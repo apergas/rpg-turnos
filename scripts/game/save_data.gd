@@ -25,7 +25,7 @@ class_name SaveData extends RefCounted
 ## METAL_SLIME_VERSION (1.7.0) adds the Slime de Metal's HP kept after it got away (metal_slime_hp, 0 for none); an older save gets 0.
 ## MEDALS_VERSION (1.8.0) adds the small medals taken (medals, sorted), the Coleccionista's prizes
 ## given (medal_prizes), whether he was met (collector_met) and the rounds of the Partida nueva +
-## (ng_plus); an older save gets none, 0, false and 0. CARAVAN_VERSION (2.0.0) changes no field: it marks the saves that may hold the v2 (the caravan's zones, a companion, levels past 20); its `story` may carry `finished_v2` and `v2_start` (2.3.0, without changing the version: an older save has neither and loads with false and []).
+## (ng_plus; 2.7.0 removed it: always written as 0, read and ignored); an older save gets none, 0, false and 0. CARAVAN_VERSION (2.0.0) changes no field: it marks the saves that may hold the v2 (the caravan's zones, a companion, levels past 20); its `story` may carry `finished_v2` and `v2_start` (2.3.0, without changing the version: an older save has neither and loads with false and []).
 
 const VERSION := 14
 ## First version with the story's fields.
@@ -44,7 +44,7 @@ const RING_VERSION := 11
 const OLD_ACCESSORY := "accessory"
 ## First version with the Slime de Metal's HP.
 const METAL_SLIME_VERSION := 12
-## First version with the small medals and the Partida nueva +.
+## First version with the small medals and the Partida nueva + (removed in 2.7.0).
 const MEDALS_VERSION := 13
 ## The caravan (2.0.0, the v2): no new field, but the v2's zones, the companions, level 40
 ## and the v2's cutscenes and quests only exist from here on. An older save has none.
@@ -101,7 +101,7 @@ static func from_state(state: GameState, player_pos: Vector3, play_time: float) 
 		"medals": medals,
 		"medal_prizes": state.medal_prizes,
 		"collector_met": state.collector_met,
-		"ng_plus": state.ng_plus,
+		"ng_plus": 0,
 		"position": [player_pos.x, player_pos.z],
 		"play_time": play_time,
 	}
@@ -197,15 +197,16 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 	state.ally_id = data.get("ally", "")
 	state.metal_slime_hp = int(data.get("metal_slime_hp", 0)) \
 		if int(data.version) >= METAL_SLIME_VERSION else 0
+	# A save from a Partida nueva + (before 2.7.0) may keep more than the normal max.
+	state.metal_slime_hp = mini(state.metal_slime_hp,
+		EnemyLibrary.data(EnemyLibrary.METAL_SLIME).max_hp)
 	state.medals.clear()
 	state.medal_prizes = 0
 	state.collector_met = false
-	state.ng_plus = 0
 	if int(data.version) >= MEDALS_VERSION:
 		state.medals.assign(data.medals)
 		state.medal_prizes = int(data.medal_prizes)
 		state.collector_met = data.collector_met
-		state.ng_plus = int(data.ng_plus)
 	var pos: Array = data.position
 	return {"valid": true, "position": Vector3(pos[0], 0.0, pos[1]),
 		"play_time": float(data.play_time)}
@@ -356,14 +357,11 @@ static func _valid_ally(data: Dictionary) -> bool:
 	return ally is String and (ally == "" or Allies.exists(ally))
 
 
-## METAL_SLIME_VERSION field: the Slime de Metal's HP, from 0 (none) to its max HP, which a
-## Partida nueva + raises (NgPlus, on the mine floors; ng_plus is checked before this).
+## METAL_SLIME_VERSION field: the Slime de Metal's HP, 0 (none) or more. A save from a
+## Partida nueva + (before 2.7.0) may hold more than its max: apply() cuts it down.
 static func _valid_metal_slime(data: Dictionary) -> bool:
 	var hp: Variant = data.get("metal_slime_hp")
-	var cycle := int(data.ng_plus) if int(data.version) >= MEDALS_VERSION else 0
-	var top := NgPlus.scale_value(EnemyLibrary.data(EnemyLibrary.METAL_SLIME).max_hp,
-		NgPlus.stat_mult(cycle, ZoneData.by_id("mina_1").number))
-	return hp is float and hp >= 0.0 and hp <= top
+	return hp is float and hp >= 0.0
 
 
 ## MEDALS_VERSION fields: the medals taken (Medals ids, each once), the Coleccionista's
@@ -544,8 +542,7 @@ static func _valid_world(data: Dictionary) -> bool:
 
 
 ## One line about a valid save for the title: "Rocío · Nv 12 · Mina · 1:05" (the hero's
-## name, level, the zone's short name and the play time as h:mm), and " · +1" in a Partida
-## nueva +. Older saves without a name or a zone say the default name and the meadow, as apply()
+## name, level, the zone's short name and the play time as h:mm). Older saves without a name or a zone say the default name and the meadow, as apply()
 ## would load them.
 static func summary_line(data: Dictionary) -> String:
 	var version := int(data.version)
@@ -554,28 +551,24 @@ static func summary_line(data: Dictionary) -> String:
 	var minutes := floori(float(data.play_time) / 60.0)
 	var text := "%s · Nv %d · %s · %d:%02d" % [hero_name, int(data.hero.level),
 		ZoneData.by_id(zone_id).short_name, floori(minutes / 60.0), minutes % 60]
-	var cycle := int(data.ng_plus) if version >= MEDALS_VERSION else 0
-	if cycle > 0:
-		text += " · +%d" % cycle
 	if is_caravan(data):
 		text += " · v2"
 	return text
 
 
 ## True if the save's game is finished (the Señor de la Niebla beaten: GameState.is_finished()):
-## the title then offers the Partida nueva +.
+## the slot list says "terminada" and opens its Continuar page.
 static func is_finished(data: Dictionary) -> bool:
 	var flags: Array = data.get("flags", [])
 	return int(data.version) >= 4 and flags.has(GameState.FINAL_BOSS) and not is_caravan(data)
 
 
-## True if the save's hero has left with the caravan (the v2): no Partida nueva + for it.
+## True if the save's hero has left with the caravan (the v2).
 static func is_caravan(data: Dictionary) -> bool:
 	return (data.get("flags", []) as Array).has(StoryState.CARAVAN_FLAG)
 
 
-## True if the save's v2 is finished: the Devorador beaten and the credits seen (no Partida
-## nueva + for it either: that is only for the v1).
+## True if the save's v2 is finished: the Devorador beaten and the credits seen.
 static func is_finished_v2(data: Dictionary) -> bool:
 	var story: Variant = data.get("story")
 	return is_caravan(data) and story is Dictionary and story.get("finished_v2", false) == true

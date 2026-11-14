@@ -31,6 +31,9 @@ const THUNDER := "thunder"
 @export var status_chance := 0.0
 ## The spell of the hero this one replaces once learned ("" for none).
 @export var replaces := ""
+## A heal the hero casts also heals the creature beside him (BattleEngine.ally) by this share
+## of power, rounded up (Sanación: 0.5). 0.0 for none; enemies' heals ignore it.
+@export var ally_share := 0.0
 
 
 ## True if the hero has to pick one enemy for it.
