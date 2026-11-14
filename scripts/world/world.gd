@@ -119,14 +119,6 @@ const LANTERN_COLOR := Color(1.0, 0.85, 0.65)
 const LANTERN_ENERGY := 2.0
 const LANTERN_RANGE := 10.0
 const LANTERN_HEIGHT := 2.4
-## Autoplay: below the zone's autoplay_boss_level the hero leaves the route for the
-## nearest group this close that can start a battle, gives up after AUTOPLAY_HUNT_MS (or
-## stuck on the way, Player.take_failed_hunt()) and leaves that one alone for
-## AUTOPLAY_HUNT_RETRY_MS.
-const AUTOPLAY_HUNT_RADIUS := 60.0
-const AUTOPLAY_HUNT_RADIUS_CAVE := 12.0  # walls: a straight line to a far group fails
-const AUTOPLAY_HUNT_MS := 15000
-const AUTOPLAY_HUNT_RETRY_MS := 20000
 
 ## The map to build; set before add_child.
 var zone: ZoneData
@@ -137,6 +129,7 @@ var boss_id := ""
 var _hud: MapHud
 var _props: MapProps
 var _monsters: MapMonsters
+var _hunter: AutoplayHunter
 
 var _grass: ShaderMaterial
 var _player: Player
@@ -173,13 +166,8 @@ var _step_m := 0.0
 var _signs_under_prompt: Array[Label3D] = []
 ## The zone's ZoneParticles (null: none, or low quality), carried with the hero.
 var _particles: Node3D
-## Autoplay: hunt groups (Game: below the zone's autoplay_boss_level), until when the one
-## hunted now is followed, and group instance id -> the time until which it is left alone.
-var _hunt_on := false
-var _hunt_until_ms := 0
 ## Time of the simulation in ms (the hunt's timers count it, so a run with --fixed-fps keeps them).
 var _sim_ms := 0.0
-var _hunt_skip := {}
 ## DebugPanel's Monstruos (MapMonsters.debug_no_groups): Game and DebugPanel use this name.
 static var debug_no_groups: bool:
 	get:
@@ -205,7 +193,9 @@ func _ready() -> void:
 	_figures.setup(zone, _player)
 	_monsters = MapMonsters.new()
 	_monsters.setup(zone, _player)
-	_monsters.groups_reset.connect(func() -> void: _hunt_skip.clear())
+	_hunter = AutoplayHunter.new()
+	_hunter.setup(zone, _player, _monsters)
+	_monsters.groups_reset.connect(_hunter.forget)
 	add_child(_figures)
 	_figures.build()
 	if boss_id == "":
@@ -286,8 +276,8 @@ func _physics_process(delta: float) -> void:
 	if _monsters.check_contact(pos, int(_sim_ms)):
 		_trigger(false)
 		return
-	if _autoplay and _hunt_on and not _monsters.is_repelled():
-		_update_hunt(pos)
+	if _autoplay and _hunter.is_on() and not _monsters.is_repelled():
+		_hunter.step(pos, int(_sim_ms))
 	var near := _nearest_use(pos)
 	if near.is_empty():
 		_hide_prompt()
@@ -522,9 +512,7 @@ func set_repel(on: bool) -> void:
 
 ## Autoplay: hunt the groups (Game: while the hero is below the zone's autoplay_boss_level).
 func set_autoplay_hunt(on: bool) -> void:
-	_hunt_on = on
-	if not on:
-		_player.stop_hunt()
+	_hunter.set_on(on)
 
 
 ## Every group of the zone again (MonsterGroups.groups()), in new places, none within
@@ -572,39 +560,6 @@ func end_contact(outcome: int) -> void:
 ## No group starts a battle for MonsterGroups.CALM_MS from now.
 func _calm() -> void:
 	_monsters.calm(int(_sim_ms))
-
-
-## Autoplay: leaves the route for the nearest group within AUTOPLAY_HUNT_RADIUS that can
-## start a battle, and goes back to it once that one is gone or fled from, after
-## AUTOPLAY_HUNT_MS, or when the hero got stuck on the way (that one is then left alone for
-## AUTOPLAY_HUNT_RETRY_MS).
-func _update_hunt(pos: Vector3) -> void:
-	var now := int(_sim_ms)
-	var failed := _player.take_failed_hunt()
-	if failed != 0:
-		_hunt_skip[failed] = now + AUTOPLAY_HUNT_RETRY_MS
-	if _player.is_hunting():
-		var current := _player.hunting()
-		var index := _monsters.group_index(current) if current != null else -1
-		if index < 0 or not _monsters.groups[index].armed:
-			_player.stop_hunt()
-		elif now > _hunt_until_ms:
-			_hunt_skip[current.get_instance_id()] = now + AUTOPLAY_HUNT_RETRY_MS
-			_player.stop_hunt()
-		return
-	var best: Node3D = null
-	var best_d := AUTOPLAY_HUNT_RADIUS_CAVE if zone.is_dungeon() else AUTOPLAY_HUNT_RADIUS
-	for group in _monsters.groups:
-		var node: Node3D = group.node
-		if not group.armed or now < int(_hunt_skip.get(node.get_instance_id(), 0)):
-			continue
-		var d := _flat_distance(pos, node.position)
-		if d < best_d:
-			best = node
-			best_d = d
-	if best != null:
-		_player.hunt(best)
-		_hunt_until_ms = now + AUTOPLAY_HUNT_MS
 
 
 ## Shows or removes the return portal at the zone's portal_pos.
