@@ -18,7 +18,7 @@ speed = 20
 skills = Array[ExtResource("2_skill")]([ExtResource("3_sk")])
 map_roam = 1.0
 map_speed = 1.0
-exp_reward = 155
+exp_reward = 86
 gold_reward = 62
 ai_weights = {
 "attack": 60,
@@ -26,5 +26,5 @@ ai_weights = {
 }
 weak = Array[String](["fire"])
 drops = {
-"junco_bruma": 0.5
+"junco_bruma": 0.8
 }
