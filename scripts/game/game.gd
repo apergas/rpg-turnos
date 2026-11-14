@@ -77,8 +77,6 @@ const HERO_DATA := preload("res://data/hero.tres")
 const BATTLE_SCENE := preload("res://scenes/battle/battle_scene.tscn")
 const WORLD_SCENE := preload("res://scenes/world/world.tscn")
 const CUTSCENE_PATH := "res://data/cutscenes/%s.tres"
-## The author shown in the credits.
-const AUTHOR := "apergas"
 const FADE_TIME := 0.3
 const TOUCH_HINT := "Toca el suelo para ir allí, o arrastra el dedo para andar."
 ## The v2's Jefe de caravana: in Villaclaro once the caravan has come, then in the Caravana.
@@ -408,7 +406,7 @@ func _ready() -> void:
 			start_pos = info.position
 			_ctx.play_time = info.play_time
 			if _autoplay_save:
-				print("Cargado: %s" % _summary(SaveData.from_state(state, info.position,
+				print("Cargado: %s" % CreditsData.summary(SaveData.from_state(state, info.position,
 					info.play_time)))
 			# The arrival lines of the lands already passed (and of this one) are not said
 			# again on loading.
@@ -619,7 +617,7 @@ func _switch_zone(zone_id: String, entry_id: String) -> void:
 	if _ctx.world.in_village():
 		_on_village_changed(true)
 	if _autoplay:
-		print("Zona: %s (Nv %d, %s)" % [zone_id, state.hero.level, _clock(_ctx.play_time)])
+		print("Zona: %s (Nv %d, %s)" % [zone_id, state.hero.level, CreditsData.clock(_ctx.play_time)])
 
 
 func _on_encounter(boss: bool) -> void:
@@ -772,7 +770,7 @@ func _on_encounter(boss: bool) -> void:
 	if won:
 		var data := _autosave(not boss and finished_quests.is_empty())  # keep its reward readable
 		if _autoplay_save and _save.is_empty() and not data.is_empty():
-			print("Guardado: %s" % _summary(data))
+			print("Guardado: %s" % CreditsData.summary(data))
 			quit_to_title.emit()
 			return
 	_set_busy(false)
@@ -1108,7 +1106,7 @@ func _finish_game() -> void:
 	state.story.finished = true
 	_ctx.world.freeze(true)
 	_autosave(false)
-	var time_text := _clock(_ctx.play_time)
+	var time_text := CreditsData.clock(_ctx.play_time)
 	_audio.play_music(MusicLibrary.TITLE)
 	_audio.stop_ambient()
 	var layer := CanvasLayer.new()
@@ -1117,7 +1115,7 @@ func _finish_game() -> void:
 	var credits := CreditsScreen.new()
 	layer.add_child(credits)
 	await _fade_to(0.0)
-	await credits.run(_credits_sections(time_text))
+	await credits.run(CreditsData.credits_sections(state, time_text))
 	if _autoplay:
 		print("Juego completado: Nv %d, tiempo de juego %s, misiones %d" % [state.hero.level,
 			time_text, state.quests_done()])
@@ -1139,7 +1137,7 @@ func _finish_v2() -> void:
 	_switch_zone("caravana", "")
 	_ctx.world.freeze(true)
 	_autosave(false)
-	var numbers := _v2_numbers()
+	var numbers := CreditsData.v2_numbers(state, _ctx.play_time)
 	_ctx.world.set_active(false)
 	_audio.stop_ambient()
 	_audio.play_music(MusicLibrary.BEYOND)
@@ -1158,10 +1156,10 @@ func _finish_v2() -> void:
 	credits.end_text = CreditsScreen.TO_BE_CONTINUED
 	layer.add_child(credits)
 	await _fade_to(0.0)
-	await credits.run(_v2_credits_sections(numbers))
+	await credits.run(CreditsData.v2_credits_sections(state, numbers))
 	if _autoplay:
 		print("Juego completado (v2): Nv %d, tiempo en la caravana %s, tiempo de juego %s, misiones de la caravana %d/%d"
-			% [state.hero.level, numbers.time, _clock(_ctx.play_time), state.quests.done_of(true),
+			% [state.hero.level, numbers.time, CreditsData.clock(_ctx.play_time), state.quests.done_of(true),
 			QuestLog.total_of(true)])
 		print("Familias completas: %d/%d" % [Bestiary.complete_count(state),
 			Bestiary.families(state).size()])
@@ -1169,62 +1167,6 @@ func _finish_v2() -> void:
 		print("Medallas: %d/%d (enemigos comunes vencidos: %d)" % [state.medals.size(),
 			Medals.MEDALS.size(), _common_beaten])
 	quit_to_title.emit()
-
-
-## The v2's time and battles: since the hero left with the caravan (story.v2_start), or the
-## whole game's for a save that was already in the caravan before 2.3.0 ("since" false).
-func _v2_numbers() -> Dictionary:
-	var start: Array = state.story.v2_start
-	var since := not start.is_empty()
-	return {
-		"time": _clock(_ctx.play_time - (float(start[0]) if since else 0.0)),
-		"battles": state.battles - (int(start[1]) if since else 0),
-		"since": since,
-	}
-
-
-## The v2's credits: the caravan's story, this journey's numbers, who made the game.
-func _v2_credits_sections(numbers: Dictionary) -> Array:
-	var journey: Array[String] = []
-	if state.ally_id != "":
-		journey.append("Compañero: %s" % Allies.display_name(state.ally_id))
-	journey.append(("Tiempo en la caravana: %s" if numbers.since else "Tiempo de juego: %s")
-		% numbers.time)
-	journey.append(("Combates en la caravana: %d" if numbers.since else "Combates: %d")
-		% numbers.battles)
-	journey.append("Misiones de la caravana: %d/%d" % [state.quests.done_of(true),
-		QuestLog.total_of(true)])
-	journey.append("Nivel: %d" % state.hero.level)
-	return [
-		["La caravana del portal", ["La historia de %s" % state.hero.display_name]],
-		["Tu viaje", journey],
-		["Creado por", [AUTHOR]],
-		["Motor", ["Godot Engine 4.7"]],
-		["Modelos 3D", ["KayKit, de Kay Lousberg (CC0)", "Nature Kit, de Kenney (CC0)"]],
-		["Música y sonido", ["Generados por el propio juego"]],
-		["Gracias por jugar", []],
-	]
-
-
-## The credits: who made the game, with what, and the numbers of this game.
-func _credits_sections(time_text: String) -> Array:
-	var numbers: Array[String] = [
-		"Tiempo de juego: %s" % time_text,
-		"Combates: %d" % state.battles,
-		"Pasos: %d" % state.steps,
-		"Oro ganado: %d G" % state.gold_earned,
-		"Misiones cumplidas: %d" % state.quests_done(),
-		"Nivel: %d" % state.hero.level,
-	]
-	return [
-		["Villaclaro", ["La historia de %s" % state.hero.display_name]],
-		["Creado por", [AUTHOR]],
-		["Motor", ["Godot Engine 4.7"]],
-		["Modelos 3D", ["KayKit, de Kay Lousberg (CC0)"]],
-		["Música y sonido", ["Generados por el propio juego"]],
-		["Tu partida", numbers],
-		["Gracias por jugar", []],
-	]
 
 
 ## What CutscenePlayer's "travel" step does: builds zone_id at entry_id under black and
@@ -1680,17 +1622,6 @@ func _refresh_status() -> void:
 ## "a Villaclaro", "a la aldea del bosque", "al refugio de la mina".
 static func _to_place(place: String) -> String:
 	return "al " + place.substr(3) if place.begins_with("el ") else "a " + place
-
-
-## Seconds as "h:mm:ss".
-static func _clock(seconds: float) -> String:
-	return "%d:%02d:%02d" % [floori(seconds / 3600.0), floori(seconds / 60.0) % 60,
-		floori(seconds) % 60]
-
-
-## One line with every saved value, keys sorted, for --autoplay-save.
-static func _summary(data: Dictionary) -> String:
-	return JSON.stringify(data, "", true)
 
 
 func _build_shop() -> void:
