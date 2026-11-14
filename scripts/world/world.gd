@@ -56,24 +56,7 @@ signal map_requested
 const PLAYER_SCENE := preload("res://scenes/world/player.tscn")
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
 const HERO_DATA := preload("res://data/hero.tres")
-const NOTICE_TIME := 4.0
-## Fade in and out of the notice window.
-const NOTICE_FADE := 0.2
-## Seconds "Misión cumplida" stays in the status window.
-const MISSION_DONE_TIME := 4.0
-## The notice window, top centre (clear of the status window and the ☰ button).
-const NOTICE_MAX_WIDTH := float(UiTokens.WINDOW_W_XL)
-const UI_EDGE := float(UiTokens.SPACE_6)
-## Phone: the mission line wraps here and the bars narrow to fit.
-const TOUCH_MISSION_WIDTH := 300.0
-## The use button of the phone interface.
-const USE_BUTTON_SIZE := Vector2(180, 72)
-## The phone's walking hint: wraps here and sits over the use button's row.
-const TOUCH_HINT_WIDTH := float(UiTokens.WINDOW_W_L)
-## The place's name, big, the first time the map is the player's (World.freeze(false)).
-const BANNER_TOP := 110.0
-const BANNER_FADE := 0.5
-const BANNER_TIME := 2.5
+const BANNER_FADE := MapHud.BANNER_FADE
 ## How close the player must be to talk to a figure / to open a chest / to run into the
 ## boss / to take an exit.
 const TALK_RADIUS := 2.5
@@ -165,8 +148,6 @@ const QUEST_MARK_BOB := 0.12
 const FIGURE_SIGN_RISE := 0.65
 const FIGURE_SIGN_GAP := 0.25
 const FIGURE_SIGN_PIXEL := 0.012
-## Mission lines wrap past this width, so the status window stays at the side of the screen.
-const MISSION_WIDTH := 420.0
 ## Groups of monsters farther than this from the hero neither move nor animate.
 const GROUP_ANIMATE_RADIUS := 30.0
 ## Seconds between two hops of a slime walking on the map.
@@ -190,6 +171,8 @@ var zone: ZoneData
 ## zone.boss_id. Game passes the Eco de la Niebla once the game is finished.
 var boss_id := ""
 
+var _hud: MapHud
+
 var _rng := RandomNumberGenerator.new()
 var _grass: ShaderMaterial
 var _player: Player
@@ -199,8 +182,6 @@ var _boss: StaticBody3D
 var _figures := {}
 ## What a cutscene's camera looks at (camera_to); null until the first one.
 var _camera_spot: Node3D
-## The status window and the map square under it: a cutscene hides them together.
-var _status_column: VBoxContainer
 ## chest id -> lid pivot (rotation.x opens it); a chest in _open_chests is open.
 var _chest_lids := {}
 ## Well id -> its water and light, hidden while it is dry.
@@ -223,40 +204,9 @@ var _return_mark: Node3D
 var _boss_present := false
 ## False from a boss battle until the hero walks BOSS_REARM_RADIUS away from the boss.
 var _boss_armed := true
-var _ui: CanvasLayer
-var _name_label: Label
-var _hp_bar: StatBar
-var _mp_bar: StatBar
-var _exp_bar: StatBar
-var _gold_label: Label
-var _mission_box: VBoxContainer
-## The lines of the status window, and the serial that lets "Misión cumplida" put them back.
-var _missions: Array[String] = []
-var _mission_done_serial := 0
-var _mission_done := false
-var _map_square: MapSquare
-var _has_explored := false
 ## True while an Incienso keeps the monsters away (Game counts its metres).
 var _repelled := false
 var _dry_wells: Array[String] = []
-var _notice: Label
-var _notice_word: Label
-var _notice_tween: Tween
-var _notice_window: PanelContainer
-var _place_label: Label
-var _hint_window: PanelContainer
-var _hint: Label
-var _banner: VBoxContainer
-var _banner_tween: Tween
-var _banner_shown := false
-var _prompt: Label
-var _prompt_box: VBoxContainer
-var _prompt_key: Label
-var _prompt_cap: StyleBoxFlat
-## Phones: the button that replaces the prompt, and the pad that reads the fingers.
-var _use_button: Button
-var _pad: TouchPad
-var _dialogue: DialogueBox
 var _autoplay := false
 var _waiting := false
 var _talking := false
@@ -318,6 +268,8 @@ func _ready() -> void:
 		_dungeon = DungeonMap.new()
 		_dungeon.zone = zone
 		add_child(_dungeon)
+	_hud = MapHud.new()
+	_hud.setup(zone)
 	for npc: Dictionary in zone.npcs:
 		_figures[npc.name] = _add_figure(BattleActor.Look[npc.look], npc.pos, npc.yaw, 0.4,
 			1.8)
@@ -353,8 +305,11 @@ func _ready() -> void:
 	add_child(_camera)
 	_camera.target = _player
 	_marker = _build_marker()
-	_build_ui()
-	_place_label.text = zone.map_label()
+	_hud.map_pressed.connect(_on_map_pressed)
+	_hud.tapped.connect(_on_tapped)
+	_hud.pinched.connect(_camera.zoom_by)
+	_hud.use_pressed.connect(func() -> void: _use(_nearest_use(_player.global_position)))
+	add_child(_hud)
 	set_explored(ExploredMap.new(zone))
 	place_at_entry(zone.start_entry)
 	respawn_groups()
@@ -365,17 +320,16 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	_sim_ms += delta * 1000.0
-	if _pad:
-		_player.stick_direction = _pad.direction
-		if _pad.direction != Vector2.ZERO:
+	var pad := _hud.pad
+	if pad:
+		_player.stick_direction = pad.direction
+		if pad.direction != Vector2.ZERO:
 			_use_on_arrival = {}  # walking off by hand drops the tap's errand
 	if _grass:
 		Vegetation.set_pusher(_grass, _player.global_position)
 	if _particles:
 		ZoneParticles.follow(_particles, _player.global_position)
-	_map_square.follow(_player.global_position)
-	if _hint_window and _hint_window.visible and _player.last_step_m > 0.0:
-		_hint_window.hide()
+	_hud.step(_player.global_position, _player.last_step_m)
 	_marker.visible = _player.move_target != null
 	if _marker.visible:
 		_marker.position = _player.move_target
@@ -432,8 +386,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		_use(_nearest_use(_player.global_position))
 		return
-	if _pad:
-		if _pad.handle(event):
+	var pad := _hud.pad
+	if pad:
+		if pad.handle(event):
 			get_viewport().set_input_as_handled()
 		return  # the mouse events left are the touches again
 	var point: Variant = _pointer_on_ground(event)
@@ -488,17 +443,7 @@ func _prompt_text(use: Dictionary) -> String:
 
 
 func _show_prompt(near: Dictionary) -> void:
-	var text := _prompt_text(near)
-	if _use_button:
-		_use_button.text = text
-		_use_button.show()
-		_clear_signs_under(_use_button.get_global_rect())
-		return
-	_prompt.text = text
-	_prompt_key.text = _action_key_name()
-	_paint_prompt_cap()
-	_prompt_box.show()
-	_clear_signs_under(_prompt_box.get_global_rect())
+	_clear_signs_under(_hud.show_prompt(_prompt_text(near), _action_key_name()))
 
 
 ## Hides the figure signs that would sit under the prompt (or the use button), so the two
@@ -514,12 +459,6 @@ func _clear_signs_under(rect: Rect2) -> void:
 		elif not covered and label in _signs_under_prompt:
 			label.show()
 			_signs_under_prompt.erase(label)
-
-
-## The keycap's colours, read again each time it shows so it follows the high contrast option.
-func _paint_prompt_cap() -> void:
-	_prompt_cap.bg_color = UiTokens.color(&"surface-window")
-	_prompt_cap.border_color = UiTokens.color(&"border-subtle")
 
 
 func _restore_signs() -> void:
@@ -539,26 +478,29 @@ func _action_key_name() -> String:
 
 func _hide_prompt() -> void:
 	_restore_signs()
-	_prompt_box.hide()
-	if _use_button:
-		_use_button.hide()
+	_hud.hide_prompt()
 
 
 func _prompt_showing() -> bool:
-	return _use_button.visible if _use_button else _prompt_box.visible
+	return _hud.prompt_showing()
 
 
 ## Forgets the fingers on the map (a window, a battle or a cutscene took over).
 func _reset_pad() -> void:
-	if _pad:
-		_pad.reset()
+	_hud.reset_pad()
+
+
+## The map square was tapped: the Mapa page, unless a window or a battle holds the map.
+func _on_map_pressed() -> void:
+	if not _talking and not _waiting:
+		map_requested.emit()
 
 
 ## Hidden and frozen while a battle is on top; back on, no group starts a battle for MonsterGroups.CALM_MS.
 func set_active(active: bool) -> void:
 	process_mode = Node.PROCESS_MODE_INHERIT if active else Node.PROCESS_MODE_DISABLED
 	visible = active
-	_ui.visible = active
+	_hud.visible = active
 	_camera.current = active
 	_reset_pad()
 	if active:
@@ -600,7 +542,7 @@ func in_village() -> bool:
 ## Footsteps, encounter and dialogue sounds. Without it the map is silent.
 func set_audio(audio: AudioDirector) -> void:
 	_audio = audio
-	_dialogue.set_audio(audio)
+	_hud.dialogue.set_audio(audio)
 
 
 ## Shows or removes the zone's boss; when absent it has no collision.
@@ -630,17 +572,14 @@ func set_world_flags(flags: Dictionary) -> void:
 ## What has been seen of this zone, for the map square (Game passes GameState's; run on
 ## its own the map keeps its own).
 func set_explored(map: ExploredMap) -> void:
-	_map_square.set_map(map)
-	_has_explored = true
+	_hud.set_explored(map)
 	_refresh_map_marks()
 
 
 ## The map square's points of interest (MapMarks): they follow the dry wells and, on a
 ## dungeon floor, the lever, the gates and the key.
 func _refresh_map_marks() -> void:
-	if not _has_explored:
-		return
-	_map_square.set_marks(MapMarks.of_zone(zone, _flags, _dry_wells))
+	_hud.refresh_map_marks(_flags, _dry_wells)
 
 
 ## The hero is EncounterMeter.LEVEL_GAP levels past the zone (EncounterMeter.is_shy()): the
@@ -948,7 +887,7 @@ func npc_lines(index: int, chapter: int) -> Array[String]:
 ## Freezes the player and shows the lines one by one; returns when they are all read.
 func show_dialogue(speaker: String, lines: Array[String]) -> void:
 	freeze(true)
-	await _dialogue.say(speaker, lines)
+	await _hud.dialogue.say(speaker, lines)
 	await freeze(false)
 
 
@@ -960,7 +899,7 @@ func ask(question: String, options: Array[String], focus := 0) -> int:
 		return 0
 	freeze(true)
 	var window := ChoiceWindow.new()
-	_ui.add_child(window)
+	_hud.add_child(window)
 	var chosen: int = await window.ask(question, options, focus)
 	await freeze(false)
 	return chosen
@@ -976,15 +915,7 @@ func begin_cutscene() -> void:
 	_reset_pad()
 	_player.model().set_walking(false)
 	_use_on_arrival = {}
-	_status_column.hide()
-	_map_square.hide()
-	_place_label.hide()
-	if _hint_window:
-		_hint_window.hide()
-	_notice_window.hide()
-	if _banner_tween:
-		_banner_tween.kill()
-	_banner.hide()
+	_hud.begin_cutscene()
 	_show_quest_marks()
 	_signs_under_prompt.clear()
 	for label in _figure_signs:
@@ -997,9 +928,7 @@ func end_cutscene() -> void:
 	reset_figures()
 	_camera.follow(_player)
 	_player.scripted = false
-	_status_column.show()
-	_map_square.show()
-	_place_label.show()
+	_hud.end_cutscene()
 	_show_quest_marks()
 	for label in _figure_signs:
 		label.show()
@@ -1010,7 +939,7 @@ func end_cutscene() -> void:
 
 ## A dialogue inside a cutscene: like show_dialogue() but the map stays frozen.
 func say_lines(speaker: String, lines: Array[String]) -> void:
-	await _dialogue.say(speaker, lines)
+	await _hud.dialogue.say(speaker, lines)
 
 
 ## The node a cutscene moves for who ("hero" or a figure's name; null if none here).
@@ -1079,9 +1008,8 @@ func freeze(on: bool) -> void:
 	_player.input_enabled = true
 	_talking = false
 	_taps_from_ms = Time.get_ticks_msec() + TAP_GUARD_MS
-	if not _banner_shown and not _player.scripted:
-		_banner_shown = true
-		_show_banner()
+	if not _player.scripted:
+		_hud.show_banner_once()
 
 
 ## What the quests show on this map (Game passes GameState.quests' answers): marks is figure
@@ -1181,72 +1109,23 @@ func set_chest_open(chest_id: String, open: bool, instant := false) -> void:
 ## The pause menu covers the middle of the screen and says the same as the status window,
 ## which goes away behind it (with the map square).
 func set_status_shown(on: bool) -> void:
-	_reset_pad()  # a finger's release is lost while the tree is paused
-	_status_column.visible = on
-	_map_square.visible = on
-	_place_label.visible = on
+	_hud.set_status_shown(on)
 
 
-func refresh_status(hero: Combatant, _potions: int, gold: int, missions: Array[String] = []) -> void:
-	_name_label.text = StatBar.hero_title(hero)
-	_hp_bar.show_hp(hero.hp, hero.max_hp)
-	_mp_bar.show_mp(hero.mp, hero.max_mp)
-	_exp_bar.show_exp(hero)
-	_gold_label.text = "%d G" % gold
-	_missions = missions
-	if not _mission_done:
-		_show_missions(missions)
+func refresh_status(hero: Combatant, potions: int, gold: int, missions: Array[String] = []) -> void:
+	_hud.refresh_status(hero, potions, gold, missions)
 
 
 ## Puts "Misión cumplida" (or text) in the mission list for a few seconds, then the
 ## missions under way come back.
 func show_mission_done(text: String) -> void:
-	_mission_done_serial += 1
-	var serial := _mission_done_serial
-	_mission_done = true
-	var lines: Array[String] = [text]
-	_show_missions(lines, true)
-	if _autoplay:
-		print(text)
-	await get_tree().create_timer(MISSION_DONE_TIME).timeout
-	if serial == _mission_done_serial:
-		_mission_done = false
-		_show_missions(_missions)
-
-
-func _show_missions(lines: Array[String], done := false) -> void:
-	for child in _mission_box.get_children():
-		_mission_box.remove_child(child)
-		child.queue_free()
-	var shown := lines.slice(0, 1) if Device.is_touch() else lines
-	var width := TOUCH_MISSION_WIDTH if Device.is_touch() else MISSION_WIDTH
-	for line in shown:
-		var label := Label.new()
-		label.theme_type_variation = UiTheme.CAPTION
-		if done:
-			UiTheme.style_label(label, &"caption", &"text-positive")
-		_mission_box.add_child(label)
-		BattleHud.fit_label(label, line, width)
+	_hud.show_mission_done(text)
 
 
 ## Shows a short line in its own window for NOTICE_TIME seconds (a newer one replaces it),
 ## under a small tone word ("Guardado", "Cerrado"...) in the colour of `tone`. Only the text is printed.
 func show_notice(text: String, word := "Aviso", tone := &"text-info") -> void:
-	_notice_word.text = word
-	UiTheme.style_label(_notice_word, &"label", tone)
-	BattleHud.fit_label(_notice, text, NOTICE_MAX_WIDTH)
-	_notice_window.show()
-	if _autoplay:
-		print(text)
-	# One tween owned by the map: a newer notice kills it, and it dies with the map.
-	if _notice_tween:
-		_notice_tween.kill()
-	_notice_window.modulate.a = 0.0
-	_notice_tween = create_tween()
-	_notice_tween.tween_property(_notice_window, "modulate:a", 1.0, NOTICE_FADE)
-	_notice_tween.tween_interval(NOTICE_TIME - 2.0 * NOTICE_FADE)
-	_notice_tween.tween_property(_notice_window, "modulate:a", 0.0, NOTICE_FADE)
-	_notice_tween.tween_callback(_notice_window.hide)
+	_hud.show_notice(text, word, tone)
 
 
 func _trigger(boss: bool) -> void:
@@ -1609,214 +1488,9 @@ func _add_figure(look: BattleActor.Look, pos: Vector3, yaw_deg: float, radius: f
 	return body
 
 
-func _build_ui() -> void:
-	_ui = CanvasLayer.new()
-	_ui.layer = UiTokens.LAYER_HUD
-	add_child(_ui)
-	# No size of its own: the column follows the status window as it grows and shrinks.
-	var column := VBoxContainer.new()
-	column.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	column.offset_left = UI_EDGE
-	column.offset_top = UI_EDGE
-	column.offset_right = UI_EDGE
-	column.offset_bottom = UI_EDGE
-	column.add_theme_constant_override("separation", UiTokens.SPACE_2)
-	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui.add_child(column)
-	_status_column = column
-	var panel := BattleHud.make_window()
-	column.add_child(panel)
-	_map_square = MapSquare.new(MapSquare.TOUCH_SIDE if Device.is_touch() else MapSquare.SIDE)
-	_map_square.clickable = true
-	_map_square.pressed.connect(func() -> void:
-		if not _talking and not _waiting:
-			map_requested.emit())
-	_place_label = Label.new()
-	_place_label.theme_type_variation = UiTheme.OUTLINED
-	_place_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if Device.is_touch():
-		# Under the menu button, top right.
-		_ui.add_child(_map_square)
-		_map_square.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-		_map_square.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-		_map_square.offset_right = -PauseMenu.MENU_BUTTON_MARGIN
-		_map_square.offset_left = _map_square.offset_right - MapSquare.TOUCH_SIDE
-		_map_square.offset_top = PauseMenu.MENU_BUTTON_MARGIN + PauseMenu.MENU_BUTTON_SIZE.y + UiTokens.SPACE_2
-		_map_square.offset_bottom = _map_square.offset_top + MapSquare.TOUCH_SIDE
-		_ui.add_child(_place_label)
-		_place_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		_place_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-		_place_label.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-		_place_label.offset_right = _map_square.offset_right
-		_place_label.offset_left = _map_square.offset_right
-		_place_label.offset_top = _map_square.offset_bottom + UiTokens.SPACE_1
-		_place_label.offset_bottom = _place_label.offset_top
-	else:
-		column.add_child(_place_label)
-		column.add_child(_map_square)
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", UiTokens.SPACE_1)
-	panel.add_child(box)
-	_name_label = Label.new()
-	_name_label.theme_type_variation = UiTheme.TITLE
-	box.add_child(_name_label)
-	_hp_bar = StatBar.new(StatBar.HP)
-	box.add_child(_hp_bar)
-	_mp_bar = StatBar.new(StatBar.MP)
-	box.add_child(_mp_bar)
-	_exp_bar = StatBar.new(StatBar.EXP)
-	box.add_child(_exp_bar)
-	if Device.is_touch():
-		# Estado in the pause menu says the same.
-		_exp_bar.hide()
-	var line := HSeparator.new()
-	line.theme_type_variation = UiTheme.STATUS_LINE
-	box.add_child(line)
-	_gold_label = Label.new()
-	_gold_label.theme_type_variation = UiTheme.MONEY
-	box.add_child(_gold_label)
-	_mission_box = VBoxContainer.new()
-	_mission_box.add_theme_constant_override("separation", 0)
-	box.add_child(_mission_box)
-	_notice_window = BattleHud.make_window()
-	_notice_window.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	_notice_window.offset_left = 0
-	_notice_window.offset_right = 0
-	_notice_window.offset_top = UI_EDGE
-	_notice_window.offset_bottom = UI_EDGE
-	_notice_window.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_notice_window.hide()
-	_ui.add_child(_notice_window)
-	var notice_box := VBoxContainer.new()
-	notice_box.add_theme_constant_override("separation", UiTokens.SPACE_1)
-	_notice_window.add_child(notice_box)
-	_notice_word = _label()
-	notice_box.add_child(_notice_word)
-	_notice = _label()
-	notice_box.add_child(_notice)
-	_build_banner()
-	_prompt_box = VBoxContainer.new()
-	_prompt_box.alignment = BoxContainer.ALIGNMENT_CENTER
-	_prompt_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui.add_child(_prompt_box)
-	_prompt = Label.new()
-	_prompt.theme_type_variation = UiTheme.OUTLINED
-	_prompt.text = PROMPTS[TALK]
-	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_prompt_box.add_child(_prompt)
-	# The key of the action, on a badge that is not a status colour.
-	_prompt_key = Label.new()
-	_prompt_key.theme_type_variation = UiTheme.NOTE
-	_prompt_key.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_prompt_key.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_prompt_key.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var key_panel := PanelContainer.new()
-	var cap := StyleBoxFlat.new()
-	_prompt_cap = cap
-	_paint_prompt_cap()
-	cap.set_border_width_all(UiTokens.BORDER_2)
-	cap.set_corner_radius_all(UiTokens.RADIUS_S)
-	cap.content_margin_left = UiTokens.SPACE_2
-	cap.content_margin_right = UiTokens.SPACE_2
-	cap.content_margin_top = UiTokens.SPACE_1
-	cap.content_margin_bottom = UiTokens.SPACE_1
-	key_panel.add_theme_stylebox_override(&"panel", cap)
-	key_panel.custom_minimum_size = Vector2(UiTokens.ICON_M, UiTokens.ICON_M)
-	key_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	key_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	key_panel.add_child(_prompt_key)
-	_prompt_box.add_child(key_panel)
-	_prompt_box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, \
-		Control.PRESET_MODE_MINSIZE, 200)
-	_prompt_box.hide()
-	if Device.is_touch():
-		_build_touch_controls()
-	_dialogue = DialogueBox.new()
-	_ui.add_child(_dialogue)
-
-
-## Phones: the pad behind every window, and the big use button.
-func _build_touch_controls() -> void:
-	_pad = TouchPad.new()
-	_ui.add_child(_pad)
-	_ui.move_child(_pad, 0)
-	_pad.tapped.connect(_on_tapped)
-	_pad.pinched.connect(_camera.zoom_by)
-	_use_button = Button.new()
-	_use_button.focus_mode = Control.FOCUS_NONE
-	_use_button.theme_type_variation = UiTheme.ACTION_BUTTON
-	_use_button.custom_minimum_size = USE_BUTTON_SIZE
-	_use_button.hide()
-	_ui.add_child(_use_button)
-	_use_button.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	_use_button.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	_use_button.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_use_button.offset_right = -UI_EDGE
-	_use_button.offset_bottom = -UI_EDGE
-	_use_button.offset_left = -UI_EDGE - USE_BUTTON_SIZE.x
-	_use_button.offset_top = -UI_EDGE - USE_BUTTON_SIZE.y
-	_use_button.pressed.connect(func() -> void: _use(_nearest_use(_player.global_position)))
-
-
 ## A line at the bottom until the hero first walks (phones, once: Game decides).
 func show_touch_hint(text: String) -> void:
-	if _hint_window == null:
-		_hint_window = BattleHud.make_window()
-		_hint_window.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_ui.add_child(_hint_window)
-		_hint_window.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-		_hint_window.grow_horizontal = Control.GROW_DIRECTION_BOTH
-		_hint_window.grow_vertical = Control.GROW_DIRECTION_BEGIN
-		_hint_window.offset_left = 0.0
-		_hint_window.offset_right = 0.0
-		_hint_window.offset_bottom = -(UI_EDGE + USE_BUTTON_SIZE.y + UiTokens.SPACE_3)
-		_hint_window.offset_top = _hint_window.offset_bottom
-		_hint = _label()
-		_hint_window.add_child(_hint)
-	BattleHud.fit_label(_hint, text, TOUCH_HINT_WIDTH)
-	_hint_window.show()
-
-
-## Two lines centred near the top: the place and, under it, its floor.
-func _build_banner() -> void:
-	_banner = VBoxContainer.new()
-	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_banner.add_theme_constant_override("separation", 0)
-	_ui.add_child(_banner)
-	_banner.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	_banner.offset_top = BANNER_TOP
-	_banner.offset_bottom = BANNER_TOP
-	for variation in [UiTheme.DISPLAY, UiTheme.DISPLAY_SUB]:
-		var label := Label.new()
-		label.theme_type_variation = variation
-		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_banner.add_child(label)
-	_banner.hide()
-
-
-## Fades the place's name in, holds it and fades it out.
-func _show_banner() -> void:
-	var name_label := _banner.get_child(0) as Label
-	var floor_label := _banner.get_child(1) as Label
-	name_label.text = zone.display_name
-	floor_label.text = zone.floor_name
-	floor_label.visible = zone.floor_name != ""
-	if _autoplay:
-		print("Lugar: %s" % zone.banner_text())
-	if _banner_tween:
-		_banner_tween.kill()
-	_banner.modulate.a = 0.0
-	_banner.show()
-	_banner_tween = create_tween()
-	_banner_tween.tween_property(_banner, "modulate:a", 1.0, BANNER_FADE)
-	_banner_tween.tween_interval(BANNER_TIME)
-	_banner_tween.tween_property(_banner, "modulate:a", 0.0, BANNER_FADE)
-	_banner_tween.tween_callback(_banner.hide)
-
-
-func _label() -> Label:
-	return Label.new()
+	_hud.show_touch_hint(text)
 
 
 ## A soft footstep every STEP_DISTANCE meters walked.
