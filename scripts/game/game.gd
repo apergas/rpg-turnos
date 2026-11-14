@@ -75,7 +75,6 @@ signal quit_to_title
 
 const HERO_DATA := preload("res://data/hero.tres")
 const BATTLE_SCENE := preload("res://scenes/battle/battle_scene.tscn")
-const WORLD_SCENE := preload("res://scenes/world/world.tscn")
 const CUTSCENE_PATH := "res://data/cutscenes/%s.tres"
 const FADE_TIME := 0.3
 const TOUCH_HINT := "Toca el suelo para ir allí, o arrastra el dedo para andar."
@@ -90,17 +89,14 @@ const LOAD_FAILED_NOTICE := "No se pudo cargar la partida. Empiezas de nuevo."
 const LEVER_NOTICE := "¡Tiras de la palanca! Se oye cómo se abre una reja."
 const KEY_NOTICE := "¡Encuentras la %s!"
 const DOOR_NOTICE := "Abres la reja con la %s."
-const PORTAL_OPEN_NOTICE := "Vuelas %s. El portal te espera para volver."
-const PORTAL_REPLACED_NOTICE := "Vuelas %s. El portal anterior se ha cerrado."
-const PORTAL_BACK_NOTICE := "El portal te devuelve y se cierra tras de ti."
 const MENU_TOUR_DELAY := 1.0
 ## Seconds of black while the hero sleeps at the inn.
 const INN_NIGHT_TIME := 0.8
 
 var state: GameState
 var _ctx: SessionContext
+var _travel: ZoneTravel
 
-var _zone: ZoneData
 var _fade: ColorRect
 var _pause: PauseMenu
 var _audio: AudioDirector
@@ -142,7 +138,6 @@ var _common_beaten := 0
 var _shop: ShopWindow
 ## Something was bought, sold or equipped since the shop opened.
 var _shop_changed := false
-var _rng := RandomNumberGenerator.new()
 ## The development panel, only with --debug (null otherwise).
 var _debug: DebugPanel
 
@@ -166,7 +161,6 @@ func _ready() -> void:
 	_autoplay_save = RunFlags.autoplay_save()
 	_autoplay_menu = RunFlags.autoplay_menu()
 	_autoplay_companion = AutoplayStarts.companion()
-	_rng.randomize()
 	for line in QuestLog.problems():
 		push_warning(line)
 	if _options == null:
@@ -177,6 +171,7 @@ func _ready() -> void:
 		_audio.set_volumes(_options.music_volume, _options.sfx_volume)
 	state = GameState.new(HERO_DATA)
 	_make_context()
+	_make_pieces()
 	var load_failed := false
 	var start_pos: Variant = null
 	if not _save.is_empty():
@@ -210,16 +205,17 @@ func _ready() -> void:
 	if RunFlags.debug():
 		_build_debug()
 	_build_cutscenes()
+	_add_pieces()
 	if _autoplay_menu:
 		# The tour of the pause menu needs the map, not a scene.
 		state.story.mark_seen("prologo")
 	# Busy until the map is ready (no ☰ either): arriving inside a village must not start its
 	# cutscene yet.
 	_set_busy(true)
-	_switch_zone(state.zone_id, "")
+	_travel.switch_zone(state.zone_id, "")
 	if start_pos != null:
 		_ctx.world.place_player(start_pos)
-		_respawn_groups()
+		_travel.respawn_groups()
 	var prologue := state.chapter() == StoryState.Chapter.PROLOGUE
 	if prologue:
 		# Under black: the prologue fades in by itself.
@@ -243,7 +239,7 @@ func _ready() -> void:
 		_show_touch_hint()
 		_check_village_scene()
 		if _medal_tour:
-			print("Medallas: a cazar en %s" % _zone.id)
+			print("Medallas: a cazar en %s" % _ctx.zone.id)
 			get_tree().create_timer(AutoplayStarts.MEDAL_TOUR_TIME).timeout.connect(_on_medal_tour_timeout)
 
 
@@ -263,7 +259,7 @@ func _process(delta: float) -> void:
 		if _quiet_s > AutoplayStarts.AUTOPLAY_STALL_S and _autoplay_hunts():
 			_quiet_s = 0.0
 			print("Grupos repuestos (partida automática, sin combates)")
-			_respawn_groups()
+			_travel.respawn_groups()
 		elif _quiet_s > AutoplayStarts.AUTOPLAY_STALL_S and _boss_needs_rest() \
 				and state.inventory.count(Inventory.WING) > 0:
 			# At the boss's level but too worn for it, with no battle coming that would bring
@@ -291,6 +287,68 @@ func _make_context() -> void:
 	_ctx.set_busy = _set_busy
 	_ctx.refresh_status = _refresh_status
 	_ctx.play_map_music = _play_map_music
+
+
+## The pieces of the session, created at once (so the pause menu and the debug panel can be
+## wired to them); set up and added to the tree later, by _add_pieces().
+func _make_pieces() -> void:
+	_travel = ZoneTravel.new()
+
+
+## The pieces set up, wired and added, where Game used to build what they hold (node
+## order matters for input and processing). Callables are what a piece awaits from another
+## one; signals are what it only reports.
+func _add_pieces() -> void:
+	_travel.setup(_ctx)
+	_travel.check_arrival_line = _check_arrival_line
+	_travel.check_village_scene = _check_village_scene
+	_travel.update_boss = _update_boss
+	_travel.world_replaced.connect(_on_world_replaced)
+	_travel.zone_switched.connect(_on_zone_switched)
+	_travel.village_checked.connect(_on_village_changed)
+	_travel.portal_taken.connect(_on_portal_taken)
+	add_child(_travel)
+
+
+## ZoneTravel built a new map: the old one goes, the new one is first in the tree and stays
+## frozen until its caller's fade is over.
+func _on_world_replaced(world: World) -> void:
+	if _ctx.world:
+		remove_child(_ctx.world)
+		_ctx.world.queue_free()
+	_ctx.world = world
+	add_child(world)
+	move_child(world, 0)
+	world.freeze(true)
+	world.set_audio(_audio)
+	world.encounter_triggered.connect(_on_encounter)
+	world.talk_requested.connect(_on_talk)
+	world.npc_requested.connect(_on_npc)
+	world.shop_requested.connect(_on_shop)
+	world.inn_requested.connect(_on_inn)
+	world.chest_opened.connect(_on_chest)
+	world.well_requested.connect(_on_well)
+	world.exit_requested.connect(_travel.on_exit)
+	world.map_requested.connect(_pause.open_map)
+	world.portal_used.connect(_travel.on_portal)
+	world.lever_pulled.connect(_on_lever)
+	world.key_taken.connect(_on_key)
+	world.door_used.connect(_on_door)
+	world.village_changed.connect(_on_village_changed)
+	world.stepped.connect(_on_stepped)
+
+
+## A map was built: autoplay's quiet clock starts over, and on autoplay the zone is printed.
+func _on_zone_switched(zone_id: String) -> void:
+	_quiet_s = 0.0
+	if RunFlags.autoplay():
+		print("Zona: %s (Nv %d, %s)" % [zone_id, state.hero.level,
+			CreditsData.clock(_ctx.play_time)])
+
+
+## The return portal was taken: autoplay's quiet clock starts over.
+func _on_portal_taken() -> void:
+	_quiet_s = 0.0
 
 
 ## --autoplay-zone=<id>: starts the new game in that zone with AUTOPLAY_ZONES' state.
@@ -345,60 +403,6 @@ func _apply_autoplay_zone() -> void:
 	print("Zona de inicio: %s (Nv %d)" % [zone_id, state.hero.level])
 
 
-## Frees the current map and builds zone_id with the player at entry_id ("" for the
-## zone's start entry). No fade: callers fade around it. The new map starts frozen
-## (World.freeze()), so nothing on it can fire while Game is still busy fading in;
-## every caller unfreezes it once the fade is over.
-func _switch_zone(zone_id: String, entry_id: String) -> void:
-	if _ctx.world:
-		remove_child(_ctx.world)
-		_ctx.world.queue_free()
-	_zone = ZoneData.by_id(zone_id)
-	if zone_id == CampLook.ZONE:
-		_zone = CampLook.dressed(_zone, state.tramo())  # the land it camps by (2.4.0)
-	state.zone_id = zone_id
-	_quiet_s = 0.0
-	_ctx.world = WORLD_SCENE.instantiate()
-	_ctx.world.zone = _zone
-	_ctx.world.boss_id = _boss_id()
-	add_child(_ctx.world)
-	move_child(_ctx.world, 0)
-	_ctx.world.freeze(true)
-	_ctx.world.set_audio(_audio)
-	_ctx.world.encounter_triggered.connect(_on_encounter)
-	_ctx.world.talk_requested.connect(_on_talk)
-	_ctx.world.npc_requested.connect(_on_npc)
-	_ctx.world.shop_requested.connect(_on_shop)
-	_ctx.world.inn_requested.connect(_on_inn)
-	_ctx.world.chest_opened.connect(_on_chest)
-	_ctx.world.well_requested.connect(_on_well)
-	_ctx.world.exit_requested.connect(_on_exit)
-	_ctx.world.map_requested.connect(_pause.open_map)
-	_ctx.world.portal_used.connect(_on_portal)
-	_ctx.world.lever_pulled.connect(_on_lever)
-	_ctx.world.key_taken.connect(_on_key)
-	_ctx.world.door_used.connect(_on_door)
-	_ctx.world.village_changed.connect(_on_village_changed)
-	_ctx.world.stepped.connect(_on_stepped)
-	_ctx.world.set_dry_wells(Wells.dry_ids(state))
-	if entry_id != "":
-		_ctx.world.place_at_entry(entry_id)
-	for id in state.opened_chests:
-		_ctx.world.set_chest_open(id, true, true)
-	_ctx.world.set_explored(state.explored_map(zone_id))
-	_ctx.world.set_world_flags(state.world_flags)
-	_show_portal()
-	_update_boss()
-	_spawn_rare()
-	_refresh_status()
-	MusicLibrary.build(_zone.music)
-	AmbientLibrary.prepare(_zone.ambient)  # under black, like the music
-	if _ctx.world.in_village():
-		_on_village_changed(true)
-	if _autoplay:
-		print("Zona: %s (Nv %d, %s)" % [zone_id, state.hero.level, CreditsData.clock(_ctx.play_time)])
-
-
 func _on_encounter(boss: bool) -> void:
 	if _ctx.busy:
 		return
@@ -415,7 +419,7 @@ func _on_encounter(boss: bool) -> void:
 		if _autoplay and kept > 0:
 			print("Slime de Metal con PV %d" % kept)
 	BattleRewards.note_enemies(state, enemies, false)
-	var echo := boss and _boss_id() == _zone.postgame_boss_id
+	var echo := boss and _boss_id() == _ctx.zone.postgame_boss_id
 	await _fade_to(1.0)
 	_ctx.world.set_active(false)
 	_audio.play_music(MusicLibrary.BOSS if boss else MusicLibrary.BATTLE)
@@ -431,7 +435,7 @@ func _on_encounter(boss: bool) -> void:
 	battle.camera_shake = _options.camera_shake
 	state.sync_level_cap()
 	battle.difficulty = state.difficulty
-	battle.zone = _zone
+	battle.zone = _ctx.zone
 	battle.quest_items = state.quests.wanted_items(state)
 	battle.medals_carried = state.medals.size()
 	battle.medal_chance = AutoplayStarts.MEDAL_TOUR_CHANCE if _medal_tour else Medals.DROP_CHANCE
@@ -467,7 +471,7 @@ func _on_encounter(boss: bool) -> void:
 	var family_lines: Array[String] = []
 	var ending_v2 := false
 	if won:
-		var rewards := BattleRewards.after_victory(state, _zone, battle.engine.enemies,
+		var rewards := BattleRewards.after_victory(state, _ctx.zone, battle.engine.enemies,
 			battle.engine.gold_won, battle.engine.medals_won, boss)
 		notice = rewards.notice
 		reward_lines.assign(rewards.reward_lines)
@@ -485,11 +489,11 @@ func _on_encounter(boss: bool) -> void:
 	elif outcome == BattleEngine.State.LOST:
 		if _autoplay:
 			_defeats += 1
-			print("Derrota en %s (%d)" % [_zone.id, _defeats])
+			print("Derrota en %s (%d)" % [_ctx.zone.id, _defeats])
 		state.gold -= battle.gold_lost
 		state.heal_full()
-		_go_to_town()
-		notice = "Has vuelto %s." % _to_place(_zone.village_name)
+		_travel.go_to_town()
+		notice = "Has vuelto %s." % ZoneTravel.to_place(_ctx.zone.village_name)
 	battle.queue_free()
 	_ctx.world.set_world_flags(state.world_flags)
 	_update_boss()
@@ -544,7 +548,7 @@ func _on_encounter(boss: bool) -> void:
 		# No Ala de viaje (or in a village): the groups come back as if it had flown away
 		# and back. Only the autoplay does this.
 		print("Grupos repuestos (partida automática)")
-		_respawn_groups()
+		_travel.respawn_groups()
 	elif _autoplay and outcome == BattleEngine.State.LOST:
 		await _autoplay_restock()
 
@@ -555,9 +559,9 @@ func _autoplay_retreat() -> void:
 	state.inventory.take(Inventory.WING)
 	print("Retirada al pueblo (PV %d/%d, PM %d, pociones %d)" % [state.hero.hp,
 		state.hero.max_hp, state.hero.mp, _ctx.potion_count()])
-	await _on_travel_requested()
+	await _travel.on_travel_requested()
 	await _autoplay_restock()
-	await _on_portal()
+	await _travel.on_portal()
 
 
 ## Autoplay: needs rest (GameState.needs_rest()), is only kept from the zone's boss by its
@@ -583,33 +587,33 @@ func _needs_groups() -> bool:
 func _autoplay_hunts() -> bool:
 	if _medal_tour:
 		return state.medals.size() < Medals.MEDALS.size()
-	return state.hero.level < _zone.autoplay_boss_level
+	return state.hero.level < _ctx.zone.autoplay_boss_level
 
 
 ## Autoplay: the zone's boss is due at this level but the hero is too worn for it. MP
 ## doesn't come back by walking, so without a rest the boss would never show up.
 func _boss_needs_rest() -> bool:
-	return _boss_wanted() and state.hero.level >= _zone.autoplay_boss_level \
+	return _boss_wanted() and state.hero.level >= _ctx.zone.autoplay_boss_level \
 		and not AutoplayStarts.rested_for_boss(state.hero)
 
 
 ## The boss of the current map: the zone's, or its postgame boss (ZoneData.postgame_boss_id)
 ## once the game is finished.
 func _boss_id() -> String:
-	return BattleRewards.boss_id(_zone, state)
+	return BattleRewards.boss_id(_ctx.zone, state)
 
 
 func _boss_wanted() -> bool:
-	return BattleRewards.boss_wanted(_zone, state, not _autoplay or _autoplay_echo)
+	return BattleRewards.boss_wanted(_ctx.zone, state, not _autoplay or _autoplay_echo)
 
 
 ## The index of the figure of this kind and id (a shop's or an inn's) with something about a
 ## quest now: a report waiting or a new offer (QuestLog.markers(): "?" or "!"), -1 if none.
 ## It is heard before the shop opens or the night is offered.
 func _figure_with_quest(kind: String, id: String) -> int:
-	var marks := state.quests.markers(_zone.id, state.inventory, state.world_flags)
-	for i in _zone.npcs.size():
-		var npc: Dictionary = _zone.npcs[i]
+	var marks := state.quests.markers(_ctx.zone.id, state.inventory, state.world_flags)
+	for i in _ctx.zone.npcs.size():
+		var npc: Dictionary = _ctx.zone.npcs[i]
 		if npc.kind == kind and npc.get("id", "") == id and marks.has(npc.name):
 			return i
 	return -1
@@ -618,137 +622,29 @@ func _figure_with_quest(kind: String, id: String) -> int:
 ## Autoplay, in the village: a night at its inn and the shop's picks, as if the hero had
 ## walked up to the innkeeper and the merchant.
 func _autoplay_restock() -> void:
-	for npc: Dictionary in _zone.npcs:
+	for npc: Dictionary in _ctx.zone.npcs:
 		if npc.kind == "inn":
 			await _on_inn(npc.id)
-	for npc: Dictionary in _zone.npcs:
+	for npc: Dictionary in _ctx.zone.npcs:
 		if npc.kind == "shop":
 			await _on_shop(npc.id)
 	# On a caravan game the figures that offer a quest ("!") are visited too, or autoplay
 	# would never take the v2's quests; a v1 game keeps the reports only.
 	var marks := {}
 	if state.in_caravan():
-		marks = state.quests.markers(_zone.id, state.inventory, state.world_flags)
-	for i in _zone.npcs.size():
-		var npc_name: String = _zone.npcs[i].name
-		if npc_name in state.quests.reports_here(_zone.id, state.inventory) \
+		marks = state.quests.markers(_ctx.zone.id, state.inventory, state.world_flags)
+	for i in _ctx.zone.npcs.size():
+		var npc_name: String = _ctx.zone.npcs[i].name
+		if npc_name in state.quests.reports_here(_ctx.zone.id, state.inventory) \
 				or marks.get(npc_name, "") == QuestLog.NEW_MARK:
 			await _on_npc(i)
-
-
-## Puts the player at the town entry of the last village visited, switching zones if
-## needed (no fade: the caller is already under black). The groups of the map come back
-## either way.
-func _go_to_town() -> void:
-	var town := ZoneData.by_id(state.town_zone)
-	if state.town_zone != state.zone_id:
-		_switch_zone(state.town_zone, town.town_entry)
-	else:
-		_ctx.world.place_at_entry(town.town_entry)
-		_respawn_groups()
-		_on_village_changed(_ctx.world.in_village())
-
-
-## Every group of this map comes back (the map counts as built again: a defeat, the portal,
-## a game loaded), clear of where the hero stands.
-func _respawn_groups() -> void:
-	var avoid: Array[Vector3] = [_ctx.world.player_position()]
-	_ctx.world.respawn_groups(avoid)
-	_spawn_rare()
-
-
-## The zone's rare enemy on this map (the Slime de Metal on the mine floors): always while
-## its quest is on, now and then once it is done (EncounterTable.rare_on_map()).
-func _spawn_rare() -> void:
-	if _zone.rare_enemy == "" or _ctx.world.has_rare():
-		return
-	if EncounterTable.rare_on_map(_zone, state.quests.wanted_enemies(),
-			state.quests.hunted_enemies(), _rng):
-		_ctx.world.add_rare(_zone.rare_enemy)
-
-
-## An open exit: fades to black, builds the next zone at the exit's entry, autosaves.
-func _on_exit(zone_id: String, entry_id: String) -> void:
-	if _ctx.busy:
-		return
-	_set_busy(true)
-	await _fade_to(1.0)
-	_switch_zone(zone_id, entry_id)
-	_play_map_music()
-	await _fade_to(0.0)
-	await _ctx.world.freeze(false)
-	await _check_arrival_line()
-	_autosave(false)
-	_set_busy(false)
-	_check_village_scene()
-
-
-## The Ala de viaje, used from the pause menu (it has already taken it): to the last
-## village visited, with the portal back to this spot open there. The menu only opens when
-## nothing is going on, so the spot is always a settled one.
-func _on_travel_requested() -> void:
-	if _ctx.busy:
-		state.inventory.add(Inventory.WING)
-		return
-	_set_busy(true)
-	# The pause menu has already unpaused the tree: without this the hero could still walk
-	# into an encounter or an exit during the fade and leave the map stuck waiting.
-	_ctx.world.freeze(true)
-	var replaced := state.open_portal(_ctx.world.player_position())
-	await _fade_to(1.0)
-	_go_to_town()
-	_show_portal()
-	_refresh_status()
-	_play_map_music()
-	await _fade_to(0.0)
-	await _ctx.world.freeze(false)
-	var place := _to_place(_zone.village_name)
-	_ctx.world.show_notice((PORTAL_REPLACED_NOTICE if replaced else PORTAL_OPEN_NOTICE) % place, "Viaje")
-	_autosave(false)
-	_set_busy(false)
-
-
-## The hero used the return portal (or autoplay, once restocked): back to the spot the Ala
-## was used at. It works once. The map stays frozen through the fade, like every other trip.
-func _on_portal() -> void:
-	if _ctx.busy or not state.has_portal():
-		return
-	_set_busy(true)
-	_quiet_s = 0.0
-	_ctx.world.freeze(true)
-	await _fade_to(1.0)
-	var zone_id := state.portal_zone
-	var pos := state.portal_pos
-	state.close_portal()
-	if zone_id != _zone.id:
-		_switch_zone(zone_id, "")
-	else:
-		_show_portal()
-	_ctx.world.place_player(pos)
-	_respawn_groups()
-	_on_village_changed(_ctx.world.in_village())
-	_refresh_status()
-	_update_boss()
-	await _fade_to(0.0)
-	await _ctx.world.freeze(false)
-	_ctx.world.show_notice(PORTAL_BACK_NOTICE, "Viaje")
-	_autosave(false)
-	_set_busy(false)
-
-
-## The portal stands in the village it was opened in and the mark on the spot it leads
-## back to, whatever map is on now.
-func _show_portal() -> void:
-	_ctx.world.set_portal(state.portal_town == _zone.id)
-	_ctx.world.set_return_mark(state.has_portal() and state.portal_zone == _zone.id,
-		state.portal_pos)
 
 
 ## Inside a village it becomes the last one visited; the music follows. The first
 ## visit plays the village's cutscene.
 func _on_village_changed(inside: bool) -> void:
-	if inside and _zone.town_entry != "":
-		state.town_zone = _zone.id
+	if inside and _ctx.zone.town_entry != "":
+		state.town_zone = _ctx.zone.id
 	_play_map_music()
 	if inside:
 		_check_village_scene()
@@ -758,8 +654,8 @@ func _on_village_changed(inside: bool) -> void:
 ## (Allies.ARRIVALS), once the place's name is up; remembered with its llegada_<zone> flag.
 ## Nothing without a companion. The caller is busy.
 func _check_arrival_line() -> void:
-	var line := Allies.arrival_line(state.ally_id, _zone.id)
-	var flag := Allies.arrival_flag(_zone.id)
+	var line := Allies.arrival_line(state.ally_id, _ctx.zone.id)
+	var flag := Allies.arrival_flag(_ctx.zone.id)
 	if line == "" or state.has_flag(flag):
 		return
 	state.world_flags[flag] = true
@@ -775,8 +671,8 @@ func _check_arrival_line() -> void:
 func _check_village_scene() -> void:
 	if _ctx.busy or not _ctx.world.in_village():
 		return
-	var scene := state.story.scene_on_village(_zone.id)
-	if scene == "" and _zone.id == "pradera" and state.can_meet_caravan() \
+	var scene := state.story.scene_on_village(_ctx.zone.id)
+	if scene == "" and _ctx.zone.id == "pradera" and state.can_meet_caravan() \
 			and not state.story.has_seen("caravana_llega"):
 		scene = "caravana_llega"
 	if scene == "":
@@ -798,7 +694,7 @@ func _play_scene(scene_id: String) -> void:
 	_cutscenes.hero_name = state.hero.display_name
 	_cutscenes.companion_name = Allies.display_name(state.ally_id) if state.ally_id != "" else ""
 	await _cutscenes.play(scene)
-	_audio.play_ambient(_zone.ambient)  # a "music" step silenced it
+	_audio.play_ambient(_ctx.zone.ambient)  # a "music" step silenced it
 	_refresh_status()
 
 
@@ -850,7 +746,7 @@ func _finish_game() -> void:
 func _finish_v2() -> void:
 	MusicLibrary.build(MusicLibrary.BEYOND)  # under black
 	state.story.finished_v2 = true
-	_switch_zone("caravana", "")
+	_travel.switch_zone("caravana", "")
 	_ctx.world.freeze(true)
 	_autosave(false)
 	var numbers := CreditsData.v2_numbers(state, _ctx.play_time)
@@ -888,7 +784,7 @@ func _finish_v2() -> void:
 ## What CutscenePlayer's "travel" step does: builds zone_id at entry_id under black and
 ## hands the new map over.
 func _scene_travel(zone_id: String, entry_id: String) -> World:
-	_switch_zone(zone_id, entry_id)
+	_travel.switch_zone(zone_id, entry_id)
 	return _ctx.world
 
 
@@ -928,8 +824,8 @@ func _on_talk() -> void:
 
 ## The index of the zone's "quest" figure (the Abuela Rosa) in ZoneData.npcs.
 func _quest_npc() -> int:
-	for i in _zone.npcs.size():
-		if _zone.npcs[i].kind == "quest":
+	for i in _ctx.zone.npcs.size():
+		if _ctx.zone.npcs[i].kind == "quest":
 			return i
 	return -1
 
@@ -940,23 +836,23 @@ func _on_npc(index: int) -> void:
 	if _ctx.busy:
 		return
 	_set_busy(true)
-	var figure: String = _zone.npcs[index].name
+	var figure: String = _ctx.zone.npcs[index].name
 	if figure == Medals.COLLECTOR:
 		await _talk_to_collector()
 		_set_busy(false)
 		return
-	if figure == CARAVAN_CHIEF and _zone.id == "caravana" \
+	if figure == CARAVAN_CHIEF and _ctx.zone.id == "caravana" \
 			and not state.has_flag(StoryState.COMPANION_FLAG):
 		await _choose_companion()
 		_set_busy(false)
 		return
-	if figure == CARAVAN_CHIEF and _zone.id == "pradera":
+	if figure == CARAVAN_CHIEF and _ctx.zone.id == "pradera":
 		await _ask_departure()
 		_set_busy(false)
 		_check_village_scene()  # the Caravana's first visit, if the hero left
 		return
 	var chief := figure == CARAVAN_CHIEF
-	var talk := state.quests.talk(state, _zone.id, figure, chief)
+	var talk := state.quests.talk(state, _ctx.zone.id, figure, chief)
 	var said: Array = talk.get("lines", _ctx.world.npc_lines(index, state.chapter()))
 	if chief and talk.get("kind", "") == QuestLog.TALK_WAIT:
 		# The Jefe with quests under way and nothing to deliver: his chapter lines first (the
@@ -966,7 +862,7 @@ func _on_npc(index: int) -> void:
 	for line: String in said:
 		lines.append(StoryState.fill(line, state.hero.display_name))
 	# A thing picked up (kind "item", the cantimplora) has no voice: the narrator says it.
-	var speaker := "" if _zone.npcs[index].kind == "item" else figure
+	var speaker := "" if _ctx.zone.npcs[index].kind == "item" else figure
 	await _ctx.world.show_dialogue(speaker, lines)
 	if not talk.is_empty():
 		var done: Array[String] = []
@@ -987,7 +883,7 @@ func _ask_departure() -> void:
 	await _play_scene("caravana_parte")  # ends under black
 	state.leave_for_caravan()
 	state.story.v2_start = [_ctx.play_time, state.battles]  # the v2's credits count from here
-	_switch_zone("caravana", "")
+	_travel.switch_zone("caravana", "")
 	_play_map_music()
 	await _fade_to(0.0)
 	await _ctx.world.freeze(false)
@@ -1019,7 +915,7 @@ func _choose_companion() -> void:
 ## The Coleccionista (Medals.talk()): every prize the medals reach, at once, with a sound;
 ## then how many are carried. Saves silently (he has met the hero, maybe given something).
 func _talk_to_collector() -> void:
-	var talk := Medals.talk(state, _zone.id)
+	var talk := Medals.talk(state, _ctx.zone.id)
 	var lines: Array[String] = []
 	for line: String in talk.lines:
 		lines.append(StoryState.fill(line, state.hero.display_name))
@@ -1033,8 +929,8 @@ func _talk_to_collector() -> void:
 ## The map shows what changed (a done_flag brings a figure back: Nara, the Superviviente);
 ## the quests finished say so with one notice and one sound; the game is saved.
 func _after_quest_talk(done: Array[String]) -> void:
-	if _zone.rare_enemy in state.quests.wanted_enemies():
-		_spawn_rare()  # its hunt was just taken: it is on this floor at once
+	if _ctx.zone.rare_enemy in state.quests.wanted_enemies():
+		_travel.spawn_rare()  # its hunt was just taken: it is on this floor at once
 	if _autoplay:
 		for id in Inventory.SEEDS:
 			while state.inventory.count(id) > 0:
@@ -1107,7 +1003,7 @@ func _on_inn(inn_id: String) -> void:
 	_ctx.world.freeze(true)
 	Inn.stay(state)
 	await _fade_to(1.0)
-	_respawn_groups()
+	_travel.respawn_groups()
 	_refresh_status()
 	_audio.play_sfx(SfxLibrary.HEAL)
 	await get_tree().create_timer(INN_NIGHT_TIME).timeout
@@ -1177,7 +1073,7 @@ func _finish_medal_tour() -> void:
 	for zone_id in [Medals.COLLECTOR_ZONE, "bosque"]:
 		await _fade_to(1.0)
 		var town := ZoneData.by_id(zone_id)
-		_switch_zone(town.id, town.town_entry)
+		_travel.switch_zone(town.id, town.town_entry)
 		_play_map_music()
 		await _fade_to(0.0)
 		await _ctx.world.freeze(false)
@@ -1189,9 +1085,9 @@ func _finish_medal_tour() -> void:
 
 ## The dungeon floor's lever: sets its flag, which opens the gates it works.
 func _on_lever() -> void:
-	if _ctx.busy or _zone.lever_flag == "":
+	if _ctx.busy or _ctx.zone.lever_flag == "":
 		return
-	state.world_flags[_zone.lever_flag] = true
+	state.world_flags[_ctx.zone.lever_flag] = true
 	_ctx.world.pull_lever()
 	_audio.play_sfx(SfxLibrary.DOOR)
 	_ctx.world.set_world_flags(state.world_flags)
@@ -1202,13 +1098,13 @@ func _on_lever() -> void:
 
 ## The key lying on the floor: into the key items; its flag keeps it taken.
 func _on_key() -> void:
-	if _ctx.busy or _zone.floor_key == "":
+	if _ctx.busy or _ctx.zone.floor_key == "":
 		return
-	state.world_flags[_zone.floor_key] = true
-	state.key_items.append(_zone.floor_key)
+	state.world_flags[_ctx.zone.floor_key] = true
+	state.key_items.append(_ctx.zone.floor_key)
 	_audio.play_sfx(SfxLibrary.LEVEL_UP)
 	_ctx.world.set_world_flags(state.world_flags)
-	_ctx.world.show_notice(KEY_NOTICE % Inventory.KEY_ITEMS[_zone.floor_key], "Hallazgo", &"text-positive")
+	_ctx.world.show_notice(KEY_NOTICE % Inventory.KEY_ITEMS[_ctx.zone.floor_key], "Hallazgo", &"text-positive")
 	_autosave(false)
 	_refresh_status()
 
@@ -1217,12 +1113,12 @@ func _on_key() -> void:
 func _on_door() -> void:
 	if _ctx.busy:
 		return
-	var key := _zone.door_key
+	var key := _ctx.zone.door_key
 	if key == "" or not key in state.key_items:
-		_ctx.world.show_notice(_zone.door_text, "Cerrado")
+		_ctx.world.show_notice(_ctx.zone.door_text, "Cerrado")
 		return
 	state.key_items.erase(key)
-	state.world_flags[_zone.door_flag] = true
+	state.world_flags[_ctx.zone.door_flag] = true
 	_audio.play_sfx(SfxLibrary.DOOR)
 	_ctx.world.set_world_flags(state.world_flags)
 	_ctx.world.show_notice(DOOR_NOTICE % Inventory.KEY_ITEMS[key])
@@ -1266,7 +1162,7 @@ func _on_title_requested() -> void:
 func _update_boss() -> void:
 	if _boss_id() == "":
 		return
-	var strong_enough := not _autoplay or (state.hero.level >= _zone.autoplay_boss_level \
+	var strong_enough := not _autoplay or (state.hero.level >= _ctx.zone.autoplay_boss_level \
 		and AutoplayStarts.rested_for_boss(state.hero))
 	_ctx.world.set_boss_present(_boss_wanted() and strong_enough)
 
@@ -1274,8 +1170,8 @@ func _update_boss() -> void:
 ## The zone's map music, or its village one inside the village, and the zone's ambient
 ## under it (after a battle or a cutscene that silenced it, it comes back here).
 func _play_map_music() -> void:
-	_audio.play_music(_zone.village_music if _ctx.world.in_village() else _zone.music)
-	_audio.play_ambient(_zone.ambient)
+	_audio.play_music(_ctx.zone.village_music if _ctx.world.in_village() else _ctx.zone.music)
+	_audio.play_ambient(_ctx.zone.ambient)
 
 
 ## The pause menu (and, with --debug, the debug panel) only opens on the map with nothing
@@ -1306,16 +1202,16 @@ func _refresh_status() -> void:
 	var missions := state.current_missions()
 	_ctx.world.refresh_status(state.hero, _ctx.potion_count(), state.gold,
 		missions)
-	_ctx.world.set_monsters_shy(EncounterMeter.is_shy(state.hero.level, _zone.exit_level))
+	_ctx.world.set_monsters_shy(EncounterMeter.is_shy(state.hero.level, _ctx.zone.exit_level))
 	_ctx.world.set_repel(state.repel_m > 0.0)
 	_ctx.world.set_autoplay_hunt(_autoplay and _autoplay_hunts())
-	var hidden := state.quests.hidden_figures(_zone.id)
-	hidden.append_array(_zone.absent_figures(state.world_flags))
+	var hidden := state.quests.hidden_figures(_ctx.zone.id)
+	hidden.append_array(_ctx.zone.absent_figures(state.world_flags))
 	# The companions not chosen never show (the figures of the cruce scene in ciudad_2).
 	for id in Allies.COMPANIONS:
 		if id != state.ally_id:
 			hidden.append(Allies.display_name(id))
-	_ctx.world.set_quest_view(state.quests.markers(_zone.id, state.inventory, state.world_flags),
+	_ctx.world.set_quest_view(state.quests.markers(_ctx.zone.id, state.inventory, state.world_flags),
 		hidden)
 	var loadout := state.loadout
 	_ctx.world.set_hero_equipment(loadout.worn(Equipment.WEAPON), loadout.worn(Equipment.SHIELD),
@@ -1333,11 +1229,6 @@ func _refresh_status() -> void:
 	if _autoplay and gear_text != _last_gear_text:
 		print(gear_text)
 	_last_gear_text = gear_text
-
-
-## "a Villaclaro", "a la aldea del bosque", "al refugio de la mina".
-static func _to_place(place: String) -> String:
-	return "al " + place.substr(3) if place.begins_with("el ") else "a " + place
 
 
 func _build_shop() -> void:
@@ -1382,7 +1273,7 @@ func _build_pause() -> void:
 	layer.add_child(_pause)
 	_pause.save_requested.connect(_on_save_requested)
 	_pause.title_requested.connect(_on_title_requested)
-	_pause.travel_requested.connect(_on_travel_requested)
+	_pause.travel_requested.connect(_travel.on_travel_requested)
 	_pause.in_village = func() -> bool: return _ctx.world.in_village()
 	_pause.hero_position = func() -> Vector3: return _ctx.world.player_position()
 	_pause.state_changed.connect(_refresh_status)
@@ -1438,7 +1329,7 @@ func _on_debug(action: String, arg: String) -> void:
 				_ctx.world.clear_groups()
 				text = "grupos quitados (quedan %d)" % _ctx.world.group_count()
 			else:
-				_respawn_groups()
+				_travel.respawn_groups()
 				text = "grupos puestos (%d)" % _ctx.world.group_count()
 		DebugPanel.BOSS:
 			var boss := EnemyLibrary.data(arg)
@@ -1477,11 +1368,11 @@ func _debug_go(zone_id: String) -> void:
 	_set_busy(true)
 	_ctx.world.freeze(true)
 	await _fade_to(1.0)
-	_switch_zone(zone_id, "")
+	_travel.switch_zone(zone_id, "")
 	_play_map_music()
 	await _fade_to(0.0)
 	await _ctx.world.freeze(false)
-	print("Depuración: a %s" % _zone.map_label())
+	print("Depuración: a %s" % _ctx.zone.map_label())
 	_set_busy(false)
 	_check_village_scene()
 
