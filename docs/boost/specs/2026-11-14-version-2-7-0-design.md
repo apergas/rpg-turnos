@@ -55,7 +55,7 @@ Fecha: 2026-11-14. Estado: spec, pendiente de revisión. Va antes de la v3 ([des
   - **No visto:** sin `TextureRect` de retrato, solo el texto "??" sobre el fondo de la carta.
   - **Visto:** el retrato con un `modulate` o un shader de desaturación.
   - **Vencido:** el retrato tal cual.
-  - Los colores y la transparencia del estado "visto" salen de `UiTokens` o `UiTheme`, como manda el design system. Si hace falta, se añade un token del juego al final de `ui_tokens.gd`.
+  - El tinte del estado "visto" es un token nuevo del design system, `portrait-seen`, con valor para los dos temas (gris al 55 % en el normal, más claro y opaco en alto contraste). Se añade primero al design system (`tokens.json`, la tabla de color de `2-fundamentos.md` y una ficha nueva del componente, `components/BestiaryCard.md`) y luego a la parte generada de `ui_tokens.gd`. Lo mismo vale para cualquier color o tamaño nuevo: siempre entra por el design system.
 - `UNKNOWN` pasa de "???" a "??".
 - No cambia nada en `Bestiary`, `GameState` ni la partida guardada.
 
