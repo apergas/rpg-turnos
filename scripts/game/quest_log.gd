@@ -26,6 +26,8 @@ const QUESTS := {
 	"superviviente": preload("res://data/quests/superviviente.tres"),
 	"juncos": preload("res://data/quests/juncos.tres"),
 	"pescador": preload("res://data/quests/pescador.tres"),
+	"gato_nebli": preload("res://data/quests/gato_nebli.tres"),
+	"geodas": preload("res://data/quests/geodas.tres"),
 }
 const VILLAGE_ZONE := "pradera"
 ## Ends the waiting lines of a HUNT or GATHER of several, so the progress is said aloud.

@@ -182,6 +182,14 @@ npcs = [{
 "name": "Ulma",
 "pos": Vector3(1.5, 0, 16.5),
 "yaw": 0.0
+}, {
+"kind": "npc",
+"lines": ["Ceniza ronronea. Todavía le brilla algo de cristal en los bigotes."],
+"look": "CAT",
+"name": "Ceniza",
+"needs": "gato_nebli_vuelve",
+"pos": Vector3(4.4, 0, 3.4),
+"yaw": -60.0
 }]
 boss_id = ""
 boss_pos = Vector3(0, 0, 0)

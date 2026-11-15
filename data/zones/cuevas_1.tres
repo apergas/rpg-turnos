@@ -38,7 +38,14 @@ exits = [{
 "to": "brumaclara",
 "yaw": 0.0
 }]
-npcs = []
+npcs = [{
+"kind": "npc",
+"lines": ["Ceniza te mira desde el rincón y bosteza."],
+"look": "CAT",
+"name": "Ceniza",
+"pos": Vector3(24, 0, -14.6),
+"yaw": 180.0
+}]
 boss_id = ""
 formations = [["murcielago_cristal"], ["slime_cristal"], ["golem_cuarzo"], ["arana_cristal", "arana_cristal"], ["topo_geoda"], ["murcielago_cristal", "slime_cristal"], ["slime_cristal", "slime_cristal"]]
 start_formations = [["murcielago_cristal"], ["slime_cristal"]]
