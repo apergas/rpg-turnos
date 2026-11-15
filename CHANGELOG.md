@@ -1,5 +1,9 @@
 # Registro de cambios
 
+## 3.6.2 (2026)
+
+- Al cambiar de página en un menú, la flecha ▶ ya no aparece un instante en el sitio de la página anterior.
+
 ## 3.6.1 (2026)
 
 Por dentro: el design system se separa en dos capas, un núcleo que podrá servir a otro juego y lo que es propio de Villaclaro. En pantalla no cambia nada.
