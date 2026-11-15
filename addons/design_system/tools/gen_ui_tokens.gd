@@ -7,7 +7,8 @@ extends SceneTree
 ## write, if a core token is not written as `name` in the core's docs (2-fundamentos.md or
 ## components/*.md) or a game token or override in the game's, or if a bundle.css uses a
 ## var(--x) it may not; 0 otherwise. A game token named like a core one, or an override of a
-## token the core lacks, fails every mode.
+## token the core lacks, or a game "extends" that is not the config's base, fails every mode
+## but `--files`.
 ## With `-- --files` it only prints the paths the pre-commit hook watches, one per line:
 ## "ds-file: <source|generated|docs> <path>".
 ## Excluded from the export. It uses no game class (a --script run compiles before them).
@@ -117,6 +118,9 @@ func _write(path: String, text: String) -> bool:
 ## core's tokens first (with the game's "overrides" applied), then the game's. A clash goes to
 ## _errors.
 func _merge(base: Dictionary, game: Dictionary) -> Dictionary:
+	if game.has("extends") and game["extends"] != _config["base"]:
+		_errors.append("\"extends\" de %s (%s) no es la base de %s (%s)" % [
+			_plain(_config["tokens"]), game["extends"], CONFIG_PATH.get_file(), _config["base"]])
 	if not _read_themes(game):
 		return {}
 	var merged := {}
