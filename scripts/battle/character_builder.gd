@@ -111,8 +111,8 @@ static func build(actor: BattleActor, data: Dictionary) -> void:
 	actor.set_animations(anim, data.anims)
 
 
-## A hair piece (ActorLooks.HAIR_PIECES: a beard, a bun or a ponytail), faceted like the slimes, in the
-## hair's colour, hung from the head bone's attachment so it follows every animation.
+## A hair piece (ActorLooks.HAIR_PIECES: a beard, a bun or a ponytail), faceted like the slimes,
+## in the hair's colour, hung from the head bone's attachment so it follows every animation.
 static func _add_hair(actor: BattleActor, model: Node3D, hair: Dictionary) -> void:
 	var head := model.get_node("Rig/Skeleton3D/head") as Node3D
 	var piece: Dictionary = ActorLooks.HAIR_PIECES[hair.style]

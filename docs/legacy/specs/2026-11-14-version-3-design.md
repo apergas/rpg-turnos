@@ -1,6 +1,6 @@
 # Versión 3: el origen de la Niebla
 
-Fecha: 2026-11-14. Parte de la 2.7.2. Cubre M-76 a M-85 del documento maestro. Es el diseño de toda la v3; se publica en cuatro versiones, de la 3.0.0 a la 3.3.0 (ver "Versiones"). Sale del borrador [v3-desarrollo.md](../v3-desarrollo.md) (opción 1 de [v3-guiones.md](../v3-guiones.md)), que queda como historia de la decisión.
+Fecha: 2026-11-14. Parte de la 2.7.2. Cubre M-76 a M-85 del documento maestro. Es el diseño de toda la v3; se publica en cuatro versiones, de la 3.0.0 a la 3.3.0 (ver "Versiones"). Sale del borrador [v3-desarrollo.md](v3-desarrollo.md) (opción 1 de [v3-guiones.md](v3-guiones.md)), que queda como historia de la decisión.
 
 ## Objetivo
 
@@ -131,7 +131,7 @@ Todo: nivel, EXP, hechizos, equipo, bolsa, oro, objetos, objetos clave, bestiari
 | 1 | Apagado: casas sin luz, faro frío, la forja apagada, el mercado cerrado con tablas |
 | 2 (Garza vencida) | El faro da luz (un `OmniLight3D` y un haz que gira); la posada con luz; algunas ventanas |
 | 3 (Coloso vencido) | La forja con fuego (`ZoneFire`) y el Herrero |
-| 4 (Vigía vencido) | El mercado abierto, la Coleccionista, todas las ventanas con luz |
+| 4 (Vigía vencido) | El mercado abierto, el Coleccionista, todas las ventanas con luz |
 | 5 (Eco vencido) | La plaza en fiesta (guirnaldas, faroles). Liberado: Albor en la plaza y el cielo un poco más claro, con el sol que asoma. Vencido: una estatua de Albor junto al pozo |
 
 ### La Caravana durante la v3
@@ -373,7 +373,7 @@ Se sigue `structuring-godot-code` y las convenciones de `CLAUDE.md`. Los dueños
 |---|---|---|
 | **3.0.0** | La base y la Ciénaga: el fin de la v2 sin volver al título, la salida con portal, la parte 3 (etapa, capítulos, zonas, guardado 15), Brumaclara apagada y con el faro encendido tras la Garza (etapas 1-2 de `BrumaclaraLook`), el sol negro, Orvalla y Neblí, la Caravana con niebla, el nivel 50, el juego de bruma, la Ciénaga entera (mapa, 5 enemigos, Garza de légamo, 2 misiones, fondo, música, ambiente) y la tercera parte del Bestiario | M-76 a M-78, M-81 (nivel, bruma), y la Ciénaga de M-79, M-80 y M-82 |
 | **3.1.0** | Las Cuevas de cristal: dos plantas, 5 enemigos, Coloso de cuarzo, el juego de cristal, el elemento luz y Alba, la forja de Brumaclara (etapa 3), el recuerdo de Albor, 2 misiones, fondo, música, ambiente y los destellos | M-79 a M-82 (Cuevas) |
-| **3.2.0** | La vuelta a Villaclaro y las Ruinas: la salida de la Caravana, la escena del amuleto, las dos plantas flotantes, 5 enemigos, Vigía de la bruma, el juego de luna, el Elixir, el mercado y la Coleccionista (etapa 4), 2 misiones, fondo, música y ambiente | M-83, M-79 a M-82 (Ruinas) |
+| **3.2.0** | La vuelta a Villaclaro y las Ruinas: la salida de la Caravana, la escena del amuleto, las dos plantas flotantes, 5 enemigos, Vigía de la bruma, el juego de luna, el Elixir, el mercado y el Coleccionista (etapa 4), 2 misiones, fondo, música y ambiente | M-83, M-79 a M-82 (Ruinas) |
 | **3.3.0** | La Fuente y el final: la planta de la Fuente, 5 enemigos, el Eco de Albor en dos fases, el juego del alba, 2 misiones, la elección, los dos finales, la fiesta (etapa 5), los créditos de la v3 y las cuatro familias con sus premios | M-79 a M-82 (Fuente), M-84, M-85 completo |
 
 - Cada versión se publica jugable: si la salida de la siguiente zona no existe todavía, Orvalla dice "Todavía no sabemos cómo seguir. Descansa, y vuelve cuando la luz nos diga algo." en lugar de abrirla.
@@ -392,7 +392,7 @@ Se sigue `structuring-godot-code` y las convenciones de `CLAUDE.md`. Los dueños
 
 - Volver al bosque, la mina o el castillo de la v1.
 - La niebla espesa de las Ruinas.
-- Un premio nuevo de la Coleccionista; las medallas siguen siendo doce.
+- Un premio nuevo del Coleccionista; las medallas siguen siendo doce.
 - Un jefe de después del final de la v3.
 - Que el compañero o la criatura se vean en el mapa (está en `ideas.md`, aparte).
 - Una v4.

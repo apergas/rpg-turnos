@@ -9,8 +9,9 @@ class_name MistCreatureBuilder extends RefCounted
 ## the Knight: CharacterBuilder builds them) and the Fuente's shadow, wolf and slime (the
 ## specter, the wolf and the slime in the mist's colours, the wolf and the slime wrapped in
 ## mist), its new Ojo de la Niebla and the Lente del faro; the Centinela caído is the Knight.
-## Static only, keeps no state: like CreatureBuilder, each build_x(actor, data) hangs its meshes under actor.body()
-## through the actor's builder methods. build() says whether the look was one of its own.
+## Static only, keeps no state: like CreatureBuilder, each build_x(actor, data) hangs its meshes
+## under actor.body() through the actor's builder methods. build() says whether the look was one
+## of its own.
 
 const Look = ActorLooks.Look
 ## Side profile of the Fuego fatuo's flame (lathed around +Y): round below, a tip above.

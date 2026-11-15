@@ -7,7 +7,8 @@ const VILLACLARO := "villaclaro"
 const BOSQUE := "bosque"
 const MINA := "mina"
 const CASTILLO := "castillo"
-## The Caravana's merchant (the v2 and the v3): one figure, a shop per step (caravan_shop(), GameState.shop_step()).
+## The Caravana's merchant (the v2 and the v3): one figure, a shop per step (caravan_shop(),
+## GameState.shop_step()).
 const CARAVAN_SHOP := "caravana"
 ## The last step a Caravana shop can have (GameState.shop_step(): 4 + the v3's etapa 4).
 const MAX_SHOP_STEP := 8
@@ -358,8 +359,9 @@ static func compare(state: GameState, id: String) -> Dictionary:
 ## For --autoplay: one Ala de viaje if none is carried (the autoplay retreat flies back
 ## with it), then the equipment of the shop that beats what is worn and is not in the bag
 ## yet, in slot order, as long as the gold lasts. Once there is no such piece left (bought
-## or not), or with no potions at all, potions up to AUTOPLAY_POTIONS. In Villaclaro the first 50 G must go on the
-## gear and the village is close by, so there the Ala waits until the gear is bought.
+## or not), or with no potions at all, potions up to AUTOPLAY_POTIONS. In Villaclaro the first
+## 50 G must go on the gear and the village is close by, so there the Ala waits until the gear
+## is bought.
 static func autoplay_picks(state: GameState, shop_id: String) -> Array[String]:
 	var picks: Array[String] = []
 	if sells_ally(shop_id):

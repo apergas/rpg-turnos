@@ -11,8 +11,8 @@ const ZONE := "brumaclara"
 ## no entry looks like the last one before it). 2, the Garza beaten: the lighthouse lit, the
 ## inn and a few windows with light, a little less fog; 3, the Coloso beaten: the forge's fire
 ## and two more windows; 4, the Vigía beaten: the market open (its boards gone, pots out, a
-## lamp on the stall) and a light in every house; 5, the Eco beaten: all of the etapa 4 and the square en fiesta
-## (garlands with paper lanterns), a little less fog.
+## lamp on the stall) and a light in every house; 5, the Eco beaten: all of the etapa 4 and the
+## square en fiesta (garlands with paper lanterns), a little less fog.
 const LOOKS := {
 	2: {"lighthouse_lit": true, "fog_density": 0.018,
 		"window_lights": [[Vector3(8.95, 1.6, -6.2), -90.0], [Vector3(8.95, 1.6, -3.8), -90.0],

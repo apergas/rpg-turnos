@@ -1,5 +1,17 @@
 # Registro de cambios
 
+## Sin publicar
+
+La Fuente de la Niebla y el final de la tercera parte.
+
+- Tras el Vigía se abre el camino a la Fuente de la Niebla: una caverna sin techo bajo el sol negro, con la Fuente en el centro, que respira.
+- Cinco enemigos nuevos y el Eco de Albor, el antiguo guardián de la Fuente, en dos fases.
+- Al vencerlo decides: devolver el amuleto o acabar con el Eco. Los dos finales acaban bien, y cada uno deja Brumaclara a su manera.
+- Los créditos de la tercera parte; después, la partida sigue en Brumaclara, de fiesta.
+- El equipo del amanecer, en la forja del Herrero de cristal.
+- Dos misiones nuevas: los ojos de la Niebla y la última pieza del faro.
+- Los enemigos de Brumaclara se ordenan en cuatro familias del bestiario, cada una con su premio.
+
 ## 3.2.0 (2026)
 
 La vuelta a Villaclaro y las Ruinas flotantes.
