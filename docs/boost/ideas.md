@@ -91,3 +91,7 @@ Estado: Pendiente
 ## 2026-11-15 · Revisar el daño de los hechizos con el nivel
 revisar daño de los hechizos. si por ejemplo llamarada hace el mismo daño tengas el nivel que tengas, no estaria bien. esta mejor que, mientras vas subiendo de nivel, que aumente tambien el daño de los hechizos. sin pasarse, pero que no se quede siempre con el mismo daño. con curar no pasa, lo de curar que te cure siempre lo mismo. si realmente ya funciona asi, no hagas nada. es decir primero se comprueba como funciona, y luego si hay que cambiarlo se cambia
 Estado: Pendiente
+
+## 2026-11-15 · Separar la tienda y el armero
+en la tienda, separarla por el tipo de objeto. un personaje sera el armero, y otro la tienda que tenemos actualmente. en la tienda se podran comprar los objetos consumibles (pociones, eter, ala de viaje, etc) y en el armero los objetos de equipo (arma, armadura, casco etc). vender objetos se podra hacer en los dos
+Estado: Pendiente
