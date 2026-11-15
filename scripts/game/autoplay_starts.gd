@@ -18,8 +18,8 @@ const AUTOPLAY_BOSS_MP := 0.4
 const ECHO_START := "eco"
 ## --autoplay-zone=medallas: the finished game of ECHO_START in Villaclaro; it hunts the
 ## meadow's groups with MEDAL_TOUR_CHANCE (the real DROP_CHANCES would take hours) until it
-## carries every medal, or MEDAL_TOUR_TIME seconds pass, then talks to the Coleccionista in
-## Villaclaro and in the forest village.
+## carries MEDAL_TOUR_GOAL medals, or MEDAL_TOUR_TIME seconds pass, then talks to the
+## Coleccionista in Villaclaro and in the forest village.
 const MEDAL_TOUR := "medallas"
 const MEDAL_TOUR_CHANCE := 0.5
 const MEDAL_TOUR_TIME := 1800.0

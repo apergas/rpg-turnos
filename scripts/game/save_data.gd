@@ -384,7 +384,8 @@ static func _valid_metal_slime(data: Dictionary) -> bool:
 
 
 ## MEDALS_VERSION fields: the medals taken (Medals ids, each once), the Coleccionista's
-## prizes given (a whole number; from MEDAL_PRIZES_VERSION no more than those medals reach: Medals.prizes_for()),
+## prizes given (a whole number; from MEDAL_PRIZES_VERSION no more than those medals reach:
+## Medals.prizes_for()),
 ## whether he was met, and the rounds of the Partida nueva + (a whole number, 0 or more).
 static func _valid_medals(data: Dictionary) -> bool:
 	var medals: Variant = data.get("medals")

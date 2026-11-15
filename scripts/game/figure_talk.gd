@@ -3,8 +3,9 @@ class_name FigureTalk extends Node
 ## them. The Abuela Rosa heals and moves the village quest on (on_talk()); a villager, a
 ## board or a thing picked up says what the QuestLog has about a quest, or its chapter lines
 ## (on_npc(); the Coleccionista: talk_to_collector(); the Jefe de caravana: CaravanFlow;
-## Orvalla says what the v3 waits on); a tienda or an armero opens the ShopWindow on its counter (on_shop()) and an
-## inn offers the free night (on_inn()), each after the quest waiting at its figure; a well, a chest, the lever, the key and a gate.
+## Orvalla says what the v3 waits on); a tienda or an armero opens the ShopWindow on its
+## counter (on_shop()) and an inn offers the free night (on_inn()), each after the quest waiting
+## at its figure; a well, a chest, the lever, the key and a gate.
 ## Gets the session and the ShopWindow in setup(); never stores Game or a World.
 
 const HEAL_LINE := "Descansas un momento. PV y PM recuperados."
@@ -187,7 +188,8 @@ func on_shop(shop_id: String, counter := Shop.ITEMS_COUNTER) -> void:
 	if waiting >= 0:
 		await on_npc(waiting)  # a report or an offer at this figure goes first (pieles_mono)
 	shop_id = Shop.resolve(shop_id, _ctx.state)  # the Caravana's and Brumaclara's by step
-	if _ctx.busy or (RunFlags.autoplay() 			and Shop.autoplay_picks(_ctx.state, shop_id, counter).is_empty()):
+	if _ctx.busy or (RunFlags.autoplay() \
+			and Shop.autoplay_picks(_ctx.state, shop_id, counter).is_empty()):
 		return
 	_ctx.set_busy.call(true)
 	_shop_changed = false

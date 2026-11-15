@@ -1,5 +1,16 @@
 # Registro de cambios
 
+## 3.6.0 (2026)
+
+Tu compañero te sigue, cada pueblo tiene armero y el Coleccionista guarda más premios.
+
+- Tu criatura o tu compañero anda detrás de ti por el mapa y se para cuando te paras. En las escenas se aparta un momento y luego vuelve a tu lado.
+- En cada pueblo, la tienda vende los objetos y un armero nuevo vende el equipo. En los dos puedes vender lo que lleves.
+- La Pluma de fénix ya no se vende: la sueltan algunos enemigos de cada tierra y sale de algunos cofres, ahora también en la mina y en el castillo.
+- Ahora hay 40 medallas pequeñas. El Coleccionista te da un anillo o un amuleto cada 4, y te espera en la Caravana y en Brumaclara desde que llegas.
+- Si tu partida es de antes, conservas tus medallas y lo que ya te dio. La próxima vez que hables con él te da de golpe los premios nuevos que te tocan.
+- Una partida guardada en esta versión ya no se abre en las anteriores.
+
 ## 3.5.0 (2026)
 
 Combate, compañero y portales.

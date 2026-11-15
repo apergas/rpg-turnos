@@ -55,10 +55,12 @@ Si algo de abajo lo contradice, manda esto.
 - **Marcas del mapa:** tiendas amarillas, posadas rosas, pozos rojos o azules (grises si están secos), salidas verdes.
 - **Criaturas:** la Domadora de cada aldea vende una, que combate sola a tu lado y vuelve curada al combate siguiente: Gallina de combate 55 G, Lobezno 190 G, Golem pequeño 490 G, Esqueleto leal 750 G. Solo se lleva una, y la nueva sustituye a la anterior sin devolver dinero.
 - **Tienda:** botón ×5 para objetos. Palo y Ropa se venden por 1 G.
+- **Pluma de fénix:** no se vende en ninguna tienda; sale de cofres y la sueltan algunos enemigos.
+- **Medallas:** 40. El Coleccionista da un anillo o un amuleto cada 4 (10 premios) y está en todos los pueblos, también en la Caravana y en Brumaclara desde el principio.
 - **Menús:** tocar fuera de una ventana la cierra o retrocede.
 - **Nueva partida:** pide confirmación si hay una partida guardada que funciona. Una dañada sale como "Continuar (partida dañada)", desactivado.
 - **Objetivo:** el principal va siempre primero. En el móvil, el mapa solo enseña esa línea; las secundarias están en la pausa.
-- **Rótulos:** "Tienda", "Posada" y "Criaturas" sobre esas figuras, y su nombre sobre el Coleccionista, el Jefe de caravana, Orvalla y el Tablón.
+- **Rótulos:** "Tienda", "Armero", "Posada" y "Criaturas" sobre esas figuras, y su nombre sobre el Coleccionista, el Jefe de caravana, Orvalla y el Tablón.
 - **Web:** el título avisa si hay una versión nueva esperando.
 - **Equilibrio:** ATK de Golem de barro 32, Araña 29, Espectro 26, Esqueleto guerrero 43, pícaro 40, mago 32, Golem de piedra 50, Señor de la Niebla 52 y 56 en su segunda fase. Prevalece sobre la tabla de enemigos.
 
@@ -69,7 +71,7 @@ Si algo de abajo lo contradice, manda esto.
   - Pradera y bosque: 5 m de gracia y 2,5 % por metro.
   - Mina y castillo: 4 m de gracia y 4 % por metro.
 - **Usar cosas:** Enter o un toque. Hablar, comprar, abrir, tirar, coger, volver.
-- **Aldeas:** tienda y posada, que siempre es gratis. Hay cuatro: Villaclaro, aldea del bosque, refugio de la mina y campamento.
+- **Aldeas:** tienda (objetos), armero (equipo) y posada, que siempre es gratis. En la tienda y en el armero se puede vender todo. Hay cuatro: Villaclaro, aldea del bosque, refugio de la mina y campamento.
 - **Ala de viaje:** vuela a la última aldea visitada y abre un portal de ida y vuelta. No se usa dentro de una aldea. Otra Ala sustituye al portal abierto.
 - **Pausa:** Esc, P o el botón ☰. Estado, Objetos, Equipo, Diario, Guardar, Opciones, Volver al título, Cerrar.
 
