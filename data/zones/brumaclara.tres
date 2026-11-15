@@ -135,7 +135,7 @@ npcs = [{
 "pos": Vector3(8.6, 0, -5),
 "yaw": -90.0
 }, {
-"id": "brumaclara_3",
+"id": "brumaclara",
 "kind": "shop",
 "look": "MIST_SMITH",
 "name": "Herrero de cristal",

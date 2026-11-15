@@ -33,6 +33,7 @@ What the code does not explain:
 - While neither Brumaclara nor the Caravana has an exit to the next step of the v3 (`StoryState.v3_way_on()`; the Caravana's is the way to Villaclaro for the amulet), Orvalla says so (`StoryState.keeper_line()`, which also points at the amulet and the Ruinas), the goal is `StoryState.V3_WAIT_GOAL` and the v3's autoplay run ends there ("Fin de la v3 por ahora: ...").
 - A quest is offered only in its own part of the game and never after its `gone` flag (`QuestLog._offered()`): the meadow of the v3 offers none of the v1's.
 - In the v3 the autoplay's restock in Brumaclara crosses the portal to the Caravana while its Mercader sells a piece the gold pays for, while a report waits there, or, with the Coloso beaten and no amulet, on to Villaclaro (`GameAutoplay._caravan_errand()`; it prints `Recado en la Caravana` and `Visita a Villaclaro`).
+- Brumaclara's Herrero de cristal opens the shop of the etapa (`Shop.resolve()`: the figure id `brumaclara` is `brumaclara_3`, then `brumaclara_4` from the Vigía on), as the Caravana's Mercader opens the one of its step.
 - The Abuela Rosa's `amuleto` scene is Villaclaro's village scene in the part 3 (`V3Flow.arrival_scene()`); a cutscene `flag` step whose name is a key item's id also gives that key item. The v3's amulet flag and key item is `amuleto_recuperado`; the v1's ending sets `amuleto_alba`, a different flag.
 - The map hero's rim (`BattleActor.set_map_readable()`) does nothing on the headless renderer: check it with `--write-movie` or a window.
 

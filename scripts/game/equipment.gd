@@ -170,6 +170,19 @@ const EQUIPMENT := {
 		"tint": Color(1.0, 1.0, 1.25)},
 	"casco_luna": {"name": "Casco de luna", "article": "un", "slot": HELMET,
 		"bonus": 25, "price": 1160, "zone": 11, "mesh": "", "tint": Color(1.0, 1.0, 1.25)},
+	# The v3's fourth set (3.3.0, etapa 4: Brumaclara's Herrero de cristal, from the Vigía on):
+	# the platinum meshes in the warm pale gold of the dawn ("del amanecer": the v1's Espada del
+	# alba is another sword).
+	"espada_amanecer": {"name": "Espada del amanecer", "article": "una", "slot": WEAPON,
+		"bonus": 124, "price": 3900, "zone": 12, "mesh": "2H_Sword",
+		"tint": Color(1.3, 1.08, 0.82)},
+	"armadura_amanecer": {"name": "Armadura del amanecer", "article": "una", "slot": ARMOR,
+		"bonus": 88, "price": 3000, "zone": 12, "mesh": ""},
+	"escudo_amanecer": {"name": "Escudo del amanecer", "article": "un", "slot": SHIELD,
+		"bonus": 38, "price": 1720, "zone": 12, "mesh": "Spike_Shield",
+		"tint": Color(1.3, 1.08, 0.82)},
+	"casco_amanecer": {"name": "Casco del amanecer", "article": "un", "slot": HELMET,
+		"bonus": 28, "price": 1320, "zone": 12, "mesh": "", "tint": Color(1.3, 1.08, 0.82)},
 	# The Eco de la Niebla's prize (the first time only): DEF like any helmet, plus ATK,
 	# dark grey with a blue cast and two bone horns (BattleActor builds them).
 	MIST_HELM: {"name": "Yelmo de bruma", "article": "un", "slot": HELMET, "bonus": 8,

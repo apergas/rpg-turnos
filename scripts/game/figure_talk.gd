@@ -183,8 +183,7 @@ func on_shop(shop_id: String) -> void:
 	var waiting := _figure_with_quest("shop", shop_id)
 	if waiting >= 0:
 		await on_npc(waiting)  # a report or an offer at the merchant goes first (pieles_mono)
-	if shop_id == Shop.CARAVAN_SHOP:
-		shop_id = Shop.caravan_shop(_ctx.state.shop_step())
+	shop_id = Shop.resolve(shop_id, _ctx.state)  # the Mercader's and the Herrero's by step
 	if _ctx.busy or (RunFlags.autoplay() and Shop.autoplay_picks(_ctx.state, shop_id).is_empty()):
 		return
 	_ctx.set_busy.call(true)
