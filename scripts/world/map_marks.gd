@@ -67,7 +67,7 @@ static func of_zone(zone: ZoneData, flags: Dictionary, dry_wells: Array[String])
 	for npc: Dictionary in zone.npcs:
 		if not ZoneData.is_present(npc, flags):
 			continue
-		if npc.kind == "shop":
+		if npc.kind in ["shop", "armory"]:
 			_add(marks, npc.pos, SHOP)
 		elif npc.kind == "inn":
 			_add(marks, npc.pos, INN)

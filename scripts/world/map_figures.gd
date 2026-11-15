@@ -52,6 +52,12 @@ func has_mark(figure_name: String) -> bool:
 	return _quest_marks.has(figure_name)
 
 
+## True if figure_name is one of this map's figures and stands on it now (not hidden by
+## set_quest_view()): MapCompanion hides while its own figure is here.
+func shows(figure_name: String) -> bool:
+	return _figures.has(figure_name) and not _hidden_figures.has(figure_name)
+
+
 ## Every figure sign shown (true) or hidden (false): cutscenes hide them.
 func set_signs_shown(on: bool) -> void:
 	for label in _figure_signs:
@@ -139,13 +145,15 @@ func show_marks() -> void:
 
 
 ## What a figure offers, over its head: its model alone doesn't tell. Its own "sign"
-## (ZoneData.npcs) first, else the shop's or the inn's by its kind; "" for none.
+## (ZoneData.npcs) first, else the shop's, the armero's or the inn's by its kind; "" for none.
 static func _figure_sign_text(npc: Dictionary) -> String:
 	if npc.has("sign"):
 		return npc.sign
 	match npc.kind:
 		"shop":
 			return "Criaturas" if Shop.sells_ally(npc.id) else "Tienda"
+		"armory":
+			return "Armero"
 		"inn":
 			return "Posada"
 	return ""

@@ -139,6 +139,13 @@ npcs = [{
 "name": "Gato",
 "pos": Vector3(-20.6, 0, -21),
 "yaw": 120.0
+}, {
+"id": "bosque",
+"kind": "armory",
+"look": "TRAVELLER_M",
+"name": "Armero",
+"pos": Vector3(-11.2, 0, 1.6),
+"yaw": -135.0
 }]
 boss_id = "bruja"
 boss_pos = Vector3(0, 0, -34)

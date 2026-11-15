@@ -62,8 +62,8 @@ Lo que se ha hecho y lo que queda por hacer en Villaclaro. Una fila por versión
 | 3.5.0 · M-93 | El compañero de la caravana estrena una pieza de equipo en cada tramo y etapa | hecho |
 | 3.5.0 · M-94 | Sin portal en el fondo de los combates del Barrio del portal, salvo contra el Devorador | hecho |
 | 3.5.0 · M-95 | El portal entre la Caravana y Brumaclara, con la misma forma pero rojizo | hecho |
-| 3.6.0 · M-96 | El compañero o la criatura te sigue por el mapa ([spec](specs/2026-11-15-version-3-6-0-design.md) · [plan](plans/2026-11-15-version-3-6-0.md)) | plan |
-| 3.6.0 · M-97 | La tienda vende los consumibles y un armero nuevo, el equipo, en cada pueblo | plan |
-| 3.6.0 · M-99 | La Pluma de fénix ya no se compra: solo cae de los enemigos o sale de los cofres | plan |
-| 3.6.0 · M-100 | El Coleccionista: 40 medallas, un anillo o amuleto cada 4, en la Caravana y Brumaclara desde que llegas; guardado 16 | plan |
+| 3.6.0 · M-96 | El compañero o la criatura te sigue por el mapa ([spec](specs/2026-11-15-version-3-6-0-design.md) · [plan](plans/2026-11-15-version-3-6-0.md)) | hecho |
+| 3.6.0 · M-97 | La tienda vende los consumibles y un armero nuevo, el equipo, en cada pueblo | hecho |
+| 3.6.0 · M-99 | La Pluma de fénix ya no se compra: solo cae de los enemigos o sale de los cofres | hecho |
+| 3.6.0 · M-100 | El Coleccionista: 40 medallas, un anillo o amuleto cada 4, en la Caravana y Brumaclara desde que llegas; guardado 16 | hecho |
 | 3.6.1 · M-98 | El design system en un núcleo reutilizable (`addons/design_system/`) y la capa de Villaclaro; el juego no cambia ([spec](specs/2026-11-15-version-3-6-1-design-system-nucleo-design.md) · [plan](plans/2026-11-15-version-3-6-1.md)) | plan |

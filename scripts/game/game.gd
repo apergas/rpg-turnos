@@ -252,8 +252,8 @@ func _add_pieces(load_failed: bool) -> void:
 		_caravan.autoplay_companion = _autopilot.companion
 		_caravan.autoplay_leaves = _autopilot.plays_v2
 		_battle.echo_wanted = _autopilot.echo
-		_battle.medal_chance = AutoplayStarts.MEDAL_TOUR_CHANCE if _autopilot.medal_tour \
-			else Medals.DROP_CHANCE
+		if _autopilot.medal_tour:
+			_battle.medal_chance = AutoplayStarts.MEDAL_TOUR_CHANCE
 		_battle.after_battle = _autopilot.after_battle
 		_battle.battle_started.connect(_autopilot.reset_quiet)
 		_battle.enemies_beaten.connect(_autopilot.on_enemies_beaten)
@@ -356,8 +356,8 @@ func _on_stepped() -> void:
 		_ctx.world.show_notice(REPEL_END_NOTICE)
 
 
-## Updates the map's status window, the quests' marks and sought figures and the hero's
-## weapon and shield.
+## Updates the map's status window, the quests' marks and sought figures, the hero's weapon
+## and shield and the creature or companion behind him.
 func _refresh_status() -> void:
 	state.sync_level_cap()
 	var missions := state.current_missions()
@@ -377,6 +377,7 @@ func _refresh_status() -> void:
 	var loadout := state.loadout
 	_ctx.world.set_hero_equipment(loadout.worn(Equipment.WEAPON), loadout.worn(Equipment.SHIELD),
 		loadout.worn(Equipment.HELMET))
+	_ctx.world.set_companion(state.ally_id, state.ally_step())
 	if _autopilot:
 		_autopilot.note_status(missions)
 

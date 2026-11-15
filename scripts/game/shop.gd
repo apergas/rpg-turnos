@@ -19,34 +19,40 @@ const SMITH_SHOP := "brumaclara"
 const SMITH_STEPS := Vector2i(3, 4)
 ## The Jefe de caravana's choice of companion (the v2): three "creatures" at no cost.
 const COMPANIONS_SHOP := "companeros"
+## The two counters of a village shop (3.6.0): a "shop" figure, the tienda, sells its items;
+## an "armory" figure, the armero, its equipment (stock()). Both buy everything. The tamers and
+## the Jefe de caravana ignore the counter.
+const ITEMS_COUNTER := "items"
+const ARMORY_COUNTER := "armory"
 ## shop id -> keeper's name, equipment and items (Inventory ids) on sale, in list order.
+## "keeper" is the tienda's name and "armorer" the armero's (keeper()).
 ## Zone 1 sells no Éter (it comes with the zone 2 shop); the Ala de viaje, the Incienso and the
-## Despertador are sold everywhere; the Pluma de fénix from the forest on.
+## Despertador are sold everywhere; the Pluma de fénix nowhere (3.6.0: chests and drops only).
 const SHOPS := {
 	VILLACLARO: {
-		"keeper": "Mercader",
+		"keeper": "Mercader", "armorer": "Armero",
 		"equipment": [Equipment.COPPER_SWORD, Equipment.LEATHER_MAIL, Equipment.WOODEN_SHIELD,
 			"casco_cobre"],
 		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ALARM, Inventory.WING,
 			Inventory.INCENSE],
 	},
 	BOSQUE: {
-		"keeper": "Mercader",
+		"keeper": "Mercader", "armorer": "Armero",
 		"equipment": ["espada_hierro", "cota_malla", "escudo_hierro", "casco_hierro"],
 		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.ALARM,
-			Inventory.PHOENIX, Inventory.WING, Inventory.INCENSE],
+			Inventory.WING, Inventory.INCENSE],
 	},
 	MINA: {
-		"keeper": "Herrero",
+		"keeper": "Tendera", "armorer": "Herrero",
 		"equipment": ["espada_acero", "armadura_acero", "escudo_acero", "casco_acero"],
 		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.ALARM,
-			Inventory.PHOENIX, Inventory.WING, Inventory.INCENSE],
+			Inventory.WING, Inventory.INCENSE],
 	},
 	CASTILLO: {
-		"keeper": "Mercader",
+		"keeper": "Mercader", "armorer": "Armero",
 		"equipment": ["espada_platino", "armadura_platino", "escudo_platino", "casco_platino"],
 		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.ALARM,
-			Inventory.PHOENIX, Inventory.WING, Inventory.INCENSE],
+			Inventory.WING, Inventory.INCENSE],
 	},
 	# The tamers: they sell one creature each. gear_shop: the shop whose gear autoplay
 	# buys first.
@@ -60,66 +66,66 @@ const SHOPS := {
 		"ally": "esqueleto_leal", "gear_shop": CASTILLO},
 	# The Caravana's merchant, tramo 1 (the jungle): the jade gear and the big potions;
 	"caravana_1": {
-		"keeper": "Mercader",
+		"keeper": "Mercader", "armorer": "Armero",
 		"equipment": ["espada_jade", "armadura_jade", "escudo_jade", "casco_jade"],
 		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
-			Inventory.WING, Inventory.INCENSE, Inventory.PHOENIX, Inventory.ALARM],
+			Inventory.WING, Inventory.INCENSE, Inventory.ALARM],
 	},
 	# The Caravana's merchant, tramo 2 (the desert): the orichalcum gear and the same items.
 	"caravana_2": {
-		"keeper": "Mercader",
+		"keeper": "Mercader", "armorer": "Armero",
 		"equipment": ["espada_oricalco", "armadura_oricalco", "escudo_oricalco",
 			"casco_oricalco"],
 		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
-			Inventory.WING, Inventory.INCENSE, Inventory.PHOENIX, Inventory.ALARM],
+			Inventory.WING, Inventory.INCENSE, Inventory.ALARM],
 	},
 	# The Caravana's merchant, tramo 3 (the mountain): the adamantite gear and the same items.
 	"caravana_3": {
-		"keeper": "Mercader",
+		"keeper": "Mercader", "armorer": "Armero",
 		"equipment": ["espada_adamantita", "armadura_adamantita", "escudo_adamantita",
 			"casco_adamantita"],
 		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
-			Inventory.WING, Inventory.INCENSE, Inventory.PHOENIX, Inventory.ALARM],
+			Inventory.WING, Inventory.INCENSE, Inventory.ALARM],
 	},
 	# The Caravana's merchant, tramo 4 (the city): the stellar gear and the same items.
 	"caravana_4": {
-		"keeper": "Mercader",
+		"keeper": "Mercader", "armorer": "Armero",
 		"equipment": ["espada_estelar", "armadura_estelar", "escudo_estelar", "casco_estelar"],
 		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
-			Inventory.WING, Inventory.INCENSE, Inventory.PHOENIX, Inventory.ALARM],
+			Inventory.WING, Inventory.INCENSE, Inventory.ALARM],
 	},
 	# The Caravana's merchant from the Devorador on (the tramo 5 and the v3's etapa 1): the
 	# bruma gear and the same items.
 	"caravana_5": {
-		"keeper": "Mercader",
+		"keeper": "Mercader", "armorer": "Armero",
 		"equipment": ["espada_bruma", "armadura_bruma", "escudo_bruma", "casco_bruma"],
 		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
-			Inventory.WING, Inventory.INCENSE, Inventory.PHOENIX, Inventory.ALARM],
+			Inventory.WING, Inventory.INCENSE, Inventory.ALARM],
 	},
 	# The Caravana's merchant from the Garza on (the v3's etapa 2 and later): the cristal gear
 	# and the same items.
 	"caravana_6": {
-		"keeper": "Mercader",
+		"keeper": "Mercader", "armorer": "Armero",
 		"equipment": ["espada_cristal", "armadura_cristal", "escudo_cristal", "casco_cristal"],
 		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
-			Inventory.WING, Inventory.INCENSE, Inventory.PHOENIX, Inventory.ALARM],
+			Inventory.WING, Inventory.INCENSE, Inventory.ALARM],
 	},
 	# Brumaclara's Herrero de cristal from the Coloso on (the v3's etapa 3): the luna gear
 	# (3.2.0), the Caravana's items and the Elixir.
 	"brumaclara_3": {
-		"keeper": "Herrero de cristal",
+		"keeper": "Tendero", "armorer": "Herrero de cristal",
 		"equipment": ["espada_luna", "armadura_luna", "escudo_luna", "casco_luna"],
 		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ELIXIR, Inventory.ANTIDOTE,
-			Inventory.WING, Inventory.INCENSE, Inventory.PHOENIX, Inventory.ALARM],
+			Inventory.WING, Inventory.INCENSE, Inventory.ALARM],
 	},
 	# Brumaclara's Herrero from the Vigía on (the v3's etapa 4 and the epilogue): the amanecer
 	# gear (3.3.0), the Caravana's items and the Elixir.
 	"brumaclara_4": {
-		"keeper": "Herrero de cristal",
+		"keeper": "Tendero", "armorer": "Herrero de cristal",
 		"equipment": ["espada_amanecer", "armadura_amanecer", "escudo_amanecer",
 			"casco_amanecer"],
 		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ELIXIR, Inventory.ANTIDOTE,
-			Inventory.WING, Inventory.INCENSE, Inventory.PHOENIX, Inventory.ALARM],
+			Inventory.WING, Inventory.INCENSE, Inventory.ALARM],
 	},
 	COMPANIONS_SHOP: {"keeper": "Jefe de caravana", "equipment": [], "items": [],
 		"allies": Allies.COMPANIONS},
@@ -170,8 +176,10 @@ static func resolve(shop_id: String, state: GameState) -> String:
 	return shop_id
 
 
-static func keeper(shop_id: String) -> String:
-	return SHOPS[shop_id].keeper
+## The name over the window: the tienda's keeper, or the armero's ("armorer") at ARMORY_COUNTER.
+static func keeper(shop_id: String, counter := ITEMS_COUNTER) -> String:
+	var shop: Dictionary = SHOPS[shop_id]
+	return shop.get("armorer", shop.keeper) if counter == ARMORY_COUNTER else shop.keeper
 
 
 static func sells_ally(shop_id: String) -> bool:
@@ -190,12 +198,14 @@ static func is_ally(id: String) -> bool:
 	return Allies.exists(id)
 
 
-## Every id on sale: equipment first, then items, then the creature of a tamer.
-static func stock(shop_id: String) -> Array[String]:
+## What a counter sells: the items at ITEMS_COUNTER, the equipment at ARMORY_COUNTER; a tamer
+## (or the Jefe de caravana) its creatures whatever the counter.
+static func stock(shop_id: String, counter: String) -> Array[String]:
 	var ids: Array[String] = []
-	ids.assign(SHOPS[shop_id].equipment + SHOPS[shop_id].items)
 	if sells_ally(shop_id):
-		ids.append_array(allies_of(shop_id))
+		ids.assign(allies_of(shop_id))
+	else:
+		ids.assign(SHOPS[shop_id].equipment if counter == ARMORY_COUNTER else SHOPS[shop_id].items)
 	return ids
 
 
@@ -359,13 +369,13 @@ static func compare(state: GameState, id: String) -> Dictionary:
 		"diff": Equipment.bonus(id) - Equipment.bonus(worn)}
 
 
-## For --autoplay: one Ala de viaje if none is carried (the autoplay retreat flies back
-## with it), then the equipment of the shop that beats what is worn and is not in the bag
-## yet, in slot order, as long as the gold lasts. Once there is no such piece left (bought
-## or not), or with no potions at all, potions up to AUTOPLAY_POTIONS. In Villaclaro the first
-## 50 G must go on the gear and the village is close by, so there the Ala waits until the gear
-## is bought.
-static func autoplay_picks(state: GameState, shop_id: String) -> Array[String]:
+## For --autoplay: what a counter buys now. A tamer: its creature (Game chooses a companion).
+## A village shop: the picks of the whole shop (_autoplay_whole_picks()) at this counter only,
+## the equipment at ARMORY_COUNTER and the rest at ITEMS_COUNTER, so the tienda and the armero
+## share the gold as one shop did. Visiting the armero first lets the tienda, recomputed with no
+## gear upgrade left, also buy the Ala and potions in the same visit (before 3.6.0 they waited
+## for the next one).
+static func autoplay_picks(state: GameState, shop_id: String, counter: String) -> Array[String]:
 	var picks: Array[String] = []
 	if sells_ally(shop_id):
 		for ally: String in allies_of(shop_id):
@@ -374,6 +384,19 @@ static func autoplay_picks(state: GameState, shop_id: String) -> Array[String]:
 			if can_buy(state, ally) and not _gear_pending(state, shop_id):
 				picks.append(ally)
 		return picks
+	for id in _autoplay_whole_picks(state, shop_id):
+		if is_equipment(id) == (counter == ARMORY_COUNTER):
+			picks.append(id)
+	return picks
+
+
+## One Ala de viaje if none is carried (the autoplay retreat flies back with it), then the
+## equipment of the shop that beats what is worn and is not in the bag yet, in slot order, as
+## long as the gold lasts. Once there is no such piece left (bought or not), or with no potions
+## at all, potions up to AUTOPLAY_POTIONS. In Villaclaro the first 50 G must go on the gear and
+## the village is close by, so there the Ala waits until the gear is bought.
+static func _autoplay_whole_picks(state: GameState, shop_id: String) -> Array[String]:
+	var picks: Array[String] = []
 	var gold := state.gold
 	var upgrades := 0
 	var wants_wing := state.inventory.count(Inventory.WING) == 0

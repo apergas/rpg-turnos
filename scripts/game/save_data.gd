@@ -25,9 +25,9 @@ class_name SaveData extends RefCounted
 ## METAL_SLIME_VERSION (1.7.0) adds the Slime de Metal's HP kept after it got away (metal_slime_hp, 0 for none); an older save gets 0.
 ## MEDALS_VERSION (1.8.0) adds the small medals taken (medals, sorted), the Coleccionista's prizes
 ## given (medal_prizes), whether he was met (collector_met) and the rounds of the Partida nueva +
-## (ng_plus; 2.7.0 removed it: always written as 0, read and ignored); an older save gets none, 0, false and 0. CARAVAN_VERSION (2.0.0) changes no field: it marks the saves that may hold the v2 (the caravan's zones, a companion, levels past 20); its `story` may carry `finished_v2` and `v2_start` (2.3.0, without changing the version: an older save has neither and loads with false and []). V3_VERSION (3.0.0) changes no field either: it marks the saves that may hold the v3 (Brumaclara's flag, its zones, levels past 40); its story may carry finished_v3 and v3_start (an older save has neither and loads with false and []).
+## (ng_plus; 2.7.0 removed it: always written as 0, read and ignored); an older save gets none, 0, false and 0. CARAVAN_VERSION (2.0.0) changes no field: it marks the saves that may hold the v2 (the caravan's zones, a companion, levels past 20); its `story` may carry `finished_v2` and `v2_start` (2.3.0, without changing the version: an older save has neither and loads with false and []). V3_VERSION (3.0.0) changes no field either: it marks the saves that may hold the v3 (Brumaclara's flag, its zones, levels past 40); its story may carry finished_v3 and v3_start (an older save has neither and loads with false and []). MEDAL_PRIZES_VERSION (3.6.0) changes no field: the Coleccionista's prizes (medal_prizes) count from his table of ten; an older save keeps its medals and pieces and loads with medal_prizes 0, so he gives at once every new prize its medals reach.
 
-const VERSION := 15
+const VERSION := 16
 ## First version with the story's fields.
 const STORY_VERSION := 6
 ## First version with the accessory slot and the side quests.
@@ -52,6 +52,9 @@ const CARAVAN_VERSION := 14
 ## The v3 (3.0.0, Brumaclara): no new field, but Brumaclara's flag, the v3's zones, levels
 ## past 40 and the story's finished_v3 and v3_start only exist from here on.
 const V3_VERSION := 15
+## The Coleccionista's table of ten prizes (3.6.0, 40 medals): no new field, but medal_prizes
+## counts that table from here on; an older save's count is of the old one and starts at 0.
+const MEDAL_PRIZES_VERSION := 16
 ## Oldest version apply() still reads.
 const OLDEST_VERSION := 2
 ## Combatant fields of the hero that change while playing (the rest come from hero.tres).
@@ -208,7 +211,10 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 	state.collector_met = false
 	if int(data.version) >= MEDALS_VERSION:
 		state.medals.assign(data.medals)
-		state.medal_prizes = int(data.medal_prizes)
+		# An older save's count was of the old table: it starts over, and the Coleccionista
+		# gives every prize its medals reach the next time they meet.
+		state.medal_prizes = int(data.medal_prizes) \
+			if int(data.version) >= MEDAL_PRIZES_VERSION else 0
 		state.collector_met = data.collector_met
 	var pos: Array = data.position
 	return {"valid": true, "position": Vector3(pos[0], 0.0, pos[1]),
@@ -378,8 +384,9 @@ static func _valid_metal_slime(data: Dictionary) -> bool:
 
 
 ## MEDALS_VERSION fields: the medals taken (Medals ids, each once), the Coleccionista's
-## prizes given (a whole number, no more than those medals reach: Medals.prizes_for()),
-## whether he was met, and the rounds of the Partida nueva + (a whole number, 0 or more).
+## prizes given (a whole number; from MEDAL_PRIZES_VERSION no more than those medals reach:
+## Medals.prizes_for()), whether he was met, and the rounds of the Partida nueva +
+## (a whole number, 0 or more).
 static func _valid_medals(data: Dictionary) -> bool:
 	var medals: Variant = data.get("medals")
 	if not medals is Array:
@@ -390,8 +397,10 @@ static func _valid_medals(data: Dictionary) -> bool:
 			return false
 		seen[id] = true
 	var prizes: Variant = data.get("medal_prizes")
-	if not (prizes is float and prizes >= 0.0 and prizes == floorf(prizes) \
-		and int(prizes) <= Medals.prizes_for((medals as Array).size())):
+	if not (prizes is float and prizes >= 0.0 and prizes == floorf(prizes)):
+		return false
+	if int(data.version) >= MEDAL_PRIZES_VERSION \
+			and int(prizes) > Medals.prizes_for((medals as Array).size()):
 		return false
 	var cycle: Variant = data.get("ng_plus")
 	return data.get("collector_met") is bool and cycle is float and cycle >= 0.0 \

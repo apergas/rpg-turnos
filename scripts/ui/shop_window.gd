@@ -1,8 +1,10 @@
 class_name ShopWindow extends Control
-## Shop window of the map. run(shop_id) opens it on "¿Comprar o vender?" and returns
+## Shop window of the map. run(shop_id, counter) opens it on "¿Comprar o vender?" and returns
 ## when the player leaves. Comprar lists what the shop sells with its price and, for
 ## equipment, the comparison with what is worn (green ▲ better, red ▼ worse, = same);
-## buying a piece of equipment asks "¿Te lo equipas ahora?". Vender lists only what can be
+## buying a piece of equipment asks "¿Te lo equipas ahora?". At the tienda
+## (Shop.ITEMS_COUNTER) Comprar lists the items, with ×5; at the armero (ARMORY_COUNTER) the
+## equipment; Vender ignores the counter. Vender lists only what can be
 ## sold now (Shop.sell_list(): the bag, never what is worn, and only what has a price) at
 ## half price. Rows of Comprar that can't be bought now are grey with the reason. Keyboard
 ## (↑ / ↓, Enter / Space, Esc goes back), mouse and touch. The rules are Shop's; this window
@@ -28,6 +30,8 @@ const ROWS_RESERVED := 220.0
 var _state: GameState
 var _audio: AudioDirector
 var _shop_id := ""
+## Shop.ITEMS_COUNTER or Shop.ARMORY_COUNTER (run()).
+var _counter := Shop.ITEMS_COUNTER
 var _page := ""
 ## Piece just bought, waiting for the "¿Te lo equipas ahora?" answer.
 var _asking := ""
@@ -117,10 +121,13 @@ func _ready() -> void:
 	hide()
 
 
-## Opens the shop of shop_id (a Shop.SHOPS key) and returns when the player leaves.
-func run(shop_id: String) -> void:
+## Opens the shop of shop_id (a Shop.SHOPS key) at counter (Shop.ITEMS_COUNTER: the tienda;
+## Shop.ARMORY_COUNTER: the armero; a tamer and the companions ignore it) and returns when the
+## player leaves.
+func run(shop_id: String, counter := Shop.ITEMS_COUNTER) -> void:
 	_shop_id = shop_id
-	_keeper.text = Shop.keeper(shop_id)
+	_counter = counter
+	_keeper.text = Shop.keeper(shop_id, counter)
 	_set_message("")
 	show()
 	_sfx(SfxLibrary.DIALOGUE)
@@ -181,9 +188,11 @@ func _show_page(page: String, focus_id := "") -> void:
 		"buy":
 			if _shop_id == Shop.COMPANIONS_SHOP:
 				_title.text = "Compañeros"
+			elif Shop.sells_ally(_shop_id):
+				_title.text = "Criaturas"
 			else:
-				_title.text = "Criaturas" if Shop.sells_ally(_shop_id) else "Comprar"
-			for id in Shop.stock(_shop_id):
+				_title.text = "Armero" if _counter == Shop.ARMORY_COUNTER else "Tienda"
+			for id in Shop.stock(_shop_id, _counter):
 				_add_buy_row(id)
 			_add_footer_button("Volver", _back)
 		"sell":
@@ -473,7 +482,7 @@ func _autoplay_run() -> void:
 	await _wait()
 	_show_page("buy")
 	await _wait()
-	for id in Shop.autoplay_picks(_state, _shop_id):
+	for id in Shop.autoplay_picks(_state, _shop_id, _counter):
 		_focus_row(Shop.display_name(id))
 		await _wait()
 		_buy(id)

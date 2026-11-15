@@ -9,7 +9,8 @@ class_name MapUses extends Node
 
 signal talk_requested
 signal npc_requested(index: int)
-signal shop_requested(shop_id: String)
+## A tienda (counter Shop.ITEMS_COUNTER) or an armero (Shop.ARMORY_COUNTER) of shop_id.
+signal shop_requested(shop_id: String, counter: String)
 signal inn_requested(inn_id: String)
 signal chest_opened(chest_id: String)
 signal well_requested(id: String, kind: String)
@@ -41,6 +42,7 @@ const FIGURE_TOP_TAP_RADIUS := 0.7
 const TALK := "talk"
 const NPC := "npc"
 const SHOP := "shop"
+const ARMORY := "armory"
 const INN := "inn"
 const CHEST := "chest"
 const WELL := "well"
@@ -56,6 +58,7 @@ const PROMPTS := {
 	TALK: "Hablar",
 	NPC: "Hablar",
 	SHOP: "Comprar",
+	ARMORY: "Comprar",
 	INN: "Descansar",
 	CHEST: "Abrir",
 	WELL: "Beber",
@@ -67,7 +70,8 @@ const PROMPTS := {
 	ITEM: "Coger",
 }
 ## ZoneData.npcs kinds -> use kinds.
-const NPC_KINDS := {"quest": TALK, "npc": NPC, "shop": SHOP, "inn": INN, "board": BOARD, "item": ITEM}
+const NPC_KINDS := {"quest": TALK, "npc": NPC, "shop": SHOP, "armory": ARMORY, "inn": INN,
+	"board": BOARD, "item": ITEM}
 
 var _zone: ZoneData
 var _player: Player
@@ -242,7 +246,7 @@ func check_exits(pos: Vector3) -> Dictionary:
 	return nearest
 
 
-## The nearest thing in reach of pos that can be used: {"kind": TALK / NPC / SHOP / INN
+## The nearest thing in reach of pos that can be used: {"kind": TALK / NPC / SHOP / ARMORY / INN
 ## / CHEST / LEVER / KEY / DOOR, "id": shop, inn or chest id ("" otherwise), "index":
 ## the npc's index}, or {}.
 func _nearest_use(pos: Vector3) -> Dictionary:
@@ -320,7 +324,9 @@ func _use(use: Dictionary) -> void:
 		NPC, BOARD, ITEM:
 			npc_requested.emit(use.index)
 		SHOP:
-			shop_requested.emit(use.id)
+			shop_requested.emit(use.id, Shop.ITEMS_COUNTER)
+		ARMORY:
+			shop_requested.emit(use.id, Shop.ARMORY_COUNTER)
 		INN:
 			inn_requested.emit(use.id)
 		CHEST:

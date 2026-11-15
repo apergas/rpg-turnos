@@ -3,15 +3,15 @@ class_name GameAutoplay extends Node
 ## of --autoplay-zone=<id> with AutoplayStarts' state (apply_start()) and plays it as a player
 ## would: after a won battle it flies back to the last village with an Ala de viaje when the hero
 ## needs rest, is too worn for the boss, has a report waiting or has no group left (retreat(): the
-## inn (or the wells, with no inn open), the shop, the figures with a mark and, in Brumaclara, an
-## errand through the portal to the Caravana (the etapa's gear, a report there, and on to Villaclaro
-## for the amulet), restock(), then the portal back); after a v3 boss whose scene brings the hero
-## home it restocks there; after a defeat it restocks; an empty map, or one quiet for
-## AutoplayStarts.AUTOPLAY_STALL_S, gets its groups back (step()); and it runs the medal tour of
-## --autoplay-zone=medallas. It prints what a reader of the log follows: each zone, each change of
-## mission line, gold or gear, each defeat, the Eco's results and the numbers after each part's
-## credits. Uses only the public functions of ZoneTravel and FigureTalk (use_pieces()) and the
-## rules; never stores Game or a World.
+## inn (or the wells, with no inn open), the tienda and the armero, the figures with a mark and,
+## in Brumaclara, an errand through the portal to the Caravana (the etapa's gear, a report
+## there, and on to Villaclaro for the amulet), restock(), then the portal back); after a v3
+## boss whose scene brings the hero home it restocks there; after a defeat it restocks; an empty
+## map, or one quiet for AutoplayStarts.AUTOPLAY_STALL_S, gets its groups back (step()); and it
+## runs the medal tour of --autoplay-zone=medallas. It prints what a reader of the log
+## follows: each zone, each change of mission line, gold or gear, each defeat, the Eco's results
+## and the numbers after each part's credits. Uses only the public functions of ZoneTravel and
+## FigureTalk (use_pieces()) and the rules; never stores Game or a World.
 
 ## The medal tour is over: Game goes back to the title (which quits on autoplay).
 signal quit_requested
@@ -36,7 +36,7 @@ var _defeats := 0
 var _echo_fights := 0
 var _echo_wins := 0
 ## Common enemies beaten in won battles (the credits print it with the medals, to tune
-## Medals.DROP_CHANCE).
+## Medals.DROP_CHANCES).
 var _common_beaten := 0
 var _last_missions: Array[String] = []
 var _last_gear_text := ""
@@ -147,7 +147,7 @@ func after_battle(outcome: int) -> void:
 		# offers and the Caravana's gear before the next land, as a player would.
 		await restock()
 		return
-	if medal_tour and won and _ctx.state.medals.size() >= Medals.MEDALS.size():
+	if medal_tour and won and _ctx.state.medals.size() >= AutoplayStarts.MEDAL_TOUR_GOAL:
 		await finish_medal_tour()
 		return
 	if won and wants_retreat():
@@ -292,10 +292,11 @@ func needs_groups() -> bool:
 
 
 ## Autoplay: the hero goes after the groups while he has levels to win before the zone's
-## boss. The medal tour hunts until it carries every medal.
+## boss. The medal tour hunts until it
+## carries AutoplayStarts.MEDAL_TOUR_GOAL medals.
 func hunts() -> bool:
 	if medal_tour:
-		return _ctx.state.medals.size() < Medals.MEDALS.size()
+		return _ctx.state.medals.size() < AutoplayStarts.MEDAL_TOUR_GOAL
 	return _ctx.state.hero.level < _ctx.zone.autoplay_boss_level
 
 
@@ -306,8 +307,8 @@ func boss_needs_rest() -> bool:
 		and not AutoplayStarts.rested_for_boss(_ctx.state.hero)
 
 
-## Autoplay, in the village: a night at its inn and the shop's picks, as if the hero had
-## walked up to the innkeeper and the merchant.
+## Autoplay, in the village: a night at its inn and the picks of its tienda, its armero and its
+## Domadora, as if the hero had walked up to the innkeeper and to each of them.
 func restock() -> void:
 	var flags := _ctx.state.world_flags
 	var inn := false
@@ -318,9 +319,14 @@ func restock() -> void:
 	if not inn:
 		for well: Dictionary in _ctx.zone.wells:
 			await _talk.on_well(well.id, well.kind)
-	for npc: Dictionary in _ctx.zone.npcs:
-		if npc.kind == "shop" and ZoneData.is_present(npc, flags):
-			await _talk.on_shop(npc.id)
+	# The tienda and the armero first (they share the gold: Shop.autoplay_picks()), then the
+	# Domadora, who waits until the village's gear is bought.
+	for creatures in [false, true]:
+		for npc: Dictionary in _ctx.zone.npcs:
+			if npc.kind in ["shop", "armory"] and ZoneData.is_present(npc, flags) \
+					and Shop.sells_ally(npc.id) == creatures:
+				await _talk.on_shop(npc.id,
+					Shop.ARMORY_COUNTER if npc.kind == "armory" else Shop.ITEMS_COUNTER)
 	# On a caravan game the figures that offer a quest ("!") are visited too, or autoplay
 	# would never take the v2's quests; a v1 game keeps the reports only.
 	await _talk_figures(_ctx.state.in_caravan())
@@ -342,11 +348,11 @@ func _talk_figures(offers: bool) -> void:
 
 
 ## Autoplay, in Brumaclara (the v3): the Caravana is ten steps away through the portal. The hero
-## walks through while its Mercader sells gear of the etapa the gold pays for
-## (Shop.gear_to_buy(): once there, the usual picks, an Ala or potions, come with it), while a
-## report waits there (the cartas for the Viajera), or for the visit to Villaclaro (the Coloso
-## beaten, no amulet yet: on through the Caravana's exit, and the Abuela Rosa's scene plays on
-## arrival; the route of the meadow and the Caravana's walk him back to the portal).
+## walks through while its Armero sells gear of the etapa the gold pays for
+## (Shop.gear_to_buy(): once there, the tienda's usual picks, an Ala or potions, come with it),
+## while a report waits there (the cartas for the Viajera), or for the visit to Villaclaro (the
+## Coloso beaten, no amulet yet: on through the Caravana's exit, and the Abuela Rosa's scene
+## plays on arrival; the route of the meadow and the Caravana's walk him back to the portal).
 func _caravan_errand() -> void:
 	var state := _ctx.state
 	var visit := state.has_flag(StoryState.V3_BOSSES[1]) and not state.has_flag(StoryState.AMULET_FLAG)
@@ -356,7 +362,8 @@ func _caravan_errand() -> void:
 	print("Recado en la Caravana")
 	# The Caravana's entry from Brumaclara has the village's id; Brumaclara's from it is "portal".
 	await _travel.on_exit(CampLook.ZONE, BrumaclaraLook.ZONE)
-	await _talk.on_shop(Shop.CARAVAN_SHOP)
+	await _talk.on_shop(Shop.CARAVAN_SHOP, Shop.ITEMS_COUNTER)
+	await _talk.on_shop(Shop.CARAVAN_SHOP, Shop.ARMORY_COUNTER)
 	await _talk_figures(false)
 	if visit:
 		print("Visita a Villaclaro")

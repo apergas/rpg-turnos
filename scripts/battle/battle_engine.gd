@@ -96,7 +96,7 @@ var quest_items := {}
 ## none drop, the battle run on its own). A common enemy beaten leaves one with medal_chance
 ## (the Slime de Metal always, a boss never) while fewer than Medals.MEDALS are carried.
 var medals_carried := -1
-var medal_chance := Medals.DROP_CHANCE
+var medal_chance := Medals.drop_chance(1)
 ## Medals left in this won battle (Game takes them: Medals.take()). Each is also in drops_won
 ## as Inventory.MEDAL, for the victory window, but never in the inventory.
 var medals_won := 0
