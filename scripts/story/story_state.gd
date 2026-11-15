@@ -57,6 +57,11 @@ const V2_FINAL_BOSS := "devorador_portal"
 const V3_FLAG := "brumaclara"
 const V3_BOSSES: Array[String] = ["garza_legamo", "coloso_cuarzo", "vigia_bruma"]
 const V3_FINAL_BOSS := "eco_albor"
+## The v3's two endings (3.3.0): the flag each final scene sets with its "flag" step (Albor freed
+## with the amulet, or the Eco beaten). Brumaclara afterwards (BrumaclaraLook), the goal and the
+## credits follow them.
+const ALBOR_FREED := "albor_liberado"
+const ALBOR_BEATEN := "albor_vencido"
 ## The Amuleto del Alba (3.2.0): the key item and the flag the Abuela Rosa's scene gives
 ## (StoryFlow), which opens the way up to the Ruinas.
 const AMULET_FLAG := "amuleto_recuperado"

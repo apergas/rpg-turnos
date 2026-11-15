@@ -370,4 +370,16 @@ const LOOKS := {
 		"top": 1.6,
 		"fly": 0.7,
 	},
+	# Albor freed (3.3.0): a young guardian, fair and pale, in a light-blue cape, his corona of
+	# light back over his head (on the map only: he never fights).
+	Look.ALBOR: {
+		"scene": ActorLooks.KNIGHT, "scale": ActorLooks.CHARACTER_SCALE, "top": 2.2,
+		"hide": ActorLooks.PERSON_HIDE, "head_texture": ActorLooks.HEAD_BLOND,
+		"hair": {"style": "tail", "color": ActorLooks.HAIR_BLOND},
+		"mesh_tints": {"Knight_ArmLeft": ActorLooks.SKIN_PALE, "Knight_ArmRight": ActorLooks.SKIN_PALE,
+			"Knight_Body": Color(1.2, 1.35, 1.8), "Knight_LegLeft": Color(0.75, 0.8, 1.0),
+			"Knight_LegRight": Color(0.75, 0.8, 1.0)},
+		"cape": Color(0.5, 0.72, 1.0), "anims": ActorLooks.CHARACTER_ANIMS,
+		"corona": Color(0.8, 0.92, 1.0),
+	},
 }

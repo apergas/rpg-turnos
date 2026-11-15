@@ -230,6 +230,16 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var forge_lit := false
 ## The Fuente de la Niebla's well of light (SourceWell, BrumaclaraStage; 3.3.0), ZERO for none.
 @export var source_pos := Vector3.ZERO
+## Brumaclara en fiesta (BrumaclaraStage; 3.3.0, the etapa 5): pennant garlands strung across
+## the square, [one end, the other end] each at the height it hangs from, with a paper lantern
+## at the middle of each.
+@export var garlands: Array = []
+## Albor's statue by the well (BrumaclaraStage; the Eco beaten, not freed), ZERO for none, and
+## the way it faces (degrees, 0 = -Z, like a figure).
+@export var statue_pos := Vector3.ZERO
+@export var statue_yaw := 0.0
+## The sun peeking from behind the black one (BlackSun; Albor freed).
+@export var sun_peeks := false
 
 @export_group("Dungeon")
 ## Rows of a dungeon floor, north (−Z) first, one character per CELL × CELL cell (see
