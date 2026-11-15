@@ -64,4 +64,5 @@ Lo que se ha hecho y lo que queda por hacer en Villaclaro. Una fila por versión
 | 3.5.0 · M-95 | El portal entre la Caravana y Brumaclara, con la misma forma pero rojizo | spec |
 | 3.6.0 · M-96 | El compañero o la criatura te sigue por el mapa ([spec](specs/2026-11-15-version-3-6-0-design.md)) | spec |
 | 3.6.0 · M-97 | La tienda vende los consumibles y un armero nuevo, el equipo, en cada pueblo | spec |
+| 3.6.0 · M-99 | La Pluma de fénix ya no se compra: solo cae de los enemigos o sale de los cofres | spec |
 | 3.6.1 · M-98 | El design system en un núcleo reutilizable (`addons/design_system/`) y la capa de Villaclaro; el juego no cambia ([spec](specs/2026-11-15-version-3-6-1-design-system-nucleo-design.md)) | spec |
