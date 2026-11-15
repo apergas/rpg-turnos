@@ -3,7 +3,8 @@ class_name CharacterBuilder extends RefCounted
 ## witch, the skeletons, the caravan's people, the companions...), from their
 ## ActorLooks.LOOKS entry: the model turned to face -Z with its props hidden, weapons on
 ## bones, tints, head texture, cape, hair pieces, the Momia's wraps, the Armadura's ember,
-## an aura or a corona of light and the hero's stick. Static only, keeps no state: it writes
+## an aura or a corona of light and the hero's stick; and the caravan companions' gear
+## (dress_companion(); 3.5.0). Static only, keeps no state: it writes
 ## into the actor through its builder methods (set_model, set_aura, set_animations,
 ## add_mesh...).
 
@@ -29,6 +30,14 @@ const STICK_COLOR := Color(0.45, 0.3, 0.16)
 const STICK_RADIUS := 0.07
 const STICK_LENGTH := 1.3
 const STICK_CENTER := 0.45
+## The companions' gear (dress_companion()): the Knight's off-hand sword (Tadeo's second one,
+## which takes the weapon's tint) and its rectangular shield (Ulma's, which takes the cape's).
+const OFFHAND_SWORD := "Rig/Skeleton3D/handslot_l/1H_Sword_Offhand"
+const RECTANGLE_SHIELD := "Rig/Skeleton3D/handslot_l/Rectangle_Shield"
+const CAPE_MESH := "Knight_Cape"
+## A cape is cloth: the shield's metal tint of its series darkened to this share, one flat
+## colour (cape_color()).
+const CAPE_SHADE := 0.6
 
 
 ## Builds the KayKit figure of data (a LOOKS entry with a "scene") on actor.
@@ -68,15 +77,11 @@ static func build(actor: BattleActor, data: Dictionary) -> void:
 		var head_material := head.get_active_material(0).duplicate() as BaseMaterial3D
 		head_material.albedo_texture = data.head_texture
 		head.set_surface_override_material(0, head_material)
-	var cape := model.find_child("Knight_Cape", true, false) as MeshInstance3D
+	var cape := model.find_child(CAPE_MESH, true, false) as MeshInstance3D
 	if cape != null and data.get("hide_cape", false):
 		cape.hide()
 	elif cape != null and data.has("cape"):
-		# One flat colour (the cape is one palette cell): a copy without the atlas.
-		var cape_material := cape.get_active_material(0).duplicate() as BaseMaterial3D
-		cape_material.albedo_texture = null
-		cape_material.albedo_color = data.cape
-		cape.set_surface_override_material(0, cape_material)
+		paint_cape(cape, data.cape)
 	if data.has("hair"):
 		_add_hair(actor, model, data.hair)
 	if data.has("aura"):
@@ -204,3 +209,65 @@ static func tint_mesh(mi: MeshInstance3D, color: Color) -> void:
 		# runs reads the freed material and prints "Parameter material is null".
 		mi.set_meta(&"tinted_%d" % i, tinted)
 		mi.set_surface_override_material(i, tinted)
+
+
+## One flat colour on the Knight's cape (it is one palette cell): a copy of its material
+## without the atlas.
+static func paint_cape(cape: MeshInstance3D, color: Color) -> void:
+	var cape_material := cape.get_active_material(0).duplicate() as BaseMaterial3D
+	cape_material.albedo_texture = null
+	cape_material.albedo_color = color
+	cape.set_surface_override_material(0, cape_material)
+
+
+## The flat cloth colour of a cape for a piece's metal tint (Equipment.tint()).
+static func cape_color(tint: Color) -> Color:
+	var cloth := tint * CAPE_SHADE
+	cloth.a = 1.0
+	return cloth.clamp()
+
+
+## A caravan companion's gear (Allies.gear()) on its Knight model: each piece worn so far takes
+## the tint of the hero's piece it names, over the model's own materials (the look's body tint
+## leaves that piece). The weapon: the meshes shown in the right hand and the off-hand sword
+## (Tadeo's two short swords); the helmet: the Knight's, shown (Tadeo wears none until his
+## first); the cape: the Knight's cape in one flat colour (cape_color()) and the rectangular
+## shield (Ulma's). A piece not worn yet keeps the look's colours; {} (a creature) changes
+## nothing. Brena and Tadeo carry no shield; each keeps its own weapons.
+static func dress_companion(model: Node3D, gear: Dictionary) -> void:
+	var weapon: String = gear.get(Allies.GEAR_WEAPON, "")
+	if weapon != "":
+		for child in model.get_node(BattleActor.HAND_R).get_children():
+			if (child as Node3D).visible:
+				_retint(child as Node3D, Equipment.tint(weapon))
+		_retint_shown(model, OFFHAND_SWORD, Equipment.tint(weapon))
+	var helmet: String = gear.get(Allies.GEAR_HELMET, "")
+	if helmet != "":
+		var helmet_mesh := model.get_node(BattleActor.HELMET_PATH) as Node3D
+		helmet_mesh.show()
+		_retint(helmet_mesh, Equipment.helmet_tint(helmet))
+	var cape_piece: String = gear.get(Allies.GEAR_CAPE, "")
+	if cape_piece != "":
+		var cape := model.find_child(CAPE_MESH, true, false) as MeshInstance3D
+		if cape != null and cape.visible:
+			paint_cape(cape, cape_color(Equipment.tint(cape_piece)))
+		_retint_shown(model, RECTANGLE_SHIELD, Equipment.tint(cape_piece))
+
+
+## _retint() on the node at path when the look shows it (its "hide" list did not hide it).
+static func _retint_shown(model: Node3D, path: String, color: Color) -> void:
+	var node := model.get_node_or_null(path) as Node3D
+	if node != null and node.visible:
+		_retint(node, color)
+
+
+## Every mesh of node (itself included) back to its imported materials, then tinted with color.
+static func _retint(node: Node3D, color: Color) -> void:
+	var meshes := node.find_children("*", "MeshInstance3D", true, false)
+	if node is MeshInstance3D:
+		meshes.append(node)
+	for mesh in meshes:
+		var mi := mesh as MeshInstance3D
+		for i in mi.mesh.get_surface_count():
+			mi.set_surface_override_material(i, null)
+		tint_mesh(mi, color)

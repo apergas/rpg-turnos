@@ -37,6 +37,7 @@ What the code does not explain:
 - The Abuela Rosa's `amuleto` scene is Villaclaro's village scene in the part 3 (`V3Flow.arrival_scene()`); a cutscene `flag` step whose name is a key item's id also gives that key item. The v3's amulet flag and key item is `amuleto_recuperado`; the v1's ending sets `amuleto_alba`, a different flag.
 - The v3 ends after the Eco de Albor (`BattleFlow` asks `StoryFlow.finish_part()` for the ending of the part 2 or 3): `StoryFlow.finish_v3()` asks `StoryState.ENDING_QUESTION` with `World.ask()` (on autoplay the first answer; `--autoplay-ending=vencer`, the last), plays the answer's final scene (its `flag` step sets `albor_liberado` or `albor_vencido` under black, swapping the Fuente's figures, and it travels to Brumaclara en fiesta), the v3's credits with "Fin" (`CreditsData.v3_credits_sections()`), then the families' prizes; the game goes on in Brumaclara. Freeing Albor leaves the amulet in the Fuente.
 - The map hero's rim (`BattleActor.set_map_readable()`) does nothing on the headless renderer: check it with `--write-movie` or a window.
+- The caravan companions' gear is never saved: `Allies.gear(id, GameState.ally_step())` derives it (a piece per step from the desert on, tinted like a hero's piece one series behind the shops), `Allies.data()` adds its ATK and DEF as the companion's `equip_attack` / `equip_defense`, and `BattleActor.set_companion_gear()` shows it (`CharacterBuilder.dress_companion()`).
 
 ## Conventions
 
