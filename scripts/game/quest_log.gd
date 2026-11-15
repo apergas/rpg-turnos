@@ -411,8 +411,8 @@ static func problems() -> Array[String]:
 			found.append("Misión %s: se entrega a %s, que no está en %s" % [id, quest.turn_in,
 				quest.turn_in_zone])
 			continue
-		# a shop or an inn hears first what waits (Game, since 2.4.0)
-		if not figure.get("kind", "npc") in ["npc", "quest", "inn", "shop"]:
+		# a shop, an armero or an inn hears first what waits (Game, since 2.4.0)
+		if not figure.get("kind", "npc") in ["npc", "quest", "inn", "shop", "armory"]:
 			found.append("Misión %s: se entrega a %s, que no es una figura con quien hablar" \
 				% [id, quest.turn_in])
 			continue

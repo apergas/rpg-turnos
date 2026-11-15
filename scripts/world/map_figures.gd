@@ -139,13 +139,15 @@ func show_marks() -> void:
 
 
 ## What a figure offers, over its head: its model alone doesn't tell. Its own "sign"
-## (ZoneData.npcs) first, else the shop's or the inn's by its kind; "" for none.
+## (ZoneData.npcs) first, else the shop's, the armero's or the inn's by its kind; "" for none.
 static func _figure_sign_text(npc: Dictionary) -> String:
 	if npc.has("sign"):
 		return npc.sign
 	match npc.kind:
 		"shop":
 			return "Criaturas" if Shop.sells_ally(npc.id) else "Tienda"
+		"armory":
+			return "Armero"
 		"inn":
 			return "Posada"
 	return ""

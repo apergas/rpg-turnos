@@ -3,7 +3,7 @@ class_name FigureTalk extends Node
 ## them. The Abuela Rosa heals and moves the village quest on (on_talk()); a villager, a
 ## board or a thing picked up says what the QuestLog has about a quest, or its chapter lines
 ## (on_npc(); the Coleccionista: talk_to_collector(); the Jefe de caravana: CaravanFlow;
-## Orvalla says what the v3 waits on); a shop opens the ShopWindow (on_shop()) and an
+## Orvalla says what the v3 waits on); a tienda or an armero opens the ShopWindow on its counter (on_shop()) and an
 ## inn offers the free night (on_inn()), each after the quest waiting at its figure; a well, a chest, the lever, the key and a gate.
 ## Gets the session and the ShopWindow in setup(); never stores Game or a World.
 
@@ -176,21 +176,23 @@ func _figure_with_quest(kind: String, id: String) -> int:
 	return -1
 
 
-## The merchant: the ShopWindow until the player leaves; autosaves if anything changed.
-## On autoplay it only opens when there is something to buy.
-func on_shop(shop_id: String) -> void:
+## The tienda (counter Shop.ITEMS_COUNTER, a "shop" figure) or the armero (ARMORY_COUNTER, an
+## "armory" figure) of shop_id: the ShopWindow until the player leaves; autosaves if anything
+## changed. On autoplay it only opens when that counter has something to buy.
+func on_shop(shop_id: String, counter := Shop.ITEMS_COUNTER) -> void:
 	if _ctx.busy:
 		return
-	var waiting := _figure_with_quest("shop", shop_id)
+	var waiting := _figure_with_quest("armory" if counter == Shop.ARMORY_COUNTER else "shop",
+		shop_id)
 	if waiting >= 0:
-		await on_npc(waiting)  # a report or an offer at the merchant goes first (pieles_mono)
-	shop_id = Shop.resolve(shop_id, _ctx.state)  # the Mercader's and the Herrero's by step
-	if _ctx.busy or (RunFlags.autoplay() and Shop.autoplay_picks(_ctx.state, shop_id).is_empty()):
+		await on_npc(waiting)  # a report or an offer at this figure goes first (pieles_mono)
+	shop_id = Shop.resolve(shop_id, _ctx.state)  # the Caravana's and Brumaclara's by step
+	if _ctx.busy or (RunFlags.autoplay() 			and Shop.autoplay_picks(_ctx.state, shop_id, counter).is_empty()):
 		return
 	_ctx.set_busy.call(true)
 	_shop_changed = false
 	_ctx.world.freeze(true)
-	await _shop.run(shop_id)
+	await _shop.run(shop_id, counter)
 	await _ctx.world.freeze(false)
 	_ctx.refresh_status.call()
 	if _shop_changed:

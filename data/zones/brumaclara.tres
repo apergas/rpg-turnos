@@ -151,7 +151,7 @@ npcs = [{
 "yaw": -90.0
 }, {
 "id": "brumaclara",
-"kind": "shop",
+"kind": "armory",
 "look": "MIST_SMITH",
 "name": "Herrero de cristal",
 "needs": "coloso_cuarzo",
@@ -240,6 +240,14 @@ npcs = [{
 "needs": "albor_liberado",
 "pos": Vector3(-3.5, 0, -2.5),
 "yaw": 180.0
+}, {
+"id": "brumaclara",
+"kind": "shop",
+"look": "MIST_VILLAGER_M",
+"name": "Tendero",
+"needs": "coloso_cuarzo",
+"pos": Vector3(8.8, 0, 2.4),
+"yaw": 135.0
 }]
 boss_id = ""
 boss_pos = Vector3(0, 0, 0)

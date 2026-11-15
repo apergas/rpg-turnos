@@ -34,8 +34,9 @@ signal talk_requested
 ## The player talked to the villager zone.npcs[index] (kind "npc") or read the board (kind
 ## "board").
 signal npc_requested(index: int)
-## The player asked the merchant of shop_id (a Shop.SHOPS key) to trade.
-signal shop_requested(shop_id: String)
+## The player asked the tienda or the armero (counter: Shop.ITEMS_COUNTER, ARMORY_COUNTER) of
+## shop_id (a Shop.SHOPS key, or a figure id Shop.resolve() turns into one) to trade.
+signal shop_requested(shop_id: String, counter: String)
 ## The player talked to the innkeeper of inn_id (an Inn.INNS key).
 signal inn_requested(inn_id: String)
 ## The player asked to open a closed chest (a Chests.CHESTS key); Game opens it in the
@@ -664,7 +665,8 @@ func _connect_standalone() -> void:
 	npc_requested.connect(func(index: int) -> void:
 		await show_dialogue(zone.npcs[index].name,
 			npc_lines(index, StoryState.Chapter.END)))
-	shop_requested.connect(func(shop_id: String) -> void: print("Tienda: %s" % shop_id))
+	shop_requested.connect(func(shop_id: String, counter: String) -> void:
+		print("Tienda: %s (%s)" % [shop_id, counter]))
 	inn_requested.connect(func(inn_id: String) -> void: print("Posada: %s" % inn_id))
 	chest_opened.connect(func(chest_id: String) -> void:
 		print("Cofre: %s" % chest_id)
