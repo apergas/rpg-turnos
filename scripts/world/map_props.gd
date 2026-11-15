@@ -25,8 +25,8 @@ const ARCH_WIDTH := 3.6
 const ARCH_HEIGHT := 3.0
 const SIGN_COLOR := Color(0.62, 0.45, 0.25)
 const FOG_COLOR := Color(0.92, 0.93, 0.97, 0.6)
-## An exit with this "look" is the Ala de viaje's portal (TravelPortal) with its label as the
-## sign, instead of the wooden arch: the Caravana and Brumaclara (3.0.0).
+## An exit with this "look" is the Ala de viaje's portal in reddish tones (TravelPortal.red;
+## 3.5.0) with its label as the sign, instead of the wooden arch: the Caravana and Brumaclara.
 const PORTAL_LOOK := "portal"
 
 ## The wells that are dry now (World.set_dry_wells()); the map square's marks follow them.
@@ -183,6 +183,7 @@ func _build_exit(exit: Dictionary) -> Node3D:
 	if exit.get("look", "") == PORTAL_LOOK:
 		var portal := TravelPortal.new()
 		portal.sign_text = exit.label
+		portal.red = true
 		portal.rotation_degrees.y = exit.yaw
 		root.add_child(portal)
 		var none := Node3D.new()
