@@ -63,6 +63,12 @@ const ENEMIES := {
 	"junco_andante": preload("res://data/enemies/junco_andante.tres"),
 	"caiman_bruma": preload("res://data/enemies/caiman_bruma.tres"),
 	"garza_legamo": preload("res://data/enemies/garza_legamo.tres"),
+	# The Cuevas de cristal (the v3, 3.1.0).
+	"murcielago_cristal": preload("res://data/enemies/murcielago_cristal.tres"),
+	"slime_cristal": preload("res://data/enemies/slime_cristal.tres"),
+	"golem_cuarzo": preload("res://data/enemies/golem_cuarzo.tres"),
+	"arana_cristal": preload("res://data/enemies/arana_cristal.tres"),
+	"topo_geoda": preload("res://data/enemies/topo_geoda.tres"),
 }
 ## Figure of each enemy id; any other id is a slime.
 const LOOKS := {
@@ -120,6 +126,11 @@ const LOOKS := {
 	"junco_andante": BattleActor.Look.WALKING_REED,
 	"caiman_bruma": BattleActor.Look.MIST_CAIMAN,
 	"garza_legamo": BattleActor.Look.SILT_HERON,
+	"murcielago_cristal": BattleActor.Look.CRYSTAL_BAT,
+	"slime_cristal": BattleActor.Look.CRYSTAL_SLIME,
+	"golem_cuarzo": BattleActor.Look.QUARTZ_GOLEM,
+	"arana_cristal": BattleActor.Look.CRYSTAL_SPIDER,
+	"topo_geoda": BattleActor.Look.GEODE_MOLE,
 	# The creatures that fight beside the hero (data in Allies, not in ENEMIES).
 	"gallina": BattleActor.Look.CHICKEN,
 	"lobezno": BattleActor.Look.WOLF_CUB,

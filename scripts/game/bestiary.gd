@@ -52,11 +52,12 @@ const V2_ENEMIES: Array[String] = ["rana_dardo", "serpiente_liana", "mono_aullad
 	"seta_tropical", "slime_arena", "murcielago_hielo", "golem_arena", "golem_hielo",
 	"espiritu_cumbre", "armadura_hueca", "gargola", "sombra", "esqueleto_centinela", "momia",
 	"jaguar_sombrio", "gusano_dunas", "grifo_cumbre", "guardian_ciudad", "devorador_portal"]
-## Every v3 enemy with a card so far (3.0.0: the Ciénaga's). Their families come with the
+## Every v3 enemy with a card so far (3.0.0: the Ciénaga's; 3.1.0: the Cuevas'). Their families come with the
 ## 3.3.0; until then they count, are seen and beaten like the rest, with no prize, on a game in
 ## the part 3 (GameState.part()).
 const V3_ENEMIES: Array[String] = ["sapo_legamo", "sanguijuela", "fuego_fatuo", "junco_andante",
-	"caiman_bruma", "garza_legamo"]
+	"caiman_bruma", "garza_legamo", "murcielago_cristal", "slime_cristal", "golem_cuarzo",
+	"arana_cristal", "topo_geoda"]
 
 
 ## The families that count in this game: the v1's, and the v2's on a caravan game.

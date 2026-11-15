@@ -17,6 +17,8 @@ const FLAME_ALPHA := 0.55
 const CORE_ALPHA := 0.9
 ## The opacity of the lamp in the Garza's crop.
 const LAMP_ALPHA := 0.9
+## The opacity of the crystals growing on the Cuevas' figures (_add_shards()).
+const SHARD_ALPHA := 0.8
 
 
 ## Builds the figure of a look of the v3 and returns true; false (nothing built) for any other.
@@ -34,6 +36,20 @@ static func build(actor: BattleActor, data: Dictionary) -> bool:
 		build_caiman(actor, data)
 	elif look == Look.SILT_HERON:
 		build_heron(actor, data)
+	elif look == Look.CRYSTAL_BAT:
+		CreatureBuilder.build_bat(actor, data)
+		_add_shards(actor, data)
+	elif look == Look.CRYSTAL_SLIME:
+		CreatureBuilder.build_slime(actor, data)
+		_add_shards(actor, data)
+	elif look == Look.QUARTZ_GOLEM:
+		CreatureBuilder.build_golem(actor, data)
+		_add_shards(actor, data)
+	elif look == Look.CRYSTAL_SPIDER:
+		CreatureBuilder.build_spider(actor, data)
+		_add_shards(actor, data)
+	elif look == Look.GEODE_MOLE:
+		build_mole(actor, data)
 	else:
 		return false
 	return true
@@ -111,3 +127,40 @@ static func build_heron(actor: BattleActor, data: Dictionary) -> void:
 	(root.get_child(-1) as Node3D).rotation_degrees.x = -90.0
 	actor.add_mesh(root, LowPoly.cone(0.03, 0.35), data.dark_color, Vector3(0, 3.25, -0.95))  # crest
 	(root.get_child(-1) as Node3D).rotation_degrees.x = 30.0
+
+
+
+## Glowing crystal points on the figure just built (its root: the last child of actor.body()):
+## each [position, rotation in degrees, size] of data.shards, in data.shard_color,
+## see-through and glowing like the Cuevas' walls (Crystals' mesh).
+static func _add_shards(actor: BattleActor, data: Dictionary) -> void:
+	var root := actor.body().get_child(actor.body().get_child_count() - 1) as Node3D
+	for shard: Array in data.shards:
+		actor.add_ghost(root, Crystals.mesh(), data.shard_color, SHARD_ALPHA, shard[0],
+			Vector3.ONE * float(shard[2]))
+		(root.get_child(-1) as Node3D).rotation_degrees = shard[1]
+
+
+## A geode mole: a round grey-brown body low to the ground, a pink pointed snout along -Z, two
+## tiny dark eyes, two big pale front claws, short back feet and, on its back, a grey geode
+## split open with violet crystals in it. About 1.1 m tall at its scale.
+static func build_mole(actor: BattleActor, data: Dictionary) -> void:
+	var root := Node3D.new()
+	root.scale = Vector3.ONE * data.scale
+	actor.body().add_child(root)
+	actor.add_blob(root, CreatureBuilder.SLIME_PROFILE, 8, data.color, Vector3(0, 0.02, 0.05),
+		Vector3.ZERO, Vector3(1.05, 0.8, 1.3))  # body
+	actor.add_mesh(root, LowPoly.cone(0.12, 0.34), data.snout_color, Vector3(0, 0.34, -0.72))
+	(root.get_child(-1) as Node3D).rotation_degrees.x = -90.0  # snout
+	for side in [-1.0, 1.0]:
+		actor.add_mesh(root, LowPoly.sphere(0.035), Color(0.04, 0.03, 0.03),
+			Vector3(side * 0.14, 0.5, -0.56))  # eye
+		for k in 3:  # the front claws, three a side, reaching forward
+			actor.add_mesh(root, LowPoly.cone(0.04, 0.22), data.claw_color,
+				Vector3(side * (0.36 + k * 0.06), 0.1, -0.55))
+			(root.get_child(-1) as Node3D).rotation_degrees.x = -70.0
+		actor.add_mesh(root, LowPoly.sphere(0.1), data.dark_color,
+			Vector3(side * 0.34, 0.06, 0.48))  # back foot
+	actor.add_mesh(root, LowPoly.hemisphere(0.36, 0.5), data.shell_color,
+		Vector3(0, 0.6, 0.22))  # the geode on its back
+	_add_shards(actor, data)

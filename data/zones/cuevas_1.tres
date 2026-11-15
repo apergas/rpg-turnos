@@ -40,11 +40,11 @@ exits = [{
 }]
 npcs = []
 boss_id = ""
-formations = []
-start_formations = []
+formations = [["murcielago_cristal"], ["slime_cristal"], ["golem_cuarzo"], ["arana_cristal", "arana_cristal"], ["topo_geoda"], ["murcielago_cristal", "slime_cristal"], ["slime_cristal", "slime_cristal"]]
+start_formations = [["murcielago_cristal"], ["slime_cristal"]]
 start_pos = Vector3(0, 0, 18.5)
 start_radius = 14.0
-monster_count = 0
+monster_count = 12
 exit_level = 46
 music = "crystal"
 village_music = ""
