@@ -58,7 +58,7 @@ const WEAK_MULT := 1.5
 const RESIST_MULT := 0.5
 ## The hero's damage spells hit this share harder for each level he has above the one that
 ## taught them (spell_power(); 3.5.0). The enemies' and the creatures' spells never grow.
-const SPELL_GROWTH := 0.03
+const SPELL_GROWTH := 0.015
 ## Poison takes this share of max HP at the end of each round.
 const POISON_SHARE := 0.08
 ## Chance of waking up at the end of each round.
