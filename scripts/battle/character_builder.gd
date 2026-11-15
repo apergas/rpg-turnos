@@ -175,4 +175,8 @@ static func tint_mesh(mi: MeshInstance3D, color: Color) -> void:
 			continue
 		var tinted := source.duplicate() as BaseMaterial3D
 		tinted.albedo_color = source.albedo_color * color
+		# The mesh also keeps the copy in its metadata, which outlives its render instance: freed
+		# first (the last mesh of a model with no one after it), the dummy renderer of --headless
+		# runs reads the freed material and prints "Parameter material is null".
+		mi.set_meta(&"tinted_%d" % i, tinted)
 		mi.set_surface_override_material(i, tinted)
