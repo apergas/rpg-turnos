@@ -43,6 +43,7 @@ decor = [[Vector3(-8.6, 0, -7.8), 0.0, "fence"], [Vector3(-5.4, 0, -7.8), 0.0, "
 decor_green = Color(0.3, 0.36, 0.3, 1)
 entries = {
 "cienaga": [Vector3(5, 0, -16), 180.0],
+"cuevas": [Vector3(5, 0, -16), 180.0],
 "portal": [Vector3(0, 0, 16), 0.0],
 "pueblo": [Vector3(0, 0, 6), 0.0]
 }
@@ -62,6 +63,17 @@ exits = [{
 "yaw": 0.0
 }, {
 "entry": "brumaclara",
+"gone": "coloso_cuarzo",
+"id": "cuevas",
+"label": "A las Cuevas",
+"lock": "",
+"lock_text": "",
+"needs": "garza_legamo",
+"pos": Vector3(5, 0, -19.5),
+"to": "cuevas_1",
+"yaw": 0.0
+}, {
+"entry": "brumaclara",
 "id": "portal",
 "label": "Al portal",
 "lock": "",
@@ -75,7 +87,7 @@ npcs = [{
 "kind": "npc",
 "lines": ["La Ciénaga está al norte, pasado el faro. Lo que se llevó la lámpara vive allí.", "Vuelve con luz, {nombre}. O al menos vuelve."],
 "lines_by_chapter": {
-12: ["El faro vuelve a dar luz. Hacía un año que no veía mi propia sombra.", "Gracias, {nombre}. Brumaclara respira un poco mejor."]
+12: ["El faro vuelve a dar luz. Hacía un año que no veía mi propia sombra.", "Con la luz se ve la boca de las Cuevas, junto al faro. Dicen que dentro los cristales brillan solos. Y que algo grande los vigila."]
 },
 "look": "ORVALLA",
 "name": "Orvalla",
@@ -110,7 +122,7 @@ npcs = [{
 "kind": "npc",
 "lines": ["Mi hermano pesca en la Ciénaga. Bueno, pescaba. Ahora es la bruma la que le pesca a él."],
 "lines_by_chapter": {
-12: ["Con el faro encendido ya se ve el camino de la Ciénaga. Mi hermano dice que es por la sopa."]
+12: ["Con el faro encendido ya no se pierde nadie en la Ciénaga. Mi hermano dice que es por la sopa."]
 },
 "look": "MIST_VILLAGER_M",
 "name": "Vecino",

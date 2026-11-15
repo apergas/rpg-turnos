@@ -263,6 +263,27 @@ const AUTOPLAY_ZONES := {
 			Inventory.PHOENIX: 1},
 		"finished": true,
 	},
+	# --autoplay-zone=cuevas: the Ciénaga done: Lv 43 with the bruma gear and Brena, the Garza
+	# beaten and its lamp, at the Cuevas' entrance (their first floor).
+	"cuevas": {
+		"zone": "cuevas_1",
+		"experience": 29200,
+		"gold": 6000,
+		"gear": ["espada_bruma", "armadura_bruma", "escudo_bruma", "casco_bruma"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra", "senor_niebla", "caravana_vista", "caravana", "companero",
+			"jaguar_sombrio", "gusano_dunas", "montana_palanca", "grifo_cumbre",
+			"guardian_ciudad", "ciudad_reja", "devorador_portal", "portal_calmo",
+			"brumaclara", "brumaclara_vista", "garza_legamo"],
+		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo",
+			"insignia_jungla", "sello_desierto", "mapa_montana", "lampara_faro"],
+		"quest_done": true,
+		"town": "brumaclara",
+		"ally": "brena",
+		"items": {Inventory.BIG_POTION: 4, Inventory.BIG_ETHER: 3, Inventory.WING: 3,
+			Inventory.PHOENIX: 1},
+		"finished": true,
+	},
 	# Ready for the Señor de la Niebla: Lv 17 with the castle's gear.
 	"castillo_trono": {
 		"experience": 2244,

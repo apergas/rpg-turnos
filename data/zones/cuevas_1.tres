@@ -1,0 +1,68 @@
+[gd_resource type="Resource" script_class="ZoneData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/zone_data.gd" id="1_zone"]
+
+[resource]
+script = ExtResource("1_zone")
+id = "cuevas_1"
+display_name = "Cuevas de cristal"
+short_name = "Cuevas"
+floor_name = "Planta 1"
+number = 12
+half_size = Vector2(30, 26)
+ground_color = Color(0.5, 0.5, 0.56, 1)
+has_grass = false
+village_name = ""
+village_radius = 0.0
+wells = [{
+"id": "cuevas_1_vida",
+"kind": "hp",
+"pos": Vector3(-24, 0, 16)
+}, {
+"id": "cuevas_1_mana",
+"kind": "mp",
+"pos": Vector3(0, 0, -20)
+}]
+entries = {
+"brumaclara": [Vector3(0, 0, 18.5), 0.0]
+}
+start_entry = "brumaclara"
+town_entry = ""
+exits = [{
+"entry": "cuevas",
+"id": "sur",
+"label": "A Brumaclara",
+"lock": "",
+"lock_text": "",
+"pos": Vector3(0, 0, 21.5),
+"to": "brumaclara",
+"yaw": 0.0
+}]
+npcs = []
+boss_id = ""
+formations = []
+start_formations = []
+start_pos = Vector3(0, 0, 18.5)
+start_radius = 14.0
+monster_count = 0
+exit_level = 46
+music = "crystal"
+village_music = ""
+ambient = "crystal"
+haze = Color(0.06, 0.07, 0.14, 1)
+fog_density = 0.01
+backdrop = "cuevas"
+particles = "sparkle"
+layout = PackedStringArray("###############", "#T.L.#T...C#.B#", "#....#.....#..#", "##.###.###.#D##", "#.....T#.....T#", "#.###..#..##..#", "#.#C#.....#...#", "#.#.#.###.#.###", "#T..#...#...#.#", "###.###.#.#...#", "#.....T...#.#.#", "#####.....T...#", "###############")
+underground = true
+ambient_color = Color(0.42, 0.46, 0.66, 1)
+ambient_energy = 0.6
+rock_color = Color(0.36, 0.36, 0.44, 1)
+floor_color = Color(0.56, 0.56, 0.62, 1)
+crystals = true
+stairs_down = "cuevas_2"
+lever_flag = "cuevas_palanca"
+door_flag = "cuevas_palanca"
+door_text = "Unas columnas de cristal cierran el paso. Quizá haya un mecanismo en otra sala."
+autoplay_route = Array[Vector3]([Vector3(0, 0, 18.5), Vector3(8, 0, 20), Vector3(16, 0, 20), Vector3(16, 0, 12), Vector3(24, 0, 12), Vector3(24, 0, 9.4), Vector3(24, 0, 12), Vector3(16, 0, 12), Vector3(16, 0, 20), Vector3(8, 0, 20), Vector3(0, 0, 16), Vector3(-16, 0, 16), Vector3(-16, 0, 12), Vector3(-16, 0, 8), Vector3(-16, 0, 4), Vector3(-16, 0, 1), Vector3(-16, 0, 8), Vector3(-16, 0, 16), Vector3(0, 0, 16), Vector3(0, 0, 8), Vector3(-8, 0, 8), Vector3(-8, 0, -8), Vector3(-20, 0, -8), Vector3(-20, 0, -16), Vector3(-16, 0, -16), Vector3(-16, 0, -19), Vector3(-16, 0, -16), Vector3(-20, 0, -16), Vector3(-20, 0, -8), Vector3(-4, 0, -8), Vector3(-4, 0, -16), Vector3(8, 0, -16), Vector3(8, 0, -20), Vector3(11, 0, -20), Vector3(8, 0, -20), Vector3(8, 0, -16), Vector3(12, 0, -16), Vector3(12, 0, -8), Vector3(20, 0, -8), Vector3(20, 0, -16), Vector3(24, 0, -16), Vector3(24, 0, -20)])
+autoplay_boss_level = 45

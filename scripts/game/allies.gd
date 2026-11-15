@@ -33,8 +33,8 @@ const GROWTH := {
 	"ulma": {"max_hp": 55, "attack": 8, "defense": 10, "speed": 1},
 }
 ## What the companion says the first time the hero reaches each land of the caravan:
-## zone id -> companion id -> line (2.4.0; the Ciénaga, 3.0.0). Remembered with the world flag ARRIVAL_PREFIX
-## + zone id.
+## zone id -> companion id -> line (2.4.0; the Ciénaga, 3.0.0; the Cuevas, 3.1.0). Remembered
+## with the world flag ARRIVAL_PREFIX + zone id.
 const ARRIVALS := {
 	"jungla": {
 		"brena": "Qué calor. Si algo se mueve entre las hojas, le pego. Si no se mueve, también.",
@@ -60,6 +60,11 @@ const ARRIVALS := {
 		"brena": "Esto huele a sopa de rana. Fría.",
 		"tadeo": "Pisa donde pise yo. Bueno, mejor no: yo me hundo hasta las rodillas.",
 		"ulma": "El agua no se mueve, pero algo se mueve en el agua. Escudo arriba.",
+	},
+	"cuevas_1": {
+		"brena": "Qué bonito. Seguro que muerde.",
+		"tadeo": "Si rompo uno de estos cristales, ¿me lo cobran? Pregunto antes de tropezar.",
+		"ulma": "La luz sale de las paredes. Aquí no hay sombra donde esconderse. Ni para ellos ni para nosotros.",
 	},
 }
 const ARRIVAL_PREFIX := "llegada_"

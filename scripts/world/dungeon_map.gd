@@ -1,21 +1,20 @@
 class_name DungeonMap extends Node3D
-## The cells of a dungeon floor (ZoneData.layout), built when it enters the tree: a dark
-## floor in chunks, a rock block with a box collider for every rock cell next to the
-## floor (the buried ones are drawn in one MultiMesh, with no collider), torches on the
-## walls (Flame: a flame, embers and a flickering light), the stairs (a flight going up, a dark
-## pit going down, with a sign), iron gates on the door cells, the lever and the key. In the Cuevas (zone.crystals) each T cell grows glowing crystals
-## instead (Crystals), the gates are crystal bars and the lever's knob a crystal. World tells
-## it the world flags (set_flags(): gates open, lever pulled, key taken) and, every
-## frame, where the camera and the hero are (see_through()): the rock blocks between them
-## turn see-through. In a castle (zone.castle) the rock cells are stone walls instead:
-## a KayKit wall piece on each straight run, a square tower at corners and ends, a round
-## pillar where one stands alone; the ground goes on past the grid, banks of mist drift
-## over the floor (zone.mist_banks) and the throne cell gets a throne on a dais. With
-## zone.rock_piece each rock block is that NatureModels piece (the mountain's snowy cliff)
-## scaled to the cell, and a floor open to the sky (not underground) has the ground of its
-## hills past the grid. A P cell gets a PortalRing (the abandoned city's portal, calm with
-## zone.portal_flag) and zone.ruined draws some castle walls and towers low. Set zone
-## before add_child.
+## The cells of a dungeon floor (ZoneData.layout), built when it enters the tree: a dark floor in
+## chunks, a rock block with a box collider for every rock cell next to the floor (the buried ones
+## are drawn in one MultiMesh, with no collider), torches on the walls (Flame: a flame, embers and a
+## flickering light), the stairs (a flight going up, a dark pit going down, with a sign), iron gates
+## on the door cells, the lever and the key. In the Cuevas (zone.crystals) each T cell grows glowing
+## crystals instead (Crystals), the gates are crystal bars and the lever's knob a crystal. World
+## tells it the world flags (set_flags(): gates open, lever pulled, key taken) and, every frame,
+## where the camera and the hero are (see_through()): the rock blocks between them turn see-through.
+## In a castle (zone.castle) the rock cells are stone walls instead: a KayKit wall piece on each
+## straight run, a square tower at corners and ends, a round pillar where one stands alone; the
+## ground goes on past the grid, banks of mist drift over the floor (zone.mist_banks) and the throne
+## cell gets a throne on a dais. With zone.rock_piece each rock block is that NatureModels piece
+## (the mountain's snowy cliff) scaled to the cell, and a floor open to the sky (not underground)
+## has the ground of its hills past the grid. A P cell gets a PortalRing (the abandoned city's
+## portal, calm with zone.portal_flag) and zone.ruined draws some castle walls and towers low. Set
+## zone before add_child.
 
 ## Height of the rock blocks.
 const WALL_HEIGHT := 3.0
