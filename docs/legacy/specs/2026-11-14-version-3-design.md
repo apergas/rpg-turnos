@@ -166,7 +166,7 @@ Todo: nivel, EXP, hechizos, equipo, bolsa, oro, objetos, objetos clave, bestiari
 | "A la Fuente" | `vigia_bruma` | — | `fuente` |
 | "Al portal" | — | — | `caravana` (con `TravelPortal`) |
 
-- Una zona de una etapa pasada no se puede volver a visitar, como en la v2. Tras el final, las salidas a las zonas no vuelven (la Fuente tampoco: su salida tiene `gone` `eco_albor`).
+- Una zona de una etapa pasada no se puede volver a visitar, como en la v2. Tras el final, las salidas a las zonas no vuelven, salvo la de la Fuente: sigue abierta para acabar las misiones que queden (el Eco ya no está; con Albor liberado, él la guarda).
 
 ### Ciénaga de Brumaclara
 

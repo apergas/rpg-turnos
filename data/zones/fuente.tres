@@ -50,7 +50,7 @@ npcs = [{
 "pos": Vector3(16, 0, 0),
 "yaw": 180.0
 }, {
-"gone": "albor_liberado",
+"gone": "fuente_en_calma",
 "kind": "npc",
 "lines": ["La Fuente respira. Yo ya casi no."],
 "look": "ALBOR_FADED",

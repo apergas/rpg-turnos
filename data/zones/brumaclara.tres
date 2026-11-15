@@ -87,7 +87,6 @@ exits = [{
 "yaw": 0.0
 }, {
 "entry": "brumaclara",
-"gone": "eco_albor",
 "id": "fuente",
 "label": "A la Fuente",
 "lock": "",
