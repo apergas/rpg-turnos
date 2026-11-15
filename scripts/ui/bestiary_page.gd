@@ -8,7 +8,8 @@ class_name BestiaryPage extends VBoxContainer
 
 signal card_chosen(id: String)
 
-const ELEMENT_NAMES := {Skill.FIRE: "Fuego", Skill.ICE: "Hielo", Skill.THUNDER: "Rayo"}
+const ELEMENT_NAMES := {Skill.FIRE: "Fuego", Skill.ICE: "Hielo", Skill.THUNDER: "Rayo",
+	Skill.LIGHT: "Luz"}
 
 ## Cards per row: a family of up to six fits in one, one of eight takes two.
 const COLUMNS := 6
