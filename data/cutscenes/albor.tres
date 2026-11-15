@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="Cutscene" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/cutscene.gd" id="1_cutscene"]
+
+[resource]
+script = ExtResource("1_cutscene")
+id = "albor"
+steps = [
+["wait", 0.6],
+["say", "", ["La Niebla se le escapa al Eco en jirones negros, y la Fuente se los traga uno a uno.", "La corona de su cabeza ya no brilla."]],
+["approach", "hero", "Eco de Albor", 2.0],
+["face", "Eco de Albor", "hero"],
+["say", "Eco de Albor", ["Hacía mucho que nadie me miraba sin miedo.", "Me llamaba Albor. Guardaba esta Fuente cuando su luz era clara."]],
+["say", "Eco de Albor", ["Un día llegó un forastero y se llevó la piedra que la encendía. Salí detrás de él, a buscarla.", "No la encontré. Y la Niebla, que antes salía de aquí limpia, empezó a salir oscura. Me fue llenando poco a poco, como la lluvia llena un cubo.", "Cuando quise volver, ya no era yo. Era su eco."]],
+["say", "", ["Albor mira el amuleto que llevas, como en el recuerdo del Coloso: mucho rato, como quien mira algo que ha perdido."]],
+["say", "Eco de Albor", ["Esa luz es la de mi Fuente. La has traído de vuelta.", "Haz lo que tengas que hacer. Yo ya no sé qué es lo justo."]]
+]

@@ -49,6 +49,15 @@ npcs = [{
 "name": "Lente del faro",
 "pos": Vector3(16, 0, 0),
 "yaw": 180.0
+}, {
+"gone": "albor_liberado",
+"kind": "npc",
+"lines": ["La Fuente respira. Yo ya casi no."],
+"look": "ALBOR_FADED",
+"name": "Eco de Albor",
+"needs": "eco_albor",
+"pos": Vector3(0, 0, -11.5),
+"yaw": 180.0
 }]
 boss_id = "eco_albor"
 boss_pos = Vector3(0, 0, -11.5)

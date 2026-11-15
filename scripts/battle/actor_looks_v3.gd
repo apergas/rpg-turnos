@@ -362,6 +362,16 @@ const LOOKS := {
 		"tint": Color(0.5, 0.85, 1.5),
 		"corona": Color(0.7, 0.9, 1.0),
 	},
+	# The Eco de Albor beaten (the albor scene, 3.3.0): the same figure, greyer, its corona out.
+	Look.ALBOR_FADED: {
+		"scene": ActorLooks.SKELETON_MAGE,
+		"scale": ActorLooks.CHARACTER_SCALE * 1.75,
+		"top": 3.5,
+		"hide": [],
+		"anims": ActorLooks.SKELETON_ANIMS,
+		"props": {ActorLooks.RIGHT_HAND_BONE: ActorLooks.SKELETON_STAFF},
+		"tint": Color(0.62, 0.66, 0.78),
+	},
 	# The Lente del faro (the piezas_faro quest, 3.3.0): a big glass in a brass ring, floating.
 	Look.LIGHTHOUSE_LENS: {
 		"color": Color(0.78, 0.6, 0.28),
