@@ -181,11 +181,12 @@ func chapter(flags: Dictionary) -> Chapter:
 static func v3_way_on(flags: Dictionary) -> bool:
 	if not flags.get(V3_FLAG, false):
 		return false
-	for zone_id: String in [BrumaclaraLook.ZONE, CampLook.ZONE]:
-		for exit: Dictionary in ZoneData.by_id(zone_id).exits:
-			if not exit.to in [BrumaclaraLook.ZONE, CampLook.ZONE] \
-					and ZoneData.is_present(exit, flags):
-				return true
+	for exit: Dictionary in ZoneData.by_id(BrumaclaraLook.ZONE).exits:
+		if exit.to != CampLook.ZONE and ZoneData.is_present(exit, flags):
+			return true
+	for exit: Dictionary in ZoneData.by_id(CampLook.ZONE).exits:
+		if exit.to == VillaclaroLook.ZONE and ZoneData.is_present(exit, flags):
+			return true
 	return false
 
 
