@@ -108,4 +108,5 @@ Estado: Pendiente
 
 ## 2026-11-15 · Barrio del portal: sin portal en el fondo de los combates
 cuando llegas al "barrio del portal", en los combates, que no se vea el portal del fondo (cuando estas en una batalla, lo que es el escenario de la batalla)
+Excepción: en el combate contra el jefe (el Devorador) el portal sí tiene que verse en el fondo.
 Estado: Pendiente
