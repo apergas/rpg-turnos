@@ -141,7 +141,7 @@ func _ready() -> void:
 	_rng.randomize()
 	_autoplay = RunFlags.autoplay()
 	Engine.time_scale = time_scale
-	BattleStage.build(self, zone)
+	BattleStage.build(self, zone, enemies.any(func(e: Combatant) -> bool: return e.is_boss))
 	_hero_actor = _spawn_actor(BattleActor.Look.HERO, HERO_POS, ENEMY_POS)
 	_hero_actor.set_equipment(_weapon_id, _shield_id, _helmet_id)
 	if ally != null:
