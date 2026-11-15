@@ -32,4 +32,50 @@ Villaclaro pasaría a ser el primer juego que consume el núcleo.
 Pasos:
 1. Ahora: separarlo dentro de este repo. Mover el núcleo a `addons/design_system/` (`tokens/base.json`, `runtime/`, `tools/`, `hooks/`, `docs/` con los componentes universales), dejar las herramientas con rutas configurables desde un `design_system.json` en la raíz, que el generador fusione `base.json` con el `tokens.json` del juego (dando error si el juego redefine un token sin querer), y que `UiTheme` extienda la base del núcleo. Lo generado (`ui_tokens.gd`, `tokens.css`) sigue en el juego. Excluir `docs/`, `tools/` y `hooks/` del addon en la exportación. Se comprueba con `gen_ui_tokens.gd -- --check`, `check_ui_values.gd`, ejecutando el juego y con capturas.
 2. Solo si se hacen más juegos (la carpeta ya queda preparada para ello): crear un repo propio para el addon con `git subtree split --prefix=addons/design_system`, sustituir la carpeta por un `git submodule` en Villaclaro, poner `submodules: true` en el checkout de `pages.yml` y `release.yml`, clonar con `--recurse-submodules` y mantener el hook activándose desde `.githooks`. Un juego nuevo añade el submódulo, copia la plantilla de `design_system.json` y `tokens.json`, pone su paleta y fuentes y genera.
+Estructura de carpetas:
+
+Núcleo (igual en todos los juegos, nunca se edita desde un juego):
+```
+addons/design_system/
+├── README.md                  qué es, cómo se instala, cómo se configura
+├── tokens/
+│   └── base.json              escalas + semánticos genéricos, valores neutros
+├── runtime/
+│   ├── ds_tokens_base.gd      lectura de tokens que no depende del juego
+│   └── ds_theme.gd            base de UiTheme: build(), menu_row(), add_cursor(),
+│                              style_label(), style_3d(), ventana, filas, botones, sliders
+├── tools/
+│   ├── gen_ui_tokens.gd       genera UiTokens + tokens.css desde base.json + el del juego
+│   └── check_ui_values.gd     prohíbe colores y tamaños escritos a mano
+├── hooks/
+│   └── pre-commit             el hook actual, llamando a tools/
+└── docs/
+    ├── 2-fundamentos.md       escalas y semánticos genéricos
+    ├── 3-interaccion.md
+    ├── 4-accesibilidad.md
+    ├── 5-godot.md
+    └── components/
+        ├── Window.md, MenuList.md, ChoiceWindow.md, Notice.md, OptionRow.md
+        └── bundle.css         estilos de esos componentes para las páginas de docs
+```
+
+Capa del juego (Villaclaro):
+```
+design_system.json             configuración: rutas de tokens, salidas, docs y carpetas de UI a revisar
+docs/boost/design-system/      (o design_system/ en la raíz, en un juego nuevo)
+├── README.md                  la identidad del juego (azul marino, dorado...)
+├── tokens.json                "extends": base.json; paleta, fuentes, tokens propios
+├── tokens.css                 GENERADO (base + juego)
+├── 1-voz-y-tono.md
+├── 2-fundamentos.md           solo lo añadido: stat-*, status-*, map-*, world-*, layer-*
+├── 6-migracion.md
+└── components/
+    ├── BestiaryCard.md, ShopRow.md, HeroPanel.md, QuestMark.md, MapSquare.md...
+    └── bundle.css             estilos de esos componentes
+scripts/ui/
+├── ui_tokens.gd               GENERADO (class_name UiTokens, como ahora)
+└── ui_theme.gd                UiTheme extends DsTheme: badge_style(), map_style()...
+assets/fonts/                  Baloo 2 y Nunito: las fuentes son del juego, no del núcleo
+```
+`--check` exige que cada token esté documentado en los docs del núcleo o en los del juego, según de dónde venga.
 Estado: Pendiente
