@@ -87,3 +87,7 @@ Estado: Pendiente
 ## 2026-11-15 · Combate: deshabilitar el menú al elegir Atacar
 en un combate, cuando pulsas atacar, sigue saliendo el menu con atacar, hechizos, objetos... aunque no puedes seleccionar nada (solo puedes pulsar en volver). pon que, si pulsas en el boton de atacar, las otras opciones se pongan en gris clarito o algo asi, para dar a entender que estan deshabilitadas, o simplemente que no aparezcan en el menu, y ya si pulsas en volver ya vuelve a ponerse como de normal
 Estado: Pendiente
+
+## 2026-11-15 · Revisar el daño de los hechizos con el nivel
+revisar daño de los hechizos. si por ejemplo llamarada hace el mismo daño tengas el nivel que tengas, no estaria bien. esta mejor que, mientras vas subiendo de nivel, que aumente tambien el daño de los hechizos. sin pasarse, pero que no se quede siempre con el mismo daño. con curar no pasa, lo de curar que te cure siempre lo mismo. si realmente ya funciona asi, no hagas nada. es decir primero se comprueba como funciona, y luego si hay que cambiarlo se cambia
+Estado: Pendiente
