@@ -114,7 +114,7 @@ Fecha: 2026-11-15. Estado: spec. Cubre M-96, M-97 y M-99 del [documento maestro]
 - **`Shop.SHOPS`** (`scripts/game/shop.gd`): `Inventory.PHOENIX` sale de la lista `items` de todas las tiendas. Con eso deja de comprarse también en la tienda de la 3.6.0, que lee esa lista.
 - **`Chests.CHESTS`** (`scripts/game/chests.gd`): los dos cofres de la v1 cambian `"gold"` por `"item": Inventory.PHOENIX`. Una partida que ya abrió ese cofre no lo vuelve a abrir (los cofres abiertos se guardan por id), así que no recibe nada de más.
 - **Los enemigos:** `"pluma_fenix": 0.02` en el diccionario `drops` de un enemigo por zona, en sus `.tres` de `data/enemies/`.
-- **El texto:** el `CHANGELOG.md` de la 1.5.0 la presentó «a la venta»; la 3.6.0 dice que ya solo se encuentra. `docs/legacy/qa/brief-qa-agentes.md` lo dice también si nombra dónde se compra.
+- **El texto:** el `CHANGELOG.md` de la 1.5.0 dice «150 G, desde la tienda del bosque». No se toca, porque es historia, pero la sección 3.6.0 dice que ya no se compra y dónde se encuentra.
 
 ## Verificación (a mano; el proyecto no tiene tests)
 
