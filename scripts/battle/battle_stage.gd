@@ -12,7 +12,7 @@ class_name BattleStage extends RefCounted
 ## broken column. "montana" is snow with a grey track, white peaks and the Kenney pines, tall
 ## stones and snowy cliffs. "ciudad" is the ruined city's yard: the castle's walls half
 ## fallen, a reddish floor, the Kenney ruins and, in the portal quarter, the portal behind the
-## enemies. The v3's backdrops (the Ciénaga's and the Cuevas') are V3Backdrops', after this one's
+## enemies. The v3's backdrops (one per land) are V3Backdrops', after this one's
 ## sky, sun, fog and black sun. The environment, the mesh and model helpers and the rock and tree
 ## models are shared with WorldStage.
 
