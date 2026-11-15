@@ -67,3 +67,4 @@ Lo que se ha hecho y lo que queda por hacer en Villaclaro. Una fila por versión
 | 3.6.0 · M-99 | La Pluma de fénix ya no se compra: solo cae de los enemigos o sale de los cofres | hecho |
 | 3.6.0 · M-100 | El Coleccionista: 40 medallas, un anillo o amuleto cada 4, en la Caravana y Brumaclara desde que llegas; guardado 16 | hecho |
 | 3.6.1 · M-98 | El design system en un núcleo reutilizable (`addons/design_system/`) y la capa de Villaclaro; el juego no cambia ([spec](specs/2026-11-15-version-3-6-1-design-system-nucleo-design.md) · [plan](plans/2026-11-15-version-3-6-1.md)) | hecho |
+| 3.6.2 | Al cambiar de página en un menú, la flecha ▶ ya no aparece un instante en el sitio de la página anterior | hecho |
