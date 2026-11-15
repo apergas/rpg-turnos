@@ -11,11 +11,10 @@ class_name BattleStage extends RefCounted
 ## sand with a darker track, palms far behind, dunes and the Kenney cacti, scrub and a
 ## broken column. "montana" is snow with a grey track, white peaks and the Kenney pines, tall
 ## stones and snowy cliffs. "ciudad" is the ruined city's yard: the castle's walls half
-## fallen, a reddish floor, the Kenney ruins and,
-## against the portal quarter's boss, the portal behind the enemies. The v3's backdrops (one
-## per land) are V3Backdrops', after this one's
-## sky, sun, fog and black sun. The environment, the mesh and model helpers and the rock and tree
-## models are shared with WorldStage.
+## fallen, a reddish floor, the Kenney ruins and, against the portal quarter's boss, the
+## portal behind the enemies. The v3's backdrops (one per land) are V3Backdrops', after this
+## one's sky, sun, fog and black sun. The environment, the mesh and model helpers and the
+## rock and tree models are shared with WorldStage.
 
 const GRASS := Color(0.32, 0.55, 0.22)
 const DIRT := Color(0.62, 0.5, 0.34)

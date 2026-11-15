@@ -4,9 +4,8 @@ class_name CharacterBuilder extends RefCounted
 ## ActorLooks.LOOKS entry: the model turned to face -Z with its props hidden, weapons on
 ## bones, tints, head texture, cape, hair pieces, the Momia's wraps, the Armadura's ember,
 ## an aura or a corona of light and the hero's stick; and the caravan companions' gear
-## (dress_companion(); 3.5.0). Static only, keeps no state: it writes
-## into the actor through its builder methods (set_model, set_aura, set_animations,
-## add_mesh...).
+## (dress_companion(); 3.5.0). Static only, keeps no state: it writes into the actor through
+## its builder methods (set_model, set_aura, set_animations, add_mesh...).
 
 ## Resting opacity of an aura (LOOKS "aura": the Señor de la Niebla, the Eco).
 const FOG_AURA_ALPHA := 0.2

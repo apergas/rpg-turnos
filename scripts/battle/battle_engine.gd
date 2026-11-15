@@ -243,9 +243,8 @@ func flee_chance() -> float:
 	return clampf(FLEE_BASE + (hero.total_speed() - mean) * FLEE_PER_SPEED, FLEE_MIN, FLEE_MAX)
 
 
-## The power a damage spell of who hits with, before its element and its spread: the hero's
-## grows SPELL_GROWTH for each level above the one that taught it (Leveling.learned_at(), never
-## below its own power); anyone else's is its power. A heal never grows (_cast()).
+## The power a damage spell of who hits with, before element and spread: the hero's grows
+## SPELL_GROWTH per level above the one that taught it (Leveling.learned_at()); a heal never.
 func spell_power(who: int, skill: Skill) -> float:
 	if who != BattleEvent.HERO:
 		return skill.power
@@ -364,8 +363,7 @@ func _enemy_command(who: int) -> Dictionary:
 
 
 ## Everyone of side standing, fastest roll first (the hero wins ties). Defending, fleeing or
-## using an item, the hero goes first, before faster enemies and the creature (an item like
-## in Pokémon; 3.5.0). An enemy surprise's round (side ENEMIES) leaves him out as ever.
+## using an item, the hero goes first (3.5.0); an enemy surprise's round leaves him out.
 func _turn_order(hero_cmd: Dictionary, side: int = Side.ALL) -> Array[int]:
 	var rolls := []
 	if side != Side.ENEMIES:
