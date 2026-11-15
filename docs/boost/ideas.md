@@ -115,3 +115,7 @@ Estado: Pendiente
 no se si funciona asi, compruebalo, pero los objetos tienen preferencia a los ataques/hechizos, tambien de los enemigos. es decir, aunque un enemigo tenga mas velocidad que tu, al usar un objeto en combate (pocion, eter o lo que sea) siempre va primero. una vez te tomas el pocion o lo que sea ya es el turno del enemigo, compañero o a quien le toque
 (tipo pokemon)
 Estado: Pendiente
+
+## 2026-11-15 · Portal rojizo entre la Caravana y Brumaclara
+cuando finalizas el v2 vas al v3, el portal que sale actualmente es azul. cambialo para que tenga la mismaa forma pero rojizo (para diferenciarlo de los portales del ala de viaje)
+Estado: Pendiente
