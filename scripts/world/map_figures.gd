@@ -2,9 +2,9 @@ class_name MapFigures extends Node3D
 ## The figures of a map (ZoneData.npcs, and the boss World asks for with add_figure()):
 ## each a BattleActor on a cylinder collider, with its sign ("Tienda", "Posada", "Criaturas",
 ## or its own "sign": "Coleccionista", "Tablón"...) and the "!" or "?" of the quests over it;
-## the figures a quest has not brought out are off the map. Cutscenes find and move them here (figure_node(),
-## figure_turn(), figure_actor(), reset_figures()). Owned by World, which calls setup(),
-## adds it and then build(); never stores World.
+## the figures a quest has not brought out are off the map. Cutscenes find and move them here
+## (figure_node(), figure_turn(), figure_actor(), reset_figures()). Owned by World, which calls
+## setup(), adds it and then build(); never stores World.
 
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
 ## The "!" and "?" of the quests: over the figure, bobbing.
