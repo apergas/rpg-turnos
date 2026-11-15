@@ -8,7 +8,7 @@ const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
 const SIZE := Vector2i(128, 128)
 ## Ambient light by id for the very dark figures (the default is 0.7).
 const AMBIENT := {"jaguar_sombrio": 5.0, "armadura_hueca": 1.8, "caballero_bruma": 1.8,
-	"vigia_bruma": 1.8}
+	"vigia_bruma": 1.8, "centinela_caido": 1.8}
 ## Figures too long to show head on, or with their crystals on the back: the turn of the figure
 ## (degrees) and the camera's distance.
 const VIEWS := {"caiman_bruma": {"turn": 55.0, "distance": 5.0},
@@ -17,7 +17,8 @@ const VIEWS := {"caiman_bruma": {"turn": 55.0, "distance": 5.0},
 	"golem_cuarzo": {"turn": 35.0, "distance": 4.0},
 	"arana_cristal": {"turn": 35.0, "distance": 3.6},
 	"topo_geoda": {"turn": 35.0, "distance": 3.4},
-	"coloso_cuarzo": {"turn": 35.0, "distance": 6.2}}
+	"coloso_cuarzo": {"turn": 35.0, "distance": 6.2},
+	"lobo_niebla": {"turn": 35.0, "distance": 4.0}}
 
 
 func _initialize() -> void:

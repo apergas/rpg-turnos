@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+[ext_resource type="Resource" path="res://data/enemies/slime_bruma_ayuda.tres" id="2_ayuda"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "slime_bruma"
+display_name = "Slime de bruma"
+max_hp = 230
+hp = 230
+attack = 106
+defense = 74
+speed = 36
+map_roam = 1.5
+map_speed = 1.2
+exp_reward = 124
+gold_reward = 90
+ai_weights = {
+"attack": 85,
+"stagger": 15
+}
+weak = Array[String](["fire"])
+resist = Array[String](["ice"])
+drops = {
+"eter_grande": 0.08
+}
+help = ExtResource("2_ayuda")

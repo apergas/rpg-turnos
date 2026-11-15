@@ -44,11 +44,11 @@ exits = [{
 }]
 npcs = []
 boss_id = ""
-formations = []
-start_formations = []
+formations = [["sombra_albor"], ["ojo_niebla"], ["lobo_niebla", "lobo_niebla"], ["slime_bruma"], ["centinela_caido"], ["sombra_albor", "ojo_niebla"], ["slime_bruma", "slime_bruma"], ["centinela_caido", "lobo_niebla"]]
+start_formations = [["sombra_albor"], ["slime_bruma"]]
 start_pos = Vector3(0, 0, 22.5)
 start_radius = 14.0
-monster_count = 0
+monster_count = 12
 exit_level = 50
 music = "source"
 village_music = ""

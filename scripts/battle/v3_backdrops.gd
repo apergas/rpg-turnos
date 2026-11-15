@@ -1,12 +1,12 @@
 class_name V3Backdrops extends RefCounted
 ## Constructor: the battle backdrops of the v3's lands (3.0.0: "cienaga"; 3.1.0: "cuevas";
-## 3.2.0: "ruinas"; 3.3.0: "fuente"), kept apart from BattleStage so it does not grow. BattleStage.build() hands
-## them over after the zone's sky, sun, fog and black sun. "cienaga" is olive marsh ground with
-## pools of still dark water behind and beside the fighters, the boardwalk under them, dead
-## mossy trees, reeds, a fallen log, the meadow's rocks and the dark hills behind. "cuevas" is
-## the mine's cave in the Cuevas' colours (their floor and rock), with glowing crystal clusters
-## on the walls behind and beside the fighters and a cold light on them from the camera's side
-## instead of the hero's lantern.
+## 3.2.0: "ruinas"; 3.3.0: "fuente"), kept apart from BattleStage so it does not grow.
+## BattleStage.build() hands them over after the zone's sky, sun, fog and black sun. "cienaga"
+## is olive marsh ground with pools of still dark water behind and beside the fighters, the
+## boardwalk under them, dead mossy trees, reeds, a fallen log, the meadow's rocks and the dark
+## hills behind. "cuevas" is the mine's cave in the Cuevas' colours (their floor and rock), with
+## glowing crystal clusters on the walls behind and beside the fighters and a cold light on them
+## from the camera's side instead of the hero's lantern.
 ## "ruinas" is an island of old flagstones floating over the void: its rocky root under
 ## it, broken columns and blocks behind and beside the fighters, smaller islands far away and
 ## the sea of mist far below (the zone's haze); the black sun is the zone's.

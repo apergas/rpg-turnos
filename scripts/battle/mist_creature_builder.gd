@@ -4,11 +4,13 @@ class_name MistCreatureBuilder extends RefCounted
 ## frog, the Sanguijuela the snake, the Junco andante the plant, in their own colours) and the
 ## new ones: the Fuego fatuo, the Caimán de bruma, the Garza de légamo and the Medusa de niebla,
 ## the Cuevas' crystal figures (the bat, slime, golem and spider of before with crystals, the
-## Topo de geoda and the Coloso de cuarzo) and the Ruinas' bird, gargoyle and wind spirit (the
+## Topo de geoda and the Coloso de cuarzo), the Ruinas' bird, gargoyle and wind spirit (the
 ## vulture, the gargoyle and the specter in the mist's colours; the Caballero and the Vigía are
-## the Knight: CharacterBuilder builds them). Static only, keeps no state: like CreatureBuilder,
-## each build_x(actor, data) hangs its meshes under actor.body() through the actor's builder
-## methods. build() says whether the look was one of its own.
+## the Knight: CharacterBuilder builds them) and the Fuente's shadow, wolf and slime (the
+## specter, the wolf and the slime in the mist's colours, the wolf and the slime wrapped in
+## mist) and its new Ojo de la Niebla; the Centinela caído is the Knight. Static only, keeps no
+## state: like CreatureBuilder, each build_x(actor, data) hangs its meshes under actor.body()
+## through the actor's builder methods. build() says whether the look was one of its own.
 
 const Look = ActorLooks.Look
 ## Side profile of the Fuego fatuo's flame (lathed around +Y): round below, a tip above.
@@ -26,6 +28,8 @@ const SHARD_ALPHA := 0.8
 ## The Medusa de niebla's see-through bell and tentacles, and how many tentacles.
 const JELLY_ALPHA := 0.5
 const TENTACLES := 8
+## The Ojo de la Niebla's halo, more opaque than an aura.
+const EYE_HALO_ALPHA := 0.4
 
 
 ## Builds the figure of a look of the v3 and returns true; false (nothing built) for any other.
@@ -65,6 +69,16 @@ static func build(actor: BattleActor, data: Dictionary) -> bool:
 		CreatureBuilder.build_specter(actor, data)
 	elif look == Look.MIST_JELLYFISH:
 		build_jellyfish(actor, data)
+	elif look == Look.MIST_SHADOW:
+		CreatureBuilder.build_specter(actor, data)
+	elif look == Look.MIST_EYE:
+		build_eye(actor, data)
+	elif look == Look.MIST_WOLF:
+		CreatureBuilder.build_wolf(actor, data)
+		_add_mist(actor, data)
+	elif look == Look.MIST_SLIME:
+		CreatureBuilder.build_slime(actor, data)
+		_add_mist(actor, data)
 	else:
 		return false
 	return true
@@ -202,3 +216,31 @@ static func build_jellyfish(actor: BattleActor, data: Dictionary) -> void:
 		var length := 0.7 + 0.25 * (i % 3)
 		actor.add_ghost(hover, LowPoly.cylinder(0.03, length), data.tentacle_color, JELLY_ALPHA,
 			Vector3(cos(angle) * 0.4, 0.3 - length / 2.0, sin(angle) * 0.4), Vector3.ONE)
+
+
+## The Ojo de la Niebla: a big pale eyeball floating over the ground (it floats like the
+## specter), a blue iris and a black pupil facing -Z, a see-through halo standing round it and
+## a wisp of mist under it. About 2.4 m tall at its scale.
+static func build_eye(actor: BattleActor, data: Dictionary) -> void:
+	var hover := Node3D.new()
+	hover.position.y = data.fly
+	hover.scale = Vector3.ONE * data.scale
+	actor.body().add_child(hover)
+	actor.set_hover(hover)
+	actor.add_mesh(hover, LowPoly.sphere(0.5), data.color, Vector3(0, 0.5, 0), 0.3)  # the eyeball
+	actor.add_mesh(hover, LowPoly.sphere(0.24), data.iris_color, Vector3(0, 0.5, -0.36))  # iris
+	actor.add_mesh(hover, LowPoly.sphere(0.12), Color(0.03, 0.03, 0.06), Vector3(0, 0.5, -0.5))
+	var halo := TorusMesh.new()
+	halo.inner_radius = 0.68
+	halo.outer_radius = 0.8
+	actor.add_ghost(hover, halo, data.halo_color, EYE_HALO_ALPHA, Vector3(0, 0.5, 0), Vector3.ONE)
+	(hover.get_child(-1) as Node3D).rotation_degrees.x = 90.0  # standing round the eye
+	actor.add_ghost(hover, LowPoly.sphere(0.3), data.mist_color, CreatureBuilder.AURA_ALPHA,
+		Vector3(0, -0.1, 0), Vector3(1.0, 0.6, 1.0))  # the wisp under it
+
+
+## A see-through mist round the feet of a figure of the Fuente (the wolf and the slime of before):
+## an ellipsoid of data's mist_color and mist_size, scaled with the figure.
+static func _add_mist(actor: BattleActor, data: Dictionary) -> void:
+	actor.add_ghost(actor.body(), LowPoly.sphere(1.0), data.mist_color, CreatureBuilder.AURA_ALPHA,
+		Vector3(0, 0.3 * data.scale, 0), (data.mist_size as Vector3) * data.scale)

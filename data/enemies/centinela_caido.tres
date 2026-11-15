@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "centinela_caido"
+display_name = "Centinela caído"
+max_hp = 330
+hp = 330
+attack = 120
+defense = 112
+speed = 26
+map_roam = 1.5
+map_speed = 1.2
+exp_reward = 136
+gold_reward = 96
+ai_weights = {
+"attack": 70,
+"charge": 20,
+"stagger": 10
+}
+weak = Array[String](["thunder"])
+resist = Array[String](["ice"])
+drops = {
+"elixir": 0.03
+}
