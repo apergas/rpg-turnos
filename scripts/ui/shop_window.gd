@@ -248,7 +248,9 @@ func _add_buy_row(id: String) -> void:
 	if Shop.is_ally(id):
 		# Stats with the note under them, so a long note never widens the window.
 		var info_box := VBoxContainer.new()
-		info_box.add_child(_label(Allies.stats_text(id)))
+		# A companion as it would join now (its growth so far); a creature never grows.
+		var step := _state.ally_step() if Allies.is_companion(id) else 1
+		info_box.add_child(_label(Allies.stats_text(id, step)))
 		if Allies.line(id) != "":
 			UiStyle.add_small_text(info_box, Allies.line(id))
 		if why != "":

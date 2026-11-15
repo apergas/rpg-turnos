@@ -75,6 +75,8 @@ var _gold_label: Label
 ## Estado's right column: each spell, its MP and what it does.
 var _spells_box: VBoxContainer
 var _ally_label: Label
+## Under the companion's name, its numbers now (Allies.stats_text()), in small text.
+var _ally_stats: Label
 var _items_box: VBoxContainer
 var _items_message: Label
 var _equip_box: VBoxContainer
@@ -316,9 +318,12 @@ func _fill_status() -> void:
 		_spells_box.add_child(_label("%s  %d PM" % [skill.display_name, skill.mp_cost]))
 		UiStyle.add_small_text(_spells_box, skill.description)
 	_ally_label.visible = _state.ally_id != ""
+	_ally_stats.visible = _ally_label.visible
 	if _state.ally_id != "":
 		BattleHud.fit_label(_ally_label, "%s: %s" % [Allies.kind_name(_state.ally_id),
 				Allies.display_name(_state.ally_id)],
+			TEXT_WIDTH)
+		BattleHud.fit_label(_ally_stats, Allies.stats_text(_state.ally_id, _state.ally_step()),
 			TEXT_WIDTH)
 
 
@@ -603,6 +608,8 @@ func _build_status(stack: VBoxContainer) -> void:
 	left.add_child(_gold_label)
 	_ally_label = _label("")
 	left.add_child(_ally_label)
+	_ally_stats = _label("", UiTheme.CAPTION)
+	left.add_child(_ally_stats)
 	_spells_box = VBoxContainer.new()
 	_spells_box.add_theme_constant_override("separation", 0)
 	columns.add_child(_spells_box)
