@@ -323,7 +323,7 @@ Cinco por zona, veinte en total. Donde se puede son variantes de figuras que ya 
 
 ## M-84. El Eco de Albor, la elección y los finales
 
-- Al vencer la fase 2 se ve la escena `albor`: el Eco se arrodilla junto a la Fuente y la corona se apaga. Habla como Albor: salió a buscar la luz que se llevaron y la Niebla lo fue llenando.
+- Al vencer la fase 2 se ve la escena `albor`: el Eco se detiene junto a la Fuente y la corona se apaga. Habla como Albor: salió a buscar la luz que se llevaron y la Niebla lo fue llenando.
 - La pregunta (`World.ask()`): "El Amuleto del Alba brilla en tu mano. ¿Qué haces?" con **"Devolver el amuleto"** y **"Acabar con el Eco"**. El foco empieza en la primera; Esc y tocar fuera eligen la última, como siempre (las dos acaban bien).
 - **Devolver el amuleto** (`albor_liberado`): el amuleto vuelve a la Fuente, Albor recupera su forma y se queda de guardián. El sol negro se aclara un poco y Neblí ve el sol por primera vez.
 - **Acabar con el Eco** (`albor_vencido`): la Fuente se cierra a medias, la Niebla vuelve a su sitio y Brumaclara se salva, pero Albor desaparece. Orvalla pone una estatua en la plaza.
