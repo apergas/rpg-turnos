@@ -1,6 +1,6 @@
 # Registro de cambios
 
-## Sin publicar
+## 3.2.0 (2026)
 
 La vuelta a Villaclaro y las Ruinas flotantes.
 

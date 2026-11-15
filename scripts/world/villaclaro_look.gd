@@ -3,8 +3,8 @@ class_name VillaclaroLook extends RefCounted
 ## Caravana: in the part 3 (the visit for the Amuleto del Alba) the Niebla that escapes through
 ## the portal is back on its roads (mist drifting at the hero's feet, a thicker and greyer haze,
 ## a duller sky) and the village is not the last one visited (no town entry: the Ala de viaje and
-## a defeat still lead to the last village visited: the Caravana or Brumaclara). Its exits (the north road to the Caravana instead of the
-## forest's) come with their needs / gone flags. Pure: dressed() returns a copy of the zone;
+## a defeat still lead to the last village visited: the Caravana or Brumaclara). Its exits
+## (the north road to the Caravana instead of the forest's) come with their needs / gone flags. Pure: dressed() returns a copy of the zone;
 ## ZoneTravel builds the meadow from it.
 
 const ZONE := "pradera"
