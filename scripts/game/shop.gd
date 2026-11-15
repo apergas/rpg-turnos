@@ -125,7 +125,6 @@ const SHOPS := {
 		"allies": Allies.COMPANIONS},
 }
 const NO_GOLD := "Falta oro"
-const WORN := "Lo llevas puesto"
 const NOT_FOR_SALE := "No se vende"
 ## What the starting gear sells for: it is worth almost nothing, but it clears the bag.
 const STARTING_GEAR_PRICE := 1
@@ -299,21 +298,24 @@ static func buy_bulk(state: GameState, id: String) -> Dictionary:
 		price(id) * BULK]}
 
 
-## What can be offered for sale, in list order: the equipment worn (it can't be sold, but
-## is listed), the equipment in the bag (one row per id) and the items carried.
+## What can be sold now, in list order: the equipment in the bag in catalog order (one row per
+## id; what is worn is not listed) and the items carried, each only while sellable().
 static func sell_list(state: GameState) -> Array[String]:
 	var ids: Array[String] = []
-	for slot in Equipment.SLOTS:
-		var worn := state.loadout.worn(slot)
-		if worn != "":
-			ids.append(worn)
 	for id: String in Equipment.EQUIPMENT:
-		if id in state.bag_equipment and not ids.has(id):
+		if sellable(state, id):
 			ids.append(id)
 	for id in Inventory.IDS:
-		if state.inventory.count(id) > 0:
+		if sellable(state, id):
 			ids.append(id)
 	return ids
+
+
+## True while state carries a copy of id to sell (the worn one does not count) and a shop pays
+## something for it: not the prizes with no price, the quest items or the seeds. The shop never
+## matters here: a prize ring or amulet pays PRIZE_ACCESSORY_MIN at least anywhere.
+static func sellable(state: GameState, id: String) -> bool:
+	return sell_count(state, id) > 0 and sell_price(id) > 0
 
 
 ## How many of id the hero carries that could be sold (the worn one does not count).
@@ -323,10 +325,11 @@ static func sell_count(state: GameState, id: String) -> int:
 	return state.inventory.count(id)
 
 
-## Why id can't be sold ("" if it can): worn and none in the bag, or not for sale.
+## Why id can't be sold ("" if it can): none to sell (the worn one does not count), or not for
+## sale. sell_list() lists only what can be, so this is sell()'s safety net.
 static func sell_problem(state: GameState, id: String, shop_id := "") -> String:
 	if sell_count(state, id) <= 0:
-		return WORN if state.loadout.is_worn(id) else NOT_CARRIED
+		return NOT_CARRIED
 	if sell_price(id, shop_id) <= 0:
 		return NOT_FOR_SALE
 	return ""
