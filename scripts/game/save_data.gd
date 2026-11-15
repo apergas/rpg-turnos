@@ -344,10 +344,12 @@ static func _valid_part_content(data: Dictionary, part: int) -> bool:
 		for id: Variant in quests:
 			if id is String and QuestLog.QUESTS.has(id) and QuestLog.part_of(id) > part:
 				return false
+	if part == 3:
+		return true
 	var cap := Leveling.V1_MAX_LEVEL if part == 1 else Leveling.V2_MAX_LEVEL
 	var hero: Variant = data.get("hero")
 	# Stored EXP is not checked: 1.9.0 never capped it, apply() clamps it on load.
-	if part < 3 and hero is Dictionary and hero.get("level", 1.0) > float(cap):
+	if hero is Dictionary and hero.get("level", 1.0) > float(cap):
 		return false
 	return true
 
