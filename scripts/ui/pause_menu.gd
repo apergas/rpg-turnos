@@ -319,11 +319,10 @@ func _fill_status() -> void:
 	_ally_label.visible = _state.ally_id != ""
 	_ally_stats.visible = _ally_label.visible
 	if _state.ally_id != "":
-		BattleHud.fit_label(_ally_label, "%s: %s" % [Allies.kind_name(_state.ally_id),
-				Allies.display_name(_state.ally_id)],
+		var id := _state.ally_id
+		BattleHud.fit_label(_ally_label, "%s: %s" % [Allies.kind_name(id), Allies.display_name(id)],
 			TEXT_WIDTH)
-		var numbers := Allies.stats_text(_state.ally_id, _state.ally_step())
-		BattleHud.fit_label(_ally_stats, numbers, TEXT_WIDTH)
+		BattleHud.fit_label(_ally_stats, Allies.stats_text(id, _state.ally_step()), TEXT_WIDTH)
 
 
 ## The message lines always keep their place, so a message never moves the buttons.
