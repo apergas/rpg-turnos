@@ -82,11 +82,6 @@ const AMULET_SCENE := "amuleto"
 ## Brumaclara's lighthouse keeper: she says how the v3 goes on, and every mission of the v3 is
 ## handed to her (as the v2's are to the Jefe de caravana).
 const V3_KEEPER := "Orvalla"
-## While neither Brumaclara nor the Caravana has an exit open to the next step of the v3 (each
-## version of the v3 brings the next one; the 3.2.0 ends with the Vigía): what Orvalla adds and
-## the goal.
-const V3_NOT_YET_LINE := "Todavía no sabemos cómo seguir. Descansa, y vuelve cuando la luz nos diga algo."
-const V3_WAIT_GOAL := "Todas las ventanas de Brumaclara vuelven a tener luz"
 ## What Orvalla adds besides (keeper_line()): the Coloso beaten, the amulet to fetch from
 ## Villaclaro; the amulet here, the way up to the Ruinas (3.2.0).
 const V3_AMULET_LINE := "Un amuleto partido en tres... El Jefe de vuestra caravana dice que conoce un atajo a tu pueblo. Ve a buscarlo, {nombre}."
@@ -198,25 +193,9 @@ func chapter(flags: Dictionary) -> Chapter:
 	return reached
 
 
-## True while Brumaclara has an exit open, with these flags, to a land of the v3 (not the
-## portal back to the Caravana), or the Caravana one to Villaclaro (the visit for the amulet,
-## 3.2.0). False before the v3.
-static func v3_way_on(flags: Dictionary) -> bool:
-	if not flags.get(V3_FLAG, false):
-		return false
-	for exit: Dictionary in ZoneData.by_id(BrumaclaraLook.ZONE).exits:
-		if exit.to != CampLook.ZONE and ZoneData.is_present(exit, flags):
-			return true
-	for exit: Dictionary in ZoneData.by_id(CampLook.ZONE).exits:
-		if exit.to == VillaclaroLook.ZONE and ZoneData.is_present(exit, flags):
-			return true
-	return false
-
-
 ## What Orvalla adds to her lines (FigureTalk) while the v3 waits on something: the amulet
 ## (V3_AMULET_LINE), the way up to the Ruinas once it is here (V3_RUINS_LINE), the way to the
-## Fuente once the Vigía is beaten (V3_SOURCE_LINE), or no next step yet (V3_NOT_YET_LINE); ""
-## otherwise.
+## Fuente once the Vigía is beaten (V3_SOURCE_LINE); "" otherwise.
 static func keeper_line(flags: Dictionary) -> String:
 	if flags.get(V3_BOSSES[1], false) and not flags.get(AMULET_FLAG, false):
 		return V3_AMULET_LINE
@@ -224,7 +203,7 @@ static func keeper_line(flags: Dictionary) -> String:
 		return V3_RUINS_LINE
 	if flags.get(V3_BOSSES[2], false) and not flags.get(V3_FINAL_BOSS, false):
 		return V3_SOURCE_LINE
-	return "" if v3_way_on(flags) else V3_NOT_YET_LINE
+	return ""
 
 
 ## The stretch of the caravan's road (the v2): 1 + the zone bosses beaten in order, 5 once
@@ -340,8 +319,6 @@ func goal_text(flags: Dictionary, zone_id := "") -> String:
 		return RUINAS_GOALS[_ruinas_step(flags, zone_id)]
 	if now == Chapter.V3_END:
 		return ending_text(flags)
-	if now > Chapter.V2_END and not v3_way_on(flags):
-		return V3_WAIT_GOAL
 	return GOALS[now]
 
 

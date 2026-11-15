@@ -108,7 +108,7 @@ func on_npc(index: int) -> void:
 		said = _ctx.world.npc_lines(index, _ctx.state.chapter()) + talk.lines
 	var extra := StoryState.keeper_line(_ctx.state.world_flags) if figure == StoryState.V3_KEEPER else ""
 	if extra != "" and talk.get("kind", QuestLog.TALK_WAIT) == QuestLog.TALK_WAIT:
-		said = said + [extra]  # the v3 waits on something (the amulet, no next land): she says it
+		said = said + [extra]  # the v3 waits on something (the amulet, the Ruinas, the Fuente): she says it
 	var lines: Array[String] = []
 	for line: String in said:
 		lines.append(StoryState.fill(line, _ctx.state.hero.display_name))
