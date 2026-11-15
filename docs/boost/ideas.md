@@ -19,3 +19,7 @@ Estado: Pendiente
 ## 2026-11-15 · Vender sin equipo puesto ni objetos únicos
 en el mercader, en la opcion de vender, que las cosas que llevas puesto no aparezcan, y las cosas que no se pueden vender (como la espada del alba o el escudo de medallas) tampoco
 Estado: Pendiente
+
+## 2026-11-15 · Rótulo sobre los personajes con función
+el coleccionista, al igual que el jefe de la caravana y todos los personajes con los que se pueda interactuar para algo en concreto, que lo ponga encima (como posada, tienda, etc). si son personajes que estan de relleno (como los viajeros) no hace falta
+Estado: Pendiente
