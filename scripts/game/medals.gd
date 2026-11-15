@@ -21,7 +21,7 @@ const MEDALS: Array[String] = ["pradera_casa", "pradera_rincon", "pradera_rocas"
 ## while fewer than MEDALS are carried. Tuned in Task 5 of the 3.6.0 plan: a player by hand,
 ## who beats about twice the common enemies the autoplay does, carries about 12 at the end of
 ## the v1, 28 at the end of the v2 and the 40 near the end of the v3.
-const DROP_CHANCES := {1: 0.075, 2: 0.05, 3: 0.05}
+const DROP_CHANCES := {1: 0.075, 2: 0.05, 3: 0.04}
 ## Said in the dialogue window when one is taken (taken so far / all of them).
 const FOUND_TEXT := "¡Encuentras una Medalla pequeña! (%d/%d)"
 ## The figure that counts the medals (ZoneData.npcs of Villaclaro) and where he stands.
