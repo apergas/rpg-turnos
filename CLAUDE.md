@@ -13,7 +13,7 @@ The code says what each script does; this is the map, plus what the code can't t
 - `scenes/title/` + `scripts/title/` — `TitleScreen`, the main scene: loads and applies the options, owns the only `AudioDirector`, the save slots, then creates a `Game`.
 - `scenes/game/` + `scripts/game/` — `Game` (one play session, a coordinator over its pieces: zones, battles, cutscenes, the v3's start, autosaves, autoplay) and the pure rules it owns (`GameState`, `SaveData` / `SaveStore`, shop, inn, quests, bestiary, equipment, leveling...).
 - `scripts/story/` — `StoryState`, `Cutscene` (`data/cutscenes/<id>.tres`) and `CutscenePlayer`.
-- `scenes/world/` + `scripts/world/` — `World` (one map built from `data/zones/<id>.tres`, `ZoneData`; a thin owner over its `Map*` pieces and `AutoplayHunter`), `Player`, the `WorldStage` / `DungeonMap` builders and the monster groups; the v3's village pieces are `BrumaclaraStage` (its `Lighthouse`, its lit windows) and the sky's `BlackSun`; Brumaclara is dressed per etapa by `BrumaclaraLook`, as the Caravana by `CampLook`.
+- `scenes/world/` + `scripts/world/` — `World` (one map built from `data/zones/<id>.tres`, `ZoneData`; a thin owner over its `Map*` pieces and `AutoplayHunter`), `Player`, the `WorldStage` / `DungeonMap` builders and the monster groups; the v3's village pieces are `BrumaclaraStage` (its `Lighthouse`, its lit windows, its forge) and the sky's `BlackSun`; Brumaclara is dressed per etapa by `BrumaclaraLook`, as the Caravana by `CampLook`.
 - `scenes/battle/` + `scripts/battle/` — `BattleScene` (plays a battle back) over `BattleEngine` (pure rules), `BattleActor` (every figure, alive; what it looks like is `ActorLooks` (the v3's figures in `ActorLooksV3`, read through `ActorLooks.entry()`), built by `CreatureBuilder` (the v3's by `MistCreatureBuilder`) / `CharacterBuilder`) and `EnemyLibrary` (`data/enemies/`); the v3's battle backdrops (the Ciénaga's, the Cuevas') are `V3Backdrops`.
 - `scripts/ui/` — windows and menus; `scripts/audio/` — music, effects and ambient, all synthesized in code.
 - `data/` — `.tres` resources: hero, enemies, skills, allies, zones, quests, cutscenes.
@@ -29,7 +29,7 @@ What the code does not explain:
 - The `--autoplay-zone=<id>` starts are `AUTOPLAY_ZONES` in `autoplay_starts.gd` (the v2 ones also in `V2_STARTS`); how to run and measure them is the `villaclaro-autoplay` skill.
 - On desktop `user://` is `%APPDATA%\Godot\app_userdata\rpg-turnos\`; autoplay runs save to `user://save_autoplay.json` and never touch the three slots, but `--debug` saves to the real slot.
 - A zone exit with `"look": "portal"` is drawn as the Ala de viaje's portal (`MapProps.PORTAL_LOOK`); the v3's parts of the game are `GameState.part()` (1, 2, 3) and its stretch `GameState.etapa()`, never saved; a save may only stand in the zones of its part (`ZoneData.zones_of_part()`).
-- While Brumaclara has no exit to the next land of the v3 (`StoryState.v3_way_on()`), Orvalla says so, the goal is "El faro vuelve a dar luz" and the v3's autoplay run ends there ("Fin de la v3 por ahora: ...").
+- While Brumaclara has no exit to the next land of the v3 (`StoryState.v3_way_on()`), Orvalla says so, the goal is "La forja de Brumaclara vuelve a arder" and the v3's autoplay run ends there ("Fin de la v3 por ahora: ...").
 - The map hero's rim (`BattleActor.set_map_readable()`) does nothing on the headless renderer: check it with `--write-movie` or a window.
 
 ## Conventions

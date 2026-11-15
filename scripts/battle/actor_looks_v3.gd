@@ -56,6 +56,17 @@ const LOOKS := {
 			"Knight_LegRight": Color(0.9, 1.0, 1.2)},
 		"cape": Color(0.4, 0.55, 0.7), "anims": ActorLooks.CHARACTER_ANIMS,
 	},
+	# Brumaclara's Herrero de cristal (the shop, from the Coloso on): dark skin, a brown beard,
+	# a violet-grey smock, no cape.
+	Look.MIST_SMITH: {
+		"scene": ActorLooks.KNIGHT, "scale": ActorLooks.CHARACTER_SCALE, "top": 1.9,
+		"hide": ActorLooks.PERSON_HIDE, "head_texture": ActorLooks.HEAD_BROWN_DARK,
+		"hair": {"style": "beard", "color": ActorLooks.HAIR_BROWN},
+		"mesh_tints": {"Knight_ArmLeft": ActorLooks.SKIN_DARK, "Knight_ArmRight": ActorLooks.SKIN_DARK,
+			"Knight_Body": Color(0.85, 0.72, 1.2), "Knight_LegLeft": Color(0.45, 0.42, 0.5),
+			"Knight_LegRight": Color(0.45, 0.42, 0.5)},
+		"hide_cape": true, "anims": ActorLooks.CHARACTER_ANIMS,
+	},
 	# The Ciénaga (3.0.0). Variants of older figures, in the swamp's colours (CreatureBuilder
 	# builds them: the frog, the snake, the plant), and two new ones (MistCreatureBuilder).
 	# The Sapo de légamo: the Rana dardo, greyish green and 1.4 times its size.

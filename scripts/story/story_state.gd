@@ -58,9 +58,9 @@ const V3_FINAL_BOSS := "eco_albor"
 ## handed to her (as the v2's are to the Jefe de caravana).
 const V3_KEEPER := "Orvalla"
 ## While Brumaclara has no exit open to another land of the v3 (each version of the v3 brings
-## the next one; the 3.0.0 ends with the Garza): what Orvalla adds and the goal.
+## the next one; the 3.1.0 ends with the Coloso): what Orvalla adds and the goal.
 const V3_NOT_YET_LINE := "Todavía no sabemos cómo seguir. Descansa, y vuelve cuando la luz nos diga algo."
-const V3_WAIT_GOAL := "El faro vuelve a dar luz"
+const V3_WAIT_GOAL := "La forja de Brumaclara vuelve a arder"
 ## The mine's flags (ZoneData lever_flag, floor_key, door_flag of its floors).
 const MINE_LEVER := "mina_palanca"
 const MINE_KEY := "llave_mina"

@@ -220,6 +220,11 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## The lit windows: [position on the wall, yaw the wall faces] each (BrumaclaraStage: a warm
 ## glow and a small light in front of it).
 @export var window_lights: Array = []
+## Brumaclara's forge (BrumaclaraStage, 3.1.0), ZERO for none: where it stands, the way its
+## front faces (degrees, like a building's door) and whether its fire burns.
+@export var forge_pos := Vector3.ZERO
+@export var forge_yaw := 0.0
+@export var forge_lit := false
 
 @export_group("Dungeon")
 ## Rows of a dungeon floor, north (−Z) first, one character per CELL × CELL cell (see
