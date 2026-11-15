@@ -1,7 +1,8 @@
 class_name Allies extends RefCounted
 ## The caravan's companions and the creatures the Domadora of each village sells: a fighter that acts by itself in
 ## battle. Only one at a time; a new one replaces the old one with nothing paid back, and
-## one of a lower tier can't be bought. Pure: no nodes.
+## one of a lower tier can't be bought. A companion grows at each step (GROWTH) and wears a new
+## piece of gear from the second one (GEAR, gear()); a creature does neither. Pure: no nodes.
 
 const CREATURES := {
 	"gallina": {"article": "una", "tier": 1, "price": 55,
@@ -31,6 +32,26 @@ const GROWTH := {
 	"brena": {"max_hp": 40, "attack": 12, "defense": 6, "speed": 2},
 	"tadeo": {"max_hp": 35, "attack": 10, "defense": 5, "speed": 4},
 	"ulma": {"max_hp": 55, "attack": 8, "defense": 10, "speed": 1},
+}
+## The companion's gear (3.5.0): the piece each step (GameState.ally_step()) puts on and what it
+## adds. "tint_of" is the hero's piece whose tint it wears, one series behind what the Caravana
+## or the Herrero sells at that step: the swords' tint for a weapon, the helmets' for a helmet
+## and the shields' for a cape (the hero's armour has no tint). A piece keeps its colour until
+## the next one of its kind. Every companion keeps its own shape
+## (CharacterBuilder.dress_companion()).
+const GEAR_WEAPON := "weapon"
+const GEAR_HELMET := "helmet"
+const GEAR_CAPE := "cape"
+const GEAR := {
+	2: {"piece": GEAR_WEAPON, "tint_of": "espada_jade", "attack": 6},
+	3: {"piece": GEAR_HELMET, "tint_of": "casco_oricalco", "defense": 4},
+	4: {"piece": GEAR_CAPE, "tint_of": "escudo_adamantita", "defense": 4},
+	5: {"piece": GEAR_WEAPON, "tint_of": "espada_estelar", "attack": 6},
+	6: {"piece": GEAR_HELMET, "tint_of": "casco_bruma", "defense": 4},
+	7: {"piece": GEAR_CAPE, "tint_of": "escudo_cristal", "defense": 4},
+	8: {"piece": GEAR_WEAPON, "tint_of": "espada_luna", "attack": 6},
+	9: {"piece": GEAR_HELMET, "tint_of": "casco_amanecer", "defense": 4},
+	10: {"piece": GEAR_CAPE, "tint_of": "escudo_amanecer", "defense": 4},
 }
 ## What the companion says the first time the hero reaches each land of the caravan:
 ## zone id -> companion id -> line (2.4.0; the Ciénaga, 3.0.0; the Cuevas, 3.1.0;
@@ -130,7 +151,9 @@ static func tier(id: String) -> int:
 
 
 ## A fresh copy, with its life full: it comes back healed for every battle. A companion
-## gets GROWTH once for every tramo after the first (tramo 0 or 1: its own numbers).
+## gets GROWTH once for every tramo after the first (tramo 0 or 1: its own numbers), and the
+## ATK and DEF of the gear worn by then (gear()) as its equipment bonuses, which the battle adds
+## through total_attack() and total_defense().
 static func data(id: String, tramo := 1) -> Combatant:
 	var copy := (CREATURES[id].data as Combatant).duplicate() as Combatant
 	if is_companion(id):
@@ -140,8 +163,29 @@ static func data(id: String, tramo := 1) -> Combatant:
 		copy.attack += growth.attack * steps
 		copy.defense += growth.defense * steps
 		copy.speed += growth.speed * steps
+		var worn := gear(id, tramo)
+		copy.equip_attack = worn.attack
+		copy.equip_defense = worn.defense
 	copy.hp = copy.max_hp
 	return copy
+
+
+## The gear a companion wears at step (GEAR, up to that step): for each piece the Equipment id
+## whose tint it wears ("" until its first), and the ATK and DEF they add. {} for a creature.
+static func gear(id: String, step: int) -> Dictionary:
+	if not is_companion(id):
+		return {}
+	var worn := {GEAR_WEAPON: "", GEAR_HELMET: "", GEAR_CAPE: "", "attack": 0, "defense": 0}
+	var steps: Array = GEAR.keys()
+	steps.sort()
+	for s: int in steps:
+		if s > step:
+			break
+		var piece: Dictionary = GEAR[s]
+		worn[piece.piece] = piece.tint_of
+		worn.attack += piece.get("attack", 0)
+		worn.defense += piece.get("defense", 0)
+	return worn
 
 
 ## The numbers of id at step (data()'s tramo: a companion grows with it, a creature never does),
