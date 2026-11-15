@@ -23,3 +23,10 @@ Estado: Pendiente
 ## 2026-11-15 · Rótulo sobre los personajes con función
 el coleccionista, al igual que el jefe de la caravana y todos los personajes con los que se pueda interactuar para algo en concreto, que lo ponga encima (como posada, tienda, etc). si son personajes que estan de relleno (como los viajeros) no hace falta
 Estado: Pendiente
+
+## 2026-11-15 · Refactor: design system agnóstico para otros juegos de Godot
+Posible refactor. Separar el design system en dos capas para poder reutilizarlo en otros juegos hechos en Godot:
+- Núcleo reutilizable como addon (`addons/design_system/`): `gen_ui_tokens.gd` y `check_ui_values.gd` con rutas configurables (hoy van fijas a `res://docs/boost/design-system/...` y `res://scripts/ui/ui_tokens.gd`), la base de `UiTheme` (`build()`, `menu_row()`, `add_cursor()`, `style_label()`, `style_3d()`), un `tokens.json` base con escalas (espaciado, radios, bordes, contornos, opacidades, `touch-target`) y semánticos genéricos (`surface-*`, `border-*`, `text-*`, estilos de texto) con valores neutros, el mecanismo de temas (alto contraste), los componentes universales (`Window`, `MenuList`, `ChoiceWindow`, `Notice`, `OptionRow`) y las guías de interacción y accesibilidad.
+- Capa de cada juego: su `tokens.json` con la paleta, las fuentes y sus tokens propios (en Villaclaro `stat-*`, `status-*`, `map-*`, `world-*`, `layer-*`, medidas como `enemy-bar-width`), sus componentes (`BestiaryCard`, `ShopRow`, `HeroPanel`...), su voz y tono, y una extensión de `UiTheme` (`badge_style()`, `map_style()`).
+Villaclaro pasaría a ser el primer juego que consume el núcleo.
+Estado: Pendiente
