@@ -1,14 +1,13 @@
 class_name MenuCursor extends Control
-## The gold ▶ of the chosen row of one window (design system, M-63). It follows the focused
-## control when it is inside its window: a plain menu row, or, for a selector (UiTheme.SELECTOR)
-## or a slider, the option row holding it. Keys and bestiary cards draw their own frame and get
-## no cursor. Drawn, not a glyph, so the web shows it the same. Put it on with
-## UiTheme.add_cursor(window): the cursor is the window's last child (over the rows) and top
-## level, so the window's layout ignores it. The row's background is not drawn here: a top
-## level node draws over the text, so a button paints it with its focus style (UiTheme._rows())
-## and an option row (FocusRow) with its own _draw(). While a finger or the mouse holds a
-## button down the theme draws its pressed box instead of the focus style: then the button gets
-## a backing panel behind its text.
+## The ▶ of the chosen row of one window (design system core). It follows the focused control
+## when it is inside its window: a plain menu row, or, for a selector (DsTheme.SELECTOR) or a
+## slider, the option row holding it. Keys and cards draw their own frame and get no cursor.
+## Drawn, not a glyph, so the web shows it the same. Put it on with DsTheme.add_cursor(window):
+## the cursor is the window's last child (over the rows) and top level, so the window's layout
+## ignores it. The row's background is not drawn here: a top level node draws over the text, so
+## a button paints it with its focus style (DsTheme._rows()) and an option row with its own
+## _draw(). While a finger or the mouse holds a button down the theme draws its pressed box
+## instead of the focus style: then the button gets a backing panel behind its text.
 
 var _target: Control
 var _last_y := 0.0
@@ -58,7 +57,7 @@ func _skip_disabled(grey: Button) -> void:
 
 
 static func _row_of(control: Control) -> Control:
-	if control is Range or (control is Button and control.theme_type_variation == UiTheme.SELECTOR):
+	if control is Range or (control is Button and control.theme_type_variation == DsTheme.SELECTOR):
 		return control.get_parent() as Control
 	if control is Button and control.theme_type_variation == &"":
 		return control
@@ -73,7 +72,7 @@ func _process(_delta: float) -> void:
 	if not shown:
 		return
 	var rect := _target.get_global_rect()
-	var inset := UiTokens.SPACE_1 if Device.is_touch() else UiTokens.SPACE_2
+	var inset := UiTokens.SPACE_1 if DsTheme.touch else UiTokens.SPACE_2
 	global_position = Vector2(rect.position.x + inset, rect.position.y + (rect.size.y - size.y) / 2.0).round()
 
 
@@ -90,7 +89,7 @@ func _set_backing(shown: bool) -> void:
 			wanted = Panel.new()
 			wanted.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			wanted.show_behind_parent = true
-			wanted.theme_type_variation = UiTheme.SELECTED_ROW
+			wanted.theme_type_variation = DsTheme.SELECTED_ROW
 			wanted.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 			button.add_child(wanted)
 			button.set_meta(&"focus_backing", wanted)

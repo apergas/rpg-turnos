@@ -1,5 +1,5 @@
 class_name UiStyle extends RefCounted
-## Constructor: static; adds the shared small labels and finger-sized rows to the controls it is given and keeps no state.
+## Constructor: static; adds the shared small labels to the controls it is given and keeps no state.
 ## What the menu windows share: their colors, the size of small text and the line that says
 ## what an item does.
 
@@ -28,14 +28,3 @@ static func add_small_text(parent: Node, text: String) -> void:
 static func is_outside_tap(event: InputEvent) -> bool:
 	var mouse := event as InputEventMouseButton
 	return mouse != null and not mouse.pressed and mouse.button_index == MOUSE_BUTTON_LEFT
-
-
-## Least width of a button on a phone, so "Sí" or "Usar" are not a sliver.
-const TOUCH_BUTTON_WIDTH := float(UiTokens.TOUCH_MIN_WIDTH)
-
-
-## On a phone, makes a menu row big enough for a finger. Flat rows need it: the phone's button
-## theme does not draw their "normal" style, so it does not give them any height.
-static func fit_finger(button: Button) -> void:
-	if Device.is_touch():
-		button.custom_minimum_size = Vector2(TOUCH_BUTTON_WIDTH, DisplaySettings.TOUCH_BUTTON_HEIGHT)
