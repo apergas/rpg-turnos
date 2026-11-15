@@ -13,3 +13,6 @@ Idea en una o pocas frases, con las palabras del usuario.
 
 ## 2026-11-15 · Quitar el incienso
 Como los monstruos son visibles en el mapa, ya no tiene sentido el incienso.
+
+## 2026-11-15 · Nivel máximo 60 en la v3
+en la v3 tiene como maximo lvl 50. subelo a 60
