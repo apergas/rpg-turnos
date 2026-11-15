@@ -2,9 +2,9 @@ class_name BrumaclaraLook extends RefCounted
 ## Brumaclara dressed for the v3's etapa (3.0.0), as CampLook dresses the Caravana for its tramo:
 ## the same layout (houses, figures, exits, wells, the lighthouse), with what comes back to the
 ## village with each boss beaten: light in the lighthouse and in the windows (BrumaclaraStage
-## draws them), the forge's fire, the market open, a lighter fog... data/zones/brumaclara.tres is the etapa 1, all dark. Pure:
-## dressed() returns a copy of the zone; ZoneTravel builds Brumaclara from it. The figures that
-## come back (the Curandera...) are the zone's own, by their needs flags.
+## draws them), the forge's fire, the market open, a lighter fog... data/zones/brumaclara.tres is
+## the etapa 1, all dark. Pure: dressed() returns a copy of the zone; ZoneTravel builds Brumaclara
+## from it. The figures that come back (the Curandera...) are the zone's own, by their needs flags.
 
 const ZONE := "brumaclara"
 ## etapa -> the fields that change from the .tres: the whole look of that etapa (an etapa with

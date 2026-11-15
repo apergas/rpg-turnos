@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="Cutscene" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/cutscene.gd" id="1_cutscene"]
+
+[resource]
+script = ExtResource("1_cutscene")
+id = "vigia"
+steps = [
+["wait", 0.4],
+["say", "", ["El Vigía de la bruma clava la lanza en las losas y se arrodilla. Su armadura cruje como una puerta vieja.", "El Amuleto del Alba brilla en tu mano, y el Vigía levanta la cabeza hacia él."]],
+["say", "Vigía de la bruma", ["Lleváis su luz. Pasad."]],
+["say", "", ["Del pecho de la armadura cae una piedra con un sol grabado. Luego el Vigía se queda quieto, como una estatua más de las Ruinas."]],
+["say", "", ["¡Consigues el Sello de Albor!"]],
+["say", "", ["Bajas de las Ruinas con el sello. Cuando llegas a Brumaclara, todas las ventanas del pueblo tienen luz, y alguien ha quitado las tablas del mercado."]],
+["fade_out"],
+["travel", "brumaclara", "ruinas"],
+["fade_in"],
+["camera_to", Vector3(-7, 0, -11), 12.0],
+["sfx", "level_up"],
+["say", "", ["En el mercado se oyen voces. Hacía años que nadie regateaba en Brumaclara."]],
+["camera_back"],
+["approach", "Orvalla", "hero", 1.8],
+["face", "hero", "Orvalla"],
+["face", "Orvalla", "hero"],
+["say", "Orvalla", ["El Sello de Albor. Mi abuela decía que abría la Fuente, y yo creía que era un cuento para dormir.", "La Fuente está más allá de las Ruinas. Cuando la bruma deje ver el camino, iremos. Mientras, descansa, {nombre}."]],
+["approach", "Neblí", "hero", 2.2],
+["face", "Neblí", "hero"],
+["say", "Neblí", ["¿Detrás de la Fuente está el sol? ¿Me lo traerás, o tengo que ir yo?"]]
+]
