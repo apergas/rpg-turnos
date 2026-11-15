@@ -79,3 +79,7 @@ assets/fonts/                  Baloo 2 y Nunito: las fuentes son del juego, no d
 ```
 `--check` exige que cada token esté documentado en los docs del núcleo o en los del juego, según de dónde venga.
 Estado: Pendiente
+
+## 2026-11-15 · Equipo: el efecto debajo del nombre
+en el equipo, sale todo seguido el nombre dle objeto y lo que da. cambialo, poniendo lo que da (ATK +X, inmune a X..) debajo del nombre, tipo en la seccion de "objetos"
+Estado: Pendiente
