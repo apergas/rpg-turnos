@@ -80,10 +80,10 @@ Por turnos: el héroe contra uno o dos enemigos.
 | Regla | Valor |
 |---|---|
 | Comandos | Atacar, Hechizos, Objetos, Defender, Huir |
-| Iniciativa | `VEL × azar(0,5-1,5)`. Si defiende o huye, el héroe va primero |
+| Iniciativa | `VEL × azar(0,5-1,5)`. Si defiende, huye o usa un objeto, el héroe va primero |
 | Daño físico | `max(1, ATK total − DEF total / 2) × azar(0,875-1,125)`, mínimo 1 |
 | Fallo y crítico | 5 % de fallo. 1/16 de crítico: `ATK × 1,5`, ignora la DEF |
-| Hechizos | Pagan PM, ignoran la DEF, no fallan ni son críticos. Debilidad ×1,5, resistencia ×0,5 |
+| Hechizos | Pagan PM, ignoran la DEF, no fallan ni son críticos. Debilidad ×1,5, resistencia ×0,5. El daño de los del héroe sube un 3 % por cada nivel por encima del que los enseña (Ascuas, desde el 1); curar no cambia |
 | Defender | Reduce a la mitad el daño de esa ronda |
 | Huir | `0,5 + (VEL héroe − VEL media enemiga) × 0,05`, entre 0,2 y 0,95. Contra un jefe no se puede y no pasa el turno |
 | Veneno | 8 % de los PV máximos al final de cada ronda |

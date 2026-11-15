@@ -58,6 +58,9 @@ var zone: ZoneData
 ## The creature at the hero's side (null: none). Set it before adding the scene; it is
 ## already a copy with its life full.
 var ally: Combatant
+## How far a caravan companion has grown (GameState.ally_step()): the gear its figure wears
+## (Allies.gear()). Set it with ally; a creature ignores it.
+var ally_step := 1
 ## Quest item -> how many its quest asks for (Game: QuestLog.wanted_items()); set before
 ## adding it. Empty: no quest item drops.
 var quest_items := {}
@@ -138,11 +141,12 @@ func _ready() -> void:
 	_rng.randomize()
 	_autoplay = RunFlags.autoplay()
 	Engine.time_scale = time_scale
-	BattleStage.build(self, zone)
+	BattleStage.build(self, zone, enemies.any(func(e: Combatant) -> bool: return e.is_boss))
 	_hero_actor = _spawn_actor(BattleActor.Look.HERO, HERO_POS, ENEMY_POS)
 	_hero_actor.set_equipment(_weapon_id, _shield_id, _helmet_id)
 	if ally != null:
 		_ally_actor = _spawn_actor(EnemyLibrary.look(ally.id), ALLY_POS, ENEMY_POS)
+		_ally_actor.set_companion_gear(Allies.gear(ally.id, ally_step))
 	for i in enemies.size():
 		_enemy_actors.append(_spawn_actor(EnemyLibrary.look(enemies[i].id),
 			_slot(i, enemies.size()), HERO_POS))

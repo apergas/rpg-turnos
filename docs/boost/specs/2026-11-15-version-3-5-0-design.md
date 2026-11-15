@@ -158,3 +158,4 @@ Lo que el [plan](../plans/2026-11-15-version-3-5-0.md) precisa o corrige de este
 - **`PORTAL_LOOK`** está en `MapProps`, no en `ZoneData`. Se corrigen los comentarios de los dos.
 - **Brief de QA:** además de la fila «Iniciativa», cambia la de «Hechizos», por el crecimiento.
 - **Equilibrio:** si una zona queda más de un 15 % más corta que antes, `SPELL_GROWTH` baja a 0,02 y, como mucho, a 0,015.
+- **Equilibrio, decisión final:** se mantiene `SPELL_GROWTH` en 0,03, la elección del usuario. La Fuente tarda casi lo mismo con 0,03 y con 0,02 (22:10 y 22:20), así que su partida más corta no viene de los hechizos (su referencia de 36:41 llevaba una derrota), y con menos crecimiento la ciudad pasó a tener una derrota.

@@ -17,8 +17,9 @@ class_name Combatant extends Resource
 ## total_attack() / total_defense(), which add the equipment bonuses.
 @export var attack := 1
 @export var defense := 0
-## Hero only: bonuses of the equipment worn, copied from the Loadout by
-## GameState.refresh_equipment() (never saved: the loadout is).
+## Bonuses of the equipment worn: the hero's, copied from the Loadout by
+## GameState.refresh_equipment() (never saved: the loadout is); a caravan companion's ATK and
+## DEF, from its gear at its step (Allies.data()). Nobody else has any.
 @export var equip_attack := 0
 @export var equip_defense := 0
 @export var equip_speed := 0

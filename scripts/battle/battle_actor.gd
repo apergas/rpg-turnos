@@ -1,11 +1,12 @@
 class_name BattleActor extends Node3D
 ## 3D figure of a fighter or a villager, alive: its animations (play_*), the floating
-## numbers, the hero's equipment (set_equipment(), the Yelmo's horns), the flash, the
-## highlight and the see-through of the map. What it looks like is data in ActorLooks
-## (look, set before add_child); its meshes are built by CharacterBuilder (the KayKit
-## models) or CreatureBuilder (the figures built in code), which write into it only through
-## its builder methods (body(), add_mesh(), add_blob(), add_ghost(), add_wing(), set_sway(),
-## set_jaw(), set_hover(), set_devourer(), set_model(), set_aura(), set_animations()).
+## numbers, the hero's equipment (set_equipment(), the Yelmo's horns), a companion's gear
+## (set_companion_gear()), the flash, the highlight and the see-through of the map. What it
+## looks like is data in ActorLooks (look, set before add_child); its meshes are built by
+## CharacterBuilder (the KayKit models) or CreatureBuilder (the figures built in code), which
+## write into it only through its builder methods (body(), add_mesh(), add_blob(),
+## add_ghost(), add_wing(), set_sway(), set_jaw(), set_hover(), set_devourer(), set_model(),
+## set_aura(), set_animations()).
 ## The figure faces -Z, so look_at() the opponent. Every play_* can be awaited: it returns
 ## when its animation and its tween are done.
 
@@ -250,6 +251,13 @@ func set_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> voi
 	# The hand meshes, the helmet and the horns may have changed: the rim goes on them again.
 	if _map_overlay != null:
 		_apply_map_overlay()
+
+
+## Companions only (Brena, Tadeo, Ulma): the gear of Allies.gear() on the model
+## (CharacterBuilder.dress_companion()). Others ignore it; the hero's is set_equipment().
+func set_companion_gear(gear: Dictionary) -> void:
+	if look in [Look.BRENA, Look.TADEO, Look.ULMA] and _model != null:
+		CharacterBuilder.dress_companion(_model, gear)
 
 
 ## The two horns of the Yelmo de bruma, built once under the helmet mesh. Their meshes
