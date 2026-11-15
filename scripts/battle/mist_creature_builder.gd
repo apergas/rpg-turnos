@@ -3,8 +3,10 @@ class_name MistCreatureBuilder extends RefCounted
 ## CreatureBuilder does not grow: the variants of older figures (the Sapo de légamo is the
 ## frog, the Sanguijuela the snake, the Junco andante the plant, in their own colours) and the
 ## new ones: the Fuego fatuo, the Caimán de bruma and the Garza de légamo, and the Cuevas'
-## crystal figures (the golem and the Coloso de cuarzo). Static only, keeps no state: like CreatureBuilder, each build_x(actor, data) hangs its meshes under actor.body()
-## through the actor's builder methods. build() says whether the look was one of its own.
+## crystal figures (the bat, slime, golem and spider of before with crystals, the Topo de
+## geoda and the Coloso de cuarzo). Static only, keeps no state: like CreatureBuilder, each
+## build_x(actor, data) hangs its meshes under actor.body() through the actor's builder
+## methods. build() says whether the look was one of its own.
 
 const Look = ActorLooks.Look
 ## Side profile of the Fuego fatuo's flame (lathed around +Y): round below, a tip above.
@@ -127,7 +129,6 @@ static func build_heron(actor: BattleActor, data: Dictionary) -> void:
 	(root.get_child(-1) as Node3D).rotation_degrees.x = -90.0
 	actor.add_mesh(root, LowPoly.cone(0.03, 0.35), data.dark_color, Vector3(0, 3.25, -0.95))  # crest
 	(root.get_child(-1) as Node3D).rotation_degrees.x = 30.0
-
 
 
 ## Glowing crystal points on the figure just built (its root: the last child of actor.body()):

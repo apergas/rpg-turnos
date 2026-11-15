@@ -70,8 +70,7 @@ const BOSS_REARM_RADIUS := 5.0
 const TAP_GUARD_MS := 400
 ## Meters walked between two footstep sounds.
 const STEP_DISTANCE := 1.6
-## Underground the hero carries a lantern: a warm light over the head (not among the Cuevas'
-## crystals: they light the floor).
+## Underground the hero carries a warm lantern light (not in the Cuevas: crystals light it).
 const LANTERN_COLOR := Color(1.0, 0.85, 0.65)
 const LANTERN_ENERGY := 2.0
 const LANTERN_RANGE := 10.0

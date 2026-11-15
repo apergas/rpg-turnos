@@ -343,7 +343,8 @@ func restock() -> void:
 ## Autoplay, in Brumaclara (the v3): the Caravana's Mercader, ten steps away through the
 ## portal, sells the gear of the etapa (Shop.caravan_shop()); while he has a piece the gold pays
 ## for (Shop.gear_to_buy()), the hero walks through, buys and comes back, as a player would.
-## Only for the gear: the potions wait for Brumaclara's own shop, as in the 3.0.0.
+## It goes only for the gear (Shop.gear_to_buy()); once there, the usual picks (an Ala, potions
+## when none are left) come with it.
 func _caravan_errand() -> void:
 	if not Shop.gear_to_buy(_ctx.state, Shop.caravan_shop(_ctx.state.shop_step())):
 		return

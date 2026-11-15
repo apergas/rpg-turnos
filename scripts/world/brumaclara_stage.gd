@@ -4,8 +4,8 @@ class_name BrumaclaraStage extends RefCounted
 ## wall and a small light in front of it, ZoneData.window_lights) and its forge (a stone hearth
 ## with its chimney and an anvil, ZoneData.forge_pos; a fire on the hearth once forge_lit); and
 ## darken(), the dark tint of its houses (ZoneData.building_tint; also BeyondScreen's).
-## WorldStage.build() calls build() on
-## every open map; it adds nothing where those fields are empty. Static only, keeps no state.
+## WorldStage.build() calls build() on every open map; it adds nothing where those fields are empty.
+## Static only, keeps no state.
 
 const WINDOW_LIGHT := Color(1.0, 0.8, 0.45)
 const WINDOW_SIZE := Vector2(0.45, 0.6)
