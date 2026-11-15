@@ -246,6 +246,10 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## instead of a torch (Crystals), the D gates are crystal bars, the lever has a crystal knob,
 ## and the hero carries no lantern: the crystals light the floor.
 @export var crystals := false
+## Floating islands (the Ruinas flotantes, 3.2.0), on a floor open to the sky: the rock cells are
+## a void of mist under the islands' edges instead of rock (FloatingIslands): no wall is drawn,
+## an invisible one keeps the hero on the slabs.
+@export var floating := false
 ## Castle: the rock cells are stone walls (KayKit wall pieces on the straight runs,
 ## square towers at corners and ends, round pillars when they stand alone) instead of
 ## rock blocks, and the open ground goes on past the grid.
