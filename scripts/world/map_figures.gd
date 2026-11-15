@@ -1,10 +1,10 @@
 class_name MapFigures extends Node3D
 ## The figures of a map (ZoneData.npcs, and the boss World asks for with add_figure()):
-## each a BattleActor on a cylinder collider, with its sign ("Tienda", "Posada",
-## "Criaturas") and the "!" or "?" of the quests over it; the figures a quest has not
-## brought out are off the map. Cutscenes find and move them here (figure_node(),
-## figure_turn(), figure_actor(), reset_figures()). Owned by World, which calls setup(),
-## adds it and then build(); never stores World.
+## each a BattleActor on a cylinder collider, with its sign ("Tienda", "Posada", "Criaturas",
+## or its own "sign": "Coleccionista", "Tablón"...) and the "!" or "?" of the quests over it;
+## the figures a quest has not brought out are off the map. Cutscenes find and move them here
+## (figure_node(), figure_turn(), figure_actor(), reset_figures()). Owned by World, which calls
+## setup(), adds it and then build(); never stores World.
 
 const ACTOR_SCENE := preload("res://scenes/battle/battle_actor.tscn")
 ## The "!" and "?" of the quests: over the figure, bobbing.
@@ -138,8 +138,11 @@ func show_marks() -> void:
 		label.visible = text != "" and not _player.scripted
 
 
-## What a figure offers, over its head: its model alone doesn't tell.
+## What a figure offers, over its head: its model alone doesn't tell. Its own "sign"
+## (ZoneData.npcs) first, else the shop's or the inn's by its kind; "" for none.
 static func _figure_sign_text(npc: Dictionary) -> String:
+	if npc.has("sign"):
+		return npc.sign
 	match npc.kind:
 		"shop":
 			return "Criaturas" if Shop.sells_ally(npc.id) else "Tienda"

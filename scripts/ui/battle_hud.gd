@@ -4,7 +4,8 @@ class_name BattleHud extends Control
 ## its text, BattleHud.fit_label()). Main menu: Atacar,
 ## Hechizos, Objetos, Defender, Huir; Hechizos and Objetos open a list where a row that
 ## can't be used is grey and says why. With two enemies standing, Atacar and one-target
-## spells ask for the target: target_changed tells the scene where to put the arrow.
+## spells ask for the target: the rest of the page stays in its place, grey, and only Volver
+## answers (on a phone it hides); target_changed tells the scene where to put the arrow.
 ## Keyboard: W / S or up / down move, A / D or left / right change the target,
 ## Enter / Space / E accept, Esc / Q / Backspace / X go back. Mouse and touch: click a
 ## row; click an enemy to aim and click it again to confirm; a click anywhere else goes
@@ -378,7 +379,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				_accept()
 			elif index in _targets:
 				_aim_at(_targets.find(index))
-			else:
+			elif not _list.get_global_rect().has_point(mouse.position):
+				# A click on a grey row (it lets clicks through) does nothing; anywhere else
+				# goes back.
 				_back()
 
 
@@ -565,11 +568,17 @@ func _ask_target(cmd: Dictionary, back: Page) -> void:
 	_add_back_row()
 	_page = Page.TARGET
 	var touch := Device.is_touch()
-	if touch:
-		# Only the enemies and Volver answer here, so the rest of the menu goes.
-		for i in _rows.size():
-			_rows[i].visible = i == _back_row
-		_set_cursor(_back_row)
+	# Only the enemies and Volver answer here: on a phone the rest of the menu goes; on a desktop
+	# it keeps its place, grey (no cursor, no hover sound, no click). Accept still reads the
+	# arrow over the enemy, not the cursor on Volver.
+	for i in _rows.size():
+		if i == _back_row:
+			continue
+		if touch:
+			_rows[i].visible = false
+		else:
+			_set_enabled(_rows[i], false)
+	_set_cursor(_back_row)
 	_set_message("¿A quién? Toca al enemigo." if touch else "¿A quién?")
 	_message.visible_characters = -1
 	_aim_at(0)
@@ -586,7 +595,8 @@ func _aim_at(i: int) -> void:
 	_sfx(SfxLibrary.CURSOR)
 
 
-## One step back: target -> its list, list -> main menu.
+## One step back: target -> its list, list -> main menu. _open() rebuilds the rows, so each
+## comes back enabled or grey for its own reason (Huir against a boss, a spell with no MP).
 func _back() -> void:
 	match _page:
 		Page.TARGET:

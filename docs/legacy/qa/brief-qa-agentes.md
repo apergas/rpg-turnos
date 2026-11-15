@@ -58,7 +58,7 @@ Si algo de abajo lo contradice, manda esto.
 - **Menús:** tocar fuera de una ventana la cierra o retrocede.
 - **Nueva partida:** pide confirmación si hay una partida guardada que funciona. Una dañada sale como "Continuar (partida dañada)", desactivado.
 - **Objetivo:** el principal va siempre primero. En el móvil, el mapa solo enseña esa línea; las secundarias están en la pausa.
-- **Rótulos:** "Tienda", "Posada" y "Criaturas" sobre esas figuras.
+- **Rótulos:** "Tienda", "Posada" y "Criaturas" sobre esas figuras, y su nombre sobre el Coleccionista, el Jefe de caravana, Orvalla y el Tablón.
 - **Web:** el título avisa si hay una versión nueva esperando.
 - **Equilibrio:** ATK de Golem de barro 32, Araña 29, Espectro 26, Esqueleto guerrero 43, pícaro 40, mago 32, Golem de piedra 50, Señor de la Niebla 52 y 56 en su segunda fase. Prevalece sobre la tabla de enemigos.
 
@@ -345,7 +345,7 @@ Marca cada prueba: **OK**, **Falla** (con el ID del hallazgo), **Parcial** o **N
 | ID | Prueba | Resultado esperado |
 |---|---|---|
 | T-30 | Todos los comandos en menú y volver | Funcionan. Volver regresa sin perder el turno |
-| T-31 | Dos enemigos: elegir objetivo | Flecha sobre el objetivo. 📱 Solo "Volver" y "¿A quién? Toca al enemigo." |
+| T-31 | Dos enemigos: elegir objetivo | Flecha sobre el objetivo. El resto del menú en gris y el cursor en "Volver". 📱 Solo "Volver" y "¿A quién? Toca al enemigo." |
 | T-32 | Hechizo sin PM, objeto sin poder usarlo | Fila gris con el motivo; no se gasta el turno |
 | T-33 | Veneno, sueño y silencio | Se comportan como en la sección 3 y se limpian al acabar |
 | T-34 | Defender contra la carga del Golem | Reduce el golpe a la mitad |
@@ -361,7 +361,7 @@ Marca cada prueba: **OK**, **Falla** (con el ID del hallazgo), **Parcial** o **N
 |---|---|---|
 | T-40 | Comprar sin oro | Fila gris, "Falta oro" |
 | T-41 | Comprar equipo y equipárselo | Comparación correcta con lo puesto. ATK y DEF cambian |
-| T-42 | Vender | Mitad del precio. No deja vender lo puesto ni lo que no vale nada |
+| T-42 | Vender | Mitad del precio. La lista no enseña lo puesto ni lo que no se vende |
 | T-43 | Posada | Sin preguntar: "Descansa un poco.", gratis, cura PV y PM, guarda. Descansado: "Se te ve en forma." |
 | T-44 | Abrir cada cofre | Da su contenido una vez, también tras recargar |
 | T-45 | Ala de viaje, portal y vuelta | Viaje y vuelta correctos. Dentro de una aldea, gris. Una segunda Ala cierra el portal anterior |

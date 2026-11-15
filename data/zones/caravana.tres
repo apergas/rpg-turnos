@@ -130,6 +130,7 @@ npcs = [{
 "name": "Coleccionista",
 "needs": "companero",
 "pos": Vector3(-6.5, 0, -6.5),
+"sign": "Coleccionista",
 "yaw": 60.0
 }, {
 "kind": "npc",
@@ -148,6 +149,7 @@ npcs = [{
 "look": "CARAVAN_CHIEF",
 "name": "Jefe de caravana",
 "pos": Vector3(0, 0, -6),
+"sign": "Jefe de caravana",
 "yaw": 180.0
 }, {
 "id": "caravana",
@@ -169,6 +171,7 @@ npcs = [{
 "look": "BOARD",
 "name": "Tablón",
 "pos": Vector3(-3, 0, 6),
+"sign": "Tablón",
 "yaw": 0.0
 }, {
 "kind": "npc",
