@@ -1,12 +1,13 @@
 # Versión 3.6.0: el compañero en el mapa, la tienda y el armero
 
-Fecha: 2026-11-15. Estado: spec. Cubre M-96, M-97 y M-99 del [documento maestro](../documento-maestro.md). Va después de la [3.5.0](2026-11-15-version-3-5-0-design.md), cuyo equipo del compañero también se ve en el mapa. La partida guardada sigue en la versión 15 y no gana ni pierde campos.
+Fecha: 2026-11-15. Estado: spec. Cubre M-96, M-97, M-99 y M-100 del [documento maestro](../documento-maestro.md). Va después de la [3.5.0](2026-11-15-version-3-5-0-design.md), cuyo equipo del compañero también se ve en el mapa. La partida guardada pasa a la **versión 16**, solo por los premios del Coleccionista (M-100); no gana ni pierde campos.
 
 ## Objetivo
 
 1. **El compañero te sigue por el mapa (M-96).** La criatura de la v1 o el compañero de la v2 y la v3 anda a poca distancia detrás del héroe y se para cuando él se para. Solo se ve: no se habla con él ni choca con nada.
 2. **La tienda y el armero (M-97).** En cada pueblo, la tienda vende los consumibles y un armero nuevo vende el equipo. En los dos se puede vender.
 3. **La Pluma de fénix no se compra (M-99).** Solo cae de los enemigos o sale de los cofres.
+4. **El Coleccionista, hasta 40 medallas (M-100).** Un premio cada 4 medallas, siempre un anillo o un amuleto, y está en la Caravana y en Brumaclara desde que llegas.
 
 ## Decisiones tomadas (2026-11-15)
 
@@ -96,7 +97,7 @@ Fecha: 2026-11-15. Estado: spec. Cubre M-96, M-97 y M-99 del [documento maestro]
   - en la v2, `desierto_ruina`, `montana_1_oeste` y `ciudad_2_cofre`;
   - en la v3, `cienaga_islote_norte`, `cuevas_2_cofre`, `ruinas_2_cofre` y `fuente_este`.
 - Solo la deja caer la Momia del desierto (3 %).
-- El Coleccionista da dos por 2 medallas (`Medals.PRIZES`).
+- El Coleccionista da dos por 2 medallas (`Medals.PRIZES`), pero desde M-100 ya no da objetos.
 - La partida automática no la compra (`Shop.autoplay_picks()` solo compra equipo, el Ala y pociones).
 
 ### Lo que ve el jugador
@@ -106,8 +107,8 @@ Fecha: 2026-11-15. Estado: spec. Cubre M-96, M-97 y M-99 del [documento maestro]
 - **Se consigue así:**
   - en los siete cofres de hoy y en dos cofres de la v1 que hoy dan oro: uno de la mina (`mina_2_cofre`) y uno del castillo (`castillo_patio_oeste` o el que el plan vea mejor colocado);
   - de los enemigos: la Momia, como hoy, y un enemigo común de cada zona de combate que hoy no la da, del bosque a la Fuente, con un 2 % (uno solo por zona, elegido en el plan entre los más frecuentes);
-  - del Coleccionista, como hoy.
 - Para los jefes no cambia nada: sus botines son los de siempre.
+- El Coleccionista deja de darlas (M-100): por eso la v1 gana los dos cofres de arriba.
 
 ### Lo que cambia en el código
 
@@ -115,6 +116,63 @@ Fecha: 2026-11-15. Estado: spec. Cubre M-96, M-97 y M-99 del [documento maestro]
 - **`Chests.CHESTS`** (`scripts/game/chests.gd`): los dos cofres de la v1 cambian `"gold"` por `"item": Inventory.PHOENIX`. Una partida que ya abrió ese cofre no lo vuelve a abrir (los cofres abiertos se guardan por id), así que no recibe nada de más.
 - **Los enemigos:** `"pluma_fenix": 0.02` en el diccionario `drops` de un enemigo por zona, en sus `.tres` de `data/enemies/`.
 - **El texto:** el `CHANGELOG.md` de la 1.5.0 dice «150 G, desde la tienda del bosque». No se toca, porque es historia, pero la sección 3.6.0 dice que ya no se compra y dónde se encuentra.
+
+## 4. El Coleccionista, hasta 40 medallas (M-100)
+
+### Cómo está hoy
+
+- Hay 12 medallas pequeñas (`Medals.MEDALS`, por id). Con las 12, los enemigos dejan de soltarlas (`BattleEngine`, `DROP_CHANCE` 5 %) y el Coleccionista dice `ALL_LINE` («¡Las doce! Ya no me queda nada que darte…»).
+- Da cinco premios (`Medals.PRIZES`), en este orden:
+  - con 2 medallas, dos Plumas de fénix;
+  - con 4, dos semillas;
+  - con 6, el Escudo de medallas;
+  - con 9, la Cota de medallas;
+  - con 12, el Amuleto de medallas.
+- Está en Villaclaro, el bosque, la mina y el castillo. En la Caravana, solo después de elegir compañero (`"needs": "companero"`). En Brumaclara, solo tras el Vigía (`"needs": "vigia_bruma"`).
+- La partida guarda los ids de las medallas (`medals`) y cuántos premios ha dado (`medal_prizes`), y al cargar exige `medal_prizes <= Medals.prizes_for(medallas)`.
+
+### Lo que ve el jugador
+
+- **Hay 40 medallas.** Los enemigos comunes las siguen soltando hasta que llevas las 40. El contador del Diario y el aviso al encontrar una dicen «n/40».
+- **Un premio cada 4 medallas**, diez en total. Todos son anillos o amuletos, nunca armas ni armaduras, y se pueden vender como los demás premios (por `prize_accessory_price()`). Los tramos y los valores de partida son estos; el plan los ajusta comparándolos con los premios de familia del bestiario de cada parte, para que ninguno sea mucho mejor que los de su momento:
+
+| Medallas | Premio | Hueco | Da | Cuándo se suele llegar |
+|---|---|---|---|---|
+| 4 | Anillo de cobre | Anillo | VEL +2 | v1 |
+| 8 | Amuleto de medallas (el de hoy) | Amuleto | VEL +4 · ATK +3 | v1 |
+| 12 | Anillo de la suerte | Anillo | VEL +3 · Inmune al sueño | final de la v1 |
+| 16 | Amuleto de bronce | Amuleto | VEL +2 · DEF +6 | v2 |
+| 20 | Anillo de plata | Anillo | VEL +3 · ATK +8 | v2 |
+| 24 | Amuleto de plata | Amuleto | VEL +3 · Inmune al silencio | v2 |
+| 28 | Anillo de oro | Anillo | VEL +4 · ATK +14 | final de la v2 |
+| 32 | Amuleto de oro | Amuleto | VEL +4 · DEF +14 | v3 |
+| 36 | Anillo del coleccionista | Anillo | VEL +5 · ATK +20 · Inmune al veneno | v3 |
+| 40 | Amuleto del coleccionista | Amuleto | VEL +6 · DEF +20 · Inmune al sueño y al silencio | final de la v3 |
+
+- Con las 40 dice su línea final («¡Las cuarenta! Ya no me queda nada que darte, {nombre}. Gracias.»). Sigue en su sitio, como hoy: no desaparece.
+- **Sigue a la caravana como los demás:**
+  - está en la Caravana desde que llegas, sin esperar a elegir compañero;
+  - está en Brumaclara desde que llegas, sin esperar al Vigía;
+  - en Villaclaro y en los pueblos de la v1, como hoy.
+  Su broma de la primera vez en otro pueblo (`AWAY_LINE`) no cambia.
+- **El reparto de medallas:** con 40 hay que repartirlas por las tres partes. El plan ajusta `DROP_CHANCE`, por parte si hace falta, con la partida automática (`medal_tour` y los recorridos completos). La meta: unas 12 al acabar la v1 jugando a mano, unas 28 al acabar la v2 y las 40 cerca del final de la v3.
+- **Las partidas de antes** conservan sus medallas y lo que ya les dio: el Escudo y la Cota de medallas siguen siendo suyos y siguen sin venderse. Su cuenta de premios vuelve a empezar con la tabla nueva. La próxima vez que hablen con él les da de golpe todos los premios nuevos que sus medallas alcanzan. Por ejemplo, con 9 medallas reciben el Anillo de cobre y el Amuleto de medallas; si ya tenían este último, reciben otra copia, que pueden vender.
+
+### Lo que cambia en el código
+
+- **`Medals`** (`scripts/game/medals.gd`):
+  - `MEDALS` gana 28 ids nuevos al final (`medalla_13` a `medalla_40`); los 12 de hoy se quedan, así las partidas guardadas siguen siendo válidas.
+  - `PRIZES` pasa a la tabla de arriba, con `"equipment"` siempre de hueco anillo o amuleto. Se va el tipo de premio `"items"` si nada más lo usa.
+  - `ALL_LINE` dice «cuarenta», y el comentario de cabecera deja de decir «twelve».
+- **`Equipment`** (`scripts/game/equipment.gd`): los nueve anillos y amuletos nuevos, con `"price": 0` y `"zone": -1` como el Amuleto de medallas. `MEDAL_SHIELD` y `MEDAL_MAIL` se quedan, porque las partidas de antes los tienen, pero nadie los da ya.
+- **`data/zones/caravana.tres` y `brumaclara.tres`:** el Coleccionista pierde su `"needs"`.
+- **La partida guardada, versión 16** (`SaveData.VERSION`):
+  - al cargar una partida de la 15 o anterior, `medal_prizes` se pone a 0 antes de validar;
+  - desde la 16, la validación de siempre, con la tabla nueva;
+  - una partida guardada en la 3.6.0 ya no se abre en una versión anterior, como pasó con la 15.
+- **Lo que cambia solo:** `BattleEngine` (el aviso de medalla), `JournalPage` y la partida automática (`medal_tour`, sus mensajes «Medalla: n/40» y «Medallas: … premios n/10») ya leen `Medals.MEDALS.size()` y `Medals.PRIZES.size()`. Hay que comprobar que `medal_tour` termina en un tiempo razonable con 40; si no, se limita a la v1, que es donde empieza.
+- **La 3.4.0** pone el rótulo «Coleccionista» sobre él. Como ahora está en la Caravana y en Brumaclara desde el principio, el rótulo también.
+- **`CHANGELOG.md`:** la sección de la 2.5.0 es historia y no se toca. La sección 3.6.0 explica lo nuevo y qué pasa con las partidas de antes.
 
 ## Verificación (a mano; el proyecto no tiene tests)
 
@@ -126,5 +184,7 @@ Fecha: 2026-11-15. Estado: spec. Cubre M-96, M-97 y M-99 del [documento maestro]
   - la tienda y el armero de Villaclaro, de la mina y de Brumaclara, con sus rótulos;
   - «Comprar» de una tienda del bosque, de la Caravana y de Brumaclara, sin la Pluma de fénix.
 - La partida automática termina la v1, la v2 y la v3 sin más derrotas que en la 3.5.0: sin plumas en las tiendas, revivir depende de lo encontrado.
-- La partida guardada de antes carga igual (el compañero no se guarda aparte: sale de `ally_id`).
+- La partida guardada de antes carga igual (el compañero no se guarda aparte: sale de `ally_id`). Una partida de la 15 con 9 medallas y 4 premios carga, y al hablar con el Coleccionista recibe el Anillo de cobre y el Amuleto de medallas.
+- La ida y vuelta de la partida guardada (skill `villaclaro-autoplay`) con la versión 16.
+- El Coleccionista en la Caravana y en Brumaclara nada más llegar, con su rótulo.
 - `CHANGELOG.md`, sección 3.6.0, y `application/config/version` = 3.6.0.

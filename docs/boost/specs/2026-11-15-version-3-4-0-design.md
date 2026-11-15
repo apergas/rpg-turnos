@@ -101,7 +101,7 @@ Cinco retoques de interfaz, sin reglas de juego nuevas:
 
 | Figura | Dónde | Rótulo |
 |---|---|---|
-| Coleccionista | Villaclaro, bosque, mina, castillo, Caravana y Brumaclara (cuando están) | «Coleccionista» |
+| Coleccionista | Villaclaro, bosque, mina, castillo, Caravana y Brumaclara (donde esté; desde la 3.6.0, en la Caravana y en Brumaclara desde que llegas) | «Coleccionista» |
 | Jefe de caravana | La Caravana y la pradera de Villaclaro (donde elige compañero, pregunta por la salida o recibe misiones) | «Jefe de caravana» |
 | Orvalla | Brumaclara | «Orvalla» |
 | Tablón | Villaclaro, bosque, castillo, Caravana y Brumaclara | «Tablón» |
