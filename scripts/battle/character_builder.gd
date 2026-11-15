@@ -3,18 +3,21 @@ class_name CharacterBuilder extends RefCounted
 ## witch, the skeletons, the caravan's people, the companions...), from their
 ## ActorLooks.LOOKS entry: the model turned to face -Z with its props hidden, weapons on
 ## bones, tints, head texture, cape, hair pieces, the Momia's wraps, the Armadura's ember,
-## an aura or a corona of light and the hero's stick. Static only, keeps no state: it writes into the actor
-## through its builder methods (set_model, set_aura, set_animations, add_mesh...).
+## an aura or a corona of light and the hero's stick. Static only, keeps no state: it writes
+## into the actor through its builder methods (set_model, set_aura, set_animations,
+## add_mesh...).
 
 ## Resting opacity of an aura (LOOKS "aura": the Señor de la Niebla, the Eco).
 const FOG_AURA_ALPHA := 0.2
 ## The corona of light over the head (LOOKS "corona": the Eco de Albor, Albor; 3.3.0): a flat
-## ring CORONA_RADIUS wide and CORONA_THICKNESS thick, CORONA_LIFT over the head bone (in the
-## model's own units), at CORONA_ALPHA. It is the figure's aura: the Eco's second phase
-## (BattleActor.play_phase()) swells it and dims it to the aura's phase opacity.
-const CORONA_RADIUS := 0.34
-const CORONA_THICKNESS := 0.06
-const CORONA_LIFT := 1.5
+## upright ring behind the head, CORONA_RADIUS wide and CORONA_THICKNESS thick, CORONA_LIFT over
+## the head bone and CORONA_BACK behind it (in the model's own units), at CORONA_ALPHA. It is
+## the figure's aura: the Eco's second phase (BattleActor.play_phase()) swells it and dims it
+## to the aura's phase opacity.
+const CORONA_RADIUS := 0.45
+const CORONA_THICKNESS := 0.07
+const CORONA_LIFT := 1.0
+const CORONA_BACK := 0.35
 const CORONA_ALPHA := 0.85
 ## Bones the weapons hang from, under the model's Rig/Skeleton3D.
 const SKELETON_PATH := "Rig/Skeleton3D"
@@ -89,8 +92,9 @@ static func build(actor: BattleActor, data: Dictionary) -> void:
 		ring.outer_radius = CORONA_RADIUS
 		ring.rings = 16
 		ring.ring_segments = 6
-		actor.add_ghost(crown, ring, data.corona, CORONA_ALPHA, Vector3(0, CORONA_LIFT, 0),
+		actor.add_ghost(crown, ring, data.corona, CORONA_ALPHA, Vector3(0, CORONA_LIFT, -CORONA_BACK),
 			Vector3.ONE)
+		(crown.get_child(-1) as Node3D).rotation_degrees.x = 90.0
 		actor.set_aura(crown.get_child(-1) as MeshInstance3D)
 	if actor.look == ActorLooks.Look.HERO:
 		var stick := LowPoly.cylinder(STICK_RADIUS, STICK_LENGTH)

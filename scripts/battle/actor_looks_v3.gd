@@ -359,7 +359,7 @@ const LOOKS := {
 		"hide": [],
 		"anims": ActorLooks.SKELETON_ANIMS,
 		"props": {ActorLooks.RIGHT_HAND_BONE: ActorLooks.SKELETON_STAFF},
-		"tint": Color(0.72, 0.8, 1.05),
+		"tint": Color(0.5, 0.85, 1.5),
 		"corona": Color(0.7, 0.9, 1.0),
 	},
 }

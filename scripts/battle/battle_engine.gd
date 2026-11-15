@@ -562,7 +562,8 @@ func _fall(who: int, events: Array[Dictionary]) -> void:
 	fighter.speed = next.speed
 	fighter.skills = next.skills.duplicate()
 	fighter.ai_weights = next.ai_weights.duplicate()
-	fighter.weak = next.weak.duplicate()  # the Eco de Albor is weak to light only in its second
+	# The Eco de Albor is weak to light only in its second phase.
+	fighter.weak = next.weak.duplicate()
 	fighter.resist = next.resist.duplicate()
 	fighter.status.clear()
 	_charged.erase(who)
