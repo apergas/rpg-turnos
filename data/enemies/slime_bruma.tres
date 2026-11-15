@@ -14,7 +14,7 @@ defense = 74
 speed = 36
 map_roam = 1.5
 map_speed = 1.2
-exp_reward = 124
+exp_reward = 69
 gold_reward = 90
 ai_weights = {
 "attack": 85,
