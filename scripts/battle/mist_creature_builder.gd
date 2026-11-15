@@ -8,8 +8,8 @@ class_name MistCreatureBuilder extends RefCounted
 ## vulture, the gargoyle and the specter in the mist's colours; the Caballero and the Vigía are
 ## the Knight: CharacterBuilder builds them) and the Fuente's shadow, wolf and slime (the
 ## specter, the wolf and the slime in the mist's colours, the wolf and the slime wrapped in
-## mist) and its new Ojo de la Niebla; the Centinela caído is the Knight. Static only, keeps no
-## state: like CreatureBuilder, each build_x(actor, data) hangs its meshes under actor.body()
+## mist), its new Ojo de la Niebla and the Lente del faro; the Centinela caído is the Knight.
+## Static only, keeps no state: like CreatureBuilder, each build_x(actor, data) hangs its meshes under actor.body()
 ## through the actor's builder methods. build() says whether the look was one of its own.
 
 const Look = ActorLooks.Look
@@ -30,6 +30,8 @@ const JELLY_ALPHA := 0.5
 const TENTACLES := 8
 ## The Ojo de la Niebla's halo, more opaque than an aura.
 const EYE_HALO_ALPHA := 0.4
+## The Lente del faro's glass.
+const LENS_ALPHA := 0.6
 
 
 ## Builds the figure of a look of the v3 and returns true; false (nothing built) for any other.
@@ -79,6 +81,8 @@ static func build(actor: BattleActor, data: Dictionary) -> bool:
 	elif look == Look.MIST_SLIME:
 		CreatureBuilder.build_slime(actor, data)
 		_add_mist(actor, data)
+	elif look == Look.LIGHTHOUSE_LENS:
+		build_lens(actor, data)
 	else:
 		return false
 	return true
@@ -244,3 +248,20 @@ static func build_eye(actor: BattleActor, data: Dictionary) -> void:
 static func _add_mist(actor: BattleActor, data: Dictionary) -> void:
 	actor.add_ghost(actor.body(), LowPoly.sphere(1.0), data.mist_color, CreatureBuilder.AURA_ALPHA,
 		Vector3(0, 0.3 * data.scale, 0), (data.mist_size as Vector3) * data.scale)
+
+
+## The Lente del faro: a round glass in a brass ring standing on its edge and floating over the
+## ground (it floats like the specter, never still), facing -Z. About 1.6 m tall.
+static func build_lens(actor: BattleActor, data: Dictionary) -> void:
+	var hover := Node3D.new()
+	hover.position.y = data.fly
+	hover.scale = Vector3.ONE * data.scale
+	actor.body().add_child(hover)
+	actor.set_hover(hover)
+	var ring := TorusMesh.new()
+	ring.inner_radius = 0.36
+	ring.outer_radius = 0.44
+	actor.add_mesh(hover, ring, data.color, Vector3(0, 0.5, 0), 0.3)
+	(hover.get_child(-1) as Node3D).rotation_degrees.x = 90.0  # standing, facing -Z
+	actor.add_ghost(hover, LowPoly.sphere(0.38), data.glass_color, LENS_ALPHA,
+		Vector3(0, 0.5, 0), Vector3(1.0, 1.0, 0.3))  # the glass

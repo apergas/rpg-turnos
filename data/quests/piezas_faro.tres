@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="QuestData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/quest_data.gd" id="1_quest"]
+
+[resource]
+script = ExtResource("1_quest")
+id = "piezas_faro"
+title = "La última pieza del faro"
+kind = 3
+zone = "brumaclara"
+giver = "Orvalla"
+needs = "vigia_bruma"
+gone = "eco_albor"
+turn_in_zone = "brumaclara"
+turn_in = "Orvalla"
+target = "Lente del faro"
+target_zone = "fuente"
+objective = "Busca la lente grande del faro de Orvalla en la Fuente de la Niebla."
+status = "busca la lente del faro"
+report = "llévasela a Orvalla"
+offer_lines = Array[String](["El faro alumbra, pero cojea. Le falta la lente grande, la de arriba del todo.", "Se la llevó la bruma cuando el faro se apagó, y la bruma siempre acaba en la Fuente. Si la ves, tráemela. Pesa poco y brilla mucho: no tiene pérdida."])
+found_lines = Array[String](["En la sala del este flota una lente de cristal en un aro de latón. Brilla como si alguien la hubiera limpiado esta mañana.", "La envuelves con cuidado. Es la lente del faro de Orvalla."])
+wait_lines = Array[String](["¿La lente? Grande, redonda y con aro de latón. Si encuentras otra cosa grande, redonda y con aro de latón, también la quiero."])
+done_lines = Array[String](["¡La lente! Mírala, ni un arañazo. La Niebla la ha tratado mejor que yo.", "Esta noche el faro alumbrará hasta la Fuente. Toma, dos semillas: las guardaba para un día así."])
+reward_gold = 0
+reward_items = {
+"semilla_fuerza": 1,
+"semilla_agilidad": 1
+}

@@ -30,6 +30,8 @@ const QUESTS := {
 	"geodas": preload("res://data/quests/geodas.tres"),
 	"cartas": preload("res://data/quests/cartas.tres"),
 	"caballeros": preload("res://data/quests/caballeros.tres"),
+	"ojos": preload("res://data/quests/ojos.tres"),
+	"piezas_faro": preload("res://data/quests/piezas_faro.tres"),
 }
 const VILLAGE_ZONE := "pradera"
 ## Ends the waiting lines of a HUNT or GATHER of several, so the progress is said aloud.
@@ -52,7 +54,7 @@ const DONE_MANY_TEXT := "Misiones cumplidas: %d"
 ## than its quest's is always there when the quest can be finished (problems()).
 const FLAG_ORDER := ["caravana_vista", "caravana", "companero", "jaguar_sombrio",
 	"gusano_dunas", "grifo_cumbre", "guardian_ciudad", "devorador_portal", "brumaclara",
-	"garza_legamo", "coloso_cuarzo", "amuleto_recuperado", "vigia_bruma"]
+	"garza_legamo", "coloso_cuarzo", "amuleto_recuperado", "vigia_bruma", "eco_albor"]
 
 ## The village quest, the same object as GameState.quest.
 var village: Quest

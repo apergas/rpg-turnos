@@ -362,4 +362,12 @@ const LOOKS := {
 		"tint": Color(0.5, 0.85, 1.5),
 		"corona": Color(0.7, 0.9, 1.0),
 	},
+	# The Lente del faro (the piezas_faro quest, 3.3.0): a big glass in a brass ring, floating.
+	Look.LIGHTHOUSE_LENS: {
+		"color": Color(0.78, 0.6, 0.28),
+		"glass_color": Color(0.85, 0.95, 1.0),
+		"scale": 1.0,
+		"top": 1.6,
+		"fly": 0.7,
+	},
 }
