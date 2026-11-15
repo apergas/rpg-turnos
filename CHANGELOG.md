@@ -1,6 +1,6 @@
 # Registro de cambios
 
-## Sin publicar
+## 3.3.0 (2026)
 
 La Fuente de la Niebla y el final de la tercera parte.
 
@@ -8,6 +8,8 @@ La Fuente de la Niebla y el final de la tercera parte.
 - Cinco enemigos nuevos y el Eco de Albor, el antiguo guardián de la Fuente, en dos fases.
 - Al vencerlo decides: devolver el amuleto o acabar con el Eco. Los dos finales acaban bien, y cada uno deja Brumaclara a su manera.
 - Los créditos de la tercera parte; después, la partida sigue en Brumaclara, de fiesta.
+- Después del final la Fuente sigue abierta, para acabar las misiones que queden.
+- Alba pega más fuerte: ahora vale la pena contra los hijos de la Niebla.
 - El equipo del amanecer, en la forja del Herrero de cristal.
 - Dos misiones nuevas: los ojos de la Niebla y la última pieza del faro.
 - Los enemigos de Brumaclara se ordenan en cuatro familias del bestiario, cada una con su premio.
