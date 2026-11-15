@@ -1,13 +1,13 @@
 class_name Equipment extends RefCounted
 ## The equipment catalog: every weapon, helmet, armor, shield, ring and amulet, with its
 ## slot, bonus (ATK for a weapon, VEL for a ring or an amulet, DEF for the rest), price in
-## gold, the zone whose shop sells it (1-4 the v1's shops, 5-8 the v2's tramos, 9-12 the v3's etapas; 0: no shop, the starting gear; -1: never sold, a
-## quest's or a bestiary family's reward, a boss's prize or the Coleccionista's), the mesh the hero
-## shows for it
-## (a handslot mesh of Knight.glb, STICK_MESH built in code, or "" for none) and, on some
-## rings and amulets, the statuses it keeps away ("immune": one, or a list). A piece that is not a weapon may
-## also add "attack" (extra_attack()) or "defense" (extra_defense()); a helmet may show "horns" (has_horns()); a helmet or a
-## weapon may have a "tint" for its mesh (tint()).
+## gold, the zone whose shop sells it (1-4 the v1's shops, 5-8 the v2's tramos, 9-12 the v3's
+## etapas; 0: no shop, the starting gear; -1: never sold, a quest's or a bestiary family's reward,
+## a boss's prize or the Coleccionista's), the mesh the hero shows for it (a handslot mesh of
+## Knight.glb, STICK_MESH built in code, or "" for none) and, on some rings and amulets, the
+## statuses it keeps away ("immune": one, or a list). A piece that is not a weapon may also add
+## "attack" (extra_attack()) or "defense" (extra_defense()); a helmet may show "horns"
+## (has_horns()); a helmet or a weapon may have a "tint" for its mesh (tint()).
 ## Pure: no nodes.
 
 const WEAPON := "weapon"

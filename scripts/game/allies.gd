@@ -34,7 +34,8 @@ const GROWTH := {
 }
 ## What the companion says the first time the hero reaches each land of the caravan:
 ## zone id -> companion id -> line (2.4.0; the Ciénaga, 3.0.0; the Cuevas, 3.1.0;
-## Villaclaro and the Ruinas, 3.2.0; the Fuente, 3.3.0). Remembered with the world flag ARRIVAL_PREFIX + zone id.
+## Villaclaro and the Ruinas, 3.2.0; the Fuente, 3.3.0). Remembered with the world flag
+## ARRIVAL_PREFIX + zone id.
 const ARRIVALS := {
 	"jungla": {
 		"brena": "Qué calor. Si algo se mueve entre las hojas, le pego. Si no se mueve, también.",
