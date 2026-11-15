@@ -81,6 +81,7 @@ npcs = [{
 "look": "COLLECTOR",
 "name": "Coleccionista",
 "pos": Vector3(-14, 0, 10.5),
+"sign": "Coleccionista",
 "yaw": 150.0
 }, {
 "id": "bosque",
@@ -120,6 +121,7 @@ npcs = [{
 "look": "BOARD",
 "name": "Tablón",
 "pos": Vector3(-8.2, 0, 7),
+"sign": "Tablón",
 "yaw": 180.0
 }, {
 "kind": "npc",

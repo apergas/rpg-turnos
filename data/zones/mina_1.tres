@@ -48,6 +48,7 @@ npcs = [{
 "look": "COLLECTOR",
 "name": "Coleccionista",
 "pos": Vector3(-6.5, 0, 19.8),
+"sign": "Coleccionista",
 "yaw": 180.0
 }, {
 "id": "mina",
@@ -87,6 +88,7 @@ npcs = [{
 "look": "BOARD",
 "name": "Tablón",
 "pos": Vector3(-3, 0, 17),
+"sign": "Tablón",
 "yaw": 180.0
 }]
 formations = [["golem_barro"], ["arana"], ["espectro"], ["arana"], ["arana", "espectro"], ["golem_barro", "arana"], ["hongo_cueva"]]
