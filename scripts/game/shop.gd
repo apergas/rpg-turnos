@@ -368,6 +368,15 @@ static func autoplay_picks(state: GameState, shop_id: String) -> Array[String]:
 	return picks
 
 
+## For --autoplay's errand to the Caravana (GameAutoplay): true while shop_id sells a piece of
+## equipment that beats what is worn, is not in the bag yet and the gold pays for.
+static func gear_to_buy(state: GameState, shop_id: String) -> bool:
+	for id: String in SHOPS[shop_id].equipment:
+		if compare(state, id).diff > 0 and not id in state.bag_equipment and can_buy(state, id):
+			return true
+	return false
+
+
 ## True while the village's shop still has an upgrade not bought (even if unaffordable).
 static func _gear_pending(state: GameState, shop_id: String) -> bool:
 	for id: String in SHOPS[SHOPS[shop_id].gear_shop].equipment:

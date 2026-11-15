@@ -30,6 +30,7 @@ What the code does not explain:
 - On desktop `user://` is `%APPDATA%\Godot\app_userdata\rpg-turnos\`; autoplay runs save to `user://save_autoplay.json` and never touch the three slots, but `--debug` saves to the real slot.
 - A zone exit with `"look": "portal"` is drawn as the Ala de viaje's portal (`MapProps.PORTAL_LOOK`); the v3's parts of the game are `GameState.part()` (1, 2, 3) and its stretch `GameState.etapa()`, never saved; a save may only stand in the zones of its part (`ZoneData.zones_of_part()`).
 - While Brumaclara has no exit to the next land of the v3 (`StoryState.v3_way_on()`), Orvalla says so, the goal is "La forja de Brumaclara vuelve a arder" and the v3's autoplay run ends there ("Fin de la v3 por ahora: ...").
+- In the v3 the autoplay's restock in Brumaclara crosses the portal to the Caravana's Mercader while he sells a piece the gold pays for (`GameAutoplay._caravan_errand()`, it prints `Recado en la Caravana`).
 - The map hero's rim (`BattleActor.set_map_readable()`) does nothing on the headless renderer: check it with `--write-movie` or a window.
 
 ## Conventions
