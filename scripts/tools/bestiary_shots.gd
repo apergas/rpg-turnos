@@ -11,7 +11,8 @@ const AMBIENT := {"jaguar_sombrio": 5.0, "armadura_hueca": 1.8, "caballero_bruma
 	"vigia_bruma": 1.8, "centinela_caido": 1.8}
 ## Figures too long to show head on, or with their crystals on the back: the turn of the figure
 ## (degrees) and the camera's distance.
-const VIEWS := {"caiman_bruma": {"turn": 55.0, "distance": 5.0},
+const VIEWS := {"eco_albor": {"turn": 0.0, "distance": 6.0},
+	"caiman_bruma": {"turn": 55.0, "distance": 5.0},
 	"murcielago_cristal": {"turn": 35.0, "distance": 4.2},
 	"slime_cristal": {"turn": 35.0, "distance": 3.4},
 	"golem_cuarzo": {"turn": 35.0, "distance": 4.0},

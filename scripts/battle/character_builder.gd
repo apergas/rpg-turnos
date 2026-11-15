@@ -3,11 +3,19 @@ class_name CharacterBuilder extends RefCounted
 ## witch, the skeletons, the caravan's people, the companions...), from their
 ## ActorLooks.LOOKS entry: the model turned to face -Z with its props hidden, weapons on
 ## bones, tints, head texture, cape, hair pieces, the Momia's wraps, the Armadura's ember,
-## an aura and the hero's stick. Static only, keeps no state: it writes into the actor
+## an aura or a corona of light and the hero's stick. Static only, keeps no state: it writes into the actor
 ## through its builder methods (set_model, set_aura, set_animations, add_mesh...).
 
 ## Resting opacity of an aura (LOOKS "aura": the Señor de la Niebla, the Eco).
 const FOG_AURA_ALPHA := 0.2
+## The corona of light over the head (LOOKS "corona": the Eco de Albor, Albor; 3.3.0): a flat
+## ring CORONA_RADIUS wide and CORONA_THICKNESS thick, CORONA_LIFT over the head bone (in the
+## model's own units), at CORONA_ALPHA. It is the figure's aura: the Eco's second phase
+## (BattleActor.play_phase()) swells it and dims it to the aura's phase opacity.
+const CORONA_RADIUS := 0.34
+const CORONA_THICKNESS := 0.06
+const CORONA_LIFT := 1.5
+const CORONA_ALPHA := 0.85
 ## Bones the weapons hang from, under the model's Rig/Skeleton3D.
 const SKELETON_PATH := "Rig/Skeleton3D"
 ## The AnimationPlayer inside a KayKit character scene.
@@ -72,6 +80,18 @@ static func build(actor: BattleActor, data: Dictionary) -> void:
 		actor.add_ghost(actor.body(), LowPoly.sphere(0.5), data.aura, FOG_AURA_ALPHA, Vector3(0, actor.top_height() * 0.45, 0),
 			Vector3(2.2, 3.2, 2.2))
 		actor.set_aura(actor.body().get_child(-1) as MeshInstance3D)
+	if data.has("corona"):
+		var crown := BoneAttachment3D.new()
+		crown.bone_name = "head"
+		bones.add_child(crown)
+		var ring := TorusMesh.new()
+		ring.inner_radius = CORONA_RADIUS - CORONA_THICKNESS
+		ring.outer_radius = CORONA_RADIUS
+		ring.rings = 16
+		ring.ring_segments = 6
+		actor.add_ghost(crown, ring, data.corona, CORONA_ALPHA, Vector3(0, CORONA_LIFT, 0),
+			Vector3.ONE)
+		actor.set_aura(crown.get_child(-1) as MeshInstance3D)
 	if actor.look == ActorLooks.Look.HERO:
 		var stick := LowPoly.cylinder(STICK_RADIUS, STICK_LENGTH)
 		stick.top_radius = STICK_RADIUS * 0.7

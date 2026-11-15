@@ -43,7 +43,8 @@ exits = [{
 "yaw": 0.0
 }]
 npcs = []
-boss_id = ""
+boss_id = "eco_albor"
+boss_pos = Vector3(0, 0, -11.5)
 formations = [["sombra_albor"], ["ojo_niebla"], ["lobo_niebla", "lobo_niebla"], ["slime_bruma"], ["centinela_caido"], ["sombra_albor", "ojo_niebla"], ["slime_bruma", "slime_bruma"], ["centinela_caido", "lobo_niebla"]]
 start_formations = [["sombra_albor"], ["slime_bruma"]]
 start_pos = Vector3(0, 0, 22.5)

@@ -375,6 +375,29 @@ const AUTOPLAY_ZONES := {
 			Inventory.PHOENIX: 1},
 		"finished": true,
 	},
+	# --autoplay-zone=albor: the Fuente almost done: Lv 50 with the amanecer gear and Brena, at its
+	# entrance; it walks the floor and fights the Eco de Albor.
+	"albor": {
+		"zone": "fuente",
+		"experience": 44600,
+		"gold": 2000,
+		"gear": ["espada_amanecer", "armadura_amanecer", "escudo_amanecer", "casco_amanecer"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra", "senor_niebla", "caravana_vista", "caravana", "companero",
+			"jaguar_sombrio", "gusano_dunas", "montana_palanca", "grifo_cumbre",
+			"guardian_ciudad", "ciudad_reja", "devorador_portal", "portal_calmo",
+			"brumaclara", "brumaclara_vista", "garza_legamo", "cuevas_palanca", "coloso_cuarzo",
+			"amuleto_recuperado", "vigia_bruma"],
+		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo",
+			"insignia_jungla", "sello_desierto", "mapa_montana", "lampara_faro", "cristal_fuente",
+			"amuleto_recuperado", "sello_albor"],
+		"quest_done": true,
+		"town": "brumaclara",
+		"ally": "brena",
+		"items": {Inventory.BIG_POTION: 6, Inventory.BIG_ETHER: 5, Inventory.ELIXIR: 2,
+			Inventory.WING: 3, Inventory.PHOENIX: 1},
+		"finished": true,
+	},
 	# Ready for the Señor de la Niebla: Lv 17 with the castle's gear.
 	"castillo_trono": {
 		"experience": 2244,

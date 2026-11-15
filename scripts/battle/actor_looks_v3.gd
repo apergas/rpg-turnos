@@ -349,4 +349,17 @@ const LOOKS := {
 		"anims": ActorLooks.CHARACTER_ANIMS,
 		"tint": Color(0.45, 0.55, 0.78),
 	},
+	# The Eco de Albor, the v3's last boss: the Señor de la Niebla's figure at 1.75 times the size
+	# (not more: its life bar, top + 0.15, must fit the battle camera) in a pale blue grey, with a
+	# corona of light-blue light over its head (its second phase dims it).
+	Look.ALBOR_ECHO: {
+		"scene": ActorLooks.SKELETON_MAGE,
+		"scale": ActorLooks.CHARACTER_SCALE * 1.75,
+		"top": 3.5,
+		"hide": [],
+		"anims": ActorLooks.SKELETON_ANIMS,
+		"props": {ActorLooks.RIGHT_HAND_BONE: ActorLooks.SKELETON_STAFF},
+		"tint": Color(0.72, 0.8, 1.05),
+		"corona": Color(0.7, 0.9, 1.0),
+	},
 }

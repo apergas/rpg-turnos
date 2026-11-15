@@ -94,7 +94,10 @@ func on_encounter(boss: bool) -> void:
 	var echo := boss and boss_id() == _ctx.zone.postgame_boss_id
 	await _ctx.fade.call(1.0)
 	_ctx.world.set_active(false)
-	_ctx.audio.play_music(MusicLibrary.BOSS if boss else MusicLibrary.BATTLE)
+	var track := MusicLibrary.BATTLE
+	if boss:
+		track = MusicLibrary.ALBOR if boss_id() == StoryState.V3_FINAL_BOSS else MusicLibrary.BOSS
+	_ctx.audio.play_music(track)  # under black: building a new track stalls nobody
 	_ctx.audio.stop_ambient()
 	var battle: BattleScene = BATTLE_SCENE.instantiate()
 	battle.setup(_ctx.state.hero, enemies, _ctx.state.inventory)
