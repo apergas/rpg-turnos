@@ -17,7 +17,8 @@ const NAME_TAG := "{nombre}"
 ## Every cutscene, in story order.
 const SCENES: Array[String] = ["prologo", "rey_slime", "aldea_bosque", "bruja", "mina",
 	"golem", "castillo", "final", "caravana_llega", "caravana_parte", "caravana_campamento",
-	"jaguar", "gusano", "grifo", "guardian", "cruce", "brumaclara_llega", "garza"]
+	"jaguar", "gusano", "grifo", "guardian", "cruce", "brumaclara_llega", "garza",
+	"recuerdo_albor"]
 ## The cutscene that follows beating each boss (its world flag).
 const AFTER_BOSS := {
 	"rey_slime": "rey_slime",
@@ -29,6 +30,7 @@ const AFTER_BOSS := {
 	"grifo_cumbre": "grifo",
 	"guardian_ciudad": "guardian",
 	"garza_legamo": "garza",
+	"coloso_cuarzo": "recuerdo_albor",
 	"devorador_portal": "cruce",
 }
 ## The cutscene of the first visit to each zone's village.
