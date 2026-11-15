@@ -69,7 +69,7 @@ const V3_KEEPER := "Orvalla"
 ## version of the v3 brings the next one; the 3.2.0 ends with the Vigía): what Orvalla adds and
 ## the goal.
 const V3_NOT_YET_LINE := "Todavía no sabemos cómo seguir. Descansa, y vuelve cuando la luz nos diga algo."
-const V3_WAIT_GOAL := "La forja de Brumaclara vuelve a arder"
+const V3_WAIT_GOAL := "Todas las ventanas de Brumaclara vuelven a tener luz"
 ## What Orvalla adds besides (keeper_line()): the Coloso beaten, the amulet to fetch from
 ## Villaclaro; the amulet here, the way up to the Ruinas (3.2.0).
 const V3_AMULET_LINE := "Un amuleto partido en tres... El Jefe de vuestra caravana dice que conoce un atajo a tu pueblo. Ve a buscarlo, {nombre}."
