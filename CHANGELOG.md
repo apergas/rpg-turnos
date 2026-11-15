@@ -1,6 +1,6 @@
 # Registro de cambios
 
-## Sin publicar
+## 3.1.0 (2026)
 
 Las Cuevas de cristal.
 
