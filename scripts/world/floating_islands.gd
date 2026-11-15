@@ -57,8 +57,8 @@ static func build(root: Node3D, zone: ZoneData) -> void:
 				shape.position = center + Vector3(0, WALL_HEIGHT / 2.0, 0)
 				walls.add_child(shape)
 	for i in SLAB_SHADES.size():
-		LowPoly.add_multimesh(root, slab, by_shade[i], _material(zone.floor_color * SLAB_SHADES[i]))
-	LowPoly.add_multimesh(root, root_mesh(ROOT_RADIUS, 1.0), roots, _material(zone.rock_color))
+		LowPoly.add_multimesh(root, slab, by_shade[i], material(zone.floor_color * SLAB_SHADES[i]))
+	LowPoly.add_multimesh(root, root_mesh(ROOT_RADIUS, 1.0), roots, material(zone.rock_color))
 	_add_void(root, zone)
 	var ground := StaticBody3D.new()
 	var plane := CollisionShape3D.new()
@@ -79,7 +79,7 @@ static func root_mesh(top_radius: float, length: float) -> CylinderMesh:
 	return mesh
 
 
-static func _material(color: Color) -> StandardMaterial3D:
+static func material(color: Color) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
 	material.albedo_color = color
 	material.roughness = 1.0

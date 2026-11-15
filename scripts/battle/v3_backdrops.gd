@@ -46,26 +46,30 @@ const CUEVAS_GLOW_ENERGY := 1.1
 const CUEVAS_GLOW_RANGE := 12.0
 const CUEVAS_GLOW_POS := Vector3(0.5, 3.0, 3.5)
 const RUINAS := "ruinas"
-## The fighters' island: a slab (its top at y 0) and how deep its root hangs.
-const RUINAS_PLATFORM := Vector3(22, 0.6, 18)
-const RUINAS_PLATFORM_CENTER := Vector3(0, -0.3, -2)
+## The fighters' island: its flagstones (RUINAS_TILES columns by rows, one CELL each, a joint
+## between them), the rock slab under them (its top at y 0), how deep its root hangs and where
+## the back row of tiles is centred (the island's back edge shows behind the enemies).
+const RUINAS_TILES := Vector2i(5, 4)
+const RUINAS_BACK_Z := -7.0
+const RUINAS_BASE_THICKNESS := 0.6
 const RUINAS_ROOT := 9.0
-## The far islands: [the centre of their top, radius], behind and beside the fighters.
+## The far islands: [the centre of their top, radius], in the void behind and beside the
+## fighters, in the band the island's back edge leaves clear.
 const RUINAS_ISLANDS := [
-	[Vector3(-17, -2, -22), 4.0], [Vector3(15, -4, -28), 5.5], [Vector3(-3, -7, -40), 7.0],
-	[Vector3(27, -1, -12), 3.0], [Vector3(-28, -5, -10), 3.5],
+	[Vector3(-13, 0.5, -18), 3.5], [Vector3(9, 1.5, -26), 4.0], [Vector3(-3, 1.0, -36), 5.0],
+	[Vector3(22, 0.0, -10), 2.5],
 ]
 ## How far below the sea of mist lies.
 const RUINAS_VOID_DEPTH := 30.0
 ## [Decor id, position, yaw in degrees, scale] (BattleStage.add_decor_pieces()): broken columns
 ## and blocks on the island, out of the fighters' ellipse and the camera's way.
 const RUINAS_DECOR := [
-	["column_broken", Vector3(-6, 0, -7), 20.0, 1.2],
-	["column", Vector3(7, 0, -8.5), 0.0, 1.3],
-	["column_broken", Vector3(9, 0, -2), 140.0, 1.0],
+	["column_broken", Vector3(-6, 0, -6.5), 20.0, 1.2],
+	["column", Vector3(7, 0, -7), 0.0, 1.3],
+	["column_broken", Vector3(8.5, 0, -2), 140.0, 1.0],
 	["ruin_block", Vector3(-8, 0, -2), 30.0, 1.0],
-	["column", Vector3(-10, 0, -9), 0.0, 1.2],
-	["ruin_block", Vector3(4, 0, -9.5), 75.0, 0.9],
+	["column", Vector3(-8.5, 0, -7.5), 0.0, 1.2],
+	["ruin_block", Vector3(4, 0, -8), 75.0, 0.9],
 ]
 
 
@@ -129,11 +133,33 @@ static func _build_cuevas(root: Node3D, zone: ZoneData) -> void:
 
 
 static func _build_ruinas(root: Node3D, zone: ZoneData) -> void:
-	var slab := BoxMesh.new()
-	slab.size = RUINAS_PLATFORM
-	BattleStage.add_mesh(root, slab, zone.floor_color, RUINAS_PLATFORM_CENTER)
-	var under := RUINAS_PLATFORM_CENTER + Vector3(0, -RUINAS_PLATFORM.y / 2.0 - RUINAS_ROOT / 2.0, 0)
-	BattleStage.add_mesh(root, FloatingIslands.root_mesh(RUINAS_PLATFORM.x / 2.0, RUINAS_ROOT),
+	var cell := ZoneData.CELL
+	var width := RUINAS_TILES.x * cell
+	var depth := RUINAS_TILES.y * cell
+	var center_z := RUINAS_BACK_Z - cell / 2.0 + depth / 2.0
+	var base := BoxMesh.new()
+	base.size = Vector3(width, RUINAS_BASE_THICKNESS, depth)
+	BattleStage.add_mesh(root, base, zone.rock_color,
+		Vector3(0, -FloatingIslands.SLAB_THICKNESS - RUINAS_BASE_THICKNESS / 2.0 + 0.1, center_z))
+	var tile := BoxMesh.new()
+	tile.size = Vector3(cell - FloatingIslands.SLAB_GAP, FloatingIslands.SLAB_THICKNESS,
+		cell - FloatingIslands.SLAB_GAP)
+	var by_shade: Array = []
+	for shade in FloatingIslands.SLAB_SHADES:
+		var list: Array[Transform3D] = []
+		by_shade.append(list)
+	for row in RUINAS_TILES.y:
+		for col in RUINAS_TILES.x:
+			var at := Vector3((col - (RUINAS_TILES.x - 1) / 2.0) * cell,
+				-FloatingIslands.SLAB_THICKNESS / 2.0, RUINAS_BACK_Z + row * cell)
+			(by_shade[absi(col * 7 + row * 13) % by_shade.size()] as Array).append(
+				Transform3D(Basis.IDENTITY, at))
+	for i in by_shade.size():
+		LowPoly.add_multimesh(root, tile, by_shade[i],
+			FloatingIslands.material(zone.floor_color * FloatingIslands.SLAB_SHADES[i]))
+	var under := Vector3(0, -FloatingIslands.SLAB_THICKNESS - RUINAS_BASE_THICKNESS
+		- RUINAS_ROOT / 2.0, center_z)
+	BattleStage.add_mesh(root, FloatingIslands.root_mesh(width / 2.0, RUINAS_ROOT),
 		zone.rock_color, under)
 	for island: Array in RUINAS_ISLANDS:
 		_add_island(root, zone, island[0], island[1])
