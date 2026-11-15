@@ -113,7 +113,7 @@ exits = [{
 "yaw": 0.0
 }, {
 "entry": "norte",
-"gone": "amuleto_alba",
+"gone": "amuleto_recuperado",
 "id": "villaclaro",
 "label": "A Villaclaro",
 "lock": "",

@@ -16,7 +16,7 @@ steps = [
 ["say", "Abuela Rosa", ["Un amuleto partido en tres... Ay, {nombre}. Eso es cosa de mi abuelo.", "Volvió del norte con una piedra que brillaba sola. Decía que la había encontrado junto a una fuente de luz azul.", "La partió en tres y repartió los trozos: uno al bosque, otro a la mina y otro al castillo, para que nadie la tuviera entera.", "Desde entonces la niebla rondaba el castillo. Y los trozos acabaron en las peores manos, eso ya lo sabes tú."]],
 ["say", "Abuela Rosa", ["Si esa luz es de allí, tiene que volver a su casa. Llévatelo."]],
 ["sfx", "level_up"],
-["flag", "amuleto_alba"],
+["flag", "amuleto_recuperado"],
 ["say", "", ["¡Consigues el Amuleto del Alba!"]],
 ["say", "Abuela Rosa", ["Y vuelve, ¿eh? Que aquí también hace falta quien me pruebe los pasteles.", "La caravana te espera por el camino del norte."]]
 ]

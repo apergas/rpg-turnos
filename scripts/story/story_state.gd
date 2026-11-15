@@ -58,7 +58,7 @@ const V3_BOSSES: Array[String] = ["garza_legamo", "coloso_cuarzo", "vigia_bruma"
 const V3_FINAL_BOSS := "eco_albor"
 ## The Amuleto del Alba (3.2.0): the key item and the flag the Abuela Rosa's scene gives
 ## (StoryFlow), which opens the way up to the Ruinas.
-const AMULET_FLAG := "amuleto_alba"
+const AMULET_FLAG := "amuleto_recuperado"
 ## The Abuela Rosa's story of the amulet (data/cutscenes/amuleto.tres): Villaclaro's village
 ## scene in the part 3 (V3Flow.arrival_scene()); its "flag" step gives the amulet.
 const AMULET_SCENE := "amuleto"

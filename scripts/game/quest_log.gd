@@ -50,7 +50,7 @@ const DONE_MANY_TEXT := "Misiones cumplidas: %d"
 ## than its quest's is always there when the quest can be finished (problems()).
 const FLAG_ORDER := ["caravana_vista", "caravana", "companero", "jaguar_sombrio",
 	"gusano_dunas", "grifo_cumbre", "guardian_ciudad", "devorador_portal", "brumaclara",
-	"garza_legamo", "coloso_cuarzo", "amuleto_alba", "vigia_bruma"]
+	"garza_legamo", "coloso_cuarzo", "amuleto_recuperado", "vigia_bruma"]
 
 ## The village quest, the same object as GameState.quest.
 var village: Quest
