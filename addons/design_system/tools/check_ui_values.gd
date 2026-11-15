@@ -1,13 +1,16 @@
 extends SceneTree
-## Development tool: finds UI values written by hand that must come from UiTokens / UiTheme.
-## Run: godot --headless --path . --script res://scripts/tools/check_ui_values.gd
+## Development tool of the design system core: finds UI values written by hand that must come
+## from UiTokens / the theme. What it scans comes from res://design_system.json: every .gd
+## under scan_roots; Color( is forbidden in color_dirs, except in gd_out (the generated
+## UiTokens).
+## Run: godot --headless --path . --script res://addons/design_system/tools/check_ui_values.gd
 ## Prints `path:line: reason` for each hit and exits 1; exits 0 when clean.
 ## Excluded from the export. It uses no game class (a --script run compiles before them).
 
-const ROOT := "res://scripts"
-const TOKENS_FILE := "res://scripts/ui/ui_tokens.gd"
-const COLOR_DIRS: Array[String] = ["res://scripts/ui/", "res://scripts/title/"]
+const CONFIG_PATH := "res://design_system.json"
 
+var _tokens_file := ""
+var _color_dirs: Array = []
 var _color_literal := RegEx.new()
 var _font_size_literal := RegEx.new()
 var _font_size_assign := RegEx.new()
@@ -18,10 +21,17 @@ func _init() -> void:
 	# A runtime error below would hang a --script run; this deferred quit(1) ends it, and
 	# the quit(code) at the end replaces it.
 	quit(1)
+	var config: Variant = JSON.parse_string(FileAccess.get_file_as_string(CONFIG_PATH))
+	if not config is Dictionary:
+		printerr("check_ui_values: no se pudo leer %s" % CONFIG_PATH)
+		return
+	_tokens_file = config["gd_out"]
+	_color_dirs = config["color_dirs"]
 	_color_literal.compile("\\bColor\\(")
 	_font_size_literal.compile("add_theme_font_size_override\\(\\s*[^,]+,\\s*-?\\d")
 	_font_size_assign.compile("(\\b|default_)font_size\\s*=\\s*-?\\d")
-	_scan(ROOT)
+	for root: String in config["scan_roots"]:
+		_scan(root)
 	if _hits == 0:
 		print("Valores de interfaz: sin valores a mano")
 	quit(1 if _hits > 0 else 0)
@@ -40,7 +50,7 @@ func _scan(dir_path: String) -> void:
 
 func _check_file(path: String) -> void:
 	var lines := FileAccess.get_file_as_string(path).split("\n")
-	var colors_forbidden := path != TOKENS_FILE and _in_color_dirs(path)
+	var colors_forbidden := path != _tokens_file and _in_color_dirs(path)
 	for i in lines.size():
 		var line := lines[i]
 		if line.strip_edges().begins_with("#"):
@@ -55,7 +65,7 @@ func _check_file(path: String) -> void:
 
 
 func _in_color_dirs(path: String) -> bool:
-	for dir in COLOR_DIRS:
+	for dir: String in _color_dirs:
 		if path.begins_with(dir):
 			return true
 	return false

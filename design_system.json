@@ -1,0 +1,11 @@
+{
+ "base": "res://addons/design_system/tokens/base.json",
+ "tokens": "res://docs/boost/design-system/tokens.json",
+ "gd_out": "res://scripts/ui/ui_tokens.gd",
+ "css_out": "res://docs/boost/design-system/tokens.css",
+ "docs": ["res://addons/design_system/docs", "res://docs/boost/design-system"],
+ "bundles": ["res://addons/design_system/docs/components/bundle.css",
+             "res://docs/boost/design-system/components/bundle.css"],
+ "scan_roots": ["res://scripts", "res://addons/design_system/runtime"],
+ "color_dirs": ["res://scripts/ui/", "res://scripts/title/", "res://addons/design_system/runtime/"]
+}

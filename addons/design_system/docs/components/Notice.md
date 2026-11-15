@@ -1,7 +1,7 @@
 Aviso: una ventana breve arriba en el centro que confirma algo y se va sola.
 
 ## Cuándo usarlo
-«Partida guardada.», «Misión cumplida: …», «Has vuelto a Villaclaro.», «El incienso se ha consumido.». Nunca para algo que el jugador deba decidir (para eso, ChoiceWindow).
+«Partida guardada.», «Misión cumplida: …», «Has vuelto al pueblo.». Nunca para algo que el jugador deba decidir (para eso, ChoiceWindow).
 
 ## Qué aporta quien lo usa
 El texto y su tono: info, éxito o peligro.

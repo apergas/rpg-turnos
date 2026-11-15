@@ -10,8 +10,6 @@ const TOUCH_LARGE_SCALE := 1.6
 const TOUCH_3D_HIGH := 0.8
 const TOUCH_3D_LOW := 0.6
 const TOUCH_LOW_FPS := 30
-## Height a button reaches on a phone (the theme builds the rows with it).
-const TOUCH_BUTTON_HEIGHT := float(UiTokens.TOUCH_TARGET)
 const BUTTON_STYLES := ["normal", "hover", "pressed", "disabled"]
 
 

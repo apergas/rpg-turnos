@@ -1,0 +1,122 @@
+{
+ "name": "Design system: núcleo",
+ "version": 1,
+ "note": "Los tokens genéricos del núcleo (addons/design_system). Un juego los amplía con su tokens.json (\"extends\") y les da sus valores en \"overrides\". Los colores son neutros: grises y un acento azul.",
+ "color": {
+  "themes": [
+   {"role": "normal", "name": "Normal"},
+   {"role": "contrast", "name": "Alto contraste"}
+  ],
+  "tokens": [
+   {"name": "surface-window", "value": {"normal": "#1c1c22e6", "contrast": "#0e0e12"}, "usage": "Relleno de toda ventana, translúcido: la escena se ve detrás. Opaco en alto contraste."},
+   {"name": "surface-window-solid", "value": {"normal": "#1c1c22", "contrast": "#0e0e12"}, "usage": "Ventana opaca: pantallas sin escena detrás."},
+   {"name": "surface-selected", "value": {"normal": "#2e2e38", "contrast": "#3a3a48"}, "usage": "Fondo de la fila elegida, junto al cursor."},
+   {"name": "surface-track", "value": {"normal": "#0000008c", "contrast": "#000000"}, "usage": "Parte vacía de una barra o un deslizador."},
+   {"name": "surface-scrim", "value": {"normal": "#00000080", "contrast": "#000000b3"}, "usage": "Velo a pantalla completa detrás de un menú; tocarlo es «volver»."},
+   {"name": "border-window", "value": "#ffffff", "usage": "Marco de toda ventana."},
+   {"name": "border-subtle", "value": {"normal": "#4a4a56", "contrast": "#9a9aa8"}, "usage": "Separadores y líneas internas de una ventana."},
+   {"name": "border-focus", "value": "#4d9fff", "usage": "Cursor y anillo de foco: dónde está la selección."},
+   {"name": "text-primary", "value": "#ffffff", "usage": "Texto de filas, mensajes y diálogos sobre surface-window."},
+   {"name": "text-secondary", "value": {"normal": "#b8b8c4", "contrast": "#dadae2"}, "usage": "Descripciones bajo una fila, notas."},
+   {"name": "text-disabled", "value": {"normal": "#80808c", "contrast": "#9a9aa6"}, "usage": "Filas que no se pueden elegir y su motivo."},
+   {"name": "text-accent", "value": "#4d9fff", "usage": "Títulos de ventana, nombre de quien habla, el objetivo."},
+   {"name": "text-money", "value": "#e6c04d", "usage": "Toda cantidad de dinero."},
+   {"name": "text-positive", "value": "#66d97a", "usage": "Mejor, éxito, lo ganado."},
+   {"name": "text-negative", "value": "#ff7066", "usage": "Peor, lo perdido."},
+   {"name": "text-danger", "value": "#ff9933", "usage": "Peligro: un dato en estado crítico."},
+   {"name": "text-info", "value": "#85a8ff", "usage": "Avisos informativos."},
+   {"name": "text-on-fill", "value": "#ffffff", "usage": "Texto sobre una barra o una insignia de color."},
+   {"name": "text-outline", "value": "#000000", "usage": "Contorno del texto claro sobre la escena o una barra."}
+  ]
+ },
+ "type": {
+  "families": {
+   "display": "system-ui, sans-serif",
+   "ui": "system-ui, sans-serif"
+  },
+  "groups": [
+   {
+    "name": "Rótulos",
+    "family": "display",
+    "styles": [
+     {"name": "display-xl", "fontSize": "96px", "lineHeight": 1.0, "fontWeight": 800, "sample": "Título", "usage": "El logotipo en la pantalla de título."},
+     {"name": "display-l", "fontSize": "64px", "lineHeight": 1.05, "fontWeight": 800, "sample": "Fin", "usage": "El logotipo en móvil; «Fin»."},
+     {"name": "display-m", "fontSize": "48px", "lineHeight": 1.1, "fontWeight": 700, "sample": "Un lugar", "usage": "El rótulo de un lugar; números grandes."},
+     {"name": "title-l", "fontSize": "36px", "lineHeight": 1.15, "fontWeight": 700, "sample": "Subtítulo", "usage": "Subtítulo; encabezado de pantallas completas."},
+     {"name": "title-m", "fontSize": "30px", "lineHeight": 1.2, "fontWeight": 700, "sample": "Segunda línea", "usage": "Segunda línea de un rótulo; encabezados de los créditos."}
+    ]
+   },
+   {
+    "name": "Interfaz",
+    "family": "ui",
+    "styles": [
+     {"name": "title-s", "fontSize": "26px", "lineHeight": 1.3, "fontWeight": 800, "sample": "Opciones", "usage": "Título de una ventana o página, en text-accent."},
+     {"name": "body", "fontSize": "24px", "lineHeight": 1.35, "fontWeight": 700, "sample": "Aceptar", "usage": "El tamaño base: filas de menú, mensajes y diálogos."},
+     {"name": "label", "fontSize": "20px", "lineHeight": 1.3, "fontWeight": 700, "sample": "42/42", "usage": "Texto sobre barras, encabezados pequeños."},
+     {"name": "caption", "fontSize": "18px", "lineHeight": 1.35, "fontWeight": 600, "sample": "Una descripción.", "usage": "Descripciones en text-secondary, notas, la versión."},
+     {"name": "micro", "fontSize": "16px", "lineHeight": 1.25, "fontWeight": 800, "sample": "Estado", "usage": "Insignias, leyendas."}
+    ]
+   }
+  ]
+ },
+ "spacing": {
+  "tokens": [
+   {"name": "space-1", "value": "4px", "usage": "Separación mínima: entre insignias, entre barra y texto."},
+   {"name": "space-2", "value": "8px", "usage": "Entre filas de un menú; relleno lateral de una insignia."},
+   {"name": "space-3", "value": "12px", "usage": "Relleno vertical de ventana."},
+   {"name": "space-4", "value": "16px", "usage": "Relleno horizontal de ventana; separación entre ventanas."},
+   {"name": "space-5", "value": "20px", "usage": "Separación entre grupos dentro de una ventana."},
+   {"name": "space-6", "value": "24px", "usage": "Margen desde el borde de la pantalla."},
+   {"name": "space-8", "value": "32px", "usage": "Separación entre bloques de una página."},
+   {"name": "space-12", "value": "48px", "usage": "Separación entre secciones de los créditos."}
+  ]
+ },
+ "radius": {
+  "tokens": [
+   {"name": "radius-s", "value": "4px", "usage": "Insignias, fila seleccionada."},
+   {"name": "radius-m", "value": "8px", "usage": "Toda ventana."},
+   {"name": "radius-l", "value": "12px", "usage": "Tarjetas grandes."},
+   {"name": "radius-full", "value": "999px", "usage": "Pastillas: el botón grande de acción en móvil."}
+  ]
+ },
+ "border": {
+  "tokens": [
+   {"name": "border-1", "value": "1px", "usage": "Separadores (border-subtle)."},
+   {"name": "border-2", "value": "2px", "usage": "Anillo de foco, marcos finos."},
+   {"name": "border-3", "value": "3px", "usage": "Marco de ventana."}
+  ]
+ },
+ "shadow": {
+  "tokens": [
+   {"name": "shadow-window", "value": "0 4px 12px #00000073", "godot": {"size": 6, "offset": [0, 4]}, "usage": "Sombra de toda ventana: la separa de un fondo claro. En Godot: shadow_size 6, shadow_offset (0, 4)."}
+  ]
+ },
+ "outline": {
+  "tokens": [
+   {"name": "outline-s", "value": "4px", "usage": "Texto sobre barras e insignias."},
+   {"name": "outline-m", "value": "8px", "usage": "Texto claro sobre la escena."},
+   {"name": "outline-l", "value": "12px", "usage": "Rótulos y subtítulo."},
+   {"name": "outline-xl", "value": "18px", "usage": "Logotipo."}
+  ]
+ },
+ "size": {
+  "tokens": [
+   {"name": "touch-target", "value": "56px", "usage": "Alto mínimo de cualquier fila o botón en móvil."},
+   {"name": "touch-min-width", "value": "120px", "usage": "Ancho mínimo de un botón en móvil."},
+   {"name": "row-height", "value": "40px", "usage": "Alto de una fila de menú en escritorio."},
+   {"name": "cursor-size", "value": "14px", "usage": "Triángulo del cursor."},
+   {"name": "icon-m", "value": "24px", "usage": "Iconos dibujados (menú, flechas)."},
+   {"name": "window-w-s", "value": "240px", "usage": "Ventana estrecha: un menú de comandos."},
+   {"name": "window-w-m", "value": "360px", "usage": "Ventana media: descripciones, mensajes laterales."},
+   {"name": "window-w-l", "value": "480px", "usage": "Ventana ancha: preguntas, texto de páginas."},
+   {"name": "window-w-xl", "value": "640px", "usage": "Avisos arriba al centro."},
+   {"name": "window-w-max", "value": "1000px", "usage": "Diálogo, máximo antes de partir líneas."}
+  ]
+ },
+ "opacity": {
+  "tokens": [
+   {"name": "opacity-window", "value": "0.9", "usage": "Alfa del relleno de ventana."},
+   {"name": "opacity-faded", "value": "0.5", "usage": "Algo que está pero no cuenta ahora: se ve atenuado."}
+  ]
+ }
+}
