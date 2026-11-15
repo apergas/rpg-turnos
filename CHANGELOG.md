@@ -1,5 +1,17 @@
 # Registro de cambios
 
+## Sin publicar
+
+La vuelta a Villaclaro y las Ruinas flotantes.
+
+- Tras el Coloso, la Caravana abre un atajo a Villaclaro. La niebla ha vuelto a sus caminos, y la Abuela Rosa te cuenta de dónde salió el Amuleto del Alba y te lo da.
+- Con el amuleto se sube a las Ruinas flotantes: dos plantas de islas sobre un abismo de niebla, unidas por puentes.
+- Cinco enemigos nuevos y el Vigía de la bruma, que guarda el Sello de Albor.
+- Tras el Vigía, Brumaclara enciende todas sus ventanas, abre el mercado y llega el Coleccionista.
+- El equipo de luna y el Elixir, que recupera todos los PV y PM, en la forja del Herrero de cristal.
+- Dos misiones nuevas: unas cartas para la Viajera de la Caravana y los caballeros de bruma.
+- Las misiones de una tierra que ya no se puede visitar dejan de ofrecerse.
+
 ## 3.1.0 (2026)
 
 Las Cuevas de cristal.
