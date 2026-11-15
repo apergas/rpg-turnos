@@ -8,10 +8,10 @@ class_name GameAutoplay extends Node
 ## there, and on to Villaclaro for the amulet), restock(), then the portal back); after a v3
 ## boss whose scene brings the hero home it restocks there; after a defeat it restocks; an empty
 ## map, or one quiet for AutoplayStarts.AUTOPLAY_STALL_S, gets its groups back (step()); and it
-## runs the medal tour of --autoplay-zone=medallas. It prints what a reader of the log follows: each zone, each change of
-## mission line, gold or gear, each defeat, the Eco's results and the numbers after each part's
-## credits. Uses only the public functions of ZoneTravel and FigureTalk (use_pieces()) and the
-## rules; never stores Game or a World.
+## runs the medal tour of --autoplay-zone=medallas. It prints what a reader of the log
+## follows: each zone, each change of mission line, gold or gear, each defeat, the Eco's results
+## and the numbers after each part's credits. Uses only the public functions of ZoneTravel and
+## FigureTalk (use_pieces()) and the rules; never stores Game or a World.
 
 ## The medal tour is over: Game goes back to the title (which quits on autoplay).
 signal quit_requested
