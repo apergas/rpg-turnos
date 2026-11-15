@@ -127,3 +127,14 @@ Cinco retoques de interfaz, sin reglas de juego nuevas:
   - el combate con dos enemigos tras «Atacar» y tras un hechizo de un objetivo;
   - los rótulos de la Caravana y de Brumaclara.
 - `CHANGELOG.md`, sección 3.4.0, y `application/config/version` = 3.4.0.
+
+## Ajustes del plan
+
+Lo que el [plan](../plans/2026-11-15-version-3-4-0.md) precisa o corrige de este spec. Manda lo que dice el plan.
+
+- **Rótulos:** el Tablón de la mina también lleva el suyo, aunque la tabla de arriba no lo nombra.
+- **Menú en gris:** no se guarda el estado de cada fila. `_back()` ya llama a `_open()`, que rehace las filas, cada una con su motivo, como Huir contra un jefe o un hechizo sin PM.
+- **Menú en gris, clics:** en la página de elegir objetivo, un clic dentro de la ventana de órdenes no hace nada, igual que ya pasa en las listas de hechizos y objetos. Así un clic en una fila gris no cuenta como un clic fuera.
+- **Vender:** `WORN` se borra, y `sell_problem()` devuelve `NOT_CARRIED` para una pieza que no está en la bolsa. `Shop.sellable(state, id)` no recibe la tienda: solo cambia el precio de los anillos y amuletos de premio, que siempre valen al menos 10 G.
+- **Equipo:** en móvil la página ya va dentro de un `ScrollBox`, así que solo hay que comprobar la de ordenador.
+- **Estado:** las filas de «Criaturas» y «Compañeros» de la tienda también muestran «VEL», porque comparten `stats_text()`.
