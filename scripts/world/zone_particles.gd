@@ -32,6 +32,8 @@ const BOG := "bog"
 const SPARKLE := "sparkle"
 ## The Fuente de la Niebla (3.3.0): a pale mist rising slowly from the floor round the hero.
 const RISE := "rise"
+## And the mist that rises from the Fuente itself (SourceWell), in a small box over its pool.
+const WELL_MIST := "well_mist"
 ## Half extents, along X and Z, of the box the particles are born in around the hero.
 const BOX := Vector3(15.0, 0.0, 10.0)
 ## Share of a particle's life spent fading in, and again fading out.
@@ -93,6 +95,10 @@ const KINDS := {
 		"speed": [0.15, 0.3], "direction": Vector3.UP, "spread": 20.0, "spin": 0.0,
 		"colors": [Color(0.72, 0.8, 1.0, 0.28), Color(0.6, 0.7, 0.95, 0.2)],
 		"lit": false, "round": true},
+	WELL_MIST: {"amount": 24, "lifetime": 4.0, "height": 0.7, "depth": 0.2, "size": 0.7,
+		"speed": [0.5, 0.9], "direction": Vector3.UP, "spread": 12.0, "spin": 0.0,
+		"colors": [Color(0.7, 0.85, 1.0, 0.4), Color(0.85, 0.92, 1.0, 0.3)],
+		"lit": false, "round": true, "box": Vector3(1.4, 0.0, 1.4)},
 }
 
 ## No particles at all while false (low quality). Set by DisplaySettings.

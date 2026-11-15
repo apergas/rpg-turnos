@@ -1,11 +1,11 @@
 class_name BrumaclaraStage extends RefCounted
-## Constructor: what a village of the v3 adds to its map (3.0.0, Brumaclara): its lighthouse
-## (Lighthouse, at ZoneData.lighthouse_pos, lit or not) and its lit windows (a warm glow on the
-## wall and a small light in front of it, ZoneData.window_lights) and its forge (a stone hearth
-## with its chimney and an anvil, ZoneData.forge_pos; a fire on the hearth once forge_lit); and
-## darken(), the dark tint of its houses (ZoneData.building_tint; also BeyondScreen's).
-## WorldStage.build() calls build() on every open map; it adds nothing where those fields are empty.
-## Static only, keeps no state.
+## Constructor: what a map of the v3 adds (3.0.0): in Brumaclara its lighthouse (Lighthouse, at
+## ZoneData.lighthouse_pos, lit or not), its lit windows (a warm glow on the wall and a small light
+## in front of it, ZoneData.window_lights) and its forge (a stone hearth with its chimney and an
+## anvil, ZoneData.forge_pos; a fire on the hearth once forge_lit); at the Fuente its well of light
+## (SourceWell, ZoneData.source_pos; 3.3.0); and darken(), the dark tint of Brumaclara's houses
+## (ZoneData.building_tint; also BeyondScreen's). WorldStage.build() calls build() on every map,
+## open or of cells; it adds nothing where those fields are empty. Static only, keeps no state.
 
 const WINDOW_LIGHT := Color(1.0, 0.8, 0.45)
 const WINDOW_SIZE := Vector2(0.45, 0.6)
@@ -41,6 +41,10 @@ static func build(root: Node3D, zone: ZoneData) -> void:
 		_add_window(root, window[0], window[1])
 	if zone.forge_pos != Vector3.ZERO:
 		_add_forge(root, zone.forge_pos, zone.forge_yaw, zone.forge_lit)
+	if zone.source_pos != Vector3.ZERO:
+		var well := SourceWell.new()
+		well.position = zone.source_pos
+		root.add_child(well)
 
 
 ## Every mesh of model in tint times its own colours (its texture stays).

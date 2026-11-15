@@ -66,5 +66,6 @@ underground = false
 rock_color = Color(0.24, 0.24, 0.32, 1)
 floor_color = Color(0.36, 0.38, 0.46, 1)
 crystals = true
+source_pos = Vector3(0, 0, -17)
 autoplay_route = Array[Vector3]([Vector3(0, 0, 22.5), Vector3(0, 0, 16), Vector3(-20, 0, 16), Vector3(-20, 0, 23.1), Vector3(-20, 0, 16), Vector3(-16, 0, 16), Vector3(-16, 0, 12), Vector3(-16, 0, 8), Vector3(-16, 0, 4.9), Vector3(-12, 0, 4), Vector3(0, 0, 4), Vector3(12, 0, 4), Vector3(19.1, 0, 4), Vector3(16, 0, 1.6), Vector3(12, 0, 4), Vector3(0, 0, 4), Vector3(0, 0, -4), Vector3(0, 0, -10.1)])
 autoplay_boss_level = 50

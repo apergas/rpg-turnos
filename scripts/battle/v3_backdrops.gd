@@ -1,6 +1,6 @@
 class_name V3Backdrops extends RefCounted
 ## Constructor: the battle backdrops of the v3's lands (3.0.0: "cienaga"; 3.1.0: "cuevas";
-## 3.2.0: "ruinas"), kept apart from BattleStage so it does not grow. BattleStage.build() hands
+## 3.2.0: "ruinas"; 3.3.0: "fuente"), kept apart from BattleStage so it does not grow. BattleStage.build() hands
 ## them over after the zone's sky, sun, fog and black sun. "cienaga" is olive marsh ground with
 ## pools of still dark water behind and beside the fighters, the boardwalk under them, dead
 ## mossy trees, reeds, a fallen log, the meadow's rocks and the dark hills behind. "cuevas" is
@@ -10,6 +10,10 @@ class_name V3Backdrops extends RefCounted
 ## "ruinas" is an island of old flagstones floating over the void: its rocky root under
 ## it, broken columns and blocks behind and beside the fighters, smaller islands far away and
 ## the sea of mist far below (the zone's haze); the black sun is the zone's.
+## "fuente" is the Fuente's cavern open to the black sun: the zone's floor, rock blocks beside and
+## behind the fighters (low at the back, so the sky shows over them) with crystals on them, the
+## mine's stalagmites, the dark rim far away and the Fuente itself (SourceWell) breathing behind
+## the enemies; no lantern.
 ## Static only, keeps no state.
 
 const CIENAGA := "cienaga"
@@ -71,10 +75,26 @@ const RUINAS_DECOR := [
 	["column", Vector3(-8.5, 0, -7.5), 0.0, 1.2],
 	["ruin_block", Vector3(4, 0, -8), 75.0, 0.9],
 ]
+const FUENTE := "fuente"
+## The cavern's rock blocks ([centre, size]): two behind the fighters with a gap between them
+## where the Fuente shows, two at each side and a low rim far behind.
+const FUENTE_BLOCKS := [
+	[Vector3(-8, 1.5, -10), Vector3(7, 3, 4)], [Vector3(8, 2, -10), Vector3(7, 4, 4)],
+	[Vector3(-11, 2, -1), Vector3(4, 4, 6)], [Vector3(12, 2, 0), Vector3(4, 4, 6)],
+	[Vector3(-12, 1.5, 6), Vector3(4, 3, 6)], [Vector3(13, 1.5, 6), Vector3(4, 3, 6)],
+	[Vector3(0, 1.0, -20), Vector3(40, 2, 4)],
+]
+## The crystal clusters ([foot of the wall, out from it, shade]) on the faces of FUENTE_BLOCKS.
+const FUENTE_CLUSTERS := [
+	[Vector3(-6, 0, -8), Vector3(0, 0, 1), 0], [Vector3(7, 0, -8), Vector3(0, 0, 1), 1],
+	[Vector3(-9, 0, -1), Vector3(1, 0, 0), 1], [Vector3(10, 0, 0), Vector3(-1, 0, 0), 0],
+]
+## Where the Fuente stands: in the gap behind the enemies.
+const FUENTE_WELL := Vector3(1.5, 0, -8.5)
 
 
 static func has(backdrop: String) -> bool:
-	return backdrop in [CIENAGA, CUEVAS, RUINAS]
+	return backdrop in [CIENAGA, CUEVAS, RUINAS, FUENTE]
 
 
 static func build(root: Node3D, zone: ZoneData) -> void:
@@ -83,6 +103,8 @@ static func build(root: Node3D, zone: ZoneData) -> void:
 			_build_cuevas(root, zone)
 		RUINAS:
 			_build_ruinas(root, zone)
+		FUENTE:
+			_build_fuente(root, zone)
 		_:
 			_build_cienaga(root, zone)
 
@@ -167,6 +189,32 @@ static func _build_ruinas(root: Node3D, zone: ZoneData) -> void:
 	sea.size = Vector2(400, 400)
 	BattleStage.add_mesh(root, sea, zone.haze, Vector3(0, -RUINAS_VOID_DEPTH, 0))
 	BattleStage.add_decor_pieces(root, RUINAS_DECOR, zone.decor_green)
+
+
+static func _build_fuente(root: Node3D, zone: ZoneData) -> void:
+	var ground := PlaneMesh.new()
+	ground.size = Vector2(80, 80)
+	BattleStage.add_mesh(root, ground, zone.floor_color, Vector3.ZERO)
+	for block: Array in FUENTE_BLOCKS:
+		var box := BoxMesh.new()
+		box.size = block[1]
+		BattleStage.add_mesh(root, box, zone.rock_color, block[0])
+	for spike: Array in BattleStage.STALAGMITES:
+		var cone := CylinderMesh.new()
+		cone.top_radius = 0.0
+		cone.bottom_radius = spike[1]
+		cone.height = spike[2]
+		cone.radial_segments = 6
+		BattleStage.add_mesh(root, cone, zone.rock_color.lightened(0.15),
+			spike[0] + Vector3(0, spike[2] / 2.0, 0))
+	for cluster: Array in FUENTE_CLUSTERS:
+		Crystals.add_cluster(root, cluster[0], cluster[1], cluster[2])
+	for hill in BattleStage.HILLS:
+		BattleStage.add_mesh(root, BattleStage.unit_sphere(), zone.hill_color, hill[0], hill[1])
+	var well := SourceWell.new()
+	well.solid = false
+	well.position = FUENTE_WELL
+	root.add_child(well)
 
 
 ## A far island: a round slab whose top is at top, and its root under it.

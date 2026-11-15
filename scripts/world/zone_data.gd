@@ -228,6 +228,8 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var forge_pos := Vector3.ZERO
 @export var forge_yaw := 0.0
 @export var forge_lit := false
+## The Fuente de la Niebla's well of light (SourceWell, BrumaclaraStage; 3.3.0), ZERO for none.
+@export var source_pos := Vector3.ZERO
 
 @export_group("Dungeon")
 ## Rows of a dungeon floor, north (−Z) first, one character per CELL × CELL cell (see
