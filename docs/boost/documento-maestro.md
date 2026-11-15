@@ -52,18 +52,18 @@ Lo que se ha hecho y lo que queda por hacer en Villaclaro. Una fila por versión
 | 3.1.0 a 3.2.0 · M-83 | La vuelta a Villaclaro a por el Amuleto del Alba | hecho |
 | 3.3.0 · M-84 | El Eco de Albor, la elección, los dos finales y los créditos de la v3 ([plan](../legacy/plans/2026-11-14-version-3-3-0.md)) | hecho |
 | 3.0.0 a 3.3.0 · M-85 | Partida automática de la v3 | hecho |
-| 3.4.0 · M-86 | Vender solo lo vendible: fuera de la lista las piezas puestas y lo que no se vende ([spec](specs/2026-11-15-version-3-4-0-design.md)) | spec |
-| 3.4.0 · M-87 | En «Equipo», lo que da cada pieza va debajo de su nombre | spec |
-| 3.4.0 · M-88 | En «Estado», los números del compañero o la criatura debajo de su nombre | spec |
-| 3.4.0 · M-89 | En combate, al elegir objetivo, el resto del menú queda en gris y solo responde «Volver» | spec |
-| 3.4.0 · M-90 | Rótulos con el nombre sobre el Coleccionista, el Jefe de caravana, Orvalla y el Tablón | spec |
-| 3.5.0 · M-91 | Los hechizos de daño del héroe crecen un 3 % por nivel; curar no cambia ([spec](specs/2026-11-15-version-3-5-0-design.md)) | spec |
-| 3.5.0 · M-92 | Usar un objeto en combate va siempre el primero, como Defender y Huir | spec |
-| 3.5.0 · M-93 | El compañero de la caravana estrena una pieza de equipo en cada tramo y etapa | spec |
-| 3.5.0 · M-94 | Sin portal en el fondo de los combates del Barrio del portal, salvo contra el Devorador | spec |
-| 3.5.0 · M-95 | El portal entre la Caravana y Brumaclara, con la misma forma pero rojizo | spec |
-| 3.6.0 · M-96 | El compañero o la criatura te sigue por el mapa ([spec](specs/2026-11-15-version-3-6-0-design.md)) | spec |
-| 3.6.0 · M-97 | La tienda vende los consumibles y un armero nuevo, el equipo, en cada pueblo | spec |
-| 3.6.0 · M-99 | La Pluma de fénix ya no se compra: solo cae de los enemigos o sale de los cofres | spec |
-| 3.6.0 · M-100 | El Coleccionista: 40 medallas, un anillo o amuleto cada 4, en la Caravana y Brumaclara desde que llegas; guardado 16 | spec |
-| 3.6.1 · M-98 | El design system en un núcleo reutilizable (`addons/design_system/`) y la capa de Villaclaro; el juego no cambia ([spec](specs/2026-11-15-version-3-6-1-design-system-nucleo-design.md)) | spec |
+| 3.4.0 · M-86 | Vender solo lo vendible: fuera de la lista las piezas puestas y lo que no se vende ([spec](specs/2026-11-15-version-3-4-0-design.md) · [plan](plans/2026-11-15-version-3-4-0.md)) | plan |
+| 3.4.0 · M-87 | En «Equipo», lo que da cada pieza va debajo de su nombre | plan |
+| 3.4.0 · M-88 | En «Estado», los números del compañero o la criatura debajo de su nombre | plan |
+| 3.4.0 · M-89 | En combate, al elegir objetivo, el resto del menú queda en gris y solo responde «Volver» | plan |
+| 3.4.0 · M-90 | Rótulos con el nombre sobre el Coleccionista, el Jefe de caravana, Orvalla y el Tablón | plan |
+| 3.5.0 · M-91 | Los hechizos de daño del héroe crecen un 3 % por nivel; curar no cambia ([spec](specs/2026-11-15-version-3-5-0-design.md) · [plan](plans/2026-11-15-version-3-5-0.md)) | plan |
+| 3.5.0 · M-92 | Usar un objeto en combate va siempre el primero, como Defender y Huir | plan |
+| 3.5.0 · M-93 | El compañero de la caravana estrena una pieza de equipo en cada tramo y etapa | plan |
+| 3.5.0 · M-94 | Sin portal en el fondo de los combates del Barrio del portal, salvo contra el Devorador | plan |
+| 3.5.0 · M-95 | El portal entre la Caravana y Brumaclara, con la misma forma pero rojizo | plan |
+| 3.6.0 · M-96 | El compañero o la criatura te sigue por el mapa ([spec](specs/2026-11-15-version-3-6-0-design.md) · [plan](plans/2026-11-15-version-3-6-0.md)) | plan |
+| 3.6.0 · M-97 | La tienda vende los consumibles y un armero nuevo, el equipo, en cada pueblo | plan |
+| 3.6.0 · M-99 | La Pluma de fénix ya no se compra: solo cae de los enemigos o sale de los cofres | plan |
+| 3.6.0 · M-100 | El Coleccionista: 40 medallas, un anillo o amuleto cada 4, en la Caravana y Brumaclara desde que llegas; guardado 16 | plan |
+| 3.6.1 · M-98 | El design system en un núcleo reutilizable (`addons/design_system/`) y la capa de Villaclaro; el juego no cambia ([spec](specs/2026-11-15-version-3-6-1-design-system-nucleo-design.md) · [plan](plans/2026-11-15-version-3-6-1.md)) | plan |

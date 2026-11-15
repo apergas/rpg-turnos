@@ -188,3 +188,19 @@ Fecha: 2026-11-15. Estado: spec. Cubre M-96, M-97, M-99 y M-100 del [documento m
 - La ida y vuelta de la partida guardada (skill `villaclaro-autoplay`) con la versión 16.
 - El Coleccionista en la Caravana y en Brumaclara nada más llegar, con su rótulo.
 - `CHANGELOG.md`, sección 3.6.0, y `application/config/version` = 3.6.0.
+
+## Ajustes del plan
+
+Lo que el [plan](../plans/2026-11-15-version-3-6-0.md) precisa o corrige de este spec. Manda lo que dice el plan.
+
+- **Nombres en la ventana de la tienda:** `SHOPS` gana una clave `"armorer"` con el nombre del armero de cada pueblo. El de la tienda pasa a ser la Tendera en la mina y el Tendero en Brumaclara. El título de la página de compra pasa de «Comprar» a «Tienda» o «Armero».
+- **Misiones en una tienda:** solo se buscan entre las figuras del mostrador que se abre. Así la Tendera nueva no se queda con una misión del Herrero. Hoy ninguna misión se entrega en una tienda.
+- **Recorrido de la partida automática:** solo compra a las figuras de su recorrido. Se añaden puntos de paso en Villaclaro, el castillo y la Caravana para llegar a los armeros nuevos.
+- **El oro de la partida automática:** `autoplay_picks()` calcula lo que compraría en una tienda con todo junto y luego lo reparte por mostrador. Compra lo mismo que hoy, visite antes la tienda o el armero. `restock()` visita los dos antes que a la Domadora.
+- **Premios del Coleccionista, más bajos desde 20 medallas**, para no pasar a los premios de familia de su momento: Anillo de plata ATK +6, Anillo de oro ATK +8, Amuleto de oro DEF +8, Anillo del coleccionista ATK +12 y Amuleto del coleccionista DEF +12.
+- **Pluma de fénix:** el desierto no gana otra caída, porque ya la suelta la Momia.
+- **Medallas por parte:** `Medals.DROP_CHANCES` y `Medals.drop_chance(part)` sustituyen a `DROP_CHANCE`. `BattleFlow` la usa salvo en `medal_tour`, que pone la suya.
+- **Partida guardada de antes:** el tope de premios solo se comprueba desde la versión 16, y `apply()` lee 0 premios si la versión es anterior. El resultado es el mismo que poner la cuenta a 0 antes de validar.
+- **Orvalla:** su línea del capítulo 14 dice que el Coleccionista llegó con el Vigía. Se reescribe, porque ahora está desde el principio.
+- **Aspecto de las figuras nuevas:** usan aspectos que ya existen, sin tinte, porque `actor_looks.gd` está en su límite de líneas.
+- **Diálogos:** ninguno dice que el Herrero venda pociones, así que no hay nada que corregir.

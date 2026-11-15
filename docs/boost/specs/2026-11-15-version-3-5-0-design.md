@@ -147,3 +147,14 @@ Cada paso pinta la pieza que estrena con los colores de una serie del héroe, un
   - el portal de la Caravana y el de Brumaclara junto al del Ala de viaje, con `--write-movie` o en ventana.
 - En un combate de prueba: con un enemigo más rápido, una poción va antes que su golpe.
 - `CHANGELOG.md`, sección 3.5.0, y `application/config/version` = 3.5.0.
+
+## Ajustes del plan
+
+Lo que el [plan](../plans/2026-11-15-version-3-5-0.md) precisa o corrige de este spec. Manda lo que dice el plan.
+
+- **Partida automática:** `BattleAutoplay` solo estima el daño de los hechizos en un sitio (`_spell_damage()`), que es el que cambia. El otro uso de `power` compara curas y no se toca.
+- **El paso del compañero:** `BattleScene` lo recibe en un campo, `ally_step`, que `BattleFlow` pone junto a `ally`, en lugar de por `setup()`. Así recibe ya `BattleScene` todo lo demás.
+- **La capa:** las armaduras del héroe no llevan tinte. En los pasos de capa, la capa toma el color del escudo de esa serie, más oscuro (`CAPE_SHADE` 0,6). `Knight.glb` no tiene cinturón. Si la capa no se ve en las capturas, primero se sube `CAPE_SHADE` a 0,8 y, si aún no se ve, se tiñen los brazos (`Knight_ArmLeft` y `Knight_ArmRight`).
+- **`PORTAL_LOOK`** está en `MapProps`, no en `ZoneData`. Se corrigen los comentarios de los dos.
+- **Brief de QA:** además de la fila «Iniciativa», cambia la de «Hechizos», por el crecimiento.
+- **Equilibrio:** si una zona queda más de un 15 % más corta que antes, `SPELL_GROWTH` baja a 0,02 y, como mucho, a 0,015.
