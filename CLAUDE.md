@@ -27,6 +27,8 @@ What the code does not explain:
 - `scripts/tools/bestiary_shots.gd` renders `assets/bestiary/<id>.png` and must run without `--headless` after a look changes; `scripts/tools/head_textures.gd` writes `assets/characters/head_*.png`, then run `--import` and set `mipmaps/generate=true` in each new `.import`. Both tools are excluded from the export.
 - The `--autoplay-zone=<id>` starts are `AUTOPLAY_ZONES` in `autoplay_starts.gd` (the v2 ones also in `V2_STARTS`); how to run and measure them is the `villaclaro-autoplay` skill.
 - On desktop `user://` is `%APPDATA%\Godot\app_userdata\rpg-turnos\`; autoplay runs save to `user://save_autoplay.json` and never touch the three slots, but `--debug` saves to the real slot.
+- A zone exit with `"look": "portal"` is drawn as the Ala de viaje's portal (`MapProps.PORTAL_LOOK`); the v3's parts of the game are `GameState.part()` (1, 2, 3) and its stretch `GameState.etapa()`, never saved; a save may only stand in the zones of its part (`ZoneData.zones_of_part()`).
+- While Brumaclara has no exit to the next land of the v3 (`StoryState.v3_way_on()`), Orvalla says so, the goal is "El faro vuelve a dar luz" and the v3's autoplay run ends there ("Fin de la v3 por ahora: ...").
 - The map hero's rim (`BattleActor.set_map_readable()`) does nothing on the headless renderer: check it with `--write-movie` or a window.
 
 ## Conventions
