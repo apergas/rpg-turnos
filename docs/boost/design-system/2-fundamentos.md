@@ -1,22 +1,45 @@
-# Fundamentos
+# Fundamentos de Villaclaro
 
-## Color
+Las escalas, las medidas genéricas, los diez estilos de texto y el papel de cada semántico de superficie, marco y texto están en los [fundamentos del núcleo](../../../addons/design_system/docs/2-fundamentos.md). Aquí está lo de Villaclaro.
+
+## Los valores que Villaclaro da al núcleo
+
+En el `"overrides"` de `tokens.json`:
+
+| Token | `juego` | `alto-contraste` |
+| --- | --- | --- |
+| `surface-window` | #0a0a1fe6 (`navy-900` al 90 %: el mundo se ve detrás) | #05050f |
+| `surface-window-solid` | `navy-900` | `navy-950` |
+| `surface-selected` | `navy-800` | `navy-700` |
+| `surface-track` | #0000008c | `black` |
+| `surface-scrim` | #00000080 | #000000b3 |
+| `border-window` | `white` (marco de 3 px de toda ventana y del botón ☰) | `white` |
+| `border-subtle` | `navy-600` | `grey-400` |
+| `border-focus` | `gold-300` (11:1 sobre `surface-window-solid`) | `gold-300` |
+| `text-primary` | `white` | `white` |
+| `text-secondary` | `grey-300` | `grey-200` |
+| `text-disabled` | `grey-500` | `grey-400` |
+| `text-accent` | `gold-300` | `gold-300` |
+| `text-money` | `gold-400` | `gold-400` |
+| `text-positive` | `green-300` | `green-300` |
+| `text-negative` | `red-300` | `red-300` |
+| `text-danger` | `orange-300` | `orange-300` |
+| `text-info` | `blue-300` | `blue-300` |
+| `text-on-fill` | `white` | `white` |
+| `text-outline` | `black` | `black` |
+
+## Color propio
 
 | Para | Token | No usar para |
 | --- | --- | --- |
-| Fondo de ventana | `surface-window` (opaco: `surface-window-solid`) | — |
-| Fila elegida | `surface-selected` + cursor `border-focus` | botones normales |
-| Texto | `text-primary`, `text-secondary`, `text-disabled` | — |
-| Títulos, quien habla, objetivo | `text-accent` | dinero |
-| Dinero | `text-money` | títulos |
-| Bueno / malo / peligro / info | `text-positive`, `text-negative`, `text-danger`, `text-info` | decoración |
 | PV / PM / EXP | `stat-hp`, `stat-mp`, `stat-exp` | cualquier otra cosa |
 | Estados | `status-*` | otra cosa que no sea la insignia |
 | Efectos | `element-*` | menús |
 | Brillo sobre la figura en combate (defender, cargar, Despertador, veneno, sueño, silencio, aturdido) | `effect-*` (no son `status-*`: esos son las insignias) | insignias, texto |
 | Retrato del bestiario visto, sin vencer | `portrait-seen` (color de lavado: retrato desaturado y aclarado) | texto |
+| Logotipo y rótulos de lugar | `text-display`, `text-display-soft`, con contorno `text-outline-warm` | texto de ventana |
 
-Opacidades: `opacity-placeholder` 0,45 (nombre aún sin escribir) y `opacity-map-picture` 0,8 (la imagen del mapa dentro de su cuadro), junto a `opacity-window`, `opacity-map`, `opacity-faded` y `opacity-portrait-desaturate`. El joystick táctil se dibuja en `border-window` con `opacity-touch-ring` 0,35 (el aro) y `opacity-touch-knob` 0,6 (el pomo).
+Opacidades: `opacity-placeholder` 0,45 (nombre aún sin escribir), `opacity-map-picture` 0,8 (la imagen del mapa dentro de su cuadro), `opacity-map` 0,45 (el cuadro del mapa) y `opacity-portrait-desaturate` 0,85 (cuánto se desatura el retrato visto sin vencer), junto a las del núcleo. El joystick táctil se dibuja en `border-window` con `opacity-touch-ring` 0,35 (el aro) y `opacity-touch-knob` 0,6 (el pomo).
 
 Antes había seis dorados casi iguales. Ahora son cuatro tonos con papel propio: `gold-100` subtítulo, `gold-200` logotipo, `gold-300` acento y cursor, `gold-400` dinero.
 
@@ -36,6 +59,10 @@ Colores en bruto: la interfaz usa los semánticos, que apuntan a estos. Ninguno 
 | `grey-400`, `grey-500` | texto desactivado (alto contraste, normal) |
 | `grey-600` | insignia de Silencio |
 | `black` | contorno de texto sobre el mundo |
+| `gold-100` | crema del subtítulo |
+| `gold-200` | dorado del logotipo y los rótulos de lugar |
+| `gold-300` | dorado de acento: títulos, cursor, hablante, marcas de misión |
+| `gold-400` | dorado del dinero |
 | `brown-950` | contorno cálido del texto dorado |
 | `red-300` | rojo legible sobre azul: peor, daño |
 | `red-500` | rojo de PV |
@@ -58,8 +85,6 @@ Colores en bruto: la interfaz usa los semánticos, que apuntan a estos. Ninguno 
 
 | Token | Papel |
 | --- | --- |
-| `surface-scrim` | velo a pantalla completa tras el menú de pausa y el resultado del combate; tocarlo es «volver» |
-| `text-outline` | contorno del texto blanco sobre el mundo o una barra |
 | `effect-defend`, `effect-charge`, `effect-wake` | brillo sobre la figura: defenderse, enemigo que carga, Despertador |
 | `effect-poison`, `effect-sleep`, `effect-silence`, `effect-stun` | brillo sobre la figura al recibir ese estado |
 | `map-well-dry`, `map-lever-down`, `map-door-open` | marcas del mapa: pozo seco, palanca tirada, reja abierta |
@@ -72,7 +97,7 @@ Colores en bruto: la interfaz usa los semánticos, que apuntan a estos. Ninguno 
 
 Ambas son libres (OFL, licencias en `licenses/`) y variables: un solo archivo por familia cubre todos los pesos. Van incluidas en el juego, así que escritorio, web y móvil se ven igual. Antes, la letra por defecto del motor cambiaba según la plataforma.
 
-Escala, sobre un lienzo de 1280 × 720 que el motor escala (×1,25 con texto grande, ×1,35 en móvil):
+La escala es la del núcleo, sobre un lienzo de 1280 × 720 que el motor escala (×1,25 con texto grande, ×1,35 en móvil). En Villaclaro:
 
 | Estilo | px | Uso |
 | --- | --- | --- |
@@ -89,17 +114,11 @@ Escala, sobre un lienzo de 1280 × 720 que el motor escala (×1,25 con texto gra
 
 Antes había trece tamaños sueltos (16, 18, 20, 22, 24, 26, 28, 30, 36, 44, 48, 72, 96); ahora son diez con nombre.
 
-## Espaciado y forma
+## Medidas propias
 
-- Pasos de 4 px: `space-1` 4, `space-2` 8, `space-3` 12, `space-4` 16, `space-5` 20, `space-6` 24, `space-8` 32, `space-12` 48.
-- Ventana: relleno `space-4` × `space-3`, separación entre ventanas `space-4`, margen de pantalla `space-6`.
-- Radios: `radius-s` 4 (insignias, fila elegida, mapa), `radius-m` 8 (ventanas), `radius-l` 12 (tarjetas grandes), `radius-full` (botón de acción en móvil).
-- Iconos dibujados (☰, flechas): `icon-m` 24. Botón ☰: `menu-button` 64.
-- Anchos de ventana: `window-w-s` 240, `-m` 360, `-l` 480, `-xl` 640, `-max` 1000.
-
-## Elevación
-
-Una sola sombra, `shadow-window`, en toda ventana. Sobre cielo, nieve o arena, el marco blanco se perdía; la sombra lo despega.
+- Botón ☰: `menu-button` 64, con iconos de `icon-m` 24.
+- Barras del héroe: `bar-width` 220 (170 en móvil) × `bar-height` 30; del enemigo, `enemy-bar-width` 96 × `enemy-bar-height` 8.
+- Cuadro del mapa: `map-size` 150 (110 en móvil).
 
 ## Movimiento
 

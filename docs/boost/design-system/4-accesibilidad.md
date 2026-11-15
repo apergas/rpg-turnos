@@ -1,8 +1,10 @@
-# Accesibilidad
+# Accesibilidad en Villaclaro
+
+Las reglas generales (4,5:1 en el tema normal, 7:1 en el de alto contraste, nunca solo color) están en la [accesibilidad del núcleo](../../../addons/design_system/docs/4-accesibilidad.md). Aquí, los pares comprobados con los valores de Villaclaro y lo que hace su tema de alto contraste.
 
 ## Contraste
 
-Todo texto llega al menos a 4,5:1 sobre su fondo en el tema `juego`, y a 7:1 en `alto-contraste` (4,5:1 para el texto de las barras, que es grande y grueso). Pares comprobados en `juego`:
+Pares comprobados en `juego`:
 
 | Texto | Sobre | Contraste |
 | --- | --- | --- |
@@ -15,17 +17,11 @@ Todo texto llega al menos a 4,5:1 sobre su fondo en el tema `juego`, y a 7:1 en 
 | blanco | insignias | 6,1–7,1:1 |
 | cursor `border-focus` | `surface-selected` | 12,8:1 |
 
-Cambio respecto al juego actual: el verde de la barra de EXP pasa de #2e9e42 (3,5:1 con blanco, solo legible gracias al contorno) a `green-600` #237a33 (5,4:1).
+El verde de la barra de EXP pasó de #2e9e42 (3,5:1 con blanco, solo legible gracias al contorno) a `green-600` #237a33 (5,4:1).
 
 ## Tema «Alto contraste»
 
-Una opción nueva propuesta para Opciones, junto a «Texto grande»:
-- ventanas opacas;
-- texto secundario y desactivado más claros;
-- separadores visibles (7:1);
-- insignias más oscuras.
-
-Usa los mismos tokens, así que no hace falta tocar ninguna pantalla.
+La opción de Opciones, junto a «Texto grande»: ventanas opacas (`navy-950`), texto secundario y desactivado más claros, separadores visibles (7:1) e insignias más oscuras.
 
 ## Nunca solo color
 
@@ -35,6 +31,6 @@ Usa los mismos tokens, así que no hace falta tocar ninguna pantalla.
 - PV críticos: texto naranja y latido.
 - Avisos: palabra de tono («Misión cumplida», «Guardado»).
 
-## Otras opciones que ya existen y se mantienen
+## Otras opciones
 
 Texto grande (×1,25), velocidad del texto, velocidad del combate, temblor de cámara y teclas reasignables.

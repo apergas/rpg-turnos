@@ -29,7 +29,7 @@ base.json + tokens.json  →  gen_ui_tokens.gd  →  UiTokens  →  DsTheme + el
 Un constructor estático (`## Constructor:`). Solo depende de `UiTokens` y `MenuCursor`.
 
 - `apply(window, high_contrast, extend)`: pone el tema sobre el tema por defecto (un `Control` bajo un `CanvasLayer` solo recibe ese, por eso hace `merge_with` sobre `ThemeDB.get_default_theme()`), con la letra `ui` en `body` para todos los tipos. Lo rehace en vivo si cambia el alto contraste. `ensure(window, extend)` lo pone una vez, para escenas que corren solas. `build(extend)` devuelve el `Theme`. `extend` es un `Callable` que recibe el `Theme` y le añade lo del juego.
-- `DsTheme.touch`: `true` en un móvil o una tableta. Lo pone el juego antes de `apply()` o `ensure()`. Con él, las filas miden `touch-target` × `touch-min-width` y el cursor se acerca al borde.
+- `DsTheme.touch`: `true` en un móvil o una tableta. Lo pone el juego antes de `apply()` o `ensure()`; si en algún camino llama a `ensure()` o `apply()` de `DsTheme` sin pasar por el tema propio del juego, debe ponerlo antes también ahí. Con él, las filas miden `touch-target` × `touch-min-width` y el cursor se acerca al borde.
 - **Variaciones de `Label`**: `TITLE`, `SECTION`, `SMALL`, `CAPTION`, `NOTE`, `REASON`, `MONEY`, `POSITIVE`, `NEGATIVE`, `BADGE`, `MICRO`, `OUTLINED`. Se usan con `label.theme_type_variation = DsTheme.CAPTION` (o por el nombre del tema del juego, que las hereda).
 - **Variaciones de ventana y botón**: `CARD`, `SELECTED_ROW`, `SELECTOR`, `KEY`, `CARD_HIT`, `MENU_BUTTON`, `TITLE_ROW`, `ACTION_BUTTON`, `STATUS_LINE`.
 - **Estilos sueltos**: `window_style()`, `selected_style()` (fondo de la fila elegida), `row_style()`.
