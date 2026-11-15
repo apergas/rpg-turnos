@@ -45,7 +45,8 @@ const EFFECT_WAKE_GUARD := "wake_guard"
 ## value MP), "full" (every HP and MP back: the Elixir), "cure" (removes the status named
 ## by value), "travel" (the Ala de viaje: Game takes the hero to the last village visited
 ## and leaves a portal there that leads back once), "repel" (the Incienso: for value metres
-## touching a group of monsters starts no battle; GameState counts them), "seed" (adds SEED_BONUS to the Combatant field named by value),
+## touching a group of monsters starts no battle; GameState counts them), "seed" (adds
+## SEED_BONUS to the Combatant field named by value),
 ## "revive" (EFFECT_REVIVE: the Pluma de fénix, used by itself when the hero falls in battle,
 ## value is the share of max HP he rises with), "wake_guard" (EFFECT_WAKE_GUARD: the
 ## Despertador, no sleep for the rest of the battle) or "quest"
@@ -103,8 +104,8 @@ const ITEMS := {
 		"text": "Sube la VEL en 2 para siempre."},
 }
 ## Order of the item lists.
-const IDS: Array[String] = [POTION, ETHER, BIG_POTION, BIG_ETHER, ELIXIR, ANTIDOTE, ALARM, PHOENIX, WING,
-	INCENSE, SEED_ATTACK, SEED_DEFENSE, SEED_SPEED, SETA, PIEL_MONO, CRISTAL_HIELO, JUNCO_BRUMA,
+const IDS: Array[String] = [POTION, ETHER, BIG_POTION, BIG_ETHER, ELIXIR, ANTIDOTE, ALARM,
+	PHOENIX, WING, INCENSE, SEED_ATTACK, SEED_DEFENSE, SEED_SPEED, SETA, PIEL_MONO, CRISTAL_HIELO, JUNCO_BRUMA,
 	ESQUIRLA_GEODA]
 ## Why an Ala de viaje can't be used in a village.
 const IN_TOWN := "Ya estás en un lugar seguro"
@@ -225,7 +226,8 @@ func problem(id: String, c: Combatant, in_battle: bool) -> String:
 
 
 ## Takes one and applies it to c. Returns {"used": bool, "effect": String, "amount":
-## int (HP or MP recovered), "mp": int (MP recovered by a "full" item), "status": String (cured), "reason": String (why not)}. A
+## int (HP or MP recovered), "mp": int (MP recovered by a "full" item), "status": String
+## (cured), "reason": String (why not)}. A
 ## "travel" item only gets used up: the caller does the trip.
 func use(id: String, c: Combatant, in_battle: bool) -> Dictionary:
 	var reason := problem(id, c, in_battle)

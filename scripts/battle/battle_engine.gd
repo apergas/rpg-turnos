@@ -508,8 +508,10 @@ func _use_item(who: int, id: String, events: Array[Dictionary]) -> void:
 		"mp":
 			events.append(BattleEvent.mp_heal(who, result.amount, user.mp))
 		"full":
-			events.append(BattleEvent.heal(who, result.amount, user.hp))
-			events.append(BattleEvent.mp_heal(who, result.mp, user.mp))
+			if result.amount > 0:
+				events.append(BattleEvent.heal(who, result.amount, user.hp))
+			if result.mp > 0:
+				events.append(BattleEvent.mp_heal(who, result.mp, user.mp))
 		"cure":
 			events.append(BattleEvent.status_off(who, result.status))
 		Inventory.EFFECT_WAKE_GUARD:
