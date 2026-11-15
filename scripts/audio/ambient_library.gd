@@ -264,7 +264,8 @@ static func _crystal_hum(count: int, rng: RandomNumberGenerator) -> PackedFloat3
 	var out := _rumble(count, rng)
 	for i in count:
 		var t := float(i) / MusicLibrary.RATE
-		out[i] = 0.6 * out[i] + 0.05 * (sin(TAU * 55.0 * t) + sin(TAU * 55.375 * t)) 			+ 0.02 * sin(TAU * 110.0 * t)
+		out[i] = 0.6 * out[i] + 0.05 * (sin(TAU * 55.0 * t) + sin(TAU * 55.375 * t)) \
+			+ 0.02 * sin(TAU * 110.0 * t)
 	return out
 
 
