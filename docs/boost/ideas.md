@@ -105,3 +105,7 @@ Estado: Pendiente
 en estado, donde sale tadeo, pon tambien sus stats debajo de su nombre
 Tadeo es un ejemplo: vale para el compañero que se lleve, sea cual sea (las estadísticas que tiene en ese momento, con lo que haya crecido).
 Estado: Pendiente
+
+## 2026-11-15 · Barrio del portal: sin portal en el fondo de los combates
+cuando llegas al "barrio del portal", en los combates, que no se vea el portal del fondo (cuando estas en una batalla, lo que es el escenario de la batalla)
+Estado: Pendiente
