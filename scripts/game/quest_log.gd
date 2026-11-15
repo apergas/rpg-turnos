@@ -198,7 +198,10 @@ func talk(state: GameState, zone_id: String, figure: String, short_wait := false
 ## (StoryState.part(): the meadow of the v3 offers none of the v1's), its needs flag set and its
 ## gone flag not.
 func _offered(quest: QuestData, flags: Dictionary) -> bool:
-	return stage(quest.id) == Stage.OPEN and ZoneData.part_of(quest.zone) == StoryState.part(flags) 		and (quest.needs == "" or flags.get(quest.needs, false)) 		and (quest.gone == "" or not flags.get(quest.gone, false))
+	return stage(quest.id) == Stage.OPEN \
+		and ZoneData.part_of(quest.zone) == StoryState.part(flags) \
+		and (quest.needs == "" or flags.get(quest.needs, false)) \
+		and (quest.gone == "" or not flags.get(quest.gone, false))
 
 
 ## The figures of this zone with a report waiting for them.
