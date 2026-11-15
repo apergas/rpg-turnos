@@ -58,6 +58,14 @@ npcs = [{
 "needs": "eco_albor",
 "pos": Vector3(0, 0, -11.5),
 "yaw": 180.0
+}, {
+"kind": "npc",
+"lines": ["Bajo contigo. La Fuente sabe esperar."],
+"look": "ALBOR",
+"name": "Albor",
+"needs": "albor_liberado",
+"pos": Vector3(0, 0, -11.5),
+"yaw": 180.0
 }]
 boss_id = "eco_albor"
 boss_pos = Vector3(0, 0, -11.5)

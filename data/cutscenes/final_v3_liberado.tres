@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="Cutscene" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/cutscene.gd" id="1_cutscene"]
+
+[resource]
+script = ExtResource("1_cutscene")
+id = "final_v3_liberado"
+steps = [
+["say", "", ["Le tiendes el Amuleto del Alba. Albor lo coge con las dos manos, como si quemara, y lo deja caer en la Fuente."]],
+["sfx", "level_up"],
+["fade_out"],
+["flag", "albor_liberado"],
+["fade_in"],
+["say", "", ["La luz de la Fuente se vuelve clara, del color del agua por la mañana. Donde estaba el Eco hay un muchacho con capa de guardián, y sobre su cabeza vuelve a brillar una corona de luz."]],
+["face", "Albor", "hero"],
+["say", "Albor", ["Ya no tengo frío. Hacía tanto que se me había olvidado lo que era no tenerlo.", "La Fuente se queda conmigo, y yo con ella. Pero esta tarde bajo contigo: hace siglos que no veo una plaza llena."]],
+["say", "{compañero}", ["Pues que no sea un siglo más. Vamos, que se enfría la fiesta."]],
+["say", "", ["Bajáis los tres a Brumaclara. El pueblo entero os espera en la plaza, bajo guirnaldas y farolillos, y el sol negro ya no es tan negro: por un borde asoma una luz dorada."]],
+["fade_out"],
+["travel", "brumaclara", "fuente"],
+["fade_in"],
+["camera_to", Vector3(0, 0, 0), 16.0],
+["sfx", "level_up"],
+["cheer", ["Orvalla", "Neblí", "Vecino", "Vecina"]],
+["say", "", ["Alguien saca un tambor. Hacía años que en Brumaclara no bailaba nadie."]],
+["camera_back"],
+["approach", "Orvalla", "hero", 1.8],
+["face", "hero", "Orvalla"],
+["face", "Orvalla", "hero"],
+["say", "Orvalla", ["La Fuente con guardián otra vez. Mi abuela no se lo creería. Yo tampoco, y lo estoy viendo.", "La Niebla sigue siendo nuestra, pero ya no se escapa por tu agujero. Gracias, {nombre}. De parte del faro, y de la farera."]],
+["approach", "Neblí", "hero", 2.2],
+["face", "Neblí", "hero"],
+["say", "Neblí", ["¡He visto el sol! Solo un trozo, pero lo he visto. ¡Es amarillo! ¡Nadie me había dicho que era amarillo!"]],
+["say", "Orvalla", ["Ahora ya lo sabes. Y ahora no habrá quien te calle."]],
+["fade_out"]
+]

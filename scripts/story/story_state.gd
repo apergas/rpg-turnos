@@ -18,7 +18,7 @@ const NAME_TAG := "{nombre}"
 const SCENES: Array[String] = ["prologo", "rey_slime", "aldea_bosque", "bruja", "mina",
 	"golem", "castillo", "final", "caravana_llega", "caravana_parte", "caravana_campamento",
 	"jaguar", "gusano", "grifo", "guardian", "cruce", "brumaclara_llega", "garza",
-	"recuerdo_albor", "amuleto", "vigia", "albor"]
+	"recuerdo_albor", "amuleto", "vigia", "albor", "final_v3_liberado", "final_v3_vencido"]
 ## The cutscene that follows beating each boss (its world flag).
 const AFTER_BOSS := {
 	"rey_slime": "rey_slime",
@@ -63,6 +63,16 @@ const V3_FINAL_BOSS := "eco_albor"
 ## credits follow them.
 const ALBOR_FREED := "albor_liberado"
 const ALBOR_BEATEN := "albor_vencido"
+## The question after the albor scene (StoryFlow.finish_v3(), World.ask(): Esc and a tap outside
+## pick the last option; both end well) and the final scene of each answer, in the same order.
+const ENDING_QUESTION := "El Amuleto del Alba brilla en tu mano. ¿Qué haces?"
+const ENDING_OPTIONS: Array[String] = ["Devolver el amuleto", "Acabar con el Eco"]
+const ENDING_SCENES: Array[String] = ["final_v3_liberado", "final_v3_vencido"]
+## What the v3's credits and the goal say once it is over, by the ending (ending_text()).
+const V3_FREED_TEXT := "Albor guarda la Fuente"
+const V3_BEATEN_TEXT := "La Niebla ha vuelto a su sitio"
+## What Orvalla says when the game goes on in Brumaclara after the v3's credits.
+const V3_AFTER_END_LINE := "La fiesta va para largo, {nombre}. Quédate lo que quieras: aquí ya no se apaga ninguna luz."
 ## The Amuleto del Alba (3.2.0): the key item and the flag the Abuela Rosa's scene gives
 ## (StoryFlow), which opens the way up to the Ruinas.
 const AMULET_FLAG := "amuleto_recuperado"
@@ -256,6 +266,11 @@ static func part(flags: Dictionary) -> int:
 	return 2 if flags.get(CARAVAN_FLAG, false) else 1
 
 
+## The line of the v3's ending these flags chose (the credits, the goal of its last chapter).
+static func ending_text(flags: Dictionary) -> String:
+	return V3_FREED_TEXT if flags.get(ALBOR_FREED, false) else V3_BEATEN_TEXT
+
+
 func has_seen(scene_id: String) -> bool:
 	return scene_id in seen
 
@@ -298,6 +313,10 @@ func mark_seen_for_flags(flags: Dictionary) -> void:
 		mark_seen("brumaclara_llega")
 	if flags.get(AMULET_FLAG, false):
 		mark_seen(AMULET_SCENE)
+	if flags.get(ALBOR_FREED, false):
+		mark_seen(ENDING_SCENES[0])
+	if flags.get(ALBOR_BEATEN, false):
+		mark_seen(ENDING_SCENES[1])
 	finished = flags.get("senor_niebla", false)
 	finished_v2 = flags.get(V2_FINAL_BOSS, false)
 	finished_v3 = flags.get(V3_FINAL_BOSS, false)
@@ -319,6 +338,8 @@ func goal_text(flags: Dictionary, zone_id := "") -> String:
 		return CUEVAS_GOALS[_cuevas_step(flags, zone_id)]
 	if now == Chapter.RUINAS:
 		return RUINAS_GOALS[_ruinas_step(flags, zone_id)]
+	if now == Chapter.V3_END:
+		return ending_text(flags)
 	if now > Chapter.V2_END and not v3_way_on(flags):
 		return V3_WAIT_GOAL
 	return GOALS[now]

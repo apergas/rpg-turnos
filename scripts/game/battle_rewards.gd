@@ -39,6 +39,19 @@ static func boss_wanted(zone: ZoneData, state: GameState, postgame_allowed: bool
 	return state.quest.boss_available() if boss == Quest.BOSS_ID else not state.has_flag(boss)
 
 
+## The part whose ending follows this victory: 2 after the Devorador del portal, 3 after the Eco
+## de Albor, each only the first time; 0 otherwise.
+static func ending_part(state: GameState, zone: ZoneData, boss: bool) -> int:
+	if not boss:
+		return 0
+	var id := boss_id(zone, state)
+	if id == StoryState.V2_FINAL_BOSS and not state.story.finished_v2:
+		return 2
+	if id == StoryState.V3_FINAL_BOSS and not state.story.finished_v3:
+		return 3
+	return 0
+
+
 ## Notes enemies in the bestiary: seen, or beaten too after a won battle. Only those with a
 ## card (Bestiary.has()): the Eco de la Niebla never counts.
 static func note_enemies(state: GameState, enemies: Array[Combatant], beaten: bool) -> void:
@@ -72,8 +85,8 @@ static func boss_notice(state: GameState, boss: Combatant) -> String:
 
 ## A won battle: the gold, the medals dropped, the enemies beaten in the bestiary, the village
 ## quest and the side quests, each boss's flag, key item, notice, cutscene and first-victory
-## prize, and the families completed (not after the v2's last boss the first time: its
-## ending follows, and the prize comes when the game is next loaded).
+## prize, and the families completed (not after the last boss of the v2 or the v3 the first time:
+## its ending follows, and the prize comes later).
 static func after_victory(state: GameState, zone: ZoneData, enemies: Array[Combatant],
 		gold_won: int, medals_won: int, boss: bool) -> Dictionary:
 	var notice := ""
@@ -101,12 +114,12 @@ static func after_victory(state: GameState, zone: ZoneData, enemies: Array[Comba
 	for enemy in enemies:
 		finished_quests.append_array(state.quests.on_victory(state, enemy.id))
 	# The enemies are noted as beaten above: a family may be complete now.
-	# The v2's last boss (the first time): its ending follows. It also completes the Jefes
-	# de la caravana, but no map is left to show the prize on: it comes when the game is
-	# next loaded, in the Caravana (Game._ready() gives it).
-	var ending_v2 := boss and boss_id(zone, state) == StoryState.V2_FINAL_BOSS \
-		and not state.story.finished_v2
-	if not ending_v2:
+	# The last boss of the v2 or of the v3 (the first time): its part's ending follows. The v2's
+	# also completes the Jefes de la caravana, but no map is left to show the prize on: it comes
+	# when the game is next loaded, in the Caravana (Game._ready()); the v3's prizes come after
+	# its credits, in Brumaclara (StoryFlow.finish_v3()).
+	var ending := ending_part(state, zone, boss)
+	if ending == 0:
 		family_lines = family_rewards(state)
 	return {
 		"notice": notice,
@@ -115,5 +128,5 @@ static func after_victory(state: GameState, zone: ZoneData, enemies: Array[Comba
 		"mission_done": mission_done,
 		"finished_quests": finished_quests,
 		"family_lines": family_lines,
-		"ending_v2": ending_v2,
+		"ending": ending,
 	}

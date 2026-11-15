@@ -26,6 +26,9 @@ const MEDAL_TOUR_TIME := 1800.0
 ## The autoplay starts that play the v2: only they answer the Jefe de caravana's questions
 ## with Sí (every other run, the finished-game ones included, stays in the v1).
 const V2_STARTS := ["caravana", "jungla", "desierto", "montana", "ciudad", "portal"]
+## --autoplay-ending=vencer: the v3's last question answered with its last option, "Acabar con el
+## Eco" (StoryFlow.finish_v3()).
+const BEAT_ENDING := "vencer"
 ## --autoplay-zone=<id>: what a new game starting in each zone gets, as planned when
 ## arriving there (zone 1 done: Lv 5, its shop's gear, the Rey Slime beaten).
 const AUTOPLAY_ZONES := {

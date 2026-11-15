@@ -32,8 +32,9 @@ var print_save := false
 var play_scene: Callable
 ## await finish_game.call(): the v1's ending and credits (StoryFlow).
 var finish_game: Callable
-## await finish_v2.call(): the v2's ending and credits (StoryFlow).
-var finish_v2: Callable
+## await finish_part.call(part): the ending of the v2 (2) or of the v3 (3) and its credits
+## (StoryFlow).
+var finish_part: Callable
 ## go_to_town.call(): a beaten hero back to the last village (ZoneTravel).
 var go_to_town: Callable
 ## await after_battle.call(outcome): the autoplay's next move (GameAutoplay); not set
@@ -141,7 +142,7 @@ func on_encounter(boss: bool) -> void:
 	var mission_done := false
 	var finished_quests: Array[Dictionary] = []
 	var family_lines: Array[String] = []
-	var ending_v2 := false
+	var ending := 0
 	if won:
 		var rewards := BattleRewards.after_victory(_ctx.state, _ctx.zone,
 			battle.engine.enemies, battle.engine.gold_won, battle.engine.medals_won, boss)
@@ -151,7 +152,7 @@ func on_encounter(boss: bool) -> void:
 		mission_done = rewards.mission_done
 		finished_quests.assign(rewards.finished_quests)
 		family_lines.assign(rewards.family_lines)
-		ending_v2 = rewards.ending_v2
+		ending = rewards.ending
 		enemies_beaten.emit(battle.engine.enemies, battle.engine.medals_won)
 	elif outcome == BattleEngine.State.LOST:
 		battle_lost.emit(_ctx.zone.id)
@@ -189,8 +190,14 @@ func on_encounter(boss: bool) -> void:
 	for finished: Dictionary in finished_quests:
 		_ctx.world.show_mission_done(QuestLog.done_text(finished.title))
 		_ctx.world.show_notice(" ".join(finished.lines), "Misión cumplida", &"text-positive")
-	if ending_v2:
-		await finish_v2.call()
+	if ending == 2:
+		await finish_part.call(ending)
+		return
+	if ending == 3:
+		# The game goes on in Brumaclara; on autoplay the run prints the v3's numbers and ends.
+		await finish_part.call(ending)
+		if after_battle.is_valid():
+			await after_battle.call(outcome)
 		return
 	if won and _ctx.state.is_finished() and not _ctx.state.story.finished:
 		await finish_game.call()

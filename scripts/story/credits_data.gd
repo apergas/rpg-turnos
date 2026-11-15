@@ -1,7 +1,8 @@
 class_name CreditsData extends RefCounted
 ## Rule: what the credits say, from a GameState: the v1's sections (credits_sections()), the
-## v2's (v2_credits_sections(), with v2_numbers()), the v3's numbers (v3_numbers()), the "h:mm:ss" text of a time (clock())
-## and the one-line JSON of a save for --autoplay-save (summary()). Never touches nodes.
+## v2's (v2_credits_sections(), with v2_numbers()), the v3's (v3_credits_sections(), with
+## v3_numbers()), the "h:mm:ss" text of a time (clock()) and the one-line JSON of a save for
+## --autoplay-save (summary()). Never touches nodes.
 
 ## The author shown in the credits.
 const AUTHOR := "apergas"
@@ -41,7 +42,7 @@ static func v2_numbers(state: GameState, play_time: float) -> Dictionary:
 
 
 ## The v3's time and battles: since the hero first stood in Brumaclara (story.v3_start), or the
-## whole game's if it has none ("since" false). The v3's credits (3.3.0) and the autoplay use it.
+## whole game's if it has none ("since" false). The v3's credits and the autoplay use it.
 static func v3_numbers(state: GameState, play_time: float) -> Dictionary:
 	var start: Array = state.story.v3_start
 	var since := not start.is_empty()
@@ -67,6 +68,33 @@ static func v2_credits_sections(state: GameState, numbers: Dictionary) -> Array:
 	return [
 		["La caravana del portal", ["La historia de %s" % state.hero.display_name]],
 		["Tu viaje", journey],
+		["Creado por", [AUTHOR]],
+		["Motor", ["Godot Engine 4.7"]],
+		["Modelos 3D", ["KayKit, de Kay Lousberg (CC0)", "Nature Kit, de Kenney (CC0)"]],
+		["Música y sonido", ["Generados por el propio juego"]],
+		["Gracias por jugar", []],
+	]
+
+
+## The v3's credits: the origin of the Niebla, this journey's numbers, the ending chosen
+## (StoryState.ending_text()), who made the game.
+static func v3_credits_sections(state: GameState, numbers: Dictionary) -> Array:
+	var journey: Array[String] = []
+	if state.ally_id != "":
+		journey.append("Compañero: %s" % Allies.display_name(state.ally_id))
+	journey.append(("Tiempo en Brumaclara: %s" if numbers.since else "Tiempo de juego: %s")
+		% numbers.time)
+	journey.append(("Combates en Brumaclara: %d" if numbers.since else "Combates: %d")
+		% numbers.battles)
+	journey.append("Misiones de Brumaclara: %d/%d" % [state.quests.done_of(3),
+		QuestLog.total_of(3)])
+	journey.append("Familias: %d/%d" % [Bestiary.complete_count(state),
+		Bestiary.families(state).size()])
+	journey.append("Nivel: %d" % state.hero.level)
+	return [
+		["El origen de la Niebla", ["La historia de %s" % state.hero.display_name]],
+		["Tu viaje", journey],
+		["El final", [StoryState.ending_text(state.world_flags)]],
 		["Creado por", [AUTHOR]],
 		["Motor", ["Godot Engine 4.7"]],
 		["Modelos 3D", ["KayKit, de Kay Lousberg (CC0)", "Nature Kit, de Kenney (CC0)"]],

@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="Cutscene" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/cutscene.gd" id="1_cutscene"]
+
+[resource]
+script = ExtResource("1_cutscene")
+id = "final_v3_vencido"
+steps = [
+["say", "", ["Levantas el arma. El Eco no se defiende: cierra los ojos, como quien por fin puede descansar."]],
+["say", "Eco de Albor", ["Gracias. Dile a la Fuente que no fue culpa suya."]],
+["say", "", ["El último golpe no hace ruido."]],
+["fade_out"],
+["flag", "albor_vencido"],
+["travel", "brumaclara", "fuente"],
+["fade_in"],
+["say", "", ["Unos días después, Brumaclara está de fiesta. La Niebla ya no se escapa por el portal: ha vuelto a su sitio, y el pueblo respira tranquilo."]],
+["approach", "Orvalla", "hero", 1.8],
+["face", "hero", "Orvalla"],
+["face", "Orvalla", "hero"],
+["say", "Orvalla", ["Así que Albor se deshizo en niebla blanca, y la Fuente se la respiró entera. Mi abuela decía que la Niebla se acuerda de todo. Ojalá se acuerde de él.", "Le hemos hecho una estatua junto al pozo. La ha tallado el Herrero: dice que la piedra no se le da peor que el cristal."]],
+["camera_to", Vector3(-3.5, 0, -2.5), 10.0],
+["say", "", ["En la peana, Orvalla ha hecho grabar: «Albor, que guardó la Fuente»."]],
+["camera_back"],
+["approach", "Neblí", "hero", 2.2],
+["face", "Neblí", "hero"],
+["say", "Neblí", ["La estatua no tiene sol, pero tiene corona. Orvalla dice que es casi lo mismo. Yo creo que no."]],
+["say", "Orvalla", ["Ya habrá tiempo de soles, Neblí. Hoy toca fiesta."]],
+["cheer", ["Orvalla", "Neblí", "Vecino", "Vecina"]],
+["fade_out"]
+]
