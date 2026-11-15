@@ -1,6 +1,6 @@
 class_name MapProps extends Node3D
 ## The things that stand on a map and change with the game: the exits (arch, sign and the
-## fog bank of a closed one), the Ala de viaje's return portal and the ring of the spot it
+## fog bank of a closed one; or a portal), the Ala de viaje's return portal and the ring of the spot it
 ## leads back to, the wells (their water and light hidden while dry), the chests (a lid on
 ## a hinge) and the ring on the spot the player walks to. Owned by World, which calls
 ## setup(), adds it and then build(); never stores World.
@@ -25,6 +25,9 @@ const ARCH_WIDTH := 3.6
 const ARCH_HEIGHT := 3.0
 const SIGN_COLOR := Color(0.62, 0.45, 0.25)
 const FOG_COLOR := Color(0.92, 0.93, 0.97, 0.6)
+## An exit with this "look" is the Ala de viaje's portal (TravelPortal) with its label as the
+## sign, instead of the wooden arch: the Caravana and Brumaclara (3.0.0).
+const PORTAL_LOOK := "portal"
 
 ## The wells that are dry now (World.set_dry_wells()); the map square's marks follow them.
 var dry_wells: Array[String]:
@@ -169,12 +172,22 @@ func build_marker() -> void:
 
 
 ## The arch of an exit (turned by its yaw) with its sign, which always faces the camera,
-## and the fog bank that closes it. Returns the fog bank.
+## and the fog bank that closes it; or, for an exit with "look": PORTAL_LOOK, the swirling
+## portal with the exit's label over it (never closed: its fog bank is empty). Returns the
+## fog bank.
 func _build_exit(exit: Dictionary) -> Node3D:
 	var root := Node3D.new()
 	root.position = exit.pos
 	add_child(root)
 	_arches[exit.id] = root
+	if exit.get("look", "") == PORTAL_LOOK:
+		var portal := TravelPortal.new()
+		portal.sign_text = exit.label
+		portal.rotation_degrees.y = exit.yaw
+		root.add_child(portal)
+		var none := Node3D.new()
+		root.add_child(none)
+		return none
 	var arch := Node3D.new()
 	arch.rotation_degrees.y = exit.yaw
 	root.add_child(arch)

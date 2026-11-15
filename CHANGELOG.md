@@ -1,5 +1,53 @@
 # Registro de cambios
 
+## 3.3.0 (2026)
+
+La Fuente de la Niebla y el final de la tercera parte.
+
+- Tras el Vigía se abre el camino a la Fuente de la Niebla: una caverna sin techo bajo el sol negro, con la Fuente en el centro, que respira.
+- Cinco enemigos nuevos y el Eco de Albor, el antiguo guardián de la Fuente, en dos fases.
+- Al vencerlo decides: devolver el amuleto o acabar con el Eco. Los dos finales acaban bien, y cada uno deja Brumaclara a su manera.
+- Los créditos de la tercera parte; después, la partida sigue en Brumaclara, de fiesta.
+- Después del final la Fuente sigue abierta, para acabar las misiones que queden.
+- Alba pega más fuerte: ahora vale la pena contra los hijos de la Niebla.
+- El equipo del amanecer, en la forja del Herrero de cristal.
+- Dos misiones nuevas: los ojos de la Niebla y la última pieza del faro.
+- Los enemigos de Brumaclara se ordenan en cuatro familias del bestiario, cada una con su premio.
+
+## 3.2.0 (2026)
+
+La vuelta a Villaclaro y las Ruinas flotantes.
+
+- Tras el Coloso, la Caravana abre un atajo a Villaclaro. La niebla ha vuelto a sus caminos, y la Abuela Rosa te cuenta de dónde salió el Amuleto del Alba y te lo da.
+- Con el amuleto se sube a las Ruinas flotantes: dos plantas de islas sobre un abismo de niebla, unidas por puentes.
+- Cinco enemigos nuevos y el Vigía de la bruma, que guarda el Sello de Albor.
+- Tras el Vigía, Brumaclara enciende todas sus ventanas, abre el mercado y llega el Coleccionista.
+- El equipo de luna y el Elixir, que recupera todos los PV y PM, en la forja del Herrero de cristal.
+- Dos misiones nuevas: unas cartas para la Viajera de la Caravana y los caballeros de bruma.
+- Las misiones de una tierra que ya no se puede visitar dejan de ofrecerse.
+
+## 3.1.0 (2026)
+
+Las Cuevas de cristal.
+
+- Tras la Garza se abre el camino a las Cuevas de cristal: dos plantas bajo tierra donde la única luz es la de los cristales, con su palanca y su reja de cristal.
+- Cinco enemigos nuevos y el Coloso de cuarzo, que guarda el Cristal de la Fuente. Al vencerlo verás el primer recuerdo de Albor.
+- La forja de Brumaclara vuelve a arder, y el Herrero de cristal vende pociones, éteres y demás en el pueblo.
+- El equipo de cristal, a la venta en la Caravana desde que cae la Garza.
+- La luz, un elemento nuevo, y Alba, un hechizo nuevo a nivel 45: daño de luz a todos.
+- Dos misiones nuevas: el gato de Neblí y las esquirlas de geoda.
+
+## 3.0.0 (2026)
+
+Empieza la tercera parte: al otro lado del portal.
+
+- Al terminar la caravana ya no vuelves al título: sigues en la Caravana, junto a la hoguera, y el portal se ha quedado quieto. Las partidas de la caravana terminadas lo ven al cargar.
+- Brumaclara, un pueblo bajo un sol negro que respira la Niebla. Te esperan Orvalla, la farera, y Neblí, que nunca ha visto el sol.
+- La Ciénaga de Brumaclara: cinco enemigos nuevos, la Garza de légamo y dos misiones. Al vencerla, el faro vuelve a dar luz y la posada abre.
+- Nivel máximo 50, y el equipo de bruma a la venta en la Caravana.
+- El bestiario gana una tercera parte, «Brumaclara».
+- Las partidas que guarda esta versión ya no se abren en una versión anterior del juego.
+
 ## 2.7.2 (2026)
 
 Por dentro, más ordenado. El juego no cambia.

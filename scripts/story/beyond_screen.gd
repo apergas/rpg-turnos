@@ -215,7 +215,7 @@ func _build_land() -> void:
 	for tree in TREES:
 		var dead := BattleStage.add_model(self, WorldStage.MODELS[tree[0]],
 			_on_ground(tree[1], tree[2]), tree[3], tree[4])
-		_darken(dead, Color(0.1, 0.07, 0.07))
+		BrumaclaraStage.darken(dead, Color(0.1, 0.07, 0.07))
 	for rock in ROCKS:
 		BattleStage.add_model(self, BattleStage.ROCK_SCENES[rock[0]],
 			_on_ground(rock[1], rock[2]), rock[3], rock[4])
@@ -226,7 +226,7 @@ func _build_village() -> void:
 		var house: Array = HOUSES[i]
 		var model := BattleStage.add_model(self, WorldStage.MODELS[house[0]],
 			_on_ground(house[1], house[2]), WorldStage.BUILDING_SCALE, house[3])
-		_darken(model)
+		BrumaclaraStage.darken(model, HOUSE_TINT)
 		if i < 5:
 			var top := BattleStage.model_aabb(model).end.y * WorldStage.BUILDING_SCALE
 			_add_smoke(_on_ground(house[1], house[2]) + Vector3(0.8, top, 0.5))
@@ -257,18 +257,6 @@ func _add_windows(pos: Vector3, yaw: float) -> void:
 		win.position = pos + basis * Vector3(dx, 1.6, 1.55)
 		win.rotation_degrees = Vector3(0, yaw, 0)
 		add_child(win)
-
-
-## Every mesh of model in HOUSE_TINT times its own colours (its texture stays).
-func _darken(model: Node3D, tint := HOUSE_TINT) -> void:
-	for node in model.find_children("*", "MeshInstance3D", true, false):
-		var mi := node as MeshInstance3D
-		for s in mi.mesh.get_surface_count():
-			var mat := mi.get_active_material(s)
-			if mat is BaseMaterial3D:
-				var dark := mat.duplicate() as BaseMaterial3D
-				dark.albedo_color *= tint
-				mi.set_surface_override_material(s, dark)
 
 
 ## Grey smoke rising slowly from a chimney and drifting east, already full when shown.

@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="QuestData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/quest_data.gd" id="1_quest"]
+
+[resource]
+script = ExtResource("1_quest")
+id = "gato_nebli"
+title = "El gato de Neblí"
+kind = 3
+zone = "brumaclara"
+giver = "Neblí"
+needs = "garza_legamo"
+gone = "coloso_cuarzo"
+turn_in_zone = "brumaclara"
+turn_in = "Orvalla"
+target = "Ceniza"
+target_zone = "cuevas_1"
+objective = "Busca a Ceniza, el gato de Neblí, en la primera planta de las Cuevas de cristal."
+status = "busca a Ceniza"
+report = "vuelve con Orvalla"
+offer_lines = Array[String](["Mi gato, Ceniza, se metió en las Cuevas detrás de una luz. Los gatos persiguen las luces. Y yo no puedo entrar.", "Es gris, como todo aquí. Si lo encuentras, Orvalla sabrá qué hacer."])
+found_lines = Array[String](["Miau. Ceniza se frota contra tus botas. Tiene el pelo lleno de polvo de cristal.", "Se lo piensa un momento y sale corriendo hacia la salida. Sabe volver solo... cuando quiere."])
+wait_lines = Array[String](["¿Neblí te ha contado lo de Ceniza? Ese gato siempre vuelve cuando le da la gana. Esta vez, de las Cuevas."])
+done_lines = Array[String](["¡Ceniza ha vuelto! Ha llegado él solo, con polvo de cristal hasta en los bigotes.", "Neblí no lo suelta. Toma, de parte de los dos: dice que esta semilla la guardaba para cuando saliera el sol."])
+done_flag = "gato_nebli_vuelve"
+reward_gold = 0
+reward_items = {
+"semilla_defensa": 1
+}

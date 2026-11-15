@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Skill" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/skill.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+id = "sol_negro"
+display_name = "Sol negro"
+mp_cost = 14
+power = 135
+color = Color(0.12, 0.1, 0.22, 1)
+element = ""
+kind = "damage"
+targets = "one"
+status = ""
+status_chance = 0.0

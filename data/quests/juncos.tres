@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="QuestData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/quest_data.gd" id="1_quest"]
+
+[resource]
+script = ExtResource("1_quest")
+id = "juncos"
+title = "Juncos de bruma"
+kind = 1
+zone = "brumaclara"
+giver = "Tablón"
+needs = "brumaclara"
+gone = "garza_legamo"
+turn_in_zone = "brumaclara"
+turn_in = "Orvalla"
+target = "junco_bruma"
+goal = 4
+objective = "Reúne 4 Juncos de bruma en la Ciénaga y llévaselos a Orvalla."
+status = "juncos de bruma %d / %d"
+report = "juncos a Orvalla"
+offer_lines = Array[String](["SE BUSCAN: juncos de bruma, cuatro. Para tejer mechas nuevas para el faro. Se entregan a Orvalla."])
+wait_lines = Array[String](["¿Juncos? Los de los juncos andantes de la Ciénaga. Si uno se te acerca andando, es de esos. Cuatro."])
+done_lines = Array[String](["¡Cuatro juncos de bruma! Con esto tejo mechas para un año entero.", "Toma. En Brumaclara no sobra el oro, pero esto te lo has ganado."])
+reward_gold = 900
+reward_items = {
+"pocion_grande": 2
+}

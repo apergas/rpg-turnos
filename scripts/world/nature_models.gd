@@ -38,6 +38,8 @@ const MOUNTAIN_STONE := Color(0.5, 0.52, 0.56)
 ## castle walls under its red sky.
 const CITY_STONE := Color(0.5, 0.45, 0.44)
 const CITY_STONE_DARK := Color(0.36, 0.31, 0.31)
+## The Ciénaga (3.0.0): the ochre of its reeds.
+const REED := Color(0.55, 0.5, 0.26)
 ## id → [[kit model, scale, position, yaw, overrides]] (the models the mesh holds); overrides
 ## is optional: a material → colour that wins over GREENS and PALETTE in that piece only.
 const PIECES := {
@@ -102,6 +104,10 @@ const PIECES := {
 		{"grass": CITY_STONE_DARK, "dirt": CITY_STONE_DARK}],
 		["rock_smallC", 2.0, Vector3(0.6, 0, 0.3), 1.1, {"grass": CITY_STONE, "dirt": CITY_STONE}],
 		["stone_smallB", 2.2, Vector3(-0.4, 0, 0.5), 2.3, {"stone": CITY_STONE}]],
+	# The Ciénaga (3.0.0): the kit's thin dark tree, its leaves in the zone's mossy green, and
+	# its tall grass in ochre, as reeds.
+	"dead_tree": [["tree_thin_dark", 3.2, Vector3.ZERO, 0.0]],
+	"reeds": [["grass_large", 3.0, Vector3.ZERO, 0.0, {"grass": REED}]],
 }
 
 static var _cache: Dictionary = {}

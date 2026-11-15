@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "lobo_niebla"
+display_name = "Lobo de niebla"
+max_hp = 250
+hp = 250
+attack = 116
+defense = 64
+speed = 58
+map_roam = 3.0
+map_speed = 2.6
+exp_reward = 70
+gold_reward = 88
+ai_weights = {
+"attack": 90,
+"stagger": 10
+}
+weak = Array[String](["fire"])
+drops = {
+"pocion_grande": 0.06
+}

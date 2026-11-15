@@ -1,0 +1,96 @@
+[gd_resource type="Resource" script_class="ZoneData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/zone_data.gd" id="1_zone"]
+
+[resource]
+script = ExtResource("1_zone")
+id = "fuente"
+display_name = "La Fuente de la Niebla"
+short_name = "Fuente"
+floor_name = "Bajo el sol negro"
+number = 14
+half_size = Vector2(26, 30)
+ground_color = Color(0.36, 0.38, 0.46, 1)
+has_grass = false
+hills = [[Vector3(-38, -4, -18), Vector3(14, 12, 26)], [Vector3(38, -4, -18), Vector3(14, 12, 26)], [Vector3(0, -4, -46), Vector3(30, 13, 14)], [Vector3(-36, -4, 22), Vector3(13, 10, 24)], [Vector3(36, -4, 22), Vector3(13, 10, 24)], [Vector3(0, -4, 46), Vector3(28, 9, 12)]]
+hill_color = Color(0.16, 0.16, 0.22, 1)
+village_name = ""
+village_radius = 0.0
+wells = [{
+"id": "fuente_vida",
+"kind": "hp",
+"pos": Vector3(0, 0, 11)
+}, {
+"id": "fuente_mana",
+"kind": "mp",
+"pos": Vector3(16, 0, 24)
+}]
+decor = [[Vector3(-8, 0, -22), 0.0, "rock_tall"], [Vector3(8, 0, -22), 60.0, "rock_tall"], [Vector3(-20, 0, 6), 30.0, "rubble"], [Vector3(20, 0, 16), 0.0, "rubble"]]
+decor_green = Color(0.3, 0.34, 0.36, 1)
+entries = {
+"brumaclara": [Vector3(0, 0, 22.5), 0.0]
+}
+start_entry = "brumaclara"
+town_entry = ""
+exits = [{
+"entry": "fuente",
+"id": "sur",
+"label": "A Brumaclara",
+"lock": "",
+"lock_text": "",
+"pos": Vector3(0, 0, 25.5),
+"to": "brumaclara",
+"yaw": 0.0
+}]
+npcs = [{
+"kind": "item",
+"lines": ["Una lente de cristal en un aro de latón. Brilla sola."],
+"look": "LIGHTHOUSE_LENS",
+"name": "Lente del faro",
+"pos": Vector3(16, 0, 0),
+"yaw": 180.0
+}, {
+"gone": "fuente_en_calma",
+"kind": "npc",
+"lines": ["La Fuente respira. Yo ya casi no."],
+"look": "ALBOR_FADED",
+"name": "Eco de Albor",
+"needs": "eco_albor",
+"pos": Vector3(0, 0, -11.5),
+"yaw": 180.0
+}, {
+"kind": "npc",
+"lines": ["Bajo contigo. La Fuente sabe esperar."],
+"look": "ALBOR",
+"name": "Albor",
+"needs": "albor_liberado",
+"pos": Vector3(0, 0, -11.5),
+"yaw": 180.0
+}]
+boss_id = "eco_albor"
+boss_pos = Vector3(0, 0, -11.5)
+formations = [["sombra_albor"], ["ojo_niebla"], ["ojo_niebla", "ojo_niebla"], ["lobo_niebla", "lobo_niebla"], ["slime_bruma"], ["centinela_caido"], ["sombra_albor", "ojo_niebla"], ["slime_bruma", "slime_bruma"], ["centinela_caido", "lobo_niebla"]]
+start_formations = [["sombra_albor"], ["slime_bruma"]]
+start_pos = Vector3(0, 0, 22.5)
+start_radius = 14.0
+monster_count = 12
+exit_level = 50
+music = "source"
+village_music = ""
+ambient = "source"
+sky_top = Color(0.16, 0.12, 0.28, 1)
+haze = Color(0.42, 0.46, 0.62, 1)
+fog_density = 0.016
+sun_color = Color(0.6, 0.7, 1, 1)
+sun_energy = 0.35
+backdrop = "fuente"
+particles = "rise"
+black_sun = true
+layout = PackedStringArray("#############", "###T.....T###", "##.........##", "##.........##", "##.........##", "###.......###", "#####...#####", "#...#...#...#", "#.C........C#", "#...#####...#", "##.##...##.##", "#...........#", "#.###...###.#", "#C..#...#..T#", "#############")
+underground = false
+rock_color = Color(0.24, 0.24, 0.32, 1)
+floor_color = Color(0.36, 0.38, 0.46, 1)
+crystals = true
+source_pos = Vector3(0, 0, -17)
+autoplay_route = Array[Vector3]([Vector3(0, 0, 22.5), Vector3(0, 0, 16), Vector3(-20, 0, 16), Vector3(-20, 0, 23.1), Vector3(-20, 0, 16), Vector3(-16, 0, 16), Vector3(-16, 0, 12), Vector3(-16, 0, 8), Vector3(-16, 0, 4.9), Vector3(-12, 0, 4), Vector3(0, 0, 4), Vector3(12, 0, 4), Vector3(19.1, 0, 4), Vector3(16, 0, 1.6), Vector3(12, 0, 4), Vector3(0, 0, 4), Vector3(0, 0, -4), Vector3(0, 0, -10.1)])
+autoplay_boss_level = 50

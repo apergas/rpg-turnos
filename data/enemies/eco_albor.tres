@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+[ext_resource type="Script" path="res://scripts/battle/skill.gd" id="2_skill"]
+[ext_resource type="Resource" path="res://data/skills/bruma_negra.tres" id="3_bruma"]
+[ext_resource type="Resource" path="res://data/enemies/eco_albor_2.tres" id="4_fase2"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "eco_albor"
+display_name = "Eco de Albor"
+max_hp = 3800
+hp = 3800
+max_mp = 160
+mp = 160
+attack = 144
+defense = 96
+speed = 36
+skills = Array[ExtResource("2_skill")]([ExtResource("3_bruma")])
+exp_reward = 3000
+gold_reward = 2000
+ai_weights = {
+"attack": 50,
+"bruma_negra": 30,
+"charge": 10,
+"stagger": 10
+}
+next_phase = ExtResource("4_fase2")
+is_boss = true

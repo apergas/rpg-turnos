@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="Cutscene" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/cutscene.gd" id="1_cutscene"]
+
+[resource]
+script = ExtResource("1_cutscene")
+id = "recuerdo_albor"
+steps = [
+["wait", 0.4],
+["say", "", ["El Coloso de cuarzo se agrieta de arriba abajo y se deshace en esquirlas. Entre ellas queda un cristal que late como un corazón."]],
+["say", "", ["¡Consigues el Cristal de la Fuente!"]],
+["say", "", ["Al tocarlo, la cueva se borra. Ves una fuente de luz azul bajo un cielo claro, y a un muchacho con capa de guardián sentado en el borde.", "Tiene en las manos un amuleto partido en tres. Lo mira mucho rato, como quien mira algo que ha perdido.", "Luego levanta la vista hacia ti, como si pudiera verte. Y la luz se apaga."]],
+["say", "", ["Vuelves a Brumaclara con el cristal. El Herrero de cristal guarda una esquirla del Coloso en la forja y, por primera vez en años, el fuego prende."]],
+["fade_out"],
+["travel", "brumaclara", "cuevas"],
+["fade_in"],
+["camera_to", Vector3(13, 0, 0.5), 12.0],
+["sfx", "level_up"],
+["say", "", ["El martillo del Herrero vuelve a sonar sobre el yunque."]],
+["camera_back"],
+["approach", "Orvalla", "hero", 1.8],
+["face", "hero", "Orvalla"],
+["face", "Orvalla", "hero"],
+["say", "Orvalla", ["¿Qué traes ahí? Esa luz la conozco. Es de la Fuente.", "¿Dónde la habéis visto?"]],
+["say", "", ["Le cuentas lo que viste: la fuente, el muchacho, el amuleto partido en tres."]],
+["say", "Orvalla", ["Un guardián... Mi abuela contaba que la Fuente tuvo uno, hace mucho. Se llamaba Albor.", "Nadie sabe qué fue de él. Y un amuleto partido en tres no es cosa de aquí.", "Descansa, {nombre}. Algo nos dirá la luz."]],
+["approach", "Neblí", "hero", 2.2],
+["face", "Neblí", "hero"],
+["say", "Neblí", ["¿Albor tenía sol? Seguro que sí. Los guardianes siempre tienen de todo."]]
+]

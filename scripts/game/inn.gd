@@ -14,17 +14,22 @@ const INNS := {
 	MINA: "Posadero",
 	CASTILLO: "Posadera",
 	"caravana": "Curandera",
+	"brumaclara": "Curandera",
 }
 const REST := "Descansa un poco."
 ## What the keeper says to someone with full HP and MP (no fade, nothing to heal). Neutral:
 ## the hero has no set gender.
 const FULL := "Se te ve en forma."
-## A keeper's own lines (the Caravana's Curandera): inn id -> {"rest", "full"}. The other
+## A keeper's own lines (the Curanderas of the Caravana and of Brumaclara): inn id -> {"rest", "full"}. The other
 ## inns say REST and FULL.
 const LINES := {
 	"caravana": {
 		"rest": "Túmbate un rato. Esto no duele... casi nada.",
 		"full": "Estás más sano que una pera. Vuelve cuando te duela algo.",
+	},
+	"brumaclara": {
+		"rest": "El agua de bruma no sabe a nada, pero cura.",
+		"full": "Aquí nadie está más sano que tú. Ni el faro.",
 	},
 }
 

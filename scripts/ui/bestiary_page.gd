@@ -8,7 +8,8 @@ class_name BestiaryPage extends VBoxContainer
 
 signal card_chosen(id: String)
 
-const ELEMENT_NAMES := {Skill.FIRE: "Fuego", Skill.ICE: "Hielo", Skill.THUNDER: "Rayo"}
+const ELEMENT_NAMES := {Skill.FIRE: "Fuego", Skill.ICE: "Hielo", Skill.THUNDER: "Rayo",
+	Skill.LIGHT: "Luz"}
 
 ## Cards per row: a family of up to six fits in one, one of eight takes two.
 const COLUMNS := 6
@@ -19,8 +20,8 @@ const UNKNOWN := "??"
 ## the portrait-seen wash) and beaten at least once (its portrait as it is).
 enum CardState {UNSEEN, SEEN, BEATEN}
 ## On a caravan game the album has two parts, each under its own title: the v1's families
-## and the v2's.
-const PART_TITLES := ["Villaclaro", "La caravana"]
+## and the v2's; in Brumaclara a third, the v3's.
+const PART_TITLES := ["Villaclaro", "La caravana", "Brumaclara"]
 ## What the title, the Volver row and the margins leave for the grid.
 const RESERVED := 160.0
 
@@ -62,6 +63,10 @@ func fill(state: GameState) -> void:
 	if caravan:
 		_add_part(PART_TITLES[1])
 		for family in Bestiary.V2_FAMILIES:
+			_add_family(state, family)
+	if state.part() == 3:
+		_add_part(PART_TITLES[2])
+		for family in Bestiary.V3_FAMILIES:
 			_add_family(state, family)
 
 

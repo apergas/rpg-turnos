@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="QuestData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/quest_data.gd" id="1_quest"]
+
+[resource]
+script = ExtResource("1_quest")
+id = "pescador"
+title = "El pescador perdido"
+kind = 3
+zone = "brumaclara"
+giver = "Vecino"
+needs = "brumaclara"
+gone = "garza_legamo"
+turn_in_zone = "brumaclara"
+turn_in = "Orvalla"
+target = "Pescador"
+target_zone = "cienaga"
+objective = "Busca al pescador de Brumaclara en un islote del este de la Ciénaga."
+status = "busca al pescador"
+report = "vuelve con Orvalla"
+offer_lines = Array[String](["Mi hermano salió a pescar a la Ciénaga y no ha vuelto. Dijo que iba a los islotes del este.", "¿Lo buscarías? Orvalla te dará algo de mi parte."])
+found_lines = Array[String](["¡Alguien con luz! Llevo dos días en este islote: la bruma se comió el camino de vuelta.", "Ya lo veo otra vez. Vuelvo al pueblo: dile a Orvalla que voy detrás."])
+wait_lines = Array[String](["¿Has visto a mi hermano? Dijo que iba a los islotes del este."])
+done_lines = Array[String](["¡Ha vuelto el pescador! Mojado hasta las cejas, pero entero.", "Dice que ha visto peces que brillan. Yo le he dicho que se seque primero.", "Ten, de parte de los dos."])
+done_flag = "pescador_vuelve"
+reward_gold = 0
+reward_items = {
+"semilla_agilidad": 1
+}

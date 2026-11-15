@@ -58,12 +58,23 @@ town_entry = "pueblo"
 portal_pos = Vector3(-3.5, 0, -15)
 exits = [{
 "entry": "sur",
+"gone": "brumaclara",
 "id": "norte",
 "label": "Al bosque",
 "lock": "rey_slime",
 "lock_text": "Una niebla espesa cierra el camino del norte.",
 "pos": Vector3(0, 0, -28.6),
 "to": "bosque",
+"yaw": 0.0
+}, {
+"entry": "villaclaro",
+"id": "caravana",
+"label": "A la caravana",
+"lock": "",
+"lock_text": "",
+"needs": "brumaclara",
+"pos": Vector3(0, 0, -28.6),
+"to": "caravana",
 "yaw": 0.0
 }]
 npcs = [{
@@ -72,7 +83,8 @@ npcs = [{
 2: ["El bosque está al norte, {nombre}. Busca a la Bruja y su fragmento.", "Y come algo antes de salir, que luego todo son prisas."],
 3: ["¡Un fragmento! Lo noto desde aquí: me hace cosquillas en los huesos.", "El segundo lo guarda un golem, en el fondo de la vieja mina."],
 4: ["Con dos fragmentos ya se puede entrar en el Castillo de la Niebla.", "El tercero lo guarda su señor. Ve con cuidado, y abrígate."],
-5: ["El Amuleto del Alba está en su sitio y el cielo, por fin, también.", "Pasea cuanto quieras, {nombre}. Ahora da gusto."]
+5: ["El Amuleto del Alba está en su sitio y el cielo, por fin, también.", "Pasea cuanto quieras, {nombre}. Ahora da gusto."],
+13: ["Llévalo con cuidado, {nombre}. Ese amuleto ha pasado por muchas manos, y todas lo querían para ellas.", "Y abrígate, que dicen que al otro lado no sale el sol. Pobre gente."]
 },
 "look": "VILLAGER",
 "name": "Abuela Rosa",
@@ -106,7 +118,8 @@ npcs = [{
 2: ["¡Has echado al Rey Slime! Me aplastó las lechugas, ¿sabes?", "Aquí se respira mejor, pero al norte la niebla sigue igual."],
 3: ["Un viajero dice que la vieja mina está llena de arañas.", "Yo me quedo con mis gallinas."],
 4: ["Dicen que en el castillo los esqueletos no duermen nunca.", "Con razón tienen tan mala cara."],
-5: ["¡Mira qué cielo! Las gallinas ya ponen los huevos derechos."]
+5: ["¡Mira qué cielo! Las gallinas ya ponen los huevos derechos."],
+13: ["Vuelve la niebla por los caminos. Mis gallinas ponen los huevos de lado otra vez.", "No sé qué haces por ahí, {nombre}, pero date prisa, que me quedo sin tortillas."]
 },
 "look": "FARMER",
 "name": "Granjero",
@@ -115,6 +128,9 @@ npcs = [{
 }, {
 "kind": "board",
 "lines": ["Aviso viejo: se vende gallina que pone de lado. Razón, el Granjero.", "Otro más viejo aún: se regala gallina."],
+"lines_by_chapter": {
+13: ["Aviso nuevo: «La niebla ha vuelto a los caminos. Que nadie salga al bosque hasta que se vaya.» — La Abuela Rosa"]
+},
 "look": "BOARD",
 "name": "Tablón",
 "pos": Vector3(2.8, 0, -17.3),

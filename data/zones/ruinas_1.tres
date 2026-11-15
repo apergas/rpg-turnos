@@ -1,0 +1,69 @@
+[gd_resource type="Resource" script_class="ZoneData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/zone_data.gd" id="1_zone"]
+
+[resource]
+script = ExtResource("1_zone")
+id = "ruinas_1"
+display_name = "Ruinas flotantes"
+short_name = "Ruinas"
+floor_name = "Los puentes"
+number = 13
+half_size = Vector2(30, 26)
+ground_color = Color(0.62, 0.6, 0.56, 1)
+has_grass = false
+village_name = ""
+village_radius = 0.0
+wells = [{
+"id": "ruinas_1_vida",
+"kind": "hp",
+"pos": Vector3(-8, 0, 20)
+}, {
+"id": "ruinas_1_mana",
+"kind": "mp",
+"pos": Vector3(24, 0, -4)
+}]
+decor = [[Vector3(-8, 0, 12), 0.0, "column"], [Vector3(8, 0, 12), 40.0, "column_broken"], [Vector3(8, 0, 20), 30.0, "ruin_block"], [Vector3(-24, 0, 4), 0.0, "ruin_block"], [Vector3(-24, 0, -4), 110.0, "column_broken"], [Vector3(24, 0, 4), 0.0, "column"], [Vector3(12, 0, -4), 200.0, "column_broken"], [Vector3(24, 0, -20), 60.0, "column_broken"], [Vector3(16, 0, -20), 0.0, "column"]]
+decor_green = Color(0.34, 0.42, 0.3, 1)
+entries = {
+"brumaclara": [Vector3(0, 0, 18.5), 0.0]
+}
+start_entry = "brumaclara"
+town_entry = ""
+exits = [{
+"entry": "ruinas",
+"id": "sur",
+"label": "A Brumaclara",
+"lock": "",
+"lock_text": "",
+"pos": Vector3(0, 0, 21.5),
+"to": "brumaclara",
+"yaw": 0.0
+}]
+npcs = []
+boss_id = ""
+formations = [["ave_bruma"], ["gargola_antigua"], ["caballero_bruma"], ["espiritu_viento"], ["medusa_niebla"], ["ave_bruma", "ave_bruma"], ["caballero_bruma", "espiritu_viento"]]
+start_formations = [["ave_bruma"], ["medusa_niebla"]]
+start_pos = Vector3(0, 0, 18.5)
+start_radius = 14.0
+monster_count = 12
+exit_level = 49
+music = "ruins"
+village_music = ""
+ambient = "mountain"
+sky_top = Color(0.26, 0.2, 0.42, 1)
+haze = Color(0.6, 0.6, 0.72, 1)
+fog_density = 0.012
+sun_color = Color(0.75, 0.8, 1, 1)
+sun_energy = 0.5
+backdrop = "ruinas"
+particles = "bruma"
+black_sun = true
+layout = PackedStringArray("###############", "#...#######...#", "#.S.#######.C.#", "#...#######...#", "##.#########.##", "#....#####....#", "#.C..#####....#", "#....#####....#", "###.#######.###", "###.#.....#.###", "###.........###", "#####.....#####", "###############")
+underground = false
+rock_color = Color(0.34, 0.32, 0.38, 1)
+floor_color = Color(0.62, 0.6, 0.56, 1)
+floating = true
+stairs_up = "ruinas_2"
+autoplay_route = Array[Vector3]([Vector3(0, 0, 18.5), Vector3(0, 0, 16), Vector3(16, 0, 16), Vector3(16, 0, 4), Vector3(20, 0, 4), Vector3(20, 0, -12), Vector3(20, 0, -15), Vector3(20, 0, -12), Vector3(20, 0, 4), Vector3(16, 0, 4), Vector3(16, 0, 16), Vector3(-16, 0, 16), Vector3(-16, 0, 0), Vector3(-19, 0, 0), Vector3(-16, 0, 0), Vector3(-20, 0, -4), Vector3(-20, 0, -12), Vector3(-20, 0, -16)])
+autoplay_boss_level = 48

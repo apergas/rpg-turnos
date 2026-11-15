@@ -103,7 +103,7 @@ var _eyelid: Node3D
 func _ready() -> void:
 	_body = Node3D.new()
 	add_child(_body)
-	var data: Dictionary = ActorLooks.LOOKS[look]
+	var data: Dictionary = ActorLooks.entry(look)
 	_top = data.top
 	if data.has("scene"):
 		CharacterBuilder.build(self, data)
@@ -479,7 +479,7 @@ func play_cheer() -> void:
 ## The Devorador wakes (its second phase): a red flash while its eye opens and the whole mass
 ## grows by DEVOURER_GROWTH; its bar goes up with it.
 func _devourer_wakes() -> void:
-	_set_flash(true, ActorLooks.LOOKS[look].glow_color)
+	_set_flash(true, ActorLooks.entry(look).glow_color)
 	var t := create_tween().set_parallel()
 	t.tween_property(_devourer, "scale", _devourer.scale * DEVOURER_GROWTH, 0.9) \
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -502,10 +502,10 @@ func _start_idle() -> void:
 	elif _hover:
 		_start_float()
 	else:
-		var gentle := look in [Look.WOLF, Look.MUD_GOLEM, Look.STONE_GOLEM, Look.SPIDER,
+		var gentle: bool = look in [Look.WOLF, Look.MUD_GOLEM, Look.STONE_GOLEM, Look.SPIDER,
 			Look.CAT, Look.WOLF_CUB, Look.MINI_GOLEM, Look.SNAKE, Look.MONKEY, Look.JAGUAR,
 			Look.SAND_GOLEM, Look.SCORPION, Look.SNOW_WOLF, Look.ICE_GOLEM, Look.GOAT, Look.RUIN_RAT,
-			Look.PORTAL_DEVOURER]
+			Look.PORTAL_DEVOURER] or ActorLooks.entry(look).get("gentle", false)
 		_start_bounce(0.4 if gentle else 1.0)
 
 
@@ -513,7 +513,7 @@ func _start_idle() -> void:
 func _start_float() -> void:
 	if _idle_tween:
 		_idle_tween.kill()
-	var fly: float = ActorLooks.LOOKS[look].fly
+	var fly: float = ActorLooks.entry(look).fly
 	_idle_tween = create_tween().set_loops()
 	for y in [fly + 0.18, fly]:
 		_idle_tween.tween_property(_hover, "position:y", y, 0.8) \
@@ -526,7 +526,7 @@ func _start_flap() -> void:
 	if _idle_tween:
 		_idle_tween.kill()
 	_idle_tween = create_tween().set_loops()
-	var beat: float = ActorLooks.LOOKS[look].get("flap_time", 0.18)
+	var beat: float = ActorLooks.entry(look).get("flap_time", 0.18)
 	for angle in [0.6, -0.4]:
 		_idle_tween.tween_property(_wings[0], "rotation:z", -angle, beat) \
 			.set_trans(Tween.TRANS_SINE)

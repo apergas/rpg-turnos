@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "ave_bruma"
+display_name = "Ave de bruma"
+max_hp = 220
+hp = 220
+attack = 106
+defense = 60
+speed = 70
+map_roam = 3.0
+map_speed = 2.8
+exp_reward = 116
+gold_reward = 78
+ai_weights = {
+"attack": 80,
+"stagger": 20
+}
+weak = Array[String](["thunder"])
+drops = {
+"eter_grande": 0.06
+}

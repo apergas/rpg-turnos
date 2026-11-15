@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "sapo_legamo"
+display_name = "Sapo de légamo"
+max_hp = 250
+hp = 250
+attack = 88
+defense = 64
+speed = 30
+map_roam = 1.5
+map_speed = 1.5
+exp_reward = 84
+gold_reward = 66
+ai_weights = {
+"attack": 85,
+"stagger": 15
+}
+weak = Array[String](["ice"])
+drops = {
+"pocion_grande": 0.08
+}
+attack_status = "poison"
+attack_status_chance = 0.3

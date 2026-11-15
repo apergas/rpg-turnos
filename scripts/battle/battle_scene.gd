@@ -477,10 +477,10 @@ func _play_event(event: Dictionary) -> void:
 			await _say(said)
 
 
-## The number colour of a spell: &"element-<element>" for fire, ice and thunder.
+## The number colour of a spell: &"element-<element>" for fire, ice, thunder and light.
 func _element_token(event: Dictionary) -> StringName:
 	var element := str(event.get("element", ""))
-	if element in ["fire", "ice", "thunder"]:
+	if element in [Skill.FIRE, Skill.ICE, Skill.THUNDER, Skill.LIGHT]:
 		return StringName("element-" + element)
 	return &"text-primary"
 

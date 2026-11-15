@@ -3,11 +3,22 @@ class_name CharacterBuilder extends RefCounted
 ## witch, the skeletons, the caravan's people, the companions...), from their
 ## ActorLooks.LOOKS entry: the model turned to face -Z with its props hidden, weapons on
 ## bones, tints, head texture, cape, hair pieces, the Momia's wraps, the Armadura's ember,
-## an aura and the hero's stick. Static only, keeps no state: it writes into the actor
-## through its builder methods (set_model, set_aura, set_animations, add_mesh...).
+## an aura or a corona of light and the hero's stick. Static only, keeps no state: it writes
+## into the actor through its builder methods (set_model, set_aura, set_animations,
+## add_mesh...).
 
 ## Resting opacity of an aura (LOOKS "aura": the Señor de la Niebla, the Eco).
 const FOG_AURA_ALPHA := 0.2
+## The corona of light over the head (LOOKS "corona": the Eco de Albor, Albor; 3.3.0): a flat
+## upright ring behind the head, CORONA_RADIUS wide and CORONA_THICKNESS thick, CORONA_LIFT over
+## the head bone and CORONA_BACK behind it (in the model's own units), at CORONA_ALPHA. It is
+## the figure's aura: the Eco's second phase (BattleActor.play_phase()) swells it and dims it
+## to the aura's phase opacity.
+const CORONA_RADIUS := 0.45
+const CORONA_THICKNESS := 0.07
+const CORONA_LIFT := 1.0
+const CORONA_BACK := 0.35
+const CORONA_ALPHA := 0.85
 ## Bones the weapons hang from, under the model's Rig/Skeleton3D.
 const SKELETON_PATH := "Rig/Skeleton3D"
 ## The AnimationPlayer inside a KayKit character scene.
@@ -72,6 +83,19 @@ static func build(actor: BattleActor, data: Dictionary) -> void:
 		actor.add_ghost(actor.body(), LowPoly.sphere(0.5), data.aura, FOG_AURA_ALPHA, Vector3(0, actor.top_height() * 0.45, 0),
 			Vector3(2.2, 3.2, 2.2))
 		actor.set_aura(actor.body().get_child(-1) as MeshInstance3D)
+	if data.has("corona"):
+		var crown := BoneAttachment3D.new()
+		crown.bone_name = "head"
+		bones.add_child(crown)
+		var ring := TorusMesh.new()
+		ring.inner_radius = CORONA_RADIUS - CORONA_THICKNESS
+		ring.outer_radius = CORONA_RADIUS
+		ring.rings = 16
+		ring.ring_segments = 6
+		actor.add_ghost(crown, ring, data.corona, CORONA_ALPHA, Vector3(0, CORONA_LIFT, -CORONA_BACK),
+			Vector3.ONE)
+		(crown.get_child(-1) as Node3D).rotation_degrees.x = 90.0
+		actor.set_aura(crown.get_child(-1) as MeshInstance3D)
 	if actor.look == ActorLooks.Look.HERO:
 		var stick := LowPoly.cylinder(STICK_RADIUS, STICK_LENGTH)
 		stick.top_radius = STICK_RADIUS * 0.7
@@ -87,8 +111,8 @@ static func build(actor: BattleActor, data: Dictionary) -> void:
 	actor.set_animations(anim, data.anims)
 
 
-## A hair piece (ActorLooks.HAIR_PIECES: a beard, a bun or a ponytail), faceted like the slimes, in the
-## hair's colour, hung from the head bone's attachment so it follows every animation.
+## A hair piece (ActorLooks.HAIR_PIECES: a beard, a bun or a ponytail), faceted like the slimes,
+## in the hair's colour, hung from the head bone's attachment so it follows every animation.
 static func _add_hair(actor: BattleActor, model: Node3D, hair: Dictionary) -> void:
 	var head := model.get_node("Rig/Skeleton3D/head") as Node3D
 	var piece: Dictionary = ActorLooks.HAIR_PIECES[hair.style]
@@ -175,4 +199,8 @@ static func tint_mesh(mi: MeshInstance3D, color: Color) -> void:
 			continue
 		var tinted := source.duplicate() as BaseMaterial3D
 		tinted.albedo_color = source.albedo_color * color
+		# The mesh also keeps the copy in its metadata, which outlives its render instance: freed
+		# first (the last mesh of a model with no one after it), the dummy renderer of --headless
+		# runs reads the freed material and prints "Parameter material is null".
+		mi.set_meta(&"tinted_%d" % i, tinted)
 		mi.set_surface_override_material(i, tinted)

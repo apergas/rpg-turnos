@@ -7,7 +7,7 @@ class_name SessionContext extends RefCounted
 var state: GameState
 ## The current map. Game sets it each time ZoneTravel builds one (Game._on_world_replaced()).
 var world: World
-## The current map's zone (World.zone; the Caravana's is dressed by CampLook).
+## The current map's zone (World.zone; the Caravana's is dressed by CampLook, Brumaclara's by BrumaclaraLook).
 var zone: ZoneData:
 	get:
 		return world.zone if world != null else null

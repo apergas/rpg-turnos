@@ -1,0 +1,267 @@
+[gd_resource type="Resource" script_class="ZoneData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/zone_data.gd" id="1_zone"]
+
+[resource]
+script = ExtResource("1_zone")
+id = "brumaclara"
+display_name = "Brumaclara"
+short_name = "Brumaclara"
+number = 10
+half_size = Vector2(22, 22)
+outer_margin = 6.0
+ground_color = Color(0.17, 0.18, 0.21, 1)
+has_grass = true
+grass_tips = PackedColorArray(0.24, 0.3, 0.27, 1, 0.34, 0.38, 0.32, 1)
+grass_seed = 17
+hills = [[Vector3(-31, -3.5, -32), Vector3(16, 7, 16)], [Vector3(0, -4.2, -41), Vector3(21, 8, 15)], [Vector3(31, -3.5, -31), Vector3(16, 6.5, 16)], [Vector3(41, -4.2, 0), Vector3(15, 7, 21)], [Vector3(32, -3.5, 32), Vector3(16, 6.5, 16)], [Vector3(0, -4.2, 43), Vector3(21, 7, 15)], [Vector3(-32, -3.5, 32), Vector3(16, 7, 16)], [Vector3(-41, -4.2, 0), Vector3(15, 6.5, 21)]]
+hill_color = Color(0.14, 0.15, 0.2, 1)
+path_points = Array[Vector3]([Vector3(0, 0, 19), Vector3(0, 0, 4), Vector3(0, 0, -8), Vector3(5, 0, -12), Vector3(5, 0, -18)])
+path_half_width = 1.6
+path_color = Color(0.38, 0.38, 0.42, 1)
+safe_discs = [[Vector3(0, 0, 0), 7.0]]
+village_name = "Brumaclara"
+village_pos = Vector3(0, 0, 0)
+village_radius = 40.0
+buildings = [[Vector3(-11, 0, -5), 90.0, "house_A_red"], [Vector3(-11, 0, 6), 90.0, "house_B_red"], [Vector3(11, 0, -5), -90.0, "tavern_green"], [Vector3(11, 0, 6), -90.0, "house_A_green"], [Vector3(-7, 0, -13), 0.0, "market_green"], [Vector3(8, 0, 13), 180.0, "house_B_green"], [Vector3(-8, 0, 13), 180.0, "house_A_red"]]
+wells = [{
+"id": "brumaclara_vida",
+"kind": "hp",
+"pos": Vector3(-3.5, 0, 1)
+}, {
+"id": "brumaclara_mana",
+"kind": "mp",
+"pos": Vector3(3.5, 0, 1)
+}]
+rocks = [[Vector3(-17, 0, -17), 2, 7.0, 15.0], [Vector3(17, 0, -17), 3, 7.0, 130.0], [Vector3(-17, 0, 17), 1, 7.0, 290.0], [Vector3(17, 0, 17), 0, 7.0, 45.0]]
+tree_seed = 53
+tree_tries = 0
+tree_center_chance = 0.0
+bush_seed = 61
+bush_tries = 30
+decor = [[Vector3(-8.6, 0, -7.8), 0.0, "fence"], [Vector3(-5.4, 0, -7.8), 0.0, "fence"], [Vector3(-13.5, 0, 1), 30.0, "log_stack"]]
+decor_green = Color(0.3, 0.36, 0.3, 1)
+entries = {
+"cienaga": [Vector3(5, 0, -16), 180.0],
+"cuevas": [Vector3(5, 0, -16), 180.0],
+"ruinas": [Vector3(5, 0, -16), 180.0],
+"fuente": [Vector3(5, 0, -16), 180.0],
+"portal": [Vector3(0, 0, 16), 0.0],
+"pueblo": [Vector3(0, 0, 6), 0.0]
+}
+start_entry = "portal"
+town_entry = "pueblo"
+portal_pos = Vector3(-2.5, 0, 11)
+exits = [{
+"entry": "brumaclara",
+"gone": "garza_legamo",
+"id": "cienaga",
+"label": "A la Ciénaga",
+"lock": "",
+"lock_text": "",
+"needs": "brumaclara",
+"pos": Vector3(5, 0, -19.5),
+"to": "cienaga",
+"yaw": 0.0
+}, {
+"entry": "brumaclara",
+"gone": "coloso_cuarzo",
+"id": "cuevas",
+"label": "A las Cuevas",
+"lock": "",
+"lock_text": "",
+"needs": "garza_legamo",
+"pos": Vector3(5, 0, -19.5),
+"to": "cuevas_1",
+"yaw": 0.0
+}, {
+"entry": "brumaclara",
+"gone": "vigia_bruma",
+"id": "ruinas",
+"label": "A las Ruinas",
+"lock": "",
+"lock_text": "",
+"needs": "amuleto_recuperado",
+"pos": Vector3(5, 0, -19.5),
+"to": "ruinas_1",
+"yaw": 0.0
+}, {
+"entry": "brumaclara",
+"id": "fuente",
+"label": "A la Fuente",
+"lock": "",
+"lock_text": "",
+"needs": "vigia_bruma",
+"pos": Vector3(5, 0, -19.5),
+"to": "fuente",
+"yaw": 0.0
+}, {
+"entry": "brumaclara",
+"id": "portal",
+"label": "Al portal",
+"lock": "",
+"lock_text": "",
+"look": "portal",
+"pos": Vector3(0, 0, 19.5),
+"to": "caravana",
+"yaw": 0.0
+}]
+npcs = [{
+"kind": "npc",
+"lines": ["La Ciénaga está al norte, pasado el faro. Lo que se llevó la lámpara vive allí.", "Vuelve con luz, {nombre}. O al menos vuelve."],
+"lines_by_chapter": {
+12: ["El faro vuelve a dar luz. Hacía un año que no veía mi propia sombra.", "Con la luz se ve la boca de las Cuevas, junto al faro. Dicen que dentro los cristales brillan solos. Y que algo grande los vigila."],
+13: ["Ese cristal late como un corazón. El Herrero lo tiene junto a la forja y no para de cantar.", "Albor... Mi abuela contaba que la Fuente tuvo un guardián. Nadie sabe qué fue de él."],
+14: ["El Sello de Albor. Mi abuela decía que abría la Fuente, y yo creía que era un cuento para dormir.", "Mira el pueblo: hasta el mercado ha vuelto. Y un señor que pregunta por medallas. Lo que hace la luz."],
+15: ["Brumaclara respira tranquila. Hasta el faro parece que ronca.", "Gracias por todo, {nombre}. Si algún día te aburres en tu mundo, ya sabes dónde está el portal."]
+},
+"look": "ORVALLA",
+"name": "Orvalla",
+"pos": Vector3(-2.5, 0, -10.5),
+"yaw": 180.0
+}, {
+"kind": "npc",
+"lines": ["¿Allí de donde vienes el sol da luz? ¿Y calienta? ¿Y se puede mirar?", "Aquí el sol es negro. Mi abuela dice que antes no."],
+"lines_by_chapter": {
+12: ["¡El faro da luz! ¿El sol de tu mundo es así, pero más grande?"],
+13: ["¡La forja hace chispas! Son como estrellas pequeñas. ¿En tu mundo las estrellas también queman?"],
+14: ["¡Todas las ventanas tienen luz! Desde el faro parece que el pueblo es una estrella. ¿Las estrellas de tu mundo también tienen ventanas?"],
+15: ["¡Hay fiesta! Nunca había visto una. Es como un día normal, pero todo el mundo grita contento."]
+},
+"look": "NEBLI",
+"name": "Neblí",
+"pos": Vector3(3, 0, 4.5),
+"yaw": -60.0
+}, {
+"kind": "board",
+"lines": ["El tablón está vacío. Alguien ha dibujado un sol con cara triste."],
+"look": "BOARD",
+"name": "Tablón",
+"pos": Vector3(-4.5, 0, 5.5),
+"yaw": 0.0
+}, {
+"id": "brumaclara",
+"kind": "inn",
+"look": "MIST_HEALER",
+"name": "Curandera",
+"needs": "garza_legamo",
+"pos": Vector3(8.6, 0, -5),
+"yaw": -90.0
+}, {
+"id": "brumaclara",
+"kind": "shop",
+"look": "MIST_SMITH",
+"name": "Herrero de cristal",
+"needs": "coloso_cuarzo",
+"pos": Vector3(11.2, 0, -0.9),
+"yaw": -90.0
+}, {
+"kind": "npc",
+"lines": ["Colecciono medallas pequeñas."],
+"look": "CARAVAN_COLLECTOR",
+"name": "Coleccionista",
+"needs": "vigia_bruma",
+"pos": Vector3(-7.0, 0, -11.0),
+"yaw": 180.0
+}, {
+"kind": "npc",
+"lines": ["Mi hermano pesca en la Ciénaga. Bueno, pescaba. Ahora es la bruma la que le pesca a él."],
+"lines_by_chapter": {
+12: ["Con el faro encendido ya no se pierde nadie en la Ciénaga. Mi hermano dice que es por la sopa."],
+13: ["El Herrero ha vuelto a encender la forja. Se oye el martillo desde mi cama. Bendito martillo."],
+14: ["Ha vuelto el mercado. Me he comprado una sartén. No tengo nada que freír, pero qué sartén."],
+15: ["Mi hermano dice que en la fiesta ha pescado un pez que brilla. Lo ha soltado: tenía cara de buena persona."]
+},
+"look": "MIST_VILLAGER_M",
+"name": "Vecino",
+"pos": Vector3(-7, 0, 3),
+"yaw": 90.0
+}, {
+"kind": "npc",
+"lines": ["Respirar la niebla es como beber agua: no lo notas hasta que falta.", "Y últimamente falta."],
+"lines_by_chapter": {
+12: ["¡Mira mis ventanas! Con la luz del faro he descubierto que tengo cortinas."],
+13: ["Huele a hierro caliente. Hacía tanto que aquí no olía a nada..."],
+14: ["Con todas las ventanas encendidas he visto por fin la cara de mi vecino. Prefería la niebla."],
+15: ["¡Fiesta! He sacado las cortinas buenas. Las que descubrí con la luz del faro."]
+},
+"look": "MIST_VILLAGER_F",
+"name": "Vecina",
+"pos": Vector3(7, 0, 8.5),
+"yaw": -120.0
+}, {
+"kind": "npc",
+"lines": ["Me he secado. Por fuera. Por dentro sigo oyendo ranas."],
+"look": "MIST_VILLAGER_M",
+"name": "Pescador",
+"needs": "pescador_vuelve",
+"pos": Vector3(-8.5, 0, -1),
+"yaw": 90.0
+}, {
+"gone": "brumaclara_vista",
+"kind": "npc",
+"lines": ["Voy contigo."],
+"look": "BRENA",
+"name": "Brena",
+"pos": Vector3(1.5, 0, 16.5),
+"yaw": 0.0
+}, {
+"gone": "brumaclara_vista",
+"kind": "npc",
+"lines": ["Voy contigo."],
+"look": "TADEO",
+"name": "Tadeo",
+"pos": Vector3(1.5, 0, 16.5),
+"yaw": 0.0
+}, {
+"gone": "brumaclara_vista",
+"kind": "npc",
+"lines": ["Voy contigo."],
+"look": "ULMA",
+"name": "Ulma",
+"pos": Vector3(1.5, 0, 16.5),
+"yaw": 0.0
+}, {
+"kind": "npc",
+"lines": ["Ceniza ronronea. Todavía le brilla algo de cristal en los bigotes."],
+"look": "CAT",
+"name": "Ceniza",
+"needs": "gato_nebli_vuelve",
+"pos": Vector3(4.4, 0, 3.4),
+"yaw": -60.0
+}, {
+"kind": "npc",
+"lines": ["Subo a la Fuente cada mañana y bajo cada tarde. Un guardián también tiene derecho a una plaza.", "Neblí me pregunta por el sol cada cinco minutos. Le digo que tenga paciencia. Yo esperé bastante más."],
+"look": "ALBOR",
+"name": "Albor",
+"needs": "albor_liberado",
+"pos": Vector3(-3.5, 0, -2.5),
+"yaw": 180.0
+}]
+boss_id = ""
+boss_pos = Vector3(0, 0, 0)
+formations = []
+start_formations = []
+start_pos = Vector3(0, 0, 0)
+start_radius = 0.0
+monster_count = 0
+exit_level = 40
+music = "brumaclara"
+village_music = "brumaclara"
+ambient = "castle"
+sky_top = Color(0.2, 0.14, 0.32, 1)
+haze = Color(0.5, 0.5, 0.62, 1)
+fog_density = 0.022
+sun_color = Color(0.65, 0.7, 1, 1)
+sun_energy = 0.35
+backdrop = "cienaga"
+particles = "bruma"
+black_sun = true
+building_tint = Color(0.42, 0.42, 0.52, 1)
+lighthouse_pos = Vector3(0, 0, -15)
+lighthouse_lit = false
+forge_pos = Vector3(13, 0, 0.5)
+forge_yaw = -90.0
+window_lights = []
+autoplay_route = Array[Vector3]([Vector3(0, 0, 15), Vector3(-5.6, 0, 3.4), Vector3(2, 0, 3.4), Vector3(-1.5, 0, -9.2), Vector3(7.2, 0, -4.6), Vector3(5, 0, -13), Vector3(5, 0, -19)])
+autoplay_boss_level = 0

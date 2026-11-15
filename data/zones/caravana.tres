@@ -48,7 +48,10 @@ entries = {
 "ciudad": [Vector3(0, 0, -13), 180.0],
 "jungla": [Vector3(0, 0, -13), 180.0],
 "montana": [Vector3(0, 0, -13), 180.0],
-"pueblo": [Vector3(0, 0, 4), 0.0]
+"pueblo": [Vector3(0, 0, 4), 0.0],
+"brumaclara": [Vector3(0, 0, -13), 180.0],
+"villaclaro": [Vector3(11, 0, -6.3), 120.0],
+"hoguera": [Vector3(4.2, 0, 0.4), -90.0]
 }
 start_entry = "inicio"
 town_entry = "pueblo"
@@ -97,6 +100,28 @@ exits = [{
 "pos": Vector3(0, 0, -17),
 "to": "ciudad_1",
 "yaw": 0.0
+}, {
+"entry": "portal",
+"id": "portal",
+"label": "Al portal",
+"lock": "",
+"lock_text": "",
+"look": "portal",
+"needs": "devorador_portal",
+"pos": Vector3(0, 0, -17),
+"to": "brumaclara",
+"yaw": 0.0
+}, {
+"entry": "norte",
+"gone": "amuleto_recuperado",
+"id": "villaclaro",
+"label": "A Villaclaro",
+"lock": "",
+"lock_text": "",
+"needs": "coloso_cuarzo",
+"pos": Vector3(14, 0, -8),
+"to": "pradera",
+"yaw": -60.0
 }]
 npcs = [{
 "kind": "npc",
@@ -113,7 +138,12 @@ npcs = [{
 7: ["El desierto está al norte. Busca la ruina: dicen que algo enorme vive bajo la arena.", "Lleva agua... bueno, pociones. En el desierto el agua se evapora antes de llegar a la boca."],
 8: ["La montaña está al norte. En la cumbre anida un grifo enorme.", "Busca la palanca de los viejos pastores: abre la reja de la subida.", "Y abrígate. La última vez se me congeló la barba y tardó tres días en volver a rizarse."],
 9: ["La ciudad abandonada está al norte. Dicen que un guardián de bronce vigila su plaza mayor.", "Detrás de la ciudad está el portal. Llega hasta él, y la caravana irá detrás."],
-10: ["Cruzaste el portal y volviste para contarlo. Lo que hay al otro lado... ya habrá tiempo.", "La caravana se queda aquí una temporada. Descansa, {nombre}. Te lo has ganado, y yo también."]
+10: ["El portal se ha quedado quieto. Si quieres ver qué hay al otro lado, ya sabes dónde está.", "La caravana se queda aquí una temporada. Descansa, {nombre}. Te lo has ganado, y yo también."],
+11: ["Te fuiste diez minutos y ya no veo mis botas.", "Esa niebla viene del portal. Si al otro lado necesitan ayuda, ya sabes dónde estamos."],
+12: ["Dicen que al otro lado se ha encendido un faro. Desde aquí la niebla huele un poco menos a sótano."],
+13: ["Dicen que en Brumaclara vuelve a sonar un martillo. Aquí llega el eco por el portal, a la hora de la siesta.", "Al este hay un atajo que encontramos al venir: va derecho a Villaclaro. Con esta niebla, no sé cuánto tiempo seguirá abierto."],
+14: ["Dicen que en Brumaclara han abierto un mercado. Mi Mercader está celoso, aunque no lo diga."],
+15: ["La niebla se ha ido de mis botas. Por fin sé de qué color eran: marrones. Qué decepción.", "Dicen que al otro lado hay fiesta. Si sobra pastel, ya sabes dónde estamos."]
 },
 "look": "CARAVAN_CHIEF",
 "name": "Jefe de caravana",
@@ -144,7 +174,9 @@ npcs = [{
 "kind": "npc",
 "lines": ["Llevo tres caravanas encima. Esta es la primera que va hacia el portal.", "Las otras dos iban a por queso. Esta me gusta más."],
 "lines_by_chapter": {
-10: ["Dicen que al otro lado del portal hay un pueblo bajo un sol negro. Yo no pienso ir a verlo.", "Con un sol negro no hay manera de secar la ropa."]
+10: ["Dicen que al otro lado del portal hay un pueblo bajo un sol negro. Yo no pienso ir a verlo.", "Con un sol negro no hay manera de secar la ropa."],
+11: ["¿Has visto lo que sale del portal? Niebla. Ahora sí que no hay manera de secar la ropa."],
+13: ["Si al otro lado hay un pueblo, ¿habrá alguien con quien hablar de la ropa? Aquí nadie me entiende."]
 },
 "look": "TRAVELLER_F",
 "name": "Viajera",
@@ -155,7 +187,8 @@ npcs = [{
 "lines": ["Crucé ese desierto de joven. De día quema y de noche hiela.", "Por eso tengo esta cara."],
 "lines_by_chapter": {
 9: ["De niño oí que en esa ciudad vivía un rey. Ahora solo quedan piedras y esqueletos."],
-10: ["Si vuelves a cruzar ese portal, tráeme algo de recuerdo. Algo pequeño. Que no muerda."]
+10: ["Si vuelves a cruzar ese portal, tráeme algo de recuerdo. Algo pequeño. Que no muerda."],
+11: ["Si al otro lado hay un pueblo, pregúntales si venden queso. Por preguntar."]
 },
 "look": "TRAVELLER_M",
 "name": "Viajero",

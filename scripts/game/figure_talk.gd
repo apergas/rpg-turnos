@@ -2,9 +2,9 @@ class_name FigureTalk extends Node
 ## Node, a piece of Game: what the figures and the things of the map do when the hero uses
 ## them. The Abuela Rosa heals and moves the village quest on (on_talk()); a villager, a
 ## board or a thing picked up says what the QuestLog has about a quest, or its chapter lines
-## (on_npc(); the Coleccionista: talk_to_collector(); the Jefe de caravana: CaravanFlow); a
-## shop opens the ShopWindow (on_shop()) and an inn offers the free night (on_inn()), each
-## after the quest waiting at its figure; a well, a chest, the lever, the key and a gate.
+## (on_npc(); the Coleccionista: talk_to_collector(); the Jefe de caravana: CaravanFlow;
+## Orvalla says what the v3 waits on); a shop opens the ShopWindow (on_shop()) and an
+## inn offers the free night (on_inn()), each after the quest waiting at its figure; a well, a chest, the lever, the key and a gate.
 ## Gets the session and the ShopWindow in setup(); never stores Game or a World.
 
 const HEAL_LINE := "Descansas un momento. PV y PM recuperados."
@@ -97,13 +97,19 @@ func on_npc(index: int) -> void:
 		_ctx.set_busy.call(false)
 		check_village_scene.call()  # the Caravana's first visit, if the hero left
 		return
-	var chief := figure == CaravanFlow.CARAVAN_CHIEF
-	var talk := _ctx.state.quests.talk(_ctx.state, _ctx.zone.id, figure, chief)
+	# The figure the missions of its part are handed to (the v2's Jefe de caravana, the v3's
+	# Orvalla): every report at once, and only one waiting line after its chapter lines.
+	var receiver := figure in [CaravanFlow.CARAVAN_CHIEF, StoryState.V3_KEEPER]
+	var talk := _ctx.state.quests.talk(_ctx.state, _ctx.zone.id, figure, receiver)
 	var said: Array = talk.get("lines", _ctx.world.npc_lines(index, _ctx.state.chapter()))
-	if chief and talk.get("kind", "") == QuestLog.TALK_WAIT:
-		# The Jefe with quests under way and nothing to deliver: his chapter lines first (the
-		# way on, his joke), then one waiting line.
+	if receiver and talk.get("kind", "") == QuestLog.TALK_WAIT:
+		# The receiver with quests under way and nothing to deliver: its chapter lines first (the
+		# way on, a joke), then one waiting line.
 		said = _ctx.world.npc_lines(index, _ctx.state.chapter()) + talk.lines
+	var extra := StoryState.keeper_line(_ctx.state.world_flags) if figure == StoryState.V3_KEEPER else ""
+	if extra != "" and talk.get("kind", QuestLog.TALK_WAIT) == QuestLog.TALK_WAIT:
+		# the v3 waits on something (the amulet, the Ruinas, the Fuente): she says it
+		said = said + [extra]
 	var lines: Array[String] = []
 	for line: String in said:
 		lines.append(StoryState.fill(line, _ctx.state.hero.display_name))
@@ -178,8 +184,7 @@ func on_shop(shop_id: String) -> void:
 	var waiting := _figure_with_quest("shop", shop_id)
 	if waiting >= 0:
 		await on_npc(waiting)  # a report or an offer at the merchant goes first (pieles_mono)
-	if shop_id == Shop.CARAVAN_SHOP:
-		shop_id = Shop.caravan_shop(_ctx.state.tramo())
+	shop_id = Shop.resolve(shop_id, _ctx.state)  # the Mercader's and the Herrero's by step
 	if _ctx.busy or (RunFlags.autoplay() and Shop.autoplay_picks(_ctx.state, shop_id).is_empty()):
 		return
 	_ctx.set_busy.call(true)

@@ -2,7 +2,8 @@ class_name WorldStage extends RefCounted
 ## Constructor: static; builds the nodes of one map under the root it is given and answers where things stand on it. Its static vars are caches of the last zone's layout (trees, chests), never game state.
 ## Builds one map of the world from its ZoneData: the sky and light of the zone, the
 ## ground, a field of tall grass (Vegetation) with a bare dirt path and safe discs,
-## low-poly buildings and rocks with hand-made colliders, trees (denser toward the walls,
+## low-poly buildings and rocks with hand-made colliders (a v3 village's darkened, with its
+## lighthouse and lit windows: BrumaclaraStage), trees (denser toward the walls,
 ## with trunk colliders) and bushes scattered with fixed seeds, invisible walls and hills
 ## outside (in the zone's hill_color, like its dunes: solid half-buried ellipsoids that
 ## everything keeps off). A zone may colour its path and safe discs (path_color), lay patches
@@ -111,6 +112,7 @@ static func build(root: Node3D, zone: ZoneData) -> ShaderMaterial:
 		_add_decor(root, zone)
 		for hill in zone.hills:  # the peaks round a floor open to the sky (the mountain)
 			BattleStage.add_mesh(root, BattleStage.unit_sphere(), zone.hill_color, hill[0], hill[1])
+		BrumaclaraStage.build(root, zone)  # the Fuente's well of light (3.3.0)
 		return null
 	_add_ground(root, zone)
 	for patch in zone.ground_patches:
@@ -119,8 +121,10 @@ static func build(root: Node3D, zone: ZoneData) -> ShaderMaterial:
 	for rock in zone.rocks:
 		_add_solid_model(root, BattleStage.ROCK_SCENES[rock[1]], rock[0], rock[2], rock[3])
 	for building in zone.buildings:
-		_add_solid_model(root, MODELS[building[2]], building[0],
+		var model := _add_solid_model(root, MODELS[building[2]], building[0],
 			MODEL_SCALES.get(building[2], BUILDING_SCALE), building[1])
+		if zone.building_tint != Color.WHITE:
+			BrumaclaraStage.darken(model, zone.building_tint)
 	for dune: Array in zone.dunes:
 		_add_dune(root, zone, dune)
 	for line in dune_problems(zone):
@@ -131,6 +135,7 @@ static func build(root: Node3D, zone: ZoneData) -> ShaderMaterial:
 	for hill in zone.hills:
 		BattleStage.add_mesh(root, BattleStage.unit_sphere(), zone.hill_color, hill[0], hill[1])
 	_add_walls(root, zone)
+	BrumaclaraStage.build(root, zone)  # the lighthouse and the lit windows of a v3 village
 	if not zone.has_grass:
 		return null
 	return Vegetation.build(root, _outer_rect(zone), is_grass_free.bind(zone), zone.grass_seed,
@@ -253,7 +258,8 @@ static func _add_disc(root: Node3D, center: Vector3, radius: float,
 static func _add_dune(root: Node3D, zone: ZoneData, dune: Array) -> void:
 	var center: Vector3 = dune[0]
 	var radii: Vector3 = dune[1]
-	BattleStage.add_mesh(root, BattleStage.unit_sphere(), zone.hill_color, center, radii)
+	var color: Color = dune[2] if dune.size() > 2 else zone.hill_color
+	BattleStage.add_mesh(root, BattleStage.unit_sphere(), color, center, radii)
 	var foot := dune_footprint(dune)
 	var along_x := foot.x >= foot.y
 	var long := maxf(foot.x, foot.y)
@@ -350,9 +356,9 @@ static func _segment_in_dune(dune: Array, a: Vector3, b: Vector3, margin: float)
 
 
 ## An imported model on a static body, with a box collider fitted to its mesh (the
-## free models bring no collision of their own).
+## free models bring no collision of their own). Returns the model.
 static func _add_solid_model(root: Node3D, scene: PackedScene, pos: Vector3, scl: float, \
-		yaw_deg: float) -> void:
+		yaw_deg: float) -> Node3D:
 	var body := StaticBody3D.new()
 	body.position = pos
 	body.rotation_degrees = Vector3(0, yaw_deg, 0)
@@ -365,6 +371,7 @@ static func _add_solid_model(root: Node3D, scene: PackedScene, pos: Vector3, scl
 	shape.shape = box
 	shape.position = bounds.get_center() * scl
 	body.add_child(shape)
+	return model
 
 
 static func _add_trees(root: Node3D, zone: ZoneData) -> void:

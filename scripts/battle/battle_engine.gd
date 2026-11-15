@@ -507,6 +507,11 @@ func _use_item(who: int, id: String, events: Array[Dictionary]) -> void:
 			events.append(BattleEvent.heal(who, result.amount, user.hp))
 		"mp":
 			events.append(BattleEvent.mp_heal(who, result.amount, user.mp))
+		"full":
+			if result.amount > 0:
+				events.append(BattleEvent.heal(who, result.amount, user.hp))
+			if result.mp > 0:
+				events.append(BattleEvent.mp_heal(who, result.mp, user.mp))
 		"cure":
 			events.append(BattleEvent.status_off(who, result.status))
 		Inventory.EFFECT_WAKE_GUARD:
@@ -534,7 +539,8 @@ func _hurt(target: int, amount: int, crit: bool, magic: bool, affinity: String, 
 
 ## A fighter at 0 HP is defeated, unless it is the hero with a Pluma de fénix and none
 ## burnt yet in this battle (he rises), or an enemy with a next phase still to come: then
-## it rises at once with that phase's stats (cured, its charge forgotten).
+## it rises at once with that phase's stats, weaknesses and resistances (cured, its charge
+## forgotten).
 func _fall(who: int, events: Array[Dictionary]) -> void:
 	var fighter := _fighter(who)
 	if who == BattleEvent.HERO and not _revived \
@@ -556,6 +562,9 @@ func _fall(who: int, events: Array[Dictionary]) -> void:
 	fighter.speed = next.speed
 	fighter.skills = next.skills.duplicate()
 	fighter.ai_weights = next.ai_weights.duplicate()
+	# The Eco de Albor is weak to light only in its second phase.
+	fighter.weak = next.weak.duplicate()
+	fighter.resist = next.resist.duplicate()
 	fighter.status.clear()
 	_charged.erase(who)
 	events.append(BattleEvent.phase(who, fighter.hp, next.phase_line))

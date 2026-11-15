@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "arana_cristal"
+display_name = "Araña de cristal"
+female = true
+max_hp = 220
+hp = 220
+attack = 98
+defense = 60
+speed = 44
+map_roam = 2.0
+map_speed = 2.0
+exp_reward = 98
+gold_reward = 66
+ai_weights = {
+"attack": 85,
+"stagger": 15
+}
+weak = Array[String](["fire"])
+drops = {
+"antidote": 0.12
+}
+attack_status = "poison"
+attack_status_chance = 0.3

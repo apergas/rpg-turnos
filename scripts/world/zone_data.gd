@@ -14,10 +14,16 @@ class_name ZoneData extends Resource
 ## Every zone, in world order (save validation and --autoplay-zone check against it).
 const IDS: Array[String] = ["pradera", "bosque", "mina_1", "mina_2", "mina_3",
 	"castillo_patio", "castillo_trono", "caravana", "jungla", "desierto", "montana_1", "montana_2",
-	"ciudad_1", "ciudad_2"]
-## The zones of the v2 (the caravan), growing with each version: a save with the caravan's
-## flag is only valid on one of these, and a save without it only on the others.
+	"ciudad_1", "ciudad_2", "brumaclara", "cienaga", "cuevas_1", "cuevas_2", "ruinas_1",
+	"ruinas_2", "fuente"]
+## The zones of the v2 (the caravan), growing with each version; which zones a save may be on:
+## zones_of_part().
 const V2_ZONES: Array[String] = ["caravana", "jungla", "desierto", "montana_1", "montana_2", "ciudad_1", "ciudad_2"]
+## The zones of the v3 (Brumaclara), growing with each version like V2_ZONES (3.0.0:
+## Brumaclara and the Ciénaga; 3.1.0: the Cuevas' two floors; 3.2.0: the Ruinas'; 3.3.0: the
+## Fuente).
+const V3_ZONES: Array[String] = ["brumaclara", "cienaga", "cuevas_1", "cuevas_2", "ruinas_1",
+	"ruinas_2", "fuente"]
 ## Side of a dungeon cell, in metres.
 const CELL := 4.0
 ## Dungeon cells: rock (a wall in a castle), floor, stairs up and down, chest, lever,
@@ -67,7 +73,9 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var hill_color := Color(0.27, 0.47, 0.22)
 ## Dunes inside the field: [centre (y below 0: half buried), radii] of a flattened
 ## ellipsoid of hill_color. They are solid (WorldStage gives each a row of cylinders) and
-## everything keeps off them: trees, decoration, grass and the monster groups.
+## everything keeps off them: trees, decoration, grass and the monster groups. A third
+## element, a Color, draws it in that colour instead (the Ciénaga's still water: a dune almost
+## flat, a dark pool the hero walks round).
 @export var dunes: Array = []
 ## Patches of other ground: [centre, radius, colour] discs drawn on the ground under the
 ## path (the desert's green oasis).
@@ -150,7 +158,8 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## Each exit: {"id", "pos" (trigger, inside the walls), "yaw" (the arch's facing), "to"
 ## (zone id), "entry" (entry id there), "label" (sign text), "lock" (GameState.world_flags
 ## key that opens it, "" for always open), "lock_text" (notice while it is closed), and
-## optional "needs" / "gone": flags that make it exist (is_present())}.
+## optional "needs" / "gone": flags that make it exist (is_present()), and an optional "look":
+## "portal" (drawn as the Ala de viaje's portal, MapProps.PORTAL_LOOK)}.
 @export var exits: Array = []
 ## Each figure: {"kind": "quest" (the old woman), "shop", "inn", "npc" or "board" (a notice
 ## board: read, not talked to), "id" (Shop /
@@ -200,6 +209,37 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var backdrop := "pradera"
 ## ZoneParticles kind floating around the hero ("" for none).
 @export var particles := ""
+## The black sun in the sky (BlackSun; the v3's open zones): drawn over the map and its
+## battles, seen in the battles (the map camera looks down).
+@export var black_sun := false
+
+@export_group("Village look")
+## Every building's model in its own colours times this (Brumaclara's dark houses); white:
+## as the models come.
+@export var building_tint := Color.WHITE
+## Brumaclara's lighthouse (Lighthouse), ZERO for none, and whether it shines.
+@export var lighthouse_pos := Vector3.ZERO
+@export var lighthouse_lit := false
+## The lit windows: [position on the wall, yaw the wall faces] each (BrumaclaraStage: a warm
+## glow and a small light in front of it).
+@export var window_lights: Array = []
+## Brumaclara's forge (BrumaclaraStage, 3.1.0), ZERO for none: where it stands, the way its
+## front faces (degrees, like a building's door) and whether its fire burns.
+@export var forge_pos := Vector3.ZERO
+@export var forge_yaw := 0.0
+@export var forge_lit := false
+## The Fuente de la Niebla's well of light (SourceWell, BrumaclaraStage; 3.3.0), ZERO for none.
+@export var source_pos := Vector3.ZERO
+## Brumaclara en fiesta (BrumaclaraStage; 3.3.0, the etapa 5): pennant garlands strung across
+## the square, [one end, the other end] each at the height it hangs from, with a paper lantern
+## at the middle of each.
+@export var garlands: Array = []
+## Albor's statue by the well (BrumaclaraStage; the Eco beaten, not freed), ZERO for none, and
+## the way it faces (degrees, 0 = -Z, like a figure).
+@export var statue_pos := Vector3.ZERO
+@export var statue_yaw := 0.0
+## The sun peeking from behind the black one (BlackSun; Albor freed).
+@export var sun_peeks := false
 
 @export_group("Dungeon")
 ## Rows of a dungeon floor, north (−Z) first, one character per CELL × CELL cell (see
@@ -207,7 +247,7 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## on the origin.
 @export var layout: PackedStringArray = PackedStringArray()
 ## Underground: a black background, a dim ambient light instead of the sky and no sun;
-## the torches and the hero's lantern light the floor.
+## the torches and the hero's lantern light the floor (the crystals, in a zone with crystals).
 @export var underground := false
 @export var ambient_color := Color(0.3, 0.32, 0.45)
 @export var ambient_energy := 0.5
@@ -217,6 +257,14 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## (the mountain's snowy cliff, "snow_rock": a unit cube centred on its middle, scaled to the
 ## block). "" keeps the box (the mine).
 @export var rock_piece := ""
+## Crystal caves (the Cuevas de cristal, 3.1.0): each T cell grows a cluster of glowing crystals
+## instead of a torch (Crystals), the D gates are crystal bars, the lever has a crystal knob,
+## and the hero carries no lantern: the crystals light the floor.
+@export var crystals := false
+## Floating islands (the Ruinas flotantes, 3.2.0), on a floor open to the sky: the rock cells are
+## a void of mist under the islands' edges instead of rock (FloatingIslands): no wall is drawn,
+## an invisible one keeps the hero on the slabs.
+@export var floating := false
 ## Castle: the rock cells are stone walls (KayKit wall pieces on the straight runs,
 ## square towers at corners and ends, round pillars when they stand alone) instead of
 ## rock blocks, and the open ground goes on past the grid.
@@ -259,6 +307,33 @@ static func by_id(zone_id: String) -> ZoneData:
 	if not zone_id in IDS:
 		return null
 	return load("res://data/zones/%s.tres" % zone_id) as ZoneData
+
+
+## The part of the game a zone belongs to (GameState.part()): 3 for V3_ZONES, 2 for V2_ZONES
+## (the Caravana among them), 1 for the rest. What a quest or a chest of that zone counts for.
+static func part_of(zone_id: String) -> int:
+	if zone_id in V3_ZONES:
+		return 3
+	return 2 if zone_id in V2_ZONES else 1
+
+
+## The zones a save of that part may stand in or have as its last village: the v1's, the
+## v2's, and in the part 3 the Caravana, the v3's and the meadow (the visit to Villaclaro of
+## the 3.2.0).
+static func zones_of_part(part: int) -> Array[String]:
+	var zones: Array[String] = []
+	match part:
+		3:
+			zones.append("caravana")
+			zones.append_array(V3_ZONES)
+			zones.append("pradera")
+		2:
+			zones.assign(V2_ZONES)
+		_:
+			for id in IDS:
+				if part_of(id) == 1:
+					zones.append(id)
+	return zones
 
 
 ## Where entry_id puts the player: [position, yaw in degrees]. On a dungeon floor "S"

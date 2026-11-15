@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="QuestData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/quest_data.gd" id="1_quest"]
+
+[resource]
+script = ExtResource("1_quest")
+id = "geodas"
+title = "Esquirlas de geoda"
+kind = 1
+zone = "brumaclara"
+giver = "Tablón"
+needs = "garza_legamo"
+gone = "coloso_cuarzo"
+turn_in_zone = "brumaclara"
+turn_in = "Orvalla"
+target = "esquirla_geoda"
+goal = 3
+objective = "Reúne 3 Esquirlas de geoda en las Cuevas de cristal y llévaselas a Orvalla."
+status = "esquirlas de geoda %d / %d"
+report = "esquirlas a Orvalla"
+offer_lines = Array[String](["SE BUSCAN: esquirlas de geoda, tres. Las llevan a la espalda los topos de las Cuevas. Son para el cristal del faro. Se entregan a Orvalla."])
+wait_lines = Array[String](["¿Esquirlas? Las de los topos de geoda: llevan una piedra partida a la espalda, llena de cristales. Tres."])
+done_lines = Array[String](["¡Tres esquirlas de geoda! Con esto el cristal del faro brillará el doble.", "Toma. Y si ves otro topo, salúdalo de mi parte: no tiene la culpa de ser de piedra."])
+reward_gold = 1200
+reward_items = {
+"eter_grande": 2
+}

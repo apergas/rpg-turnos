@@ -7,7 +7,8 @@ class_name AmbientLibrary extends RefCounted
 ## in the desert, whose bed is a low wind with the hiss of sand, a howl over the peaks on
 ## the mountain, whose bed is a strong wind that never stops, a softer wind whistling
 ## through the ruins with falling stones in the abandoned city, and the same wind with a deep
-## throbbing rumble and groans in the portal quarter). Streams
+## throbbing rumble and groans in the portal quarter), the Ciénaga's still water with insects and
+## the croak of its frogs, and the Cuevas' deep hum with their drops (the v3). Streams
 ## are 22050 Hz, 16-bit mono (MusicLibrary.to_stream()) and cached.
 
 const MEADOW := "meadow"
@@ -19,7 +20,12 @@ const DESERT := "desert"
 const MOUNTAIN := "mountain"
 const CITY := "city"
 const PORTAL := "portal"
-const IDS: Array[String] = [MEADOW, FOREST, MINE, CASTLE, JUNGLE, DESERT, MOUNTAIN, CITY, PORTAL]
+const SWAMP := "swamp"
+const CRYSTAL := "crystal"
+## The Fuente de la Niebla (3.3.0): the portal quarter's wind and rumble with a deep heartbeat.
+const SOURCE := "source"
+const IDS: Array[String] = [MEADOW, FOREST, MINE, CASTLE, JUNGLE, DESERT, MOUNTAIN, CITY, PORTAL,
+	SWAMP, CRYSTAL, SOURCE]
 
 ## Seconds of each bed, and of the cross-fade that closes its loop.
 const LOOP := 8.0
@@ -29,17 +35,20 @@ const VARIANTS := 4
 ## Seconds between two short sounds: [least, most].
 const GAPS := {MEADOW: [2.0, 6.0], FOREST: [3.0, 7.0], MINE: [1.0, 4.0], CASTLE: [4.0, 9.0],
 	JUNGLE: [1.5, 4.0], DESERT: [3.0, 8.0], MOUNTAIN: [2.5, 6.0],
-	CITY: [3.0, 8.0], PORTAL: [4.0, 9.0]}
+	CITY: [3.0, 8.0], PORTAL: [4.0, 9.0], SWAMP: [2.0, 5.0],
+	CRYSTAL: [1.5, 4.5], SOURCE: [5.0, 10.0]}
 ## Peak of each bed and of every short sound (AudioDirector plays them at the effects volume
 ## × its AMBIENT_SHARE).
 const BED_PEAK := {MEADOW: 0.35, FOREST: 0.4, MINE: 0.5, CASTLE: 0.35, JUNGLE: 0.35, DESERT: 0.4, MOUNTAIN: 0.45,
-	CITY: 0.35, PORTAL: 0.45}
+	CITY: 0.35, PORTAL: 0.45, SWAMP: 0.4, CRYSTAL: 0.45, SOURCE: 0.45}
 const SHOT_PEAK := 0.55
 ## The echoes of a drop in the mine: [delay in seconds, gain].
 const ECHOES := [[0.17, 0.45], [0.34, 0.2], [0.51, 0.08]]
 ## Samples of fade-in of a drop (no click).
 const DROP_FADE_IN := 40
 const NOISE_SEED := 777
+## The Fuente's heartbeat: seconds from one lub-dub to the next (LOOP holds five of them).
+const BEAT := 1.6
 
 static var _beds := {}
 static var _shots := {}
@@ -91,8 +100,12 @@ static func bed(id: String) -> AudioStreamWAV:
 			raw = _sand_wind(count + seam, rng)
 		MOUNTAIN:
 			raw = _mountain_wind(count + seam, rng)
-		CITY, PORTAL:
+		CITY, PORTAL, SOURCE:
 			raw = _ruin_wind(count + seam, rng)
+		SWAMP:
+			raw = _bog(count + seam, rng)
+		CRYSTAL:
+			raw = _crystal_hum(count + seam, rng)
 		_:
 			raw = _wind(count + seam, rng)
 	var samples := raw.slice(0, count)
@@ -100,8 +113,10 @@ static func bed(id: String) -> AudioStreamWAV:
 		var t := float(i) / seam
 		# Equal power: two unrelated noises add in power, so the bed keeps its level.
 		samples[i] = raw[i] * sin(t * PI / 2.0) + raw[count + i] * cos(t * PI / 2.0)
-	if id == PORTAL:
+	if id == PORTAL or id == SOURCE:
 		_add_rumble(samples)
+	if id == SOURCE:
+		_add_heartbeat(samples)
 	_normalize(samples, BED_PEAK[id])
 	var stream := MusicLibrary.to_stream(samples)
 	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
@@ -134,8 +149,12 @@ static func shot(id: String, variant: int) -> AudioStreamWAV:
 			samples = _howl(rng)
 		CITY:
 			samples = _rubble(rng)
-		PORTAL:
+		PORTAL, SOURCE:
 			samples = _groan(rng)
+		SWAMP:
+			samples = _croak(rng)
+		CRYSTAL:
+			samples = _drop(rng)
 		_:
 			samples = _gust(rng)
 	_normalize(samples, SHOT_PEAK)
@@ -203,6 +222,30 @@ static func _insects(count: int, rng: RandomNumberGenerator) -> PackedFloat32Arr
 	return out
 
 
+## The Ciénaga: still water, noise low-passed twice at 260 Hz that laps slowly, and a thin
+## whine of insects over it (the jungle's band, much softer).
+static func _bog(count: int, rng: RandomNumberGenerator) -> PackedFloat32Array:
+	var out := PackedFloat32Array()
+	out.resize(count)
+	var low_a := _pole(260.0)
+	var high_a := _pole(6000.0)
+	var band_a := _pole(3800.0)
+	var l1 := 0.0
+	var l2 := 0.0
+	var high := 0.0
+	var band := 0.0
+	for i in count:
+		var t := float(i) / MusicLibrary.RATE
+		var x := rng.randf_range(-1.0, 1.0)
+		l1 += low_a * (x - l1)
+		l2 += low_a * (l1 - l2)
+		high += high_a * (x - high)
+		band += band_a * (high - band)
+		var lap := 0.6 + 0.4 * sin(TAU * 0.21 * t) * sin(TAU * 0.07 * t + 0.5)
+		out[i] = 3.0 * l2 * lap + 0.12 * (high - band)
+	return out
+
+
 ## The mine: a deep rumble, noise low-passed three times at 80 Hz, breathing slowly.
 static func _rumble(count: int, rng: RandomNumberGenerator) -> PackedFloat32Array:
 	var out := PackedFloat32Array()
@@ -217,6 +260,18 @@ static func _rumble(count: int, rng: RandomNumberGenerator) -> PackedFloat32Arra
 		y2 += a * (y1 - y2)
 		y3 += a * (y2 - y3)
 		out[i] = y3 * (0.8 + 0.2 * sin(TAU * 0.06 * t))
+	return out
+
+
+## The Cuevas de cristal: the mine's low rumble of noise under a deep hum, two sines a little
+## out of tune round 55 Hz that beat slowly, and their octave. Whole cycles in LOOP seconds
+## (55, 55.375 and 110 Hz × 8 s), so the hum crosses the loop's seam unbroken.
+static func _crystal_hum(count: int, rng: RandomNumberGenerator) -> PackedFloat32Array:
+	var out := _rumble(count, rng)
+	for i in count:
+		var t := float(i) / MusicLibrary.RATE
+		out[i] = 0.6 * out[i] + 0.05 * (sin(TAU * 55.0 * t) + sin(TAU * 55.375 * t)) \
+			+ 0.02 * sin(TAU * 110.0 * t)
 	return out
 
 
@@ -372,6 +427,23 @@ static func _add_rumble(samples: PackedFloat32Array) -> void:
 			+ 0.15 * sin(TAU * 82.0 * t))
 
 
+## The Fuente's heartbeat (3.3.0), added after the portal's rumble: a lub-dub every BEAT
+## seconds, two thumps of a 48 Hz sine that die out fast, the second softer, a little louder
+## than the bed's peak. The loop holds whole beats, so it stays seamless.
+static func _add_heartbeat(samples: PackedFloat32Array) -> void:
+	var peak := 0.0
+	for v in samples:
+		peak = maxf(peak, absf(v))
+	for i in samples.size():
+		var t := fmod(float(i) / MusicLibrary.RATE, BEAT)
+		var thump := 0.0
+		for beat: Array in [[0.0, 1.0], [0.24, 0.7]]:
+			var u: float = t - beat[0]
+			if u >= 0.0 and u < 0.3:
+				thump += beat[1] * exp(-u * 18.0) * sin(TAU * 48.0 * u)
+		samples[i] += peak * 1.2 * thump
+
+
 ## Stones falling in the ruins: 3 to 6 short knocks (noise through a band-pass at 900 to
 ## 1800 Hz, with a fast decay), each softer than the last.
 static func _rubble(rng: RandomNumberGenerator) -> PackedFloat32Array:
@@ -476,6 +548,22 @@ static func _jungle_bird(rng: RandomNumberGenerator) -> PackedFloat32Array:
 			var phase := fmod(hz * float(i) / MusicLibrary.RATE, 1.0)
 			out.append((1.0 if phase < 0.5 else -1.0) * 0.5 * sin(PI * u))
 		_rest(out, rng.randf_range(0.04, 0.08))
+	return out
+
+
+## A frog of the Ciénaga: two to four low croaks, a buzzing square wave that falls a little.
+static func _croak(rng: RandomNumberGenerator) -> PackedFloat32Array:
+	var out := PackedFloat32Array()
+	var base := rng.randf_range(110.0, 170.0)
+	for n in rng.randi_range(2, 4):
+		var count := int(rng.randf_range(0.07, 0.11) * MusicLibrary.RATE)
+		var phase := 0.0
+		for i in count:
+			var u := float(i) / count
+			phase += base * (1.0 - 0.15 * u) / MusicLibrary.RATE
+			var square := 1.0 if fmod(phase, 1.0) < 0.5 else -1.0
+			out.append(square * 0.5 * sin(PI * u) * (0.6 + 0.4 * sin(TAU * 30.0 * u)))
+		_rest(out, rng.randf_range(0.05, 0.09))
 	return out
 
 

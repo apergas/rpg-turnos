@@ -9,7 +9,7 @@ class_name Game extends Node
 ## emits quit_to_title when the player goes back to the title or an ending is over.
 ## Each job of the session is a piece, a child Node wired in _add_pieces(): ZoneTravel (the
 ## change of map, exits, the Ala and its portal), StoryFlow (the cutscenes and the endings),
-## CaravanFlow (the v2's departure and companion), FigureTalk (figures, shops, inns, wells,
+## CaravanFlow (the v2's departure and companion), V3Flow (the v3's start in Brumaclara), FigureTalk (figures, shops, inns, wells,
 ## chests, the lever, the key, the gates), BattleFlow (the battles and the boss on the map),
 ## GameAutoplay (only with --autoplay) and GameDebug (only with --debug). What a piece awaits
 ## from another is a Callable Game wires; what it reports is a signal Game connects.
@@ -34,6 +34,7 @@ var _ctx: SessionContext
 var _travel: ZoneTravel
 var _story: StoryFlow
 var _caravan: CaravanFlow
+var _v3: V3Flow
 var _talk: FigureTalk
 var _battle: BattleFlow
 
@@ -192,6 +193,7 @@ func _make_pieces() -> void:
 	_travel = ZoneTravel.new()
 	_story = StoryFlow.new()
 	_caravan = CaravanFlow.new()
+	_v3 = V3Flow.new()
 	_talk = FigureTalk.new()
 	_battle = BattleFlow.new()
 	if RunFlags.autoplay():
@@ -221,6 +223,9 @@ func _add_pieces(load_failed: bool) -> void:
 	_caravan.play_scene = _story.play_scene
 	_caravan.switch_zone = _travel.switch_zone
 	add_child(_caravan)
+	_v3.setup(_ctx)
+	_travel.zone_switched.connect(_v3.on_zone_switched)
+	add_child(_v3)
 	_talk.setup(_ctx, _shop)
 	_talk.update_boss = _battle.update_boss
 	_talk.choose_companion = _caravan.choose_companion
@@ -232,7 +237,7 @@ func _add_pieces(load_failed: bool) -> void:
 	_battle.setup(_ctx)
 	_battle.play_scene = _story.play_scene
 	_battle.finish_game = _story.finish_game
-	_battle.finish_v2 = _story.finish_v2
+	_battle.finish_part = _story.finish_part
 	_battle.go_to_town = _travel.go_to_town
 	_battle.print_save = RunFlags.autoplay() and RunFlags.autoplay_save() and _save.is_empty()
 	_battle.quit_requested.connect(func() -> void: quit_to_title.emit())

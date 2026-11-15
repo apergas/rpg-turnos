@@ -24,6 +24,14 @@ const QUESTS := {
 	"cristales_hielo": preload("res://data/quests/cristales_hielo.tres"),
 	"centinelas": preload("res://data/quests/centinelas.tres"),
 	"superviviente": preload("res://data/quests/superviviente.tres"),
+	"juncos": preload("res://data/quests/juncos.tres"),
+	"pescador": preload("res://data/quests/pescador.tres"),
+	"gato_nebli": preload("res://data/quests/gato_nebli.tres"),
+	"geodas": preload("res://data/quests/geodas.tres"),
+	"cartas": preload("res://data/quests/cartas.tres"),
+	"caballeros": preload("res://data/quests/caballeros.tres"),
+	"ojos": preload("res://data/quests/ojos.tres"),
+	"piezas_faro": preload("res://data/quests/piezas_faro.tres"),
 }
 const VILLAGE_ZONE := "pradera"
 ## Ends the waiting lines of a HUNT or GATHER of several, so the progress is said aloud.
@@ -42,10 +50,11 @@ const TALK_OFFER := "offer"
 const TALK_WAIT := "wait"
 ## The notice of several missions finished at once on a phone (one line of 300 px).
 const DONE_MANY_TEXT := "Misiones cumplidas: %d"
-## The v2's flags in the order a game sets them: a turn-in figure that needs a flag earlier
+## The v2's and v3's flags in the order a game sets them: a turn-in figure that needs a flag earlier
 ## than its quest's is always there when the quest can be finished (problems()).
 const FLAG_ORDER := ["caravana_vista", "caravana", "companero", "jaguar_sombrio",
-	"gusano_dunas", "grifo_cumbre", "guardian_ciudad", "devorador_portal"]
+	"gusano_dunas", "grifo_cumbre", "guardian_ciudad", "devorador_portal", "brumaclara",
+	"garza_legamo", "coloso_cuarzo", "amuleto_recuperado", "vigia_bruma", "eco_albor"]
 
 ## The village quest, the same object as GameState.quest.
 var village: Quest
@@ -189,9 +198,14 @@ func talk(state: GameState, zone_id: String, figure: String, short_wait := false
 	return {}
 
 
-## True if the quest may be offered now: still OPEN and its needs flag set.
+## True if the quest may be offered now: still OPEN, of the part of the game these flags are in
+## (StoryState.part(): the meadow of the v3 offers none of the v1's), its needs flag set and its
+## gone flag not.
 func _offered(quest: QuestData, flags: Dictionary) -> bool:
-	return stage(quest.id) == Stage.OPEN and (quest.needs == "" or flags.get(quest.needs, false))
+	return stage(quest.id) == Stage.OPEN \
+		and ZoneData.part_of(quest.zone) == StoryState.part(flags) \
+		and (quest.needs == "" or flags.get(quest.needs, false)) \
+		and (quest.gone == "" or not flags.get(quest.gone, false))
 
 
 ## The figures of this zone with a report waiting for them.
@@ -252,26 +266,26 @@ func status_lines(inventory: Inventory) -> Array[String]:
 	return lines
 
 
-## The missions of the v2 (the caravan's zones), the rest are the v1's (the Colección's
-## "n/7" and "n/2").
-static func is_v2(id: String) -> bool:
-	return data(id).zone in ZoneData.V2_ZONES
+## The part of the game a mission belongs to (ZoneData.part_of() of the zone it is given in):
+## the Diario's "Misiones de ..." lines, the credits and the save count them by part.
+static func part_of(id: String) -> int:
+	return ZoneData.part_of(data(id).zone)
 
 
-## How many missions the v1 has (the village quest included) or the v2 has.
-static func total_of(v2: bool) -> int:
-	var total := 0 if v2 else 1
+## How many missions a part has (the v1's with the village quest).
+static func total_of(part: int) -> int:
+	var total := 1 if part == 1 else 0
 	for id: String in QUESTS:
-		if is_v2(id) == v2:
+		if part_of(id) == part:
 			total += 1
 	return total
 
 
-## Missions finished of the v1 (the village quest included) or of the v2.
-func done_of(v2: bool) -> int:
-	var done := 1 if not v2 and village.stage == Quest.Stage.DONE else 0
+## Missions finished of a part (the v1's with the village quest).
+func done_of(part: int) -> int:
+	var done := 1 if part == 1 and village.stage == Quest.Stage.DONE else 0
 	for id: String in QUESTS:
-		if is_v2(id) == v2 and stage(id) == Stage.DONE:
+		if part_of(id) == part and stage(id) == Stage.DONE:
 			done += 1
 	return done
 

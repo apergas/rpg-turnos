@@ -25,9 +25,9 @@ class_name SaveData extends RefCounted
 ## METAL_SLIME_VERSION (1.7.0) adds the Slime de Metal's HP kept after it got away (metal_slime_hp, 0 for none); an older save gets 0.
 ## MEDALS_VERSION (1.8.0) adds the small medals taken (medals, sorted), the Coleccionista's prizes
 ## given (medal_prizes), whether he was met (collector_met) and the rounds of the Partida nueva +
-## (ng_plus; 2.7.0 removed it: always written as 0, read and ignored); an older save gets none, 0, false and 0. CARAVAN_VERSION (2.0.0) changes no field: it marks the saves that may hold the v2 (the caravan's zones, a companion, levels past 20); its `story` may carry `finished_v2` and `v2_start` (2.3.0, without changing the version: an older save has neither and loads with false and []).
+## (ng_plus; 2.7.0 removed it: always written as 0, read and ignored); an older save gets none, 0, false and 0. CARAVAN_VERSION (2.0.0) changes no field: it marks the saves that may hold the v2 (the caravan's zones, a companion, levels past 20); its `story` may carry `finished_v2` and `v2_start` (2.3.0, without changing the version: an older save has neither and loads with false and []). V3_VERSION (3.0.0) changes no field either: it marks the saves that may hold the v3 (Brumaclara's flag, its zones, levels past 40); its story may carry finished_v3 and v3_start (an older save has neither and loads with false and []).
 
-const VERSION := 14
+const VERSION := 15
 ## First version with the story's fields.
 const STORY_VERSION := 6
 ## First version with the accessory slot and the side quests.
@@ -49,6 +49,9 @@ const MEDALS_VERSION := 13
 ## The caravan (2.0.0, the v2): no new field, but the v2's zones, the companions, level 40
 ## and the v2's cutscenes and quests only exist from here on. An older save has none.
 const CARAVAN_VERSION := 14
+## The v3 (3.0.0, Brumaclara): no new field, but Brumaclara's flag, the v3's zones, levels
+## past 40 and the story's finished_v3 and v3_start only exist from here on.
+const V3_VERSION := 15
 ## Oldest version apply() still reads.
 const OLDEST_VERSION := 2
 ## Combatant fields of the hero that change while playing (the rest come from hero.tres).
@@ -296,22 +299,30 @@ static func is_valid(data: Dictionary) -> bool:
 	return data.get("play_time") is float and data.play_time >= 0.0
 
 
-## The v2 and the v1 don't mix: with the caravan's flag the zone and the last village are
-## v2 zones and the ally is a companion or none; without it, no v2 zone and no companion.
-## Before CARAVAN_VERSION nothing of the v2 can be there at all.
+## The parts don't mix. A save of the part 3 (Brumaclara's flag) has the caravan's flag and the
+## Devorador beaten, and a version from V3_VERSION on; one with the caravan's flag a version
+## from CARAVAN_VERSION on. The zone and the last village are zones of its part
+## (ZoneData.zones_of_part()); nothing of a later part is in it (_valid_part_content()); the
+## ally is a companion (or none) from the part 2 on, never in the part 1.
 static func _valid_caravan(data: Dictionary) -> bool:
-	var flags: Variant = data.get("flags", [])
-	var in_caravan: bool = flags is Array and StoryState.CARAVAN_FLAG in flags
+	var flags: Array = data.flags if data.get("flags") is Array else []
+	var in_caravan := StoryState.CARAVAN_FLAG in flags
+	var in_v3 := StoryState.V3_FLAG in flags
 	if in_caravan and int(data.version) < CARAVAN_VERSION:
 		return false
-	if not in_caravan and not _valid_v1_content(data):
+	if in_v3 and (int(data.version) < V3_VERSION or not in_caravan \
+			or not (StoryState.V2_FINAL_BOSS in flags)):
+		return false
+	var part := 3 if in_v3 else (2 if in_caravan else 1)
+	if not _valid_part_content(data, part):
 		return false
 	var ally: String = data.ally if data.get("ally", "") is String else ""
 	if Allies.is_companion(ally) != (in_caravan and ally != ""):
 		return false
+	var zones := ZoneData.zones_of_part(part)
 	for key in ["zone", "town"]:
 		var zone_id: Variant = data.get(key, "")
-		if zone_id is String and (zone_id in ZoneData.V2_ZONES) != in_caravan:
+		if zone_id is String and zone_id != "" and not (zone_id in zones):
 			return false
 	return true
 
@@ -325,19 +336,21 @@ static func _valid_hero_ranges(hero: Dictionary) -> bool:
 		and hero.hp >= 1.0 and hero.hp <= hero.max_hp and hero.mp <= hero.max_mp
 
 
-## A save without the caravan's flag holds nothing of the v2: no v2 quest taken and a hero
-## within the v1's level and EXP cap.
-static func _valid_v1_content(data: Dictionary) -> bool:
+## Nothing of a later part: no quest of a later part taken, and a hero within the level cap of
+## his part (the v1's 20, the v2's 40).
+static func _valid_part_content(data: Dictionary, part: int) -> bool:
 	var quests: Variant = data.get("quests", {})
 	if quests is Dictionary:
 		for id: Variant in quests:
-			if id is String and QuestLog.QUESTS.has(id) and QuestLog.is_v2(id):
+			if id is String and QuestLog.QUESTS.has(id) and QuestLog.part_of(id) > part:
 				return false
+	if part == 3:
+		return true
+	var cap := Leveling.V1_MAX_LEVEL if part == 1 else Leveling.V2_MAX_LEVEL
 	var hero: Variant = data.get("hero")
-	if hero is Dictionary:
-		# Stored EXP is not checked: 1.9.0 never capped it, apply() clamps it on load.
-		if hero.get("level", 1.0) > float(Leveling.V1_MAX_LEVEL):
-			return false
+	# Stored EXP is not checked: 1.9.0 never capped it, apply() clamps it on load.
+	if hero is Dictionary and hero.get("level", 1.0) > float(cap):
+		return false
 	return true
 
 
@@ -491,7 +504,11 @@ static func _valid_story(data: Dictionary) -> bool:
 		return false
 	if story.has("finished_v2") and not story.finished_v2 is bool:
 		return false
-	if story.has("v2_start") and not _valid_v2_start(story.v2_start):
+	if story.has("v2_start") and not _valid_start(story.v2_start):
+		return false
+	if story.has("finished_v3") and not story.finished_v3 is bool:
+		return false
+	if story.has("v3_start") and not _valid_start(story.v3_start):
 		return false
 	var stats: Variant = data.get("stats")
 	if not stats is Dictionary:
@@ -503,9 +520,9 @@ static func _valid_story(data: Dictionary) -> bool:
 	return true
 
 
-## The story's v2_start: [] or [play time, battles], two numbers >= 0 (2.3.0; older saves
-## don't have it).
-static func _valid_v2_start(value: Variant) -> bool:
+## A story's v2_start or v3_start: [] or [play time, battles], two numbers >= 0 (older saves
+## don't have them).
+static func _valid_start(value: Variant) -> bool:
 	if not value is Array:
 		return false
 	var start := value as Array
@@ -551,7 +568,9 @@ static func summary_line(data: Dictionary) -> String:
 	var minutes := floori(float(data.play_time) / 60.0)
 	var text := "%s · Nv %d · %s · %d:%02d" % [hero_name, int(data.hero.level),
 		ZoneData.by_id(zone_id).short_name, floori(minutes / 60.0), minutes % 60]
-	if is_caravan(data):
+	if is_v3(data):
+		text += " · v3"
+	elif is_caravan(data):
 		text += " · v2"
 	return text
 
@@ -568,10 +587,24 @@ static func is_caravan(data: Dictionary) -> bool:
 	return (data.get("flags", []) as Array).has(StoryState.CARAVAN_FLAG)
 
 
-## True if the save's v2 is finished: the Devorador beaten and the credits seen.
+## True if the save's hero has reached Brumaclara (the v3).
+static func is_v3(data: Dictionary) -> bool:
+	return (data.get("flags", []) as Array).has(StoryState.V3_FLAG)
+
+
+## True if the save's v2 is finished (the Devorador beaten and the credits seen) and the hero
+## has not gone on into the v3.
 static func is_finished_v2(data: Dictionary) -> bool:
 	var story: Variant = data.get("story")
-	return is_caravan(data) and story is Dictionary and story.get("finished_v2", false) == true
+	return is_caravan(data) and not is_v3(data) and story is Dictionary \
+		and story.get("finished_v2", false) == true
+
+
+## True if the save's v3 is finished (the Eco de Albor beaten and the credits seen): the slot list
+## says "terminada"; it loads as any other, in Brumaclara.
+static func is_finished_v3(data: Dictionary) -> bool:
+	var story: Variant = data.get("story")
+	return is_v3(data) and story is Dictionary and story.get("finished_v3", false) == true
 
 
 const IMPORT_NOT_SAVE := "Ese archivo no es una partida de Villaclaro."

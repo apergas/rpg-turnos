@@ -21,13 +21,21 @@ const DESERT := "desert"
 const MOUNTAIN := "mountain"
 const CITY := "city"
 const BEYOND := "beyond"
+const BRUMACLARA := "brumaclara"
+const SWAMP := "swamp"
+const CRYSTAL := "crystal"
+const RUINS := "ruins"
+## The Fuente de la Niebla (3.3.0), and the Eco de Albor's battle (ALBOR, Task 5).
+const SOURCE := "source"
+const ALBOR := "albor"
 const BATTLE := "battle"
 const BOSS := "boss"
 const VICTORY := "victory"
 const DEFEAT := "defeat"
 const CARAVAN := "caravan"
 const IDS: Array[String] = [TITLE, MAP, VILLAGE, FOREST, MINE, CASTLE, BATTLE, BOSS, VICTORY,
-	DEFEAT, CARAVAN, JUNGLE, DESERT, MOUNTAIN, CITY, BEYOND]
+	DEFEAT, CARAVAN, JUNGLE, DESERT, MOUNTAIN, CITY, BEYOND, BRUMACLARA, SWAMP,
+	CRYSTAL, RUINS, SOURCE, ALBOR]
 
 const LEAD_VOLUME := 0.2
 const BASS_VOLUME := 0.3
@@ -192,6 +200,94 @@ const TRACKS := {
 		],
 		"bass": ["A2/16", "A2/16", "F2/16", "E2/16", "F2/16", "D2/16", "E2/16", "A2/16"],
 		"drums": ["r/16"],
+	},
+	# Brumaclara (3.0.0): a slow, misty air in D minor, almost without drums.
+	BRUMACLARA: {
+		"bpm": 72, "loop": true, "duty": 0.5,
+		"lead": [
+			"D5/6 F5/2 A5/8", "G5/4 F5/4 E5/8", "F5/4 E5/4 D5/4 C5/4", "D5/12 r/4",
+			"A4/6 C5/2 D5/8", "E5/4 F5/4 G5/8", "F5/4 E5/4 C5/4 E5/4", "D5/12 r/4",
+		],
+		"bass": [
+			"D3/8 A2/8", "C3/8 G2/8", "A#2/8 F2/8", "A2/16",
+			"F2/8 C3/8", "C3/8 G2/8", "A#2/8 A2/8", "D3/16",
+		],
+		"drums": ["r/8 h/8"],
+	},
+	# The Ciénaga (3.0.0): a slow E minor that bubbles, a croak of a bass and a lazy beat.
+	SWAMP: {
+		"bpm": 88, "loop": true, "duty": 0.25,
+		"lead": [
+			"E4/4 G4/4 B4/6 A4/2", "G4/4 F#4/4 E4/8", "E4/4 G4/4 C5/6 B4/2", "A4/12 r/4",
+			"B4/4 A4/4 G4/4 F#4/4", "G4/6 A4/2 B4/8", "C5/4 B4/4 A4/4 F#4/4", "E4/12 r/4",
+		],
+		"bass": [
+			"E2/4 B2/4 E2/4 B2/4", "C2/4 G2/4 C2/4 G2/4", "A1/4 E2/4 A1/4 E2/4",
+			"B1/4 F#2/4 B1/4 F#2/4",
+		],
+		"drums": ["k/4 r/2 h/2 s/4 h/4", "k/2 k/2 r/2 h/2 s/4 r/4"],
+	},
+	# The Cuevas de cristal (3.1.0): bell-like arpeggios in A minor over a slow, deep bass.
+	CRYSTAL: {
+		"bpm": 84, "loop": true, "duty": 0.125,
+		"lead": [
+			"A5/2 E5/2 C5/2 E5/2 A5/4 B5/4", "C6/2 G5/2 E5/2 G5/2 C6/8",
+			"F5/2 C5/2 A4/2 C5/2 F5/4 E5/4", "E5/2 B4/2 G#4/2 B4/2 E5/8",
+			"A5/2 E5/2 C5/2 E5/2 A5/4 C6/4", "D6/2 A5/2 F5/2 A5/2 D6/4 C6/4",
+			"B5/4 G#5/4 E5/4 B4/4", "A4/12 r/4",
+		],
+		"bass": ["A2/16", "C3/16", "F2/16", "E2/16", "A2/16", "D2/16", "E2/16", "A1/16"],
+		"drums": ["r/8 h/4 r/4"],
+	},
+	# The Ruinas flotantes (3.2.0): a slow, airy tune in D dorian over open fifths, the wind in
+	# the hats.
+	RUINS: {
+		"bpm": 92, "loop": true, "duty": 0.25,
+		"lead": [
+			"D5/4 A5/4 G5/2 F5/2 E5/4", "C5/4 E5/4 D5/8",
+			"F5/4 A5/4 C6/4 B5/2 A5/2", "G5/4 E5/4 A5/8",
+			"D6/4 C6/2 A5/2 G5/4 F5/4", "E5/4 G5/4 A5/8",
+			"F5/2 E5/2 D5/4 C5/4 E5/4", "D5/12 r/4",
+		],
+		"bass": ["D2/8 A2/8", "C2/8 G2/8", "F2/8 C3/8", "A1/8 E2/8", "D2/8 A2/8", "C2/8 G2/8",
+			"A#1/8 F2/8", "D2/16"],
+		"drums": ["r/4 h/4 r/4 h/4"],
+	},
+	# The Fuente de la Niebla (3.3.0): slow and hushed in A minor, a thin lead over low fifths
+	# and a heartbeat in the drums.
+	SOURCE: {
+		"bpm": 72, "loop": true, "duty": 0.125,
+		"lead": [
+			"A4/4 C5/4 E5/6 D5/2", "C5/4 B4/4 A4/8",
+			"F4/4 A4/4 C5/6 B4/2", "A4/4 G#4/4 E4/8",
+			"A4/4 E5/4 A5/6 G5/2", "F5/4 E5/4 D5/8",
+			"C5/4 D5/4 E5/4 B4/4", "A4/12 r/4",
+		],
+		"bass": ["A1/8 E2/8", "A1/8 E2/8", "F1/8 C2/8", "E1/8 B1/8", "A1/8 E2/8", "D2/8 A2/8",
+			"E1/8 B1/8", "A1/16"],
+		"drums": ["k/2 k/2 r/12"],
+	},
+	# The Eco de Albor's battle (3.3.0): fast and dark in D minor, the lead climbing in arpeggios
+	# over a pounding bass, to the dominant at the end of each half.
+	ALBOR: {
+		"bpm": 156, "loop": true, "duty": 0.25,
+		"lead": [
+			"D5/2 F5/2 A5/2 D6/2 C6/4 A5/4", "A#5/4 A5/2 G5/2 A5/8",
+			"D5/2 F5/2 A5/2 D6/2 E6/4 F6/4", "E6/6 C6/2 A5/8",
+			"A#5/2 A5/2 G5/2 F5/2 G5/4 A5/4", "F5/4 E5/4 D5/8",
+			"G5/2 A5/2 A#5/2 C6/2 D6/4 C6/4", "A5/8 C#6/8",
+			"D6/2 A5/2 F5/2 D5/2 D6/2 A5/2 F5/2 D5/2", "C6/2 A5/2 F5/2 C5/2 C6/2 A5/2 F5/2 C5/2",
+			"A#5/4 D6/4 F6/4 D6/4", "C#6/8 A5/8",
+		],
+		"bass": [
+			"D2/2 D3/2 D2/2 D3/2 D2/2 D3/2 D2/2 D3/2", "A#1/2 A#2/2 A#1/2 A#2/2 A#1/2 A#2/2 A#1/2 A#2/2",
+			"D2/2 D3/2 D2/2 D3/2 D2/2 D3/2 D2/2 D3/2", "A1/2 A2/2 A1/2 A2/2 A1/2 A2/2 A1/2 A2/2",
+			"A#1/2 A#2/2 A#1/2 A#2/2 A#1/2 A#2/2 A#1/2 A#2/2", "D2/2 D3/2 D2/2 D3/2 D2/2 D3/2 D2/2 D3/2",
+			"G1/2 G2/2 G1/2 G2/2 G1/2 G2/2 G1/2 G2/2", "A1/2 A2/2 A1/2 A2/2 A1/2 A2/2 A1/2 A2/2",
+			"D2/2 D3/2 D2/2 D3/2 D2/2 D3/2 D2/2 D3/2", "F1/2 F2/2 F1/2 F2/2 F1/2 F2/2 F1/2 F2/2",
+			"A#1/2 A#2/2 A#1/2 A#2/2 A#1/2 A#2/2 A#1/2 A#2/2", "A1/2 A2/2 A1/2 A2/2 A1/2 A2/2 A1/2 A2/2",
+		],
+		"drums": ["k/2 h/2 s/2 h/2 k/2 k/2 s/2 h/2"],
 	},
 	# The castle: a slow march in E minor.
 	CASTLE: {

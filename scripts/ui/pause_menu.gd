@@ -395,6 +395,8 @@ func _use_text(id: String, result: Dictionary) -> String:
 	match result.effect:
 		"mp":
 			return "Recuperas %d PM." % result.amount
+		"full":
+			return "Recuperas todos los PV y PM."
 		"seed":
 			return "¡%s +%d para siempre!" % [Inventory.seed_stat(id), result.amount]
 		"repel":

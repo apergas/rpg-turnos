@@ -1,20 +1,20 @@
 class_name DungeonMap extends Node3D
-## The cells of a dungeon floor (ZoneData.layout), built when it enters the tree: a dark
-## floor in chunks, a rock block with a box collider for every rock cell next to the
-## floor (the buried ones are drawn in one MultiMesh, with no collider), torches on the
-## walls (Flame: a flame, embers and a flickering light), the stairs (a flight going up, a dark
-## pit going down, with a sign), iron gates on the door cells, the lever and the key. World tells
-## it the world flags (set_flags(): gates open, lever pulled, key taken) and, every
-## frame, where the camera and the hero are (see_through()): the rock blocks between them
-## turn see-through. In a castle (zone.castle) the rock cells are stone walls instead:
-## a KayKit wall piece on each straight run, a square tower at corners and ends, a round
-## pillar where one stands alone; the ground goes on past the grid, banks of mist drift
-## over the floor (zone.mist_banks) and the throne cell gets a throne on a dais. With
-## zone.rock_piece each rock block is that NatureModels piece (the mountain's snowy cliff)
-## scaled to the cell, and a floor open to the sky (not underground) has the ground of its
-## hills past the grid. A P cell gets a PortalRing (the abandoned city's portal, calm with
-## zone.portal_flag) and zone.ruined draws some castle walls and towers low. Set zone
-## before add_child.
+## The cells of a dungeon floor (ZoneData.layout), built when it enters the tree: a dark floor in
+## chunks, a rock block with a box collider for every rock cell next to the floor (the buried ones
+## are drawn in one MultiMesh, with no collider), torches on the walls (Flame: a flame, embers and a
+## flickering light), the stairs (a flight going up, a dark pit going down, with a sign), iron gates
+## on the door cells, the lever and the key. In the Cuevas (zone.crystals) each T cell grows glowing
+## crystals instead (Crystals), the gates are crystal bars and the lever's knob a crystal. World
+## tells it the world flags (set_flags(): gates open, lever pulled, key taken) and, every frame,
+## where the camera and the hero are (see_through()): the rock blocks between them turn see-through.
+## In a castle (zone.castle) the rock cells are stone walls instead: a KayKit wall piece on each
+## straight run, a square tower at corners and ends, a round pillar where one stands alone; the
+## ground goes on past the grid, banks of mist drift over the floor (zone.mist_banks) and the throne
+## cell gets a throne on a dais. With zone.rock_piece each rock block is that NatureModels piece
+## (the mountain's snowy cliff) scaled to the cell, and a floor open to the sky (not underground)
+## has the ground of its hills past the grid. A P cell gets a PortalRing (the abandoned city's
+## portal, calm with zone.portal_flag) and zone.ruined draws some castle walls and towers low. Set
+## zone before add_child. The Ruinas' islands (zone.floating) are FloatingIslands'.
 
 ## Height of the rock blocks.
 const WALL_HEIGHT := 3.0
@@ -55,8 +55,7 @@ const RUIN_HEIGHT := 0.55
 const PORTAL_BOX := Vector3(ZoneData.CELL, 5.2, 1.4)
 const THRONE_GOLD := Color(0.85, 0.65, 0.2)
 const THRONE_RED := Color(0.45, 0.08, 0.12)
-## Mist: flat see-through banks drifting back and forth over floor cells picked with a
-## fixed seed.
+## Mist: flat see-through banks drifting back and forth over floor cells picked by a fixed seed.
 const MIST_COLOR := Color(0.8, 0.78, 0.9, 0.22)
 const MIST_SEED := 5
 ## Ground around a castle's grid: a plane this much wider on every side.
@@ -106,10 +105,13 @@ func _ready() -> void:
 	_clear_material.vertex_color_is_srgb = true
 	_clear_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	_clear_material.roughness = 1.0
-	_add_floor()
+	if zone.floating:
+		FloatingIslands.build(self, zone)
+	else:
+		_add_floor()
 	if zone.castle:
 		_add_castle()
-	else:
+	elif not zone.floating:
 		_add_rock()
 	for cell in zone.find_cells(ZoneData.THRONE):
 		_add_throne(cell)
@@ -473,6 +475,9 @@ func _add_torch(cell: Vector2i) -> void:
 	var out := -Vector3(side.x, 0, side.y)
 	var inset := _face_inset(cell + side, side)
 	var at_wall := zone.cell_center(cell) - out * (ZoneData.CELL / 2.0 + inset - 0.12)
+	if zone.crystals:
+		Crystals.add_cluster(self, at_wall, out, _shade(cell))
+		return
 	var stick := BoxMesh.new()
 	stick.size = Vector3(0.1, 0.5, 0.1)
 	BattleStage.add_mesh(self, stick, WOOD, at_wall + out * 0.1 + Vector3(0, TORCH_HEIGHT - 0.2, 0))
@@ -528,6 +533,10 @@ func _add_gate(cell: Vector2i) -> void:
 	(shape.shape as BoxShape3D).size = Vector3(ZoneData.CELL, WALL_HEIGHT, 0.6)
 	shape.position.y = WALL_HEIGHT / 2.0
 	body.add_child(shape)
+	if zone.crystals:
+		Crystals.add_bars(body, ZoneData.CELL, WALL_HEIGHT)
+		_gates.append(body)
+		return
 	var bar := BoxMesh.new()
 	bar.size = Vector3(0.1, WALL_HEIGHT, 0.1)
 	for i in 9:
@@ -553,7 +562,8 @@ func _add_lever(cell: Vector2i) -> void:
 	var handle := BoxMesh.new()
 	handle.size = Vector3(0.08, 0.8, 0.08)
 	BattleStage.add_mesh(_lever, handle, WOOD, Vector3(0, 0.4, 0))
-	BattleStage.add_mesh(_lever, BattleStage.unit_sphere(), Color(0.7, 0.15, 0.1),
+	BattleStage.add_mesh(_lever, BattleStage.unit_sphere(),
+		Crystals.KNOB if zone.crystals else Color(0.7, 0.15, 0.1),
 		Vector3(0, 0.85, 0), Vector3.ONE * 0.1)
 
 

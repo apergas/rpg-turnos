@@ -45,6 +45,9 @@ const KINDS := {
 	"fallen_head": {"radius": 1.0, "collider": "box"},
 	"obelisk": {"radius": 0.7, "collider": "box"},
 	"rubble": {"radius": 1.0, "collider": ""},
+	# The Ciénaga (the v3, 3.0.0): dead trees with moss and tufts of reeds.
+	"dead_tree": {"radius": 0.6, "collider": "cylinder"},
+	"reeds": {"radius": 0.5, "collider": ""},
 }
 ## Scattered pieces keep this far from each other and from every placed piece.
 const SCATTER_GAP := 1.2

@@ -8,12 +8,45 @@ class_name Chests extends RefCounted
 ## desert's three behind the western dune, in the oasis and in the ruin; the mountain's three
 ## (two on the climb, one on the summit) and the city's three (the north-west and north-east
 ## rooms of the streets, the west room of the portal quarter) make 25 chests in a game with
-## the caravan. Pure: open() changes a GameState and returns the message.
+## the caravan; the Ciénaga's three, on its islets next to its route, and the Cuevas' three (two
+## on the first floor, one on the second, each on its C cell) and the Ruinas' three (two on the
+## bridges, one on the esplanade's floor) and the Fuente's three (each on its C cell) make 37 in
+## Brumaclara's. Pure: open() changes a GameState and returns the message.
 
 ## id -> {"zone": ZoneData id, "pos": Vector3, "yaw": degrees (the lid opens toward -Z
 ## turned by yaw), and one of "gold": int, "item": Inventory id, "equipment": Equipment
 ## id}. Ids are unique across zones (the save lists the opened ones).
 const CHESTS := {
+	# The Ciénaga (the v3, 3.0.0): on its three islets, next to its route.
+	"cienaga_islote_oeste": {"zone": "cienaga", "pos": Vector3(-27, 0, 18), "yaw": -60.0,
+		"gold": 900},
+	"cienaga_islote_este": {"zone": "cienaga", "pos": Vector3(30, 0, 2), "yaw": 120.0,
+		"item": Inventory.BIG_ETHER},
+	"cienaga_islote_norte": {"zone": "cienaga", "pos": Vector3(-28, 0, -16), "yaw": -90.0,
+		"item": Inventory.PHOENIX},
+	# The Cuevas de cristal (3.1.0): the end of the west passage and the north room of the
+	# first floor, the west room of the second (each on its C cell, next to the route).
+	"cuevas_1_oeste": {"zone": "cuevas_1", "pos": Vector3(-16, 0, 0), "yaw": 180.0,
+		"gold": 1100},
+	"cuevas_1_norte": {"zone": "cuevas_1", "pos": Vector3(12, 0, -20), "yaw": 90.0,
+		"item": Inventory.BIG_ETHER},
+	"cuevas_2_cofre": {"zone": "cuevas_2", "pos": Vector3(-16, 0, 0), "yaw": 0.0,
+		"item": Inventory.PHOENIX},
+	# The Ruinas flotantes (3.2.0): the west and north-east islands of the bridges, the west island
+	# of the esplanade's floor (each on its C cell, next to the route).
+	"ruinas_1_oeste": {"zone": "ruinas_1", "pos": Vector3(-20, 0, 0), "yaw": -90.0,
+		"gold": 1300},
+	"ruinas_1_norte": {"zone": "ruinas_1", "pos": Vector3(20, 0, -16), "yaw": 180.0,
+		"item": Inventory.ELIXIR},
+	"ruinas_2_cofre": {"zone": "ruinas_2", "pos": Vector3(-16, 0, 4), "yaw": -90.0,
+		"item": Inventory.PHOENIX},
+	# The Fuente de la Niebla (3.3.0): the south-west room, the west and the east rooms (each on
+	# its C cell, next to the route).
+	"fuente_suroeste": {"zone": "fuente", "pos": Vector3(-20, 0, 24), "yaw": 0.0, "gold": 1500},
+	"fuente_oeste": {"zone": "fuente", "pos": Vector3(-16, 0, 4), "yaw": 180.0,
+		"item": Inventory.ELIXIR},
+	"fuente_este": {"zone": "fuente", "pos": Vector3(20, 0, 4), "yaw": 90.0,
+		"item": Inventory.PHOENIX},
 	"pradera_este": {"zone": "pradera", "pos": Vector3(13.1, 0, 12.7), "yaw": 30.0, "gold": 25},
 	"pradera_oeste": {"zone": "pradera", "pos": Vector3(-11.1, 0, 1.3), "yaw": -150.0,
 		"equipment": Equipment.WOODEN_SHIELD},
@@ -77,11 +110,11 @@ static func of_zone(zone_id: String) -> Array[String]:
 	return ids
 
 
-## The chests of this game: the v1's, plus the v2's once the caravan has been joined.
+## How many chests the game has so far: those of the parts reached (GameState.part()).
 static func total(state: GameState) -> int:
 	var count := 0
 	for id: String in CHESTS:
-		if state.in_caravan() or not (CHESTS[id].zone in ZoneData.V2_ZONES):
+		if ZoneData.part_of(CHESTS[id].zone) <= state.part():
 			count += 1
 	return count
 
@@ -90,7 +123,7 @@ static func total(state: GameState) -> int:
 static func opened_count(state: GameState) -> int:
 	var count := 0
 	for id in state.opened_chests:
-		if CHESTS.has(id) and (state.in_caravan() or not (CHESTS[id].zone in ZoneData.V2_ZONES)):
+		if CHESTS.has(id) and ZoneData.part_of(CHESTS[id].zone) <= state.part():
 			count += 1
 	return count
 
