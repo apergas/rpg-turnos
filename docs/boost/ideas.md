@@ -113,4 +113,5 @@ Estado: Pendiente
 
 ## 2026-11-15 · Combate: los objetos van antes que los ataques
 no se si funciona asi, compruebalo, pero los objetos tienen preferencia a los ataques/hechizos, tambien de los enemigos. es decir, aunque un enemigo tenga mas velocidad que tu, al usar un objeto en combate (pocion, eter o lo que sea) siempre va primero. una vez te tomas el pocion o lo que sea ya es el turno del enemigo, compañero o a quien le toque
+(tipo pokemon)
 Estado: Pendiente
