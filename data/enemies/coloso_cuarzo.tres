@@ -7,9 +7,9 @@
 script = ExtResource("1_combatant")
 id = "coloso_cuarzo"
 display_name = "Coloso de cuarzo"
-max_hp = 3000
-hp = 3000
-attack = 122
+max_hp = 3200
+hp = 3200
+attack = 132
 defense = 84
 speed = 26
 exp_reward = 2300
