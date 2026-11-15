@@ -363,8 +363,9 @@ func _enemy_command(who: int) -> Dictionary:
 	return cmd_attack(_enemy_target())
 
 
-## Everyone of side standing, fastest roll first (the hero wins ties). Defending or
-## fleeing, the hero goes first.
+## Everyone of side standing, fastest roll first (the hero wins ties). Defending, fleeing or
+## using an item, the hero goes first, before faster enemies and the creature (an item like
+## in Pokémon; 3.5.0). An enemy surprise's round (side ENEMIES) leaves him out as ever.
 func _turn_order(hero_cmd: Dictionary, side: int = Side.ALL) -> Array[int]:
 	var rolls := []
 	if side != Side.ENEMIES:
@@ -379,7 +380,7 @@ func _turn_order(hero_cmd: Dictionary, side: int = Side.ALL) -> Array[int]:
 	var order: Array[int] = []
 	for roll in rolls:
 		order.append(roll[1])
-	if side != Side.ENEMIES and hero_cmd.type in [CMD_DEFEND, CMD_FLEE]:
+	if side != Side.ENEMIES and hero_cmd.type in [CMD_DEFEND, CMD_FLEE, CMD_ITEM]:
 		order.erase(BattleEvent.HERO)
 		order.push_front(BattleEvent.HERO)
 	return order
