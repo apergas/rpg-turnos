@@ -25,9 +25,10 @@ class_name World extends Node3D
 ## and goes on.
 ## Its jobs are split into pieces it owns and calls in a fixed order from _physics_process:
 ## MapHud (the 2D layer), MapProps (exits, portal, wells, chests, the walk marker),
-## MapFigures (figures, signs, quest marks), MapMonsters (the groups), AutoplayHunter (the
-## autoplay's hunt) and MapUses (what is in reach, taps, exits). Its public methods are
-## façades of them and its signals are unchanged.
+## MapFigures (figures, signs, quest marks), MapCompanion (the creature or companion walking
+## behind the hero), MapMonsters (the groups), AutoplayHunter (the autoplay's hunt) and MapUses
+## (what is in reach, taps, exits). Its public methods are façades of them and its signals are
+## unchanged.
 
 signal encounter_triggered(boss: bool)
 signal talk_requested
@@ -88,6 +89,7 @@ var _props: MapProps
 var _monsters: MapMonsters
 var _uses: MapUses
 var _hunter: AutoplayHunter
+var _companion: MapCompanion
 
 var _grass: ShaderMaterial
 var _player: Player
@@ -163,6 +165,9 @@ func _ready() -> void:
 	set_world_flags({})
 	_player.route = zone.autoplay_route
 	add_child(_player)
+	_companion = MapCompanion.new()
+	_companion.setup(_player, _figures)
+	add_child(_companion)
 	if zone.underground and not zone.crystals:
 		var lantern := OmniLight3D.new()
 		lantern.light_color = LANTERN_COLOR
@@ -207,6 +212,7 @@ func _physics_process(delta: float) -> void:
 	if _dungeon:
 		_dungeon.see_through(_camera.global_position, _player.global_position)
 	_monsters.move_groups(delta)
+	_companion.step(delta)
 	if _waiting or _talking:
 		return
 	_monsters.tick_refill(delta)
@@ -324,6 +330,7 @@ func place_at_entry(entry_id: String) -> void:
 ## away from them. in_village() is right at once; village_changed is not emitted.
 func place_player(pos: Vector3, yaw_deg := 0.0) -> void:
 	_player.place(pos, deg_to_rad(yaw_deg))
+	_companion.snap_behind()
 	_camera.snap()
 	if _particles:
 		ZoneParticles.follow(_particles, _player.global_position, true)
@@ -504,12 +511,14 @@ func begin_cutscene() -> void:
 	_figures.show_marks()
 	_uses.forget_covered_signs()
 	_figures.set_signs_shown(false)
+	_companion.begin_scene()
 
 
 ## Puts every figure back on its spot, gives the camera back to the hero and the
 ## controls back to the player (the groups calm for a moment).
 func end_cutscene() -> void:
 	reset_figures()
+	_companion.end_scene()
 	_camera.follow(_player)
 	_player.scripted = false
 	_hud.end_cutscene()
@@ -582,11 +591,18 @@ func freeze(on: bool) -> void:
 ## nothing to use.
 func set_quest_view(marks: Dictionary, hidden_names: Array[String]) -> void:
 	_figures.set_quest_view(marks, hidden_names)
+	_companion.refresh()
 
 
 ## Shows the weapon and shield worn on the hero (Equipment ids, "" for none).
 func set_hero_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> void:
 	_player.set_equipment(weapon_id, shield_id, helmet_id)
+
+
+## The creature or companion walking behind the hero (MapCompanion; Game._refresh_status()):
+## an Allies id, "" for none, and its growth step (GameState.ally_step()).
+func set_companion(ally_id: String, step: int) -> void:
+	_companion.set_ally(ally_id, step)
 
 
 ## Opens (lid tipped back, tweened unless instant) or closes a chest of this zone. An

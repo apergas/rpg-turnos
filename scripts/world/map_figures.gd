@@ -52,6 +52,12 @@ func has_mark(figure_name: String) -> bool:
 	return _quest_marks.has(figure_name)
 
 
+## True if figure_name is one of this map's figures and stands on it now (not hidden by
+## set_quest_view()): MapCompanion hides while its own figure is here.
+func shows(figure_name: String) -> bool:
+	return _figures.has(figure_name) and not _hidden_figures.has(figure_name)
+
+
 ## Every figure sign shown (true) or hidden (false): cutscenes hide them.
 func set_signs_shown(on: bool) -> void:
 	for label in _figure_signs:

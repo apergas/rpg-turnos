@@ -356,8 +356,8 @@ func _on_stepped() -> void:
 		_ctx.world.show_notice(REPEL_END_NOTICE)
 
 
-## Updates the map's status window, the quests' marks and sought figures and the hero's
-## weapon and shield.
+## Updates the map's status window, the quests' marks and sought figures, the hero's weapon
+## and shield and the creature or companion behind him.
 func _refresh_status() -> void:
 	state.sync_level_cap()
 	var missions := state.current_missions()
@@ -377,6 +377,7 @@ func _refresh_status() -> void:
 	var loadout := state.loadout
 	_ctx.world.set_hero_equipment(loadout.worn(Equipment.WEAPON), loadout.worn(Equipment.SHIELD),
 		loadout.worn(Equipment.HELMET))
+	_ctx.world.set_companion(state.ally_id, state.ally_step())
 	if _autopilot:
 		_autopilot.note_status(missions)
 
