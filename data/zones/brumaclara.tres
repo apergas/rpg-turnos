@@ -44,6 +44,7 @@ decor_green = Color(0.3, 0.36, 0.3, 1)
 entries = {
 "cienaga": [Vector3(5, 0, -16), 180.0],
 "cuevas": [Vector3(5, 0, -16), 180.0],
+"ruinas": [Vector3(5, 0, -16), 180.0],
 "portal": [Vector3(0, 0, 16), 0.0],
 "pueblo": [Vector3(0, 0, 6), 0.0]
 }
@@ -74,6 +75,17 @@ exits = [{
 "yaw": 0.0
 }, {
 "entry": "brumaclara",
+"gone": "vigia_bruma",
+"id": "ruinas",
+"label": "A las Ruinas",
+"lock": "",
+"lock_text": "",
+"needs": "amuleto_recuperado",
+"pos": Vector3(5, 0, -19.5),
+"to": "ruinas_1",
+"yaw": 0.0
+}, {
+"entry": "brumaclara",
 "id": "portal",
 "label": "Al portal",
 "lock": "",
@@ -88,7 +100,8 @@ npcs = [{
 "lines": ["La Ciénaga está al norte, pasado el faro. Lo que se llevó la lámpara vive allí.", "Vuelve con luz, {nombre}. O al menos vuelve."],
 "lines_by_chapter": {
 12: ["El faro vuelve a dar luz. Hacía un año que no veía mi propia sombra.", "Con la luz se ve la boca de las Cuevas, junto al faro. Dicen que dentro los cristales brillan solos. Y que algo grande los vigila."],
-13: ["Ese cristal late como un corazón. El Herrero lo tiene junto a la forja y no para de cantar.", "Albor... Mi abuela contaba que la Fuente tuvo un guardián. Nadie sabe qué fue de él."]
+13: ["Ese cristal late como un corazón. El Herrero lo tiene junto a la forja y no para de cantar.", "Albor... Mi abuela contaba que la Fuente tuvo un guardián. Nadie sabe qué fue de él."],
+14: ["El Sello de Albor. Mi abuela decía que abría la Fuente, y yo creía que era un cuento para dormir.", "Mira el pueblo: hasta el mercado ha vuelto. Y un señor que pregunta por medallas. Lo que hace la luz."]
 },
 "look": "ORVALLA",
 "name": "Orvalla",
@@ -99,7 +112,8 @@ npcs = [{
 "lines": ["¿Allí de donde vienes el sol da luz? ¿Y calienta? ¿Y se puede mirar?", "Aquí el sol es negro. Mi abuela dice que antes no."],
 "lines_by_chapter": {
 12: ["¡El faro da luz! ¿El sol de tu mundo es así, pero más grande?"],
-13: ["¡La forja hace chispas! Son como estrellas pequeñas. ¿En tu mundo las estrellas también queman?"]
+13: ["¡La forja hace chispas! Son como estrellas pequeñas. ¿En tu mundo las estrellas también queman?"],
+14: ["¡Todas las ventanas tienen luz! Desde el faro parece que el pueblo es una estrella. ¿Las estrellas de tu mundo también tienen ventanas?"]
 },
 "look": "NEBLI",
 "name": "Neblí",
@@ -130,10 +144,19 @@ npcs = [{
 "yaw": -90.0
 }, {
 "kind": "npc",
+"lines": ["Colecciono medallas pequeñas."],
+"look": "CARAVAN_COLLECTOR",
+"name": "Coleccionista",
+"needs": "vigia_bruma",
+"pos": Vector3(-7.0, 0, -11.0),
+"yaw": 180.0
+}, {
+"kind": "npc",
 "lines": ["Mi hermano pesca en la Ciénaga. Bueno, pescaba. Ahora es la bruma la que le pesca a él."],
 "lines_by_chapter": {
 12: ["Con el faro encendido ya no se pierde nadie en la Ciénaga. Mi hermano dice que es por la sopa."],
-13: ["El Herrero ha vuelto a encender la forja. Se oye el martillo desde mi cama. Bendito martillo."]
+13: ["El Herrero ha vuelto a encender la forja. Se oye el martillo desde mi cama. Bendito martillo."],
+14: ["Ha vuelto el mercado. Me he comprado una sartén. No tengo nada que freír, pero qué sartén."]
 },
 "look": "MIST_VILLAGER_M",
 "name": "Vecino",
@@ -144,7 +167,8 @@ npcs = [{
 "lines": ["Respirar la niebla es como beber agua: no lo notas hasta que falta.", "Y últimamente falta."],
 "lines_by_chapter": {
 12: ["¡Mira mis ventanas! Con la luz del faro he descubierto que tengo cortinas."],
-13: ["Huele a hierro caliente. Hacía tanto que aquí no olía a nada..."]
+13: ["Huele a hierro caliente. Hacía tanto que aquí no olía a nada..."],
+14: ["Con todas las ventanas encendidas he visto por fin la cara de mi vecino. Prefería la niebla."]
 },
 "look": "MIST_VILLAGER_F",
 "name": "Vecina",

@@ -14,7 +14,7 @@ class_name DungeonMap extends Node3D
 ## (the mountain's snowy cliff) scaled to the cell, and a floor open to the sky (not underground)
 ## has the ground of its hills past the grid. A P cell gets a PortalRing (the abandoned city's
 ## portal, calm with zone.portal_flag) and zone.ruined draws some castle walls and towers low. Set
-## zone before add_child.
+## zone before add_child. The Ruinas' islands (zone.floating) are FloatingIslands'.
 
 ## Height of the rock blocks.
 const WALL_HEIGHT := 3.0
@@ -55,8 +55,7 @@ const RUIN_HEIGHT := 0.55
 const PORTAL_BOX := Vector3(ZoneData.CELL, 5.2, 1.4)
 const THRONE_GOLD := Color(0.85, 0.65, 0.2)
 const THRONE_RED := Color(0.45, 0.08, 0.12)
-## Mist: flat see-through banks drifting back and forth over floor cells picked with a
-## fixed seed.
+## Mist: flat see-through banks drifting back and forth over floor cells picked by a fixed seed.
 const MIST_COLOR := Color(0.8, 0.78, 0.9, 0.22)
 const MIST_SEED := 5
 ## Ground around a castle's grid: a plane this much wider on every side.
@@ -106,10 +105,13 @@ func _ready() -> void:
 	_clear_material.vertex_color_is_srgb = true
 	_clear_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	_clear_material.roughness = 1.0
-	_add_floor()
+	if zone.floating:
+		FloatingIslands.build(self, zone)
+	else:
+		_add_floor()
 	if zone.castle:
 		_add_castle()
-	else:
+	elif not zone.floating:
 		_add_rock()
 	for cell in zone.find_cells(ZoneData.THRONE):
 		_add_throne(cell)

@@ -3,15 +3,26 @@ class_name V3Flow extends Node
 ## Brumaclara (through the Caravana's portal) the part 3 begins: on_zone_switched() sets its
 ## flag and the start of its numbers (story.v3_start) before the trip's autosave, so that save
 ## is already one of the part 3 (Brumaclara is only valid there) with the level cap at 50. The
-## arrival cutscene follows as the village's first-visit scene (StoryFlow). The later versions
-## bring the visit to Villaclaro and the endings here. Gets the session in setup(); never stores
-## Game or a World.
+## arrival cutscene follows as the village's first-visit scene (StoryFlow), and so does the
+## Abuela Rosa's in Villaclaro (arrival_scene(), 3.2.0). The later versions bring the endings
+## here. Gets the session in setup(); never stores Game or a World.
 
 var _ctx: SessionContext
 
 
 func setup(ctx: SessionContext) -> void:
 	_ctx = ctx
+
+
+## The village scene of Villaclaro in the part 3 (StoryFlow.check_village_scene(), like
+## CaravanFlow.arrival_scene() in the v1): StoryState.AMULET_SCENE the first time the hero
+## stands there with the Coloso beaten, "" otherwise.
+static func arrival_scene(state: GameState, zone_id: String) -> String:
+	if zone_id == VillaclaroLook.ZONE and state.part() == 3 \
+			and state.has_flag(StoryState.V3_BOSSES[1]) \
+			and not state.story.has_seen(StoryState.AMULET_SCENE):
+		return StoryState.AMULET_SCENE
+	return ""
 
 
 ## ZoneTravel.zone_switched: Brumaclara for the first time starts the v3.

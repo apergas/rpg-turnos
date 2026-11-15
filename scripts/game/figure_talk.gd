@@ -3,7 +3,7 @@ class_name FigureTalk extends Node
 ## them. The Abuela Rosa heals and moves the village quest on (on_talk()); a villager, a
 ## board or a thing picked up says what the QuestLog has about a quest, or its chapter lines
 ## (on_npc(); the Coleccionista: talk_to_collector(); the Jefe de caravana: CaravanFlow;
-## Orvalla says when the v3 has no way on yet); a shop opens the ShopWindow (on_shop()) and an
+## Orvalla says what the v3 waits on); a shop opens the ShopWindow (on_shop()) and an
 ## inn offers the free night (on_inn()), each after the quest waiting at its figure; a well, a chest, the lever, the key and a gate.
 ## Gets the session and the ShopWindow in setup(); never stores Game or a World.
 
@@ -106,9 +106,9 @@ func on_npc(index: int) -> void:
 		# The receiver with quests under way and nothing to deliver: its chapter lines first (the
 		# way on, a joke), then one waiting line.
 		said = _ctx.world.npc_lines(index, _ctx.state.chapter()) + talk.lines
-	if figure == StoryState.V3_KEEPER and not StoryState.v3_way_on(_ctx.state.world_flags) \
-			and talk.get("kind", QuestLog.TALK_WAIT) == QuestLog.TALK_WAIT:
-		said = said + [StoryState.V3_NOT_YET_LINE]  # no next land yet: she says so
+	var extra := StoryState.keeper_line(_ctx.state.world_flags) if figure == StoryState.V3_KEEPER else ""
+	if extra != "" and talk.get("kind", QuestLog.TALK_WAIT) == QuestLog.TALK_WAIT:
+		said = said + [extra]  # the v3 waits on something (the amulet, no next land): she says it
 	var lines: Array[String] = []
 	for line: String in said:
 		lines.append(StoryState.fill(line, _ctx.state.hero.display_name))

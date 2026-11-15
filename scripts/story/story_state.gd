@@ -18,7 +18,7 @@ const NAME_TAG := "{nombre}"
 const SCENES: Array[String] = ["prologo", "rey_slime", "aldea_bosque", "bruja", "mina",
 	"golem", "castillo", "final", "caravana_llega", "caravana_parte", "caravana_campamento",
 	"jaguar", "gusano", "grifo", "guardian", "cruce", "brumaclara_llega", "garza",
-	"recuerdo_albor"]
+	"recuerdo_albor", "amuleto", "vigia"]
 ## The cutscene that follows beating each boss (its world flag).
 const AFTER_BOSS := {
 	"rey_slime": "rey_slime",
@@ -31,6 +31,7 @@ const AFTER_BOSS := {
 	"guardian_ciudad": "guardian",
 	"garza_legamo": "garza",
 	"coloso_cuarzo": "recuerdo_albor",
+	"vigia_bruma": "vigia",
 	"devorador_portal": "cruce",
 }
 ## The cutscene of the first visit to each zone's village.
@@ -56,13 +57,24 @@ const V2_FINAL_BOSS := "devorador_portal"
 const V3_FLAG := "brumaclara"
 const V3_BOSSES: Array[String] = ["garza_legamo", "coloso_cuarzo", "vigia_bruma"]
 const V3_FINAL_BOSS := "eco_albor"
+## The Amuleto del Alba (3.2.0): the key item and the flag the Abuela Rosa's scene gives
+## (StoryFlow), which opens the way up to the Ruinas.
+const AMULET_FLAG := "amuleto_recuperado"
+## The Abuela Rosa's story of the amulet (data/cutscenes/amuleto.tres): Villaclaro's village
+## scene in the part 3 (V3Flow.arrival_scene()); its "flag" step gives the amulet.
+const AMULET_SCENE := "amuleto"
 ## Brumaclara's lighthouse keeper: she says how the v3 goes on, and every mission of the v3 is
 ## handed to her (as the v2's are to the Jefe de caravana).
 const V3_KEEPER := "Orvalla"
-## While Brumaclara has no exit open to another land of the v3 (each version of the v3 brings
-## the next one; the 3.1.0 ends with the Coloso): what Orvalla adds and the goal.
+## While neither Brumaclara nor the Caravana has an exit open to the next step of the v3 (each
+## version of the v3 brings the next one; the 3.2.0 ends with the Vigía): what Orvalla adds and
+## the goal.
 const V3_NOT_YET_LINE := "Todavía no sabemos cómo seguir. Descansa, y vuelve cuando la luz nos diga algo."
-const V3_WAIT_GOAL := "La forja de Brumaclara vuelve a arder"
+const V3_WAIT_GOAL := "Todas las ventanas de Brumaclara vuelven a tener luz"
+## What Orvalla adds besides (keeper_line()): the Coloso beaten, the amulet to fetch from
+## Villaclaro; the amulet here, the way up to the Ruinas (3.2.0).
+const V3_AMULET_LINE := "Un amuleto partido en tres... El Jefe de vuestra caravana dice que conoce un atajo a tu pueblo. Ve a buscarlo, {nombre}."
+const V3_RUINS_LINE := "Con ese amuleto la bruma del faro se aparta. Por ahí se sube a las Ruinas."
 ## The mine's flags (ZoneData lever_flag, floor_key, door_flag of its floors).
 const MINE_LEVER := "mina_palanca"
 const MINE_KEY := "llave_mina"
@@ -107,8 +119,16 @@ const CUEVAS_GOALS := {
 	"down": "Objetivo: baja a la segunda planta de las Cuevas",
 	"colossus": "Objetivo: vence al Coloso de cuarzo",
 }
+## The Ruinas chapter's goal, step by step (3.2.0): the amulet first, then floor by floor.
+const RUINAS_GOALS := {
+	"amulet": "Objetivo: vuelve a Villaclaro a por el Amuleto del Alba",
+	"climb": "Objetivo: sube a las Ruinas flotantes",
+	"bridges": "Objetivo: cruza los puentes hasta la escalera",
+	"watcher": "Objetivo: vence al Vigía de la bruma",
+}
 ## The next step of the story, by chapter: GameState.main_goal() once the village quest
-## is done. The mine, mountain, city and Cuevas chapters are answered by their own tables.
+## is done. The mine, mountain, city, Cuevas and Ruinas chapters are answered by their own
+## tables.
 const GOALS := {
 	Chapter.PROLOGUE: "Objetivo: habla con la Abuela Rosa",
 	Chapter.MEADOW: "Objetivo: ayuda a la Abuela Rosa",
@@ -122,6 +142,7 @@ const GOALS := {
 	Chapter.V2_END: "Objetivo: cruza el portal",
 	Chapter.BRUMACLARA: "Objetivo: atraviesa la Ciénaga y devuelve la luz al faro",
 	Chapter.CUEVAS: "Objetivo: busca los cristales en las Cuevas",
+	Chapter.RUINAS: "Objetivo: sube a las Ruinas flotantes",
 }
 
 ## Cutscene ids already played (SCENES entries), in the order they were seen.
@@ -159,15 +180,29 @@ func chapter(flags: Dictionary) -> Chapter:
 
 
 ## True while Brumaclara has an exit open, with these flags, to a land of the v3 (not the
-## portal back to the Caravana). False before the v3.
+## portal back to the Caravana), or the Caravana one to Villaclaro (the visit for the amulet,
+## 3.2.0). False before the v3.
 static func v3_way_on(flags: Dictionary) -> bool:
-	var town := ZoneData.by_id(BrumaclaraLook.ZONE)
-	if town == null or not flags.get(V3_FLAG, false):
+	if not flags.get(V3_FLAG, false):
 		return false
-	for exit: Dictionary in town.exits:
+	for exit: Dictionary in ZoneData.by_id(BrumaclaraLook.ZONE).exits:
 		if exit.to != CampLook.ZONE and ZoneData.is_present(exit, flags):
 			return true
+	for exit: Dictionary in ZoneData.by_id(CampLook.ZONE).exits:
+		if exit.to == VillaclaroLook.ZONE and ZoneData.is_present(exit, flags):
+			return true
 	return false
+
+
+## What Orvalla adds to her lines (FigureTalk) while the v3 waits on something: the amulet
+## (V3_AMULET_LINE), the way up to the Ruinas once it is here (V3_RUINS_LINE), or no next step
+## yet (V3_NOT_YET_LINE); "" otherwise.
+static func keeper_line(flags: Dictionary) -> String:
+	if flags.get(V3_BOSSES[1], false) and not flags.get(AMULET_FLAG, false):
+		return V3_AMULET_LINE
+	if flags.get(AMULET_FLAG, false) and not flags.get(V3_BOSSES[2], false):
+		return V3_RUINS_LINE
+	return "" if v3_way_on(flags) else V3_NOT_YET_LINE
 
 
 ## The stretch of the caravan's road (the v2): 1 + the zone bosses beaten in order, 5 once
@@ -199,6 +234,14 @@ static func etapa(flags: Dictionary) -> int:
 			break
 		reached += 1
 	return reached
+
+
+## The part of the game these flags are in (GameState.part()): 1 the v1 (Villaclaro), 2 the v2
+## (the caravan), 3 the v3 (Brumaclara).
+static func part(flags: Dictionary) -> int:
+	if flags.get(V3_FLAG, false):
+		return 3
+	return 2 if flags.get(CARAVAN_FLAG, false) else 1
 
 
 func has_seen(scene_id: String) -> bool:
@@ -241,6 +284,8 @@ func mark_seen_for_flags(flags: Dictionary) -> void:
 		mark_seen("caravana_campamento")
 	if flags.get(V3_FLAG, false):
 		mark_seen("brumaclara_llega")
+	if flags.get(AMULET_FLAG, false):
+		mark_seen(AMULET_SCENE)
 	finished = flags.get("senor_niebla", false)
 	finished_v2 = flags.get(V2_FINAL_BOSS, false)
 	finished_v3 = flags.get(V3_FINAL_BOSS, false)
@@ -260,6 +305,8 @@ func goal_text(flags: Dictionary, zone_id := "") -> String:
 		return CITY_GOALS[_city_step(flags, zone_id)]
 	if now == Chapter.CUEVAS:
 		return CUEVAS_GOALS[_cuevas_step(flags, zone_id)]
+	if now == Chapter.RUINAS:
+		return RUINAS_GOALS[_ruinas_step(flags, zone_id)]
 	if now > Chapter.V2_END and not v3_way_on(flags):
 		return V3_WAIT_GOAL
 	return GOALS[now]
@@ -299,6 +346,14 @@ static func _cuevas_step(flags: Dictionary, zone_id: String) -> String:
 	if zone_id == "cuevas_1":
 		return "down" if flags.get(CUEVAS_LEVER, false) else "lever"
 	return "enter"
+
+
+static func _ruinas_step(flags: Dictionary, zone_id: String) -> String:
+	if not flags.get(AMULET_FLAG, false):
+		return "amulet"
+	if zone_id == "ruinas_2":
+		return "watcher"
+	return "bridges" if zone_id == "ruinas_1" else "climb"
 
 
 func to_dict() -> Dictionary:

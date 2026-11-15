@@ -69,8 +69,8 @@ Todo: nivel, EXP, hechizos, equipo, bolsa, oro, objetos, objetos clave, bestiari
 | 10 con el portal y sin `brumaclara` | "Objetivo: cruza el portal" |
 | 11 | "Objetivo: atraviesa la Ciénaga y devuelve la luz al faro" |
 | 12 | "Objetivo: busca los cristales en las Cuevas" (en las celdas, por planta, como `MOUNTAIN_GOALS`) |
-| 13 sin `amuleto_alba` | "Objetivo: vuelve a Villaclaro a por el Amuleto del Alba" |
-| 13 con `amuleto_alba` | "Objetivo: sube a las Ruinas flotantes" |
+| 13 sin `amuleto_recuperado` | "Objetivo: vuelve a Villaclaro a por el Amuleto del Alba" |
+| 13 con `amuleto_recuperado` | "Objetivo: sube a las Ruinas flotantes" |
 | 14 | "Objetivo: llega a la Fuente de la Niebla" |
 | 15 | Liberado: "Albor guarda la Fuente" · Vencido: "La Niebla ha vuelto a su sitio" |
 
@@ -162,7 +162,7 @@ Todo: nivel, EXP, hechizos, equipo, bolsa, oro, objetos, objetos clave, bestiari
 |---|---|---|---|
 | "A la Ciénaga" | `brumaclara` | `garza_legamo` | `cienaga` |
 | "A las Cuevas" | `garza_legamo` | `coloso_cuarzo` | `cuevas_1` |
-| "A las Ruinas" | `amuleto_alba` | `vigia_bruma` | `ruinas_1` |
+| "A las Ruinas" | `amuleto_recuperado` | `vigia_bruma` | `ruinas_1` |
 | "A la Fuente" | `vigia_bruma` | — | `fuente` |
 | "Al portal" | — | — | `caravana` (con `TravelPortal`) |
 
@@ -314,10 +314,10 @@ Cinco por zona, veinte en total. Donde se puede son variantes de figuras que ya 
 ## M-83. La vuelta a Villaclaro
 
 - Al vencer al Coloso se ve el primer recuerdo de Albor (`recuerdo_albor`): un joven guardián mira un amuleto partido en tres. Orvalla: "Esa luz la conozco. Es de la Fuente. ¿Dónde la habéis visto?". El objetivo pasa a "vuelve a Villaclaro".
-- La Caravana gana una salida **"A Villaclaro"** con `needs` `coloso_cuarzo` y `gone` `amuleto_alba`: el Jefe tiene "un atajo que encontramos al venir". Lleva a la entrada norte de `pradera`.
+- La Caravana gana una salida **"A Villaclaro"** con `needs` `coloso_cuarzo` y `gone` `amuleto_recuperado`: el Jefe tiene "un atajo que encontramos al venir". Lleva a la entrada norte de `pradera`.
 - En la parte 3, la pradera solo tiene esa salida de vuelta ("A la caravana"): las salidas al bosque y al resto de la v1 tienen `gone` `brumaclara`. Los monstruos de la pradera se quedan (son flojos y huyen del héroe, como en las zonas superadas).
 - Los vecinos de Villaclaro tienen frases nuevas para el capítulo 13; las salidas de la pradera vuelven a tener niebla (la Niebla se escapa).
-- Al hablar con la Abuela Rosa se ve la escena `amuleto`: su abuelo encontró en el norte "una piedra que brillaba", la partió en tres para repartirla, y desde entonces la niebla rondaba el castillo. Da el **Amuleto del Alba** (objeto clave `amuleto_alba`, y la bandera del mismo nombre).
+- Al entrar en Villaclaro, la Abuela Rosa sale al encuentro del héroe y se ve la escena `amuleto`: su abuelo encontró en el norte "una piedra que brillaba", la partió en tres para repartirla, y desde entonces la niebla rondaba el castillo. Da el **Amuleto del Alba** (objeto clave `amuleto_recuperado`, y la bandera del mismo nombre).
 - Con el amuleto, la salida "A Villaclaro" de la Caravana desaparece: el héroe ya no vuelve. La pradera sigue siendo una zona válida en la parte 3, por si la partida se guardó allí; la salida "A la caravana" de la pradera no tiene `gone`, así que nadie se queda atrapado.
 - Visita corta: unos 5 minutos.
 

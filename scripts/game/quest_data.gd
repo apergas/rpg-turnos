@@ -20,6 +20,9 @@ enum Kind { HUNT, GATHER, DELIVER, FIND }
 ## A world flag that must be set before the quest is offered ("" for none). A quest
 ## already taken goes on whatever happens to the flag.
 @export var needs := ""
+## A world flag after which the quest is no longer offered ("" for none): the boss of the land
+## it is done in (its land closes behind the boss). A quest already taken goes on.
+@export var gone := ""
 ## Who hears the report ("" : it ends on the spot, when the goal is reached).
 @export var turn_in_zone := ""
 @export var turn_in := ""

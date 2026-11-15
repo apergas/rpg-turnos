@@ -33,8 +33,8 @@ const GROWTH := {
 	"ulma": {"max_hp": 55, "attack": 8, "defense": 10, "speed": 1},
 }
 ## What the companion says the first time the hero reaches each land of the caravan:
-## zone id -> companion id -> line (2.4.0; the Ciénaga, 3.0.0; the Cuevas, 3.1.0). Remembered
-## with the world flag ARRIVAL_PREFIX + zone id.
+## zone id -> companion id -> line (2.4.0; the Ciénaga, 3.0.0; the Cuevas, 3.1.0;
+## Villaclaro and the Ruinas, 3.2.0). Remembered with the world flag ARRIVAL_PREFIX + zone id.
 const ARRIVALS := {
 	"jungla": {
 		"brena": "Qué calor. Si algo se mueve entre las hojas, le pego. Si no se mueve, también.",
@@ -66,15 +66,26 @@ const ARRIVALS := {
 		"tadeo": "Si rompo uno de estos cristales, ¿me lo cobran? Pregunto antes de tropezar.",
 		"ulma": "La luz sale de las paredes. Aquí no hay sombra donde esconderse. Ni para ellos ni para nosotros.",
 	},
+	"ruinas_1": {
+		"brena": "Piedras que flotan. Si me caigo, que conste que fue un empujón.",
+		"tadeo": "No mires abajo. Yo ya he mirado. No lo hagas.",
+		"ulma": "Pisa donde pise yo, y no corras. Aquí un tropiezo dura mucho.",
+	},
+	"pradera": {
+		"brena": "¿Esto es tu pueblo? Es pequeño. Me gusta. Aquí nadie podría perderse.",
+		"tadeo": "Así que aquí empezó todo. Pensaba que habría una estatua tuya. Como mínimo, un banco.",
+		"ulma": "Hay niebla otra vez en los caminos. La noto en las rodillas, como la humedad.",
+	},
 }
 const ARRIVAL_PREFIX := "llegada_"
 ## Each arrival zone's tramo boss: a save past it has heard (or skipped) that line.
 const ARRIVAL_BOSSES := {"jungla": "jaguar_sombrio", "desierto": "gusano_dunas",
 	"montana_1": "grifo_cumbre", "ciudad_1": "guardian_ciudad",
-	"cienaga": "garza_legamo", "cuevas_1": "coloso_cuarzo"}
+	"cienaga": "garza_legamo", "cuevas_1": "coloso_cuarzo", "pradera": "amuleto_recuperado",
+	"ruinas_1": "vigia_bruma"}
 ## The upper floors count as their land's arrival zone.
 const ARRIVAL_REGIONS := {"montana_2": "montana_1", "ciudad_2": "ciudad_1",
-	"cuevas_2": "cuevas_1"}
+	"cuevas_2": "cuevas_1", "ruinas_2": "ruinas_1"}
 
 
 static func is_companion(id: String) -> bool:

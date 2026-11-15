@@ -10,6 +10,7 @@ kind = 3
 zone = "brumaclara"
 giver = "Vecino"
 needs = "brumaclara"
+gone = "garza_legamo"
 turn_in_zone = "brumaclara"
 turn_in = "Orvalla"
 target = "Pescador"

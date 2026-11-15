@@ -98,12 +98,12 @@ const SHOPS := {
 		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
 			Inventory.WING, Inventory.INCENSE, Inventory.PHOENIX, Inventory.ALARM],
 	},
-	# Brumaclara's Herrero de cristal from the Coloso on (the v3's etapa 3, 3.1.0): the first
-	# shop on the other side of the portal, the items only (the luna gear joins it in 3.2.0).
+	# Brumaclara's Herrero de cristal from the Coloso on (the v3's etapa 3): the luna gear
+	# (3.2.0), the Caravana's items and the Elixir.
 	"brumaclara_3": {
 		"keeper": "Herrero de cristal",
-		"equipment": [],
-		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
+		"equipment": ["espada_luna", "armadura_luna", "escudo_luna", "casco_luna"],
+		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ELIXIR, Inventory.ANTIDOTE,
 			Inventory.WING, Inventory.INCENSE, Inventory.PHOENIX, Inventory.ALARM],
 	},
 	COMPANIONS_SHOP: {"keeper": "Jefe de caravana", "equipment": [], "items": [],
