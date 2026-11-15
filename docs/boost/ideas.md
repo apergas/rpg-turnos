@@ -83,3 +83,7 @@ Estado: Pendiente
 ## 2026-11-15 · Equipo: el efecto debajo del nombre
 en el equipo, sale todo seguido el nombre dle objeto y lo que da. cambialo, poniendo lo que da (ATK +X, inmune a X..) debajo del nombre, tipo en la seccion de "objetos"
 Estado: Pendiente
+
+## 2026-11-15 · Combate: deshabilitar el menú al elegir Atacar
+en un combate, cuando pulsas atacar, sigue saliendo el menu con atacar, hechizos, objetos... aunque no puedes seleccionar nada (solo puedes pulsar en volver). pon que, si pulsas en el boton de atacar, las otras opciones se pongan en gris clarito o algo asi, para dar a entender que estan deshabilitadas, o simplemente que no aparezcan en el menu, y ya si pulsas en volver ya vuelve a ponerse como de normal
+Estado: Pendiente
