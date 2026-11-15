@@ -284,6 +284,27 @@ const AUTOPLAY_ZONES := {
 			Inventory.PHOENIX: 1},
 		"finished": true,
 	},
+	# --autoplay-zone=coloso: the Cuevas almost done: Lv 45 with the cristal gear and Brena, the
+	# reja open, at the second floor's stairs; it walks to the hall and fights the Coloso.
+	"coloso": {
+		"zone": "cuevas_2",
+		"experience": 33100,
+		"gold": 3000,
+		"gear": ["espada_cristal", "armadura_cristal", "escudo_cristal", "casco_cristal"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra", "senor_niebla", "caravana_vista", "caravana", "companero",
+			"jaguar_sombrio", "gusano_dunas", "montana_palanca", "grifo_cumbre",
+			"guardian_ciudad", "ciudad_reja", "devorador_portal", "portal_calmo",
+			"brumaclara", "brumaclara_vista", "garza_legamo", "cuevas_palanca"],
+		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo",
+			"insignia_jungla", "sello_desierto", "mapa_montana", "lampara_faro"],
+		"quest_done": true,
+		"town": "brumaclara",
+		"ally": "brena",
+		"items": {Inventory.BIG_POTION: 5, Inventory.BIG_ETHER: 4, Inventory.WING: 3,
+			Inventory.PHOENIX: 1},
+		"finished": true,
+	},
 	# Ready for the Señor de la Niebla: Lv 17 with the castle's gear.
 	"castillo_trono": {
 		"experience": 2244,

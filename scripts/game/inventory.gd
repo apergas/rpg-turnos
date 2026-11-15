@@ -120,6 +120,7 @@ const KEY_ITEMS := {
 	"mapa_montana": "Mapa de la montaña",
 	"llave_portal": "Llave del portal",
 	"lampara_faro": "Lámpara del faro",
+	"cristal_fuente": "Cristal de la Fuente",
 }
 ## What each key item is, for Objetos.
 const KEY_TEXTS := {
@@ -133,6 +134,7 @@ const KEY_TEXTS := {
 	"mapa_montana": "Lo guardaba el Grifo de la cumbre. Marca el camino hasta la ciudad abandonada.",
 	"llave_portal": "La guardaba el Guardián de la ciudad. Abre la reja del barrio del portal.",
 	"lampara_faro": "La guardaba la Garza de légamo en el buche. Devuelve la luz al faro de Brumaclara.",
+	"cristal_fuente": "Lo llevaba el Coloso de cuarzo en la espalda. Late como un corazón, y su luz es la de la Fuente.",
 	MEDAL: "Algunos monstruos las llevan encima. El Coleccionista las colecciona.",
 }
 

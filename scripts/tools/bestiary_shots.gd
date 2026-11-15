@@ -15,7 +15,8 @@ const VIEWS := {"caiman_bruma": {"turn": 55.0, "distance": 5.0},
 	"slime_cristal": {"turn": 35.0, "distance": 3.4},
 	"golem_cuarzo": {"turn": 35.0, "distance": 4.0},
 	"arana_cristal": {"turn": 35.0, "distance": 3.6},
-	"topo_geoda": {"turn": 35.0, "distance": 3.4}}
+	"topo_geoda": {"turn": 35.0, "distance": 3.4},
+	"coloso_cuarzo": {"turn": 35.0, "distance": 6.2}}
 
 
 func _initialize() -> void:

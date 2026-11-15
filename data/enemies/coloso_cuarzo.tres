@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+[ext_resource type="Resource" path="res://data/skills/brillo_cuarzo.tres" id="2_brillo"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "coloso_cuarzo"
+display_name = "Coloso de cuarzo"
+max_hp = 3000
+hp = 3000
+attack = 122
+defense = 84
+speed = 26
+exp_reward = 2300
+gold_reward = 1300
+ai_weights = {
+"attack": 60,
+"charge": 25,
+"stagger": 15
+}
+weak = Array[String](["thunder"])
+resist = Array[String](["fire"])
+rescue_heal = ExtResource("2_brillo")
+rescue_heal_ratio = 0.35
+key_item = "cristal_fuente"
+is_boss = true

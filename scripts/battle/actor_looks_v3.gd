@@ -182,4 +182,21 @@ const LOOKS := {
 		"top": 1.3,
 		"gentle": true,
 	},
+	# The Coloso de cuarzo, the Cuevas' boss: the golem, huge and violet, a ridge of big
+	# crystals on its back. Scale 1.7, not the spec's 1.9: its life bar (top + 0.15) must fit
+	# the battle camera.
+	Look.QUARTZ_COLOSSUS: {
+		"color": Color(0.58, 0.46, 0.74),
+		"dark_color": Color(0.38, 0.3, 0.52),
+		"eye_color": Color(0.6, 0.95, 1.0),
+		"shard_color": Color(0.75, 0.9, 1.0),
+		"shards": [[Vector3(-0.32, 0.95, 0.3), Vector3(-35, 0, 35), 1.3],
+			[Vector3(-0.1, 1.05, 0.38), Vector3(-45, 0, 10), 1.6],
+			[Vector3(0.14, 1.02, 0.36), Vector3(-40, 0, -15), 1.4],
+			[Vector3(0.36, 0.92, 0.28), Vector3(-30, 0, -40), 1.1],
+			[Vector3(0.55, 1.15, 0.05), Vector3(0, 0, -50), 0.8]],
+		"scale": 1.7,
+		"top": 3.45,
+		"gentle": true,
+	},
 }

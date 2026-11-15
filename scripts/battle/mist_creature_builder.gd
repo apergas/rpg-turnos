@@ -2,8 +2,8 @@ class_name MistCreatureBuilder extends RefCounted
 ## Constructor: the v3's figures built in code (3.0.0), from their ActorLooksV3 entry, so
 ## CreatureBuilder does not grow: the variants of older figures (the Sapo de légamo is the
 ## frog, the Sanguijuela the snake, the Junco andante the plant, in their own colours) and the
-## new ones: the Fuego fatuo, the Caimán de bruma and the Garza de légamo. Static only, keeps no
-## state: like CreatureBuilder, each build_x(actor, data) hangs its meshes under actor.body()
+## new ones: the Fuego fatuo, the Caimán de bruma and the Garza de légamo, and the Cuevas'
+## crystal figures (the golem and the Coloso de cuarzo). Static only, keeps no state: like CreatureBuilder, each build_x(actor, data) hangs its meshes under actor.body()
 ## through the actor's builder methods. build() says whether the look was one of its own.
 
 const Look = ActorLooks.Look
@@ -42,7 +42,7 @@ static func build(actor: BattleActor, data: Dictionary) -> bool:
 	elif look == Look.CRYSTAL_SLIME:
 		CreatureBuilder.build_slime(actor, data)
 		_add_shards(actor, data)
-	elif look == Look.QUARTZ_GOLEM:
+	elif look == Look.QUARTZ_GOLEM or look == Look.QUARTZ_COLOSSUS:
 		CreatureBuilder.build_golem(actor, data)
 		_add_shards(actor, data)
 	elif look == Look.CRYSTAL_SPIDER:

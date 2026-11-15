@@ -69,6 +69,7 @@ const ENEMIES := {
 	"golem_cuarzo": preload("res://data/enemies/golem_cuarzo.tres"),
 	"arana_cristal": preload("res://data/enemies/arana_cristal.tres"),
 	"topo_geoda": preload("res://data/enemies/topo_geoda.tres"),
+	"coloso_cuarzo": preload("res://data/enemies/coloso_cuarzo.tres"),
 }
 ## Figure of each enemy id; any other id is a slime.
 const LOOKS := {
@@ -131,6 +132,7 @@ const LOOKS := {
 	"golem_cuarzo": BattleActor.Look.QUARTZ_GOLEM,
 	"arana_cristal": BattleActor.Look.CRYSTAL_SPIDER,
 	"topo_geoda": BattleActor.Look.GEODE_MOLE,
+	"coloso_cuarzo": BattleActor.Look.QUARTZ_COLOSSUS,
 	# The creatures that fight beside the hero (data in Allies, not in ENEMIES).
 	"gallina": BattleActor.Look.CHICKEN,
 	"lobezno": BattleActor.Look.WOLF_CUB,
