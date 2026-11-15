@@ -20,10 +20,8 @@ const UNKNOWN := "??"
 ## the portrait-seen wash) and beaten at least once (its portrait as it is).
 enum CardState {UNSEEN, SEEN, BEATEN}
 ## On a caravan game the album has two parts, each under its own title: the v1's families
-## and the v2's; in Brumaclara a third, the v3's enemies (one section until their families come).
+## and the v2's; in Brumaclara a third, the v3's.
 const PART_TITLES := ["Villaclaro", "La caravana", "Brumaclara"]
-## The title of the v3's one section: the enemies beaten of those it has.
-const V3_SECTION := "Enemigos %d/%d"
 ## What the title, the Volver row and the margins leave for the grid.
 const RESERVED := 160.0
 
@@ -68,12 +66,8 @@ func fill(state: GameState) -> void:
 			_add_family(state, family)
 	if state.part() == 3:
 		_add_part(PART_TITLES[2])
-		var beaten := 0
-		for id in Bestiary.V3_ENEMIES:
-			if state.defeated_enemies.has(id):
-				beaten += 1
-		_add_section(state, Bestiary.V3_ENEMIES, V3_SECTION % [beaten,
-			Bestiary.V3_ENEMIES.size()], false)
+		for family in Bestiary.V3_FAMILIES:
+			_add_family(state, family)
 
 
 ## A family's title (in green with its prize once complete) and its cards.
