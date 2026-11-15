@@ -1,6 +1,6 @@
 # Registro de cambios
 
-## Sin publicar
+## 3.0.0 (2026)
 
 Empieza la tercera parte: al otro lado del portal.
 
