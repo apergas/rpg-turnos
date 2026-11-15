@@ -1,5 +1,15 @@
 # Registro de cambios
 
+## 3.5.0 (2026)
+
+Combate, compañero y portales.
+
+- Tus hechizos de daño crecen contigo: pegan un 3 % más por cada nivel que tengas por encima del que te los enseñó. Curar sigue igual.
+- Usar un objeto en combate va siempre antes que nadie, como defender o huir: la poción llega antes que el golpe del enemigo más rápido.
+- Brena, Tadeo y Ulma estrenan una pieza de equipo en cada tramo y en cada etapa, desde el desierto: un arma, un casco o una capa. Se ve en combate y les da un poco más de ataque o de defensa.
+- En los combates del Barrio del portal ya no sale el portal detrás, salvo contra el Devorador.
+- El portal entre la Caravana y Brumaclara es ahora rojizo, para no confundirlo con el del Ala de viaje.
+
 ## 3.4.0 (2026)
 
 Una interfaz más clara.
