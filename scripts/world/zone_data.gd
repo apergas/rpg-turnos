@@ -227,7 +227,7 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## on the origin.
 @export var layout: PackedStringArray = PackedStringArray()
 ## Underground: a black background, a dim ambient light instead of the sky and no sun;
-## the torches and the hero's lantern light the floor.
+## the torches and the hero's lantern light the floor (the crystals, in a zone with crystals).
 @export var underground := false
 @export var ambient_color := Color(0.3, 0.32, 0.45)
 @export var ambient_energy := 0.5
@@ -237,6 +237,10 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## (the mountain's snowy cliff, "snow_rock": a unit cube centred on its middle, scaled to the
 ## block). "" keeps the box (the mine).
 @export var rock_piece := ""
+## Crystal caves (the Cuevas de cristal, 3.1.0): each T cell grows a cluster of glowing crystals
+## instead of a torch (Crystals), the D gates are crystal bars, the lever has a crystal knob,
+## and the hero carries no lantern: the crystals light the floor.
+@export var crystals := false
 ## Castle: the rock cells are stone walls (KayKit wall pieces on the straight runs,
 ## square towers at corners and ends, round pillars when they stand alone) instead of
 ## rock blocks, and the open ground goes on past the grid.
