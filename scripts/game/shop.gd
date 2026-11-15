@@ -372,7 +372,9 @@ static func compare(state: GameState, id: String) -> Dictionary:
 ## For --autoplay: what a counter buys now. A tamer: its creature (Game chooses a companion).
 ## A village shop: the picks of the whole shop (_autoplay_whole_picks()) at this counter only,
 ## the equipment at ARMORY_COUNTER and the rest at ITEMS_COUNTER, so the tienda and the armero
-## share the gold as one shop did, in either order.
+## share the gold as one shop did. Visiting the armero first lets the tienda, recomputed with no
+## gear upgrade left, also buy the Ala and potions in the same visit (before 3.6.0 they waited
+## for the next one).
 static func autoplay_picks(state: GameState, shop_id: String, counter: String) -> Array[String]:
 	var picks: Array[String] = []
 	if sells_ally(shop_id):

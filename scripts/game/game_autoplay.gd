@@ -6,9 +6,9 @@ class_name GameAutoplay extends Node
 ## inn (or the wells, with no inn open), the tienda and the armero, the figures with a mark and,
 ## in Brumaclara, an errand through the portal to the Caravana (the etapa's gear, a report
 ## there, and on to Villaclaro for the amulet), restock(), then the portal back); after a v3
-## boss whose scene brings the hero home it restocks there; after a defeat it restocks; an empty map, or one quiet for
-## AutoplayStarts.AUTOPLAY_STALL_S, gets its groups back (step()); and it runs the medal tour of
-## --autoplay-zone=medallas. It prints what a reader of the log follows: each zone, each change of
+## boss whose scene brings the hero home it restocks there; after a defeat it restocks; an empty
+## map, or one quiet for AutoplayStarts.AUTOPLAY_STALL_S, gets its groups back (step()); and it
+## runs the medal tour of --autoplay-zone=medallas. It prints what a reader of the log follows: each zone, each change of
 ## mission line, gold or gear, each defeat, the Eco's results and the numbers after each part's
 ## credits. Uses only the public functions of ZoneTravel and FigureTalk (use_pieces()) and the
 ## rules; never stores Game or a World.
@@ -292,8 +292,8 @@ func needs_groups() -> bool:
 
 
 ## Autoplay: the hero goes after the groups while he has levels to win before the zone's
-## boss. The medal tour hunts until it carries
-## AutoplayStarts.MEDAL_TOUR_GOAL medals.
+## boss. The medal tour hunts until it
+## carries AutoplayStarts.MEDAL_TOUR_GOAL medals.
 func hunts() -> bool:
 	if medal_tour:
 		return _ctx.state.medals.size() < AutoplayStarts.MEDAL_TOUR_GOAL
@@ -352,8 +352,7 @@ func _talk_figures(offers: bool) -> void:
 ## (Shop.gear_to_buy(): once there, the tienda's usual picks, an Ala or potions, come with it),
 ## while a report waits there (the cartas for the Viajera), or for the visit to Villaclaro (the
 ## Coloso beaten, no amulet yet: on through the Caravana's exit, and the Abuela Rosa's scene
-## plays on
-## arrival; the route of the meadow and the Caravana's walk him back to the portal).
+## plays on arrival; the route of the meadow and the Caravana's walk him back to the portal).
 func _caravan_errand() -> void:
 	var state := _ctx.state
 	var visit := state.has_flag(StoryState.V3_BOSSES[1]) and not state.has_flag(StoryState.AMULET_FLAG)
