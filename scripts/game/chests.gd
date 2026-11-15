@@ -10,8 +10,8 @@ class_name Chests extends RefCounted
 ## rooms of the streets, the west room of the portal quarter) make 25 chests in a game with
 ## the caravan; the Ciénaga's three, on its islets next to its route, and the Cuevas' three (two
 ## on the first floor, one on the second, each on its C cell) and the Ruinas' three (two on the
-## bridges, one on the esplanade's floor, each on its C cell) make 34 in Brumaclara's. Pure:
-## open() changes a GameState and returns the message.
+## bridges, one on the esplanade's floor) and the Fuente's three (each on its C cell) make 37 in
+## Brumaclara's. Pure: open() changes a GameState and returns the message.
 
 ## id -> {"zone": ZoneData id, "pos": Vector3, "yaw": degrees (the lid opens toward -Z
 ## turned by yaw), and one of "gold": int, "item": Inventory id, "equipment": Equipment
@@ -39,6 +39,13 @@ const CHESTS := {
 	"ruinas_1_norte": {"zone": "ruinas_1", "pos": Vector3(20, 0, -16), "yaw": 180.0,
 		"item": Inventory.ELIXIR},
 	"ruinas_2_cofre": {"zone": "ruinas_2", "pos": Vector3(-16, 0, 4), "yaw": -90.0,
+		"item": Inventory.PHOENIX},
+	# The Fuente de la Niebla (3.3.0): the south-west room, the west and the east rooms (each on
+	# its C cell, next to the route).
+	"fuente_suroeste": {"zone": "fuente", "pos": Vector3(-20, 0, 24), "yaw": 0.0, "gold": 1500},
+	"fuente_oeste": {"zone": "fuente", "pos": Vector3(-16, 0, 4), "yaw": 180.0,
+		"item": Inventory.ELIXIR},
+	"fuente_este": {"zone": "fuente", "pos": Vector3(20, 0, 4), "yaw": 90.0,
 		"item": Inventory.PHOENIX},
 	"pradera_este": {"zone": "pradera", "pos": Vector3(13.1, 0, 12.7), "yaw": 30.0, "gold": 25},
 	"pradera_oeste": {"zone": "pradera", "pos": Vector3(-11.1, 0, 1.3), "yaw": -150.0,

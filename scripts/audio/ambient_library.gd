@@ -22,8 +22,10 @@ const CITY := "city"
 const PORTAL := "portal"
 const SWAMP := "swamp"
 const CRYSTAL := "crystal"
+## The Fuente de la Niebla (3.3.0): the portal quarter's wind and rumble with a deep heartbeat.
+const SOURCE := "source"
 const IDS: Array[String] = [MEADOW, FOREST, MINE, CASTLE, JUNGLE, DESERT, MOUNTAIN, CITY, PORTAL,
-	SWAMP, CRYSTAL]
+	SWAMP, CRYSTAL, SOURCE]
 
 ## Seconds of each bed, and of the cross-fade that closes its loop.
 const LOOP := 8.0
@@ -34,17 +36,19 @@ const VARIANTS := 4
 const GAPS := {MEADOW: [2.0, 6.0], FOREST: [3.0, 7.0], MINE: [1.0, 4.0], CASTLE: [4.0, 9.0],
 	JUNGLE: [1.5, 4.0], DESERT: [3.0, 8.0], MOUNTAIN: [2.5, 6.0],
 	CITY: [3.0, 8.0], PORTAL: [4.0, 9.0], SWAMP: [2.0, 5.0],
-	CRYSTAL: [1.5, 4.5]}
+	CRYSTAL: [1.5, 4.5], SOURCE: [5.0, 10.0]}
 ## Peak of each bed and of every short sound (AudioDirector plays them at the effects volume
 ## × its AMBIENT_SHARE).
 const BED_PEAK := {MEADOW: 0.35, FOREST: 0.4, MINE: 0.5, CASTLE: 0.35, JUNGLE: 0.35, DESERT: 0.4, MOUNTAIN: 0.45,
-	CITY: 0.35, PORTAL: 0.45, SWAMP: 0.4, CRYSTAL: 0.45}
+	CITY: 0.35, PORTAL: 0.45, SWAMP: 0.4, CRYSTAL: 0.45, SOURCE: 0.45}
 const SHOT_PEAK := 0.55
 ## The echoes of a drop in the mine: [delay in seconds, gain].
 const ECHOES := [[0.17, 0.45], [0.34, 0.2], [0.51, 0.08]]
 ## Samples of fade-in of a drop (no click).
 const DROP_FADE_IN := 40
 const NOISE_SEED := 777
+## The Fuente's heartbeat: seconds from one lub-dub to the next (LOOP holds five of them).
+const BEAT := 1.6
 
 static var _beds := {}
 static var _shots := {}
@@ -96,7 +100,7 @@ static func bed(id: String) -> AudioStreamWAV:
 			raw = _sand_wind(count + seam, rng)
 		MOUNTAIN:
 			raw = _mountain_wind(count + seam, rng)
-		CITY, PORTAL:
+		CITY, PORTAL, SOURCE:
 			raw = _ruin_wind(count + seam, rng)
 		SWAMP:
 			raw = _bog(count + seam, rng)
@@ -109,8 +113,10 @@ static func bed(id: String) -> AudioStreamWAV:
 		var t := float(i) / seam
 		# Equal power: two unrelated noises add in power, so the bed keeps its level.
 		samples[i] = raw[i] * sin(t * PI / 2.0) + raw[count + i] * cos(t * PI / 2.0)
-	if id == PORTAL:
+	if id == PORTAL or id == SOURCE:
 		_add_rumble(samples)
+	if id == SOURCE:
+		_add_heartbeat(samples)
 	_normalize(samples, BED_PEAK[id])
 	var stream := MusicLibrary.to_stream(samples)
 	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
@@ -143,7 +149,7 @@ static func shot(id: String, variant: int) -> AudioStreamWAV:
 			samples = _howl(rng)
 		CITY:
 			samples = _rubble(rng)
-		PORTAL:
+		PORTAL, SOURCE:
 			samples = _groan(rng)
 		SWAMP:
 			samples = _croak(rng)
@@ -419,6 +425,23 @@ static func _add_rumble(samples: PackedFloat32Array) -> void:
 		var throb := 0.55 + 0.45 * sin(TAU * 0.5 * t)
 		samples[i] += peak * throb * (0.5 * sin(TAU * 41.0 * t) + 0.3 * sin(TAU * 55.0 * t)
 			+ 0.15 * sin(TAU * 82.0 * t))
+
+
+## The Fuente's heartbeat (3.3.0), added after the portal's rumble: a lub-dub every BEAT
+## seconds, two thumps of a 48 Hz sine that die out fast, the second softer, a little louder
+## than the bed's peak. The loop holds whole beats, so it stays seamless.
+static func _add_heartbeat(samples: PackedFloat32Array) -> void:
+	var peak := 0.0
+	for v in samples:
+		peak = maxf(peak, absf(v))
+	for i in samples.size():
+		var t := fmod(float(i) / MusicLibrary.RATE, BEAT)
+		var thump := 0.0
+		for beat: Array in [[0.0, 1.0], [0.24, 0.7]]:
+			var u: float = t - beat[0]
+			if u >= 0.0 and u < 0.3:
+				thump += beat[1] * exp(-u * 18.0) * sin(TAU * 48.0 * u)
+		samples[i] += peak * 1.2 * thump
 
 
 ## Stones falling in the ruins: 3 to 6 short knocks (noise through a band-pass at 900 to

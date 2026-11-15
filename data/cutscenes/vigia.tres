@@ -22,7 +22,7 @@ steps = [
 ["approach", "Orvalla", "hero", 1.8],
 ["face", "hero", "Orvalla"],
 ["face", "Orvalla", "hero"],
-["say", "Orvalla", ["El Sello de Albor. Mi abuela decía que abría la Fuente, y yo creía que era un cuento para dormir.", "La Fuente está más allá de las Ruinas. Cuando la bruma deje ver el camino, iremos. Mientras, descansa, {nombre}."]],
+["say", "Orvalla", ["El Sello de Albor. Mi abuela decía que abría la Fuente, y yo creía que era un cuento para dormir.", "La Fuente está más allá de las Ruinas, y el sello abre su camino: sale del faro, como todos. Descansa antes, {nombre}. Allí arriba no hay posada."]],
 ["approach", "Neblí", "hero", 2.2],
 ["face", "Neblí", "hero"],
 ["say", "Neblí", ["¿Detrás de la Fuente está el sol? ¿Me lo traerás, o tengo que ir yo?"]]

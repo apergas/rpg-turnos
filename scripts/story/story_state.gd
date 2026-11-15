@@ -75,6 +75,8 @@ const V3_WAIT_GOAL := "Todas las ventanas de Brumaclara vuelven a tener luz"
 ## Villaclaro; the amulet here, the way up to the Ruinas (3.2.0).
 const V3_AMULET_LINE := "Un amuleto partido en tres... El Jefe de vuestra caravana dice que conoce un atajo a tu pueblo. Ve a buscarlo, {nombre}."
 const V3_RUINS_LINE := "Con ese amuleto la bruma del faro se aparta. Por ahí se sube a las Ruinas."
+## And the Vigía beaten (3.3.0): the way to the Fuente.
+const V3_SOURCE_LINE := "El camino de la Fuente sale del faro. Con el Sello de Albor, la bruma te deja pasar."
 ## The mine's flags (ZoneData lever_flag, floor_key, door_flag of its floors).
 const MINE_LEVER := "mina_palanca"
 const MINE_KEY := "llave_mina"
@@ -143,6 +145,7 @@ const GOALS := {
 	Chapter.BRUMACLARA: "Objetivo: atraviesa la Ciénaga y devuelve la luz al faro",
 	Chapter.CUEVAS: "Objetivo: busca los cristales en las Cuevas",
 	Chapter.RUINAS: "Objetivo: sube a las Ruinas flotantes",
+	Chapter.FUENTE: "Objetivo: llega a la Fuente de la Niebla",
 }
 
 ## Cutscene ids already played (SCENES entries), in the order they were seen.
@@ -195,13 +198,16 @@ static func v3_way_on(flags: Dictionary) -> bool:
 
 
 ## What Orvalla adds to her lines (FigureTalk) while the v3 waits on something: the amulet
-## (V3_AMULET_LINE), the way up to the Ruinas once it is here (V3_RUINS_LINE), or no next step
-## yet (V3_NOT_YET_LINE); "" otherwise.
+## (V3_AMULET_LINE), the way up to the Ruinas once it is here (V3_RUINS_LINE), the way to the
+## Fuente once the Vigía is beaten (V3_SOURCE_LINE), or no next step yet (V3_NOT_YET_LINE); ""
+## otherwise.
 static func keeper_line(flags: Dictionary) -> String:
 	if flags.get(V3_BOSSES[1], false) and not flags.get(AMULET_FLAG, false):
 		return V3_AMULET_LINE
 	if flags.get(AMULET_FLAG, false) and not flags.get(V3_BOSSES[2], false):
 		return V3_RUINS_LINE
+	if flags.get(V3_BOSSES[2], false) and not flags.get(V3_FINAL_BOSS, false):
+		return V3_SOURCE_LINE
 	return "" if v3_way_on(flags) else V3_NOT_YET_LINE
 
 

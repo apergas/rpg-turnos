@@ -30,6 +30,8 @@ const BRUMA := "bruma"
 const BOG := "bog"
 ## The Cuevas de cristal (3.1.0): tiny blue and violet glints that wink in and out.
 const SPARKLE := "sparkle"
+## The Fuente de la Niebla (3.3.0): a pale mist rising slowly from the floor round the hero.
+const RISE := "rise"
 ## Half extents, along X and Z, of the box the particles are born in around the hero.
 const BOX := Vector3(15.0, 0.0, 10.0)
 ## Share of a particle's life spent fading in, and again fading out.
@@ -87,6 +89,10 @@ const KINDS := {
 		"speed": [0.02, 0.08], "direction": Vector3.UP, "spread": 180.0, "spin": 0.0,
 		"colors": [Color(0.6, 0.85, 1.0, 1.0), Color(0.85, 0.65, 1.0, 1.0)],
 		"lit": false, "round": true, "glow": true, "box": Vector3(8.0, 0.0, 6.0)},
+	RISE: {"amount": 40, "lifetime": 9.0, "height": 0.4, "depth": 0.3, "size": 0.8,
+		"speed": [0.15, 0.3], "direction": Vector3.UP, "spread": 20.0, "spin": 0.0,
+		"colors": [Color(0.72, 0.8, 1.0, 0.28), Color(0.6, 0.7, 0.95, 0.2)],
+		"lit": false, "round": true},
 }
 
 ## No particles at all while false (low quality). Set by DisplaySettings.
