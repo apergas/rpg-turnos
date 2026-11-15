@@ -67,6 +67,11 @@ const ARRIVALS := {
 		"tadeo": "Si rompo uno de estos cristales, ¿me lo cobran? Pregunto antes de tropezar.",
 		"ulma": "La luz sale de las paredes. Aquí no hay sombra donde esconderse. Ni para ellos ni para nosotros.",
 	},
+	"ruinas_1": {
+		"brena": "Piedras que flotan. Si me caigo, que conste que fue un empujón.",
+		"tadeo": "No mires abajo. Yo ya he mirado. No lo hagas.",
+		"ulma": "Pisa donde pise yo, y no corras. Aquí un tropiezo dura mucho.",
+	},
 	"pradera": {
 		"brena": "¿Esto es tu pueblo? Es pequeño. Me gusta. Aquí nadie podría perderse.",
 		"tadeo": "Así que aquí empezó todo. Pensaba que habría una estatua tuya. Como mínimo, un banco.",

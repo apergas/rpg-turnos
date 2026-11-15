@@ -24,6 +24,7 @@ const BEYOND := "beyond"
 const BRUMACLARA := "brumaclara"
 const SWAMP := "swamp"
 const CRYSTAL := "crystal"
+const RUINS := "ruins"
 const BATTLE := "battle"
 const BOSS := "boss"
 const VICTORY := "victory"
@@ -31,7 +32,7 @@ const DEFEAT := "defeat"
 const CARAVAN := "caravan"
 const IDS: Array[String] = [TITLE, MAP, VILLAGE, FOREST, MINE, CASTLE, BATTLE, BOSS, VICTORY,
 	DEFEAT, CARAVAN, JUNGLE, DESERT, MOUNTAIN, CITY, BEYOND, BRUMACLARA, SWAMP,
-	CRYSTAL]
+	CRYSTAL, RUINS]
 
 const LEAD_VOLUME := 0.2
 const BASS_VOLUME := 0.3
@@ -234,6 +235,20 @@ const TRACKS := {
 		],
 		"bass": ["A2/16", "C3/16", "F2/16", "E2/16", "A2/16", "D2/16", "E2/16", "A1/16"],
 		"drums": ["r/8 h/4 r/4"],
+	},
+	# The Ruinas flotantes (3.2.0): a slow, airy tune in D dorian over open fifths, the wind in
+	# the hats.
+	RUINS: {
+		"bpm": 92, "loop": true, "duty": 0.25,
+		"lead": [
+			"D5/4 A5/4 G5/2 F5/2 E5/4", "C5/4 E5/4 D5/8",
+			"F5/4 A5/4 C6/4 B5/2 A5/2", "G5/4 E5/4 A5/8",
+			"D6/4 C6/2 A5/2 G5/4 F5/4", "E5/4 G5/4 A5/8",
+			"F5/2 E5/2 D5/4 C5/4 E5/4", "D5/12 r/4",
+		],
+		"bass": ["D2/8 A2/8", "C2/8 G2/8", "F2/8 C3/8", "A1/8 E2/8", "D2/8 A2/8", "C2/8 G2/8",
+			"A#1/8 F2/8", "D2/16"],
+		"drums": ["r/4 h/4 r/4 h/4"],
 	},
 	# The castle: a slow march in E minor.
 	CASTLE: {

@@ -44,6 +44,7 @@ decor_green = Color(0.3, 0.36, 0.3, 1)
 entries = {
 "cienaga": [Vector3(5, 0, -16), 180.0],
 "cuevas": [Vector3(5, 0, -16), 180.0],
+"ruinas": [Vector3(5, 0, -16), 180.0],
 "portal": [Vector3(0, 0, 16), 0.0],
 "pueblo": [Vector3(0, 0, 6), 0.0]
 }
@@ -71,6 +72,17 @@ exits = [{
 "needs": "garza_legamo",
 "pos": Vector3(5, 0, -19.5),
 "to": "cuevas_1",
+"yaw": 0.0
+}, {
+"entry": "brumaclara",
+"gone": "vigia_bruma",
+"id": "ruinas",
+"label": "A las Ruinas",
+"lock": "",
+"lock_text": "",
+"needs": "amuleto_recuperado",
+"pos": Vector3(5, 0, -19.5),
+"to": "ruinas_1",
 "yaw": 0.0
 }, {
 "entry": "brumaclara",

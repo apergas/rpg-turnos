@@ -305,6 +305,29 @@ const AUTOPLAY_ZONES := {
 			Inventory.PHOENIX: 1},
 		"finished": true,
 	},
+	# --autoplay-zone=ruinas: the Cuevas done and the amulet brought from Villaclaro: Lv 46 with
+	# the cristal gear and Brena, at the Ruinas' entrance (their first floor).
+	"ruinas": {
+		"zone": "ruinas_1",
+		"experience": 35200,
+		"gold": 6000,
+		"gear": ["espada_cristal", "armadura_cristal", "escudo_cristal", "casco_cristal"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra", "senor_niebla", "caravana_vista", "caravana", "companero",
+			"jaguar_sombrio", "gusano_dunas", "montana_palanca", "grifo_cumbre",
+			"guardian_ciudad", "ciudad_reja", "devorador_portal", "portal_calmo",
+			"brumaclara", "brumaclara_vista", "garza_legamo", "cuevas_palanca", "coloso_cuarzo",
+			"amuleto_recuperado"],
+		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo",
+			"insignia_jungla", "sello_desierto", "mapa_montana", "lampara_faro", "cristal_fuente",
+			"amuleto_recuperado"],
+		"quest_done": true,
+		"town": "brumaclara",
+		"ally": "brena",
+		"items": {Inventory.BIG_POTION: 4, Inventory.BIG_ETHER: 3, Inventory.WING: 3,
+			Inventory.PHOENIX: 1},
+		"finished": true,
+	},
 	# Ready for the Señor de la Niebla: Lv 17 with the castle's gear.
 	"castillo_trono": {
 		"experience": 2244,

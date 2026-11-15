@@ -14,13 +14,15 @@ class_name ZoneData extends Resource
 ## Every zone, in world order (save validation and --autoplay-zone check against it).
 const IDS: Array[String] = ["pradera", "bosque", "mina_1", "mina_2", "mina_3",
 	"castillo_patio", "castillo_trono", "caravana", "jungla", "desierto", "montana_1", "montana_2",
-	"ciudad_1", "ciudad_2", "brumaclara", "cienaga", "cuevas_1", "cuevas_2"]
+	"ciudad_1", "ciudad_2", "brumaclara", "cienaga", "cuevas_1", "cuevas_2", "ruinas_1",
+	"ruinas_2"]
 ## The zones of the v2 (the caravan), growing with each version; which zones a save may be on:
 ## zones_of_part().
 const V2_ZONES: Array[String] = ["caravana", "jungla", "desierto", "montana_1", "montana_2", "ciudad_1", "ciudad_2"]
 ## The zones of the v3 (Brumaclara), growing with each version like V2_ZONES (3.0.0:
-## Brumaclara and the Ciénaga; 3.1.0: the Cuevas' two floors).
-const V3_ZONES: Array[String] = ["brumaclara", "cienaga", "cuevas_1", "cuevas_2"]
+## Brumaclara and the Ciénaga; 3.1.0: the Cuevas' two floors; 3.2.0: the Ruinas').
+const V3_ZONES: Array[String] = ["brumaclara", "cienaga", "cuevas_1", "cuevas_2", "ruinas_1",
+	"ruinas_2"]
 ## Side of a dungeon cell, in metres.
 const CELL := 4.0
 ## Dungeon cells: rock (a wall in a castle), floor, stairs up and down, chest, lever,

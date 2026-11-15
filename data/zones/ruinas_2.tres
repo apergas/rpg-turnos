@@ -1,0 +1,58 @@
+[gd_resource type="Resource" script_class="ZoneData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/zone_data.gd" id="1_zone"]
+
+[resource]
+script = ExtResource("1_zone")
+id = "ruinas_2"
+display_name = "Ruinas flotantes"
+short_name = "Ruinas"
+floor_name = "La explanada"
+number = 13
+half_size = Vector2(26, 26)
+ground_color = Color(0.62, 0.6, 0.56, 1)
+has_grass = false
+village_name = ""
+village_radius = 0.0
+wells = [{
+"id": "ruinas_2_vida",
+"kind": "hp",
+"pos": Vector3(16, 0, 0)
+}, {
+"id": "ruinas_2_mana",
+"kind": "mp",
+"pos": Vector3(-4, 0, 20)
+}]
+decor = [[Vector3(-16, 0, -12), 20.0, "column_broken"], [Vector3(16, 0, -12), 160.0, "column_broken"], [Vector3(-12, 0, -20), 0.0, "column"], [Vector3(12, 0, -20), 0.0, "column"], [Vector3(-20, 0, 0), 45.0, "ruin_block"], [Vector3(20, 0, 8), 90.0, "column_broken"]]
+decor_green = Color(0.34, 0.42, 0.3, 1)
+entries = {}
+start_entry = "B"
+town_entry = ""
+exits = []
+npcs = []
+boss_id = ""
+boss_pos = Vector3(0, 0, -15)
+formations = []
+start_formations = []
+start_radius = 0.0
+monster_count = 0
+exit_level = 49
+music = "ruins"
+village_music = ""
+ambient = "mountain"
+sky_top = Color(0.26, 0.2, 0.42, 1)
+haze = Color(0.6, 0.6, 0.72, 1)
+fog_density = 0.012
+sun_color = Color(0.75, 0.8, 1, 1)
+sun_energy = 0.5
+backdrop = "ruinas"
+particles = "bruma"
+black_sun = true
+layout = PackedStringArray("#############", "###.......###", "##.........##", "##.........##", "###.......###", "######.######", "#....#.#....#", "#.C..#.#....#", "#....#.#....#", "###.##.##.###", "###.......###", "####..B..####", "#############")
+underground = false
+rock_color = Color(0.34, 0.32, 0.38, 1)
+floor_color = Color(0.62, 0.6, 0.56, 1)
+floating = true
+stairs_down = "ruinas_1"
+autoplay_route = Array[Vector3]([Vector3(0, 0, 16), Vector3(-12, 0, 16), Vector3(-12, 0, 8), Vector3(-15, 0, 4), Vector3(-12, 0, 8), Vector3(-12, 0, 16), Vector3(12, 0, 16), Vector3(12, 0, 8), Vector3(14, 0, 4), Vector3(12, 0, 8), Vector3(12, 0, 16), Vector3(0, 0, 16), Vector3(0, 0, 4), Vector3(0, 0, -8), Vector3(0, 0, -13.6)])
+autoplay_boss_level = 48
