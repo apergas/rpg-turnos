@@ -70,6 +70,12 @@ const ENEMIES := {
 	"arana_cristal": preload("res://data/enemies/arana_cristal.tres"),
 	"topo_geoda": preload("res://data/enemies/topo_geoda.tres"),
 	"coloso_cuarzo": preload("res://data/enemies/coloso_cuarzo.tres"),
+	# The Ruinas flotantes (the v3, 3.2.0).
+	"ave_bruma": preload("res://data/enemies/ave_bruma.tres"),
+	"gargola_antigua": preload("res://data/enemies/gargola_antigua.tres"),
+	"caballero_bruma": preload("res://data/enemies/caballero_bruma.tres"),
+	"espiritu_viento": preload("res://data/enemies/espiritu_viento.tres"),
+	"medusa_niebla": preload("res://data/enemies/medusa_niebla.tres"),
 }
 ## Figure of each enemy id; any other id is a slime.
 const LOOKS := {
@@ -133,6 +139,11 @@ const LOOKS := {
 	"arana_cristal": BattleActor.Look.CRYSTAL_SPIDER,
 	"topo_geoda": BattleActor.Look.GEODE_MOLE,
 	"coloso_cuarzo": BattleActor.Look.QUARTZ_COLOSSUS,
+	"ave_bruma": BattleActor.Look.MIST_BIRD,
+	"gargola_antigua": BattleActor.Look.OLD_GARGOYLE,
+	"caballero_bruma": BattleActor.Look.MIST_KNIGHT,
+	"espiritu_viento": BattleActor.Look.WIND_SPIRIT,
+	"medusa_niebla": BattleActor.Look.MIST_JELLYFISH,
 	# The creatures that fight beside the hero (data in Allies, not in ENEMIES).
 	"gallina": BattleActor.Look.CHICKEN,
 	"lobezno": BattleActor.Look.WOLF_CUB,

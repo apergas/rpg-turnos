@@ -2,10 +2,12 @@ class_name MistCreatureBuilder extends RefCounted
 ## Constructor: the v3's figures built in code (3.0.0), from their ActorLooksV3 entry, so
 ## CreatureBuilder does not grow: the variants of older figures (the Sapo de légamo is the
 ## frog, the Sanguijuela the snake, the Junco andante the plant, in their own colours) and the
-## new ones: the Fuego fatuo, the Caimán de bruma and the Garza de légamo, and the Cuevas'
-## crystal figures (the bat, slime, golem and spider of before with crystals, the Topo de
-## geoda and the Coloso de cuarzo). Static only, keeps no state: like CreatureBuilder, each
-## build_x(actor, data) hangs its meshes under actor.body() through the actor's builder
+## new ones: the Fuego fatuo, the Caimán de bruma, the Garza de légamo and the Medusa de niebla,
+## the Cuevas' crystal figures (the bat, slime, golem and spider of before with crystals, the
+## Topo de geoda and the Coloso de cuarzo) and the Ruinas' bird, gargoyle and wind spirit (the
+## vulture, the gargoyle and the specter in the mist's colours; the Caballero and the Vigía are
+## the Knight: CharacterBuilder builds them). Static only, keeps no state: like CreatureBuilder,
+## each build_x(actor, data) hangs its meshes under actor.body() through the actor's builder
 ## methods. build() says whether the look was one of its own.
 
 const Look = ActorLooks.Look
@@ -21,6 +23,9 @@ const CORE_ALPHA := 0.9
 const LAMP_ALPHA := 0.9
 ## The opacity of the crystals growing on the Cuevas' figures (_add_shards()).
 const SHARD_ALPHA := 0.8
+## The Medusa de niebla's see-through bell and tentacles, and how many tentacles.
+const JELLY_ALPHA := 0.5
+const TENTACLES := 8
 
 
 ## Builds the figure of a look of the v3 and returns true; false (nothing built) for any other.
@@ -52,6 +57,14 @@ static func build(actor: BattleActor, data: Dictionary) -> bool:
 		_add_shards(actor, data)
 	elif look == Look.GEODE_MOLE:
 		build_mole(actor, data)
+	elif look == Look.MIST_BIRD:
+		CreatureBuilder.build_bat(actor, data)
+	elif look == Look.OLD_GARGOYLE:
+		CreatureBuilder.build_gargoyle(actor, data)
+	elif look == Look.WIND_SPIRIT:
+		CreatureBuilder.build_specter(actor, data)
+	elif look == Look.MIST_JELLYFISH:
+		build_jellyfish(actor, data)
 	else:
 		return false
 	return true
@@ -165,3 +178,27 @@ static func build_mole(actor: BattleActor, data: Dictionary) -> void:
 	actor.add_mesh(root, LowPoly.hemisphere(0.36, 0.5), data.shell_color,
 		Vector3(0, 0.6, 0.22))  # the geode on its back
 	_add_shards(actor, data)
+
+
+## A mist jellyfish: a see-through bell floating over the ground (it floats like the specter),
+## a bright core in it, a frill round its rim, two dark eyes and TENTACLES thin tentacles of
+## three lengths hanging below, facing -Z. About 2.3 m tall.
+static func build_jellyfish(actor: BattleActor, data: Dictionary) -> void:
+	var hover := Node3D.new()
+	hover.position.y = data.fly
+	hover.scale = Vector3.ONE * data.scale
+	actor.body().add_child(hover)
+	actor.set_hover(hover)
+	actor.add_ghost(hover, LowPoly.hemisphere(0.6, 0.55), data.color, JELLY_ALPHA,
+		Vector3(0, 0.3, 0), Vector3.ONE)  # the bell
+	actor.add_ghost(hover, LowPoly.sphere(0.2), data.core_color, CORE_ALPHA, Vector3(0, 0.45, 0),
+		Vector3.ONE)  # its core
+	actor.add_ghost(hover, LowPoly.cylinder(0.62, 0.08), data.color, JELLY_ALPHA,
+		Vector3(0, 0.3, 0), Vector3.ONE)  # the frill round the rim
+	for x in [-0.14, 0.14]:
+		actor.add_mesh(hover, LowPoly.sphere(0.05), Color(0.03, 0.04, 0.12), Vector3(x, 0.5, -0.52))
+	for i in TENTACLES:
+		var angle := TAU * i / TENTACLES
+		var length := 0.7 + 0.25 * (i % 3)
+		actor.add_ghost(hover, LowPoly.cylinder(0.03, length), data.tentacle_color, JELLY_ALPHA,
+			Vector3(cos(angle) * 0.4, 0.3 - length / 2.0, sin(angle) * 0.4), Vector3.ONE)

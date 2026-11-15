@@ -210,4 +210,67 @@ const LOOKS := {
 		"top": 3.45,
 		"gentle": true,
 	},
+	# The Ruinas flotantes (3.2.0): the vulture, the gargoyle, the hollow armour and the specter of
+	# the v2 in the mist's colours, and a new one, the Medusa de niebla.
+	# The Ave de bruma: the Buitre in blue grey, its ruff white with mist.
+	Look.MIST_BIRD: {
+		"color": Color(0.46, 0.52, 0.64),
+		"wing_color": Color(0.36, 0.42, 0.56),
+		"head_color": Color(0.7, 0.74, 0.84),
+		"ruff_color": Color(0.9, 0.93, 1.0),
+		"beak_color": Color(0.85, 0.82, 0.7),
+		"wing_size": Vector3(1.1, 0.04, 0.52),
+		"top": 2.4,
+		"fly": 1.3,
+		"flap_time": 0.16,
+	},
+	# The Gárgola antigua: the Gárgola in pale old stone, green with moss, light-blue eyes.
+	Look.OLD_GARGOYLE: {
+		"color": Color(0.74, 0.72, 0.66),
+		"dark_color": Color(0.36, 0.46, 0.3),
+		"wing_color": Color(0.62, 0.62, 0.58),
+		"horn_color": Color(0.82, 0.8, 0.72),
+		"eye_color": Color(0.6, 0.9, 1.0),
+		"scale": 1.25,
+		"top": 2.3,
+		"flap_time": 0.5,
+	},
+	# The Caballero de bruma: the Armadura hueca in mist blue, a cold light in its empty collar.
+	Look.MIST_KNIGHT: {
+		"scene": ActorLooks.KNIGHT,
+		"scale": ActorLooks.CHARACTER_SCALE * 1.1,
+		"top": 2.0,
+		"hide": [
+			"Rig/Skeleton3D/Knight_Head",
+			"Rig/Skeleton3D/head/Knight_Helmet",
+			"Rig/Skeleton3D/handslot_l/1H_Sword_Offhand",
+			"Rig/Skeleton3D/handslot_l/Badge_Shield",
+			"Rig/Skeleton3D/handslot_l/Rectangle_Shield",
+			"Rig/Skeleton3D/handslot_l/Spike_Shield",
+			"Rig/Skeleton3D/handslot_r/2H_Sword",
+		],
+		"anims": ActorLooks.CHARACTER_ANIMS,
+		"tint": Color(0.5, 0.62, 0.95),
+		"neck_glow": Color(0.6, 0.85, 1.0),
+	},
+	# The Espíritu del viento: the specter in white and blue, its aura the colour of the sky.
+	Look.WIND_SPIRIT: {
+		"color": Color(0.88, 0.93, 1.0),
+		"aura_color": Color(0.55, 0.75, 1.0),
+		"alpha": 0.5,
+		"eye_color": Color(0.2, 0.35, 0.7),
+		"scale": 1.1,
+		"top": 2.5,
+		"fly": 0.6,
+	},
+	# The Medusa de niebla: a see-through bell of mist with a bright core, a frill and long thin
+	# tentacles, floating.
+	Look.MIST_JELLYFISH: {
+		"color": Color(0.72, 0.8, 1.0),
+		"core_color": Color(0.9, 0.95, 1.0),
+		"tentacle_color": Color(0.62, 0.7, 0.95),
+		"scale": 1.0,
+		"top": 2.3,
+		"fly": 1.1,
+	},
 }

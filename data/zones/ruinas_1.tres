@@ -42,11 +42,11 @@ exits = [{
 }]
 npcs = []
 boss_id = ""
-formations = []
-start_formations = []
+formations = [["ave_bruma"], ["gargola_antigua"], ["caballero_bruma"], ["espiritu_viento"], ["medusa_niebla"], ["ave_bruma", "ave_bruma"], ["caballero_bruma", "espiritu_viento"]]
+start_formations = [["ave_bruma"], ["medusa_niebla"]]
 start_pos = Vector3(0, 0, 18.5)
 start_radius = 14.0
-monster_count = 0
+monster_count = 12
 exit_level = 49
 music = "ruins"
 village_music = ""
