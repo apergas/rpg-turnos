@@ -75,8 +75,7 @@ var _gold_label: Label
 ## Estado's right column: each spell, its MP and what it does.
 var _spells_box: VBoxContainer
 var _ally_label: Label
-## Under the companion's name, its numbers now (Allies.stats_text()), in small text.
-var _ally_stats: Label
+var _ally_stats: Label  ## Under the companion's name: its numbers now, in small text.
 var _items_box: VBoxContainer
 var _items_message: Label
 var _equip_box: VBoxContainer
@@ -323,8 +322,8 @@ func _fill_status() -> void:
 		BattleHud.fit_label(_ally_label, "%s: %s" % [Allies.kind_name(_state.ally_id),
 				Allies.display_name(_state.ally_id)],
 			TEXT_WIDTH)
-		BattleHud.fit_label(_ally_stats, Allies.stats_text(_state.ally_id, _state.ally_step()),
-			TEXT_WIDTH)
+		var numbers := Allies.stats_text(_state.ally_id, _state.ally_step())
+		BattleHud.fit_label(_ally_stats, numbers, TEXT_WIDTH)
 
 
 ## The message lines always keep their place, so a message never moves the buttons.
