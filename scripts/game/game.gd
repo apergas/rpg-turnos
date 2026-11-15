@@ -252,8 +252,8 @@ func _add_pieces(load_failed: bool) -> void:
 		_caravan.autoplay_companion = _autopilot.companion
 		_caravan.autoplay_leaves = _autopilot.plays_v2
 		_battle.echo_wanted = _autopilot.echo
-		_battle.medal_chance = AutoplayStarts.MEDAL_TOUR_CHANCE if _autopilot.medal_tour \
-			else Medals.DROP_CHANCE
+		if _autopilot.medal_tour:
+			_battle.medal_chance = AutoplayStarts.MEDAL_TOUR_CHANCE
 		_battle.after_battle = _autopilot.after_battle
 		_battle.battle_started.connect(_autopilot.reset_quiet)
 		_battle.enemies_beaten.connect(_autopilot.on_enemies_beaten)

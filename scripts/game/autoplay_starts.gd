@@ -17,12 +17,14 @@ const AUTOPLAY_BOSS_MP := 0.4
 ## --autoplay-zone=eco: a finished game in the throne room, ready for the Eco de la Niebla.
 const ECHO_START := "eco"
 ## --autoplay-zone=medallas: the finished game of ECHO_START in Villaclaro; it hunts the
-## meadow's groups with MEDAL_TOUR_CHANCE (the real DROP_CHANCE would take hours) until it
+## meadow's groups with MEDAL_TOUR_CHANCE (the real DROP_CHANCES would take hours) until it
 ## carries every medal, or MEDAL_TOUR_TIME seconds pass, then talks to the Coleccionista in
 ## Villaclaro and in the forest village.
 const MEDAL_TOUR := "medallas"
-const MEDAL_TOUR_CHANCE := 0.25
+const MEDAL_TOUR_CHANCE := 0.5
 const MEDAL_TOUR_TIME := 1800.0
+## The medals the tour hunts: the v1's twelve (the 40 take hours even at MEDAL_TOUR_CHANCE).
+const MEDAL_TOUR_GOAL := 12
 ## The autoplay starts that play the v2: only they answer the Jefe de caravana's questions
 ## with Sí (every other run, the finished-game ones included, stays in the v1).
 const V2_STARTS := ["caravana", "jungla", "desierto", "montana", "ciudad", "portal"]

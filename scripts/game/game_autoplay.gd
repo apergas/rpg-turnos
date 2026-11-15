@@ -36,7 +36,7 @@ var _defeats := 0
 var _echo_fights := 0
 var _echo_wins := 0
 ## Common enemies beaten in won battles (the credits print it with the medals, to tune
-## Medals.DROP_CHANCE).
+## Medals.DROP_CHANCES).
 var _common_beaten := 0
 var _last_missions: Array[String] = []
 var _last_gear_text := ""
@@ -147,7 +147,7 @@ func after_battle(outcome: int) -> void:
 		# offers and the Caravana's gear before the next land, as a player would.
 		await restock()
 		return
-	if medal_tour and won and _ctx.state.medals.size() >= Medals.MEDALS.size():
+	if medal_tour and won and _ctx.state.medals.size() >= AutoplayStarts.MEDAL_TOUR_GOAL:
 		await finish_medal_tour()
 		return
 	if won and wants_retreat():
@@ -295,7 +295,7 @@ func needs_groups() -> bool:
 ## boss. The medal tour hunts until it carries every medal.
 func hunts() -> bool:
 	if medal_tour:
-		return _ctx.state.medals.size() < Medals.MEDALS.size()
+		return _ctx.state.medals.size() < AutoplayStarts.MEDAL_TOUR_GOAL
 	return _ctx.state.hero.level < _ctx.zone.autoplay_boss_level
 
 

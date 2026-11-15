@@ -128,7 +128,6 @@ npcs = [{
 "lines": ["Colecciono medallas pequeñas."],
 "look": "CARAVAN_COLLECTOR",
 "name": "Coleccionista",
-"needs": "companero",
 "pos": Vector3(-6.5, 0, -6.5),
 "sign": "Coleccionista",
 "yaw": 60.0

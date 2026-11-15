@@ -67,7 +67,7 @@ var quest_items := {}
 ## Small medals carried and the chance a common enemy leaves one (Game; set before adding
 ## it). -1: no medal drops (the battle run on its own).
 var medals_carried := -1
-var medal_chance := Medals.DROP_CHANCE
+var medal_chance := Medals.drop_chance(1)
 
 var _rng := RandomNumberGenerator.new()
 var _done := false
