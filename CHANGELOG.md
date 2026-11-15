@@ -1,5 +1,15 @@
 # Registro de cambios
 
+## 3.4.0 (2026)
+
+Una interfaz más clara.
+
+- En la tienda, «Vender» solo enseña lo que puedes vender: ni lo que llevas puesto ni lo que no tiene precio. Al vender lo último de algo, el cursor pasa a la fila siguiente.
+- En «Equipo», lo que da cada pieza va en letra pequeña debajo de su nombre.
+- En «Estado», debajo de tu compañero o tu criatura salen sus PV, ATK, DEF y VEL de ese momento. Las criaturas y los compañeros de la tienda enseñan también su VEL.
+- En combate, mientras eliges a quién atacar, el resto del menú se queda en gris y solo responde «Volver».
+- El Coleccionista, el Jefe de caravana, Orvalla y el Tablón llevan su nombre encima, como la Tienda o la Posada.
+
 ## 3.3.0 (2026)
 
 La Fuente de la Niebla y el final de la tercera parte.

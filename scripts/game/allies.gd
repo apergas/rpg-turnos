@@ -145,8 +145,8 @@ static func data(id: String, tramo := 1) -> Combatant:
 
 
 ## The numbers of id at step (data()'s tramo: a companion grows with it, a creature never does),
-## "PV 205 · ATK 80 · DEF 43 · VEL 34": the Estado page and the rows of Criaturas and Compañeros.
-## The totals, so whatever adds to them shows here too.
+## "PV 205 · ATK 80 · DEF 43 · VEL 34": the Estado page and the rows of Criaturas and
+## Compañeros. The totals, so whatever adds to them shows here too.
 static func stats_text(id: String, step: int) -> String:
 	var c := data(id, step)
 	return "PV %d · ATK %d · DEF %d · VEL %d" % [c.max_hp, c.total_attack(), c.total_defense(),

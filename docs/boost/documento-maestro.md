@@ -52,11 +52,11 @@ Lo que se ha hecho y lo que queda por hacer en Villaclaro. Una fila por versión
 | 3.1.0 a 3.2.0 · M-83 | La vuelta a Villaclaro a por el Amuleto del Alba | hecho |
 | 3.3.0 · M-84 | El Eco de Albor, la elección, los dos finales y los créditos de la v3 ([plan](../legacy/plans/2026-11-14-version-3-3-0.md)) | hecho |
 | 3.0.0 a 3.3.0 · M-85 | Partida automática de la v3 | hecho |
-| 3.4.0 · M-86 | Vender solo lo vendible: fuera de la lista las piezas puestas y lo que no se vende ([spec](specs/2026-11-15-version-3-4-0-design.md) · [plan](plans/2026-11-15-version-3-4-0.md)) | plan |
-| 3.4.0 · M-87 | En «Equipo», lo que da cada pieza va debajo de su nombre | plan |
-| 3.4.0 · M-88 | En «Estado», los números del compañero o la criatura debajo de su nombre | plan |
-| 3.4.0 · M-89 | En combate, al elegir objetivo, el resto del menú queda en gris y solo responde «Volver» | plan |
-| 3.4.0 · M-90 | Rótulos con el nombre sobre el Coleccionista, el Jefe de caravana, Orvalla y el Tablón | plan |
+| 3.4.0 · M-86 | Vender solo lo vendible: fuera de la lista las piezas puestas y lo que no se vende ([spec](specs/2026-11-15-version-3-4-0-design.md) · [plan](plans/2026-11-15-version-3-4-0.md)) | hecho |
+| 3.4.0 · M-87 | En «Equipo», lo que da cada pieza va debajo de su nombre | hecho |
+| 3.4.0 · M-88 | En «Estado», los números del compañero o la criatura debajo de su nombre | hecho |
+| 3.4.0 · M-89 | En combate, al elegir objetivo, el resto del menú queda en gris y solo responde «Volver» | hecho |
+| 3.4.0 · M-90 | Rótulos con el nombre sobre el Coleccionista, el Jefe de caravana, Orvalla y el Tablón | hecho |
 | 3.5.0 · M-91 | Los hechizos de daño del héroe crecen un 3 % por nivel; curar no cambia ([spec](specs/2026-11-15-version-3-5-0-design.md) · [plan](plans/2026-11-15-version-3-5-0.md)) | plan |
 | 3.5.0 · M-92 | Usar un objeto en combate va siempre el primero, como Defender y Huir | plan |
 | 3.5.0 · M-93 | El compañero de la caravana estrena una pieza de equipo en cada tramo y etapa | plan |
