@@ -201,6 +201,14 @@ static func etapa(flags: Dictionary) -> int:
 	return reached
 
 
+## The part of the game these flags are in (GameState.part()): 1 the v1 (Villaclaro), 2 the v2
+## (the caravan), 3 the v3 (Brumaclara).
+static func part(flags: Dictionary) -> int:
+	if flags.get(V3_FLAG, false):
+		return 3
+	return 2 if flags.get(CARAVAN_FLAG, false) else 1
+
+
 func has_seen(scene_id: String) -> bool:
 	return scene_id in seen
 

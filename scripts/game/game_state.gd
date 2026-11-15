@@ -312,9 +312,7 @@ func tramo() -> int:
 ## v3 (Brumaclara). in_caravan() stays true in the part 3: the companion, the Caravana's shop
 ## and the tramo still count.
 func part() -> int:
-	if has_flag(StoryState.V3_FLAG):
-		return 3
-	return 2 if in_caravan() else 1
+	return StoryState.part(world_flags)
 
 
 ## The v3's stretch (StoryState.etapa()): 0 before the v3.

@@ -10,6 +10,7 @@ kind = 1
 zone = "brumaclara"
 giver = "Tablón"
 needs = "garza_legamo"
+gone = "coloso_cuarzo"
 turn_in_zone = "brumaclara"
 turn_in = "Orvalla"
 target = "esquirla_geoda"
