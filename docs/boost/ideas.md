@@ -100,3 +100,8 @@ Estado: Pendiente
 Relacionada con «Revisar el daño de los hechizos con el nivel»: primero se comprueba cómo funciona ahora y solo se cambia si hace falta.
 lo mismo que he dicho de los hechizos, vale para el acompañante (a partir de la v2, los animales no). cuando pasas de zona (de jungla a desierto-montaña-etc), en cada cambio de zona, que sea un poco mejor. puedes ir añadiendole objetos tambien, que no tenga siempre el mismo equipo, por ejemplo al cambiar de zona le pones un casco, luego en otra zona le pones una espada mejor, etc
 Estado: Pendiente
+
+## 2026-11-15 · Estado: las estadísticas del compañero debajo de su nombre
+en estado, donde sale tadeo, pon tambien sus stats debajo de su nombre
+Tadeo es un ejemplo: vale para el compañero que se lleve, sea cual sea (las estadísticas que tiene en ese momento, con lo que haya crecido).
+Estado: Pendiente
