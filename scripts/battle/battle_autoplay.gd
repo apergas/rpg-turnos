@@ -5,7 +5,7 @@ class_name BattleAutoplay extends RefCounted
 ## enemy has charged (its blow comes next and Defender halves it); it cures poison
 ## with an antidote and refills MP with an ether when it can't heal anymore. Otherwise it
 ## aims at the enemy with the least HP and casts the spell that hurts most (weaknesses
-## count) only when it beats an attack by SPELL_MARGIN, keeping MP for two heals.
+## and the spell's growth with the hero's level count) only when it beats an attack by SPELL_MARGIN, keeping MP for two heals.
 ## Pure: reads the engine, never touches nodes. Fleeing is the battle scene's choice.
 
 const HEAL_RATIO := 0.4
@@ -83,7 +83,8 @@ static func _weakest(engine: BattleEngine) -> int:
 	return best
 
 
-## Expected damage of a spell: on the target, or on every enemy for ALL spells.
+## Expected damage of a hero's spell (BattleEngine.spell_power(), grown with his level): on the
+## target, or on every enemy for ALL spells.
 static func _spell_damage(engine: BattleEngine, skill: Skill, target: int) -> float:
 	var targets: Array[int] = [target]
 	if skill.targets == Skill.ALL:
@@ -96,5 +97,5 @@ static func _spell_damage(engine: BattleEngine, skill: Skill, target: int) -> fl
 			mult = BattleEngine.WEAK_MULT
 		elif skill.element != "" and skill.element in enemy.resist:
 			mult = BattleEngine.RESIST_MULT
-		total += minf(skill.power * mult, enemy.hp)
+		total += minf(engine.spell_power(BattleEvent.HERO, skill) * mult, enemy.hp)
 	return total

@@ -18,6 +18,7 @@ class_name BattleEngine extends RefCounted
 ## A hero who falls with a Pluma de fénix rises once per battle with half his HP (_revive()).
 ## A Despertador used in battle keeps the hero awake until it ends (_wake_guard).
 ## Equipment that keeps a status away says so (no_sleep() for sleep, immune() for poison and silence).
+## The hero's damage spells grow with his level (spell_power(), SPELL_GROWTH); heals never do.
 
 enum State { ONGOING, WON, LOST, FLED }
 ## Who won the surprise roll at the start of a battle (roll_ambush()).
@@ -55,6 +56,9 @@ const DAMAGE_SPREAD := Vector2(0.875, 1.125)
 const INITIATIVE_SPREAD := Vector2(0.5, 1.5)
 const WEAK_MULT := 1.5
 const RESIST_MULT := 0.5
+## The hero's damage spells hit this share harder for each level he has above the one that
+## taught them (spell_power(); 3.5.0). The enemies' and the creatures' spells never grow.
+const SPELL_GROWTH := 0.03
 ## Poison takes this share of max HP at the end of each round.
 const POISON_SHARE := 0.08
 ## Chance of waking up at the end of each round.
@@ -237,6 +241,16 @@ func flee_chance() -> float:
 		total += enemies[i].speed
 	var mean := total / maxf(1.0, alive.size())
 	return clampf(FLEE_BASE + (hero.total_speed() - mean) * FLEE_PER_SPEED, FLEE_MIN, FLEE_MAX)
+
+
+## The power a damage spell of who hits with, before its element and its spread: the hero's
+## grows SPELL_GROWTH for each level above the one that taught it (Leveling.learned_at(), never
+## below its own power); anyone else's is its power. A heal never grows (_cast()).
+func spell_power(who: int, skill: Skill) -> float:
+	if who != BattleEvent.HERO:
+		return skill.power
+	var levels := maxi(hero.level - Leveling.learned_at(hero, skill), 0)
+	return skill.power * (1.0 + SPELL_GROWTH * levels)
 
 
 ## Resolves a full round with the hero's command and the enemies' own choices. Returns
@@ -432,8 +446,8 @@ func _attack(who: int, target: int, events: Array[Dictionary], charged := false)
 		_add_status(target, attacker.attack_status, events)
 
 
-## Spells pay their MP and never miss or crit. Damage ignores DEF and follows the
-## element; a heal restores power HP to the caster.
+## Spells pay their MP and never miss or crit. Damage ignores DEF, grows with the hero's
+## level (spell_power()) and follows the element; a heal restores power HP to the caster.
 func _cast(who: int, cmd: Dictionary, events: Array[Dictionary]) -> void:
 	var caster := _fighter(who)
 	var skill: Skill = cmd.skill
@@ -459,7 +473,7 @@ func _cast(who: int, cmd: Dictionary, events: Array[Dictionary]) -> void:
 			var affinity := _affinity(_fighter(target), skill.element)
 			var mult := WEAK_MULT if affinity == BattleEvent.WEAK \
 				else RESIST_MULT if affinity == BattleEvent.RESIST else 1.0
-			var amount := maxi(1, roundi(skill.power * mult \
+			var amount := maxi(1, roundi(spell_power(who, skill) * mult \
 				* _rng.randf_range(DAMAGE_SPREAD.x, DAMAGE_SPREAD.y)))
 			_hurt(target, amount, false, true, affinity, events)
 		if skill.status != "" and _guarded(target, skill.status):

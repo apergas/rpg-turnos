@@ -61,6 +61,15 @@ static func sync_skills(hero: Combatant) -> void:
 			hero.skills.append(skill)
 
 
+## The level of the hero's `learn` that teaches skill (matched by id), or 1: a spell he starts
+## with (Ascuas) counts as learned at level 1. BattleEngine.spell_power() grows from it.
+static func learned_at(hero: Combatant, skill: Skill) -> int:
+	for level: int in hero.learn:
+		if (hero.learn[level] as Skill).id == skill.id:
+			return level
+	return 1
+
+
 ## Debug only (DebugPanel): puts the hero at level (clamped to 1..MAX_LEVEL) with that
 ## level's EXP, one level of GAINS up or down at a time (current HP and MP go along, as on a
 ## level up, and then stay within 1..max and 0..max), and with that level's spells:
