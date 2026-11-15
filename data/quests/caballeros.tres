@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="QuestData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/quest_data.gd" id="1_quest"]
+
+[resource]
+script = ExtResource("1_quest")
+id = "caballeros"
+title = "Los caballeros de bruma"
+zone = "brumaclara"
+giver = "Tablón"
+needs = "coloso_cuarzo"
+gone = "vigia_bruma"
+turn_in_zone = "brumaclara"
+turn_in = "Orvalla"
+target = "caballero_bruma"
+goal = 5
+objective = "Derrota 5 caballeros de bruma en las Ruinas flotantes y avisa a Orvalla."
+status = "caballeros %d / %d"
+report = "vuelve con Orvalla"
+offer_lines = Array[String](["SE BUSCA: quien despida a cinco caballeros de bruma de las Ruinas. Guardan los puentes y no dejan pasar ni al viento. Se paga en casa de Orvalla."])
+wait_lines = Array[String](["¿Los caballeros de las Ruinas? Armaduras vacías que siguen haciendo la guardia. La costumbre, supongo."])
+done_lines = Array[String](["¡Cinco caballeros! Ya era hora de que alguien les diera el día libre.", "Toma tu paga. Y este elixir: lo guardaba para una ocasión especial, y tú eres bastante especial."])
+reward_gold = 1500
+reward_items = {
+"elixir": 1
+}

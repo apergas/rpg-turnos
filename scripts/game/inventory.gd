@@ -128,6 +128,7 @@ const KEY_ITEMS := {
 	"cristal_fuente": "Cristal de la Fuente",
 	"amuleto_recuperado": "Amuleto del Alba",
 	"sello_albor": "Sello de Albor",
+	"cartas_vecina": "Cartas de la Vecina",
 }
 ## What each key item is, for Objetos.
 const KEY_TEXTS := {
@@ -143,6 +144,7 @@ const KEY_TEXTS := {
 	"lampara_faro": "La guardaba la Garza de légamo en el buche. Devuelve la luz al faro de Brumaclara.",
 	"cristal_fuente": "Lo llevaba el Coloso de cuarzo en la espalda. Late como un corazón, y su luz es la de la Fuente.",
 	"amuleto_recuperado": "Los tres fragmentos, otra vez juntos. Lo guardaba la Abuela Rosa en Villaclaro, y su luz es la de la Fuente.",
+	"cartas_vecina": "Un fajo de cartas atadas con un junco. Son para la Viajera de la Caravana.",
 	"sello_albor": "Lo llevaba el Vigía de la bruma en el pecho: una piedra con un sol grabado. Abre el camino de la Fuente.",
 	MEDAL: "Algunos monstruos las llevan encima. El Coleccionista las colecciona.",
 }

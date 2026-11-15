@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="QuestData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/quest_data.gd" id="1_quest"]
+
+[resource]
+script = ExtResource("1_quest")
+id = "cartas"
+title = "Cartas para la Viajera"
+kind = 2
+zone = "brumaclara"
+giver = "Vecina"
+needs = "coloso_cuarzo"
+turn_in_zone = "caravana"
+turn_in = "Viajera"
+key_item = "cartas_vecina"
+objective = "Lleva las cartas de la Vecina a la Viajera, en la Caravana, al otro lado del portal."
+status = "cartas a la Viajera"
+offer_lines = Array[String](["Desde niña escribo cartas a la otra orilla de la niebla. Nunca he sabido a quién mandarlas.", "Dicen que en vuestra caravana hay una viajera que se queja de que la ropa no se seca. Como yo. Dale estas, {nombre}: alguien tiene que entenderme."])
+done_lines = Array[String](["¿Cartas? ¿Para mí? Hace años que nadie me escribe.", "...Dice que en Brumaclara la ropa tampoco se seca. ¡Por fin alguien que me entiende!", "Toma, {nombre}, por traerlas. Y dile que le contestaré. Con buena letra."])
+reward_gold = 0
+reward_items = {
+"semilla_fuerza": 1
+}
