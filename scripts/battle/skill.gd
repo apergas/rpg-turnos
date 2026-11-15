@@ -12,6 +12,8 @@ const ALL := "all"
 const FIRE := "fire"
 const ICE := "ice"
 const THUNDER := "thunder"
+## The light of the v3 (3.1.0): Alba's, and the weakness of the Niebla's creatures.
+const LIGHT := "light"
 
 @export var id := ""
 @export var display_name := ""
@@ -22,7 +24,7 @@ const THUNDER := "thunder"
 @export var power := 0
 ## Color of the caster's glow and of the ball that hits the target.
 @export var color := Color(1.0, 0.45, 0.1)
-## "" (none), FIRE, ICE or THUNDER.
+## "" (none), FIRE, ICE, THUNDER or LIGHT.
 @export var element := ""
 @export var kind := DAMAGE
 @export var targets := ONE

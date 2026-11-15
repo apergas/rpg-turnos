@@ -128,7 +128,8 @@ npcs = [{
 9: ["La ciudad abandonada está al norte. Dicen que un guardián de bronce vigila su plaza mayor.", "Detrás de la ciudad está el portal. Llega hasta él, y la caravana irá detrás."],
 10: ["El portal se ha quedado quieto. Si quieres ver qué hay al otro lado, ya sabes dónde está.", "La caravana se queda aquí una temporada. Descansa, {nombre}. Te lo has ganado, y yo también."],
 11: ["Te fuiste diez minutos y ya no veo mis botas.", "Esa niebla viene del portal. Si al otro lado necesitan ayuda, ya sabes dónde estamos."],
-12: ["Dicen que al otro lado se ha encendido un faro. Desde aquí la niebla huele un poco menos a sótano."]
+12: ["Dicen que al otro lado se ha encendido un faro. Desde aquí la niebla huele un poco menos a sótano."],
+13: ["Dicen que en Brumaclara vuelve a sonar un martillo. Aquí llega el eco por el portal, a la hora de la siesta."]
 },
 "look": "CARAVAN_CHIEF",
 "name": "Jefe de caravana",

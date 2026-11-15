@@ -9,11 +9,16 @@ class_name BrumaclaraLook extends RefCounted
 const ZONE := "brumaclara"
 ## etapa -> the fields that change from the .tres: the whole look of that etapa (an etapa with
 ## no entry looks like the last one before it). 2, the Garza beaten: the lighthouse lit, the
-## inn and a few windows with light, a little less fog.
+## inn and a few windows with light, a little less fog; 3, the Coloso beaten: the forge's fire
+## and two more windows.
 const LOOKS := {
 	2: {"lighthouse_lit": true, "fog_density": 0.018,
 		"window_lights": [[Vector3(8.95, 1.6, -6.2), -90.0], [Vector3(8.95, 1.6, -3.8), -90.0],
 			[Vector3(-9.55, 1.5, -5.6), 90.0], [Vector3(8.6, 1.5, 11.2), 180.0]]},
+	3: {"lighthouse_lit": true, "forge_lit": true, "fog_density": 0.016,
+		"window_lights": [[Vector3(8.95, 1.6, -6.2), -90.0], [Vector3(8.95, 1.6, -3.8), -90.0],
+			[Vector3(-9.55, 1.5, -5.6), 90.0], [Vector3(8.6, 1.5, 11.2), 180.0],
+			[Vector3(-9.2, 1.5, 6.0), 90.0], [Vector3(9.55, 1.5, 6.6), -90.0]]},
 }
 
 

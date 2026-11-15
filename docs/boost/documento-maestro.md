@@ -44,11 +44,11 @@ Lo que se ha hecho y lo que queda por hacer en Villaclaro. Una fila por versión
 | 2.7.2 · M-74 | Refactor de arquitectura: la línea de órdenes solo se lee en `RunFlags`, y el piloto automático de cada clase va en su `#region Autoplay` ([plan](../legacy/plans/2026-11-14-refactor-1-runflags-builders.md)) | hecho |
 | 3.0.0 · M-76 | El paso al otro lado: el fin de la v2 sigue en la Caravana y el portal une la Caravana con Brumaclara en los dos sentidos ([spec](specs/2026-11-14-version-3-design.md) · [plan](plans/2026-11-14-version-3-0-0.md)) | hecho |
 | 3.0.0 · M-77 | La parte 3 en el estado: etapa, capítulos, zonas por parte, guardado 15 | hecho |
-| 3.0.0 · M-78 | Brumaclara, el sol negro y el pueblo que crece con cada jefe | en curso (3.0.0: etapas 1 y 2) |
-| 3.0.0 a 3.3.0 · M-79 | Las cuatro zonas: Ciénaga, Cuevas de cristal, Ruinas flotantes y la Fuente | en curso (3.0.0: la Ciénaga) |
-| 3.0.0 a 3.3.0 · M-80 | Veinte enemigos, tres jefes, el Eco de Albor y cuatro familias del bestiario | en curso (3.0.0: la Ciénaga y la Garza) |
-| 3.0.0 a 3.3.0 · M-81 | Nivel 50, el elemento luz y Alba, cuatro juegos de equipo, el Elixir | en curso (3.0.0: nivel 50 y juego de bruma) |
-| 3.0.0 a 3.3.0 · M-82 | Ocho misiones entregadas a Orvalla | en curso (3.0.0: la Ciénaga) |
-| 3.2.0 · M-83 | La vuelta a Villaclaro a por el Amuleto del Alba | spec |
+| 3.0.0 · M-78 | Brumaclara, el sol negro y el pueblo que crece con cada jefe | en curso (3.0.0-3.1.0: etapas 1 a 3) |
+| 3.0.0 a 3.3.0 · M-79 | Las cuatro zonas: Ciénaga, Cuevas de cristal, Ruinas flotantes y la Fuente · [plan 3.1.0](plans/2026-11-14-version-3-1-0.md) | en curso (la Ciénaga y las Cuevas) |
+| 3.0.0 a 3.3.0 · M-80 | Veinte enemigos, tres jefes, el Eco de Albor y cuatro familias del bestiario | en curso (la Ciénaga, las Cuevas, la Garza y el Coloso) |
+| 3.0.0 a 3.3.0 · M-81 | Nivel 50, el elemento luz y Alba, cuatro juegos de equipo, el Elixir | en curso (nivel 50, juegos de bruma y cristal, el elemento luz y Alba) |
+| 3.0.0 a 3.3.0 · M-82 | Ocho misiones entregadas a Orvalla | en curso (la Ciénaga y las Cuevas) |
+| 3.1.0 a 3.2.0 · M-83 | La vuelta a Villaclaro a por el Amuleto del Alba | en curso (3.1.0: el recuerdo de Albor) |
 | 3.3.0 · M-84 | El Eco de Albor, la elección, los dos finales y los créditos de la v3 | spec |
-| 3.0.0 a 3.3.0 · M-85 | Partida automática de la v3 | en curso (3.0.0: brumaclara, cienaga y garza) |
+| 3.0.0 a 3.3.0 · M-85 | Partida automática de la v3 | en curso (brumaclara, cienaga, garza, cuevas y coloso) |

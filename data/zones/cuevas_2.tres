@@ -1,0 +1,54 @@
+[gd_resource type="Resource" script_class="ZoneData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/zone_data.gd" id="1_zone"]
+
+[resource]
+script = ExtResource("1_zone")
+id = "cuevas_2"
+display_name = "Cuevas de cristal"
+short_name = "Cuevas"
+floor_name = "Planta 2"
+number = 12
+half_size = Vector2(30, 26)
+ground_color = Color(0.5, 0.5, 0.56, 1)
+has_grass = false
+village_name = ""
+village_radius = 0.0
+wells = [{
+"id": "cuevas_2_vida",
+"kind": "hp",
+"pos": Vector3(-4, 0, 20)
+}, {
+"id": "cuevas_2_mana",
+"kind": "mp",
+"pos": Vector3(16, 0, 20)
+}]
+entries = {}
+start_entry = "S"
+town_entry = ""
+exits = []
+npcs = []
+boss_id = "coloso_cuarzo"
+boss_pos = Vector3(0, 0, -17)
+formations = [["golem_cuarzo"], ["arana_cristal", "arana_cristal"], ["topo_geoda"], ["murcielago_cristal", "murcielago_cristal"], ["golem_cuarzo", "slime_cristal"], ["topo_geoda", "arana_cristal"], ["murcielago_cristal", "arana_cristal"]]
+start_formations = []
+start_radius = 0.0
+monster_count = 12
+exit_level = 46
+music = "crystal"
+village_music = ""
+ambient = "crystal"
+haze = Color(0.06, 0.07, 0.14, 1)
+fog_density = 0.01
+backdrop = "cuevas"
+particles = "sparkle"
+layout = PackedStringArray("###############", "####T.....T####", "####.......####", "####.......####", "#T....##.##..T#", "#.....#...#...#", "#.#C#.#.#.#.#.#", "#.#...#.#...#.#", "#.###.#.#.###.#", "#.....#.#.....#", "#.###.....###.#", "#T..#..S..#..T#", "###############")
+underground = true
+ambient_color = Color(0.42, 0.46, 0.66, 1)
+ambient_energy = 0.8
+rock_color = Color(0.36, 0.36, 0.44, 1)
+floor_color = Color(0.56, 0.56, 0.62, 1)
+crystals = true
+stairs_up = "cuevas_1"
+autoplay_route = Array[Vector3]([Vector3(0, 0, 16), Vector3(-8, 0, 16), Vector3(-8, 0, 12), Vector3(-24, 0, 12), Vector3(-24, 0, -4), Vector3(-16, 0, -4), Vector3(-16, 0, -1), Vector3(-16, 0, -4), Vector3(-8, 0, -4), Vector3(-8, 0, -12), Vector3(0, 0, -12), Vector3(0, 0, -15.5), Vector3(0, 0, -12), Vector3(4, 0, -12), Vector3(4, 0, -8), Vector3(4, 0, -4), Vector3(8, 0, -4), Vector3(8, 0, 4), Vector3(16, 0, 4), Vector3(16, 0, -4), Vector3(24, 0, -4), Vector3(24, 0, 12), Vector3(8, 0, 12), Vector3(8, 0, 16)])
+autoplay_boss_level = 45

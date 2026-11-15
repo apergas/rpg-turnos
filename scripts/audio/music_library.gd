@@ -23,13 +23,15 @@ const CITY := "city"
 const BEYOND := "beyond"
 const BRUMACLARA := "brumaclara"
 const SWAMP := "swamp"
+const CRYSTAL := "crystal"
 const BATTLE := "battle"
 const BOSS := "boss"
 const VICTORY := "victory"
 const DEFEAT := "defeat"
 const CARAVAN := "caravan"
 const IDS: Array[String] = [TITLE, MAP, VILLAGE, FOREST, MINE, CASTLE, BATTLE, BOSS, VICTORY,
-	DEFEAT, CARAVAN, JUNGLE, DESERT, MOUNTAIN, CITY, BEYOND, BRUMACLARA, SWAMP]
+	DEFEAT, CARAVAN, JUNGLE, DESERT, MOUNTAIN, CITY, BEYOND, BRUMACLARA, SWAMP,
+	CRYSTAL]
 
 const LEAD_VOLUME := 0.2
 const BASS_VOLUME := 0.3
@@ -220,6 +222,18 @@ const TRACKS := {
 			"B1/4 F#2/4 B1/4 F#2/4",
 		],
 		"drums": ["k/4 r/2 h/2 s/4 h/4", "k/2 k/2 r/2 h/2 s/4 r/4"],
+	},
+	# The Cuevas de cristal (3.1.0): bell-like arpeggios in A minor over a slow, deep bass.
+	CRYSTAL: {
+		"bpm": 84, "loop": true, "duty": 0.125,
+		"lead": [
+			"A5/2 E5/2 C5/2 E5/2 A5/4 B5/4", "C6/2 G5/2 E5/2 G5/2 C6/8",
+			"F5/2 C5/2 A4/2 C5/2 F5/4 E5/4", "E5/2 B4/2 G#4/2 B4/2 E5/8",
+			"A5/2 E5/2 C5/2 E5/2 A5/4 C6/4", "D6/2 A5/2 F5/2 A5/2 D6/4 C6/4",
+			"B5/4 G#5/4 E5/4 B4/4", "A4/12 r/4",
+		],
+		"bass": ["A2/16", "C3/16", "F2/16", "E2/16", "A2/16", "D2/16", "E2/16", "A1/16"],
+		"drums": ["r/8 h/4 r/4"],
 	},
 	# The castle: a slow march in E minor.
 	CASTLE: {

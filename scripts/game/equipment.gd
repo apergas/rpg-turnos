@@ -146,6 +146,18 @@ const EQUIPMENT := {
 		"tint": Color(0.7, 0.8, 1.05)},
 	"casco_bruma": {"name": "Casco de bruma", "article": "un", "slot": HELMET,
 		"bonus": 20, "price": 880, "zone": 9, "mesh": "", "tint": Color(0.72, 0.82, 1.05)},
+	# The v3's second set (3.1.0, etapa 2: the Caravana's Mercader, from the Garza on): the
+	# platinum meshes in the violet blue of the Cuevas' crystals.
+	"espada_cristal": {"name": "Espada de cristal", "article": "una", "slot": WEAPON,
+		"bonus": 98, "price": 2990, "zone": 10, "mesh": "2H_Sword",
+		"tint": Color(0.8, 0.75, 1.35)},
+	"armadura_cristal": {"name": "Armadura de cristal", "article": "una", "slot": ARMOR,
+		"bonus": 70, "price": 2300, "zone": 10, "mesh": ""},
+	"escudo_cristal": {"name": "Escudo de cristal", "article": "un", "slot": SHIELD,
+		"bonus": 31, "price": 1320, "zone": 10, "mesh": "Spike_Shield",
+		"tint": Color(0.8, 0.75, 1.35)},
+	"casco_cristal": {"name": "Casco de cristal", "article": "un", "slot": HELMET,
+		"bonus": 22, "price": 1010, "zone": 10, "mesh": "", "tint": Color(0.82, 0.78, 1.35)},
 	# The Eco de la Niebla's prize (the first time only): DEF like any helmet, plus ATK,
 	# dark grey with a blue cast and two bone horns (BattleActor builds them).
 	MIST_HELM: {"name": "Yelmo de bruma", "article": "un", "slot": HELMET, "bonus": 8,

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+[ext_resource type="Resource" path="res://data/enemies/slime_cristal.tres" id="2_slime"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "topo_geoda"
+display_name = "Topo de geoda"
+max_hp = 270
+hp = 270
+attack = 100
+defense = 76
+speed = 26
+map_roam = 1.5
+map_speed = 1.4
+exp_reward = 106
+gold_reward = 76
+ai_weights = {
+"attack": 85,
+"stagger": 15
+}
+weak = Array[String](["ice"])
+drops = {
+"esquirla_geoda": 0.6
+}
+help = ExtResource("2_slime")

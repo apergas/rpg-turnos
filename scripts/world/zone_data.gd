@@ -14,13 +14,13 @@ class_name ZoneData extends Resource
 ## Every zone, in world order (save validation and --autoplay-zone check against it).
 const IDS: Array[String] = ["pradera", "bosque", "mina_1", "mina_2", "mina_3",
 	"castillo_patio", "castillo_trono", "caravana", "jungla", "desierto", "montana_1", "montana_2",
-	"ciudad_1", "ciudad_2", "brumaclara", "cienaga"]
+	"ciudad_1", "ciudad_2", "brumaclara", "cienaga", "cuevas_1", "cuevas_2"]
 ## The zones of the v2 (the caravan), growing with each version; which zones a save may be on:
 ## zones_of_part().
 const V2_ZONES: Array[String] = ["caravana", "jungla", "desierto", "montana_1", "montana_2", "ciudad_1", "ciudad_2"]
 ## The zones of the v3 (Brumaclara), growing with each version like V2_ZONES (3.0.0:
-## Brumaclara and the Ciénaga).
-const V3_ZONES: Array[String] = ["brumaclara", "cienaga"]
+## Brumaclara and the Ciénaga; 3.1.0: the Cuevas' two floors).
+const V3_ZONES: Array[String] = ["brumaclara", "cienaga", "cuevas_1", "cuevas_2"]
 ## Side of a dungeon cell, in metres.
 const CELL := 4.0
 ## Dungeon cells: rock (a wall in a castle), floor, stairs up and down, chest, lever,
@@ -220,6 +220,11 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## The lit windows: [position on the wall, yaw the wall faces] each (BrumaclaraStage: a warm
 ## glow and a small light in front of it).
 @export var window_lights: Array = []
+## Brumaclara's forge (BrumaclaraStage, 3.1.0), ZERO for none: where it stands, the way its
+## front faces (degrees, like a building's door) and whether its fire burns.
+@export var forge_pos := Vector3.ZERO
+@export var forge_yaw := 0.0
+@export var forge_lit := false
 
 @export_group("Dungeon")
 ## Rows of a dungeon floor, north (−Z) first, one character per CELL × CELL cell (see
@@ -227,7 +232,7 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## on the origin.
 @export var layout: PackedStringArray = PackedStringArray()
 ## Underground: a black background, a dim ambient light instead of the sky and no sun;
-## the torches and the hero's lantern light the floor.
+## the torches and the hero's lantern light the floor (the crystals, in a zone with crystals).
 @export var underground := false
 @export var ambient_color := Color(0.3, 0.32, 0.45)
 @export var ambient_energy := 0.5
@@ -237,6 +242,10 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## (the mountain's snowy cliff, "snow_rock": a unit cube centred on its middle, scaled to the
 ## block). "" keeps the box (the mine).
 @export var rock_piece := ""
+## Crystal caves (the Cuevas de cristal, 3.1.0): each T cell grows a cluster of glowing crystals
+## instead of a torch (Crystals), the D gates are crystal bars, the lever has a crystal knob,
+## and the hero carries no lantern: the crystals light the floor.
+@export var crystals := false
 ## Castle: the rock cells are stone walls (KayKit wall pieces on the straight runs,
 ## square towers at corners and ends, round pillars when they stand alone) instead of
 ## rock blocks, and the open ground goes on past the grid.

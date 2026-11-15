@@ -18,6 +18,8 @@ const PIEL_MONO := "piel_mono"
 const CRISTAL_HIELO := "cristal_hielo"
 ## The Ciénaga's quest item (juncos, 3.0.0), dropped by the Junco andante.
 const JUNCO_BRUMA := "junco_bruma"
+## The Cuevas' quest item (geodas, 3.1.0), dropped by the Topo de geoda.
+const ESQUIRLA_GEODA := "esquirla_geoda"
 const SEED_ATTACK := "semilla_fuerza"
 const SEED_DEFENSE := "semilla_defensa"
 const SEED_SPEED := "semilla_agilidad"
@@ -83,6 +85,9 @@ const ITEMS := {
 	JUNCO_BRUMA: {"name": "Junco de bruma", "article": "un", "effect": "quest", "value": 0,
 		"price": 0, "battle": false, "field": false,
 		"text": "Hueco y gris: suena como una flauta cuando sopla la bruma. Alguien de Brumaclara los anda buscando."},
+	ESQUIRLA_GEODA: {"name": "Esquirla de geoda", "article": "una", "effect": "quest",
+		"value": 0, "price": 0, "battle": false, "field": false,
+		"text": "Un trozo de piedra gris por fuera y violeta por dentro. En Brumaclara alguien quiere tres."},
 	SEED_ATTACK: {"name": "Semilla de fuerza", "article": "una", "effect": "seed",
 		"value": "attack", "price": 0, "battle": false, "field": true,
 		"text": "Sube el ATK en 2 para siempre."},
@@ -95,7 +100,8 @@ const ITEMS := {
 }
 ## Order of the item lists.
 const IDS: Array[String] = [POTION, ETHER, BIG_POTION, BIG_ETHER, ANTIDOTE, ALARM, PHOENIX, WING,
-	INCENSE, SEED_ATTACK, SEED_DEFENSE, SEED_SPEED, SETA, PIEL_MONO, CRISTAL_HIELO, JUNCO_BRUMA]
+	INCENSE, SEED_ATTACK, SEED_DEFENSE, SEED_SPEED, SETA, PIEL_MONO, CRISTAL_HIELO, JUNCO_BRUMA,
+	ESQUIRLA_GEODA]
 ## Why an Ala de viaje can't be used in a village.
 const IN_TOWN := "Ya estás en un lugar seguro"
 ## Why a "quest" item can't be used.
@@ -114,6 +120,7 @@ const KEY_ITEMS := {
 	"mapa_montana": "Mapa de la montaña",
 	"llave_portal": "Llave del portal",
 	"lampara_faro": "Lámpara del faro",
+	"cristal_fuente": "Cristal de la Fuente",
 }
 ## What each key item is, for Objetos.
 const KEY_TEXTS := {
@@ -127,6 +134,7 @@ const KEY_TEXTS := {
 	"mapa_montana": "Lo guardaba el Grifo de la cumbre. Marca el camino hasta la ciudad abandonada.",
 	"llave_portal": "La guardaba el Guardián de la ciudad. Abre la reja del barrio del portal.",
 	"lampara_faro": "La guardaba la Garza de légamo en el buche. Devuelve la luz al faro de Brumaclara.",
+	"cristal_fuente": "Lo llevaba el Coloso de cuarzo en la espalda. Late como un corazón, y su luz es la de la Fuente.",
 	MEDAL: "Algunos monstruos las llevan encima. El Coleccionista las colecciona.",
 }
 

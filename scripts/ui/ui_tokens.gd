@@ -70,6 +70,7 @@ const JUEGO := {
 	&"element-fire": Color("#ff731a"),
 	&"element-ice": Color("#8cd9ff"),
 	&"element-thunder": Color("#b380ff"),
+	&"element-light": Color("#fff2cc"),
 	&"element-heal": Color("#4dff66"),
 	&"element-weak": Color("#ff9933"),
 	&"effect-defend": Color("#99ccff"),

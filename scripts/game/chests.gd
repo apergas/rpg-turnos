@@ -8,7 +8,9 @@ class_name Chests extends RefCounted
 ## desert's three behind the western dune, in the oasis and in the ruin; the mountain's three
 ## (two on the climb, one on the summit) and the city's three (the north-west and north-east
 ## rooms of the streets, the west room of the portal quarter) make 25 chests in a game with
-## the caravan; the Ciénaga's three, on its islets next to its route, 28 in Brumaclara's. Pure: open() changes a GameState and returns the message.
+## the caravan; the Ciénaga's three, on its islets next to its route, and the Cuevas' three (two
+## on the first floor, one on the second, each on its C cell) make 31 in Brumaclara's. Pure:
+## open() changes a GameState and returns the message.
 
 ## id -> {"zone": ZoneData id, "pos": Vector3, "yaw": degrees (the lid opens toward -Z
 ## turned by yaw), and one of "gold": int, "item": Inventory id, "equipment": Equipment
@@ -20,6 +22,14 @@ const CHESTS := {
 	"cienaga_islote_este": {"zone": "cienaga", "pos": Vector3(30, 0, 2), "yaw": 120.0,
 		"item": Inventory.BIG_ETHER},
 	"cienaga_islote_norte": {"zone": "cienaga", "pos": Vector3(-28, 0, -16), "yaw": -90.0,
+		"item": Inventory.PHOENIX},
+	# The Cuevas de cristal (3.1.0): the end of the west passage and the north room of the
+	# first floor, the west room of the second (each on its C cell, next to the route).
+	"cuevas_1_oeste": {"zone": "cuevas_1", "pos": Vector3(-16, 0, 0), "yaw": 180.0,
+		"gold": 1100},
+	"cuevas_1_norte": {"zone": "cuevas_1", "pos": Vector3(12, 0, -20), "yaw": 90.0,
+		"item": Inventory.BIG_ETHER},
+	"cuevas_2_cofre": {"zone": "cuevas_2", "pos": Vector3(-16, 0, 0), "yaw": 0.0,
 		"item": Inventory.PHOENIX},
 	"pradera_este": {"zone": "pradera", "pos": Vector3(13.1, 0, 12.7), "yaw": 30.0, "gold": 25},
 	"pradera_oeste": {"zone": "pradera", "pos": Vector3(-11.1, 0, 1.3), "yaw": -150.0,

@@ -8,7 +8,7 @@ class_name AmbientLibrary extends RefCounted
 ## the mountain, whose bed is a strong wind that never stops, a softer wind whistling
 ## through the ruins with falling stones in the abandoned city, and the same wind with a deep
 ## throbbing rumble and groans in the portal quarter), the Ciénaga's still water with insects and
-## the croak of its frogs (the v3). Streams
+## the croak of its frogs, and the Cuevas' deep hum with their drops (the v3). Streams
 ## are 22050 Hz, 16-bit mono (MusicLibrary.to_stream()) and cached.
 
 const MEADOW := "meadow"
@@ -21,8 +21,9 @@ const MOUNTAIN := "mountain"
 const CITY := "city"
 const PORTAL := "portal"
 const SWAMP := "swamp"
+const CRYSTAL := "crystal"
 const IDS: Array[String] = [MEADOW, FOREST, MINE, CASTLE, JUNGLE, DESERT, MOUNTAIN, CITY, PORTAL,
-	SWAMP]
+	SWAMP, CRYSTAL]
 
 ## Seconds of each bed, and of the cross-fade that closes its loop.
 const LOOP := 8.0
@@ -32,11 +33,12 @@ const VARIANTS := 4
 ## Seconds between two short sounds: [least, most].
 const GAPS := {MEADOW: [2.0, 6.0], FOREST: [3.0, 7.0], MINE: [1.0, 4.0], CASTLE: [4.0, 9.0],
 	JUNGLE: [1.5, 4.0], DESERT: [3.0, 8.0], MOUNTAIN: [2.5, 6.0],
-	CITY: [3.0, 8.0], PORTAL: [4.0, 9.0], SWAMP: [2.0, 5.0]}
+	CITY: [3.0, 8.0], PORTAL: [4.0, 9.0], SWAMP: [2.0, 5.0],
+	CRYSTAL: [1.5, 4.5]}
 ## Peak of each bed and of every short sound (AudioDirector plays them at the effects volume
 ## × its AMBIENT_SHARE).
 const BED_PEAK := {MEADOW: 0.35, FOREST: 0.4, MINE: 0.5, CASTLE: 0.35, JUNGLE: 0.35, DESERT: 0.4, MOUNTAIN: 0.45,
-	CITY: 0.35, PORTAL: 0.45, SWAMP: 0.4}
+	CITY: 0.35, PORTAL: 0.45, SWAMP: 0.4, CRYSTAL: 0.45}
 const SHOT_PEAK := 0.55
 ## The echoes of a drop in the mine: [delay in seconds, gain].
 const ECHOES := [[0.17, 0.45], [0.34, 0.2], [0.51, 0.08]]
@@ -98,6 +100,8 @@ static func bed(id: String) -> AudioStreamWAV:
 			raw = _ruin_wind(count + seam, rng)
 		SWAMP:
 			raw = _bog(count + seam, rng)
+		CRYSTAL:
+			raw = _crystal_hum(count + seam, rng)
 		_:
 			raw = _wind(count + seam, rng)
 	var samples := raw.slice(0, count)
@@ -143,6 +147,8 @@ static func shot(id: String, variant: int) -> AudioStreamWAV:
 			samples = _groan(rng)
 		SWAMP:
 			samples = _croak(rng)
+		CRYSTAL:
+			samples = _drop(rng)
 		_:
 			samples = _gust(rng)
 	_normalize(samples, SHOT_PEAK)
@@ -248,6 +254,18 @@ static func _rumble(count: int, rng: RandomNumberGenerator) -> PackedFloat32Arra
 		y2 += a * (y1 - y2)
 		y3 += a * (y2 - y3)
 		out[i] = y3 * (0.8 + 0.2 * sin(TAU * 0.06 * t))
+	return out
+
+
+## The Cuevas de cristal: the mine's low rumble of noise under a deep hum, two sines a little
+## out of tune round 55 Hz that beat slowly, and their octave. Whole cycles in LOOP seconds
+## (55, 55.375 and 110 Hz × 8 s), so the hum crosses the loop's seam unbroken.
+static func _crystal_hum(count: int, rng: RandomNumberGenerator) -> PackedFloat32Array:
+	var out := _rumble(count, rng)
+	for i in count:
+		var t := float(i) / MusicLibrary.RATE
+		out[i] = 0.6 * out[i] + 0.05 * (sin(TAU * 55.0 * t) + sin(TAU * 55.375 * t)) \
+			+ 0.02 * sin(TAU * 110.0 * t)
 	return out
 
 

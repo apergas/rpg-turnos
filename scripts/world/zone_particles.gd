@@ -1,19 +1,19 @@
 class_name ZoneParticles extends RefCounted
-## Constructor: static; builds the particle node of a zone for its caller and moves it with follow(). Its static vars enabled and half are settings DisplaySettings writes.
-## The particles that float around the hero on a map (ZoneData.particles): pollen and
-## dandelion seeds in the meadow, leaves falling slowly in the forest, dust motes that the
-## lantern lights in the mine, flakes of violet mist in the castle, grains of sand blown in gusts in the desert, flakes of snow falling slowly and a little
-## sideways (the wind) on the mountain, pale flakes of ash falling slowly and sideways in the
-## abandoned city, as many as embers still glowing among them (each particle is born one of
-## the two colours, so half and half: dark ash alone vanished on the dark red ground), a
-## knee-deep mist drifting south in Brumaclara and a greenish mist with fireflies in the
-## Ciénaga (the v3). A CPUParticles3D (the
-## same on the Compatibility renderer and on the web) in world space: World carries its
-## box (BOX, 30 × 20 m around the hero; the mine's is smaller, the lantern's reach) along
-## every physics tick with follow(), and what is already floating stays where it is. Never
-## in battle (World is hidden) or on the title (it has no World). DisplaySettings sets
-## enabled (false on low quality: no particles) and half (a phone: half as many); a change
-## shows on the next map built.
+## Constructor: static; builds the particle node of a zone for its caller and moves it with
+## follow(). Its static vars enabled and half are settings DisplaySettings writes. The particles
+## that float around the hero on a map (ZoneData.particles): pollen and dandelion seeds in the
+## meadow, leaves falling slowly in the forest, dust motes that the lantern lights in the mine,
+## flakes of violet mist in the castle, grains of sand blown in gusts in the desert, flakes of snow
+## falling slowly and a little sideways (the wind) on the mountain, pale flakes of ash falling
+## slowly and sideways in the abandoned city, as many as embers still glowing among them (each
+## particle is born one of the two colours, so half and half: dark ash alone vanished on the dark
+## red ground), a knee-deep mist drifting south in Brumaclara and a greenish mist with fireflies in
+## the Ciénaga (the v3), and glints winking in and out among the Cuevas' crystals. A CPUParticles3D
+## (the same on the Compatibility renderer and on the web) in world space: World carries its box
+## (BOX, 30 × 20 m around the hero; the mine's is smaller, the lantern's reach) along every physics
+## tick with follow(), and what is already floating stays where it is. Never in battle (World is
+## hidden) or on the title (it has no World). DisplaySettings sets enabled (false on low quality: no
+## particles) and half (a phone: half as many); a change shows on the next map built.
 
 const POLLEN := "pollen"
 const LEAVES := "leaves"
@@ -28,6 +28,8 @@ const ASH := "ash"
 ## second kind born in the same box).
 const BRUMA := "bruma"
 const BOG := "bog"
+## The Cuevas de cristal (3.1.0): tiny blue and violet glints that wink in and out.
+const SPARKLE := "sparkle"
 ## Half extents, along X and Z, of the box the particles are born in around the hero.
 const BOX := Vector3(15.0, 0.0, 10.0)
 ## Share of a particle's life spent fading in, and again fading out.
@@ -81,6 +83,10 @@ const KINDS := {
 		"speed": [0.15, 0.3], "direction": Vector3(1.0, 0.0, 0.3), "spread": 40.0,
 		"spin": 0.0, "colors": [Color(0.62, 0.72, 0.5, 0.28), Color(0.7, 0.78, 0.6, 0.2)],
 		"lit": false, "round": true, "also": FIREFLIES},
+	SPARKLE: {"amount": 50, "lifetime": 1.6, "height": 1.4, "depth": 1.2, "size": 0.05,
+		"speed": [0.02, 0.08], "direction": Vector3.UP, "spread": 180.0, "spin": 0.0,
+		"colors": [Color(0.6, 0.85, 1.0, 1.0), Color(0.85, 0.65, 1.0, 1.0)],
+		"lit": false, "round": true, "glow": true, "box": Vector3(8.0, 0.0, 6.0)},
 }
 
 ## No particles at all while false (low quality). Set by DisplaySettings.

@@ -1,5 +1,16 @@
 # Registro de cambios
 
+## 3.1.0 (2026)
+
+Las Cuevas de cristal.
+
+- Tras la Garza se abre el camino a las Cuevas de cristal: dos plantas bajo tierra donde la única luz es la de los cristales, con su palanca y su reja de cristal.
+- Cinco enemigos nuevos y el Coloso de cuarzo, que guarda el Cristal de la Fuente. Al vencerlo verás el primer recuerdo de Albor.
+- La forja de Brumaclara vuelve a arder, y el Herrero de cristal vende pociones, éteres y demás en el pueblo.
+- El equipo de cristal, a la venta en la Caravana desde que cae la Garza.
+- La luz, un elemento nuevo, y Alba, un hechizo nuevo a nivel 45: daño de luz a todos.
+- Dos misiones nuevas: el gato de Neblí y las esquirlas de geoda.
+
 ## 3.0.0 (2026)
 
 Empieza la tercera parte: al otro lado del portal.

@@ -39,7 +39,7 @@ class_name Combatant extends Resource
 ## BattleEngine.CHARGE_MULT damage) or the id of one of its skills. Empty means always
 ## attack.
 @export var ai_weights := {}
-## Enemy only: elements ("fire", "ice", "thunder") that hurt it ×1.5 / ×0.5.
+## Enemy only: elements ("fire", "ice", "thunder", "light") that hurt it ×1.5 / ×0.5.
 @export var weak: Array[String] = []
 @export var resist: Array[String] = []
 ## Enemy only: chance (0..1) of leaving each item (Inventory id) when defeated.

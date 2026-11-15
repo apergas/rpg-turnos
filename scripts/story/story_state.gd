@@ -17,7 +17,8 @@ const NAME_TAG := "{nombre}"
 ## Every cutscene, in story order.
 const SCENES: Array[String] = ["prologo", "rey_slime", "aldea_bosque", "bruja", "mina",
 	"golem", "castillo", "final", "caravana_llega", "caravana_parte", "caravana_campamento",
-	"jaguar", "gusano", "grifo", "guardian", "cruce", "brumaclara_llega", "garza"]
+	"jaguar", "gusano", "grifo", "guardian", "cruce", "brumaclara_llega", "garza",
+	"recuerdo_albor"]
 ## The cutscene that follows beating each boss (its world flag).
 const AFTER_BOSS := {
 	"rey_slime": "rey_slime",
@@ -29,6 +30,7 @@ const AFTER_BOSS := {
 	"grifo_cumbre": "grifo",
 	"guardian_ciudad": "guardian",
 	"garza_legamo": "garza",
+	"coloso_cuarzo": "recuerdo_albor",
 	"devorador_portal": "cruce",
 }
 ## The cutscene of the first visit to each zone's village.
@@ -58,9 +60,9 @@ const V3_FINAL_BOSS := "eco_albor"
 ## handed to her (as the v2's are to the Jefe de caravana).
 const V3_KEEPER := "Orvalla"
 ## While Brumaclara has no exit open to another land of the v3 (each version of the v3 brings
-## the next one; the 3.0.0 ends with the Garza): what Orvalla adds and the goal.
+## the next one; the 3.1.0 ends with the Coloso): what Orvalla adds and the goal.
 const V3_NOT_YET_LINE := "Todavía no sabemos cómo seguir. Descansa, y vuelve cuando la luz nos diga algo."
-const V3_WAIT_GOAL := "El faro vuelve a dar luz"
+const V3_WAIT_GOAL := "La forja de Brumaclara vuelve a arder"
 ## The mine's flags (ZoneData lever_flag, floor_key, door_flag of its floors).
 const MINE_LEVER := "mina_palanca"
 const MINE_KEY := "llave_mina"
@@ -96,8 +98,17 @@ const MINE_GOALS := {
 	"key": "Objetivo: busca la llave de la reja",
 	"golem": "Objetivo: vence al Golem de piedra",
 }
+## The Cuevas' flag (ZoneData lever_flag and door_flag of their first floor, 3.1.0).
+const CUEVAS_LEVER := "cuevas_palanca"
+## The Cuevas chapter's goal, floor by floor: what goal_text() says there.
+const CUEVAS_GOALS := {
+	"enter": "Objetivo: busca los cristales en las Cuevas",
+	"lever": "Objetivo: busca el mecanismo de la reja de cristal",
+	"down": "Objetivo: baja a la segunda planta de las Cuevas",
+	"colossus": "Objetivo: vence al Coloso de cuarzo",
+}
 ## The next step of the story, by chapter: GameState.main_goal() once the village quest
-## is done. The mine chapter is answered by MINE_GOALS.
+## is done. The mine, mountain, city and Cuevas chapters are answered by their own tables.
 const GOALS := {
 	Chapter.PROLOGUE: "Objetivo: habla con la Abuela Rosa",
 	Chapter.MEADOW: "Objetivo: ayuda a la Abuela Rosa",
@@ -110,6 +121,7 @@ const GOALS := {
 	Chapter.CITY: "Objetivo: entra en la ciudad abandonada",
 	Chapter.V2_END: "Objetivo: cruza el portal",
 	Chapter.BRUMACLARA: "Objetivo: atraviesa la Ciénaga y devuelve la luz al faro",
+	Chapter.CUEVAS: "Objetivo: busca los cristales en las Cuevas",
 }
 
 ## Cutscene ids already played (SCENES entries), in the order they were seen.
@@ -246,6 +258,8 @@ func goal_text(flags: Dictionary, zone_id := "") -> String:
 		return "Objetivo: habla con el Jefe de caravana"
 	if now == Chapter.CITY:
 		return CITY_GOALS[_city_step(flags, zone_id)]
+	if now == Chapter.CUEVAS:
+		return CUEVAS_GOALS[_cuevas_step(flags, zone_id)]
 	if now > Chapter.V2_END and not v3_way_on(flags):
 		return V3_WAIT_GOAL
 	return GOALS[now]
@@ -276,6 +290,14 @@ static func _city_step(flags: Dictionary, zone_id: String) -> String:
 		return "gate"
 	if zone_id.begins_with("ciudad_"):
 		return "guardian"
+	return "enter"
+
+
+static func _cuevas_step(flags: Dictionary, zone_id: String) -> String:
+	if zone_id == "cuevas_2":
+		return "colossus"
+	if zone_id == "cuevas_1":
+		return "down" if flags.get(CUEVAS_LEVER, false) else "lever"
 	return "enter"
 
 

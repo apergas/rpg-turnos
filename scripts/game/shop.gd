@@ -9,6 +9,8 @@ const MINA := "mina"
 const CASTILLO := "castillo"
 ## The Caravana's merchant (the v2 and the v3): one figure, a shop per step (caravan_shop(), GameState.shop_step()).
 const CARAVAN_SHOP := "caravana"
+## The last step a Caravana shop can have (GameState.shop_step(): 4 + the v3's etapa 4).
+const MAX_SHOP_STEP := 8
 ## The Jefe de caravana's choice of companion (the v2): three "creatures" at no cost.
 const COMPANIONS_SHOP := "companeros"
 ## shop id -> keeper's name, equipment and items (Inventory ids) on sale, in list order.
@@ -88,6 +90,22 @@ const SHOPS := {
 		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
 			Inventory.WING, Inventory.INCENSE, Inventory.PHOENIX, Inventory.ALARM],
 	},
+	# The Caravana's merchant from the Garza on (the v3's etapa 2 and later): the cristal gear
+	# and the same items.
+	"caravana_6": {
+		"keeper": "Mercader",
+		"equipment": ["espada_cristal", "armadura_cristal", "escudo_cristal", "casco_cristal"],
+		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
+			Inventory.WING, Inventory.INCENSE, Inventory.PHOENIX, Inventory.ALARM],
+	},
+	# Brumaclara's Herrero de cristal from the Coloso on (the v3's etapa 3, 3.1.0): the first
+	# shop on the other side of the portal, the items only (the luna gear joins it in 3.2.0).
+	"brumaclara_3": {
+		"keeper": "Herrero de cristal",
+		"equipment": [],
+		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
+			Inventory.WING, Inventory.INCENSE, Inventory.PHOENIX, Inventory.ALARM],
+	},
 	COMPANIONS_SHOP: {"keeper": "Jefe de caravana", "equipment": [], "items": [],
 		"allies": Allies.COMPANIONS},
 }
@@ -113,9 +131,9 @@ const BULK := 5
 
 
 ## The shop of the highest step up to `step` that exists in SHOPS (GameState.shop_step():
-## 1-5 in the v2, 5-8 in the v3).
+## 1-5 in the v2, 5-MAX_SHOP_STEP in the v3).
 static func caravan_shop(step: int) -> String:
-	for t in range(clampi(step, 1, 8), 0, -1):
+	for t in range(clampi(step, 1, MAX_SHOP_STEP), 0, -1):
 		var id := "%s_%d" % [CARAVAN_SHOP, t]
 		if SHOPS.has(id):
 			return id
@@ -348,6 +366,15 @@ static func autoplay_picks(state: GameState, shop_id: String) -> Array[String]:
 		gold -= price(potion_id)
 		potions += 1
 	return picks
+
+
+## For --autoplay's errand to the Caravana (GameAutoplay): true while shop_id sells a piece of
+## equipment that beats what is worn, is not in the bag yet and the gold pays for.
+static func gear_to_buy(state: GameState, shop_id: String) -> bool:
+	for id: String in SHOPS[shop_id].equipment:
+		if compare(state, id).diff > 0 and not id in state.bag_equipment and can_buy(state, id):
+			return true
+	return false
 
 
 ## True while the village's shop still has an upgrade not bought (even if unaffordable).
