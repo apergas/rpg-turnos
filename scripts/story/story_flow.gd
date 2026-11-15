@@ -1,10 +1,11 @@
 class_name StoryFlow extends Node
 ## Node, a piece of Game: the story played on the map. Each cutscene of data/cutscenes/
 ## through its CutscenePlayer (play_scene(), marked seen), the prologue of a new game
-## (play_prologue()), the first visit's scene of each village (check_village_scene()), the
-## companion's line the first time a land of the caravan is reached (check_arrival_line()),
-## and the two endings: the v1's credits (finish_game()) and the v2's screen beyond the
-## portal and its credits, after which the game goes on in the Caravana (finish_v2()). Gets the session in setup(); never stores Game or a
+## (play_prologue()), the first visit's scene of each village (check_village_scene();
+## Villaclaro's in the v3 is V3Flow's), the companion's line the first time a land of the
+## caravan is reached (check_arrival_line()), and the two endings: the v1's credits
+## (finish_game()) and the v2's screen beyond the portal and its credits, after which the game
+## goes on in the Caravana (finish_v2()). Gets the session in setup(); never stores Game or a
 ## World.
 
 ## The v1's ending is over, or the v2's on autoplay: Game goes back to the title.
@@ -75,6 +76,8 @@ func check_village_scene() -> void:
 	var scene := _ctx.state.story.scene_on_village(_ctx.zone.id)
 	if scene == "":
 		scene = CaravanFlow.arrival_scene(_ctx.state, _ctx.zone.id)
+	if scene == "":
+		scene = V3Flow.arrival_scene(_ctx.state, _ctx.zone.id)
 	if scene == "":
 		return
 	_ctx.set_busy.call(true)
@@ -186,8 +189,11 @@ func _scene_travel(zone_id: String, entry_id: String) -> World:
 	return _ctx.world
 
 
-## What CutscenePlayer's "flag" step does.
+## What CutscenePlayer's "flag" step does. A flag that is a key item's id gives the key item too
+## (the Amuleto del Alba, 3.2.0).
 func _scene_flag(flag: String) -> void:
 	_ctx.state.world_flags[flag] = true
+	if Inventory.KEY_ITEMS.has(flag) and not flag in _ctx.state.key_items:
+		_ctx.state.key_items.append(flag)
 	_ctx.world.set_world_flags(_ctx.state.world_flags)
 	_ctx.refresh_status.call()  # a figure may come with the flag (the Jefe de caravana)

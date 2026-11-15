@@ -126,6 +126,7 @@ const KEY_ITEMS := {
 	"llave_portal": "Llave del portal",
 	"lampara_faro": "Lámpara del faro",
 	"cristal_fuente": "Cristal de la Fuente",
+	"amuleto_alba": "Amuleto del Alba",
 }
 ## What each key item is, for Objetos.
 const KEY_TEXTS := {
@@ -140,6 +141,7 @@ const KEY_TEXTS := {
 	"llave_portal": "La guardaba el Guardián de la ciudad. Abre la reja del barrio del portal.",
 	"lampara_faro": "La guardaba la Garza de légamo en el buche. Devuelve la luz al faro de Brumaclara.",
 	"cristal_fuente": "Lo llevaba el Coloso de cuarzo en la espalda. Late como un corazón, y su luz es la de la Fuente.",
+	"amuleto_alba": "Los tres fragmentos, otra vez juntos. Lo guardaba la Abuela Rosa en Villaclaro, y su luz es la de la Fuente.",
 	MEDAL: "Algunos monstruos las llevan encima. El Coleccionista las colecciona.",
 }
 

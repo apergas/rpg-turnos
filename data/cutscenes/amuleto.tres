@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="Cutscene" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/cutscene.gd" id="1_cutscene"]
+
+[resource]
+script = ExtResource("1_cutscene")
+id = "amuleto"
+steps = [
+["wait", 0.4],
+["say", "", ["Villaclaro está como lo dejaste, pero la niebla vuelve a asomar por los caminos."]],
+["approach", "Abuela Rosa", "hero", 1.8],
+["face", "hero", "Abuela Rosa"],
+["face", "Abuela Rosa", "hero"],
+["say", "Abuela Rosa", ["¡{nombre}! ¡Qué alegría! Y qué cara traes: como si hubieras visto un sol negro.", "Ven aquí, que te miro bien. Y cuéntamelo todo, que para eso estoy."]],
+["say", "", ["Le cuentas lo de Brumaclara, la Niebla que se escapa por el portal y el guardián que viste junto a una fuente de luz, con un amuleto partido en tres."]],
+["say", "Abuela Rosa", ["Un amuleto partido en tres... Ay, {nombre}. Eso es cosa de mi abuelo.", "Volvió del norte con una piedra que brillaba sola. Decía que la había encontrado junto a una fuente de luz azul.", "La partió en tres y repartió los trozos: uno al bosque, otro a la mina y otro al castillo, para que nadie la tuviera entera.", "Desde entonces la niebla rondaba el castillo. Y los trozos acabaron en las peores manos, eso ya lo sabes tú."]],
+["say", "Abuela Rosa", ["Si esa luz es de allí, tiene que volver a su casa. Llévatelo."]],
+["sfx", "level_up"],
+["flag", "amuleto_alba"],
+["say", "", ["¡Consigues el Amuleto del Alba!"]],
+["say", "Abuela Rosa", ["Y vuelve, ¿eh? Que aquí también hace falta quien me pruebe los pasteles.", "La caravana te espera por el camino del norte."]]
+]

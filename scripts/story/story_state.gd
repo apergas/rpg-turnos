@@ -18,7 +18,7 @@ const NAME_TAG := "{nombre}"
 const SCENES: Array[String] = ["prologo", "rey_slime", "aldea_bosque", "bruja", "mina",
 	"golem", "castillo", "final", "caravana_llega", "caravana_parte", "caravana_campamento",
 	"jaguar", "gusano", "grifo", "guardian", "cruce", "brumaclara_llega", "garza",
-	"recuerdo_albor"]
+	"recuerdo_albor", "amuleto"]
 ## The cutscene that follows beating each boss (its world flag).
 const AFTER_BOSS := {
 	"rey_slime": "rey_slime",
@@ -59,6 +59,9 @@ const V3_FINAL_BOSS := "eco_albor"
 ## The Amuleto del Alba (3.2.0): the key item and the flag the Abuela Rosa's scene gives
 ## (StoryFlow), which opens the way up to the Ruinas.
 const AMULET_FLAG := "amuleto_alba"
+## The Abuela Rosa's story of the amulet (data/cutscenes/amuleto.tres): Villaclaro's village
+## scene in the part 3 (V3Flow.arrival_scene()); its "flag" step gives the amulet.
+const AMULET_SCENE := "amuleto"
 ## Brumaclara's lighthouse keeper: she says how the v3 goes on, and every mission of the v3 is
 ## handed to her (as the v2's are to the Jefe de caravana).
 const V3_KEEPER := "Orvalla"
@@ -280,6 +283,8 @@ func mark_seen_for_flags(flags: Dictionary) -> void:
 		mark_seen("caravana_campamento")
 	if flags.get(V3_FLAG, false):
 		mark_seen("brumaclara_llega")
+	if flags.get(AMULET_FLAG, false):
+		mark_seen(AMULET_SCENE)
 	finished = flags.get("senor_niebla", false)
 	finished_v2 = flags.get(V2_FINAL_BOSS, false)
 	finished_v3 = flags.get(V3_FINAL_BOSS, false)
