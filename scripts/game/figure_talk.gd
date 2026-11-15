@@ -108,7 +108,8 @@ func on_npc(index: int) -> void:
 		said = _ctx.world.npc_lines(index, _ctx.state.chapter()) + talk.lines
 	var extra := StoryState.keeper_line(_ctx.state.world_flags) if figure == StoryState.V3_KEEPER else ""
 	if extra != "" and talk.get("kind", QuestLog.TALK_WAIT) == QuestLog.TALK_WAIT:
-		said = said + [extra]  # the v3 waits on something (the amulet, no next land): she says it
+		# the v3 waits on something (the amulet, the Ruinas, the Fuente): she says it
+		said = said + [extra]
 	var lines: Array[String] = []
 	for line: String in said:
 		lines.append(StoryState.fill(line, _ctx.state.hero.display_name))
@@ -183,8 +184,7 @@ func on_shop(shop_id: String) -> void:
 	var waiting := _figure_with_quest("shop", shop_id)
 	if waiting >= 0:
 		await on_npc(waiting)  # a report or an offer at the merchant goes first (pieles_mono)
-	if shop_id == Shop.CARAVAN_SHOP:
-		shop_id = Shop.caravan_shop(_ctx.state.shop_step())
+	shop_id = Shop.resolve(shop_id, _ctx.state)  # the Mercader's and the Herrero's by step
 	if _ctx.busy or (RunFlags.autoplay() and Shop.autoplay_picks(_ctx.state, shop_id).is_empty()):
 		return
 	_ctx.set_busy.call(true)

@@ -237,7 +237,7 @@ func _add_pieces(load_failed: bool) -> void:
 	_battle.setup(_ctx)
 	_battle.play_scene = _story.play_scene
 	_battle.finish_game = _story.finish_game
-	_battle.finish_v2 = _story.finish_v2
+	_battle.finish_part = _story.finish_part
 	_battle.go_to_town = _travel.go_to_town
 	_battle.print_save = RunFlags.autoplay() and RunFlags.autoplay_save() and _save.is_empty()
 	_battle.quit_requested.connect(func() -> void: quit_to_title.emit())

@@ -45,6 +45,7 @@ entries = {
 "cienaga": [Vector3(5, 0, -16), 180.0],
 "cuevas": [Vector3(5, 0, -16), 180.0],
 "ruinas": [Vector3(5, 0, -16), 180.0],
+"fuente": [Vector3(5, 0, -16), 180.0],
 "portal": [Vector3(0, 0, 16), 0.0],
 "pueblo": [Vector3(0, 0, 6), 0.0]
 }
@@ -86,6 +87,16 @@ exits = [{
 "yaw": 0.0
 }, {
 "entry": "brumaclara",
+"id": "fuente",
+"label": "A la Fuente",
+"lock": "",
+"lock_text": "",
+"needs": "vigia_bruma",
+"pos": Vector3(5, 0, -19.5),
+"to": "fuente",
+"yaw": 0.0
+}, {
+"entry": "brumaclara",
 "id": "portal",
 "label": "Al portal",
 "lock": "",
@@ -101,7 +112,8 @@ npcs = [{
 "lines_by_chapter": {
 12: ["El faro vuelve a dar luz. Hacía un año que no veía mi propia sombra.", "Con la luz se ve la boca de las Cuevas, junto al faro. Dicen que dentro los cristales brillan solos. Y que algo grande los vigila."],
 13: ["Ese cristal late como un corazón. El Herrero lo tiene junto a la forja y no para de cantar.", "Albor... Mi abuela contaba que la Fuente tuvo un guardián. Nadie sabe qué fue de él."],
-14: ["El Sello de Albor. Mi abuela decía que abría la Fuente, y yo creía que era un cuento para dormir.", "Mira el pueblo: hasta el mercado ha vuelto. Y un señor que pregunta por medallas. Lo que hace la luz."]
+14: ["El Sello de Albor. Mi abuela decía que abría la Fuente, y yo creía que era un cuento para dormir.", "Mira el pueblo: hasta el mercado ha vuelto. Y un señor que pregunta por medallas. Lo que hace la luz."],
+15: ["Brumaclara respira tranquila. Hasta el faro parece que ronca.", "Gracias por todo, {nombre}. Si algún día te aburres en tu mundo, ya sabes dónde está el portal."]
 },
 "look": "ORVALLA",
 "name": "Orvalla",
@@ -113,7 +125,8 @@ npcs = [{
 "lines_by_chapter": {
 12: ["¡El faro da luz! ¿El sol de tu mundo es así, pero más grande?"],
 13: ["¡La forja hace chispas! Son como estrellas pequeñas. ¿En tu mundo las estrellas también queman?"],
-14: ["¡Todas las ventanas tienen luz! Desde el faro parece que el pueblo es una estrella. ¿Las estrellas de tu mundo también tienen ventanas?"]
+14: ["¡Todas las ventanas tienen luz! Desde el faro parece que el pueblo es una estrella. ¿Las estrellas de tu mundo también tienen ventanas?"],
+15: ["¡Hay fiesta! Nunca había visto una. Es como un día normal, pero todo el mundo grita contento."]
 },
 "look": "NEBLI",
 "name": "Neblí",
@@ -135,7 +148,7 @@ npcs = [{
 "pos": Vector3(8.6, 0, -5),
 "yaw": -90.0
 }, {
-"id": "brumaclara_3",
+"id": "brumaclara",
 "kind": "shop",
 "look": "MIST_SMITH",
 "name": "Herrero de cristal",
@@ -156,7 +169,8 @@ npcs = [{
 "lines_by_chapter": {
 12: ["Con el faro encendido ya no se pierde nadie en la Ciénaga. Mi hermano dice que es por la sopa."],
 13: ["El Herrero ha vuelto a encender la forja. Se oye el martillo desde mi cama. Bendito martillo."],
-14: ["Ha vuelto el mercado. Me he comprado una sartén. No tengo nada que freír, pero qué sartén."]
+14: ["Ha vuelto el mercado. Me he comprado una sartén. No tengo nada que freír, pero qué sartén."],
+15: ["Mi hermano dice que en la fiesta ha pescado un pez que brilla. Lo ha soltado: tenía cara de buena persona."]
 },
 "look": "MIST_VILLAGER_M",
 "name": "Vecino",
@@ -168,7 +182,8 @@ npcs = [{
 "lines_by_chapter": {
 12: ["¡Mira mis ventanas! Con la luz del faro he descubierto que tengo cortinas."],
 13: ["Huele a hierro caliente. Hacía tanto que aquí no olía a nada..."],
-14: ["Con todas las ventanas encendidas he visto por fin la cara de mi vecino. Prefería la niebla."]
+14: ["Con todas las ventanas encendidas he visto por fin la cara de mi vecino. Prefería la niebla."],
+15: ["¡Fiesta! He sacado las cortinas buenas. Las que descubrí con la luz del faro."]
 },
 "look": "MIST_VILLAGER_F",
 "name": "Vecina",
@@ -214,6 +229,14 @@ npcs = [{
 "needs": "gato_nebli_vuelve",
 "pos": Vector3(4.4, 0, 3.4),
 "yaw": -60.0
+}, {
+"kind": "npc",
+"lines": ["Subo a la Fuente cada mañana y bajo cada tarde. Un guardián también tiene derecho a una plaza.", "Neblí me pregunta por el sol cada cinco minutos. Le digo que tenga paciencia. Yo esperé bastante más."],
+"look": "ALBOR",
+"name": "Albor",
+"needs": "albor_liberado",
+"pos": Vector3(-3.5, 0, -2.5),
+"yaw": 180.0
 }]
 boss_id = ""
 boss_pos = Vector3(0, 0, 0)

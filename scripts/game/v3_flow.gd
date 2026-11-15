@@ -4,8 +4,8 @@ class_name V3Flow extends Node
 ## flag and the start of its numbers (story.v3_start) before the trip's autosave, so that save
 ## is already one of the part 3 (Brumaclara is only valid there) with the level cap at 50. The
 ## arrival cutscene follows as the village's first-visit scene (StoryFlow), and so does the
-## Abuela Rosa's in Villaclaro (arrival_scene(), 3.2.0). The later versions bring the endings
-## here. Gets the session in setup(); never stores Game or a World.
+## Abuela Rosa's in Villaclaro (arrival_scene(), 3.2.0). The v3's ending is StoryFlow's
+## (finish_v3(), 3.3.0). Gets the session in setup(); never stores Game or a World.
 
 var _ctx: SessionContext
 

@@ -1,10 +1,10 @@
 class_name Bestiary extends RefCounted
-## The bestiary's families (five, nine on a caravan game; the v3's enemies, still without
-## families, on a game in Brumaclara): every enemy with a card belongs to one (the Eco de la Niebla
-## has none and never counts). A family is complete once every enemy of it has been beaten
-## (GameState.defeated_enemies, not only seen); its prize, a piece of equipment of its own,
-## is given once (give()) and marked with the world flag "familia_<id>", so the save needs
-## no field of its own. Pure: reads and changes a GameState, no nodes.
+## The bestiary's families (five; nine on a caravan game; thirteen on a game in Brumaclara):
+## every enemy with a card belongs to one (the Eco de la Niebla has none and never counts). A
+## family is complete once every enemy of it has been beaten (GameState.defeated_enemies, not
+## only seen); its prize, a piece of equipment of its own, is given once (give()) and marked
+## with the world flag "familia_<id>", so the save needs no field of its own. Pure: reads and
+## changes a GameState, no nodes.
 
 const FLAG_PREFIX := "familia_"
 ## In the album's order: id, name, the enemies in order and the prize (an Equipment id).
@@ -52,20 +52,42 @@ const V2_ENEMIES: Array[String] = ["rana_dardo", "serpiente_liana", "mono_aullad
 	"seta_tropical", "slime_arena", "murcielago_hielo", "golem_arena", "golem_hielo",
 	"espiritu_cumbre", "armadura_hueca", "gargola", "sombra", "esqueleto_centinela", "momia",
 	"jaguar_sombrio", "gusano_dunas", "grifo_cumbre", "guardian_ciudad", "devorador_portal"]
-## Every v3 enemy with a card so far (3.0.0: the Ciénaga's; 3.1.0: the Cuevas'; 3.2.0: the
-## Ruinas'). Their families come with the 3.3.0; until then they count, are seen and beaten like
-## the rest, with no prize, on a game in the part 3 (GameState.part()).
-const V3_ENEMIES: Array[String] = ["sapo_legamo", "sanguijuela", "fuego_fatuo", "junco_andante",
-	"caiman_bruma", "garza_legamo", "murcielago_cristal", "slime_cristal", "golem_cuarzo",
-	"arana_cristal", "topo_geoda", "coloso_cuarzo", "ave_bruma", "gargola_antigua",
-	"caballero_bruma", "espiritu_viento", "medusa_niebla", "vigia_bruma"]
+
+## The v3's families (3.3.0): the enemies of Brumaclara's four lands and their guardians. They
+## only count on a game in the part 3 (families()); their prizes follow the same rule.
+const V3_FAMILIES: Array[Dictionary] = [
+	{"id": "bestias_brumaclara", "name": "Bestias de Brumaclara",
+		"enemies": ["sapo_legamo", "sanguijuela", "junco_andante", "caiman_bruma",
+			"arana_cristal", "topo_geoda", "lobo_niebla"],
+		"reward": Equipment.MIST_RING},
+	{"id": "cristal_piedra", "name": "Cristal y piedra",
+		"enemies": ["murcielago_cristal", "slime_cristal", "golem_cuarzo", "gargola_antigua",
+			"caballero_bruma", "centinela_caido"],
+		"reward": Equipment.QUARTZ_AMULET},
+	{"id": "hijos_niebla", "name": "Hijos de la Niebla",
+		"enemies": ["fuego_fatuo", "ave_bruma", "espiritu_viento", "medusa_niebla",
+			"sombra_albor", "ojo_niebla", "slime_bruma"],
+		"reward": Equipment.BEACON_AMULET},
+	{"id": "guardianes_fuente", "name": "Guardianes de la Fuente",
+		"enemies": ["garza_legamo", "coloso_cuarzo", "vigia_bruma", "eco_albor"],
+		"reward": Equipment.ALBOR_SWORD},
+]
+## Every v3 enemy with a card, family by family (24).
+const V3_ENEMIES: Array[String] = ["sapo_legamo", "sanguijuela", "junco_andante", "caiman_bruma",
+	"arana_cristal", "topo_geoda", "lobo_niebla", "murcielago_cristal", "slime_cristal",
+	"golem_cuarzo", "gargola_antigua", "caballero_bruma", "centinela_caido", "fuego_fatuo",
+	"ave_bruma", "espiritu_viento", "medusa_niebla", "sombra_albor", "ojo_niebla", "slime_bruma",
+	"garza_legamo", "coloso_cuarzo", "vigia_bruma", "eco_albor"]
 
 
-## The families that count in this game: the v1's, and the v2's on a caravan game.
+## The families that count in this game: the v1's, the v2's on a caravan game and the v3's in
+## Brumaclara.
 static func families(state: GameState) -> Array[Dictionary]:
 	var all: Array[Dictionary] = FAMILIES.duplicate()
 	if state.in_caravan():
 		all.append_array(V2_FAMILIES)
+	if state.part() == 3:
+		all.append_array(V3_FAMILIES)
 	return all
 
 
@@ -84,7 +106,7 @@ static func has(enemy_id: String) -> bool:
 
 
 ## How many enemies the bestiary counts: the families' (22), the v2's on a caravan game (25: 47)
-## and the v3's in Brumaclara.
+## and the v3's in Brumaclara (24: 71).
 static func total_count(state: GameState) -> int:
 	var total := all_ids().size()
 	if state.in_caravan():
@@ -94,9 +116,9 @@ static func total_count(state: GameState) -> int:
 	return total
 
 
-## The family with family_id ({} if none), the v2's too.
+## The family with family_id ({} if none), the v2's and the v3's too.
 static func family(family_id: String) -> Dictionary:
-	for entry in FAMILIES + V2_FAMILIES:
+	for entry in FAMILIES + V2_FAMILIES + V3_FAMILIES:
 		if entry.id == family_id:
 			return entry
 	return {}
@@ -104,7 +126,7 @@ static func family(family_id: String) -> Dictionary:
 
 ## The id of enemy_id's family ("" for none: the Eco de la Niebla).
 static func family_of(enemy_id: String) -> String:
-	for entry in FAMILIES + V2_FAMILIES:
+	for entry in FAMILIES + V2_FAMILIES + V3_FAMILIES:
 		if (entry.enemies as Array).has(enemy_id):
 			return entry.id
 	return ""

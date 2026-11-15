@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="QuestData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/quest_data.gd" id="1_quest"]
+
+[resource]
+script = ExtResource("1_quest")
+id = "ojos"
+title = "Los ojos de la Niebla"
+zone = "brumaclara"
+giver = "Tablón"
+needs = "vigia_bruma"
+gone = "eco_albor"
+turn_in_zone = "brumaclara"
+turn_in = "Orvalla"
+target = "ojo_niebla"
+goal = 4
+objective = "Derrota 4 ojos de la Niebla en la Fuente y avisa a Orvalla."
+status = "ojos %d / %d"
+report = "vuelve con Orvalla"
+offer_lines = Array[String](["SE BUSCA: quien cierre cuatro ojos de la Niebla. Miran desde la Fuente y dan sueño solo de verlos. Se paga en casa de Orvalla."])
+wait_lines = Array[String](["¿Los ojos de la Fuente? Te miran como si te conocieran. A mí me miran como si les debiera dinero."])
+done_lines = Array[String](["¡Cuatro ojos cerrados! Ya decía yo que se me cerraban los míos cada vez que miraba al norte.", "Tu paga, y dos elixires. Si esos ojos dan sueño, esto lo quita."])
+reward_gold = 1800
+reward_items = {
+"elixir": 2
+}

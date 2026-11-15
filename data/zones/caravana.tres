@@ -142,7 +142,8 @@ npcs = [{
 11: ["Te fuiste diez minutos y ya no veo mis botas.", "Esa niebla viene del portal. Si al otro lado necesitan ayuda, ya sabes dónde estamos."],
 12: ["Dicen que al otro lado se ha encendido un faro. Desde aquí la niebla huele un poco menos a sótano."],
 13: ["Dicen que en Brumaclara vuelve a sonar un martillo. Aquí llega el eco por el portal, a la hora de la siesta.", "Al este hay un atajo que encontramos al venir: va derecho a Villaclaro. Con esta niebla, no sé cuánto tiempo seguirá abierto."],
-14: ["Dicen que en Brumaclara han abierto un mercado. Mi Mercader está celoso, aunque no lo diga."]
+14: ["Dicen que en Brumaclara han abierto un mercado. Mi Mercader está celoso, aunque no lo diga."],
+15: ["La niebla se ha ido de mis botas. Por fin sé de qué color eran: marrones. Qué decepción.", "Dicen que al otro lado hay fiesta. Si sobra pastel, ya sabes dónde estamos."]
 },
 "look": "CARAVAN_CHIEF",
 "name": "Jefe de caravana",

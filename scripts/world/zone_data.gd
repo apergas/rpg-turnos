@@ -15,14 +15,15 @@ class_name ZoneData extends Resource
 const IDS: Array[String] = ["pradera", "bosque", "mina_1", "mina_2", "mina_3",
 	"castillo_patio", "castillo_trono", "caravana", "jungla", "desierto", "montana_1", "montana_2",
 	"ciudad_1", "ciudad_2", "brumaclara", "cienaga", "cuevas_1", "cuevas_2", "ruinas_1",
-	"ruinas_2"]
+	"ruinas_2", "fuente"]
 ## The zones of the v2 (the caravan), growing with each version; which zones a save may be on:
 ## zones_of_part().
 const V2_ZONES: Array[String] = ["caravana", "jungla", "desierto", "montana_1", "montana_2", "ciudad_1", "ciudad_2"]
 ## The zones of the v3 (Brumaclara), growing with each version like V2_ZONES (3.0.0:
-## Brumaclara and the Ciénaga; 3.1.0: the Cuevas' two floors; 3.2.0: the Ruinas').
+## Brumaclara and the Ciénaga; 3.1.0: the Cuevas' two floors; 3.2.0: the Ruinas'; 3.3.0: the
+## Fuente).
 const V3_ZONES: Array[String] = ["brumaclara", "cienaga", "cuevas_1", "cuevas_2", "ruinas_1",
-	"ruinas_2"]
+	"ruinas_2", "fuente"]
 ## Side of a dungeon cell, in metres.
 const CELL := 4.0
 ## Dungeon cells: rock (a wall in a castle), floor, stairs up and down, chest, lever,
@@ -227,6 +228,18 @@ const STAIRS_SAFE_RADIUS := 6.0
 @export var forge_pos := Vector3.ZERO
 @export var forge_yaw := 0.0
 @export var forge_lit := false
+## The Fuente de la Niebla's well of light (SourceWell, BrumaclaraStage; 3.3.0), ZERO for none.
+@export var source_pos := Vector3.ZERO
+## Brumaclara en fiesta (BrumaclaraStage; 3.3.0, the etapa 5): pennant garlands strung across
+## the square, [one end, the other end] each at the height it hangs from, with a paper lantern
+## at the middle of each.
+@export var garlands: Array = []
+## Albor's statue by the well (BrumaclaraStage; the Eco beaten, not freed), ZERO for none, and
+## the way it faces (degrees, 0 = -Z, like a figure).
+@export var statue_pos := Vector3.ZERO
+@export var statue_yaw := 0.0
+## The sun peeking from behind the black one (BlackSun; Albor freed).
+@export var sun_peeks := false
 
 @export_group("Dungeon")
 ## Rows of a dungeon floor, north (−Z) first, one character per CELL × CELL cell (see

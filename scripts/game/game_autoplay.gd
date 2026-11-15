@@ -9,9 +9,9 @@ class_name GameAutoplay extends Node
 ## home it restocks there; after a defeat it restocks; an empty map, or one quiet for
 ## AutoplayStarts.AUTOPLAY_STALL_S, gets its groups back (step()); and it runs the medal tour of
 ## --autoplay-zone=medallas. It prints what a reader of the log follows: each zone, each change of
-## mission line, gold or gear, each defeat, the Eco's results and the numbers after the credits, or
-## where the v3 that exists ends. Uses only the public functions of ZoneTravel and FigureTalk
-## (use_pieces()) and the rules; never stores Game or a World.
+## mission line, gold or gear, each defeat, the Eco's results and the numbers after each part's
+## credits. Uses only the public functions of ZoneTravel and FigureTalk (use_pieces()) and the
+## rules; never stores Game or a World.
 
 ## The medal tour is over: Game goes back to the title (which quits on autoplay).
 signal quit_requested
@@ -132,18 +132,14 @@ func reset_quiet() -> void:
 	_quiet_s = 0.0
 
 
-## What follows a battle once the map is the player's again (BattleFlow awaits it): the end
-## of the medal tour, the retreat, the groups back, or a restock after a defeat.
+## What follows a battle once the map is the player's again (BattleFlow awaits it): the v3's
+## numbers once its ending is over, the end of the medal tour, the retreat, the groups back, or a
+## restock after a defeat.
 func after_battle(outcome: int) -> void:
 	var won := outcome == BattleEngine.State.WON
-	if won and _ctx.state.part() == 3 and not StoryState.v3_way_on(_ctx.state.world_flags):
-		# The last zone of the v3 there is so far is behind (3.2.0: the Vigía): the hero goes
-		# back to Brumaclara for the reports and offers, and the run ends.
-		if not _ctx.world.in_village() and _ctx.state.inventory.count(Inventory.WING) > 0:
-			await fly_home()
-		if _ctx.world.in_village():
-			await restock()
-		print_v3_so_far()
+	if won and _ctx.state.story.finished_v3:
+		# The v3's ending is over (StoryFlow.finish_v3()): the run ends with its numbers.
+		print_v3_completed()
 		quit_requested.emit()
 		return
 	if won and _ctx.state.part() == 3 and _ctx.world.in_village():
@@ -231,12 +227,11 @@ func print_v2_completed(numbers: Dictionary) -> void:
 	_print_run_tail()
 
 
-## The numbers of the v3 so far, once its last zone that exists is behind (3.2.0: the Vigía
-## beaten): the autoplay run of the v3 ends there.
-func print_v3_so_far() -> void:
+## The numbers of the v3 after its credits (the game goes on in Brumaclara; the run ends here).
+func print_v3_completed() -> void:
 	var state := _ctx.state
 	var numbers := CreditsData.v3_numbers(state, _ctx.play_time)
-	print("Fin de la v3 por ahora: Nv %d, tiempo en Brumaclara %s, tiempo de juego %s, misiones de Brumaclara %d/%d"
+	print("Juego completado (v3): Nv %d, tiempo en Brumaclara %s, tiempo de juego %s, misiones de Brumaclara %d/%d"
 		% [state.hero.level, numbers.time, CreditsData.clock(_ctx.play_time),
 		state.quests.done_of(3), QuestLog.total_of(3)])
 	_print_run_tail()

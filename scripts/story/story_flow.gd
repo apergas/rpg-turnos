@@ -3,10 +3,11 @@ class_name StoryFlow extends Node
 ## through its CutscenePlayer (play_scene(), marked seen), the prologue of a new game
 ## (play_prologue()), the first visit's scene of each village (check_village_scene();
 ## Villaclaro's in the v3 is V3Flow's), the companion's line the first time a land of the
-## caravan is reached (check_arrival_line()), and the two endings: the v1's credits
-## (finish_game()) and the v2's screen beyond the portal and its credits, after which the game
-## goes on in the Caravana (finish_v2()). Gets the session in setup(); never stores Game or a
-## World.
+## caravan is reached (check_arrival_line()), and the three endings: the v1's credits
+## (finish_game()), the v2's screen beyond the portal and its credits, after which the game
+## goes on in the Caravana (finish_v2()), and the v3's question, final scene and credits, after
+## which it goes on in Brumaclara en fiesta (finish_v3(), 3.3.0); BattleFlow asks for the last two
+## through finish_part(). Gets the session in setup(); never stores Game or a World.
 
 ## The v1's ending is over, or the v2's on autoplay: Game goes back to the title.
 signal quit_requested
@@ -179,6 +180,63 @@ func finish_v2() -> void:
 	_ctx.play_map_music.call()
 	await _ctx.fade.call(0.0)
 	await _ctx.world.show_dialogue(CaravanFlow.CARAVAN_CHIEF, [PORTAL_STILL_LINE])
+	_ctx.set_busy.call(false)
+
+
+## The ending of a part after its last boss (BattleFlow): the v2's (2) or the v3's (3).
+func finish_part(part: int) -> void:
+	if part == 2:
+		await finish_v2()
+	else:
+		await finish_v3()
+
+
+## After the Eco de Albor (its albor scene ends on the Fuente; Game is busy): the question of the
+## ending (on autoplay its first answer, the last with --autoplay-ending=vencer), the answer's
+## final scene (its "flag" step sets ALBOR_FREED or ALBOR_BEATEN; it brings the hero to
+## Brumaclara en fiesta and ends under black), the game finished in the v3 and saved there, the
+## v3's credits with "Fin", then from black Orvalla's line and the prizes of the families the Eco
+## completed. The game goes on in Brumaclara. Freeing Albor leaves the Amuleto del Alba in the
+## Fuente (it leaves the key items).
+func finish_v3() -> void:
+	var choice := 0
+	if RunFlags.autoplay_ending() == AutoplayStarts.BEAT_ENDING:
+		choice = StoryState.ENDING_OPTIONS.size() - 1
+		print("Pregunta: %s -> %s" % [StoryState.ENDING_QUESTION,
+			StoryState.ENDING_OPTIONS[choice]])
+	else:
+		choice = await _ctx.world.ask(StoryState.ENDING_QUESTION, StoryState.ENDING_OPTIONS)
+	if choice == 0:
+		_ctx.state.key_items.erase(StoryState.AMULET_FLAG)
+	await play_scene(StoryState.ENDING_SCENES[choice])
+	_ctx.state.story.finished_v3 = true
+	_ctx.world.freeze(true)
+	_ctx.autosave.call(false)
+	var numbers := CreditsData.v3_numbers(_ctx.state, _ctx.play_time)
+	_ctx.world.set_active(false)
+	_ctx.audio.stop_ambient()
+	_ctx.audio.play_music(MusicLibrary.TITLE)
+	var layer := CanvasLayer.new()
+	layer.layer = UiTokens.LAYER_OVERLAY
+	add_child(layer)
+	var credits := CreditsScreen.new()
+	layer.add_child(credits)
+	await _ctx.fade.call(0.0)
+	await credits.run(CreditsData.v3_credits_sections(_ctx.state, numbers))
+	await _ctx.fade.call(1.0)
+	layer.queue_free()
+	_ctx.world.set_active(true)
+	_ctx.world.freeze(true)
+	_ctx.play_map_music.call()
+	await _ctx.fade.call(0.0)
+	await _ctx.world.show_dialogue(StoryState.V3_KEEPER,
+		[StoryState.fill(StoryState.V3_AFTER_END_LINE, _ctx.state.hero.display_name)])
+	var family_lines := BattleRewards.family_rewards(_ctx.state)
+	if not family_lines.is_empty():
+		_ctx.audio.play_sfx(SfxLibrary.LEVEL_UP)
+		await _ctx.world.show_dialogue("", family_lines)
+	_ctx.refresh_status.call()
+	_ctx.autosave.call(false)
 	_ctx.set_busy.call(false)
 
 

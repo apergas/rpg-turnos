@@ -26,6 +26,9 @@ const MEDAL_TOUR_TIME := 1800.0
 ## The autoplay starts that play the v2: only they answer the Jefe de caravana's questions
 ## with Sí (every other run, the finished-game ones included, stays in the v1).
 const V2_STARTS := ["caravana", "jungla", "desierto", "montana", "ciudad", "portal"]
+## --autoplay-ending=vencer: the v3's last question answered with its last option, "Acabar con el
+## Eco" (StoryFlow.finish_v3()).
+const BEAT_ENDING := "vencer"
 ## --autoplay-zone=<id>: what a new game starting in each zone gets, as planned when
 ## arriving there (zone 1 done: Lv 5, its shop's gear, the Rey Slime beaten).
 const AUTOPLAY_ZONES := {
@@ -349,6 +352,53 @@ const AUTOPLAY_ZONES := {
 		"ally": "brena",
 		"items": {Inventory.BIG_POTION: 5, Inventory.BIG_ETHER: 4, Inventory.WING: 3,
 			Inventory.PHOENIX: 1},
+		"finished": true,
+	},
+	# --autoplay-zone=fuente: the Ruinas done: Lv 49 with the luna gear and Brena, the Vigía
+	# beaten and its seal, at the Fuente's entrance; at the first retreat it buys the amanecer gear
+	# and takes the Fuente's two quests.
+	"fuente": {
+		"zone": "fuente",
+		"experience": 42100,
+		"gold": 7000,
+		"gear": ["espada_luna", "armadura_luna", "escudo_luna", "casco_luna"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra", "senor_niebla", "caravana_vista", "caravana", "companero",
+			"jaguar_sombrio", "gusano_dunas", "montana_palanca", "grifo_cumbre",
+			"guardian_ciudad", "ciudad_reja", "devorador_portal", "portal_calmo",
+			"brumaclara", "brumaclara_vista", "garza_legamo", "cuevas_palanca", "coloso_cuarzo",
+			"amuleto_recuperado", "vigia_bruma"],
+		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo",
+			"insignia_jungla", "sello_desierto", "mapa_montana", "lampara_faro", "cristal_fuente",
+			"amuleto_recuperado", "sello_albor"],
+		"quest_done": true,
+		"town": "brumaclara",
+		"ally": "brena",
+		"items": {Inventory.BIG_POTION: 4, Inventory.BIG_ETHER: 3, Inventory.WING: 3,
+			Inventory.PHOENIX: 1},
+		"finished": true,
+	},
+	# --autoplay-zone=albor: the Fuente almost done: Lv 50 with the amanecer gear and Brena, at its
+	# entrance; it walks the floor and fights the Eco de Albor.
+	"albor": {
+		"zone": "fuente",
+		"experience": 44600,
+		"gold": 2000,
+		"gear": ["espada_amanecer", "armadura_amanecer", "escudo_amanecer", "casco_amanecer"],
+		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",
+			"golem_piedra", "senor_niebla", "caravana_vista", "caravana", "companero",
+			"jaguar_sombrio", "gusano_dunas", "montana_palanca", "grifo_cumbre",
+			"guardian_ciudad", "ciudad_reja", "devorador_portal", "portal_calmo",
+			"brumaclara", "brumaclara_vista", "garza_legamo", "cuevas_palanca", "coloso_cuarzo",
+			"amuleto_recuperado", "vigia_bruma"],
+		"key_items": ["fragmento_bosque", "fragmento_mina", "fragmento_castillo",
+			"insignia_jungla", "sello_desierto", "mapa_montana", "lampara_faro", "cristal_fuente",
+			"amuleto_recuperado", "sello_albor"],
+		"quest_done": true,
+		"town": "brumaclara",
+		"ally": "brena",
+		"items": {Inventory.BIG_POTION: 6, Inventory.BIG_ETHER: 5, Inventory.ELIXIR: 2,
+			Inventory.WING: 3, Inventory.PHOENIX: 1},
 		"finished": true,
 	},
 	# Ready for the Señor de la Niebla: Lv 17 with the castle's gear.

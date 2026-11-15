@@ -1,13 +1,13 @@
 class_name Equipment extends RefCounted
 ## The equipment catalog: every weapon, helmet, armor, shield, ring and amulet, with its
 ## slot, bonus (ATK for a weapon, VEL for a ring or an amulet, DEF for the rest), price in
-## gold, the zone whose shop sells it (1-4 the v1's shops, 5-8 the v2's tramos, 9-12 the v3's etapas; 0: no shop, the starting gear; -1: never sold, a
-## quest's or a bestiary family's reward, a boss's prize or the Coleccionista's), the mesh the hero
-## shows for it
-## (a handslot mesh of Knight.glb, STICK_MESH built in code, or "" for none) and, on some
-## rings and amulets, the status it keeps away ("immune"). A piece that is not a weapon may
-## also add "attack" (extra_attack()) or "defense" (extra_defense()); a helmet may show "horns" (has_horns()); a helmet or a
-## weapon may have a "tint" for its mesh (tint()).
+## gold, the zone whose shop sells it (1-4 the v1's shops, 5-8 the v2's tramos, 9-12 the v3's
+## etapas; 0: no shop, the starting gear; -1: never sold, a quest's or a bestiary family's reward,
+## a boss's prize or the Coleccionista's), the mesh the hero shows for it (a handslot mesh of
+## Knight.glb, STICK_MESH built in code, or "" for none) and, on some rings and amulets, the
+## statuses it keeps away ("immune": one, or a list). A piece that is not a weapon may also add
+## "attack" (extra_attack()) or "defense" (extra_defense()); a helmet may show "horns"
+## (has_horns()); a helmet or a weapon may have a "tint" for its mesh (tint()).
 ## Pure: no nodes.
 
 const WEAPON := "weapon"
@@ -48,6 +48,11 @@ const CLAW_RING := "anillo_garra"
 const OASIS_AMULET := "amuleto_oasis"
 const WATCH_AMULET := "amuleto_vigia"
 const PORTAL_SWORD := "espada_portal"
+## The v3's bestiary families' prizes (3.3.0).
+const MIST_RING := "anillo_bruma"
+const QUARTZ_AMULET := "amuleto_cuarzo"
+const BEACON_AMULET := "amuleto_faro"
+const ALBOR_SWORD := "espada_albor"
 ## What effect_text() says of each status a piece keeps away.
 const IMMUNE_TEXTS := {"poison": "Inmune al veneno", "sleep": "Inmune al sueño",
 	"silence": "Inmune al silencio"}
@@ -170,6 +175,19 @@ const EQUIPMENT := {
 		"tint": Color(1.0, 1.0, 1.25)},
 	"casco_luna": {"name": "Casco de luna", "article": "un", "slot": HELMET,
 		"bonus": 25, "price": 1160, "zone": 11, "mesh": "", "tint": Color(1.0, 1.0, 1.25)},
+	# The v3's fourth set (3.3.0, etapa 4: Brumaclara's Herrero de cristal, from the Vigía on):
+	# the platinum meshes in the warm pale gold of the dawn ("del amanecer": the v1's Espada del
+	# alba is another sword).
+	"espada_amanecer": {"name": "Espada del amanecer", "article": "una", "slot": WEAPON,
+		"bonus": 124, "price": 3900, "zone": 12, "mesh": "2H_Sword",
+		"tint": Color(1.3, 1.08, 0.82)},
+	"armadura_amanecer": {"name": "Armadura del amanecer", "article": "una", "slot": ARMOR,
+		"bonus": 88, "price": 3000, "zone": 12, "mesh": ""},
+	"escudo_amanecer": {"name": "Escudo del amanecer", "article": "un", "slot": SHIELD,
+		"bonus": 38, "price": 1720, "zone": 12, "mesh": "Spike_Shield",
+		"tint": Color(1.3, 1.08, 0.82)},
+	"casco_amanecer": {"name": "Casco del amanecer", "article": "un", "slot": HELMET,
+		"bonus": 28, "price": 1320, "zone": 12, "mesh": "", "tint": Color(1.3, 1.08, 0.82)},
 	# The Eco de la Niebla's prize (the first time only): DEF like any helmet, plus ATK,
 	# dark grey with a blue cast and two bone horns (BattleActor builds them).
 	MIST_HELM: {"name": "Yelmo de bruma", "article": "un", "slot": HELMET, "bonus": 8,
@@ -200,7 +218,7 @@ const EQUIPMENT := {
 	MEDAL_AMULET: {"name": "Amuleto de medallas", "article": "un", "slot": AMULET, "bonus": 4,
 		"price": 0, "zone": -1, "mesh": "", "attack": 3},
 	# The v2's bestiary families' prizes: VEL and ATK, a status kept away with VEL or DEF,
-	# and the best sword of all, the two-handed one in dark red.
+	# and a sword better than any the v2 sells, the two-handed one in dark red.
 	CLAW_RING: {"name": "Anillo de garra", "article": "un", "slot": RING, "bonus": 3,
 		"price": 0, "zone": -1, "mesh": "", "attack": 6},
 	OASIS_AMULET: {"name": "Amuleto del oasis", "article": "un", "slot": AMULET, "bonus": 2,
@@ -209,6 +227,16 @@ const EQUIPMENT := {
 		"price": 0, "zone": -1, "mesh": "", "immune": "silence", "defense": 6},
 	PORTAL_SWORD: {"name": "Espada del portal", "article": "una", "slot": WEAPON, "bonus": 80,
 		"price": 0, "zone": -1, "mesh": "2H_Sword", "tint": Color(1.25, 0.42, 0.4)},
+	# The v3's bestiary families' prizes: VEL and ATK, sleep kept away with DEF, silence and poison
+	# kept away with VEL, and the best sword of all, the two-handed one in the Fuente's light.
+	MIST_RING: {"name": "Anillo de bruma", "article": "un", "slot": RING, "bonus": 4,
+		"price": 0, "zone": -1, "mesh": "", "attack": 8},
+	QUARTZ_AMULET: {"name": "Amuleto de cuarzo", "article": "un", "slot": AMULET, "bonus": 0,
+		"price": 0, "zone": -1, "mesh": "", "immune": "sleep", "defense": 8},
+	BEACON_AMULET: {"name": "Amuleto del faro", "article": "un", "slot": AMULET, "bonus": 3,
+		"price": 0, "zone": -1, "mesh": "", "immune": ["silence", "poison"]},
+	ALBOR_SWORD: {"name": "Espada de Albor", "article": "una", "slot": WEAPON, "bonus": 136,
+		"price": 0, "zone": -1, "mesh": "2H_Sword", "tint": Color(0.85, 1.05, 1.5)},
 }
 
 
@@ -265,9 +293,16 @@ static func stat_name(id: String) -> String:
 	return "DEF"
 
 
-## The status this piece keeps away ("" for none).
-static func immunity(id: String) -> String:
-	return EQUIPMENT[id].get("immune", "") if EQUIPMENT.has(id) else ""
+## The statuses this piece keeps away: none, one ("immune": "sleep") or several ("immune":
+## ["silence", "poison"], the Amuleto del faro).
+static func immunities(id: String) -> Array[String]:
+	var found: Array[String] = []
+	var value: Variant = EQUIPMENT[id].get("immune", []) if EQUIPMENT.has(id) else []
+	if value is String:
+		found.append(value)
+	else:
+		found.assign(value)
+	return found
 
 
 ## The ATK a piece that is not a weapon adds besides its bonus (the Yelmo de bruma, the
@@ -286,12 +321,13 @@ static func has_horns(id: String) -> bool:
 	return EQUIPMENT[id].get("horns", false) if EQUIPMENT.has(id) else false
 
 
-## What a piece gives, for the Equipo page: "ATK +6", "VEL +2 · ATK +2", "Inmune al sueño".
+## What a piece gives, for the Equipo page: "ATK +6", "VEL +2 · ATK +2", "Inmune al sueño",
+## "Inmune al silencio · Inmune al veneno · VEL +3".
 static func effect_text(id: String) -> String:
 	var parts := PackedStringArray()
-	if immunity(id) != "":
-		parts.append(IMMUNE_TEXTS.get(immunity(id), "Inmune"))
-	if bonus(id) > 0 or immunity(id) == "":
+	for status in immunities(id):
+		parts.append(IMMUNE_TEXTS.get(status, "Inmune"))
+	if bonus(id) > 0 or immunities(id).is_empty():
 		parts.append("%s +%d" % [stat_name(id), bonus(id)])
 	if extra_attack(id) > 0:
 		parts.append("ATK +%d" % extra_attack(id))

@@ -11,6 +11,7 @@ const AUTOPLAY_MENU := "--autoplay-menu"
 const AUTOPLAY_EASY := "--autoplay-easy"
 const AUTOPLAY_ZONE := "--autoplay-zone="
 const AUTOPLAY_COMPANION := "--autoplay-companion="
+const AUTOPLAY_ENDING := "--autoplay-ending="
 const DEBUG := "--debug"
 const TOUCH := "--touch"
 
@@ -47,6 +48,13 @@ static func autoplay_zone() -> String:
 ## its own default and checks the id).
 static func autoplay_companion() -> String:
 	return _value(AUTOPLAY_COMPANION)
+
+
+## --autoplay-ending=<answer> (with --autoplay): how the v3's last question is answered
+## (AutoplayStarts.BEAT_ENDING: the last option); "" when absent (the first option, as every
+## question on autoplay).
+static func autoplay_ending() -> String:
+	return _value(AUTOPLAY_ENDING) if autoplay() else ""
 
 
 ## --debug: Game builds its DebugPanel (F1 on the map).

@@ -337,7 +337,7 @@ static func build_environment(root: Node3D, zone: ZoneData = null) -> void:
 	_add_environment(root, zone)
 	_add_sun(root, zone)
 	if zone.black_sun:
-		BlackSun.add(root)
+		BlackSun.add(root, zone.sun_peeks)
 
 
 static func add_mesh(root: Node3D, mesh: Mesh, color: Color, pos: Vector3, \

@@ -67,9 +67,7 @@ func speed_bonus() -> int:
 func immunities() -> Array[String]:
 	var immune: Array[String] = []
 	for slot in Equipment.SLOTS:
-		var status := Equipment.immunity(worn(slot))
-		if status != "":
-			immune.append(status)
+		immune.append_array(Equipment.immunities(worn(slot)))
 	return immune
 
 

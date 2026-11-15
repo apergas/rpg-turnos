@@ -600,6 +600,13 @@ static func is_finished_v2(data: Dictionary) -> bool:
 		and story.get("finished_v2", false) == true
 
 
+## True if the save's v3 is finished (the Eco de Albor beaten and the credits seen): the slot list
+## says "terminada"; it loads as any other, in Brumaclara.
+static func is_finished_v3(data: Dictionary) -> bool:
+	var story: Variant = data.get("story")
+	return is_v3(data) and story is Dictionary and story.get("finished_v3", false) == true
+
+
 const IMPORT_NOT_SAVE := "Ese archivo no es una partida de Villaclaro."
 const IMPORT_NEWER := "Esa partida es de una versión más nueva del juego."
 

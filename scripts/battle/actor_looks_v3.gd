@@ -291,4 +291,105 @@ const LOOKS := {
 		"anims": ActorLooks.CHARACTER_ANIMS,
 		"tint": Color(0.55, 0.68, 1.0),
 	},
+	# The Fuente de la Niebla (3.3.0): the specter, the wolf, the slime and the Knight of before in
+	# the mist's colours, and a new one, the Ojo de la Niebla.
+	# The Sombra de Albor: the specter in deep blue, its aura white.
+	Look.MIST_SHADOW: {
+		"color": Color(0.22, 0.3, 0.55),
+		"aura_color": Color(0.9, 0.95, 1.0),
+		"alpha": 0.7,
+		"eye_color": Color(0.85, 0.95, 1.0),
+		"scale": 1.1,
+		"top": 2.5,
+		"fly": 0.5,
+	},
+	# The Ojo de la Niebla: a big pale eye with a blue iris floating in a halo of mist.
+	Look.MIST_EYE: {
+		"color": Color(0.88, 0.9, 0.96),
+		"iris_color": Color(0.35, 0.55, 0.95),
+		"halo_color": Color(0.65, 0.8, 1.0),
+		"mist_color": Color(0.75, 0.82, 1.0),
+		"scale": 1.0,
+		"top": 2.4,
+		"fly": 1.2,
+	},
+	# The Lobo de niebla: the wolf in a pale grey blue, wrapped in mist.
+	Look.MIST_WOLF: {
+		"color": Color(0.7, 0.74, 0.82),
+		"dark_color": Color(0.5, 0.54, 0.64),
+		"eye_color": Color(0.6, 0.85, 1.0),
+		"mist_color": Color(0.85, 0.9, 1.0),
+		"mist_size": Vector3(0.9, 0.5, 1.4),
+		"scale": 1.2,
+		"top": 1.6,
+		"gentle": true,
+	},
+	# The Slime de bruma: the slime in a misty white blue, a little mist round it.
+	Look.MIST_SLIME: {
+		"color": Color(0.82, 0.88, 1.0),
+		"mist_color": Color(0.85, 0.9, 1.0),
+		"mist_size": Vector3(0.8, 0.4, 0.8),
+		"scale": 1.1,
+		"top": 1.45,
+		"crown": false,
+	},
+	# The Centinela caído: the Knight in worn blue armour, with its helmet, the sword and the
+	# round shield.
+	Look.FALLEN_SENTINEL: {
+		"scene": ActorLooks.KNIGHT,
+		"scale": ActorLooks.CHARACTER_SCALE * 1.15,
+		"top": 2.2,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/1H_Sword_Offhand",
+			"Rig/Skeleton3D/handslot_l/Badge_Shield",
+			"Rig/Skeleton3D/handslot_l/Rectangle_Shield",
+			"Rig/Skeleton3D/handslot_l/Spike_Shield",
+			"Rig/Skeleton3D/handslot_r/2H_Sword",
+		],
+		"anims": ActorLooks.CHARACTER_ANIMS,
+		"tint": Color(0.45, 0.55, 0.78),
+	},
+	# The Eco de Albor, the v3's last boss: the Señor de la Niebla's figure at 1.75 times the size
+	# (not more: its life bar, top + 0.15, must fit the battle camera) in a pale blue grey, with a
+	# corona of light-blue light over its head (its second phase dims it).
+	Look.ALBOR_ECHO: {
+		"scene": ActorLooks.SKELETON_MAGE,
+		"scale": ActorLooks.CHARACTER_SCALE * 1.75,
+		"top": 3.5,
+		"hide": [],
+		"anims": ActorLooks.SKELETON_ANIMS,
+		"props": {ActorLooks.RIGHT_HAND_BONE: ActorLooks.SKELETON_STAFF},
+		"tint": Color(0.5, 0.85, 1.5),
+		"corona": Color(0.7, 0.9, 1.0),
+	},
+	# The Eco de Albor beaten (the albor scene, 3.3.0): the same figure, greyer, its corona out.
+	Look.ALBOR_FADED: {
+		"scene": ActorLooks.SKELETON_MAGE,
+		"scale": ActorLooks.CHARACTER_SCALE * 1.75,
+		"top": 3.5,
+		"hide": [],
+		"anims": ActorLooks.SKELETON_ANIMS,
+		"props": {ActorLooks.RIGHT_HAND_BONE: ActorLooks.SKELETON_STAFF},
+		"tint": Color(0.62, 0.66, 0.78),
+	},
+	# The Lente del faro (the piezas_faro quest, 3.3.0): a big glass in a brass ring, floating.
+	Look.LIGHTHOUSE_LENS: {
+		"color": Color(0.78, 0.6, 0.28),
+		"glass_color": Color(0.85, 0.95, 1.0),
+		"scale": 1.0,
+		"top": 1.6,
+		"fly": 0.7,
+	},
+	# Albor freed (3.3.0): a young guardian, fair and pale, in a light-blue cape, his corona of
+	# light back over his head (on the map only: he never fights).
+	Look.ALBOR: {
+		"scene": ActorLooks.KNIGHT, "scale": ActorLooks.CHARACTER_SCALE, "top": 2.2,
+		"hide": ActorLooks.PERSON_HIDE, "head_texture": ActorLooks.HEAD_BLOND,
+		"hair": {"style": "tail", "color": ActorLooks.HAIR_BLOND},
+		"mesh_tints": {"Knight_ArmLeft": ActorLooks.SKIN_PALE, "Knight_ArmRight": ActorLooks.SKIN_PALE,
+			"Knight_Body": Color(1.2, 1.35, 1.8), "Knight_LegLeft": Color(0.75, 0.8, 1.0),
+			"Knight_LegRight": Color(0.75, 0.8, 1.0)},
+		"cape": Color(0.5, 0.72, 1.0), "anims": ActorLooks.CHARACTER_ANIMS,
+		"corona": Color(0.8, 0.92, 1.0),
+	},
 }

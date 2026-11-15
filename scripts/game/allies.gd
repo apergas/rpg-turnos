@@ -34,7 +34,8 @@ const GROWTH := {
 }
 ## What the companion says the first time the hero reaches each land of the caravan:
 ## zone id -> companion id -> line (2.4.0; the Ciénaga, 3.0.0; the Cuevas, 3.1.0;
-## Villaclaro and the Ruinas, 3.2.0). Remembered with the world flag ARRIVAL_PREFIX + zone id.
+## Villaclaro and the Ruinas, 3.2.0; the Fuente, 3.3.0). Remembered with the world flag
+## ARRIVAL_PREFIX + zone id.
 const ARRIVALS := {
 	"jungla": {
 		"brena": "Qué calor. Si algo se mueve entre las hojas, le pego. Si no se mueve, también.",
@@ -71,6 +72,11 @@ const ARRIVALS := {
 		"tadeo": "No mires abajo. Yo ya he mirado. No lo hagas.",
 		"ulma": "Pisa donde pise yo, y no corras. Aquí un tropiezo dura mucho.",
 	},
+	"fuente": {
+		"brena": "Esto respira. No sé si pegarle o darle los buenos días.",
+		"tadeo": "Huele a lluvia antes de llover. Y a algo muy viejo que se ha despertado de mal humor.",
+		"ulma": "No hay techo. Ese sol negro nos ve tan bien como nosotros a él. Escudo arriba.",
+	},
 	"pradera": {
 		"brena": "¿Esto es tu pueblo? Es pequeño. Me gusta. Aquí nadie podría perderse.",
 		"tadeo": "Así que aquí empezó todo. Pensaba que habría una estatua tuya. Como mínimo, un banco.",
@@ -82,7 +88,7 @@ const ARRIVAL_PREFIX := "llegada_"
 const ARRIVAL_BOSSES := {"jungla": "jaguar_sombrio", "desierto": "gusano_dunas",
 	"montana_1": "grifo_cumbre", "ciudad_1": "guardian_ciudad",
 	"cienaga": "garza_legamo", "cuevas_1": "coloso_cuarzo", "pradera": "amuleto_recuperado",
-	"ruinas_1": "vigia_bruma"}
+	"ruinas_1": "vigia_bruma", "fuente": "eco_albor"}
 ## The upper floors count as their land's arrival zone.
 const ARRIVAL_REGIONS := {"montana_2": "montana_1", "ciudad_2": "ciudad_1",
 	"cuevas_2": "cuevas_1", "ruinas_2": "ruinas_1"}

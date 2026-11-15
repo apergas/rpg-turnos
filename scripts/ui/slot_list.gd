@@ -162,7 +162,7 @@ static func _detail(info: Dictionary) -> String:
 	var save: Dictionary = info.save
 	var text := SaveData.summary_line(save)
 	var story: Variant = save.get("story")
-	if SaveData.is_finished_v2(save) or (story is Dictionary
+	if SaveData.is_finished_v2(save) or SaveData.is_finished_v3(save) or (story is Dictionary
 			and story.get("finished", false) == true and not SaveData.is_caravan(save)):
 		text += FINISHED_TEXT
 	return text

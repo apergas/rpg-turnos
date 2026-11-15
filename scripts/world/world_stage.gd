@@ -112,6 +112,7 @@ static func build(root: Node3D, zone: ZoneData) -> ShaderMaterial:
 		_add_decor(root, zone)
 		for hill in zone.hills:  # the peaks round a floor open to the sky (the mountain)
 			BattleStage.add_mesh(root, BattleStage.unit_sphere(), zone.hill_color, hill[0], hill[1])
+		BrumaclaraStage.build(root, zone)  # the Fuente's well of light (3.3.0)
 		return null
 	_add_ground(root, zone)
 	for patch in zone.ground_patches:
