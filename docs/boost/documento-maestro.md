@@ -46,7 +46,7 @@ Lo que se ha hecho y lo que queda por hacer en Villaclaro. Una fila por versión
 | 3.0.0 · M-77 | La parte 3 en el estado: etapa, capítulos, zonas por parte, guardado 15 | hecho |
 | 3.0.0 · M-78 | Brumaclara, el sol negro y el pueblo que crece con cada jefe | en curso (3.0.0: etapas 1 y 2) |
 | 3.0.0 a 3.3.0 · M-79 | Las cuatro zonas: Ciénaga, Cuevas de cristal, Ruinas flotantes y la Fuente | en curso (3.0.0: la Ciénaga) |
-| 3.0.0 a 3.3.0 · M-80 | Veinte enemigos, tres jefes, el Eco de Albor y cuatro familias del bestiario | spec |
+| 3.0.0 a 3.3.0 · M-80 | Veinte enemigos, tres jefes, el Eco de Albor y cuatro familias del bestiario | en curso (3.0.0: la Ciénaga y la Garza) |
 | 3.0.0 a 3.3.0 · M-81 | Nivel 50, el elemento luz y Alba, cuatro juegos de equipo, el Elixir | en curso (3.0.0: nivel 50 y juego de bruma) |
 | 3.0.0 a 3.3.0 · M-82 | Ocho misiones entregadas a Orvalla | en curso (3.0.0: la Ciénaga) |
 | 3.2.0 · M-83 | La vuelta a Villaclaro a por el Amuleto del Alba | spec |
