@@ -49,6 +49,8 @@ func switch_zone(zone_id: String, entry_id: String) -> void:
 		zone = CampLook.dressed(zone, _ctx.state.tramo(), _ctx.state.etapa())  # the land it camps by (2.4.0)
 	elif zone_id == BrumaclaraLook.ZONE:
 		zone = BrumaclaraLook.dressed(zone, _ctx.state.etapa())  # what each boss brings back (3.0.0)
+	elif zone_id == VillaclaroLook.ZONE:
+		zone = VillaclaroLook.dressed(zone, _ctx.state.part())  # the Niebla on its roads (3.2.0)
 	_ctx.state.zone_id = zone_id
 	var world: World = WORLD_SCENE.instantiate()
 	world.zone = zone
