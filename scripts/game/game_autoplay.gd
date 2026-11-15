@@ -137,7 +137,7 @@ func reset_quiet() -> void:
 func after_battle(outcome: int) -> void:
 	var won := outcome == BattleEngine.State.WON
 	if won and _ctx.state.part() == 3 and not StoryState.v3_way_on(_ctx.state.world_flags):
-		# The last zone of the v3 there is so far is behind (3.1.0: the Coloso): the hero goes
+		# The last zone of the v3 there is so far is behind (3.2.0: the Vigía): the hero goes
 		# back to Brumaclara for the reports and offers, and the run ends.
 		if not _ctx.world.in_village() and _ctx.state.inventory.count(Inventory.WING) > 0:
 			await fly_home()
@@ -231,7 +231,7 @@ func print_v2_completed(numbers: Dictionary) -> void:
 	_print_run_tail()
 
 
-## The numbers of the v3 so far, once its last zone that exists is behind (3.1.0: the Coloso
+## The numbers of the v3 so far, once its last zone that exists is behind (3.2.0: the Vigía
 ## beaten): the autoplay run of the v3 ends there.
 func print_v3_so_far() -> void:
 	var state := _ctx.state

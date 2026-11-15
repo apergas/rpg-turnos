@@ -273,4 +273,22 @@ const LOOKS := {
 		"top": 2.3,
 		"fly": 1.1,
 	},
+	# The Vigía de la bruma, the Ruinas' boss: the Knight at 1.6 times the size in worn blue
+	# armour, with its helmet, the round shield and, for a lance, the skeletons' staff.
+	Look.MIST_WATCHER: {
+		"scene": ActorLooks.KNIGHT,
+		"scale": ActorLooks.CHARACTER_SCALE * 1.6,
+		"top": 3.1,
+		"hide": [
+			"Rig/Skeleton3D/handslot_l/1H_Sword_Offhand",
+			"Rig/Skeleton3D/handslot_l/Badge_Shield",
+			"Rig/Skeleton3D/handslot_l/Rectangle_Shield",
+			"Rig/Skeleton3D/handslot_l/Spike_Shield",
+			"Rig/Skeleton3D/handslot_r/1H_Sword",
+			"Rig/Skeleton3D/handslot_r/2H_Sword",
+		],
+		"props": {ActorLooks.RIGHT_HAND_BONE: ActorLooks.SKELETON_STAFF},
+		"anims": ActorLooks.CHARACTER_ANIMS,
+		"tint": Color(0.55, 0.68, 1.0),
+	},
 }

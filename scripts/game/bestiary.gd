@@ -58,7 +58,7 @@ const V2_ENEMIES: Array[String] = ["rana_dardo", "serpiente_liana", "mono_aullad
 const V3_ENEMIES: Array[String] = ["sapo_legamo", "sanguijuela", "fuego_fatuo", "junco_andante",
 	"caiman_bruma", "garza_legamo", "murcielago_cristal", "slime_cristal", "golem_cuarzo",
 	"arana_cristal", "topo_geoda", "coloso_cuarzo", "ave_bruma", "gargola_antigua",
-	"caballero_bruma", "espiritu_viento", "medusa_niebla"]
+	"caballero_bruma", "espiritu_viento", "medusa_niebla", "vigia_bruma"]
 
 
 ## The families that count in this game: the v1's, and the v2's on a caravan game.
