@@ -7,6 +7,8 @@ const POTION := "potion"
 const ETHER := "ether"
 const BIG_POTION := "pocion_grande"
 const BIG_ETHER := "eter_grande"
+## The Elixir (3.2.0): every HP and MP back, sold by Brumaclara's Herrero.
+const ELIXIR := "elixir"
 const ANTIDOTE := "antidote"
 const WING := "wing"
 const INCENSE := "incienso"
@@ -40,10 +42,10 @@ const AUTO_USE := "Se usa sola"
 ## (BattleEngine keeps the guard; it is gone with the battle).
 const EFFECT_WAKE_GUARD := "wake_guard"
 ## name and article (for "una Poción"); effect "hp" (heals value HP), "mp" (restores
-## value MP), "cure" (removes the status named by value), "travel" (the Ala de viaje:
-## Game takes the hero to the last village visited and leaves a portal there that leads
-## back once), "repel" (the Incienso: for value metres touching a group of monsters starts no battle; GameState
-## counts them), "seed" (adds SEED_BONUS to the Combatant field named by value),
+## value MP), "full" (every HP and MP back: the Elixir), "cure" (removes the status named
+## by value), "travel" (the Ala de viaje: Game takes the hero to the last village visited
+## and leaves a portal there that leads back once), "repel" (the Incienso: for value metres
+## touching a group of monsters starts no battle; GameState counts them), "seed" (adds SEED_BONUS to the Combatant field named by value),
 ## "revive" (EFFECT_REVIVE: the Pluma de fénix, used by itself when the hero falls in battle,
 ## value is the share of max HP he rises with), "wake_guard" (EFFECT_WAKE_GUARD: the
 ## Despertador, no sleep for the rest of the battle) or "quest"
@@ -59,6 +61,8 @@ const ITEMS := {
 		"price": 40, "battle": true, "field": true, "text": "Recupera 100 PV."},
 	BIG_ETHER: {"name": "Éter grande", "article": "un", "effect": "mp", "value": 40,
 		"price": 90, "battle": true, "field": true, "text": "Recupera 40 PM."},
+	ELIXIR: {"name": "Elixir", "article": "un", "effect": "full", "value": 0, "price": 400,
+		"battle": true, "field": true, "text": "Recupera todos los PV y PM."},
 	ANTIDOTE: {"name": "Antídoto", "article": "un", "effect": "cure", "value": "poison",
 		"price": 10, "battle": true, "field": false, "text": "Cura el veneno."},
 	ALARM: {"name": "Despertador", "article": "un", "effect": EFFECT_WAKE_GUARD, "value": 0,
@@ -99,7 +103,7 @@ const ITEMS := {
 		"text": "Sube la VEL en 2 para siempre."},
 }
 ## Order of the item lists.
-const IDS: Array[String] = [POTION, ETHER, BIG_POTION, BIG_ETHER, ANTIDOTE, ALARM, PHOENIX, WING,
+const IDS: Array[String] = [POTION, ETHER, BIG_POTION, BIG_ETHER, ELIXIR, ANTIDOTE, ALARM, PHOENIX, WING,
 	INCENSE, SEED_ATTACK, SEED_DEFENSE, SEED_SPEED, SETA, PIEL_MONO, CRISTAL_HIELO, JUNCO_BRUMA,
 	ESQUIRLA_GEODA]
 ## Why an Ala de viaje can't be used in a village.
@@ -211,6 +215,9 @@ func problem(id: String, c: Combatant, in_battle: bool) -> String:
 		"mp":
 			if c.mp >= c.max_mp:
 				return "PM al máximo"
+		"full":
+			if c.hp >= c.max_hp and c.mp >= c.max_mp:
+				return "PV y PM al máximo"
 		"cure":
 			if not c.status.has(item.value):
 				return "No hace falta"
@@ -218,7 +225,7 @@ func problem(id: String, c: Combatant, in_battle: bool) -> String:
 
 
 ## Takes one and applies it to c. Returns {"used": bool, "effect": String, "amount":
-## int (HP or MP recovered), "status": String (cured), "reason": String (why not)}. A
+## int (HP or MP recovered), "mp": int (MP recovered by a "full" item), "status": String (cured), "reason": String (why not)}. A
 ## "travel" item only gets used up: the caller does the trip.
 func use(id: String, c: Combatant, in_battle: bool) -> Dictionary:
 	var reason := problem(id, c, in_battle)
@@ -235,6 +242,11 @@ func use(id: String, c: Combatant, in_battle: bool) -> Dictionary:
 		"mp":
 			result.amount = mini(item.value, c.max_mp - c.mp)
 			c.mp += result.amount
+		"full":
+			result.amount = c.max_hp - c.hp
+			result["mp"] = c.max_mp - c.mp
+			c.hp = c.max_hp
+			c.mp = c.max_mp
 		"cure":
 			c.status.erase(item.value)
 			result.status = item.value

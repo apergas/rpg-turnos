@@ -158,6 +158,18 @@ const EQUIPMENT := {
 		"tint": Color(0.8, 0.75, 1.35)},
 	"casco_cristal": {"name": "Casco de cristal", "article": "un", "slot": HELMET,
 		"bonus": 22, "price": 1010, "zone": 10, "mesh": "", "tint": Color(0.82, 0.78, 1.35)},
+	# The v3's third set (3.2.0, etapa 3: Brumaclara's Herrero de cristal, from the Coloso on):
+	# the platinum meshes in the pale silver of the moon.
+	"espada_luna": {"name": "Espada de luna", "article": "una", "slot": WEAPON,
+		"bonus": 110, "price": 3440, "zone": 11, "mesh": "2H_Sword",
+		"tint": Color(1.0, 1.0, 1.25)},
+	"armadura_luna": {"name": "Armadura de luna", "article": "una", "slot": ARMOR,
+		"bonus": 78, "price": 2650, "zone": 11, "mesh": ""},
+	"escudo_luna": {"name": "Escudo de luna", "article": "un", "slot": SHIELD,
+		"bonus": 34, "price": 1520, "zone": 11, "mesh": "Spike_Shield",
+		"tint": Color(1.0, 1.0, 1.25)},
+	"casco_luna": {"name": "Casco de luna", "article": "un", "slot": HELMET,
+		"bonus": 25, "price": 1160, "zone": 11, "mesh": "", "tint": Color(1.0, 1.0, 1.25)},
 	# The Eco de la Niebla's prize (the first time only): DEF like any helmet, plus ATK,
 	# dark grey with a blue cast and two bone horns (BattleActor builds them).
 	MIST_HELM: {"name": "Yelmo de bruma", "article": "un", "slot": HELMET, "bonus": 8,
