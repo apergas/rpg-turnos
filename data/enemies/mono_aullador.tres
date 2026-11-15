@@ -18,6 +18,7 @@ exp_reward = 60
 gold_reward = 39
 weak = Array[String](["thunder"])
 drops = {
-"piel_mono": 0.5
+"piel_mono": 0.5,
+"pluma_fenix": 0.02
 }
 help = ExtResource("2_rana")
