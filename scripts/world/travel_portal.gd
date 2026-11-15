@@ -2,7 +2,7 @@ class_name TravelPortal extends Node3D
 ## The Ala de viaje's portal in the village (World.set_portal(); 2.5.0): a dark-blue swirling
 ## disc (portal_swirl.gdshader) with a light-blue corona of rays around it, like an eclipse,
 ## sparks rising from its edge (none on low quality, half on a phone: the ZoneParticles
-## flags) and a soft blue light that pulses with it; the "Portal" sign over it. ring_only:
+## flags) and a soft blue light that pulses with it; the "Portal" sign over it (or an exit's label: MapProps draws an exit with "look": "portal" as one, 3.0.0). ring_only:
 ## the glowing ring on the ground of the spot it leads back to (World.set_return_mark()).
 ## Seen from the south, like every figure: it stands in the XY plane.
 
@@ -25,6 +25,9 @@ const LIGHT_RANGE := 6.0
 const MARK_SIZE := 2.2
 
 var ring_only := false
+## The sign over the portal: "Portal" for the Ala de viaje's, an exit's label for a zone exit
+## drawn as a portal (MapProps).
+var sign_text := "Portal"
 
 var _light: OmniLight3D
 var _time := 0.0
@@ -43,7 +46,7 @@ func _ready() -> void:
 	_light.position = Vector3(0, CENTER_Y, 0.8)
 	add_child(_light)
 	var label := Label3D.new()
-	label.text = "Portal"
+	label.text = sign_text
 	UiTheme.style_3d(label, &"display-m", &"text-display-soft", UiTokens.OUTLINE_L)
 	label.pixel_size = 0.008
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED

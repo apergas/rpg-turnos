@@ -1,5 +1,6 @@
 class_name Bestiary extends RefCounted
-## The bestiary's families (five, nine on a caravan game): every enemy with a card belongs to one (the Eco de la Niebla
+## The bestiary's families (five, nine on a caravan game; the v3's enemies, still without
+## families, on a game in Brumaclara): every enemy with a card belongs to one (the Eco de la Niebla
 ## has none and never counts). A family is complete once every enemy of it has been beaten
 ## (GameState.defeated_enemies, not only seen); its prize, a piece of equipment of its own,
 ## is given once (give()) and marked with the world flag "familia_<id>", so the save needs
@@ -51,6 +52,11 @@ const V2_ENEMIES: Array[String] = ["rana_dardo", "serpiente_liana", "mono_aullad
 	"seta_tropical", "slime_arena", "murcielago_hielo", "golem_arena", "golem_hielo",
 	"espiritu_cumbre", "armadura_hueca", "gargola", "sombra", "esqueleto_centinela", "momia",
 	"jaguar_sombrio", "gusano_dunas", "grifo_cumbre", "guardian_ciudad", "devorador_portal"]
+## Every v3 enemy with a card so far (3.0.0: the Ciénaga's). Their families come with the
+## 3.3.0; until then they count, are seen and beaten like the rest, with no prize, on a game in
+## the part 3 (GameState.part()).
+const V3_ENEMIES: Array[String] = ["sapo_legamo", "sanguijuela", "fuego_fatuo", "junco_andante",
+	"caiman_bruma", "garza_legamo"]
 
 
 ## The families that count in this game: the v1's, and the v2's on a caravan game.
@@ -72,12 +78,18 @@ static func all_ids() -> Array[String]:
 
 ## True if enemy_id has a card (and so counts as seen and beaten).
 static func has(enemy_id: String) -> bool:
-	return family_of(enemy_id) != "" or V2_ENEMIES.has(enemy_id)
+	return family_of(enemy_id) != "" or V2_ENEMIES.has(enemy_id) or V3_ENEMIES.has(enemy_id)
 
 
-## How many enemies the bestiary counts: the families' (22) and, on a caravan game, the v2's (25: 47 in all).
+## How many enemies the bestiary counts: the families' (22), the v2's on a caravan game (25: 47)
+## and the v3's in Brumaclara.
 static func total_count(state: GameState) -> int:
-	return all_ids().size() + (V2_ENEMIES.size() if state.in_caravan() else 0)
+	var total := all_ids().size()
+	if state.in_caravan():
+		total += V2_ENEMIES.size()
+	if state.part() == 3:
+		total += V3_ENEMIES.size()
+	return total
 
 
 ## The family with family_id ({} if none), the v2's too.
@@ -149,6 +161,8 @@ static func seen_count(state: GameState) -> int:
 	var ids := all_ids()
 	if state.in_caravan():
 		ids.append_array(V2_ENEMIES)
+	if state.part() == 3:
+		ids.append_array(V3_ENEMIES)
 	for id in ids:
 		if state.seen_enemies.has(id):
 			seen += 1

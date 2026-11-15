@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="Cutscene" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/story/cutscene.gd" id="1_cutscene"]
+
+[resource]
+script = ExtResource("1_cutscene")
+id = "brumaclara_llega"
+steps = [
+["wait", 0.5],
+["move", "Orvalla", Vector3(-1.2, 0, 12.5), true],
+["move", "Neblí", Vector3(2.6, 0, 12), true],
+["camera_to", Vector3(0, 0, 12), 14.0],
+["say", "", ["Al otro lado del portal hace frío. Un sol negro cuelga sobre un pueblo dormido, y la niebla del suelo corre hacia el portal como un río."]],
+["camera_back"],
+["face", "{compañero}", "hero"],
+["say", "{compañero}", ["¿Has visto el cielo? Ese sol no calienta nada."]],
+["approach", "Orvalla", "hero", 1.8],
+["face", "hero", "Orvalla"],
+["face", "Orvalla", "hero"],
+["say", "Orvalla", ["Así que sois vosotros. Desde que el portal se quedó quieto, la Niebla se va por tu agujero.", "Soy Orvalla, la farera de Brumaclara. Esa niebla es nuestro aire. Siempre ha salido de la Fuente, al norte.", "Si se vacía, Brumaclara se ahoga. Y si pasa toda a vuestro lado, allí volverá lo de antes. Pero peor."]],
+["approach", "Neblí", "hero", 2.2],
+["face", "Neblí", "hero"],
+["say", "Neblí", ["¿Al otro lado hay sol de verdad? ¿Uno que da luz?"]],
+["say", "Orvalla", ["Neblí, deja respirar a la gente.", "Mi faro lleva un año apagado: algo se llevó la lámpara a la Ciénaga, al norte, pasado el faro.", "Si la encuentras, quizá veamos por dónde seguir."]],
+["fade_out"],
+["flag", "brumaclara_vista"],
+["fade_in"]
+]

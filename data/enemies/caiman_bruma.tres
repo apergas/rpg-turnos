@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "caiman_bruma"
+display_name = "Caimán de bruma"
+max_hp = 320
+hp = 320
+attack = 98
+defense = 88
+speed = 22
+map_roam = 1.5
+map_speed = 1.3
+exp_reward = 97
+gold_reward = 78
+ai_weights = {
+"attack": 70,
+"charge": 20,
+"stagger": 10
+}
+weak = Array[String](["thunder"])
+resist = Array[String](["ice"])
+drops = {
+"pocion_grande": 0.1
+}

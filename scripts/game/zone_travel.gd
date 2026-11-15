@@ -46,7 +46,9 @@ func setup(ctx: SessionContext) -> void:
 func switch_zone(zone_id: String, entry_id: String) -> void:
 	var zone := ZoneData.by_id(zone_id)
 	if zone_id == CampLook.ZONE:
-		zone = CampLook.dressed(zone, _ctx.state.tramo())  # the land it camps by (2.4.0)
+		zone = CampLook.dressed(zone, _ctx.state.tramo(), _ctx.state.etapa())  # the land it camps by (2.4.0)
+	elif zone_id == BrumaclaraLook.ZONE:
+		zone = BrumaclaraLook.dressed(zone, _ctx.state.etapa())  # what each boss brings back (3.0.0)
 	_ctx.state.zone_id = zone_id
 	var world: World = WORLD_SCENE.instantiate()
 	world.zone = zone

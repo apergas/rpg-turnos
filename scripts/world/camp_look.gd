@@ -2,7 +2,7 @@ class_name CampLook extends RefCounted
 ## The caravan's camp (the Caravana) dressed for the land it is camped next to (2.4.0): the
 ## same layout (tents, figures, exits, entries, wells, the campfire, the autoplay route), the
 ## look of that land: its ground, hills, sky, light and fog, its grass, trees and Kenney
-## decoration, its particles and its ambient sound (the music stays the caravan's). Pure:
+## decoration, its particles and its ambient sound (the music stays the caravan's); by the calmed portal, the v3's mist while Brumaclara needs help. Pure:
 ## dressed() returns a copy of the zone; Game builds the Caravana from it.
 
 const ZONE := "caravana"
@@ -58,11 +58,17 @@ const LOOKS := {
 ## The camp by the calmed portal: a softer, clearer sky than the city's, no ash.
 const CALM := {"sky_top": Color(0.42, 0.36, 0.48), "haze": Color(0.78, 0.6, 0.55),
 	"fog_density": 0.006, "sun_energy": 0.8, "particles": ""}
+## The camp by the calmed portal while the v3 is on (Brumaclara's etapas 1 to 4; 3.0.0): the
+## mist that comes through the portal, knee-deep, and a greyer haze. The Eco de Albor beaten,
+## the calm look comes back.
+const V3_MIST := {"haze": Color(0.62, 0.62, 0.72), "fog_density": 0.02,
+	"particles": ZoneParticles.BRUMA}
 
 
-## A copy of the Caravana dressed for tramo (GameState.tramo()); zone itself for a tramo
-## with no look (0: never in the camp).
-static func dressed(zone: ZoneData, tramo: int) -> ZoneData:
+## A copy of the Caravana dressed for tramo (GameState.tramo()) and, by the calmed portal, for
+## the v3's etapa (GameState.etapa()); zone itself for a tramo with no look (0: never in the
+## camp).
+static func dressed(zone: ZoneData, tramo: int, etapa := 0) -> ZoneData:
 	if not LOOKS.has(tramo):
 		return zone
 	var look: Dictionary = LOOKS[tramo]
@@ -94,4 +100,8 @@ static func dressed(zone: ZoneData, tramo: int) -> ZoneData:
 	if look.get("calm", false):
 		for field: String in CALM:
 			camp.set(field, CALM[field])
+		if etapa >= 1 and etapa <= 4:
+			camp.look_key += "_v3"
+			for field: String in V3_MIST:
+				camp.set(field, V3_MIST[field])
 	return camp

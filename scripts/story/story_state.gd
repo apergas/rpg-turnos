@@ -2,12 +2,13 @@ class_name StoryState extends RefCounted
 ## Where the story is: the cutscenes already seen and whether the ending was reached.
 ## The chapter follows from them and the world flags (the bosses beaten): 0 prologue,
 ## 1 meadow, 2 forest, 3 mine, 4 castle, 5 the end; in the v2 (the caravan) 6 jungle, 7 desert,
-## 8 mountain, 9 the abandoned city, 10 the v2's end (the portal calm). Says which cutscene comes after a
-## boss or on reaching a village, and the next step of the story in one line. Pure: Game
-## asks it and plays the cutscenes (data/cutscenes/<id>.tres).
+## 8 mountain, 9 the abandoned city, 10 the v2's end (the portal calm); in the v3 (Brumaclara)
+## 10 + its etapa: 11 the Ciénaga, 12 the Cuevas, 13 the Ruinas, 14 the Fuente, 15 the v3's
+## end. Says which cutscene comes after a boss or on reaching a village, and the next step of
+## the story in one line. Pure: Game asks it and plays the cutscenes (data/cutscenes/<id>.tres).
 
 enum Chapter { PROLOGUE, MEADOW, FOREST, MINE, CASTLE, END, CARAVAN, DESERT, MOUNTAIN, CITY,
-	V2_END }
+	V2_END, BRUMACLARA, CUEVAS, RUINAS, FUENTE, V3_END }
 
 const DEFAULT_NAME := "Héroe"
 const MAX_NAME_LENGTH := 8
@@ -16,7 +17,7 @@ const NAME_TAG := "{nombre}"
 ## Every cutscene, in story order.
 const SCENES: Array[String] = ["prologo", "rey_slime", "aldea_bosque", "bruja", "mina",
 	"golem", "castillo", "final", "caravana_llega", "caravana_parte", "caravana_campamento",
-	"jaguar", "gusano", "grifo", "guardian", "cruce"]
+	"jaguar", "gusano", "grifo", "guardian", "cruce", "brumaclara_llega", "garza"]
 ## The cutscene that follows beating each boss (its world flag).
 const AFTER_BOSS := {
 	"rey_slime": "rey_slime",
@@ -27,6 +28,7 @@ const AFTER_BOSS := {
 	"gusano_dunas": "gusano",
 	"grifo_cumbre": "grifo",
 	"guardian_ciudad": "guardian",
+	"garza_legamo": "garza",
 	"devorador_portal": "cruce",
 }
 ## The cutscene of the first visit to each zone's village.
@@ -35,6 +37,7 @@ const ON_VILLAGE := {
 	"mina_1": "mina",
 	"castillo_patio": "castillo",
 	"caravana": "caravana_campamento",
+	"brumaclara": "brumaclara_llega",
 }
 ## The boss whose flag ends each chapter, from the meadow on.
 const CHAPTER_BOSSES: Array[String] = ["rey_slime", "bruja", "golem_piedra", "senor_niebla"]
@@ -46,6 +49,18 @@ const COMPANION_FLAG := "companero"
 const V2_BOSSES: Array[String] = ["jaguar_sombrio", "gusano_dunas", "grifo_cumbre",
 	"guardian_ciudad"]
 const V2_FINAL_BOSS := "devorador_portal"
+## The v3 (Brumaclara, 3.0.0): its flag is set the first time the hero stands in Brumaclara
+## (V3Flow). Its zone bosses, one per etapa, and the last one, at the Fuente.
+const V3_FLAG := "brumaclara"
+const V3_BOSSES: Array[String] = ["garza_legamo", "coloso_cuarzo", "vigia_bruma"]
+const V3_FINAL_BOSS := "eco_albor"
+## Brumaclara's lighthouse keeper: she says how the v3 goes on, and every mission of the v3 is
+## handed to her (as the v2's are to the Jefe de caravana).
+const V3_KEEPER := "Orvalla"
+## While Brumaclara has no exit open to another land of the v3 (each version of the v3 brings
+## the next one; the 3.0.0 ends with the Garza): what Orvalla adds and the goal.
+const V3_NOT_YET_LINE := "Todavía no sabemos cómo seguir. Descansa, y vuelve cuando la luz nos diga algo."
+const V3_WAIT_GOAL := "El faro vuelve a dar luz"
 ## The mine's flags (ZoneData lever_flag, floor_key, door_flag of its floors).
 const MINE_LEVER := "mina_palanca"
 const MINE_KEY := "llave_mina"
@@ -93,7 +108,8 @@ const GOALS := {
 	Chapter.DESERT: "Objetivo: atraviesa el desierto",
 	Chapter.MOUNTAIN: "Objetivo: sube a la cumbre",
 	Chapter.CITY: "Objetivo: entra en la ciudad abandonada",
-	Chapter.V2_END: "El portal está en calma",
+	Chapter.V2_END: "Objetivo: cruza el portal",
+	Chapter.BRUMACLARA: "Objetivo: atraviesa la Ciénaga y devuelve la luz al faro",
 }
 
 ## Cutscene ids already played (SCENES entries), in the order they were seen.
@@ -105,12 +121,19 @@ var finished_v2 := false
 ## When the hero left with the caravan: [play time in seconds, battles], for the v2's credits;
 ## [] for a save that was already in the caravan before 2.3.0.
 var v2_start: Array = []
+## True once the v3's ending and its credits were reached (the Eco de Albor beaten; 3.3.0).
+var finished_v3 := false
+## When the hero first stood in Brumaclara: [play time in seconds, battles], for the v3's
+## numbers; [] before the v3; [0, 0] for an --autoplay-zone start inside it.
+var v3_start: Array = []
 
 
 ## The chapter now, from the cutscenes seen and the world flags (GameState.world_flags).
 ## In the caravan (CARAVAN_FLAG) it is CARAVAN + the v2 bosses beaten, V2_END once the
-## Devorador del portal falls.
+## Devorador del portal falls; in Brumaclara (V3_FLAG) V2_END + the etapa.
 func chapter(flags: Dictionary) -> Chapter:
+	if flags.get(V3_FLAG, false):
+		return (Chapter.V2_END + etapa(flags)) as Chapter
 	if flags.get(CARAVAN_FLAG, false):
 		return (Chapter.CARAVAN + tramo(flags) - 1) as Chapter
 	if not has_seen("prologo"):
@@ -121,6 +144,18 @@ func chapter(flags: Dictionary) -> Chapter:
 			break
 		reached = (reached + 1) as Chapter
 	return reached
+
+
+## True while Brumaclara has an exit open, with these flags, to a land of the v3 (not the
+## portal back to the Caravana). False before the v3.
+static func v3_way_on(flags: Dictionary) -> bool:
+	var town := ZoneData.by_id(BrumaclaraLook.ZONE)
+	if town == null or not flags.get(V3_FLAG, false):
+		return false
+	for exit: Dictionary in town.exits:
+		if exit.to != CampLook.ZONE and ZoneData.is_present(exit, flags):
+			return true
+	return false
 
 
 ## The stretch of the caravan's road (the v2): 1 + the zone bosses beaten in order, 5 once
@@ -136,6 +171,22 @@ static func tramo(flags: Dictionary) -> int:
 			break
 		reached += 1
 	return mini(reached, 4)
+
+
+## The stretch of the v3 (Brumaclara): 0 before it; 1 + the v3's zone bosses beaten in order
+## (1 to 4); 5 once the Eco de Albor is beaten (the epilogue). Never saved: it follows from the
+## flags, like the tramo.
+static func etapa(flags: Dictionary) -> int:
+	if not flags.get(V3_FLAG, false):
+		return 0
+	if flags.get(V3_FINAL_BOSS, false):
+		return 5
+	var reached := 1
+	for boss in V3_BOSSES:
+		if not flags.get(boss, false):
+			break
+		reached += 1
+	return reached
 
 
 func has_seen(scene_id: String) -> bool:
@@ -176,8 +227,11 @@ func mark_seen_for_flags(flags: Dictionary) -> void:
 		mark_seen("caravana_parte")
 	if flags.get(COMPANION_FLAG, false):
 		mark_seen("caravana_campamento")
+	if flags.get(V3_FLAG, false):
+		mark_seen("brumaclara_llega")
 	finished = flags.get("senor_niebla", false)
 	finished_v2 = flags.get(V2_FINAL_BOSS, false)
+	finished_v3 = flags.get(V3_FINAL_BOSS, false)
 
 
 ## The next step of the story in one line. In the mine chapter it follows the floor the hero
@@ -192,6 +246,8 @@ func goal_text(flags: Dictionary, zone_id := "") -> String:
 		return "Objetivo: habla con el Jefe de caravana"
 	if now == Chapter.CITY:
 		return CITY_GOALS[_city_step(flags, zone_id)]
+	if now > Chapter.V2_END and not v3_way_on(flags):
+		return V3_WAIT_GOAL
 	return GOALS[now]
 
 
@@ -225,7 +281,8 @@ static func _city_step(flags: Dictionary, zone_id: String) -> String:
 
 func to_dict() -> Dictionary:
 	return {"seen": seen.duplicate(), "finished": finished, "finished_v2": finished_v2,
-		"v2_start": v2_start.duplicate()}
+		"v2_start": v2_start.duplicate(), "finished_v3": finished_v3,
+		"v3_start": v3_start.duplicate()}
 
 
 ## Loads what to_dict() wrote; unknown scene ids are dropped.
@@ -236,10 +293,16 @@ func set_from(data: Dictionary) -> void:
 			mark_seen(id)
 	finished = bool(data.get("finished", false))
 	finished_v2 = bool(data.get("finished_v2", false))
-	v2_start = []
-	var start: Variant = data.get("v2_start", [])
-	if start is Array and (start as Array).size() == 2:
-		v2_start = [float(start[0]), int(start[1])]
+	v2_start = _start(data.get("v2_start", []))
+	finished_v3 = bool(data.get("finished_v3", false))
+	v3_start = _start(data.get("v3_start", []))
+
+
+## A saved [play time, battles] (v2_start, v3_start) as numbers, [] if it is not one.
+static func _start(value: Variant) -> Array:
+	if value is Array and (value as Array).size() == 2:
+		return [float(value[0]), int(value[1])]
+	return []
 
 
 ## text with NAME_TAG replaced by name.

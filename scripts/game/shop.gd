@@ -7,7 +7,7 @@ const VILLACLARO := "villaclaro"
 const BOSQUE := "bosque"
 const MINA := "mina"
 const CASTILLO := "castillo"
-## The Caravana's merchant (the v2): one figure, a shop per tramo (caravan_shop()).
+## The Caravana's merchant (the v2 and the v3): one figure, a shop per step (caravan_shop(), GameState.shop_step()).
 const CARAVAN_SHOP := "caravana"
 ## The Jefe de caravana's choice of companion (the v2): three "creatures" at no cost.
 const COMPANIONS_SHOP := "companeros"
@@ -80,6 +80,14 @@ const SHOPS := {
 		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
 			Inventory.WING, Inventory.INCENSE, Inventory.PHOENIX, Inventory.ALARM],
 	},
+	# The Caravana's merchant from the Devorador on (the tramo 5 and the v3's etapa 1): the
+	# bruma gear and the same items.
+	"caravana_5": {
+		"keeper": "Mercader",
+		"equipment": ["espada_bruma", "armadura_bruma", "escudo_bruma", "casco_bruma"],
+		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
+			Inventory.WING, Inventory.INCENSE, Inventory.PHOENIX, Inventory.ALARM],
+	},
 	COMPANIONS_SHOP: {"keeper": "Jefe de caravana", "equipment": [], "items": [],
 		"allies": Allies.COMPANIONS},
 }
@@ -104,9 +112,10 @@ const AUTOPLAY_POTIONS := 3
 const BULK := 5
 
 
-## The shop of the highest tramo up to `tramo` that exists in SHOPS.
-static func caravan_shop(tramo: int) -> String:
-	for t in range(clampi(tramo, 1, 4), 0, -1):
+## The shop of the highest step up to `step` that exists in SHOPS (GameState.shop_step():
+## 1-5 in the v2, 5-8 in the v3).
+static func caravan_shop(step: int) -> String:
+	for t in range(clampi(step, 1, 8), 0, -1):
 		var id := "%s_%d" % [CARAVAN_SHOP, t]
 		if SHOPS.has(id):
 			return id

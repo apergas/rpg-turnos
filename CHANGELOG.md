@@ -1,5 +1,16 @@
 # Registro de cambios
 
+## 3.0.0 (2026)
+
+Empieza la tercera parte: al otro lado del portal.
+
+- Al terminar la caravana ya no vuelves al título: sigues en la Caravana, junto a la hoguera, y el portal se ha quedado quieto. Las partidas de la caravana terminadas lo ven al cargar.
+- Brumaclara, un pueblo bajo un sol negro que respira la Niebla. Te esperan Orvalla, la farera, y Neblí, que nunca ha visto el sol.
+- La Ciénaga de Brumaclara: cinco enemigos nuevos, la Garza de légamo y dos misiones. Al vencerla, el faro vuelve a dar luz y la posada abre.
+- Nivel máximo 50, y el equipo de bruma a la venta en la Caravana.
+- El bestiario gana una tercera parte, «Brumaclara».
+- Las partidas que guarda esta versión ya no se abren en una versión anterior del juego.
+
 ## 2.7.2 (2026)
 
 Por dentro, más ordenado. El juego no cambia.

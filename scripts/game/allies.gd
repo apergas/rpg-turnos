@@ -33,7 +33,7 @@ const GROWTH := {
 	"ulma": {"max_hp": 55, "attack": 8, "defense": 10, "speed": 1},
 }
 ## What the companion says the first time the hero reaches each land of the caravan:
-## zone id -> companion id -> line (2.4.0). Remembered with the world flag ARRIVAL_PREFIX
+## zone id -> companion id -> line (2.4.0; the Ciénaga, 3.0.0). Remembered with the world flag ARRIVAL_PREFIX
 ## + zone id.
 const ARRIVALS := {
 	"jungla": {
@@ -56,11 +56,17 @@ const ARRIVALS := {
 		"tadeo": "Mira esas casas. Seguro que alguna tenía una despensa llena.",
 		"ulma": "Esqueletos de guardia. Ponte detrás de mí y no hagas ruido.",
 	},
+	"cienaga": {
+		"brena": "Esto huele a sopa de rana. Fría.",
+		"tadeo": "Pisa donde pise yo. Bueno, mejor no: yo me hundo hasta las rodillas.",
+		"ulma": "El agua no se mueve, pero algo se mueve en el agua. Escudo arriba.",
+	},
 }
 const ARRIVAL_PREFIX := "llegada_"
 ## Each arrival zone's tramo boss: a save past it has heard (or skipped) that line.
 const ARRIVAL_BOSSES := {"jungla": "jaguar_sombrio", "desierto": "gusano_dunas",
-	"montana_1": "grifo_cumbre", "ciudad_1": "guardian_ciudad"}
+	"montana_1": "grifo_cumbre", "ciudad_1": "guardian_ciudad",
+	"cienaga": "garza_legamo"}
 ## The upper floors count as their land's arrival zone.
 const ARRIVAL_REGIONS := {"montana_2": "montana_1", "ciudad_2": "ciudad_1"}
 

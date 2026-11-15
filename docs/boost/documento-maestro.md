@@ -42,13 +42,13 @@ Lo que se ha hecho y lo que queda por hacer en Villaclaro. Una fila por versión
 | 2.7.2 · M-72 | Refactor de arquitectura: `BattleActor` troceado en `ActorLooks`, `CreatureBuilder`, `CharacterBuilder` y las primitivas de `LowPoly` ([plan](../legacy/plans/2026-11-14-refactor-2-battle-actor.md)) | hecho |
 | 2.7.2 · M-73 | Refactor de arquitectura: los constructores llevan `## Constructor:` y `CLAUDE.md` distingue reglas puras, constructores y nodos ([plan](../legacy/plans/2026-11-14-refactor-1-runflags-builders.md)) | hecho |
 | 2.7.2 · M-74 | Refactor de arquitectura: la línea de órdenes solo se lee en `RunFlags`, y el piloto automático de cada clase va en su `#region Autoplay` ([plan](../legacy/plans/2026-11-14-refactor-1-runflags-builders.md)) | hecho |
-| 3.0.0 · M-76 | El paso al otro lado: el fin de la v2 sigue en la Caravana y el portal une la Caravana con Brumaclara en los dos sentidos ([spec](specs/2026-11-14-version-3-design.md) · [plan](plans/2026-11-14-version-3-0-0.md)) | plan |
-| 3.0.0 · M-77 | La parte 3 en el estado: etapa, capítulos, zonas por parte, guardado 15 | plan |
-| 3.0.0 · M-78 | Brumaclara, el sol negro y el pueblo que crece con cada jefe | plan |
-| 3.0.0 a 3.3.0 · M-79 | Las cuatro zonas: Ciénaga, Cuevas de cristal, Ruinas flotantes y la Fuente | spec |
-| 3.0.0 a 3.3.0 · M-80 | Veinte enemigos, tres jefes, el Eco de Albor y cuatro familias del bestiario | spec |
-| 3.0.0 a 3.3.0 · M-81 | Nivel 50, el elemento luz y Alba, cuatro juegos de equipo, el Elixir | spec |
-| 3.0.0 a 3.3.0 · M-82 | Ocho misiones entregadas a Orvalla | spec |
+| 3.0.0 · M-76 | El paso al otro lado: el fin de la v2 sigue en la Caravana y el portal une la Caravana con Brumaclara en los dos sentidos ([spec](specs/2026-11-14-version-3-design.md) · [plan](plans/2026-11-14-version-3-0-0.md)) | hecho |
+| 3.0.0 · M-77 | La parte 3 en el estado: etapa, capítulos, zonas por parte, guardado 15 | hecho |
+| 3.0.0 · M-78 | Brumaclara, el sol negro y el pueblo que crece con cada jefe | en curso (3.0.0: etapas 1 y 2) |
+| 3.0.0 a 3.3.0 · M-79 | Las cuatro zonas: Ciénaga, Cuevas de cristal, Ruinas flotantes y la Fuente | en curso (3.0.0: la Ciénaga) |
+| 3.0.0 a 3.3.0 · M-80 | Veinte enemigos, tres jefes, el Eco de Albor y cuatro familias del bestiario | en curso (3.0.0: la Ciénaga y la Garza) |
+| 3.0.0 a 3.3.0 · M-81 | Nivel 50, el elemento luz y Alba, cuatro juegos de equipo, el Elixir | en curso (3.0.0: nivel 50 y juego de bruma) |
+| 3.0.0 a 3.3.0 · M-82 | Ocho misiones entregadas a Orvalla | en curso (3.0.0: la Ciénaga) |
 | 3.2.0 · M-83 | La vuelta a Villaclaro a por el Amuleto del Alba | spec |
 | 3.3.0 · M-84 | El Eco de Albor, la elección, los dos finales y los créditos de la v3 | spec |
-| 3.0.0 a 3.3.0 · M-85 | Partida automática de la v3 | spec |
+| 3.0.0 a 3.3.0 · M-85 | Partida automática de la v3 | en curso (3.0.0: brumaclara, cienaga y garza) |

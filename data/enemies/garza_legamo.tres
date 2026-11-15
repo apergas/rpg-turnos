@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="Combatant" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/battle/combatant.gd" id="1_combatant"]
+[ext_resource type="Script" path="res://scripts/battle/skill.gd" id="2_skill"]
+[ext_resource type="Resource" path="res://data/skills/picotazo.tres" id="3_picotazo"]
+[ext_resource type="Resource" path="res://data/enemies/sapo_legamo.tres" id="4_sapo"]
+
+[resource]
+script = ExtResource("1_combatant")
+id = "garza_legamo"
+display_name = "Garza de légamo"
+female = true
+max_hp = 2600
+hp = 2600
+max_mp = 120
+mp = 120
+attack = 112
+defense = 74
+speed = 34
+skills = Array[ExtResource("2_skill")]([ExtResource("3_picotazo")])
+exp_reward = 1900
+gold_reward = 1100
+ai_weights = {
+"attack": 50,
+"picotazo": 35,
+"stagger": 15
+}
+weak = Array[String](["thunder"])
+help = ExtResource("4_sapo")
+key_item = "lampara_faro"
+is_boss = true
