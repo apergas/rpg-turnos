@@ -11,6 +11,8 @@ class_name MenuCursor extends Control
 
 var _target: Control
 var _last_y := 0.0
+## The frame the focus last moved to a row: the cursor waits for that row to be sorted.
+var _focus_frame := -1
 var _backed: Panel
 
 
@@ -37,9 +39,16 @@ func _on_focus(control: Control) -> void:
 		_skip_disabled.call_deferred(control as Button)
 		_target = null
 		return
+	var old := _target
 	_target = _row_of(control)
 	if _target:
 		_last_y = _target.global_position.y
+		# A page just built (its old row freed or hidden) has not sorted its rows yet: wait for
+		# the next frame, so the cursor never shows a frame where the last page had its row.
+		if old == null or not is_instance_valid(old) or old.is_queued_for_deletion() \
+				or not old.is_visible_in_tree():
+			_focus_frame = Engine.get_process_frames()
+			hide()
 
 
 func _skip_disabled(grey: Button) -> void:
@@ -65,7 +74,7 @@ static func _row_of(control: Control) -> Control:
 
 
 func _process(_delta: float) -> void:
-	var shown := _target != null and is_instance_valid(_target) and _target.is_visible_in_tree() \
+	var shown := Engine.get_process_frames() != _focus_frame and _target != null and is_instance_valid(_target) and _target.is_visible_in_tree() \
 		and _holds_focus() and _inside_scroll()
 	visible = shown
 	_set_backing(shown)
