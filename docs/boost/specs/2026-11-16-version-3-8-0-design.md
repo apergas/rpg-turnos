@@ -1,11 +1,12 @@
 # Versión 3.8.0: nivel 60 y la gente de Brumaclara
 
-Fecha: 2026-11-16. Estado: spec. Cubre M-104 y M-105 del [documento maestro](../documento-maestro.md). Va después de la [3.7.0](2026-11-16-version-3-7-0-design.md). La partida guardada sigue en la **versión 16**. Solo cambia el nivel máximo que da por válido: una partida de nivel 51 a 60 es válida desde la 3.8.0, y las versiones anteriores la rechazan.
+Fecha: 2026-11-16. Estado: spec. Cubre M-104, M-105 y M-107 del [documento maestro](../documento-maestro.md). Va después de la [3.7.0](2026-11-16-version-3-7-0-design.md). La partida guardada sigue en la **versión 16**. Solo cambia el nivel máximo que da por válido: una partida de nivel 51 a 60 es válida desde la 3.8.0, y las versiones anteriores la rechazan.
 
 ## Objetivo
 
 1. **Nivel máximo 60 en la v3 (M-104).** En Brumaclara el héroe puede subir hasta el nivel 60, no hasta el 50.
 2. **La gente de Brumaclara se ve distinta (M-105).** Los habitantes de Brumaclara dejan de parecer gente de la Caravana con otra ropa: tienen la piel de la Niebla, capucha, un cristal que brilla y, los que más se ven, algo propio en las manos o los brazos.
+3. **El aura del nivel máximo (M-107).** Cuando el héroe llega al nivel 60, lo rodea un aura dorada suave pero que se nota, como la de un guerrero que ha llegado a lo más alto.
 
 ## Decisiones tomadas (2026-11-16)
 
@@ -61,6 +62,27 @@ Toda la gente de Brumaclara se reconoce de lejos, y cada uno sigue siendo quien 
 - **Los brazos del Herrero:** el material de `Knight_ArmLeft` y `Knight_ArmRight` es el de cristal, con brillo. No llevan el tinte de piel.
 - **Dónde va el código:** los aspectos nuevos y sus constantes van en `ActorLooksV3`, porque `actor_looks.gd` ya está en su tope de líneas. Las piezas las monta `CharacterBuilder`. Si con ellas pasa de ~320 líneas, se separan en un constructor propio (por ejemplo `MistDress`), siguiendo la skill `structuring-godot-code`. `brumaclara.tres` cambia el `look` del Tendero por el suyo.
 - **El rótulo con el nombre** se queda donde está, en `top`. La capucha no puede subirlo ni taparlo.
+
+## 3. El aura del nivel máximo (M-107)
+
+### Lo que ve el jugador
+
+- Con el héroe en el nivel 60 (`Leveling.MAX_LEVEL`), lo rodea un aura dorada en todas partes: en el mapa, en los combates y en las escenas.
+- Los topes de la v1 (20) y de la v2 (40) no la encienden, porque no son el nivel máximo del juego.
+- **Cómo es:** una envoltura de luz dorada pálida, un poco más grande que el héroe, más viva abajo y en los bordes y casi transparente por delante, para que se le siga viendo bien la cara y el equipo.
+  - Ondula hacia arriba como una llama lenta y respira despacio: sube y baja de intensidad cada 2 s más o menos.
+  - Unas pocas chispas doradas suben desde los pies y se apagan a la altura de la cabeza.
+  - Es suave, no deslumbra ni tapa nada.
+- **Al llegar al 60** en un combate, tras el aviso de subida de nivel, el aura se enciende con un destello breve y desde ese momento se queda. Al cargar una partida que ya está en el 60, el aura ya está puesta.
+- Solo el héroe: el compañero y la criatura no la llevan.
+
+### Cómo se hace
+
+- **Una pieza propia:** el aura es un nodo con un solo trabajo, por ejemplo `HeroAura` (`Node3D`), en `scripts/battle/`. La crea el dueño de la figura del héroe y la cuelga de ella: el `Player` en el mapa, la escena de combate en los combates y lo que monte al héroe en las escenas. No crece `battle_actor.gd`, que está en su tope de líneas.
+- **La envoltura:** una malla que rodea la figura, con un shader propio (`shaders/hero_aura.gdshader`), aditivo y sin sombras. El borde brilla más que el centro (fresnel), la ondulación sube con ruido y el tiempo, y la respiración es una onda lenta. Tiene que ir en el renderer Compatibility, el de la web y el móvil.
+- **Las chispas:** `CPUParticles3D`, que va igual en la web, con pocas partículas (unas 12 a la vez). En el móvil, menos, siguiendo lo que `DisplaySettings` ya rebaja.
+- **El color:** dorado pálido, el mismo en el mapa y en combate. Los colores del 3D no van a `UiTokens`, que es solo de la interfaz.
+- **Cuándo se pone:** cualquiera que tenga el estado del héroe lo sabe con una regla pura, por ejemplo `Leveling.at_max(hero)`. Al subir al 60 en combate, el destello va después del evento `LEVEL_UP` de ese nivel.
 
 ## Verificación
 

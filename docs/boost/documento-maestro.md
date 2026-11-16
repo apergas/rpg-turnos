@@ -68,8 +68,10 @@ Lo que se ha hecho y lo que queda por hacer en Villaclaro. Una fila por versión
 | 3.6.0 · M-100 | El Coleccionista: 40 medallas, un anillo o amuleto cada 4, en la Caravana y Brumaclara desde que llegas; guardado 16 | hecho |
 | 3.6.1 · M-98 | El design system en un núcleo reutilizable (`addons/design_system/`) y la capa de Villaclaro; el juego no cambia ([spec](specs/2026-11-15-version-3-6-1-design-system-nucleo-design.md) · [plan](plans/2026-11-15-version-3-6-1.md)) | hecho |
 | 3.6.2 | Al cambiar de página en un menú, la flecha ▶ ya no aparece un instante en el sitio de la página anterior | hecho |
-| 3.7.0 · M-101 | En el menú, «Volver al título» pasa a «Salir» y debajo «Buscar actualizaciones» (solo en la web) ([spec](specs/2026-11-16-version-3-7-0-design.md)) | spec |
-| 3.7.0 · M-102 | La versión del juego se ve con el menú abierto, como en el título | spec |
-| 3.7.0 · M-103 | Sin Incienso: los monstruos ya se ven en el mapa | spec |
-| 3.8.0 · M-104 | Nivel máximo 60 en la v3 ([spec](specs/2026-11-16-version-3-8-0-design.md)) | spec |
-| 3.8.0 · M-105 | La gente de Brumaclara con piel de bruma, capucha y cristal; Orvalla con farol, la Curandera con cuenco y el Herrero con brazos de cristal | spec |
+| 3.7.0 · M-101 | En el menú, «Volver al título» pasa a «Salir» y debajo «Buscar actualizaciones» (solo en la web) ([spec](specs/2026-11-16-version-3-7-0-design.md) · [plan](plans/2026-11-16-version-3-7-0.md)) | plan |
+| 3.7.0 · M-102 | La versión del juego se ve con el menú abierto, como en el título | plan |
+| 3.7.0 · M-103 | Sin Incienso: los monstruos ya se ven en el mapa | plan |
+| 3.7.0 · M-106 | «Equipo» ya no muestra ATK, DEF y VEL totales: se ven en «Estado» | plan |
+| 3.8.0 · M-104 | Nivel máximo 60 en la v3 ([spec](specs/2026-11-16-version-3-8-0-design.md) · [plan](plans/2026-11-16-version-3-8-0.md)) | plan |
+| 3.8.0 · M-105 | La gente de Brumaclara con piel de bruma, capucha y cristal; Orvalla con farol, la Curandera con cuenco y el Herrero con brazos de cristal | plan |
+| 3.8.0 · M-107 | Un aura dorada suave alrededor del héroe al llegar al nivel 60 | plan |

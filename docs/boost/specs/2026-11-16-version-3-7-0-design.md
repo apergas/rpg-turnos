@@ -7,6 +7,7 @@ Fecha: 2026-11-16. Estado: spec. Cubre M-101, M-102 y M-103 del [documento maest
 1. **Salir y buscar actualizaciones (M-101).** En el menú de pausa, «Volver al título» pasa a llamarse «Salir», y justo debajo hay una opción nueva, «Buscar actualizaciones». Esta opción mira si hay una versión más nueva del juego en la web: si la hay, la instala, y si no, avisa de que ya tienes la más reciente.
 2. **La versión en el menú (M-102).** Con el menú de pausa abierto se ve el número de versión, en el mismo sitio y con el mismo estilo que en la pantalla del título.
 3. **Sin Incienso (M-103).** Como los monstruos se ven en el mapa, el Incienso ya no hace falta: deja de existir.
+4. **Equipo sin totales (M-106).** La página «Equipo» del menú de pausa deja de mostrar la línea «ATK · DEF · VEL» con los totales del héroe, porque ya se ven en «Estado».
 
 ## Decisiones tomadas (2026-11-16)
 
@@ -66,6 +67,12 @@ Fecha: 2026-11-16. Estado: spec. Cubre M-101, M-102 y M-103 del [documento maest
 - Los monstruos siguen viéndose medio transparentes cuando acabas de huir de ellos: eso no era del Incienso.
 - **Partidas con Incienso.** Al cargar, `SaveData` quita `incienso` del inventario y suma al oro su precio de venta (`Shop.sell_price()`) por cada unidad. No hace falta otra versión de guardado. Una partida con Incienso sigue siendo válida.
 - La guía de QA (`docs/legacy/qa/brief-qa-agentes.md`) y los textos que lo nombren se actualizan.
+
+## 4. Equipo sin totales (M-106)
+
+- La página «Equipo» se queda con la lista de las seis ranuras, cada una con lo que da su pieza debajo. La línea fija de debajo, «ATK %d   DEF %d   VEL %d», desaparece: se borran `_equip_stats` en `pause_menu.gd`, su creación en `_build_equipment()` y su relleno en `_fill_equipment()`.
+- La comparación junto a cada pieza de la bolsa, al elegir una ranura, se queda como está.
+- «Estado» sigue mostrando la línea «ATK · DEF · VEL» con los totales, sin cambios.
 
 ## Verificación
 
