@@ -94,17 +94,16 @@ func is_active(id: String) -> bool:
 
 
 ## True if the quest was taken and can't be finished any more. Not while it is ready to hand in
-## (_is_ready()) at a figure of the part these flags are in (ZoneData.zones_of_part()). Otherwise
-## it is lost if it is of an earlier part than these flags' (its land was left behind), or if its
-## gone flag is the boss of a land that has closed (ClosingLands). Worked out, never saved: the
-## mission lines leave it out, the Diario lists it under «Perdidas» and its figure stops waiting
-## for it. talk() still pays one that is somehow ready (nothing is taken away).
+## (_can_hand_in()). Otherwise it is lost if it is of an earlier part than these flags' (its land
+## was left behind), or if its gone flag is the boss of a land that has closed (ClosingLands).
+## Worked out, never saved: the mission lines leave it out, the Diario lists it under «Perdidas»
+## and its figure stops waiting for it. talk() still pays one that is somehow ready (nothing is
+## taken away).
 func is_lost(id: String, flags: Dictionary, inventory: Inventory) -> bool:
 	if not is_active(id):
 		return false
 	var quest := data(id)
-	if _is_ready(quest, inventory) \
-			and quest.turn_in_zone in ZoneData.zones_of_part(StoryState.part(flags)):
+	if _can_hand_in(quest, flags, inventory):
 		return false
 	if part_of(id) < StoryState.part(flags):
 		return true
@@ -113,14 +112,21 @@ func is_lost(id: String, flags: Dictionary, inventory: Inventory) -> bool:
 
 
 ## The taken quests boss_id's victory would leave lost (is_lost()): gone with that boss and not
-## ready to hand in (ClosingLands.warning() counts them).
-func lost_with(boss_id: String, inventory: Inventory) -> Array[String]:
+## to be handed in (_can_hand_in()) under these flags (ClosingLands.warning() counts them).
+func lost_with(boss_id: String, flags: Dictionary, inventory: Inventory) -> Array[String]:
 	var ids: Array[String] = []
 	for id: String in QUESTS:
 		var quest := data(id)
-		if is_active(id) and quest.gone == boss_id and not _is_ready(quest, inventory):
+		if is_active(id) and quest.gone == boss_id and not _can_hand_in(quest, flags, inventory):
 			ids.append(id)
 	return ids
+
+
+## Ready to hand in (_is_ready()) at a figure of the part these flags are in: what keeps a quest
+## from being lost (is_lost() and lost_with() both ask it, so they cannot drift).
+func _can_hand_in(quest: QuestData, flags: Dictionary, inventory: Inventory) -> bool:
+	return _is_ready(quest, inventory) \
+		and quest.turn_in_zone in ZoneData.zones_of_part(StoryState.part(flags))
 
 
 ## Takes the quest; a DELIVER hands over what is to be delivered.

@@ -40,9 +40,9 @@ static func is_closed(zone_id: String, flags: Dictionary) -> bool:
 
 ## What the land of boss_id still hides from state: {"chests": its zones' chests still shut,
 ## "beasts": the bestiary's enemies of its zones (groups, the rare one, another boss) never
-## beaten that live in no other zone of this part (there they can still be beaten), boss_id left
-## out; "quests": the taken quests its victory would leave lost (QuestLog.lost_with())}. All 0
-## when no land closes behind it.
+## beaten that live in no other open zone of this part (there they can still be beaten; a closed
+## land is no such place), boss_id left out; "quests": the taken quests its victory would leave
+## lost (QuestLog.lost_with())}. All 0 when no land closes behind it.
 static func missing(state: GameState, boss_id: String) -> Dictionary:
 	var left := {"chests": 0, "beasts": 0, "quests": 0}
 	var land := zones_of(boss_id)
@@ -50,7 +50,7 @@ static func missing(state: GameState, boss_id: String) -> Dictionary:
 		return left
 	var elsewhere := {}
 	for zone_id in ZoneData.zones_of_part(state.part()):
-		if not zone_id in land:
+		if not zone_id in land and not is_closed(zone_id, state.world_flags):
 			for id in _enemies(zone_id):
 				elsewhere[id] = true
 	var beasts := {}
@@ -63,7 +63,7 @@ static func missing(state: GameState, boss_id: String) -> Dictionary:
 					and not elsewhere.has(id):
 				beasts[id] = true
 	left.beasts = beasts.size()
-	left.quests = state.quests.lost_with(boss_id, state.inventory).size()
+	left.quests = state.quests.lost_with(boss_id, state.world_flags, state.inventory).size()
 	return left
 
 

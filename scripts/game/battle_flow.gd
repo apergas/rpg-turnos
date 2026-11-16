@@ -233,6 +233,7 @@ func _boss_agreed() -> bool:
 		return true
 	var answer: int = await _ctx.world.ask(warning, ClosingLands.ANSWERS, ClosingLands.GO_BACK)
 	if answer != ClosingLands.GO_BACK:
+		_ctx.world.freeze(true)  # ask() gave the hero back; the fade to battle must not let him walk
 		return true
 	_ctx.set_busy.call(false)
 	_ctx.world.set_active(true)
