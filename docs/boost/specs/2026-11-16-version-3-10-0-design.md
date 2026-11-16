@@ -1,6 +1,6 @@
 # Versión 3.10.0: armeros con el estilo de su lugar y nivel máximo 55
 
-Fecha: 2026-11-16. Estado: spec. Cubre M-124 a M-126 del [documento maestro](../documento-maestro.md). Va después de la 3.9.0. Nace de dos ideas de [ideas.md](../ideas.md) («Armero con el estilo de cada zona» y «Nivel máximo 55») y de un fallo que encontraron los tests de la 3.9.0. La partida guardada sigue en la **versión 16**: no gana ni pierde campos.
+Fecha: 2026-11-16. Estado: plan ([plan](../plans/2026-11-16-version-3-10-0.md)). Cubre M-124 a M-126 del [documento maestro](../documento-maestro.md). Va después de la 3.9.0. Nace de dos ideas de [ideas.md](../ideas.md) («Armero con el estilo de cada zona» y «Nivel máximo 55») y de un fallo que encontraron los tests de la 3.9.0. La partida guardada sigue en la **versión 16**: no gana ni pierde campos.
 
 ## Objetivo
 
