@@ -1,0 +1,67 @@
+# Runs the unit tests of tests/ (GUT, vendored in addons/gut/) on every push to develop (and by
+# hand from the Actions tab). A failing test, or an ERROR line in the run (a test file that does
+# not parse), turns the job red; the log and the JUnit report are kept as the artifact "tests".
+# Nothing is blocked or published. The autoplay runs (autoplay.yml) stay the check of the whole
+# game. Not on main: Pages publishes there, and what reaches main has been through develop.
+name: Tests
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: 4.7.2
+
+jobs:
+  test:
+    name: GUT
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The design system's core (addons/design_system) is a submodule.
+          submodules: true
+
+      - name: Install Godot
+        run: |
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          curl -fsSL -o godot.zip "$base/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
+          rm godot.zip
+
+      - name: Import
+        run: ./godot --headless --path . --import
+
+      - name: Run the tests
+        env:
+          XDG_DATA_HOME: ${{ runner.temp }}/data
+        run: |
+          mkdir -p build/tests
+          set +e
+          timeout 600 ./godot --headless --path . --script res://addons/gut/gut_cmdln.gd \
+            -gjunit_xml_file=res://build/tests/junit.xml 2>&1 | tee build/tests/tests.log
+          status=${PIPESTATUS[0]}
+          set -e
+          if grep -nE '^(SCRIPT |USER )?ERROR:|Parse Error' build/tests/tests.log; then
+            echo "::error::The test run printed errors (the lines above)."
+            exit 1
+          fi
+          exit "$status"
+
+      - name: Keep the log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: tests
+          path: build/tests
+          if-no-files-found: warn
