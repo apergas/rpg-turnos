@@ -11,6 +11,7 @@ class_name Game extends Node
 ## change of map, exits, the Ala and its portal), StoryFlow (the cutscenes and the endings),
 ## CaravanFlow (the v2's departure and companion), V3Flow (the v3's start in Brumaclara), FigureTalk (figures, shops, inns, wells,
 ## chests, the lever, the key, the gates), BattleFlow (the battles and the boss on the map),
+## WebUpdate (the pause menu's «Buscar actualizaciones», wired to the menu by its setup()),
 ## GameAutoplay (only with --autoplay) and GameDebug (only with --debug). What a piece awaits
 ## from another is a Callable Game wires; what it reports is a signal Game connects.
 ##
@@ -25,7 +26,6 @@ signal quit_to_title
 const HERO_DATA := preload("res://data/hero.tres")
 const FADE_TIME := 0.3
 const TOUCH_HINT := "Toca el suelo para ir allí, o arrastra el dedo para andar."
-const REPEL_END_NOTICE := "El incienso se ha consumido."
 const SAVED_NOTICE := "Partida guardada."
 const MENU_TOUR_DELAY := 1.0
 
@@ -37,6 +37,7 @@ var _caravan: CaravanFlow
 var _v3: V3Flow
 var _talk: FigureTalk
 var _battle: BattleFlow
+var _web: WebUpdate
 
 var _fade: ColorRect
 var _pause: PauseMenu
@@ -196,6 +197,7 @@ func _make_pieces() -> void:
 	_v3 = V3Flow.new()
 	_talk = FigureTalk.new()
 	_battle = BattleFlow.new()
+	_web = WebUpdate.new()
 	if RunFlags.autoplay():
 		_autopilot = GameAutoplay.new()
 		_autopilot.setup(_ctx)
@@ -242,6 +244,8 @@ func _add_pieces(load_failed: bool) -> void:
 	_battle.print_save = RunFlags.autoplay() and RunFlags.autoplay_save() and _save.is_empty()
 	_battle.quit_requested.connect(func() -> void: quit_to_title.emit())
 	add_child(_battle)
+	_web.setup(_ctx, _pause)
+	add_child(_web)
 	if _autopilot:
 		_autopilot.use_pieces(_travel, _talk)
 		_travel.zone_switched.connect(_autopilot.on_zone_switched)
@@ -345,15 +349,9 @@ func _set_busy(busy: bool) -> void:
 		_debug.set_available(not busy)
 
 
-## Every STEP_DISTANCE metres walked: two steps for the credits, and the Incienso burns.
+## Every STEP_DISTANCE metres walked: two steps for the credits.
 func _on_stepped() -> void:
 	state.steps += 2
-	if state.repel_m <= 0.0:
-		return
-	state.repel_m = maxf(0.0, state.repel_m - World.STEP_DISTANCE)
-	if state.repel_m == 0.0:
-		_ctx.world.set_repel(false)
-		_ctx.world.show_notice(REPEL_END_NOTICE)
 
 
 ## Updates the map's status window, the quests' marks and sought figures, the hero's weapon
@@ -364,7 +362,6 @@ func _refresh_status() -> void:
 	_ctx.world.refresh_status(state.hero, _ctx.potion_count(), state.gold,
 		missions)
 	_ctx.world.set_monsters_shy(EncounterMeter.is_shy(state.hero.level, _ctx.zone.exit_level))
-	_ctx.world.set_repel(state.repel_m > 0.0)
 	_ctx.world.set_autoplay_hunt(_autopilot != null and _autopilot.hunts())
 	var hidden := state.quests.hidden_figures(_ctx.zone.id)
 	hidden.append_array(_ctx.zone.absent_figures(state.world_flags))
@@ -377,6 +374,7 @@ func _refresh_status() -> void:
 	var loadout := state.loadout
 	_ctx.world.set_hero_equipment(loadout.worn(Equipment.WEAPON), loadout.worn(Equipment.SHIELD),
 		loadout.worn(Equipment.HELMET))
+	_ctx.world.set_hero_aura(Leveling.at_max(state.hero))
 	_ctx.world.set_companion(state.ally_id, state.ally_step())
 	if _autopilot:
 		_autopilot.note_status(missions)

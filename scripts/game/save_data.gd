@@ -60,6 +60,10 @@ const OLDEST_VERSION := 2
 ## Combatant fields of the hero that change while playing (the rest come from hero.tres).
 const HERO_FIELDS: Array[String] = ["level", "experience", "hp", "max_hp", "mp", "max_mp",
 	"attack", "defense", "speed"]
+## Items the game no longer has, with what Shop.sell_price() paid for one: apply() takes them
+## out of an older save and adds that gold, without a notice (3.7.0: the Incienso, bought
+## for 20 G).
+const RETIRED_ITEMS := {"incienso": 10}
 
 
 static func from_state(state: GameState, player_pos: Vector3, play_time: float) -> Dictionary:
@@ -131,6 +135,7 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 	var items := {}
 	for id: String in data.inventory:
 		items[id] = int(data.inventory[id])
+	state.gold += _sell_retired(items)
 	state.inventory.set_items(items)
 	state.quest.stage = clampi(int(data.quest.stage), Quest.Stage.OFFER, Quest.Stage.DONE) \
 		as Quest.Stage
@@ -232,6 +237,15 @@ static func _loadout_slots(data: Dictionary) -> Dictionary:
 		if piece != "":
 			slots[Equipment.slot(piece)] = piece
 	return slots
+
+
+## Takes every RETIRED_ITEMS id out of items and returns the gold they sell for.
+static func _sell_retired(items: Dictionary) -> int:
+	var gold := 0
+	for id: String in RETIRED_ITEMS:
+		gold += int(items.get(id, 0)) * int(RETIRED_ITEMS[id])
+		items.erase(id)
+	return gold
 
 
 ## Before the bestiary: every boss beaten, the common enemies of the zone it guarded and the

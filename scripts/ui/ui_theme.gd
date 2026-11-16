@@ -1,7 +1,7 @@
 class_name UiTheme extends DsTheme
 ## Constructor: static; Villaclaro's theme: the design system core's DsTheme plus the game's own
-## part (the map window, the gold display labels, the status badges). Its only state is
-## DsTheme's: the fonts and the theme applied, and DsTheme.touch, which it writes.
+## part (the map window, the gold display labels, the status badges, the version label). Its
+## only state is DsTheme's: the fonts and the theme applied, and DsTheme.touch, which it writes.
 ## The screens call everything through UiTheme (UiTheme.menu_row(), UiTheme.CAPTION...): the
 ## generic part comes from DsTheme. apply(), ensure() and build() keep DsTheme's signatures
 ## (GDScript checks a redefined static function against its parent's), tell DsTheme whether
@@ -48,6 +48,19 @@ static func badge_style(status: StringName) -> StyleBoxFlat:
 	style.content_margin_left = UiTokens.SPACE_2
 	style.content_margin_right = UiTokens.SPACE_2
 	return style
+
+
+## The game's version ("v3.7.0") in caption, text-primary, with the warm outline, added to
+## parent (a full-screen Control) in its bottom right corner, SPACE_3 in: the title screen and
+## the pause menu show it the same way. A Label never takes the mouse.
+static func version_label(parent: Control) -> Label:
+	var label := Label.new()
+	label.text = "v%s" % GameVersion.current()
+	style_label(label, &"caption", &"text-primary", UiTokens.OUTLINE_S, &"text-outline-warm")
+	parent.add_child(label)
+	label.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT,
+		Control.PRESET_MODE_MINSIZE, UiTokens.SPACE_3)
+	return label
 
 
 ## Villaclaro's part of the Theme; DsTheme.build() calls it with the Theme it builds.

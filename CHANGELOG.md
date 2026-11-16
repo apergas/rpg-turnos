@@ -1,5 +1,28 @@
 # Registro de cambios
 
+## 3.8.0 (2026)
+
+Más niveles en Brumaclara, y su gente por fin se ve de allí.
+
+- En Brumaclara puedes subir hasta el nivel 60. En la Caravana el tope sigue en 40, y en Villaclaro en 20.
+- Los enemigos de la Ciénaga, las Cuevas, las Ruinas y la Fuente, y sus jefes, dan un 35 % más de experiencia (el oro no cambia). Llegarás a cada jefe con algo más de nivel, y al final de la historia rondarás el nivel 53. El 60 te espera después, en la Fuente.
+- Si tu partida se había quedado en el nivel 50, vuelve a subir con la experiencia que ganes desde ahora.
+- La gente de Brumaclara tiene la piel de la Niebla, una capucha y un cristal pequeño que brilla en el pecho.
+- Orvalla lleva un farol encendido, la Curandera un cuenco de agua de bruma y el Herrero de cristal tiene los brazos de cristal, como los de las Cuevas.
+- El Tendero ya no se parece al Vecino: lleva su capucha verde.
+- Al llegar al nivel 60 te rodea un aura dorada suave, con chispas que suben desde tus pies. Se enciende con un destello en el combate en que llegas y ya no se va: en el mapa, en los combates y en las escenas.
+- Una partida que pase del nivel 50 ya no se abre en las versiones anteriores.
+
+## 3.7.0 (2026)
+
+Buscar actualizaciones desde el menú, la versión a la vista y adiós al Incienso.
+
+- En el menú de pausa, «Volver al título» se llama ahora «Salir».
+- En la web, debajo de «Salir» está «Buscar actualizaciones»: mira si hay una versión más nueva y, si la hay, te pregunta, guarda tu partida y recarga el juego con ella. En Windows y Linux no sale, porque esas versiones se descargan de itch.io.
+- Con el menú de pausa abierto se ve la versión del juego abajo a la derecha, como en el título.
+- La página «Equipo» ya no repite el ATK, la DEF y la VEL totales: están en «Estado».
+- El Incienso ya no existe: los monstruos se ven en el mapa y puedes esquivarlos. Si tu partida llevaba alguno, se vende solo al cargarla y te quedas con su oro.
+
 ## 3.6.2 (2026)
 
 - Al cambiar de página en un menú, la flecha ▶ ya no aparece un instante en el sitio de la página anterior.

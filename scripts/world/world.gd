@@ -236,7 +236,7 @@ func _physics_process(delta: float) -> void:
 	if _monsters.check_contact(pos, int(_sim_ms)):
 		_trigger(false)
 		return
-	if _autoplay and _hunter.is_on() and not _monsters.is_repelled():
+	if _autoplay and _hunter.is_on():
 		_hunter.step(pos, int(_sim_ms))
 	_uses.step(pos)
 
@@ -394,12 +394,6 @@ func _refresh_map_marks() -> void:
 ## groups that move keep away from him; the still ones stay. They can still be touched.
 func set_monsters_shy(on: bool) -> void:
 	_monsters.set_shy(on)
-
-
-## An Incienso burning: touching a group starts no battle and every group shows half
-## see-through (the boss still waits where it is).
-func set_repel(on: bool) -> void:
-	_monsters.set_repel(on, int(_sim_ms))
 
 
 ## Autoplay: hunt the groups (Game: while the hero is below the zone's autoplay_boss_level).
@@ -597,6 +591,11 @@ func set_quest_view(marks: Dictionary, hidden_names: Array[String]) -> void:
 ## Shows the weapon and shield worn on the hero (Equipment ids, "" for none).
 func set_hero_equipment(weapon_id: String, shield_id: String, helmet_id := "") -> void:
 	_player.set_equipment(weapon_id, shield_id, helmet_id)
+
+
+## The golden aura of the top level on the hero (HeroAura; Game._refresh_status()).
+func set_hero_aura(on: bool) -> void:
+	_player.set_aura(on)
 
 
 ## The creature or companion walking behind the hero (MapCompanion; Game._refresh_status()):

@@ -147,8 +147,8 @@ func set_walking(on: bool) -> void:
 		_anim.play(anim_name, BLEND_TIME, WALK_SPEED if on else 1.0)
 
 
-## Map only: half see-through (a group that can't start a battle now: fled from, or an
-## Incienso burning), or whole again. Every mesh of the figure.
+## Map only: half see-through (a group that can't start a battle now: fled from), or whole
+## again. Every mesh of the figure.
 func set_faded(on: bool) -> void:
 	for mi in _meshes:
 		mi.transparency = 1.0 - UiTokens.OPACITY_FADED if on else 0.0

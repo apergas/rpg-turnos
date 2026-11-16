@@ -26,33 +26,32 @@ const ITEMS_COUNTER := "items"
 const ARMORY_COUNTER := "armory"
 ## shop id -> keeper's name, equipment and items (Inventory ids) on sale, in list order.
 ## "keeper" is the tienda's name and "armorer" the armero's (keeper()).
-## Zone 1 sells no Éter (it comes with the zone 2 shop); the Ala de viaje, the Incienso and the
-## Despertador are sold everywhere; the Pluma de fénix nowhere (3.6.0: chests and drops only).
+## Zone 1 sells no Éter (it comes with the zone 2 shop); the Ala de viaje and the Despertador
+## are sold everywhere; the Pluma de fénix nowhere (3.6.0: chests and drops only).
 const SHOPS := {
 	VILLACLARO: {
 		"keeper": "Mercader", "armorer": "Armero",
 		"equipment": [Equipment.COPPER_SWORD, Equipment.LEATHER_MAIL, Equipment.WOODEN_SHIELD,
 			"casco_cobre"],
-		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ALARM, Inventory.WING,
-			Inventory.INCENSE],
+		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ALARM, Inventory.WING],
 	},
 	BOSQUE: {
 		"keeper": "Mercader", "armorer": "Armero",
 		"equipment": ["espada_hierro", "cota_malla", "escudo_hierro", "casco_hierro"],
 		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.ALARM,
-			Inventory.WING, Inventory.INCENSE],
+			Inventory.WING],
 	},
 	MINA: {
 		"keeper": "Tendera", "armorer": "Herrero",
 		"equipment": ["espada_acero", "armadura_acero", "escudo_acero", "casco_acero"],
 		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.ALARM,
-			Inventory.WING, Inventory.INCENSE],
+			Inventory.WING],
 	},
 	CASTILLO: {
 		"keeper": "Mercader", "armorer": "Armero",
 		"equipment": ["espada_platino", "armadura_platino", "escudo_platino", "casco_platino"],
 		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ETHER, Inventory.ALARM,
-			Inventory.WING, Inventory.INCENSE],
+			Inventory.WING],
 	},
 	# The tamers: they sell one creature each. gear_shop: the shop whose gear autoplay
 	# buys first.
@@ -69,7 +68,7 @@ const SHOPS := {
 		"keeper": "Mercader", "armorer": "Armero",
 		"equipment": ["espada_jade", "armadura_jade", "escudo_jade", "casco_jade"],
 		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
-			Inventory.WING, Inventory.INCENSE, Inventory.ALARM],
+			Inventory.WING, Inventory.ALARM],
 	},
 	# The Caravana's merchant, tramo 2 (the desert): the orichalcum gear and the same items.
 	"caravana_2": {
@@ -77,7 +76,7 @@ const SHOPS := {
 		"equipment": ["espada_oricalco", "armadura_oricalco", "escudo_oricalco",
 			"casco_oricalco"],
 		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
-			Inventory.WING, Inventory.INCENSE, Inventory.ALARM],
+			Inventory.WING, Inventory.ALARM],
 	},
 	# The Caravana's merchant, tramo 3 (the mountain): the adamantite gear and the same items.
 	"caravana_3": {
@@ -85,14 +84,14 @@ const SHOPS := {
 		"equipment": ["espada_adamantita", "armadura_adamantita", "escudo_adamantita",
 			"casco_adamantita"],
 		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
-			Inventory.WING, Inventory.INCENSE, Inventory.ALARM],
+			Inventory.WING, Inventory.ALARM],
 	},
 	# The Caravana's merchant, tramo 4 (the city): the stellar gear and the same items.
 	"caravana_4": {
 		"keeper": "Mercader", "armorer": "Armero",
 		"equipment": ["espada_estelar", "armadura_estelar", "escudo_estelar", "casco_estelar"],
 		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
-			Inventory.WING, Inventory.INCENSE, Inventory.ALARM],
+			Inventory.WING, Inventory.ALARM],
 	},
 	# The Caravana's merchant from the Devorador on (the tramo 5 and the v3's etapa 1): the
 	# bruma gear and the same items.
@@ -100,7 +99,7 @@ const SHOPS := {
 		"keeper": "Mercader", "armorer": "Armero",
 		"equipment": ["espada_bruma", "armadura_bruma", "escudo_bruma", "casco_bruma"],
 		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
-			Inventory.WING, Inventory.INCENSE, Inventory.ALARM],
+			Inventory.WING, Inventory.ALARM],
 	},
 	# The Caravana's merchant from the Garza on (the v3's etapa 2 and later): the cristal gear
 	# and the same items.
@@ -108,7 +107,7 @@ const SHOPS := {
 		"keeper": "Mercader", "armorer": "Armero",
 		"equipment": ["espada_cristal", "armadura_cristal", "escudo_cristal", "casco_cristal"],
 		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ANTIDOTE,
-			Inventory.WING, Inventory.INCENSE, Inventory.ALARM],
+			Inventory.WING, Inventory.ALARM],
 	},
 	# Brumaclara's Herrero de cristal from the Coloso on (the v3's etapa 3): the luna gear
 	# (3.2.0), the Caravana's items and the Elixir.
@@ -116,7 +115,7 @@ const SHOPS := {
 		"keeper": "Tendero", "armorer": "Herrero de cristal",
 		"equipment": ["espada_luna", "armadura_luna", "escudo_luna", "casco_luna"],
 		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ELIXIR, Inventory.ANTIDOTE,
-			Inventory.WING, Inventory.INCENSE, Inventory.ALARM],
+			Inventory.WING, Inventory.ALARM],
 	},
 	# Brumaclara's Herrero from the Vigía on (the v3's etapa 4 and the epilogue): the amanecer
 	# gear (3.3.0), the Caravana's items and the Elixir.
@@ -125,7 +124,7 @@ const SHOPS := {
 		"equipment": ["espada_amanecer", "armadura_amanecer", "escudo_amanecer",
 			"casco_amanecer"],
 		"items": [Inventory.BIG_POTION, Inventory.BIG_ETHER, Inventory.ELIXIR, Inventory.ANTIDOTE,
-			Inventory.WING, Inventory.INCENSE, Inventory.ALARM],
+			Inventory.WING, Inventory.ALARM],
 	},
 	COMPANIONS_SHOP: {"keeper": "Jefe de caravana", "equipment": [], "items": [],
 		"allies": Allies.COMPANIONS},

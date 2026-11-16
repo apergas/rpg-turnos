@@ -242,7 +242,7 @@ npcs = [{
 }, {
 "id": "brumaclara",
 "kind": "shop",
-"look": "MIST_VILLAGER_M",
+"look": "MIST_SHOPKEEPER",
 "name": "Tendero",
 "needs": "coloso_cuarzo",
 "pos": Vector3(8.8, 0, 2.4),
