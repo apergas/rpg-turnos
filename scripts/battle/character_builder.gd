@@ -76,7 +76,7 @@ static func build(actor: BattleActor, data: Dictionary) -> void:
 		var head := bones.get_node("Knight_Head") as MeshInstance3D
 		var head_material := head.get_active_material(0).duplicate() as BaseMaterial3D
 		head_material.albedo_texture = data.head_texture
-		head.set_surface_override_material(0, head_material)
+		own_material(head, 0, head_material)
 	var cape := model.find_child(CAPE_MESH, true, false) as MeshInstance3D
 	if cape != null and data.get("hide_cape", false):
 		cape.hide()
@@ -177,7 +177,7 @@ static func _add_mummy_wraps(actor: BattleActor, bones: Skeleton3D, color: Color
 	glow.emission_enabled = true
 	glow.emission = Color(1.0, 0.45, 0.12)
 	glow.emission_energy_multiplier = 1.4
-	eyes.set_surface_override_material(0, glow)
+	own_material(eyes, 0, glow)
 
 
 ## One piece (of the Momia's wraps, MistDress's pendant) placed by a transform in the rig's rest
@@ -207,11 +207,17 @@ static func tint_mesh(mi: MeshInstance3D, color: Color) -> void:
 			continue
 		var tinted := source.duplicate() as BaseMaterial3D
 		tinted.albedo_color = source.albedo_color * color
-		# The mesh also keeps the copy in its metadata, which outlives its render instance: freed
-		# first (the last mesh of a model with no one after it), the dummy renderer of --headless
-		# runs reads the freed material and prints "Parameter material is null".
-		mi.set_meta(&"tinted_%d" % i, tinted)
-		mi.set_surface_override_material(i, tinted)
+		own_material(mi, i, tinted)
+
+
+## material on surface i of mi, when mi is the only holder of it (a copy made for it). The mesh
+## also keeps it in its metadata, which outlives its render instance: held only by the override,
+## it is freed with the mesh before that instance, and the dummy renderer of --headless runs
+## reads the freed material when the instance goes with an overlay on (a flash or the highlight,
+## say on quitting mid-battle) and prints "Parameter material is null".
+static func own_material(mi: MeshInstance3D, i: int, material: Material) -> void:
+	mi.set_meta(&"own_material_%d" % i, material)
+	mi.set_surface_override_material(i, material)
 
 
 ## One flat colour on the Knight's cape (it is one palette cell): a copy of its material
@@ -220,7 +226,7 @@ static func paint_cape(cape: MeshInstance3D, color: Color) -> void:
 	var cape_material := cape.get_active_material(0).duplicate() as BaseMaterial3D
 	cape_material.albedo_texture = null
 	cape_material.albedo_color = color
-	cape.set_surface_override_material(0, cape_material)
+	own_material(cape, 0, cape_material)
 
 
 ## The flat cloth colour of a cape for a piece's metal tint (Equipment.tint()).
