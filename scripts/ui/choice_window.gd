@@ -1,8 +1,10 @@
 class_name ChoiceWindow extends Control
 ## A question over the map with a button per answer: await ask() returns the index chosen.
 ## Keys (↑ / ↓, Enter, Esc), mouse and touch. Esc and a tap outside the window choose the
-## last option, which callers always make the one that changes nothing ("No", "Aún no").
-## The focus starts on `focus`, so a quick Enter never takes a step that can't be undone.
+## last option, which callers always make the one that changes nothing ("No", "Aún no",
+## "Volver"); with cancel false (the v3's ending: both answers change the game for good) they
+## do nothing, and one of the buttons must be chosen. The focus starts on `focus`, so a quick
+## Enter never takes a step that can't be undone.
 
 signal answered(index: int)
 
@@ -13,6 +15,8 @@ const TOUCH_WIDTH := 300
 var _options := 0
 ## The first answer given; kept so one that comes before ask() awaits it is not lost.
 var _answer := -1
+## False while Esc and a tap outside must not answer (ask()'s cancel).
+var _cancel := true
 
 
 func _ready() -> void:
@@ -21,14 +25,15 @@ func _ready() -> void:
 
 
 ## Shows the question with one button per option and waits for the answer.
-func ask(question: String, options: Array[String], focus := 0) -> int:
+func ask(question: String, options: Array[String], focus := 0, cancel := true) -> int:
 	_options = options.size()
+	_cancel = cancel
 	size = get_viewport_rect().size  # under a CanvasLayer the anchors have no parent to follow
 	var shade := ColorRect.new()
 	shade.color = UiTokens.color(&"surface-scrim")
 	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	shade.gui_input.connect(func(event: InputEvent) -> void:
-		if UiStyle.is_outside_tap(event):
+		if _cancel and UiStyle.is_outside_tap(event):
 			_give(_options - 1))
 	add_child(shade)
 	var window := BattleHud.make_window()
@@ -65,7 +70,8 @@ func ask(question: String, options: Array[String], focus := 0) -> int:
 func _unhandled_input(event: InputEvent) -> void:
 	if _options > 0 and event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
-		_give(_options - 1)
+		if _cancel:
+			_give(_options - 1)
 
 
 func _give(index: int) -> void:

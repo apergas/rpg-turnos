@@ -63,8 +63,9 @@ const V3_FINAL_BOSS := "eco_albor"
 ## credits follow them.
 const ALBOR_FREED := "albor_liberado"
 const ALBOR_BEATEN := "albor_vencido"
-## The question after the albor scene (StoryFlow.finish_v3(), World.ask(): Esc and a tap outside
-## pick the last option; both end well) and the final scene of each answer, in the same order.
+## The question after the albor scene (StoryFlow.finish_v3(), World.ask() with cancel false: Esc
+## and a tap outside do nothing, an answer must be chosen) and the final scene of each answer, in
+## the same order.
 const ENDING_QUESTION := "El Amuleto del Alba brilla en tu mano. ¿Qué haces?"
 const ENDING_OPTIONS: Array[String] = ["Devolver el amuleto", "Acabar con el Eco"]
 const ENDING_SCENES: Array[String] = ["final_v3_liberado", "final_v3_vencido"]

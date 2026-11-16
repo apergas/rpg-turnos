@@ -205,7 +205,8 @@ func finish_v3() -> void:
 		print("Pregunta: %s -> %s" % [StoryState.ENDING_QUESTION,
 			StoryState.ENDING_OPTIONS[choice]])
 	else:
-		choice = await _ctx.world.ask(StoryState.ENDING_QUESTION, StoryState.ENDING_OPTIONS)
+		choice = await _ctx.world.ask(StoryState.ENDING_QUESTION, StoryState.ENDING_OPTIONS, 0,
+			false)
 	if choice == 0:
 		_ctx.state.key_items.erase(StoryState.AMULET_FLAG)
 	await play_scene(StoryState.ENDING_SCENES[choice])
