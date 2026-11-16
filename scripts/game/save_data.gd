@@ -140,7 +140,8 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 	var items := {}
 	for id: String in data.inventory:
 		items[id] = whole(data.inventory[id])
-	state.gold += _sell_retired(items)
+	# Capped again after the sale (3.10.0): whole() capped the gold before it.
+	state.gold = mini(state.gold + _sell_retired(items), MAX_NUMBER)
 	state.inventory.set_items(items)
 	state.quest.stage = clampi(int(data.quest.stage), Quest.Stage.OFFER, Quest.Stage.DONE) \
 		as Quest.Stage

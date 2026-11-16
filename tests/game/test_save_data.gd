@@ -114,6 +114,18 @@ func test_a_retired_item_is_sold_on_loading() -> void:
 	assert_eq(state.gold, GameState.START_GOLD + 3 * int(SaveData.RETIRED_ITEMS.incienso))
 
 
+# 3.10.0 (M-126): the retired items' gold came in after whole() had capped the gold (found by
+# the 3.9.0 tests), so a file edited by hand could end past MAX_NUMBER.
+func test_the_gold_of_retired_items_stays_within_the_cap() -> void:
+	var data := Fx.fresh_save()
+	data.gold = float(SaveData.MAX_NUMBER)
+	data.inventory["incienso"] = 3.0
+	var state := Fx.new_state()
+	assert_true(SaveData.apply(state, data).valid)
+	assert_eq(state.inventory.count("incienso"), 0)
+	assert_eq(state.gold, SaveData.MAX_NUMBER)
+
+
 func test_exp_past_the_cap_is_clamped_on_loading() -> void:
 	var data := Fx.fresh_save()
 	data.hero.level = 20.0
