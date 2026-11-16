@@ -103,11 +103,13 @@ func is_lost(id: String, flags: Dictionary, inventory: Inventory) -> bool:
 	if not is_active(id):
 		return false
 	var quest := data(id)
-	if _is_ready(quest, inventory) 			and quest.turn_in_zone in ZoneData.zones_of_part(StoryState.part(flags)):
+	if _is_ready(quest, inventory) \
+			and quest.turn_in_zone in ZoneData.zones_of_part(StoryState.part(flags)):
 		return false
 	if part_of(id) < StoryState.part(flags):
 		return true
-	return quest.gone != "" and flags.get(quest.gone, false) 		and not ClosingLands.zones_of(quest.gone).is_empty()
+	return quest.gone != "" and flags.get(quest.gone, false) \
+		and not ClosingLands.zones_of(quest.gone).is_empty()
 
 
 ## Takes the quest; a DELIVER hands over what is to be delivered.
