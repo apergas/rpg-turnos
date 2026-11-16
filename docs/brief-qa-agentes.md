@@ -1,6 +1,6 @@
 # Brief de QA: Villaclaro, la Niebla del Norte
 
-Este documento es todo lo que necesita un agente de QA para comprobar que el juego está bien, hace lo que debe y cumple lo que promete. Sirve para cualquier modelo y no supone ninguna herramienta concreta. Describe la versión **3.8.0** (`application/config/version` en `project.godot`, la que sale en el título y en la pausa).
+Este documento es todo lo que necesita un agente de QA para comprobar que el juego está bien, hace lo que debe y cumple lo que promete. Sirve para cualquier modelo y no supone ninguna herramienta concreta. Describe la versión **3.9.0** (`application/config/version` en `project.godot`, la que sale en el título y en la pausa).
 
 **Tu trabajo es encontrar problemas y documentarlos, no arreglarlos.** Entrega un informe con el formato de la sección 7.
 
@@ -9,7 +9,7 @@ Si este documento contradice el código o los datos del juego, mandan el código
 ## 1. Reglas
 
 1. **No modifiques el repositorio.** Nada de editar, hacer commit, crear ramas o hacer push. Tampoco publiques nada ni subas nada a itch.io. Tus scripts y archivos temporales van fuera del repositorio. La única excepción es el informe, si te han pedido guardarlo: `docs/boost/qa/<fecha>-<modelo>-<ángulo>.md`.
-2. **No añadas pruebas automáticas al proyecto.** El proyecto no tiene ni quiere tests, GUT ni gdUnit4. Puedes usar scripts propios fuera del repositorio, por ejemplo para simular combates o volcar los datos.
+2. **No añadas ni cambies pruebas automáticas.** El proyecto tiene tests unitarios de sus reglas y sus datos (GUT, en `tests/`), que mantiene el equipo. Puedes ejecutarlos (`godot --headless --path . --script res://addons/gut/gut_cmdln.gd`, con la carpeta de datos redirigida como en la sección 4.1) y contar como hallazgo lo que falle, pero no los toques. Tus scripts propios, por ejemplo para simular combates o volcar los datos, siguen fuera del repositorio.
 3. **No toques la partida real del usuario.** Antes de ejecutar el juego en un PC, redirige la carpeta de datos con una ruta escrita a mano (sección 4.1). Nunca borres nada dentro de una ruta construida con `$APPDATA` o `%APPDATA%`.
 4. **No inventes resultados.** Cada hallazgo declara cómo lo sabes (sección 7). Si no pudiste ejecutar algo, dilo. Un informe corto y cierto vale más que uno largo y dudoso.
 5. **No rellenes.** Si un área está bien, escribe "sin hallazgos" y qué comprobaste. Separa los defectos de las opiniones.
@@ -208,7 +208,7 @@ Nara, el Superviviente, el Pescador y Ceniza vuelven a su pueblo al encontrarlos
 
 ### 3.9. Menú de pausa
 
-Esc, P o el botón ☰. A la izquierda, "Nombre Nv n" y las páginas Estado, Hechizos, Objetos, Equipo, Mapa, Diario y "Bestiario n/total", con las misiones debajo (en el móvil, en 3 columnas). A la derecha, Guardar, Opciones, Salir (pide confirmación: "Lo que no esté guardado se perderá."), con el foco en "No", **Buscar actualizaciones** (solo en la web) y Cerrar. Mientras está abierta, la versión ("v3.8.2") sale abajo a la derecha. Tocar fuera de una ventana la cierra o retrocede. "Estado" se desplaza si no cabe (textos grandes en el móvil).
+Esc, P o el botón ☰. A la izquierda, "Nombre Nv n" y las páginas Estado, Hechizos, Objetos, Equipo, Mapa, Diario y "Bestiario n/total", con las misiones debajo (en el móvil, en 3 columnas). A la derecha, Guardar, Opciones, Salir (pide confirmación: "Lo que no esté guardado se perderá."), con el foco en "No", **Buscar actualizaciones** (solo en la web) y Cerrar. Mientras está abierta, la versión ("v3.9.0") sale abajo a la derecha. Tocar fuera de una ventana la cierra o retrocede. "Estado" se desplaza si no cabe (textos grandes en el móvil).
 
 ### 3.10. Guardado
 
@@ -325,7 +325,7 @@ Marca cada prueba: **OK**, **Falla** (con el ID del hallazgo), **Parcial** o **N
 
 | ID | Prueba | Resultado esperado |
 |---|---|---|
-| T-001 | Abrir el juego sin datos | Título con "v3.8.0". "Continuar" en gris. Sin errores en la consola |
+| T-001 | Abrir el juego sin datos | Título con "v3.9.0". "Continuar" en gris. Sin errores en la consola |
 | T-002 | Con partidas en varias ranuras | "Continuar" lista las tres con nombre, nivel, lugar y tiempo, o "Vacía"; carga la elegida donde estaba |
 | T-003 | Partida terminada (de cualquier parte) | " · terminada"; "Continuar" abre "Continuar" / "Volver" y carga en el sitio de después del final |
 | T-004 | "Nueva partida" con todo vacío | Va directa al nombre (ranura 1) |
