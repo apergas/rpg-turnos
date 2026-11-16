@@ -1,5 +1,9 @@
 # Registro de cambios
 
+## 3.8.1 (2026)
+
+- Sin cambios en el juego: el piloto automático ya no se cuelga, un mensaje de error poco frecuente al cerrar el juego en pleno combate ha desaparecido y el juego se prueba solo en cada subida.
+
 ## 3.8.0 (2026)
 
 Más niveles en Brumaclara, y su gente por fin se ve de allí.
