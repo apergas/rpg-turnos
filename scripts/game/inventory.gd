@@ -11,7 +11,6 @@ const BIG_ETHER := "eter_grande"
 const ELIXIR := "elixir"
 const ANTIDOTE := "antidote"
 const WING := "wing"
-const INCENSE := "incienso"
 const PHOENIX := "pluma_fenix"
 const ALARM := "despertador"
 const SETA := "seta"
@@ -44,8 +43,7 @@ const EFFECT_WAKE_GUARD := "wake_guard"
 ## name and article (for "una Poción"); effect "hp" (heals value HP), "mp" (restores
 ## value MP), "full" (every HP and MP back: the Elixir), "cure" (removes the status named
 ## by value), "travel" (the Ala de viaje: Game takes the hero to the last village visited
-## and leaves a portal there that leads back once), "repel" (the Incienso: for value metres
-## touching a group of monsters starts no battle; GameState counts them), "seed" (adds
+## and leaves a portal there that leads back once), "seed" (adds
 ## SEED_BONUS to the Combatant field named by value),
 ## "revive" (EFFECT_REVIVE: the Pluma de fénix, used by itself when the hero falls in battle,
 ## value is the share of max HP he rises with), "wake_guard" (EFFECT_WAKE_GUARD: the
@@ -75,9 +73,6 @@ const ITEMS := {
 	WING: {"name": "Ala de viaje", "article": "un", "effect": "travel", "value": 0,
 		"price": 25, "battle": false, "field": true,
 		"text": "Te lleva al último lugar seguro y deja un portal para volver una vez."},
-	INCENSE: {"name": "Incienso", "article": "un", "effect": "repel", "value": 200,
-		"price": 20, "battle": false, "field": true,
-		"text": "Los monstruos no te atacan durante 200 m."},
 	SETA: {"name": "Seta", "article": "una", "effect": "quest", "value": 0, "price": 0,
 		"battle": false, "field": false,
 		"text": "De las que saltan. Alguien de Villaclaro las anda buscando."},
@@ -105,7 +100,7 @@ const ITEMS := {
 }
 ## Order of the item lists.
 const IDS: Array[String] = [POTION, ETHER, BIG_POTION, BIG_ETHER, ELIXIR, ANTIDOTE, ALARM,
-	PHOENIX, WING, INCENSE, SEED_ATTACK, SEED_DEFENSE, SEED_SPEED, SETA, PIEL_MONO, CRISTAL_HIELO, JUNCO_BRUMA,
+	PHOENIX, WING, SEED_ATTACK, SEED_DEFENSE, SEED_SPEED, SETA, PIEL_MONO, CRISTAL_HIELO, JUNCO_BRUMA,
 	ESQUIRLA_GEODA]
 ## Why an Ala de viaje can't be used in a village.
 const IN_TOWN := "Ya estás en un lugar seguro"

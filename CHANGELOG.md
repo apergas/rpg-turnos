@@ -1,5 +1,15 @@
 # Registro de cambios
 
+## 3.7.0 (2026)
+
+Buscar actualizaciones desde el menú, la versión a la vista y adiós al Incienso.
+
+- En el menú de pausa, «Volver al título» se llama ahora «Salir».
+- En la web, debajo de «Salir» está «Buscar actualizaciones»: mira si hay una versión más nueva y, si la hay, te pregunta, guarda tu partida y recarga el juego con ella. En Windows y Linux no sale, porque esas versiones se descargan de itch.io.
+- Con el menú de pausa abierto se ve la versión del juego abajo a la derecha, como en el título.
+- La página «Equipo» ya no repite el ATK, la DEF y la VEL totales: están en «Estado».
+- El Incienso ya no existe: los monstruos se ven en el mapa y puedes esquivarlos. Si tu partida llevaba alguno, se vende solo al cargarla y te quedas con su oro.
+
 ## 3.6.2 (2026)
 
 - Al cambiar de página en un menú, la flecha ▶ ya no aparece un instante en el sitio de la página anterior.

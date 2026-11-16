@@ -236,7 +236,7 @@ func _physics_process(delta: float) -> void:
 	if _monsters.check_contact(pos, int(_sim_ms)):
 		_trigger(false)
 		return
-	if _autoplay and _hunter.is_on() and not _monsters.is_repelled():
+	if _autoplay and _hunter.is_on():
 		_hunter.step(pos, int(_sim_ms))
 	_uses.step(pos)
 
@@ -395,11 +395,6 @@ func _refresh_map_marks() -> void:
 func set_monsters_shy(on: bool) -> void:
 	_monsters.set_shy(on)
 
-
-## An Incienso burning: touching a group starts no battle and every group shows half
-## see-through (the boss still waits where it is).
-func set_repel(on: bool) -> void:
-	_monsters.set_repel(on, int(_sim_ms))
 
 
 ## Autoplay: hunt the groups (Game: while the hero is below the zone's autoplay_boss_level).

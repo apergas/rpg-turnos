@@ -382,12 +382,7 @@ func _build_menu() -> void:
 	subtitle.offset_bottom = 0.0
 	subtitle.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	subtitle.grow_vertical = Control.GROW_DIRECTION_END
-	var version := Label.new()
-	version.text = "v%s" % ProjectSettings.get_setting("application/config/version")
-	UiTheme.style_label(version, &"caption", &"text-primary", UiTokens.OUTLINE_S, &"text-outline-warm")
-	root.add_child(version)
-	version.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, \
-		Control.PRESET_MODE_MINSIZE, UiTokens.SPACE_3)
+	UiTheme.version_label(root)
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	center.offset_top = _menu_top()

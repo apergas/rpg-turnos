@@ -49,6 +49,12 @@ jobs:
           test -f build/web/index.wasm
           jq '.short_name = "Villaclaro"' build/web/index.manifest.json > manifest.tmp
           mv manifest.tmp build/web/index.manifest.json
+          # The version the pause menu's «Buscar actualizaciones» compares with its own
+          # (WebUpdate). It is in no list of the service worker, so it always comes from the
+          # network.
+          version=$(sed -n 's/^config\/version="\([^"]*\)"$/\1/p' project.godot)
+          test -n "$version"
+          jq -n --arg version "$version" '{version: $version}' > build/web/version.json
 
       - uses: actions/configure-pages@v6
 

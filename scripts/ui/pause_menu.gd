@@ -2,17 +2,23 @@ class_name PauseMenu extends Control
 ## Pause menu of the world map. Esc or P, or the ☰ button in the top right corner
 ## (mouse and touch), open it while `available`; it pauses the tree until it closes.
 ## Main page: two windows side by side. The hero's ("Héroe Nv X", the pages of
-## HERO_PAGES and the missions under way) and the system's (Guardar, Opciones, Volver al
-## título, Cerrar). Other pages: Estado (hero stats, gold, spells), Objetos (items usable
-## outside battle, the Ala de viaje too, and the key items, each with what it does),
-## Equipo (the six slots; choosing one lists the pieces of that slot in the bag, with
-## the comparison, and Quitar), Diario (JournalPage: what to do now, the missions in progress
-## and the finished ones), Opciones (OptionsPanel) and a confirmation before going
-## back to the title. Esc goes back one page. Keeps running while paused. Call setup()
-## before adding it to the tree.
+## HERO_PAGES and the missions under way) and the system's (Guardar, Opciones, Salir,
+## Buscar actualizaciones on the web only, Cerrar). Other pages: Estado (hero stats, gold,
+## spells), Objetos (items usable outside battle, the Ala de viaje too, and the key items,
+## each with what it does), Equipo (the six slots; choosing one lists the pieces of that
+## slot in the bag, with the comparison, and Quitar), Diario (JournalPage: what to do now,
+## the missions in progress and the finished ones), Opciones (OptionsPanel), Salir (a
+## confirmation before going back to the title) and Actualizar (a newer web version found:
+## WebUpdate answers the two update signals with show_update_line() / show_update_found()).
+## While open, the game's version shows in the bottom right corner. Esc goes back one page.
+## Keeps running while paused. Call setup() before adding it to the tree.
 
 signal save_requested
 signal title_requested
+## «Buscar actualizaciones» (web only): WebUpdate looks for a newer version.
+signal update_check_requested
+## «Actualizar» on the Actualizar page: WebUpdate saves, downloads the new version and reloads.
+signal update_requested
 ## The hero, the inventory or the equipment changed, so the map can refresh.
 signal state_changed
 ## An Ala de viaje was used (the menu closes): Game takes the hero to the last village and
@@ -44,6 +50,8 @@ const MENU_BUTTON_SIZE := Vector2.ONE * UiTokens.MENU_BUTTON
 const MENU_BUTTON_MARGIN := float(UiTokens.SPACE_6)
 ## Seconds each page stays open in tour().
 const TOUR_STEP := 1.5
+## The Actualizar page's text: the version published (WebUpdate, show_update_found()).
+const NEWER_TEXT := "Hay una versión nueva: v%s. Se guardará la partida y el juego se recargará."
 
 ## Says whether the hero is inside a village now (an Ala can't be used there). Set by
 ## Game.
@@ -67,6 +75,10 @@ var _main_row: HBoxContainer
 var _hero_label: Label
 var _mission_box: VBoxContainer
 var _main_message: Label
+## The game's version in the bottom right corner, shown while the menu is open.
+var _version_label: Label
+## The Actualizar page's text (NEWER_TEXT).
+var _update_text: Label
 var _hp_bar: StatBar
 var _mp_bar: StatBar
 var _exp_bar: StatBar
@@ -79,8 +91,6 @@ var _ally_stats: Label  ## Under the companion's name: its numbers now, in small
 var _items_box: VBoxContainer
 var _items_message: Label
 var _equip_box: VBoxContainer
-## ATK / DEF / VEL under the list of slots, outside the part that scrolls.
-var _equip_stats: Label
 var _equip_message: Label
 ## Slot whose pieces the Equipo page lists ("" for the list of the three slots).
 var _equip_slot := ""
@@ -126,6 +136,9 @@ func _ready() -> void:
 		if UiStyle.is_outside_tap(event):
 			_go_back())
 	add_child(_shade)
+	# Over the shade and under the windows: a window may cover it, never the reverse.
+	_version_label = UiTheme.version_label(self)
+	_version_label.hide()
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -146,6 +159,7 @@ func _ready() -> void:
 	_build_bestiary_entry(stack)
 	_build_options(stack)
 	_build_confirm(stack)
+	_build_update(stack)
 	UiTheme.add_cursor(_window)
 	available = available
 
@@ -160,6 +174,7 @@ func open() -> void:
 	_map_only = false
 	get_tree().paused = true
 	_shade.show()
+	_version_label.show()
 	_menu_button.hide()
 	_set_line(_main_message, "")
 	_sfx(SfxLibrary.ACCEPT)
@@ -181,6 +196,7 @@ func close() -> void:
 		return
 	_page = ""
 	_shade.hide()
+	_version_label.hide()
 	_window.hide()
 	_main_row.hide()
 	_sfx(SfxLibrary.CANCEL)
@@ -193,6 +209,22 @@ func close() -> void:
 func show_save_result(ok: bool) -> void:
 	_set_line(_main_message, "Partida guardada." if ok else "No se pudo guardar.")
 	_sfx(SfxLibrary.SAVE if ok else SfxLibrary.CANCEL)
+
+
+## A line from WebUpdate («Buscando actualizaciones…», its answer, the download) in the main
+## page's message, where «Partida guardada.» shows.
+func show_update_line(text: String) -> void:
+	_set_line(_main_message, text)
+
+
+## WebUpdate found a newer version: the Actualizar page, if the main page that asked still
+## shows; elsewhere (or closed) the search's line is only cleared, and another press asks again.
+func show_update_found(version: String) -> void:
+	_set_line(_main_message, "")
+	if _page != "main":
+		return
+	BattleHud.fit_label(_update_text, NEWER_TEXT % version, TEXT_WIDTH)
+	_open_page("update")
 
 
 ## Shows the ☰ button for TOUR_STEP seconds, then opens the menu (even if not
@@ -402,19 +434,17 @@ func _use_text(id: String, result: Dictionary) -> String:
 			return "Recuperas todos los PV y PM."
 		"seed":
 			return "¡%s +%d para siempre!" % [Inventory.seed_stat(id), result.amount]
-		"repel":
-			return "Los monstruos no te atacan durante %d m." % Inventory.ITEMS[id].value
 	return "Recuperas %d PV." % result.amount
 
 
 ## The six slots with what is worn ("Arma: Palo", and "ATK +2" in small text under it; an empty
-## slot says "nada" and has no line under it) and the totals; with a slot chosen, the pieces of
-## that slot in the bag (the comparison beside the name, the effect under it), Quitar and Volver.
+## slot says "nada" and has no line under it; the totals are Estado's); with a slot chosen, the
+## pieces of that slot in the bag (the comparison beside the name, the effect under it), Quitar
+## and Volver.
 func _fill_equipment() -> void:
 	for child in _equip_box.get_children():
 		_equip_box.remove_child(child)
 		child.queue_free()
-	var hero := _state.hero
 	var loadout := _state.loadout
 	if _equip_slot == "":
 		for slot in Equipment.SLOTS:
@@ -429,12 +459,8 @@ func _fill_equipment() -> void:
 			entry.add_child(button)
 			if worn != "":
 				UiStyle.add_small_text(entry, Equipment.effect_text(worn))
-		_equip_stats.text = "ATK %d   DEF %d   VEL %d" % [hero.total_attack(),
-			hero.total_defense(), hero.total_speed()]
-		_equip_stats.show()
 		_focus_first_in(_equip_box)
 		return
-	_equip_stats.hide()
 	_equip_box.add_child(_label("%s:" % Equipment.SLOT_NAMES[_equip_slot], UiTheme.TITLE))
 	var listed: Array[String] = []
 	for id in _state.bag_equipment:
@@ -562,15 +588,20 @@ func _build_main(center: CenterContainer) -> void:
 	var entries := [
 		["Guardar", func() -> void: save_requested.emit()],
 		["Opciones", func() -> void: _open_page("options")],
-		["Volver al título", func() -> void: _open_page("confirm")],
-		["Cerrar", close],
+		["Salir", func() -> void: _open_page("confirm")],
 	]
+	# Only the web build updates itself: Windows and Linux are downloaded by hand from itch.io.
+	if OS.has_feature("web"):
+		entries.append(["Buscar actualizaciones", _on_check_updates])
+	entries.append(["Cerrar", close])
 	for entry: Array in entries:
 		var button := _button(entry[0])
 		button.pressed.connect(entry[1])
 		system_box.add_child(button)
 	_main_message = _label("")
 	_main_message.custom_minimum_size.x = MESSAGE_WIDTH
+	# A long line (the updates' answers) wraps: a message never moves the buttons.
+	_main_message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	system_box.add_child(_main_message)
 
 
@@ -741,8 +772,6 @@ func _build_equipment(stack: VBoxContainer) -> void:
 	else:
 		_equip_box = VBoxContainer.new()
 		page.add_child(_equip_box)
-	_equip_stats = _label("")
-	page.add_child(_equip_stats)
 	_equip_message = _label("")
 	page.add_child(_equip_message)
 	page.add_child(_back_button())
@@ -814,14 +843,35 @@ func _build_options(stack: VBoxContainer) -> void:
 
 
 func _build_confirm(stack: VBoxContainer) -> void:
-	var page := _page_box(stack, "confirm", "Volver al título")
+	var page := _page_box(stack, "confirm", "Salir")
 	page.add_child(_label("Lo que no esté guardado se perderá."))
-	var yes := _button("Sí, volver")
+	var yes := _button("Sí, salir")
 	yes.pressed.connect(func() -> void: title_requested.emit())
 	page.add_child(yes)
 	var no := _button("No")
 	no.pressed.connect(_back_to_main)
 	page.add_child(no)
+
+
+## A newer version is published (show_update_found()): Actualizar goes back to the main page,
+## whose message follows the save and the download; Ahora no only goes back.
+func _build_update(stack: VBoxContainer) -> void:
+	var page := _page_box(stack, "update", "Actualizar")
+	_update_text = _label("")
+	page.add_child(_update_text)
+	var yes := _button("Actualizar")
+	yes.pressed.connect(func() -> void:
+		_open_page("main")
+		update_requested.emit())
+	page.add_child(yes)
+	var no := _button("Ahora no")
+	no.pressed.connect(_back_to_main)
+	page.add_child(no)
+
+
+func _on_check_updates() -> void:
+	_sfx(SfxLibrary.ACCEPT)
+	update_check_requested.emit()
 
 
 func _open_page(page: String) -> void:
