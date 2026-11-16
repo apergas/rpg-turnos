@@ -125,7 +125,7 @@ const KEY_ITEMS := {
 	"sello_albor": "Sello de Albor",
 	"cartas_vecina": "Cartas de la Vecina",
 }
-## What each key item is, for Objetos.
+## What each key item is, for the Diario's «Objetos clave» (JournalPage).
 const KEY_TEXTS := {
 	"fragmento_bosque": "Un trozo del Amuleto del Alba. Lo guardaba la Bruja del bosque.",
 	"fragmento_mina": "Un trozo del Amuleto del Alba. Lo guardaba el Golem de piedra.",
