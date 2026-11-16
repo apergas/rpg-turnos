@@ -113,6 +113,20 @@ func test_a_hero_past_the_top_comes_down_to_it_with_that_levels_numbers() -> voi
 	assert_eq(top.experience, before)
 
 
+func test_a_hand_edited_hero_with_small_numbers_comes_down_without_going_negative() -> void:
+	var hero := Fx.new_state().hero
+	hero.level = SaveData.OLD_MAX_LEVEL
+	for field: String in Leveling.GAINS:
+		hero.set(field, 1)
+	hero.hp = 1
+	hero.mp = 1
+	Leveling.lower_to_max(hero)
+	assert_eq(hero.level, Leveling.MAX_LEVEL)
+	for field in ["max_hp", "max_mp", "attack", "defense", "speed", "hp"]:
+		assert_gte(hero.get(field), 1, field)
+	assert_gte(hero.mp, 0)
+
+
 func test_set_level_clamps_and_gives_that_levels_spells() -> void:
 	var hero := Fx.new_state().hero
 	Leveling.set_level(hero, 99, Fx.HERO.skills)

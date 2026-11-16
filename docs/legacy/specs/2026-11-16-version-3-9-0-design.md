@@ -1,6 +1,6 @@
 # Versión 3.9.0: tests unitarios de las reglas
 
-Fecha: 2026-11-16. Estado: spec. Cubre M-121 a M-123 del [documento maestro](../documento-maestro.md). Va después de la 3.8.2 y la necesita fusionada en `develop`. El juego no cambia: la partida guardada sigue en la **versión 16**, ningún texto, dato ni equilibrio se toca.
+Fecha: 2026-11-16. Estado: spec. Cubre M-121 a M-123 del [documento maestro](../../boost/documento-maestro.md). Va después de la 3.8.2 y la necesita fusionada en `develop`. El juego no cambia: la partida guardada sigue en la **versión 16**, ningún texto, dato ni equilibrio se toca.
 
 ## Objetivo
 

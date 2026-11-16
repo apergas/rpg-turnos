@@ -143,3 +143,10 @@ func test_each_shop_sells_the_series_of_its_step_and_never_the_phoenix() -> void
 				"%s sells %s" % [shop_id, id])
 	for shop_id: String in Shop.SHOPS:
 		assert_does_not_have(Shop.SHOPS[shop_id].items, Inventory.PHOENIX, shop_id)
+
+
+func test_the_buy_page_title_follows_the_keepers_word() -> void:
+	assert_eq(Shop.counter_title(Shop.VILLACLARO, Shop.ARMORY_COUNTER), "Armera")
+	assert_eq(Shop.counter_title(Shop.BOSQUE, Shop.ARMORY_COUNTER), "Armero")
+	assert_eq(Shop.counter_title("brumaclara_3", Shop.ARMORY_COUNTER), "Armero")
+	assert_eq(Shop.counter_title(Shop.VILLACLARO, Shop.ITEMS_COUNTER), "Tienda")
