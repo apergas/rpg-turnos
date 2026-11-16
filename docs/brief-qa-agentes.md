@@ -57,6 +57,8 @@ Si algo de abajo lo contradice, manda esto.
 - **Tienda:** botón ×5 para objetos. Palo y Ropa se venden por 1 G.
 - **Pluma de fénix:** no se vende en ninguna tienda; sale de cofres y la sueltan algunos enemigos.
 - **Medallas:** 40. El Coleccionista da un anillo o un amuleto cada 4 (10 premios) y está en todos los pueblos, también en la Caravana y en Brumaclara desde el principio.
+- **Brumaclara:** su gente tiene la piel de la Niebla (gris azulado), un cristal que brilla en el pecho y, salvo Neblí y el Herrero, capucha. Orvalla lleva un farol, la Curandera un cuenco de agua que brilla y el Herrero los brazos de cristal. El rótulo con el nombre no queda tapado.
+- **Nivel 60:** un aura dorada suave rodea al héroe en el mapa, en los combates y en las escenas, con unas chispas que suben de los pies (menos en el móvil). Se enciende con un destello tras el aviso de subida al 60. Ni el compañero ni la criatura la llevan; los topes de 20 y 40 no la encienden.
 - **Menús:** tocar fuera de una ventana la cierra o retrocede.
 - **Nueva partida:** pide confirmación si hay una partida guardada que funciona. Una dañada sale como "Continuar (partida dañada)", desactivado.
 - **Objetivo:** el principal va siempre primero. En el móvil, el mapa solo enseña esa línea; las secundarias están en la pausa.
@@ -97,7 +99,7 @@ Por turnos: el héroe contra uno o dos enemigos.
 ### Personaje y progresión
 
 - **Inicio:** nivel 1, 30 PV, 6 PM, ATK 10, DEF 5, VEL 8. Lleva Palo (+2) y Ropa (+2), 50 G y 3 Pociones.
-- **Subir de nivel:** nivel máximo 20. Cada nivel da PV +6, PM +3, ATK +2, DEF +1, VEL +1. La EXP se pide en una tabla fija: 12, 35, 62, 96, 180... 3600. Subir no cura del todo.
+- **Subir de nivel:** nivel máximo 20 en la v1, 40 en la Caravana y 60 en Brumaclara. Cada nivel da PV +6, PM +3, ATK +2, DEF +1, VEL +1. La EXP se pide en una tabla fija: 12, 35, 62, 96, 180... 3600 (75100 al 60). Subir no cura del todo.
 - **Hechizos:**
 
 | Hechizo | Nivel | PM | Poder | Tipo |

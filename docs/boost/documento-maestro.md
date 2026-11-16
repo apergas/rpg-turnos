@@ -72,6 +72,6 @@ Lo que se ha hecho y lo que queda por hacer en Villaclaro. Una fila por versión
 | 3.7.0 · M-102 | La versión del juego se ve con el menú abierto, como en el título | hecho |
 | 3.7.0 · M-103 | Sin Incienso: los monstruos ya se ven en el mapa | hecho |
 | 3.7.0 · M-106 | «Equipo» ya no muestra ATK, DEF y VEL totales: se ven en «Estado» | hecho |
-| 3.8.0 · M-104 | Nivel máximo 60 en la v3 ([spec](specs/2026-11-16-version-3-8-0-design.md) · [plan](plans/2026-11-16-version-3-8-0.md)) | plan |
-| 3.8.0 · M-105 | La gente de Brumaclara con piel de bruma, capucha y cristal; Orvalla con farol, la Curandera con cuenco y el Herrero con brazos de cristal | plan |
-| 3.8.0 · M-107 | Un aura dorada suave alrededor del héroe al llegar al nivel 60 | plan |
+| 3.8.0 · M-104 | Nivel máximo 60 en la v3 ([spec](specs/2026-11-16-version-3-8-0-design.md) · [plan](plans/2026-11-16-version-3-8-0.md)) | hecho |
+| 3.8.0 · M-105 | La gente de Brumaclara con piel de bruma, capucha y cristal; Orvalla con farol, la Curandera con cuenco y el Herrero con brazos de cristal | hecho |
+| 3.8.0 · M-107 | Un aura dorada suave alrededor del héroe al llegar al nivel 60 | hecho |

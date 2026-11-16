@@ -29,6 +29,8 @@ var move_target: Variant = null
 var stick_direction := Vector2.ZERO
 
 var _model: BattleActor
+## The golden aura of the top level on the figure (set_aura()), or null.
+var _aura: HeroAura = null
 var _stuck_frames := 0
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 
@@ -64,6 +66,20 @@ func _ready() -> void:
 ## The hero's figure, for cutscenes (walking animation, turning, cheering).
 func model() -> BattleActor:
 	return _model
+
+
+## The golden aura of the top level on the hero's figure (HeroAura; Game._refresh_status()
+## through World.set_hero_aura(), with Leveling.at_max()): built once, taken away when off.
+func set_aura(on: bool) -> void:
+	if on == (_aura != null):
+		return
+	if on:
+		_aura = HeroAura.new()
+		_aura.build(_model.top_height())
+		_model.add_child(_aura)
+	else:
+		_aura.queue_free()
+		_aura = null
 
 
 ## Shows the weapon, shield and helmet worn on the model (Equipment ids, "" for none).

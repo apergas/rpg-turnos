@@ -2,7 +2,7 @@ class_name V3Flow extends Node
 ## Node, a piece of Game: the v3 (Brumaclara, 3.0.0). The first time the hero stands in
 ## Brumaclara (through the Caravana's portal) the part 3 begins: on_zone_switched() sets its
 ## flag and the start of its numbers (story.v3_start) before the trip's autosave, so that save
-## is already one of the part 3 (Brumaclara is only valid there) with the level cap at 50. The
+## is already one of the part 3 (Brumaclara is only valid there) with the level cap at 60. The
 ## arrival cutscene follows as the village's first-visit scene (StoryFlow), and so does the
 ## Abuela Rosa's in Villaclaro (arrival_scene(), 3.2.0). The v3's ending is StoryFlow's
 ## (finish_v3(), 3.3.0). Gets the session in setup(); never stores Game or a World.

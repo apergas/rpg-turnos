@@ -16,7 +16,7 @@ attack = 142
 defense = 92
 speed = 34
 skills = Array[ExtResource("2_skill")]([ExtResource("3_sello")])
-exp_reward = 2600
+exp_reward = 3510
 gold_reward = 1500
 ai_weights = {
 "attack": 50,

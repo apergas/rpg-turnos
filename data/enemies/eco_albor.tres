@@ -17,7 +17,7 @@ attack = 144
 defense = 96
 speed = 36
 skills = Array[ExtResource("2_skill")]([ExtResource("3_bruma")])
-exp_reward = 3000
+exp_reward = 4050
 gold_reward = 2000
 ai_weights = {
 "attack": 50,
