@@ -18,7 +18,7 @@ speed = 54
 skills = Array[ExtResource("2_skill")]([ExtResource("3_sk")])
 map_roam = 3.0
 map_speed = 2.4
-exp_reward = 84
+exp_reward = 113
 gold_reward = 70
 ai_weights = {
 "attack": 65,

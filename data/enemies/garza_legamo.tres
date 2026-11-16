@@ -18,7 +18,7 @@ attack = 112
 defense = 74
 speed = 34
 skills = Array[ExtResource("2_skill")]([ExtResource("3_picotazo")])
-exp_reward = 1900
+exp_reward = 2565
 gold_reward = 1100
 ai_weights = {
 "attack": 50,

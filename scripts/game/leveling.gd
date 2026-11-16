@@ -3,20 +3,22 @@ class_name Leveling extends RefCounted
 ## Current HP and MP go up by the same amount as their maximum, so a level up is not a
 ## full heal. Reaching a level listed in the hero's `learn` teaches that spell.
 
-const MAX_LEVEL := 50
+## The v3's cap (Brumaclara; GameState.level_cap() in part 3): 50 until 3.7.0, 60 since 3.8.0.
+const MAX_LEVEL := 60
 ## The v1 cap: a hero stays at it until he joins the caravan (GameState.level_cap(), kept in
 ## Combatant.level_cap by GameState.sync_level_cap()).
 const V1_MAX_LEVEL := 20
 ## The v2 cap: the caravan's hero stays at it until he reaches Brumaclara (the v3).
 const V2_MAX_LEVEL := 40
 ## EXP_TABLE[i] is the total EXP needed to reach level i + 1. Up to 20, the v1; from 21 to
-## 40, the caravan (v2); from 41 to 50, Brumaclara (v3). Each level asks a little more than
-## the last.
+## 40, the caravan (v2); from 41 to 60, Brumaclara (v3; 51 to 60 since 3.8.0). Each level asks
+## a little more than the last (from 51 on, 100 more each: 2600 ... 3500).
 const EXP_TABLE := [0, 12, 35, 62, 96, 180, 260, 340, 421, 580, 740, 900, 1073, 1550,
 	1780, 2010, 2244, 2650, 3100, 3600,
 	4150, 4750, 5400, 6100, 6850, 7650, 8500, 9400, 10350, 11350,
 	12400, 13500, 14650, 15850, 17100, 18400, 19750, 21150, 22600, 24100,
-	25700, 27400, 29200, 31100, 33100, 35200, 37400, 39700, 42100, 44600]
+	25700, 27400, 29200, 31100, 33100, 35200, 37400, 39700, 42100, 44600,
+	47200, 49900, 52700, 55600, 58600, 61700, 64900, 68200, 71600, 75100]
 const GAINS := {"max_hp": 6, "max_mp": 3, "attack": 2, "defense": 1, "speed": 1}
 
 

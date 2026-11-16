@@ -380,11 +380,11 @@ const AUTOPLAY_ZONES := {
 			Inventory.PHOENIX: 1},
 		"finished": true,
 	},
-	# --autoplay-zone=albor: the Fuente almost done: Lv 50 with the amanecer gear and Brena, at its
+	# --autoplay-zone=albor: the Fuente almost done: Lv 52 with the amanecer gear and Brena, at its
 	# entrance; it walks the floor and fights the Eco de Albor.
 	"albor": {
 		"zone": "fuente",
-		"experience": 44600,
+		"experience": 49900,
 		"gold": 2000,
 		"gear": ["espada_amanecer", "armadura_amanecer", "escudo_amanecer", "casco_amanecer"],
 		"flags": ["rey_slime", "bruja", "mina_palanca", "llave_mina", "mina_puerta",

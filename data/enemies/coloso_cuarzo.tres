@@ -12,7 +12,7 @@ hp = 3200
 attack = 132
 defense = 84
 speed = 26
-exp_reward = 2300
+exp_reward = 3105
 gold_reward = 1300
 ai_weights = {
 "attack": 60,

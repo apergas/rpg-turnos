@@ -18,7 +18,7 @@ speed = 46
 map_roam = 2.5
 map_speed = 1.8
 skills = Array[ExtResource("2_skill")]([ExtResource("3_vendaval")])
-exp_reward = 120
+exp_reward = 162
 gold_reward = 80
 ai_weights = {
 "attack": 60,
