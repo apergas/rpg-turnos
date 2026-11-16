@@ -2,10 +2,11 @@
 # Plays the autoplay runs of scripts/tools/autoplay_expected.json, JOBS at a time, each headless
 # with --fixed-fps 10 and its own scratch data folder (APPDATA on Windows, XDG_DATA_HOME on
 # Linux; both are set), so the real saves are never touched. Then checks each log against the
-# JSON: its end line, level, defeats, play time (within play_time_margin %), and no ERROR or
-# WARNING line other than known_warnings. A run past its timeout_min (wall clock) is killed with
-# its whole process tree. Prints a table; exits 1 if a run failed, 2 on a usage error. It only
-# runs the game (no tests) and never deletes anything: the logs stay in AUTOPLAY_DIR.
+# JSON: its end line, level, defeats, play time (within play_time_margin %, or the run's own
+# play_time_margin), and no ERROR or WARNING line other than known_warnings. A run past its
+# timeout_min (wall clock) is killed with its whole process tree. Prints a table; exits 1 if a run
+# failed, 2 on a usage error. It only runs the game (no tests) and never deletes anything: the
+# logs stay in AUTOPLAY_DIR.
 #
 #   scripts/tools/autoplay_all.sh            # every run
 #   scripts/tools/autoplay_all.sh v3 save    # only those
@@ -268,7 +269,7 @@ check_run() {
 		if [ -z "$line" ]; then
 			reasons+=("no acabó: falta «${result% }»")
 		else
-			local lmin lmax dmax want expected low high
+			local lmin lmax dmax want expected low high own
 			level[$i]=$(printf '%s\n' "$line" | sed -n 's/.*Nv \([0-9][0-9]*\).*/\1/p')
 			play[$i]=$(printf '%s\n' "$line" \
 				| sed -n 's/.*tiempo de juego \([0-9][0-9]*:[0-9][0-9]:[0-9][0-9]\).*/\1/p')
@@ -287,8 +288,10 @@ check_run() {
 				reasons+=("${defeats[$i]:-?} derrotas, como mucho $dmax")
 			fi
 			expected=$(seconds "$(str_field "$obj" play_time)")
-			low=$(( expected * (100 - margin) / 100 ))
-			high=$(( expected * (100 + margin) / 100 ))
+			own=$(num_field "$obj" play_time_margin)
+			own=${own:-$margin}
+			low=$(( expected * (100 - own) / 100 ))
+			high=$(( expected * (100 + own) / 100 ))
 			if [ -z "${play[$i]}" ]; then
 				reasons+=("sin tiempo de juego en «${result% }»")
 			elif [ "$(seconds "${play[$i]}")" -lt "$low" ] \
