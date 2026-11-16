@@ -1,5 +1,22 @@
 # Registro de cambios
 
+## 3.8.2 (2026)
+
+Arreglos tras dos repasos del juego de arriba abajo.
+
+- Cuando acabas Brumaclara, con cualquiera de los dos finales, todas las tierras vuelven a abrirse, cada una con su arco. Desde Villaclaro, el bosque (y con él la mina y el castillo). Desde la caravana, sus cuatro tierras y Villaclaro. Desde Brumaclara, la Ciénaga, las Cuevas y las Ruinas. Puedes volver a por los cofres, las bestias y las misiones que te dejaste, y las misiones que no tomaste, de las tres partes, se ofrecen otra vez.
+- Un portal del Ala de viaje que llevaba a una tierra ya cerrada se cierra con ella. El de la ciudad podía dejar la partida «dañada» en Brumaclara.
+- Las misiones de la caravana ya no se ofrecen cuando su tierra se ha cerrado, hasta que acabas el juego. Las que tomaste y ya no se pueden cumplir dejan sitio a las demás, y el Diario las apunta en «Perdidas» hasta el final.
+- En la pregunta final de Brumaclara, Esc y tocar fuera ya no eligen por ti: tienes que escoger.
+- Las partidas guardadas con la 1.0 y anteriores vuelven a cargar.
+- Una ranura con una partida de una versión más nueva lo dice, y el juego pregunta antes de borrar o sustituir cualquier ranura con un archivo, aunque no se pueda abrir.
+- El guardado es más seguro: si el juego se corta mientras guarda, la partida de antes sigue entera.
+- La Domadora ya no te vende una criatura si viajas con un compañero: la partida se quedaba «dañada».
+- Con «Textos grandes» en el móvil, la página «Estado» se desplaza y «Volver» siempre se ve.
+- «Salir» empieza con el cursor en «No».
+- El Diario enseña tus objetos clave, con lo que es cada uno, y tus medallas pequeñas.
+- Retoques de texto: «lobos 0/5»; la misión del pueblo dice «Objetivo:»; las teclas se llaman en castellano; la pregunta de partir con la caravana ya no dice que no volverás a Villaclaro; los tablones ya no gritan en mayúsculas, y los créditos de Villaclaro citan a Kenney.
+
 ## 3.8.1 (2026)
 
 - Sin cambios en el juego: el piloto automático ya no se cuelga, un mensaje de error poco frecuente al cerrar el juego en pleno combate ha desaparecido y el juego se prueba solo en cada subida.
