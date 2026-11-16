@@ -52,14 +52,15 @@ static func slot_text(slot: int) -> String:
 	return FileAccess.get_file_as_string(save_path(slot))
 
 
-## {"kind": SlotKind, "save": the Dictionary, empty unless USABLE}.
+## {"kind": SlotKind, "save": the Dictionary, empty unless USABLE, "newer": true for a DAMAGED
+## file saved by a newer version (SaveData.is_newer())}.
 static func slot_info(slot: int) -> Dictionary:
 	if not has_save(slot):
-		return {"kind": SlotKind.EMPTY, "save": {}}
+		return {"kind": SlotKind.EMPTY, "save": {}, "newer": false}
 	var save := load_game(slot)
 	if not SaveData.is_valid(save):
-		return {"kind": SlotKind.DAMAGED, "save": {}}
-	return {"kind": SlotKind.USABLE, "save": save}
+		return {"kind": SlotKind.DAMAGED, "save": {}, "newer": SaveData.is_newer(save)}
+	return {"kind": SlotKind.USABLE, "save": save, "newer": false}
 
 
 ## True if some slot holds a save Continuar can load.

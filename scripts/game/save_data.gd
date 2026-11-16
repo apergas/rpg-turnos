@@ -648,6 +648,12 @@ static func is_finished_v3(data: Dictionary) -> bool:
 	return is_v3(data) and story is Dictionary and story.get("finished_v3", false) == true
 
 
+## True if data says it was saved by a newer version of the game (a slot list's
+## "Partida de una versión más nueva", an import's IMPORT_NEWER).
+static func is_newer(data: Dictionary) -> bool:
+	return data.get("version") is float and int(data.version) > VERSION
+
+
 const IMPORT_NOT_SAVE := "Ese archivo no es una partida de Villaclaro."
 const IMPORT_NEWER := "Esa partida es de una versión más nueva del juego."
 
@@ -659,7 +665,7 @@ static func from_json(text: String) -> Dictionary:
 	if json.parse(text) != OK or not json.data is Dictionary:
 		return {"ok": false, "save": {}, "text": IMPORT_NOT_SAVE}
 	var data: Dictionary = json.data
-	if data.get("version") is float and int(data.version) > VERSION:
+	if is_newer(data):
 		return {"ok": false, "save": {}, "text": IMPORT_NEWER}
 	if not is_valid(data):
 		return {"ok": false, "save": {}, "text": IMPORT_NOT_SAVE}

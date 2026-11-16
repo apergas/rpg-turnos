@@ -7,7 +7,7 @@ class_name TitleScreen extends Node
 ## quit_to_title it frees it and shows the title again. There are three save slots
 ## (SaveStore, SlotList): "Continuar" opens the list and only lets usable saves be picked
 ## (it is disabled when none is; a finished one offers "Continuar" or "Volver"); "Nueva partida" goes straight to the name when every slot is
-## empty (slot 1), else asks for a slot and asks again before replacing a save that works.
+## empty (slot 1), else asks for a slot and asks again before replacing any file in it.
 ## The old single save.json moves to slot 1 the first time (SaveStore.migrate_legacy()); a
 ## save or the options cut mid-write are mended before anything is read (recover_writes()).
 ## With `-- --autoplay` the name entry types AUTOPLAY_NAME by itself and the new game
