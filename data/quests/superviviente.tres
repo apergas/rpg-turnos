@@ -10,6 +10,7 @@ kind = 3
 zone = "caravana"
 giver = "Viajero"
 needs = "grifo_cumbre"
+gone = "devorador_portal"
 turn_in_zone = "caravana"
 turn_in = "Jefe de caravana"
 target = "Superviviente"

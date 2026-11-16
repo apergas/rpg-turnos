@@ -122,7 +122,7 @@ func main_goal() -> String:
 ## the side quests. Never empty. The one place that reads them.
 func current_missions() -> Array[String]:
 	var missions: Array[String] = [main_goal()]
-	missions.append_array(quests.status_lines(inventory))
+	missions.append_array(quests.status_lines(inventory, world_flags))
 	return missions
 
 
@@ -190,10 +190,13 @@ func unequip(slot: String) -> void:
 	refresh_equipment()
 
 
-## Records a defeated boss: its world flag and its key item (once). Returns the key
+## Records a defeated boss: its world flag and its key item (once), and an Ala de viaje's
+## portal into the land that closes behind it closes too (ClosingLands). Returns the key
 ## item id it gave ("" if none or already carried).
 func on_boss_defeated(boss: Combatant) -> String:
 	world_flags[boss.id] = true
+	if ClosingLands.is_closed(portal_zone, world_flags):
+		close_portal()
 	if boss.key_item == "" or boss.key_item in key_items:
 		return ""
 	key_items.append(boss.key_item)

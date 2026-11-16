@@ -338,6 +338,16 @@ static func zones_of_part(part: int) -> Array[String]:
 	return zones
 
 
+## The zones a save with these flags may stand in or have as its last village: those of its
+## part (zones_of_part()), and every zone once the v3 is over (StoryState.world_open(), 3.8.2).
+static func open_zones(flags: Dictionary) -> Array[String]:
+	if not StoryState.world_open(flags):
+		return zones_of_part(StoryState.part(flags))
+	var zones: Array[String] = []
+	zones.assign(IDS)
+	return zones
+
+
 ## Where entry_id puts the player: [position, yaw in degrees]. On a dungeon floor "S"
 ## and "B" are the floor cell next to those stairs, facing away from them. Unknown ids
 ## give the start entry.
@@ -368,6 +378,25 @@ func all_exits() -> Array:
 				"label": "Subir" if kind == STAIRS_UP else "Bajar", "lock": "",
 				"lock_text": "", "stairs": true})
 	return all
+
+
+## On a dressed copy (CampLook, BrumaclaraLook, VillaclaroLook) once the v3 is over
+## (StoryState.world_open(), 3.8.2): every exit's gone flag goes (the lands that closed behind
+## their boss or the caravan come back), each exit in moves (by id) takes its fields ("pos",
+## "yaw", "entry"), and moved_entries adds or moves the entries in front of them, for the way
+## back. Fresh arrays: duplicate() is shallow, so the cached zone's own would change.
+func reopen_exits(moves: Dictionary, moved_entries: Dictionary) -> void:
+	var opened: Array = []
+	for exit: Dictionary in exits:
+		var copy: Dictionary = exit.duplicate()
+		copy.erase("gone")
+		copy.merge(moves.get(exit.id, {}) as Dictionary, true)
+		opened.append(copy)
+	exits = opened
+	var all_entries: Dictionary = entries.duplicate()
+	all_entries.merge(moved_entries, true)
+	entries = all_entries
+	look_key += "_abierta"
 
 
 ## What the per-zone caches key on: the id, plus the look of a dressed copy.

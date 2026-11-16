@@ -1,6 +1,6 @@
 # Versión 3.8.1: el juego se prueba solo
 
-Fecha: 2026-11-16. Estado: spec. Cubre M-108, M-109 y M-110 del [documento maestro](../documento-maestro.md). Va después de la 3.8.0. El juego no cambia para el jugador, salvo lo que exija el arreglo del cuelgue. La partida guardada sigue en la **versión 16**.
+Fecha: 2026-11-16. Estado: spec. Cubre M-108, M-109 y M-110 del [documento maestro](../../boost/documento-maestro.md). Va después de la 3.8.0. El juego no cambia para el jugador, salvo lo que exija el arreglo del cuelgue. La partida guardada sigue en la **versión 16**.
 
 ## Objetivo
 

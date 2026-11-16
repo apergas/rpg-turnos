@@ -63,8 +63,9 @@ const V3_FINAL_BOSS := "eco_albor"
 ## credits follow them.
 const ALBOR_FREED := "albor_liberado"
 const ALBOR_BEATEN := "albor_vencido"
-## The question after the albor scene (StoryFlow.finish_v3(), World.ask(): Esc and a tap outside
-## pick the last option; both end well) and the final scene of each answer, in the same order.
+## The question after the albor scene (StoryFlow.finish_v3(), World.ask() with cancel false: Esc
+## and a tap outside do nothing, an answer must be chosen) and the final scene of each answer, in
+## the same order.
 const ENDING_QUESTION := "El Amuleto del Alba brilla en tu mano. ¿Qué haces?"
 const ENDING_OPTIONS: Array[String] = ["Devolver el amuleto", "Acabar con el Eco"]
 const ENDING_SCENES: Array[String] = ["final_v3_liberado", "final_v3_vencido"]
@@ -245,6 +246,17 @@ static func part(flags: Dictionary) -> int:
 	return 2 if flags.get(CARAVAN_FLAG, false) else 1
 
 
+## True once the v3 is over: its final scene has set ALBOR_FREED or ALBOR_BEATEN (in the part 3;
+## story.finished_v3 follows a moment later, before any save). From then on every land of the
+## three parts is open again (3.8.2): the exits that closed come back (CampLook, BrumaclaraLook,
+## VillaclaroLook), a save may stand in any zone (ZoneData.open_zones()), no land is closed
+## (ClosingLands.is_closed()), no quest is lost and every quest never taken is offered again
+## (QuestLog). Before it the journey only goes forward.
+static func world_open(flags: Dictionary) -> bool:
+	return flags.get(V3_FLAG, false) \
+		and (flags.get(ALBOR_FREED, false) or flags.get(ALBOR_BEATEN, false))
+
+
 ## The line of the v3's ending these flags chose (the credits, the goal of its last chapter).
 static func ending_text(flags: Dictionary) -> String:
 	return V3_FREED_TEXT if flags.get(ALBOR_FREED, false) else V3_BEATEN_TEXT
@@ -388,7 +400,7 @@ func set_from(data: Dictionary) -> void:
 ## A saved [play time, battles] (v2_start, v3_start) as numbers, [] if it is not one.
 static func _start(value: Variant) -> Array:
 	if value is Array and (value as Array).size() == 2:
-		return [float(value[0]), int(value[1])]
+		return [clampf(float(value[0]), 0.0, SaveData.MAX_NUMBER), SaveData.whole(value[1])]
 	return []
 
 

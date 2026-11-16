@@ -2,8 +2,11 @@ class_name CampLook extends RefCounted
 ## The caravan's camp (the Caravana) dressed for the land it is camped next to (2.4.0): the
 ## same layout (tents, figures, exits, entries, wells, the campfire, the autoplay route), the
 ## look of that land: its ground, hills, sky, light and fog, its grass, trees and Kenney
-## decoration, its particles and its ambient sound (the music stays the caravan's); by the calmed portal, the v3's mist while Brumaclara needs help. Pure:
-## dressed() returns a copy of the zone; Game builds the Caravana from it.
+## decoration, its particles and its ambient sound (the music stays the caravan's); by the
+## calmed portal, the v3's mist while Brumaclara needs help. Once the v3 is over
+## (StoryState.world_open(), 3.8.2) the four lands open again round the camp, each through its
+## own arch (OPEN_EXITS). Pure: dressed() returns a copy of the zone; ZoneTravel builds the
+## Caravana from it.
 
 const ZONE := "caravana"
 ## Copied from the land's own zone (LOOKS "from").
@@ -63,12 +66,33 @@ const CALM := {"sky_top": Color(0.42, 0.36, 0.48), "haze": Color(0.78, 0.6, 0.55
 ## the calm look comes back.
 const V3_MIST := {"haze": Color(0.62, 0.62, 0.72), "fog_density": 0.02,
 	"particles": ZoneParticles.BRUMA}
+## The camp once the v3 is over (open): the four lands open again, each through its own arch
+## between the tents (the portal keeps the north, Villaclaro the east), with its entry in front
+## of it for the way back. The road to Villaclaro now ends at the meadow's south
+## (VillaclaroLook.OPEN_ENTRIES). ZoneData.reopen_exits() applies them.
+const OPEN_EXITS := {
+	"jungla": {"pos": Vector3(-14, 0, -8), "yaw": 60.0},
+	"desierto": {"pos": Vector3(-14, 0, 8), "yaw": 120.0},
+	"montana": {"pos": Vector3(14, 0, 8), "yaw": -120.0},
+	"ciudad": {"pos": Vector3(0, 0, 17), "yaw": 180.0},
+	"villaclaro": {"entry": "caravana"},
+}
+const OPEN_ENTRIES := {
+	"jungla": [Vector3(-11.4, 0, -6.5), -120.0],
+	"desierto": [Vector3(-11.4, 0, 6.5), -60.0],
+	"montana": [Vector3(11.4, 0, 6.5), 60.0],
+	"ciudad": [Vector3(0, 0, 14), 0.0],
+}
+## The calm camp's hand-placed pieces that stay once it is open (LOOKS[5]'s others would stand
+## on the new roads, in front of the desert's, the mountain's and the city's arches).
+const OPEN_DECOR := [[Vector3(-8, 0, 2.2), 30.0, "city_column_broken"],
+	[Vector3(-1.5, 0, -3), 200.0, "rubble"]]
 
 
-## A copy of the Caravana dressed for tramo (GameState.tramo()) and, by the calmed portal, for
-## the v3's etapa (GameState.etapa()); zone itself for a tramo with no look (0: never in the
-## camp).
-static func dressed(zone: ZoneData, tramo: int, etapa := 0) -> ZoneData:
+## A copy of the Caravana dressed for tramo (GameState.tramo()), by the calmed portal for the
+## v3's etapa (GameState.etapa()) and, once the v3 is over, open (StoryState.world_open():
+## OPEN_EXITS, OPEN_DECOR); zone itself for a tramo with no look (0: never in the camp).
+static func dressed(zone: ZoneData, tramo: int, etapa := 0, open := false) -> ZoneData:
 	if not LOOKS.has(tramo):
 		return zone
 	var look: Dictionary = LOOKS[tramo]
@@ -104,4 +128,9 @@ static func dressed(zone: ZoneData, tramo: int, etapa := 0) -> ZoneData:
 			camp.look_key += "_v3"
 			for field: String in V3_MIST:
 				camp.set(field, V3_MIST[field])
+	if open:
+		var kept: Array = zone.decor.duplicate()
+		kept.append_array(OPEN_DECOR)
+		camp.decor = kept
+		camp.reopen_exits(OPEN_EXITS, OPEN_ENTRIES)
 	return camp

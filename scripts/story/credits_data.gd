@@ -22,7 +22,7 @@ static func credits_sections(state: GameState, time_text: String) -> Array:
 		["Villaclaro", ["La historia de %s" % state.hero.display_name]],
 		["Creado por", [AUTHOR]],
 		["Motor", ["Godot Engine 4.7"]],
-		["Modelos 3D", ["KayKit, de Kay Lousberg (CC0)"]],
+		["Modelos 3D", ["KayKit, de Kay Lousberg (CC0)", "Nature Kit, de Kenney (CC0)"]],
 		["Música y sonido", ["Generados por el propio juego"]],
 		["Tu partida", numbers],
 		["Gracias por jugar", []],

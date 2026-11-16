@@ -75,6 +75,19 @@ Lo que se ha hecho y lo que queda por hacer en Villaclaro. Una fila por versión
 | 3.8.0 · M-104 | Nivel máximo 60 en la v3 ([spec](../legacy/specs/2026-11-16-version-3-8-0-design.md) · [plan](../legacy/plans/2026-11-16-version-3-8-0.md)) | hecho |
 | 3.8.0 · M-105 | La gente de Brumaclara con piel de bruma, capucha y cristal; Orvalla con farol, la Curandera con cuenco y el Herrero con brazos de cristal | hecho |
 | 3.8.0 · M-107 | Un aura dorada suave alrededor del héroe al llegar al nivel 60 | hecho |
-| 3.8.1 · M-108 | El piloto automático ya no se cuelga: eran dos bucles de lógica del piloto, no Jolt, cuyo aviso sigue siendo ruido conocido ([spec](specs/2026-11-16-version-3-8-1-design.md) · [plan](plans/2026-11-16-version-3-8-1.md)) | hecho |
-| 3.8.1 · M-109 | Un lanzador que juega todas las carreras del piloto automático y da OK o FALLO ([plan](plans/2026-11-16-version-3-8-1.md)) | hecho |
+| 3.8.1 · M-108 | El piloto automático ya no se cuelga: eran dos bucles de lógica del piloto, no Jolt, cuyo aviso sigue siendo ruido conocido ([spec](../legacy/specs/2026-11-16-version-3-8-1-design.md) · [plan](../legacy/plans/2026-11-16-version-3-8-1.md)) | hecho |
+| 3.8.1 · M-109 | Un lanzador que juega todas las carreras del piloto automático y da OK o FALLO ([plan](../legacy/plans/2026-11-16-version-3-8-1.md)) | hecho |
 | 3.8.1 · M-110 | GitHub Actions juega esas carreras en cada subida a `develop` | hecho |
+| 3.8.2 · M-111 | Sin aviso antes de los jefes: durante el juego las tierras se siguen cerrando tras su jefe. Al acabar la v3, todas las tierras de las tres partes vuelven a abrirse, cada una con su arco, para volver a por lo que te quedó; las misiones perdidas se pueden acabar y las no tomadas se ofrecen otra vez. El portal del Ala hacia una tierra que se cierra se cierra con ella ([spec](specs/2026-11-16-version-3-8-2-design.md) · [plan](plans/2026-11-16-version-3-8-2.md)) | hecho |
+| 3.8.2 · M-112 | Las misiones de la Caravana dejan de ofrecerse con su tierra cerrada, y las tomadas que ya no se pueden cumplir salen de las líneas de misión y pasan a «Perdidas» en el Diario, hasta el final de la v3 | hecho |
+| 3.8.2 · M-113 | En la pregunta final de la v3, Esc y tocar fuera no eligen nada: hay que escoger | hecho |
+| 3.8.2 · M-114 | Las partidas de la 1.0 y anteriores (guardado 2 a 8) vuelven a cargar | hecho |
+| 3.8.2 · M-115 | Las ranuras dicen «Partida de una versión más nueva» y preguntan antes de borrar o sustituir cualquier archivo, también uno dañado | hecho |
+| 3.8.2 · M-116 | Guardado más seguro: archivo temporal renombrado (fuera de la web) y números de un archivo editado a mano recortados | hecho |
+| 3.8.2 · M-117 | «Estado» se desplaza con textos grandes en el móvil | hecho |
+| 3.8.2 · M-118 | «Salir» empieza en «No» | hecho |
+| 3.8.2 · M-119 | Los objetos clave y las medallas, con su texto, en el Diario | hecho |
+| 3.8.2 · M-120 | Textos: cifras «n/m», «Objetivo:» en la misión del pueblo, teclas en castellano, la pregunta de partir, tablones sin mayúsculas y Kenney en los créditos de la parte 1 | hecho |
+| 3.9.0 · M-121 | Tests unitarios de las reglas puras y de los datos: GUT 9.7.1 en `addons/gut/` (fuera de las exportaciones) y unos 160 tests en `tests/` (partidas guardadas de cada versión, combate, niveles y topes, tiendas, misiones, tierras que se cierran, historia, bestiario, medallas, datos) ([spec](specs/2026-11-16-version-3-9-0-design.md) · [plan](plans/2026-11-16-version-3-9-0.md)) | plan |
+| 3.9.0 · M-122 | GitHub Actions pasa los tests en cada subida a `develop` (`tests.yml`), junto a las carreras del piloto automático | plan |
+| 3.9.0 · M-123 | Reglas nuevas en CLAUDE.md: cada cambio de una regla pura lleva sus tests en el mismo commit, nunca tests de nodos ni de lo visual, y el piloto automático sigue siendo la comprobación del juego entero | plan |

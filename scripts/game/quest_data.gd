@@ -21,7 +21,9 @@ enum Kind { HUNT, GATHER, DELIVER, FIND }
 ## already taken goes on whatever happens to the flag.
 @export var needs := ""
 ## A world flag after which the quest is no longer offered ("" for none): the boss of the land
-## it is done in (its land closes behind the boss). A quest already taken goes on.
+## it is done in (its land closes behind the boss). A quest already taken goes on while it can
+## be finished: once the land has closed and it is not ready, it is lost (QuestLog.is_lost()).
+## Once the v3 is over every land opens again: the flag no longer counts (3.8.2).
 @export var gone := ""
 ## Who hears the report ("" : it ends on the spot, when the goal is reached).
 @export var turn_in_zone := ""
@@ -34,7 +36,7 @@ enum Kind { HUNT, GATHER, DELIVER, FIND }
 ## A sentence for the Diario.
 @export var objective := ""
 ## For the mission lines, after "Misión: ", kept short (the status window fits its longest
-## line): with "%d / %d" for a HUNT or GATHER of several; report once it is time to go back.
+## line): with "%d/%d" for a HUNT or GATHER of several; report once it is time to go back.
 @export var status := ""
 @export var report := ""
 ## What is said when it is offered, by the target when found (FIND), by the turn_in figure
