@@ -194,3 +194,11 @@ func test_every_key_item_has_its_text_and_every_hero_spell_its_line() -> void:
 		if spell.replaces != "":
 			assert_has(ids, spell.replaces, "%s replaces a spell the hero has by then" % spell.id)
 		ids.append(spell.id)
+
+
+# 3.10.0 (M-125): the Fuente's groups fight the hero up to the top level and step aside at it
+# (exit_level 51 + EncounterMeter.LEVEL_GAP; 56 when the top was 60).
+func test_the_fuentes_groups_fight_until_the_top_level() -> void:
+	var fuente := ZoneData.by_id("fuente")
+	assert_false(EncounterMeter.is_shy(Leveling.MAX_LEVEL - 1, fuente.exit_level))
+	assert_true(EncounterMeter.is_shy(Leveling.MAX_LEVEL, fuente.exit_level))

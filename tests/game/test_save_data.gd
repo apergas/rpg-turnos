@@ -135,6 +135,29 @@ func test_exp_past_the_cap_is_clamped_on_loading() -> void:
 	assert_eq(state.hero.experience, Leveling.EXP_TABLE[19])
 
 
+# 3.10.0 (M-125): the v3's cap went from 60 down to 55; a 3.8.0-3.9.0 hero of 56 to 60 still
+# loads, at 55 with a 55's numbers and EXP.
+func test_a_hero_past_the_top_from_before_3_10_loads_at_the_top(
+		level = use_parameters(range(Leveling.MAX_LEVEL + 1, SaveData.OLD_MAX_LEVEL + 1))) -> void:
+	var top := _part_3_state()
+	Leveling.set_level(top.hero, Leveling.MAX_LEVEL, Fx.HERO.skills)
+	var at_top := Fx.round_trip(SaveData.from_state(top, Vector3(-2, 0, 5), 9000.0))
+	var data := at_top.duplicate(true)
+	var extra: int = level - Leveling.MAX_LEVEL
+	data.hero.level = float(level)
+	data.hero.experience = 75100.0
+	data.hero.hp += extra * Leveling.GAINS.max_hp
+	data.hero.mp += extra * Leveling.GAINS.max_mp
+	for field: String in Leveling.GAINS:
+		data.hero[field] += extra * Leveling.GAINS[field]
+	var state := Fx.new_state()
+	assert_true(SaveData.apply(state, data).valid, "level %d" % level)
+	assert_eq(state.hero.level, Leveling.MAX_LEVEL)
+	assert_true(Leveling.at_max(state.hero), "with the aura")
+	var again := Fx.round_trip(SaveData.from_state(state, Vector3(-2, 0, 5), 9000.0))
+	assert_eq_deep(again.hero, at_top.hero)
+
+
 func test_the_metal_slimes_hp_is_cut_to_its_maximum() -> void:
 	var data := Fx.fresh_save()
 	data.metal_slime_hp = 999.0

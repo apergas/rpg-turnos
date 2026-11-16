@@ -28,6 +28,8 @@ class_name SaveData extends RefCounted
 ## (ng_plus; 2.7.0 removed it: always written as 0, read and ignored); an older save gets none, 0, false and 0. CARAVAN_VERSION (2.0.0) changes no field: it marks the saves that may hold the v2 (the caravan's zones, a companion, levels past 20); its `story` may carry `finished_v2` and `v2_start` (2.3.0, without changing the version: an older save has neither and loads with false and []). V3_VERSION (3.0.0) changes no field either: it marks the saves that may hold the v3 (Brumaclara's flag, its zones, levels past 40); its story may carry finished_v3 and v3_start (an older save has neither and loads with false and []). MEDAL_PRIZES_VERSION (3.6.0) changes no field: the Coleccionista's prizes (medal_prizes) count from his table of ten; an older save keeps its medals and pieces and loads with medal_prizes 0, so he gives at once every new prize its medals reach.
 ## Every count and amount apply() reads goes through whole(), and the play time is capped with minf():
 ## a file edited by hand can't turn them negative or past MAX_NUMBER (3.8.2, no new field).
+## The v3's cap went from 60 down to 55 in 3.10.0 (no new field): a hero of 56 to OLD_MAX_LEVEL
+## loads lowered to Leveling.MAX_LEVEL (Leveling.lower_to_max()), never refused.
 
 const VERSION := 16
 ## First version with the story's fields.
@@ -69,6 +71,9 @@ const RETIRED_ITEMS := {"incienso": 10}
 ## Most a number read from a save may be (gold, items, the hero's numbers, counts, seconds of
 ## play): JSON reads every number as a float, and int() turns 1e30 into a negative one.
 const MAX_NUMBER := 9999999
+## The v3's level cap from 3.8.0 to 3.9.0: a save may hold a hero up to it, and apply() brings him
+## down to Leveling.MAX_LEVEL (3.10.0).
+const OLD_MAX_LEVEL := 60
 
 
 static func from_state(state: GameState, player_pos: Vector3, play_time: float) -> Dictionary:
@@ -130,6 +135,7 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 		return {"valid": false, "position": Vector3.ZERO, "play_time": 0.0}
 	for field in HERO_FIELDS:
 		state.hero.set(field, whole(data.hero[field]))
+	Leveling.lower_to_max(state.hero)
 	Leveling.sync_skills(state.hero)
 	state.gold = whole(data.gold)
 	state.loadout = Loadout.new()
@@ -368,12 +374,12 @@ static func _valid_caravan(data: Dictionary) -> bool:
 	return true
 
 
-## Numbers a played game can't reach: below zero, a level off the table, a dead hero.
+## Numbers a played game can't reach: below zero, a level past OLD_MAX_LEVEL, a dead hero.
 static func _valid_hero_ranges(hero: Dictionary) -> bool:
 	for field in HERO_FIELDS:
 		if hero[field] < 0.0:
 			return false
-	return hero.level >= 1.0 and hero.level <= Leveling.MAX_LEVEL \
+	return hero.level >= 1.0 and hero.level <= OLD_MAX_LEVEL \
 		and hero.hp >= 1.0 and hero.hp <= hero.max_hp and hero.mp <= hero.max_mp
 
 
