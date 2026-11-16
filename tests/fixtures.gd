@@ -156,7 +156,7 @@ static func older_save(data: Dictionary, version: int) -> Dictionary:
 
 
 ## Sets path ("gold", "hero.hp") of data to value.
-static func set_path(data: Dictionary, path: String, value: Variant) -> void:
+static func set_at(data: Dictionary, path: String, value: Variant) -> void:
 	var keys := path.split(".")
 	var at: Dictionary = data
 	for i in keys.size() - 1:
