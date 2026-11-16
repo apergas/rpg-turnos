@@ -72,6 +72,8 @@ var medal_chance := Medals.drop_chance(1)
 var _rng := RandomNumberGenerator.new()
 var _done := false
 var _new_level := 0
+## The hero's golden aura of the top level (_add_aura()), or null.
+var _aura: HeroAura = null
 ## Color of the last spell cast, used for the hit that follows it.
 var _spell_color := UiTokens.color(&"element-fire")
 ## Token of the number a spell paints: its element, or text-primary.
@@ -144,6 +146,8 @@ func _ready() -> void:
 	BattleStage.build(self, zone, enemies.any(func(e: Combatant) -> bool: return e.is_boss))
 	_hero_actor = _spawn_actor(BattleActor.Look.HERO, HERO_POS, ENEMY_POS)
 	_hero_actor.set_equipment(_weapon_id, _shield_id, _helmet_id)
+	if Leveling.at_max(hero):
+		_add_aura()
 	if ally != null:
 		_ally_actor = _spawn_actor(EnemyLibrary.look(ally.id), ALLY_POS, ENEMY_POS)
 		_ally_actor.set_companion_gear(Allies.gear(ally.id, ally_step))
@@ -464,6 +468,8 @@ func _play_event(event: Dictionary) -> void:
 			_sfx(SfxLibrary.LEVEL_UP)
 			await _say("¡%s sube al nivel %d!" % [hero.display_name, event.level])
 			await _say(_gains_text(event.gains))
+			if event.level == Leveling.MAX_LEVEL and _aura == null:
+				_add_aura().flash()
 		BattleEvent.LEARN:
 			_sfx(SfxLibrary.LEVEL_UP)
 			var learned := "¡%s aprende %s!" % [hero.display_name, event.name]
@@ -656,6 +662,14 @@ func _spawn_actor(look: BattleActor.Look, pos: Vector3, facing: Vector3) -> Batt
 	actor.position = pos
 	actor.look_at(facing, Vector3.UP)
 	return actor
+
+
+## The golden aura of the top level on the hero's figure (HeroAura; Leveling.at_max()).
+func _add_aura() -> HeroAura:
+	_aura = HeroAura.new()
+	_aura.build(_hero_actor.top_height())
+	_hero_actor.add_child(_aura)
+	return _aura
 
 
 ## Yellow cone pointing down, over the enemy being aimed at; blinks while shown.

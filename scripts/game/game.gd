@@ -374,6 +374,7 @@ func _refresh_status() -> void:
 	var loadout := state.loadout
 	_ctx.world.set_hero_equipment(loadout.worn(Equipment.WEAPON), loadout.worn(Equipment.SHIELD),
 		loadout.worn(Equipment.HELMET))
+	_ctx.world.set_hero_aura(Leveling.at_max(state.hero))
 	_ctx.world.set_companion(state.ally_id, state.ally_step())
 	if _autopilot:
 		_autopilot.note_status(missions)

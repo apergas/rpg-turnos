@@ -594,6 +594,11 @@ func set_hero_equipment(weapon_id: String, shield_id: String, helmet_id := "") -
 	_player.set_equipment(weapon_id, shield_id, helmet_id)
 
 
+## The golden aura of the top level on the hero (HeroAura; Game._refresh_status()).
+func set_hero_aura(on: bool) -> void:
+	_player.set_aura(on)
+
+
 ## The creature or companion walking behind the hero (MapCompanion; Game._refresh_status()):
 ## an Allies id, "" for none, and its growth step (GameState.ally_step()).
 func set_companion(ally_id: String, step: int) -> void:

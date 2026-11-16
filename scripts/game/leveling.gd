@@ -52,6 +52,12 @@ static func clamp_exp(hero: Combatant) -> void:
 		hero.experience = mini(hero.experience, EXP_TABLE[hero.level - 1])
 
 
+## True at the game's top level, MAX_LEVEL (the v1's and the v2's caps are not it): the hero
+## wears the golden aura (HeroAura; Player on the map, BattleScene in battle).
+static func at_max(hero: Combatant) -> bool:
+	return hero.level >= MAX_LEVEL
+
+
 ## Gives the hero every spell of `learn` up to their level (after loading a game).
 static func sync_skills(hero: Combatant) -> void:
 	var levels := hero.learn.keys()
