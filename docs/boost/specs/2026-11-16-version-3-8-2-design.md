@@ -1,6 +1,6 @@
 # Versión 3.8.2: los arreglos de las dos pasadas de QA
 
-Fecha: 2026-11-16. Estado: spec. Cubre de M-111 a M-120 del [documento maestro](../documento-maestro.md). Va después de la 3.8.1. Arregla lo que encontraron las dos pasadas de QA sobre la 3.8.0 (QA1: reglas y datos; QA2: historia, guardados, interfaz y textos). La partida guardada sigue en la **versión 16**: no gana ni pierde campos.
+Fecha: 2026-11-16. Estado: hecho. Cubre de M-111 a M-120 del [documento maestro](../documento-maestro.md). Va después de la 3.8.1. Arregla lo que encontraron las dos pasadas de QA sobre la 3.8.0 (QA1: reglas y datos; QA2: historia, guardados, interfaz y textos). La partida guardada sigue en la **versión 16**: no gana ni pierde campos.
 
 ## Objetivo
 
@@ -40,7 +40,7 @@ Las tres primeras las tomó el usuario; la primera la cambió el mismo día, con
 | Formato de cifras (QA2-07) | «lobos 0/5» en las líneas de misión y «(0/5)» en el Diario, sin espacios |
 | La misión del pueblo (QA2-08) | Sus líneas dicen «Objetivo:», como todos los objetivos del juego |
 | Teclas (QA2-09) | Los signos se ven como el signo («.», «,», «-»…) y el resto con nombre en castellano («Num 0», «Bloq Num», «Impr Pant»…) |
-| La pregunta de partir (QA2-10) | «Villaclaro quedará muy lejos: no volverás al bosque, la mina ni el castillo hasta que termines el viaje. Las misiones que dejes a medias quedarán pendientes hasta entonces.» |
+| La pregunta de partir (QA2-10) | «Villaclaro quedará muy lejos: no volverás al bosque, la mina ni el castillo hasta que termines el viaje. Las misiones que dejes a medias no se podrán acabar hasta entonces.» |
 | Los objetos clave (QA2-11) | En el Diario, en una sección «Objetos clave» con el nombre y el texto de cada uno (y las medallas pequeñas). No en «Objetos»: esa página solo enseña lo que se puede usar (lo decidió el usuario en la 2.x, y la guía de QA lo pide en T-067); el propio código ya decía que el Diario los sigue |
 | Mayúsculas (QA2-12) | «Aviso:», «Se busca:», «Se buscan:» |
 | Números de un archivo editado a mano (QA2-13) | Se hace, porque es barato: al cargar, cada número se queda entre 0 y 9 999 999. Un mapa explorado que no es base64 deja la partida como dañada (sin el error en la consola). Un portal del Ala de viaje que lleva a otra parte o a una tierra cerrada (antes del final de la v3) se quita al cargar. No se hace lo del nombre con un salto de línea: el teclado del juego no lo puede escribir y no rompe nada |
@@ -197,7 +197,7 @@ Al comprobarlos ha salido un fallo más, del mismo tema que QA1-03: un portal de
   - los signos se ven como el propio signo: `.` `,` `/` `\` `;` `'` `` ` `` `-` `=` `+` `*` `<` `>` `[` `]` `#` `§`;
   - el teclado numérico, «Num 0» a «Num 9», «Num +», «Num -», «Num *», «Num /» y «Num .»;
   - el resto: «Bloq Num», «Bloq Despl», «Impr Pant», «Pausa», «Menú» y «Windows».
-- **La pregunta de partir con la caravana:** «Villaclaro quedará muy lejos: no volverás al bosque, la mina ni el castillo hasta que termines el viaje. Las misiones que dejes a medias quedarán pendientes hasta entonces.».
+- **La pregunta de partir con la caravana:** «Villaclaro quedará muy lejos: no volverás al bosque, la mina ni el castillo hasta que termines el viaje. Las misiones que dejes a medias no se podrán acabar hasta entonces.».
 - **Tablones:** «Aviso: las cabras montesas…», «Se busca: quien despida…», «Se buscan: esquirlas de geoda…» (8 misiones).
 - **Créditos de la parte 1:** «Modelos 3D»: «KayKit, de Kay Lousberg (CC0)» y «Nature Kit, de Kenney (CC0)».
 

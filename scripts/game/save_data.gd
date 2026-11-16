@@ -234,7 +234,7 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 		state.collector_met = data.collector_met
 	var pos: Array = data.position
 	return {"valid": true, "position": Vector3(pos[0], 0.0, pos[1]),
-		"play_time": minf(float(data.play_time), MAX_NUMBER)}
+		"play_time": clampf(float(data.play_time), 0.0, MAX_NUMBER)}
 
 
 ## The loadout of data, slot -> id. Before RING_VERSION the one accessory goes to the slot
@@ -616,7 +616,7 @@ static func summary_line(data: Dictionary) -> String:
 	var version := int(data.version)
 	var hero_name: String = data.name if version >= STORY_VERSION else StoryState.DEFAULT_NAME
 	var zone_id: String = data.zone if version >= 4 else "pradera"
-	var minutes := floori(minf(float(data.play_time), MAX_NUMBER) / 60.0)
+	var minutes := floori(clampf(float(data.play_time), 0.0, MAX_NUMBER) / 60.0)
 	var text := "%s · Nv %d · %s · %d:%02d" % [hero_name, int(data.hero.level),
 		ZoneData.by_id(zone_id).short_name, floori(minutes / 60.0), minutes % 60]
 	if is_v3(data):

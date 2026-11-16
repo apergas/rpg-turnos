@@ -400,7 +400,7 @@ func set_from(data: Dictionary) -> void:
 ## A saved [play time, battles] (v2_start, v3_start) as numbers, [] if it is not one.
 static func _start(value: Variant) -> Array:
 	if value is Array and (value as Array).size() == 2:
-		return [float(value[0]), int(value[1])]
+		return [clampf(float(value[0]), 0.0, SaveData.MAX_NUMBER), SaveData.whole(value[1])]
 	return []
 
 
