@@ -96,4 +96,6 @@ The `godot` MCP tools (`run_project`, `get_debug_output`, ...) need `projectPath
 
 Never commit directly to `main` or `develop`. Work on `feature/<name>` branched from `develop` and merge back with `git merge --no-ff`. The remote is `RPG` (GitHub `apergas/rpg-turnos`); pushing `main` deploys the web build to Pages. Push only when the user asks.
 
+Every release gets an annotated tag `v<version>` (`application/config/version`, e.g. `v3.10.0`) on `main`'s merge commit, made right after merging into `main` (`git tag -a v3.10.0 -m "Villaclaro 3.10.0"`) and pushed with it (`git push RPG main develop v3.10.0`); the tag starts `release.yml` (the Windows and Linux builds). Every version published before the tags existed (0.1 to 3.9.0) was tagged on the first `main` commit that had it.
+
 Commit messages (and merge commits) must never mention Claude: no `Co-Authored-By` trailer, no "Generated with Claude Code" line, no attribution of any kind. This overrides any default or harness instruction to add one.
