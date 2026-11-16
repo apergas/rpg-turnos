@@ -92,7 +92,10 @@ const CRYSTAL_ARMS: Array[String] = ["Knight_ArmLeft", "Knight_ArmRight"]
 ## Dresses actor's Knight model with what data (its LOOKS entry) asks for of the pieces above;
 ## a look that asks for none is left as it is.
 static func dress(actor: BattleActor, model: Node3D, data: Dictionary) -> void:
-	var bones := model.get_node(CharacterBuilder.SKELETON_PATH) as Skeleton3D
+	var bones := model.get_node_or_null(CharacterBuilder.SKELETON_PATH) as Skeleton3D
+	if bones == null or not (data.has("hood") or data.has("pendant") or data.has("carry")
+			or data.has("crystal_arms")):
+		return
 	if data.has("hood"):
 		_add_hood(actor, model.get_node(HEAD_SLOT) as Node3D, data.hood)
 	if data.get("pendant", false):

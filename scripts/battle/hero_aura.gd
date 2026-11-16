@@ -13,7 +13,7 @@ const SHADER := preload("res://shaders/hero_aura.gdshader")
 ## Warm flame gold, the same on the map and in battle (a 3D colour: not a UiTokens value).
 const COLOR := Color(1.0, 0.6, 0.2)
 ## The envelope: a capsule RADIUS wide (the shader widens its feet), HEIGHT_SHARE times the
-## figure's top_height() tall (that is a little over the head), so it rises well above him.
+## figure's top_height() tall, so it rises well above his head.
 const RADIUS := 0.5
 const HEIGHT_SHARE := 1.5
 const SIDES := 16
@@ -74,7 +74,7 @@ func _set_strength(value: float) -> void:
 	_material.set_shader_parameter("strength", value)
 
 
-## count golden dots that rise from a ring at the feet and shrink to nothing by the head.
+## count golden dots that rise from a ring at the feet and rise past the head, shrinking as they go.
 func _add_sparks(top: float, count: int) -> void:
 	_sparks = CPUParticles3D.new()
 	_sparks.amount = count

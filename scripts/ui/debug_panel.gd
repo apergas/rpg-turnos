@@ -160,7 +160,7 @@ func refresh() -> void:
 		StatBar.hero_title(hero), hero.hp, hero.max_hp, hero.mp, hero.max_mp, _state.gold,
 		ZoneData.by_id(_state.zone_id).map_label(), STAGE_NAMES[_state.quest.stage]]
 	_level_down.disabled = hero.level <= 1
-	_level_up.disabled = hero.level >= Leveling.MAX_LEVEL
+	_level_up.disabled = hero.level >= hero.level_cap
 	_monsters.text = "Poner grupos" if World.debug_no_groups else "Quitar grupos"
 	for id: String in _bosses:
 		(_bosses[id] as Button).disabled = _state.has_flag(id)
