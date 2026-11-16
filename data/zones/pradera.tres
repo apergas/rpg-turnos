@@ -160,9 +160,10 @@ npcs = [{
 }, {
 "id": "villaclaro",
 "kind": "armory",
-"look": "SURVIVOR",
-"name": "Armero",
+"look": "ARMORER_VILLACLARO",
+"name": "Armera",
 "pos": Vector3(-7, 0, -22.4),
+"sign": "Armera",
 "yaw": -150.0
 }]
 boss_id = "rey_slime"

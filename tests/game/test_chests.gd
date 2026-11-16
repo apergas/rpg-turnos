@@ -5,16 +5,20 @@ extends GutTest
 const Fx := preload("res://tests/fixtures.gd")
 
 
+## The first chest that holds key ("gold", "item"); fails the test if none does.
 func _first_with(key: String) -> String:
 	for id: String in Chests.CHESTS:
 		if Chests.CHESTS[id].has(key):
 			return id
+	fail_test("no chest holds %s" % key)
 	return ""
 
 
 func test_a_chest_opens_once() -> void:
 	var state := Fx.new_state()
 	var id := _first_with("gold")
+	if id == "":
+		return
 	var gold: int = Chests.CHESTS[id].gold
 	assert_true(Chests.open(state, id).opened)
 	assert_eq(state.gold, GameState.START_GOLD + gold)
@@ -25,6 +29,8 @@ func test_a_chest_opens_once() -> void:
 func test_an_item_from_a_chest_goes_to_the_bag() -> void:
 	var state := Fx.new_state()
 	var id := _first_with("item")
+	if id == "":
+		return
 	var item: String = Chests.CHESTS[id].item
 	var before := state.inventory.count(item)
 	Chests.open(state, id)

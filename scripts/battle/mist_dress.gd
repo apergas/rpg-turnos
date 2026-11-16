@@ -1,7 +1,8 @@
 class_name MistDress extends RefCounted
 ## Constructor: what makes Brumaclara's people look like people of the Niebla (3.8.0), on the
 ## KayKit Knight that CharacterBuilder.build() has just made from their ActorLooksV3 entry: the
-## hood (LOOKS "hood": its colour; a look asks for "hair" or "hood", never both), the crystal
+## hood (LOOKS "hood": its colour; a look asks for "hair" or "hood", never both; the Caravana's
+## Armero wears it too by the desert and the mountain, 3.10.0), the crystal
 ## pendant on the chest ("pendant": true), what one carries ("carry": CARRY_LANTERN, Orvalla's
 ## lantern in the right hand, or CARRY_BOWL, the Curandera's bowl of mist water in the left)
 ## and the Herrero's crystal arms ("crystal_arms": true). The hood is a smooth cowl, the other

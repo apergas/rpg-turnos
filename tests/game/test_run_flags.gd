@@ -4,6 +4,8 @@ extends GutTest
 ## ones (none in a test run) again.
 
 
+## No "-> void": GUT 9.7.1's GutTest declares after_each() without a return type, and an
+## override must keep the signature it overrides.
 func after_each():
 	RunFlags._args = PackedStringArray()
 	RunFlags._read = false

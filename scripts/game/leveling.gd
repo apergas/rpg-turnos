@@ -3,22 +3,24 @@ class_name Leveling extends RefCounted
 ## Current HP and MP go up by the same amount as their maximum, so a level up is not a
 ## full heal. Reaching a level listed in the hero's `learn` teaches that spell.
 
-## The v3's cap (Brumaclara; GameState.level_cap() in part 3): 50 until 3.7.0, 60 since 3.8.0.
-const MAX_LEVEL := 60
+## The v3's cap (Brumaclara; GameState.level_cap() in part 3): 50 until 3.7.0, 60 from 3.8.0
+## to 3.9.0, 55 since 3.10.0 (an older save past it loads lowered: lower_to_max()).
+const MAX_LEVEL := 55
 ## The v1 cap: a hero stays at it until he joins the caravan (GameState.level_cap(), kept in
 ## Combatant.level_cap by GameState.sync_level_cap()).
 const V1_MAX_LEVEL := 20
 ## The v2 cap: the caravan's hero stays at it until he reaches Brumaclara (the v3).
 const V2_MAX_LEVEL := 40
 ## EXP_TABLE[i] is the total EXP needed to reach level i + 1. Up to 20, the v1; from 21 to
-## 40, the caravan (v2); from 41 to 60, Brumaclara (v3; 51 to 60 since 3.8.0). Each level asks
-## a little more than the last (from 51 on, 100 more each: 2600 ... 3500).
+## 40, the caravan (v2); from 41 to 55, Brumaclara (v3; 51 to 55 since 3.8.0; 56 to 60 were
+## there from 3.8.0 to 3.9.0). Each level asks a little more than the last (from 51 on, 100 more
+## each: 2600 ... 3000).
 const EXP_TABLE := [0, 12, 35, 62, 96, 180, 260, 340, 421, 580, 740, 900, 1073, 1550,
 	1780, 2010, 2244, 2650, 3100, 3600,
 	4150, 4750, 5400, 6100, 6850, 7650, 8500, 9400, 10350, 11350,
 	12400, 13500, 14650, 15850, 17100, 18400, 19750, 21150, 22600, 24100,
 	25700, 27400, 29200, 31100, 33100, 35200, 37400, 39700, 42100, 44600,
-	47200, 49900, 52700, 55600, 58600, 61700, 64900, 68200, 71600, 75100]
+	47200, 49900, 52700, 55600, 58600]
 const GAINS := {"max_hp": 6, "max_mp": 3, "attack": 2, "defense": 1, "speed": 1}
 
 
@@ -50,6 +52,17 @@ static func apply(hero: Combatant) -> Array[Dictionary]:
 static func clamp_exp(hero: Combatant) -> void:
 	if hero.level >= hero.level_cap:
 		hero.experience = mini(hero.experience, EXP_TABLE[hero.level - 1])
+
+
+## Brings a hero past MAX_LEVEL down to it (an older save: SaveData.OLD_MAX_LEVEL, the cap of
+## 3.8.0 to 3.9.0), one level of GAINS at a time as set_level() does, with that level's EXP.
+## Seeds, equipment and spells stay (the last spell comes at 45). A hero at or below it is left
+## as he is.
+static func lower_to_max(hero: Combatant) -> void:
+	if hero.level <= MAX_LEVEL:
+		return
+	_walk_to(hero, MAX_LEVEL)
+	hero.experience = EXP_TABLE[MAX_LEVEL - 1]
 
 
 ## True at the game's top level, MAX_LEVEL (the v1's and the v2's caps are not it): the hero
@@ -85,6 +98,16 @@ static func learned_at(hero: Combatant, skill: Skill) -> int:
 ## (sync_skills()). Seeds and equipment stay.
 static func set_level(hero: Combatant, level: int, base_skills: Array[Skill]) -> void:
 	level = clampi(level, 1, MAX_LEVEL)
+	_walk_to(hero, level)
+	hero.experience = EXP_TABLE[level - 1]
+	hero.skills = base_skills.duplicate()
+	sync_skills(hero)
+
+
+## Steps the hero to level, one level of GAINS up or down at a time (current HP and MP go along,
+## as on a level up), then keeps every stat at 1 or more (a hand-edited save with small numbers
+## can't go negative) and the HP within 1..max and the MP within 0..max.
+static func _walk_to(hero: Combatant, level: int) -> void:
 	while hero.level != level:
 		var step := 1 if level > hero.level else -1
 		hero.level += step
@@ -95,11 +118,10 @@ static func set_level(hero: Combatant, level: int, base_skills: Array[Skill]) ->
 		hero.attack += GAINS.attack * step
 		hero.defense += GAINS.defense * step
 		hero.speed += GAINS.speed * step
+	for field: String in GAINS:
+		hero.set(field, maxi(hero.get(field), 1))
 	hero.hp = clampi(hero.hp, 1, hero.max_hp)
 	hero.mp = clampi(hero.mp, 0, hero.max_mp)
-	hero.experience = EXP_TABLE[level - 1]
-	hero.skills = base_skills.duplicate()
-	sync_skills(hero)
 
 
 ## Removes the spell skill replaces from the hero; returns its name ("" if none).

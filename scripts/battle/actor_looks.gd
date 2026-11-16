@@ -1,8 +1,9 @@
 class_name ActorLooks extends RefCounted
 ## Data only: every figure a BattleActor can be (enum Look) and what each is made of
-## (LOOKS; the v3's figures are in ActorLooksV3.LOOKS: entry() reads both), with the KayKit models, weapons, head textures, colours and animation tables
-## the entries name. Read by BattleActor, CreatureBuilder and CharacterBuilder; never
-## touches nodes. BattleActor.Look is this enum (const Look = ActorLooks.Look).
+## (LOOKS; the v3's figures are in ActorLooksV3.LOOKS and the armeros in ActorLooksArmory.LOOKS:
+## entry() reads all three), with the KayKit models, weapons, head textures, colours and
+## animation tables the entries name. Read by BattleActor, CreatureBuilder and CharacterBuilder;
+## never touches nodes. BattleActor.Look is this enum (const Look = ActorLooks.Look).
 
 enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPER, WOLF,
 	GOBLIN, PLANT, WITCH, MUD_GOLEM, STONE_GOLEM, SPIDER, SPECTER, SKELETON_WARRIOR,
@@ -17,7 +18,9 @@ enum Look { HERO, SLIME, VILLAGER, KING_SLIME, BAT, MUSHROOM, MERCHANT, INNKEEPE
 	WALKING_REED, MIST_CAIMAN, SILT_HERON, CRYSTAL_BAT, CRYSTAL_SLIME, QUARTZ_GOLEM,
 	CRYSTAL_SPIDER, GEODE_MOLE, QUARTZ_COLOSSUS, MIST_SMITH, MIST_BIRD, OLD_GARGOYLE, MIST_KNIGHT,
 	WIND_SPIRIT, MIST_JELLYFISH, MIST_WATCHER, MIST_SHADOW, MIST_EYE, MIST_WOLF, MIST_SLIME,
-	FALLEN_SENTINEL, ALBOR_ECHO, ALBOR_FADED, ALBOR, LIGHTHOUSE_LENS, MIST_SHOPKEEPER }
+	FALLEN_SENTINEL, ALBOR_ECHO, ALBOR_FADED, ALBOR, LIGHTHOUSE_LENS, MIST_SHOPKEEPER,
+	ARMORER_VILLACLARO, ARMORER_FOREST, ARMORER_MINE, ARMORER_CASTLE, ARMORER_JUNGLE,
+	ARMORER_DESERT, ARMORER_MOUNTAIN, ARMORER_CITY }
 const KNIGHT := preload("res://assets/characters/Knight.glb")
 const MAGE := preload("res://assets/characters/Mage.glb")
 const SKELETON_WARRIOR := preload("res://assets/characters/Skeleton_Warrior.glb")
@@ -106,6 +109,12 @@ const PERSON_HIDE := [
 	"Rig/Skeleton3D/handslot_r/1H_Sword",
 	"Rig/Skeleton3D/handslot_r/2H_Sword",
 ]
+## A Mage person's hidden parts: the spellbooks and the wand (the staff stays in the hand).
+const MAGE_HIDE := [
+	"Rig/Skeleton3D/handslot_l/Spellbook",
+	"Rig/Skeleton3D/handslot_l/Spellbook_open",
+	"Rig/Skeleton3D/handslot_r/1H_Wand",
+]
 ## The hair pieces, in the head bone's space (the Knight faces +Z there, before the turn):
 ## where, turned how and scaled how. Tuned with close frames.
 const HAIR_PIECES := {
@@ -164,22 +173,14 @@ const LOOKS := {
 		"scene": MAGE,
 		"scale": CHARACTER_SCALE,
 		"top": 2.2,
-		"hide": [
-			"Rig/Skeleton3D/handslot_l/Spellbook",
-			"Rig/Skeleton3D/handslot_l/Spellbook_open",
-			"Rig/Skeleton3D/handslot_r/1H_Wand",
-		],
+		"hide": MAGE_HIDE,
 		"anims": CHARACTER_ANIMS,
 	},
 	Look.MERCHANT: {
 		"scene": MAGE,
 		"scale": CHARACTER_SCALE,
 		"top": 2.2,
-		"hide": [
-			"Rig/Skeleton3D/handslot_l/Spellbook",
-			"Rig/Skeleton3D/handslot_l/Spellbook_open",
-			"Rig/Skeleton3D/handslot_r/1H_Wand",
-		],
+		"hide": MAGE_HIDE,
 		"anims": CHARACTER_ANIMS,
 		"tint": Color(0.75, 1.0, 0.65),
 	},
@@ -187,11 +188,7 @@ const LOOKS := {
 		"scene": MAGE,
 		"scale": CHARACTER_SCALE,
 		"top": 2.2,
-		"hide": [
-			"Rig/Skeleton3D/handslot_l/Spellbook",
-			"Rig/Skeleton3D/handslot_l/Spellbook_open",
-			"Rig/Skeleton3D/handslot_r/1H_Wand",
-		],
+		"hide": MAGE_HIDE,
 		"anims": CHARACTER_ANIMS,
 		"tint": Color(0.35, 0.75, 0.65),
 	},
@@ -200,11 +197,7 @@ const LOOKS := {
 		"scene": MAGE,
 		"scale": CHARACTER_SCALE,
 		"top": 2.2,
-		"hide": [
-			"Rig/Skeleton3D/handslot_l/Spellbook",
-			"Rig/Skeleton3D/handslot_l/Spellbook_open",
-			"Rig/Skeleton3D/handslot_r/1H_Wand",
-		],
+		"hide": MAGE_HIDE,
 		"anims": CHARACTER_ANIMS,
 		"tint": Color(0.75, 0.55, 1.0),
 	},
@@ -212,11 +205,7 @@ const LOOKS := {
 		"scene": MAGE,
 		"scale": CHARACTER_SCALE,
 		"top": 2.2,
-		"hide": [
-			"Rig/Skeleton3D/handslot_l/Spellbook",
-			"Rig/Skeleton3D/handslot_l/Spellbook_open",
-			"Rig/Skeleton3D/handslot_r/1H_Wand",
-		],
+		"hide": MAGE_HIDE,
 		"anims": CHARACTER_ANIMS,
 		"tint": Color(1.0, 0.75, 0.5),
 	},
@@ -224,11 +213,7 @@ const LOOKS := {
 		"scene": MAGE,
 		"scale": CHARACTER_SCALE,
 		"top": 2.2,
-		"hide": [
-			"Rig/Skeleton3D/handslot_l/Spellbook",
-			"Rig/Skeleton3D/handslot_l/Spellbook_open",
-			"Rig/Skeleton3D/handslot_r/1H_Wand",
-		],
+		"hide": MAGE_HIDE,
 		"anims": CHARACTER_ANIMS,
 		"tint": Color(0.65, 0.8, 1.0),
 	},
@@ -303,11 +288,7 @@ const LOOKS := {
 		"scene": MAGE,
 		"scale": 0.48,
 		"top": 1.7,
-		"hide": [
-			"Rig/Skeleton3D/handslot_l/Spellbook",
-			"Rig/Skeleton3D/handslot_l/Spellbook_open",
-			"Rig/Skeleton3D/handslot_r/1H_Wand",
-		],
+		"hide": MAGE_HIDE,
 		"anims": CHARACTER_ANIMS,
 		"tint": Color(1.0, 0.72, 0.8),
 	},
@@ -829,6 +810,11 @@ const LOOKS := {
 }
 
 
-## What look is made of: its LOOKS entry, or ActorLooksV3's for a figure of the v3.
+## What look is made of: its LOOKS entry, ActorLooksV3's for a figure of the v3 or
+## ActorLooksArmory's for an armero (3.10.0).
 static func entry(look: Look) -> Dictionary:
-	return LOOKS[look] if LOOKS.has(look) else ActorLooksV3.LOOKS[look]
+	if LOOKS.has(look):
+		return LOOKS[look]
+	if ActorLooksV3.LOOKS.has(look):
+		return ActorLooksV3.LOOKS[look]
+	return ActorLooksArmory.LOOKS[look]

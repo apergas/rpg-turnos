@@ -1,7 +1,7 @@
 extends GutTest
 ## Leveling: the EXP table, the gains, the spells learned and replaced, and the caps of each part
-## (20, 40, 60) with the EXP clamped at a cap (before 3.8.0 a v3 hero lost every point past
-## 44600).
+## (20, 40, 55; 60 from 3.8.0 to 3.9.0) with the EXP clamped at a cap (before 3.8.0 a v3 hero lost
+## every point past 44600), and a hero of an older save past the top brought down to it.
 
 const Fx := preload("res://tests/fixtures.gd")
 
@@ -48,7 +48,7 @@ func test_the_caravans_hero_stops_at_40() -> void:
 	assert_false(Leveling.at_max(hero), "40 is not the game's top")
 
 
-func test_brumaclaras_hero_reaches_60_the_top() -> void:
+func test_brumaclaras_hero_reaches_55_the_top() -> void:
 	var hero := Fx.state_in_part(3).hero
 	hero.experience = 999999
 	Leveling.apply(hero)
@@ -80,6 +80,51 @@ func test_from_level_51_each_level_asks_100_more_than_the_last() -> void:
 		var step: int = Leveling.EXP_TABLE[i] - Leveling.EXP_TABLE[i - 1]
 		var before: int = Leveling.EXP_TABLE[i - 1] - Leveling.EXP_TABLE[i - 2]
 		assert_eq(step - before, 100, "level %d" % (i + 1))
+
+
+# 3.10.0 (M-125): the v3's top went from 60 down to 55.
+func test_the_exp_table_stops_at_the_top_level_55() -> void:
+	assert_eq(Leveling.MAX_LEVEL, 55)
+	assert_eq(Leveling.EXP_TABLE.back(), 58600)
+
+
+# 3.10.0 (M-125): a hero of 56 to 60 from an older save comes down with a 55's numbers.
+func test_a_hero_past_the_top_comes_down_to_it_with_that_levels_numbers() -> void:
+	var top := Fx.state_in_part(3).hero
+	Leveling.set_level(top, Leveling.MAX_LEVEL, Fx.HERO.skills)
+	var hero := Fx.state_in_part(3).hero
+	Leveling.set_level(hero, Leveling.MAX_LEVEL, Fx.HERO.skills)
+	var extra := 3
+	hero.level += extra
+	hero.hp += extra * Leveling.GAINS.max_hp
+	hero.mp += extra * Leveling.GAINS.max_mp
+	for field: String in Leveling.GAINS:
+		hero.set(field, hero.get(field) + extra * Leveling.GAINS[field])
+	hero.experience = 999999
+	Leveling.lower_to_max(hero)
+	assert_eq(hero.level, Leveling.MAX_LEVEL)
+	assert_eq(hero.experience, Leveling.EXP_TABLE[Leveling.MAX_LEVEL - 1])
+	for field in ["max_hp", "max_mp", "attack", "defense", "speed", "hp", "mp"]:
+		assert_eq(hero.get(field), top.get(field), field)
+	assert_not_null(hero.find_skill("alba"), "the spells stay")
+	var before := top.experience
+	Leveling.lower_to_max(top)
+	assert_eq(top.level, Leveling.MAX_LEVEL, "a hero at the top stays")
+	assert_eq(top.experience, before)
+
+
+func test_a_hand_edited_hero_with_small_numbers_comes_down_without_going_negative() -> void:
+	var hero := Fx.new_state().hero
+	hero.level = SaveData.OLD_MAX_LEVEL
+	for field: String in Leveling.GAINS:
+		hero.set(field, 1)
+	hero.hp = 1
+	hero.mp = 1
+	Leveling.lower_to_max(hero)
+	assert_eq(hero.level, Leveling.MAX_LEVEL)
+	for field in ["max_hp", "max_mp", "attack", "defense", "speed", "hp"]:
+		assert_gte(hero.get(field), 1, field)
+	assert_gte(hero.mp, 0)
 
 
 func test_set_level_clamps_and_gives_that_levels_spells() -> void:

@@ -53,7 +53,7 @@ Si este documento contradice el código o los datos del juego, mandan el código
 | Ruinas | Puentes, explanada y Vigía (Sello de Albor). Brumaclara enciende sus ventanas y abre el mercado | 48 |
 | Fuente | Eco de Albor; pregunta final | 52 |
 
-Los niveles son los de la partida automática (`autoplay_boss_level`), no un requisito. Al final de la v3 se ronda el nivel 53; el 60 se alcanza después, en la Fuente.
+Los niveles son los de la partida automática (`autoplay_boss_level`), no un requisito. Al final de la v3 se ronda el nivel 53; el 55, el tope, se alcanza después, en la Fuente.
 
 ## 3. Mecánicas y sistemas
 
@@ -72,7 +72,7 @@ Los valores salen de `data/` y `scripts/` de `develop`. Verifica los que puedas 
 - **Usar:** Enter o un toque. La acción dice con quién ("Hablar · Granjero", "Comprar · Mercader") y, en el ordenador, su tecla. Tocar una figura hace ir y usarla al llegar.
 - **Monstruos a la vista** (1.7.0): grupos en el mapa; el combate empieza al tocar uno. Unos quietos, otros pasean; nunca persiguen. Sendero, zonas seguras, escaleras y pasillos estrechos de mazmorra están libres. Si huyes, el grupo queda medio transparente hasta que te alejas. Los vencidos vuelven poco a poco, lejos del héroe, y todos al cambiar de zona, cruzar el portal, caer o dormir. Si el héroe pasa en 4 niveles el `exit_level` de la zona, los que se mueven se apartan.
 - **Slime de Metal:** raro, en la mina; mientras su misión está activa anda suelto y huye corriendo; si escapa conserva sus heridas.
-- **Señales:** tiendas amarillas, posadas rosas, pozos rojos o azules (grises si están secos), salidas verdes; escaleras, palancas, rejas y llaves en las mazmorras. Rótulos sobre Tienda, Armero, Posada, Criaturas, Coleccionista, Jefe de caravana, Orvalla y Tablón.
+- **Señales:** tiendas amarillas, posadas rosas, pozos rojos o azules (grises si están secos), salidas verdes; escaleras, palancas, rejas y llaves en las mazmorras. Rótulos sobre Tienda, Armero (Armera en Villaclaro), Posada, Criaturas, Coleccionista, Jefe de caravana, Orvalla y Tablón.
 - **Mapa de lo explorado:** el cuadrado pequeño (tocarlo abre la página "Mapa", con leyenda) y la línea "Mina · Planta 2". El nombre grande del lugar al llegar.
 - **Salidas cerradas:** tapadas por niebla, con un aviso, hasta vencer al jefe. Algunas salidas solo existen en cierto momento (`needs` y `gone` de `data/zones/*.tres`): en Brumaclara la salida norte lleva a la Ciénaga, luego a las Cuevas, luego a las Ruinas y luego a la Fuente; la tierra de un jefe vencido de la v2 y la v3 ya no se puede visitar, salvo la Fuente. Tras el final, todas las tierras de las tres partes vuelven a abrirse, cada una con su arco: en la Caravana, las cuatro tierras entre las tiendas (jungla al noroeste, desierto al suroeste, montaña al sureste, ciudad al sur) y Villaclaro al este; en Brumaclara, la Ciénaga y las Ruinas al oeste y las Cuevas al este; en la pradera, el bosque al norte y la Caravana al sur. No hay aviso antes de ningún jefe.
 - **Pozos** (`wells.gd`): uno de vida y uno de maná por mapa. Llenan del todo y se secan durante 10 combates, ganados o perdidos. Con todo lleno no se gastan.
@@ -107,9 +107,9 @@ Por turnos: el héroe, con su compañero o criatura, contra uno o dos enemigos (
 
 - **Inicio:** Nv 1, 30 PV, 6 PM, ATK 10, DEF 5, VEL 8; Palo (+2) y Ropa (+2), 50 G y 3 Pociones.
 - **Cada nivel:** PV +6, PM +3, ATK +2, DEF +1, VEL +1. Subir no cura del todo.
-- **Topes** (`leveling.gd`): **20** en la parte 1, **40** en la 2, **60** en la 3. En el tope la EXP no pasa del umbral de ese nivel. Tabla fija: 12, 35, 62... 3600 al 20, 24100 al 40, 44600 al 50, 75100 al 60 (del 51 al 60: 47200, 49900, 52700, 55600, 58600, 61700, 64900, 68200, 71600, 75100).
+- **Topes** (`leveling.gd`): **20** en la parte 1, **40** en la 2, **55** en la 3 (60 de la 3.8.0 a la 3.9.0). En el tope la EXP no pasa del umbral de ese nivel. Tabla fija: 12, 35, 62... 3600 al 20, 24100 al 40, 44600 al 50, 58600 al 55 (del 51 al 55: 47200, 49900, 52700, 55600, 58600). Una partida con el héroe del 56 al 60 carga con él en el 55.
 - **3.8.0:** los enemigos de la v3 y sus jefes dan un 35 % más de EXP que en la 3.7.0 (la Garza 2565, el Coloso 3105, el Vigía 3510, el Eco 4050). Una partida parada en el 50 vuelve a subir.
-- **Aura del nivel 60** (`hero_aura.gd`): al llegar al 60 un aura dorada suave rodea al héroe, con chispas que suben desde los pies (20; 10 en el móvil; ninguna en calidad baja). Se enciende con un destello tras el aviso de subida y se queda: mapa, combates y escenas. Ni el compañero ni la criatura la llevan; los topes de 20 y 40 no la encienden.
+- **Aura del nivel 55** (`hero_aura.gd`): al llegar al 55 un aura dorada suave rodea al héroe, con chispas que suben desde los pies (20; 10 en el móvil; ninguna en calidad baja). Se enciende con un destello tras el aviso de subida y se queda: mapa, combates y escenas. Ni el compañero ni la criatura la llevan; los topes de 20 y 40 no la encienden.
 
 | Hechizo | Nivel | PM | Poder | Tipo |
 |---|---|---|---|---|
@@ -133,7 +133,7 @@ Curar, Curar+ y Sanación también se usan desde la pausa, página "Hechizos".
 
 | Dónde | Tienda / Armero | Equipo (arma, armadura, escudo, casco: bonus / precio) |
 |---|---|---|
-| Villaclaro | Mercader / Armero | Cobre: +6 / 40 G, +5 / 30, +3 / 25, +2 / 20 |
+| Villaclaro | Mercader / Armera | Cobre: +6 / 40 G, +5 / 30, +3 / 25, +2 / 20 |
 | Aldea del bosque | Mercader / Armero | Hierro: +12 / 150, +10 / 120, +5 / 90, +3 / 70 |
 | Refugio de la mina | Tendera / Herrero | Acero: +20 / 400, +16 / 350, +8 / 220, +5 / 180 |
 | Campamento del castillo | Mercader / Armero | Platino: +28 / 650, +22 / 550, +10 / 300, +7 / 260 |
@@ -231,7 +231,11 @@ Música y Efectos (deslizadores), Velocidad del texto (Lenta, Normal, Rápida), 
 
 La gente de Brumaclara tiene la piel de la Niebla (gris azulado), un cristal pequeño que brilla en el pecho y, salvo Neblí y el Herrero, capucha. Orvalla lleva un farol encendido, la Curandera un cuenco de agua que brilla, el Herrero de cristal brazos de cristal, y el Tendero su capucha verde (ya no se parece al Vecino). El pueblo cambia por etapa (forja, ventanas, guirnaldas, estatua de Albor) y en el epílogo según el final; el sol negro deja asomar el sol si Albor queda libre.
 
-### 3.14. Es así a propósito
+### 3.14. Los armeros (3.10.0)
+
+Cada armero viste como su lugar y lleva un martillo del metal que vende (todos menos el Herrero de cristal de Brumaclara, que no lleva martillo y sigue como estaba): la Armera de Villaclaro es una bruja (sombrero de pico, túnica gris azul de noche, cobre); el del bosque, un leñador (verde, capa de musgo, delantal, hierro); el Herrero de la mina, un minero con gorro de latón y lámpara (acero); el del castillo, el armero del rey (armadura, yelmo, capa carmesí, platino); el de la Caravana, uno por tramo (jungla: jade; desierto, con capucha: oricalco; montaña, con pieles y capucha blanca: adamantita; ciudad y después: bronce, yelmo y estelar); el de Brumaclara, el Herrero de cristal, sin martillo.
+
+### 3.15. Es así a propósito
 
 No lo reportes como defecto, aunque puedes opinar en "Opiniones de diseño": posadas gratis; solo español; la vertical del móvil no se juega; música y efectos sintetizados; modelos KayKit y Kenney; al perder se conservan las misiones; de los jefes no se huye; el móvil usa menos resolución 3D; la tierra de un jefe vencido de las partes 2 y 3 se cierra; el mundo de la parte 1 queda atrás al partir con la caravana (solo se vuelve a Villaclaro en la parte 3, a por el amuleto); «Buscar actualizaciones» no existe en Windows y Linux.
 
@@ -355,7 +359,7 @@ Marca cada prueba: **OK**, **Falla** (con el ID del hallazgo), **Parcial** o **N
 | T-032 | Pozos de vida y de maná | Llenan, se secan (gris) y vuelven tras 10 combates; con todo lleno no se gastan |
 | T-033 | Ala de viaje fuera y dentro de un pueblo; segunda Ala; caer con un portal abierto | Vuela al último lugar seguro y deja portal de vuelta; en un pueblo, gris; la segunda sustituye al portal; el portal sigue tras caer |
 | T-034 | Compañero o criatura en el mapa | Va detrás, se para al pararse, no se queda atascado; en las escenas se aparta y vuelve |
-| T-035 | Rótulos sobre figuras | Tienda, Armero, Posada, Criaturas, Coleccionista, Jefe de caravana, Orvalla y Tablón, sin tapar nada |
+| T-035 | Rótulos sobre figuras | Tienda, Armero (Armera en Villaclaro), Posada, Criaturas, Coleccionista, Jefe de caravana, Orvalla y Tablón, sin tapar nada |
 
 ### 5.3. Combate
 
@@ -439,7 +443,7 @@ Marca cada prueba: **OK**, **Falla** (con el ID del hallazgo), **Parcial** o **N
 | ID | Prueba | Resultado esperado |
 |---|---|---|
 | T-100 | Pradera: Abuela Rosa, 3 slimes, volver | La Abuela sugiere entrenar; sale el Rey Slime; al vencerlo se levanta la niebla del norte |
-| T-101 | Villaclaro: Mercader, Armero, Domadora (Gallina), Posadero, Granjero, Tablón, Coleccionista, huerto | Cada uno hace lo suyo |
+| T-101 | Villaclaro: Mercader, Armera, Domadora (Gallina), Posadero, Granjero, Tablón, Coleccionista, huerto | Cada uno hace lo suyo |
 | T-102 | Bosque: escena de la aldea; Mercader, Armero, Domadora (Lobezno), Posadera, Leñadora, Niña, Gato, Tablón, Coleccionista; Bruja | Escena al llegar; la Bruja se cura una vez y da el primer fragmento |
 | T-103 | Mina: escena del refugio; Tendera, Herrero, Domadora (Golem pequeño), Posadero, Minera, Tablón; palanca en la 2, llave en la 3, reja | Las puertas siguen abiertas tras recargar; la llave se gasta; el objetivo sigue cada paso |
 | T-104 | Golem de piedra | Carga el golpe; al vencerlo, segundo fragmento y se abre el túnel al castillo |
@@ -500,7 +504,7 @@ Marca cada prueba: **OK**, **Falla** (con el ID del hallazgo), **Parcial** o **N
 | T-175 | Guardados antiguos (versiones 2 a 15: sin casco, con un solo accesorio, sin medallas, en Partida nueva +) | Cargan migrados según `save_data.gd`, sin error de script |
 | T-176 | Partida de antes de la 3.7.0 con Incienso | No queda ninguno y el oro ha subido 10 G por cada uno |
 | T-177 | Partida de la 3.7.0 parada en el Nv 50 en Brumaclara; ganar un combate | Llega al Nv 51 |
-| T-178 | Partida en el Nv 51-60 | Carga y conserva nivel y EXP |
+| T-178 | Partida en el Nv 51-55 | Carga y conserva nivel y EXP |
 | T-179 | Exportar una ranura e importarla en otra; importar un archivo que no es una partida | Pregunta antes de sustituir; "Partida importada en la ranura n."; uno malo se rechaza sin tocar la ranura |
 | T-180 | 🌐 Exportar en el navegador e importar en la app instalada | La partida pasa entera |
 | T-181 | 📱 Cerrar la pestaña en plena escena, combate o transición | Al volver, partida coherente con el último guardado |
@@ -550,14 +554,14 @@ Marca cada prueba: **OK**, **Falla** (con el ID del hallazgo), **Parcial** o **N
 
 | ID | Prueba | Resultado esperado |
 |---|---|---|
-| T-230 | Pasar del 59 al 60 en un combate | Aviso de subida y después el destello del aura; el aura se queda |
-| T-231 | Partida en el 60: mapa, combate y una escena | El aura en el héroe en los tres; nunca en el compañero ni en la criatura |
+| T-230 | Pasar del 54 al 55 en un combate | Aviso de subida y después el destello del aura; el aura se queda |
+| T-231 | Partida en el 55: mapa, combate y una escena | El aura en el héroe en los tres; nunca en el compañero ni en la criatura |
 | T-232 | Héroe en el 20 de la parte 1 o en el 40 de la parte 2 | Sin aura |
-| T-233 | Panel de depuración: bajar el nivel desde el 60 | El aura se apaga |
+| T-233 | Panel de depuración: bajar el nivel desde el 55 | El aura se apaga |
 | T-234 | 📱 El aura en calidad alta y baja | La mitad de chispas; ninguna en calidad baja |
 | T-235 | EXP de los enemigos y jefes de la v3 | La de `data/enemies/` (Garza 2565, Coloso 3105, Vigía 3510, Eco 4050); el oro no cambia |
 | T-236 | Brumaclara de cerca | Piel gris azulada, capucha (salvo Neblí y el Herrero), cristal que brilla en el pecho; farol de Orvalla, cuenco de la Curandera, brazos de cristal del Herrero; el Tendero con capucha verde, distinto del Vecino; los rótulos no quedan tapados |
-| T-237 | Tras el final de la v3, cazar en la Fuente | Sus monstruos siguen peleando con el héroe hasta el Nv 60 (`exit_level` 56: se apartan solo desde el 60); llegar al 60 allí cuesta de 1 h a 1 h 30 |
+| T-237 | Tras el final de la v3, cazar en la Fuente | Sus monstruos pelean con el héroe hasta el Nv 54 y se apartan en el 55 (`exit_level` 51) |
 | T-238 | Partida de la v3 que seguía con el Nv 50 de antes | Vuelve a subir con la EXP nueva |
 
 ### 5.17. Rendimiento y aspecto
@@ -580,6 +584,18 @@ Marca cada prueba: **OK**, **Falla** (con el ID del hallazgo), **Parcial** o **N
 | T-253 | Domadora con un compañero (Villaclaro en la parte 3, o cualquier pueblo de la v1 tras el final) | "Ya tienes compañero"; no vende la criatura; la ranura sigue sana |
 | T-254 | Tras el final: la Abuela Rosa, el Granjero y el Tablón de Villaclaro; la segunda planta de la ciudad | Frases de después del final (los caminos limpios); en la ciudad no están el Jefe de caravana ni el compañero |
 
+### 5.18. Lo nuevo de la 3.10.0
+
+| ID | Prueba | Resultado esperado |
+|---|---|---|
+| T-255 | Villaclaro: la Armera de cerca | Bruja: sombrero de pico y túnica gris azul de noche, martillo de cobre; rótulo, acción ("Comprar · Armera") y ventana "Armera"; no se confunde con el Mercader ni con el Coleccionista |
+| T-256 | El armero de la aldea del bosque, de la mina y del campamento del castillo | Leñador (verde, capa de musgo, delantal, martillo de hierro); minero (gorro de latón con lámpara que brilla, delantal, martillo de acero); armero del rey (armadura, yelmo, capa carmesí, martillo de platino) |
+| T-257 | El Armero de la Caravana en cada tramo y etapa | Jungla (verde y caqui, jade), desierto (capucha y capa de arena, oricalco), montaña (pieles, capucha blanca, adamantita), ciudad, tras el Devorador y en la v3 (bronce, yelmo, capa de ceniza, estelar) |
+| T-258 | Cada armero de cerca, quieto y al comprarle, en el PC y a 740 × 360 | El martillo en la mano por el mango, con la cabeza del color de su metal (hierro gris oscuro, acero gris azulado, platino casi blanco, estelar azul cielo); el delantal de cuero con correas, el gorro y la capucha no atraviesan el cuerpo; el rótulo no queda tapado; venden lo mismo que antes |
+| T-259 | Parte 3: subir al 55 | No pasa del 55; "EXP 58600" con la barra llena; el aura se enciende con su destello |
+| T-260 | Partida de la 3.9.0 con el héroe en el 56-60 | Carga sana, con el héroe en el 55 (PV, PM, ATK, DEF y VEL de un 55, mismas semillas, equipo y hechizos) y con su aura; la lista de partidas del título dice "Nv 55"; una del 61 sale "Partida dañada" |
+| T-261 | Archivo editado a mano: 9 999 999 G y algún Incienso | Carga con 9 999 999 G y sin Incienso |
+
 ## 6. Estado conocido
 
 - **Nunca comprobado en hardware real:** un móvil de verdad (rendimiento, calor, toques, sonido), la actualización de la PWA instalada desde GitHub Pages («Buscar actualizaciones» y el aviso del título con una publicación real) y un iPhone con Safari. **Aquí es donde más valor puedes aportar.**
@@ -593,7 +609,7 @@ Te asignarán uno o varios. Si no, elige el que mejor puedas cubrir y dilo.
 | Ángulo | Pregunta central | Fíjate en |
 |---|---|---|
 | **A. Jugador nuevo** | ¿Se entiende qué hacer sin leer nada de esto? | Primeros 15 minutos, objetivos, pistas, bloqueos |
-| **B. Diseño y equilibrio** | ¿Curva de dificultad y economía justas? | Nivel, oro y equipo por zona, picos, grindeo, hechizos o equipo inútiles, jefes, Fácil, duración, el camino al 60 |
+| **B. Diseño y equilibrio** | ¿Curva de dificultad y economía justas? | Nivel, oro y equipo por zona, picos, grindeo, hechizos o equipo inútiles, jefes, Fácil, duración, el camino al 55 |
 | **C. Móvil e interacción** | ¿Se juega bien con el dedo? | Tamaños táctiles, pulgar, palanca, pellizco, textos, giros, barra del navegador |
 | **D. Robustez** | ¿Puedo romperlo? | Guardados corruptos o antiguos, entradas rápidas, cortes a mitad de transición, bloqueos de progreso, duplicar objetos |
 | **E. Código** | ¿Qué falla según el código? | Lógica, `await` sobre nodos liberados, fugas, casos límite, coherencia con `CLAUDE.md` |
@@ -608,7 +624,7 @@ Te asignarán uno o varios. Si no, elige el que mejor puedas cubrir y dilo.
 
 ### Métricas
 
-Inclúyelas si las mediste; si no, "no medido". No las estimes: tiempo y nivel al vencer a cada jefe; oro y equipo al llegar a cada tienda; combates y derrotas hasta cada jefe; tiempo hasta el 60; carga, FPS y memoria con el dispositivo exacto.
+Inclúyelas si las mediste; si no, "no medido". No las estimes: tiempo y nivel al vencer a cada jefe; oro y equipo al llegar a cada tienda; combates y derrotas hasta cada jefe; tiempo hasta el 55; carga, FPS y memoria con el dispositivo exacto.
 
 ### Formato
 

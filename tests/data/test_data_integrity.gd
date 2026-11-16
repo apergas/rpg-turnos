@@ -8,6 +8,11 @@ const Fx := preload("res://tests/fixtures.gd")
 ## What an enemy's ai_weights may name besides its own skills.
 const ORDERS := [BattleEngine.CMD_ATTACK, BattleEngine.CMD_STAGGER, BattleEngine.CMD_CHARGE,
 	BattleEngine.CMD_ESCAPE]
+## Each place's armero and the look that gives it the style of its place (3.10.0, M-124). The
+## Caravana's is its tramo 1's: CampLook dresses it for the others (tests/world/test_camp_look.gd).
+const ARMORERS := {"pradera": "ARMORER_VILLACLARO", "bosque": "ARMORER_FOREST",
+	"mina_1": "ARMORER_MINE", "castillo_patio": "ARMORER_CASTLE", "caravana": "ARMORER_JUNGLE",
+	"brumaclara": "MIST_SMITH"}
 
 
 static func _sorted(ids: Array) -> String:
@@ -194,3 +199,30 @@ func test_every_key_item_has_its_text_and_every_hero_spell_its_line() -> void:
 		if spell.replaces != "":
 			assert_has(ids, spell.replaces, "%s replaces a spell the hero has by then" % spell.id)
 		ids.append(spell.id)
+
+
+# 3.10.0 (M-125): the Fuente's groups fight the hero up to the top level and step aside at it
+# (exit_level 51 + EncounterMeter.LEVEL_GAP; 56 when the top was 60).
+func test_the_fuentes_groups_fight_until_the_top_level() -> void:
+	var fuente := ZoneData.by_id("fuente")
+	assert_false(EncounterMeter.is_shy(Leveling.MAX_LEVEL - 1, fuente.exit_level))
+	assert_true(EncounterMeter.is_shy(Leveling.MAX_LEVEL, fuente.exit_level))
+
+
+# 3.10.0 (M-124)
+func test_every_armero_looks_like_its_place() -> void:
+	var places := {}
+	for zone_id in ZoneData.IDS:
+		for npc: Dictionary in ZoneData.by_id(zone_id).npcs:
+			var look: String = npc.get("look", "")
+			if npc.get("kind", "") == "armory":
+				places[zone_id] = look
+			elif look.begins_with("ARMORER_") or look == "MIST_SMITH":
+				fail_test("%s: %s wears an armero's look" % [zone_id, npc.get("name", "")])
+	assert_eq_deep(places, ARMORERS)
+	var seen := {}
+	for look: String in ARMORERS.values():
+		assert_true(ActorLooks.Look.has(look), look)
+		assert_false(seen.has(look), "%s twice" % look)
+		seen[look] = true
+	assert_eq(Shop.keeper(Shop.VILLACLARO, Shop.ARMORY_COUNTER), "Armera")

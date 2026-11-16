@@ -1,8 +1,19 @@
 # Registro de cambios
 
+## 3.10.0 (2026)
+
+- Cada armero viste como su lugar y lleva un martillo del metal que vende su mostrador (menos el Herrero de cristal de Brumaclara, que sigue como estaba). En Villaclaro, una armera bruja, con sombrero de pico y túnica; en la aldea del bosque, un leñador; en la mina, un minero con su lámpara; en el campamento del castillo, el armero del rey, con armadura y yelmo. El de la caravana cambia con cada tierra: de jungla, de desierto, de montaña y de ciudad. El leñador, el minero y los armeros de la caravana de la jungla y de la ciudad llevan además un delantal de cuero con correas.
+- El nivel máximo de Brumaclara baja de 60 a 55, y el aura dorada sale al llegar al 55. Si tu héroe estaba más arriba, la partida carga igual, con él en el 55; en la lista de partidas aparece como «Nv 55».
+- En la Fuente, los monstruos se apartan de ti al llegar al nivel máximo.
+- Una partida editada a mano ya no puede pasar de 9 999 999 de oro al cargarla.
+
+Design system: v1.0.0-1-g59a2b4f
+
 ## 3.9.0 (2026)
 
 - Sin cambios en el juego: ahora tiene pruebas automáticas de sus reglas (combates, niveles, tiendas, partidas guardadas, misiones, historia, bestiario y medallas) y de sus datos, que se pasan solas en cada subida, junto al piloto automático.
+
+Design system: v1.0.0-1-g59a2b4f
 
 ## 3.8.2 (2026)
 

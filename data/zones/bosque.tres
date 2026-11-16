@@ -142,7 +142,7 @@ npcs = [{
 }, {
 "id": "bosque",
 "kind": "armory",
-"look": "TRAVELLER_M",
+"look": "ARMORER_FOREST",
 "name": "Armero",
 "pos": Vector3(-11.2, 0, 1.6),
 "yaw": -135.0

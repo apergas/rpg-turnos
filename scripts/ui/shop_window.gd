@@ -191,7 +191,7 @@ func _show_page(page: String, focus_id := "") -> void:
 			elif Shop.sells_ally(_shop_id):
 				_title.text = "Criaturas"
 			else:
-				_title.text = "Armero" if _counter == Shop.ARMORY_COUNTER else "Tienda"
+				_title.text = Shop.counter_title(_shop_id, _counter)
 			for id in Shop.stock(_shop_id, _counter):
 				_add_buy_row(id)
 			_add_footer_button("Volver", _back)
