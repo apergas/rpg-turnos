@@ -84,7 +84,8 @@ npcs = [{
 3: ["¡Un fragmento! Lo noto desde aquí: me hace cosquillas en los huesos.", "El segundo lo guarda un golem, en el fondo de la vieja mina."],
 4: ["Con dos fragmentos ya se puede entrar en el Castillo de la Niebla.", "El tercero lo guarda su señor. Ve con cuidado, y abrígate."],
 5: ["El Amuleto del Alba está en su sitio y el cielo, por fin, también.", "Pasea cuanto quieras, {nombre}. Ahora da gusto."],
-13: ["Llévalo con cuidado, {nombre}. Ese amuleto ha pasado por muchas manos, y todas lo querían para ellas.", "Y abrígate, que dicen que al otro lado no sale el sol. Pobre gente."]
+13: ["Llévalo con cuidado, {nombre}. Ese amuleto ha pasado por muchas manos, y todas lo querían para ellas.", "Y abrígate, que dicen que al otro lado no sale el sol. Pobre gente."],
+15: ["Dicen que al otro lado ya no hay niebla, y aquí se fue la misma noche. Algo habrás tenido que ver, {nombre}.", "Los caminos vuelven a estar limpios. Ve a donde quieras, pero vuelve a cenar."]
 },
 "look": "VILLAGER",
 "name": "Abuela Rosa",
@@ -119,7 +120,8 @@ npcs = [{
 3: ["Un viajero dice que la vieja mina está llena de arañas.", "Yo me quedo con mis gallinas."],
 4: ["Dicen que en el castillo los esqueletos no duermen nunca.", "Con razón tienen tan mala cara."],
 5: ["¡Mira qué cielo! Las gallinas ya ponen los huevos derechos."],
-13: ["Vuelve la niebla por los caminos. Mis gallinas ponen los huevos de lado otra vez.", "No sé qué haces por ahí, {nombre}, pero date prisa, que me quedo sin tortillas."]
+13: ["Vuelve la niebla por los caminos. Mis gallinas ponen los huevos de lado otra vez.", "No sé qué haces por ahí, {nombre}, pero date prisa, que me quedo sin tortillas."],
+15: ["La niebla se ha ido otra vez. Las gallinas vuelven a poner los huevos derechos.", "Esta vez les he dicho que no se acostumbren."]
 },
 "look": "FARMER",
 "name": "Granjero",
@@ -129,7 +131,8 @@ npcs = [{
 "kind": "board",
 "lines": ["Aviso viejo: se vende gallina que pone de lado. Razón, el Granjero.", "Otro más viejo aún: se regala gallina."],
 "lines_by_chapter": {
-13: ["Aviso nuevo: «La niebla ha vuelto a los caminos. Que nadie salga al bosque hasta que se vaya.» — La Abuela Rosa"]
+13: ["Aviso nuevo: «La niebla ha vuelto a los caminos. Que nadie salga al bosque hasta que se vaya.» — La Abuela Rosa"],
+15: ["Aviso nuevo: «Los caminos vuelven a estar limpios. Ya se puede salir al bosque, y más allá.» — La Abuela Rosa"]
 },
 "look": "BOARD",
 "name": "Tablón",

@@ -165,9 +165,9 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 		state.portal_town = portal.town
 		state.portal_zone = portal.zone
 		state.portal_pos = Vector3(portal.pos[0], 0.0, portal.pos[1])
-		# A portal into another part's zone or a closed land (before 3.8.2 the city's stayed
-		# open into the part 3) is dropped: using it would leave the save on a zone it may not be.
-		var zones := ZoneData.zones_of_part(StoryState.part(state.world_flags))
+		# A portal into a zone this save may not stand in, or into a closed land (before 3.8.2
+		# the city's stayed open into the part 3), is dropped; once the v3 is over all are open.
+		var zones := ZoneData.open_zones(state.world_flags)
 		if not (state.portal_town in zones and state.portal_zone in zones) \
 				or ClosingLands.is_closed(state.portal_zone, state.world_flags):
 			state.close_portal()
@@ -337,9 +337,10 @@ static func is_valid(data: Dictionary) -> bool:
 
 ## The parts don't mix. A save of the part 3 (Brumaclara's flag) has the caravan's flag and the
 ## Devorador beaten, and a version from V3_VERSION on; one with the caravan's flag a version
-## from CARAVAN_VERSION on. The zone and the last village are zones of its part
-## (ZoneData.zones_of_part()); nothing of a later part is in it (_valid_part_content()); the
-## ally is a companion (or none) from the part 2 on, never in the part 1.
+## from CARAVAN_VERSION on. The zone and the last village are zones of its part, or any zone
+## once the v3 is over (ZoneData.open_zones()); nothing of a later part is in it
+## (_valid_part_content()); the ally is a companion (or none) from the part 2 on, never in the
+## part 1.
 static func _valid_caravan(data: Dictionary) -> bool:
 	var flags: Array = data.flags if data.get("flags") is Array else []
 	var in_caravan := StoryState.CARAVAN_FLAG in flags
@@ -355,7 +356,10 @@ static func _valid_caravan(data: Dictionary) -> bool:
 	var ally: String = data.get("ally", "") if data.get("ally", "") is String else ""
 	if Allies.is_companion(ally) != (in_caravan and ally != ""):
 		return false
-	var zones := ZoneData.zones_of_part(part)
+	var flag_set := {}
+	for flag: Variant in flags:
+		flag_set[flag] = true
+	var zones := ZoneData.open_zones(flag_set)
 	for key in ["zone", "town"]:
 		var zone_id: Variant = data.get(key, "")
 		if zone_id is String and zone_id != "" and not (zone_id in zones):

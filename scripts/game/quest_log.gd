@@ -93,14 +93,15 @@ func is_active(id: String) -> bool:
 	return stage(id) == Stage.ACTIVE or stage(id) == Stage.REPORT
 
 
-## True if the quest was taken and can't be finished any more. Not while it is ready to hand in
+## True if the quest was taken and can't be finished any more. Never once the v3 is over
+## (StoryState.world_open(): every land is open again), nor while it is ready to hand in
 ## (_can_hand_in()). Otherwise it is lost if it is of an earlier part than these flags' (its land
 ## was left behind), or if its gone flag is the boss of a land that has closed (ClosingLands).
 ## Worked out, never saved: the mission lines leave it out, the Diario lists it under «Perdidas»
 ## and its figure stops waiting for it. talk() still pays one that is somehow ready (nothing is
 ## taken away).
 func is_lost(id: String, flags: Dictionary, inventory: Inventory) -> bool:
-	if not is_active(id):
+	if not is_active(id) or StoryState.world_open(flags):
 		return false
 	var quest := data(id)
 	if _can_hand_in(quest, flags, inventory):
@@ -111,19 +112,8 @@ func is_lost(id: String, flags: Dictionary, inventory: Inventory) -> bool:
 		and not ClosingLands.zones_of(quest.gone).is_empty()
 
 
-## The taken quests boss_id's victory would leave lost (is_lost()): gone with that boss and not
-## to be handed in (_can_hand_in()) under these flags (ClosingLands.warning() counts them).
-func lost_with(boss_id: String, flags: Dictionary, inventory: Inventory) -> Array[String]:
-	var ids: Array[String] = []
-	for id: String in QUESTS:
-		var quest := data(id)
-		if is_active(id) and quest.gone == boss_id and not _can_hand_in(quest, flags, inventory):
-			ids.append(id)
-	return ids
-
-
 ## Ready to hand in (_is_ready()) at a figure of the part these flags are in: what keeps a quest
-## from being lost (is_lost() and lost_with() both ask it, so they cannot drift).
+## from being lost (is_lost()).
 func _can_hand_in(quest: QuestData, flags: Dictionary, inventory: Inventory) -> bool:
 	return _is_ready(quest, inventory) \
 		and quest.turn_in_zone in ZoneData.zones_of_part(StoryState.part(flags))
@@ -235,13 +225,16 @@ func talk(state: GameState, zone_id: String, figure: String, short_wait := false
 	return {}
 
 
-## True if the quest may be offered now: still OPEN, of the part of the game these flags are in
-## (StoryState.part(): the meadow of the v3 offers none of the v1's), its needs flag set and its
-## gone flag not.
+## True if the quest may be offered now: still OPEN with its needs flag set, and of the part of
+## the game these flags are in (StoryState.part(): the meadow of the v3 offers none of the v1's)
+## with its gone flag not set. Once the v3 is over (StoryState.world_open(), 3.8.2) every land is
+## open again: any quest never taken is offered, whatever its part or its gone flag.
 func _offered(quest: QuestData, flags: Dictionary) -> bool:
-	return stage(quest.id) == Stage.OPEN \
-		and ZoneData.part_of(quest.zone) == StoryState.part(flags) \
-		and (quest.needs == "" or flags.get(quest.needs, false)) \
+	if stage(quest.id) != Stage.OPEN or not (quest.needs == "" or flags.get(quest.needs, false)):
+		return false
+	if StoryState.world_open(flags):
+		return true
+	return ZoneData.part_of(quest.zone) == StoryState.part(flags) \
 		and (quest.gone == "" or not flags.get(quest.gone, false))
 
 

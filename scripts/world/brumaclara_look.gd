@@ -5,6 +5,8 @@ class_name BrumaclaraLook extends RefCounted
 ## draws them), the forge's fire, the market open, a lighter fog... data/zones/brumaclara.tres is
 ## the etapa 1, all dark. Pure: dressed() returns a copy of the zone; ZoneTravel builds Brumaclara
 ## from it. The figures that come back (the Curandera...) are the zone's own, by their needs flags.
+## Once the v3 is over (StoryState.world_open(), 3.8.2) the Ciénaga, the Cuevas and the Ruinas
+## open again, each through its own arch (OPEN_EXITS).
 
 const ZONE := "brumaclara"
 ## etapa -> the fields that change from the .tres: the whole look of that etapa (an etapa with
@@ -49,11 +51,26 @@ const FREED := {"sun_peeks": true, "sky_top": Color(0.36, 0.3, 0.52),
 	"haze": Color(0.72, 0.68, 0.78), "fog_density": 0.009, "sun_color": Color(1.0, 0.88, 0.7),
 	"sun_energy": 0.6}
 const BEATEN := {"statue_pos": Vector3(-3.5, 0, -2.5), "statue_yaw": 180.0}
+## Brumaclara once the v3 is over (open): the Ciénaga and the Ruinas open again in the west and
+## the Cuevas in the east, each through its own arch (the Fuente keeps the north road, the portal
+## the south), with its entry in front of it for the way back. ZoneData.reopen_exits() applies
+## them.
+const OPEN_EXITS := {
+	"cienaga": {"pos": Vector3(-19.5, 0, -10), "yaw": 90.0},
+	"cuevas": {"pos": Vector3(19.5, 0, -10), "yaw": -90.0},
+	"ruinas": {"pos": Vector3(-19.5, 0, 10), "yaw": 90.0},
+}
+const OPEN_ENTRIES := {
+	"cienaga": [Vector3(-16, 0, -10), -90.0],
+	"cuevas": [Vector3(16, 0, -10), 90.0],
+	"ruinas": [Vector3(-16, 0, 10), -90.0],
+}
 
 
 ## A copy of Brumaclara dressed for etapa (GameState.etapa()) and, in the epilogue, for its
-## ending (freed: StoryState.ALBOR_FREED set); zone itself up to the etapa 1.
-static func dressed(zone: ZoneData, etapa: int, freed := false) -> ZoneData:
+## ending (freed: StoryState.ALBOR_FREED set) and open (StoryState.world_open(): OPEN_EXITS);
+## zone itself up to the etapa 1.
+static func dressed(zone: ZoneData, etapa: int, freed := false, open := false) -> ZoneData:
 	var step := 0
 	for e: int in LOOKS:
 		if e <= etapa:
@@ -72,4 +89,6 @@ static func dressed(zone: ZoneData, etapa: int, freed := false) -> ZoneData:
 		town.look_key += "_libre" if freed else "_estatua"
 		for field: String in ending:
 			town.set(field, ending[field])
+	if open:
+		town.reopen_exits(OPEN_EXITS, OPEN_ENTRIES)
 	return town

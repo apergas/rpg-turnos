@@ -246,6 +246,17 @@ static func part(flags: Dictionary) -> int:
 	return 2 if flags.get(CARAVAN_FLAG, false) else 1
 
 
+## True once the v3 is over: its final scene has set ALBOR_FREED or ALBOR_BEATEN (in the part 3;
+## story.finished_v3 follows a moment later, before any save). From then on every land of the
+## three parts is open again (3.8.2): the exits that closed come back (CampLook, BrumaclaraLook,
+## VillaclaroLook), a save may stand in any zone (ZoneData.open_zones()), no land is closed
+## (ClosingLands.is_closed()), no quest is lost and every quest never taken is offered again
+## (QuestLog). Before it the journey only goes forward.
+static func world_open(flags: Dictionary) -> bool:
+	return flags.get(V3_FLAG, false) \
+		and (flags.get(ALBOR_FREED, false) or flags.get(ALBOR_BEATEN, false))
+
+
 ## The line of the v3's ending these flags chose (the credits, the goal of its last chapter).
 static func ending_text(flags: Dictionary) -> String:
 	return V3_FREED_TEXT if flags.get(ALBOR_FREED, false) else V3_BEATEN_TEXT

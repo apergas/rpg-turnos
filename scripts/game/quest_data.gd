@@ -23,6 +23,7 @@ enum Kind { HUNT, GATHER, DELIVER, FIND }
 ## A world flag after which the quest is no longer offered ("" for none): the boss of the land
 ## it is done in (its land closes behind the boss). A quest already taken goes on while it can
 ## be finished: once the land has closed and it is not ready, it is lost (QuestLog.is_lost()).
+## Once the v3 is over every land opens again: the flag no longer counts (3.8.2).
 @export var gone := ""
 ## Who hears the report ("" : it ends on the spot, when the goal is reached).
 @export var turn_in_zone := ""
