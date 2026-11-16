@@ -67,6 +67,8 @@ var _main_row: HBoxContainer
 var _hero_label: Label
 var _mission_box: VBoxContainer
 var _main_message: Label
+## The game's version in the bottom right corner, shown while the menu is open.
+var _version_label: Label
 var _hp_bar: StatBar
 var _mp_bar: StatBar
 var _exp_bar: StatBar
@@ -126,6 +128,9 @@ func _ready() -> void:
 		if UiStyle.is_outside_tap(event):
 			_go_back())
 	add_child(_shade)
+	# Over the shade and under the windows: a window may cover it, never the reverse.
+	_version_label = UiTheme.version_label(self)
+	_version_label.hide()
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -160,6 +165,7 @@ func open() -> void:
 	_map_only = false
 	get_tree().paused = true
 	_shade.show()
+	_version_label.show()
 	_menu_button.hide()
 	_set_line(_main_message, "")
 	_sfx(SfxLibrary.ACCEPT)
@@ -181,6 +187,7 @@ func close() -> void:
 		return
 	_page = ""
 	_shade.hide()
+	_version_label.hide()
 	_window.hide()
 	_main_row.hide()
 	_sfx(SfxLibrary.CANCEL)

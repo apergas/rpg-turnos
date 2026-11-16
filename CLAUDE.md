@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-`rpg-turnos` (the game is called *Villaclaro: la Niebla del Norte*; its version is `application/config/version`, also shown on the title screen; `CHANGELOG.md` in Spanish): a 3D turn-based RPG with a Dragon Quest-like look, made with Godot 4.7.2 (Compatibility renderer, so the same build runs on the web). The work is done from Claude Code, not the Godot editor, so scenes (`.tscn`) and scripts (`.gd`) are written directly as text files. Design specs live in `docs/legacy/specs/`.
+`rpg-turnos` (the game is called *Villaclaro: la Niebla del Norte*; its version is `application/config/version` (`GameVersion`), also shown on the title screen and while the pause menu is open (`UiTheme.version_label()`); `CHANGELOG.md` in Spanish): a 3D turn-based RPG with a Dragon Quest-like look, made with Godot 4.7.2 (Compatibility renderer, so the same build runs on the web). The work is done from Claude Code, not the Godot editor, so scenes (`.tscn`) and scripts (`.gd`) are written directly as text files. Design specs live in `docs/legacy/specs/`.
 
 ## Layout
 
