@@ -1,0 +1,12 @@
+{
+  "about": "What each run of scripts/tools/autoplay_all.sh must show. play_time is the play time (h:mm:ss) last measured in the villaclaro-autoplay skill and play_time_margin the % it may move; timeout_min is wall-clock minutes. A release that changes the balance updates this file with the skill. Without jq the script reads it line by line: keep each run, known_warnings and play_time_margin on one line.",
+  "known_warnings": ["Jolt Physics job system exceeded the maximum number of jobs"],
+  "play_time_margin": 20,
+  "runs": [
+    {"name": "v1", "args": "--autoplay", "quit_after": 150000, "timeout_min": 30, "result": "Juego completado: ", "level_min": 18, "level_max": 18, "defeats_max": 3, "play_time": "1:00:24"},
+    {"name": "v2", "args": "--autoplay --autoplay-zone=caravana", "quit_after": 500000, "timeout_min": 60, "result": "Juego completado (v2): ", "level_min": 40, "level_max": 40, "defeats_max": 3, "play_time": "1:44:52"},
+    {"name": "v3", "args": "--autoplay --autoplay-zone=brumaclara", "quit_after": 400000, "timeout_min": 60, "result": "Juego completado (v3): ", "level_min": 52, "level_max": 54, "defeats_max": 2, "play_time": "1:30:16"},
+    {"name": "vencer", "args": "--autoplay --autoplay-zone=albor --autoplay-ending=vencer", "quit_after": 40000, "timeout_min": 15, "also": "-> Acabar con el Eco", "result": "Juego completado (v3): ", "level_min": 52, "level_max": 54, "defeats_max": 1, "play_time": "0:09:08"},
+    {"name": "save", "args": "--autoplay --autoplay-save", "quit_after": 6000, "timeout_min": 10, "save_version": 16}
+  ]
+}
