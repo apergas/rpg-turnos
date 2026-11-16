@@ -52,26 +52,29 @@ Lo que se ha hecho y lo que queda por hacer en Villaclaro. Una fila por versión
 | 3.1.0 a 3.2.0 · M-83 | La vuelta a Villaclaro a por el Amuleto del Alba | hecho |
 | 3.3.0 · M-84 | El Eco de Albor, la elección, los dos finales y los créditos de la v3 ([plan](../legacy/plans/2026-11-14-version-3-3-0.md)) | hecho |
 | 3.0.0 a 3.3.0 · M-85 | Partida automática de la v3 | hecho |
-| 3.4.0 · M-86 | Vender solo lo vendible: fuera de la lista las piezas puestas y lo que no se vende ([spec](specs/2026-11-15-version-3-4-0-design.md) · [plan](plans/2026-11-15-version-3-4-0.md)) | hecho |
+| 3.4.0 · M-86 | Vender solo lo vendible: fuera de la lista las piezas puestas y lo que no se vende ([spec](../legacy/specs/2026-11-15-version-3-4-0-design.md) · [plan](../legacy/plans/2026-11-15-version-3-4-0.md)) | hecho |
 | 3.4.0 · M-87 | En «Equipo», lo que da cada pieza va debajo de su nombre | hecho |
 | 3.4.0 · M-88 | En «Estado», los números del compañero o la criatura debajo de su nombre | hecho |
 | 3.4.0 · M-89 | En combate, al elegir objetivo, el resto del menú queda en gris y solo responde «Volver» | hecho |
 | 3.4.0 · M-90 | Rótulos con el nombre sobre el Coleccionista, el Jefe de caravana, Orvalla y el Tablón | hecho |
-| 3.5.0 · M-91 | Los hechizos de daño del héroe crecen un 3 % por nivel; curar no cambia ([spec](specs/2026-11-15-version-3-5-0-design.md) · [plan](plans/2026-11-15-version-3-5-0.md)) | hecho |
+| 3.5.0 · M-91 | Los hechizos de daño del héroe crecen un 3 % por nivel; curar no cambia ([spec](../legacy/specs/2026-11-15-version-3-5-0-design.md) · [plan](../legacy/plans/2026-11-15-version-3-5-0.md)) | hecho |
 | 3.5.0 · M-92 | Usar un objeto en combate va siempre el primero, como Defender y Huir | hecho |
 | 3.5.0 · M-93 | El compañero de la caravana estrena una pieza de equipo en cada tramo y etapa | hecho |
 | 3.5.0 · M-94 | Sin portal en el fondo de los combates del Barrio del portal, salvo contra el Devorador | hecho |
 | 3.5.0 · M-95 | El portal entre la Caravana y Brumaclara, con la misma forma pero rojizo | hecho |
-| 3.6.0 · M-96 | El compañero o la criatura te sigue por el mapa ([spec](specs/2026-11-15-version-3-6-0-design.md) · [plan](plans/2026-11-15-version-3-6-0.md)) | hecho |
+| 3.6.0 · M-96 | El compañero o la criatura te sigue por el mapa ([spec](../legacy/specs/2026-11-15-version-3-6-0-design.md) · [plan](../legacy/plans/2026-11-15-version-3-6-0.md)) | hecho |
 | 3.6.0 · M-97 | La tienda vende los consumibles y un armero nuevo, el equipo, en cada pueblo | hecho |
 | 3.6.0 · M-99 | La Pluma de fénix ya no se compra: solo cae de los enemigos o sale de los cofres | hecho |
 | 3.6.0 · M-100 | El Coleccionista: 40 medallas, un anillo o amuleto cada 4, en la Caravana y Brumaclara desde que llegas; guardado 16 | hecho |
-| 3.6.1 · M-98 | El design system en un núcleo reutilizable (`addons/design_system/`) y la capa de Villaclaro; el juego no cambia ([spec](specs/2026-11-15-version-3-6-1-design-system-nucleo-design.md) · [plan](plans/2026-11-15-version-3-6-1.md)) | hecho |
+| 3.6.1 · M-98 | El design system en un núcleo reutilizable (`addons/design_system/`) y la capa de Villaclaro; el juego no cambia ([spec](../legacy/specs/2026-11-15-version-3-6-1-design-system-nucleo-design.md) · [plan](../legacy/plans/2026-11-15-version-3-6-1.md)) | hecho |
 | 3.6.2 | Al cambiar de página en un menú, la flecha ▶ ya no aparece un instante en el sitio de la página anterior | hecho |
-| 3.7.0 · M-101 | En el menú, «Volver al título» pasa a «Salir» y debajo «Buscar actualizaciones» (solo en la web) ([spec](specs/2026-11-16-version-3-7-0-design.md) · [plan](plans/2026-11-16-version-3-7-0.md)) | hecho |
+| 3.7.0 · M-101 | En el menú, «Volver al título» pasa a «Salir» y debajo «Buscar actualizaciones» (solo en la web) ([spec](../legacy/specs/2026-11-16-version-3-7-0-design.md) · [plan](../legacy/plans/2026-11-16-version-3-7-0.md)) | hecho |
 | 3.7.0 · M-102 | La versión del juego se ve con el menú abierto, como en el título | hecho |
 | 3.7.0 · M-103 | Sin Incienso: los monstruos ya se ven en el mapa | hecho |
 | 3.7.0 · M-106 | «Equipo» ya no muestra ATK, DEF y VEL totales: se ven en «Estado» | hecho |
-| 3.8.0 · M-104 | Nivel máximo 60 en la v3 ([spec](specs/2026-11-16-version-3-8-0-design.md) · [plan](plans/2026-11-16-version-3-8-0.md)) | hecho |
+| 3.8.0 · M-104 | Nivel máximo 60 en la v3 ([spec](../legacy/specs/2026-11-16-version-3-8-0-design.md) · [plan](../legacy/plans/2026-11-16-version-3-8-0.md)) | hecho |
 | 3.8.0 · M-105 | La gente de Brumaclara con piel de bruma, capucha y cristal; Orvalla con farol, la Curandera con cuenco y el Herrero con brazos de cristal | hecho |
 | 3.8.0 · M-107 | Un aura dorada suave alrededor del héroe al llegar al nivel 60 | hecho |
+| 3.8.1 · M-108 | El piloto automático ya no se cuelga: eran dos bucles de lógica del piloto, no Jolt, cuyo aviso sigue siendo ruido conocido ([spec](specs/2026-11-16-version-3-8-1-design.md) · [plan](plans/2026-11-16-version-3-8-1.md)) | hecho |
+| 3.8.1 · M-109 | Un lanzador que juega todas las carreras del piloto automático y da OK o FALLO ([plan](plans/2026-11-16-version-3-8-1.md)) | hecho |
+| 3.8.1 · M-110 | GitHub Actions juega esas carreras en cada subida a `develop` | hecho |

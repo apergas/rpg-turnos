@@ -572,7 +572,6 @@ Marca cada prueba: **OK**, **Falla** (con el ID del hallazgo), **Parcial** o **N
 
 ## 6. Estado conocido
 
-- **Cuelgue intermitente de la partida automática en headless:** a veces, justo después del único `WARNING` de Jolt, el proceso se queda girando sin más salida. Viene de antes (ya en la 3.6.2). Mátalo y repite. Repórtalo solo si aportas datos nuevos sobre la causa.
 - **Nunca comprobado en hardware real:** un móvil de verdad (rendimiento, calor, toques, sonido), la actualización de la PWA instalada desde GitHub Pages («Buscar actualizaciones» y el aviso del título con una publicación real) y un iPhone con Safari. **Aquí es donde más valor puedes aportar.**
 
 ## 7. Informe

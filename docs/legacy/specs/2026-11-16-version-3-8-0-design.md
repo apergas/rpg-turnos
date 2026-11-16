@@ -1,6 +1,6 @@
 # Versión 3.8.0: nivel 60 y la gente de Brumaclara
 
-Fecha: 2026-11-16. Estado: spec. Cubre M-104, M-105 y M-107 del [documento maestro](../documento-maestro.md). Va después de la [3.7.0](2026-11-16-version-3-7-0-design.md). La partida guardada sigue en la **versión 16**. Solo cambia el nivel máximo que da por válido: una partida de nivel 51 a 60 es válida desde la 3.8.0, y las versiones anteriores la rechazan.
+Fecha: 2026-11-16. Estado: spec. Cubre M-104, M-105 y M-107 del [documento maestro](../../boost/documento-maestro.md). Va después de la [3.7.0](2026-11-16-version-3-7-0-design.md). La partida guardada sigue en la **versión 16**. Solo cambia el nivel máximo que da por válido: una partida de nivel 51 a 60 es válida desde la 3.8.0, y las versiones anteriores la rechazan.
 
 ## Objetivo
 

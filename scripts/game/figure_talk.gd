@@ -242,7 +242,9 @@ func on_inn(inn_id: String) -> void:
 
 
 ## The hero used a well: drinks if it is full and the hero is not. On autoplay only a full
-## well and a hero in need.
+## well and a hero in need. A sip can make him rested enough for the zone's boss on autoplay
+## (BattleFlow.update_boss()): without asking again, a hero who reached the boss's level worn
+## and drank before any battle walked on for good with no boss to meet.
 func on_well(id: String, kind: String) -> void:
 	if _ctx.busy or (RunFlags.autoplay() and (Wells.is_dry(_ctx.state, id) or Inn.is_rested(_ctx.state))):
 		return
@@ -256,6 +258,7 @@ func on_well(id: String, kind: String) -> void:
 		_ctx.autosave.call(false)
 	var lines: Array[String] = [text]
 	await _ctx.world.show_dialogue("", lines)
+	update_boss.call()
 	_ctx.set_busy.call(false)
 
 
