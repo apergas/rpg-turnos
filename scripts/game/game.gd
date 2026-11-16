@@ -11,6 +11,7 @@ class_name Game extends Node
 ## change of map, exits, the Ala and its portal), StoryFlow (the cutscenes and the endings),
 ## CaravanFlow (the v2's departure and companion), V3Flow (the v3's start in Brumaclara), FigureTalk (figures, shops, inns, wells,
 ## chests, the lever, the key, the gates), BattleFlow (the battles and the boss on the map),
+## WebUpdate (the pause menu's «Buscar actualizaciones», wired to the menu by its setup()),
 ## GameAutoplay (only with --autoplay) and GameDebug (only with --debug). What a piece awaits
 ## from another is a Callable Game wires; what it reports is a signal Game connects.
 ##
@@ -36,6 +37,7 @@ var _caravan: CaravanFlow
 var _v3: V3Flow
 var _talk: FigureTalk
 var _battle: BattleFlow
+var _web: WebUpdate
 
 var _fade: ColorRect
 var _pause: PauseMenu
@@ -195,6 +197,7 @@ func _make_pieces() -> void:
 	_v3 = V3Flow.new()
 	_talk = FigureTalk.new()
 	_battle = BattleFlow.new()
+	_web = WebUpdate.new()
 	if RunFlags.autoplay():
 		_autopilot = GameAutoplay.new()
 		_autopilot.setup(_ctx)
@@ -241,6 +244,8 @@ func _add_pieces(load_failed: bool) -> void:
 	_battle.print_save = RunFlags.autoplay() and RunFlags.autoplay_save() and _save.is_empty()
 	_battle.quit_requested.connect(func() -> void: quit_to_title.emit())
 	add_child(_battle)
+	_web.setup(_ctx, _pause)
+	add_child(_web)
 	if _autopilot:
 		_autopilot.use_pieces(_travel, _talk)
 		_travel.zone_switched.connect(_autopilot.on_zone_switched)
