@@ -16,3 +16,6 @@ Cuando esté todo terminado (implementación, revisiones y publicaciones), un do
 
 ## 2026-11-16 · Armero con el estilo de cada zona
 El sprite del armero tiene que seguir el estilo de cada zona: en Villaclaro, tipo bruja, etc. Hoy el armero se ve igual en todas las aldeas y paradas (también en las de la Caravana y en Brumaclara), y cada uno debería tener la estética de su lugar.
+
+## 2026-11-16 · Nivel máximo 55
+Hay que bajar el nivel máximo de 60 a 55. Desde la 3.8.0 el tope del héroe en la parte 3 es 60 (`Leveling.MAX_LEVEL`), y el aura dorada aparece al llegar a ese máximo.
