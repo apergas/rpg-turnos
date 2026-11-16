@@ -334,7 +334,7 @@ func set_from(saved: Dictionary) -> void:
 		if not QUESTS.has(id):
 			continue
 		_stages[id] = clampi(int(saved[id].stage), Stage.OPEN, Stage.DONE) as Stage
-		_counts[id] = int(saved[id].count)
+		_counts[id] = SaveData.whole(saved[id].count)
 
 
 ## Time to go to the turn_in figure.
