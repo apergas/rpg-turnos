@@ -35,7 +35,7 @@ enum Kind { HUNT, GATHER, DELIVER, FIND }
 ## A sentence for the Diario.
 @export var objective := ""
 ## For the mission lines, after "Misión: ", kept short (the status window fits its longest
-## line): with "%d / %d" for a HUNT or GATHER of several; report once it is time to go back.
+## line): with "%d/%d" for a HUNT or GATHER of several; report once it is time to go back.
 @export var status := ""
 @export var report := ""
 ## What is said when it is offered, by the target when found (FIND), by the turn_in figure

@@ -345,7 +345,7 @@ func journal(inventory: Inventory, flags: Dictionary) -> Dictionary:
 	var village_line := village.status_text()
 	if village_line != "":
 		active.append({"title": Quest.TITLE,
-			"text": _sentence(village_line.trim_prefix(STATUS_PREFIX))})
+			"text": _sentence(village_line.trim_prefix(Quest.GOAL_PREFIX))})
 	elif village.stage == Quest.Stage.DONE:
 		done.append(Quest.TITLE)
 	for id: String in QUESTS:
@@ -423,7 +423,7 @@ func _journal_text(quest: QuestData, inventory: Inventory) -> String:
 	if _is_ready(quest, inventory) and quest.report != "":
 		return _sentence(quest.report)
 	if quest.goal > 1:
-		return "%s (%d / %d)" % [quest.objective, _progress(quest, inventory), quest.goal]
+		return "%s (%d/%d)" % [quest.objective, _progress(quest, inventory), quest.goal]
 	return quest.objective
 
 

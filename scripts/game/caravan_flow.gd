@@ -8,7 +8,7 @@ class_name CaravanFlow extends Node
 ## The v2's Jefe de caravana: in Villaclaro once the caravan has come, then in the Caravana.
 const CARAVAN_CHIEF := "Jefe de caravana"
 const JOIN_QUESTION := "Cuando partamos, no volverás por aquí en mucho tiempo. ¿Te unes a la caravana?"
-const LEAVE_QUESTION := "No podrás volver a Villaclaro, ni al bosque, la mina o el castillo. Las misiones que no hayas cumplido se quedan sin hacer."
+const LEAVE_QUESTION := "Villaclaro quedará muy lejos, y no podrás volver al bosque, la mina ni el castillo. Las misiones que no hayas cumplido se perderán."
 
 ## Autoplay: the companion it takes at once (--autoplay-companion; Game sets it).
 var autoplay_companion := AutoplayStarts.DEFAULT_COMPANION

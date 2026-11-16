@@ -657,7 +657,7 @@ static func is_finished_v3(data: Dictionary) -> bool:
 ## True if data says it was saved by a newer version of the game (a slot list's
 ## "Partida de una versión más nueva", an import's IMPORT_NEWER).
 static func is_newer(data: Dictionary) -> bool:
-	return data.get("version") is float and int(data.version) > VERSION
+	return data.get("version") is float and float(data.version) > VERSION
 
 
 const IMPORT_NOT_SAVE := "Ese archivo no es una partida de Villaclaro."

@@ -28,13 +28,11 @@ const FINISHED_TEXT := " · terminada"
 const NEW_CONFIRM := "La partida de la ranura %d se borrará.\n¿Empezar una nueva?"
 const NEW_YES := "Sí, empezar de nuevo"
 ## NEW over a file that can't be opened (damaged, or of a newer version).
-const NEW_DAMAGED_CONFIRM := "El archivo de la ranura %d se borrará.
-¿Empezar una nueva?"
+const NEW_DAMAGED_CONFIRM := "El archivo de la ranura %d se borrará.\n¿Empezar una nueva?"
 const IMPORT_CONFIRM := "La partida de la ranura %d se sustituirá\npor la del archivo. ¿Seguir?"
 const IMPORT_YES := "Sí, sustituir"
 ## Importar over a file that can't be opened.
-const IMPORT_DAMAGED_CONFIRM := "El archivo de la ranura %d se sustituirá
-por el que has elegido. ¿Seguir?"
+const IMPORT_DAMAGED_CONFIRM := "El archivo de la ranura %d se sustituirá\npor el que has elegido. ¿Seguir?"
 ## LOAD on a finished game: its page.
 const CYCLE_CONTINUE := "Continuar"
 const IMPORTED_TEXT := "Partida importada en la ranura %d."
