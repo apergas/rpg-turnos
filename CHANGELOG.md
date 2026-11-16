@@ -1,5 +1,9 @@
 # Registro de cambios
 
+## 3.9.0 (2026)
+
+- Sin cambios en el juego: ahora tiene pruebas automáticas de sus reglas (combates, niveles, tiendas, partidas guardadas, misiones, historia, bestiario y medallas) y de sus datos, que se pasan solas en cada subida, junto al piloto automático.
+
 ## 3.8.2 (2026)
 
 Arreglos tras dos repasos del juego de arriba abajo.
