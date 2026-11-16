@@ -14,18 +14,22 @@ class_name SmithDress extends RefCounted
 ## HAMMER_ROT so the handle stands up from the fist in the idle pose (along the hand's +Y it
 ## pointed forward, like a sword). In the model's units; tuned with close frames.
 const HAMMER_HANDLE_RADIUS := 0.05
-const HAMMER_HANDLE_LENGTH := 0.75
-const HAMMER_HANDLE_CENTER := 0.25
+const HAMMER_HANDLE_LENGTH := 0.66
+const HAMMER_HANDLE_CENTER := 0.2
 const HAMMER_HEAD_SIZE := Vector3(0.34, 0.17, 0.17)
-const HAMMER_HEAD_AT := 0.62
+const HAMMER_HEAD_AT := 0.53
 const HAMMER_ROUGHNESS := 0.5
 const HAMMER_ROT := Vector3(0, 0, 90)
-## The apron: a thin board of leather on the hips bone (it turns less than the chest in the idle
-## pose), in front of the belly down to the thighs, placed in the rig's rest pose (the Knight
-## faces +Z there). Tuned with close frames.
-const APRON_BONE := "hips"
-const APRON_SIZE := Vector3(0.52, 0.64, 0.04)
-const APRON_AT := Vector3(0, 0.64, 0.39)
+## The apron, thin leather pieces placed in the rig's rest pose (the Knight faces +Z there), each
+## [bone, size, centre]: the skirt on the hips bone (it turns less than the chest in the idle
+## pose) from the belt down to the thighs, the narrower bib on the chest up to the badge and its
+## two straps up to the neck. Tuned with close frames.
+const APRON_PIECES := [
+	["hips", Vector3(0.42, 0.46, 0.04), Vector3(0, 0.56, 0.37)],
+	["chest", Vector3(0.32, 0.34, 0.04), Vector3(0, 0.92, 0.37)],
+	["chest", Vector3(0.04, 0.2, 0.04), Vector3(-0.13, 1.17, 0.33)],
+	["chest", Vector3(0.04, 0.2, 0.04), Vector3(0.13, 1.17, 0.33)],
+]
 ## The mine's cap: a faceted dome over the head, in the head bone's space (the Knight faces +Z
 ## there, like the hair pieces), and on its front the lamp, a small yellow ball. Tuned with close
 ## frames; its top stays below the look's "top", where the name sign hangs.
@@ -44,11 +48,12 @@ static func dress(actor: BattleActor, model: Node3D, data: Dictionary) -> void:
 	if data.has("hammer"):
 		_add_hammer(actor, model.get_node(BattleActor.HAND_R) as Node3D, data.hammer)
 	if data.has("apron"):
-		var apron := BoxMesh.new()
-		apron.size = APRON_SIZE
 		var bones := model.get_node(CharacterBuilder.SKELETON_PATH) as Skeleton3D
-		CharacterBuilder.hang_on_bone(actor, bones, APRON_BONE, apron, data.apron,
-			Transform3D(Basis.IDENTITY, APRON_AT))
+		for piece: Array in APRON_PIECES:
+			var leather := BoxMesh.new()
+			leather.size = piece[1]
+			CharacterBuilder.hang_on_bone(actor, bones, piece[0], leather, data.apron,
+				Transform3D(Basis.IDENTITY, piece[2]))
 	if data.has("miner_cap"):
 		_add_cap(actor, model.get_node(MistDress.HEAD_SLOT) as Node3D, data.miner_cap)
 

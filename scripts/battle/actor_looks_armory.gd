@@ -31,17 +31,18 @@ const HELMED_HIDE := [
 ## The skins of the arms (ActorLooks' light and dark ones).
 const SKIN_LIGHT := ActorLooks.HERO_SKIN
 const SKIN_DARK := ActorLooks.SKIN_DARK
-## The hammers' heads: the metal each counter sells.
+## The hammers' heads: the metal each counter sells, each told apart (iron dark, steel blue grey,
+## platinum near white, stellar sky blue).
 const COPPER := Color(0.85, 0.5, 0.3)
-const IRON := Color(0.5, 0.5, 0.55)
-const STEEL := Color(0.7, 0.72, 0.78)
-const PLATINUM := Color(0.88, 0.9, 0.95)
+const IRON := Color(0.32, 0.32, 0.36)
+const STEEL := Color(0.52, 0.58, 0.68)
+const PLATINUM := Color(0.97, 0.97, 0.95)
 const JADE := Color(0.35, 0.75, 0.5)
 const ORICHALCUM := Color(1.0, 0.7, 0.35)
 const ADAMANTITE := Color(0.45, 0.4, 0.62)
-const STELLAR := Color(0.75, 0.85, 1.0)
-## The aprons' leather.
-const LEATHER := Color(0.5, 0.33, 0.2)
+const STELLAR := Color(0.5, 0.72, 1.0)
+## The aprons' leather, darker than the hammers' wooden handles.
+const LEATHER := Color(0.35, 0.22, 0.14)
 ## The city's bronze armour (its body, arms and helmet).
 const BRONZE := Color(1.6, 1.15, 0.6)
 
