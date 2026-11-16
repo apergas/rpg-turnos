@@ -13,17 +13,20 @@ Fecha: 2026-11-16. Estado: spec. Cubre M-104, M-105 y M-107 del [documento maest
 | Tema | Decisión |
 |---|---|
 | Los topes de la v1 y la v2 | No cambian: 20 en la v1 y 40 en la Caravana |
-| A qué nivel acaba la v3 | La carrera del piloto automático (`brumaclara`) debe acabar entre el **Nv 54 y el 56**, con 0 o 1 derrotas. El 60 se alcanza después del final, con lo que quede por hacer |
-| Cómo se ajusta | Con la tabla de experiencia de los niveles 51 a 60. No se tocan los enemigos ni sus recompensas |
+| A qué nivel acaba la v3 | La carrera del piloto automático (`brumaclara`) debe acabar entre el **Nv 53 y el 55**, con 0 o 1 derrotas. El 60 se alcanza después del final, con más o menos una hora u hora y media más en la Fuente |
+| Cómo se ajusta | Más experiencia en la v3: cada enemigo de la v3 da un 30 % más (de 1,25 a 1,35 según lo medido). La tabla de los niveles 51 a 60 no se toca, el oro tampoco. La v3 queda un poco más fácil, y se acepta |
 | Hechizos nuevos | Ninguno entre el 51 y el 60 |
 | Niebla a los pies de la gente | No: Brumaclara ya tiene niebla baja, y en el móvil cada partícula cuenta |
 | A quién no se toca | Albor, el Coleccionista (viene de la Caravana), los compañeros y el gato Ceniza |
 
 ## 1. Nivel máximo 60 (M-104)
 
-- `Leveling.MAX_LEVEL` pasa a 60 y `EXP_TABLE` gana diez entradas, del nivel 51 al 60. La tabla sigue la curva de hoy: cada nivel pide un poco más que el anterior. Las diferencias de los últimos niveles son 2100, 2200, 2300, 2400 y 2500, así que el punto de partida sería +2600, +2700… +3500, lo que da 47200, 49900, 52700, 55600, 58600, 61700, 64900, 68200, 71600 y 75100.
-- **El ajuste.** Con la tabla de partida se mide la carrera `brumaclara` del piloto automático hasta «Juego completado (v3)».
-  - Si acaba por debajo del Nv 54 o por encima del 56, se estira o se encoge el paso de cada nivel, siempre creciente, hasta que caiga en ese margen.
+- `Leveling.MAX_LEVEL` pasa a 60 y `EXP_TABLE` gana diez entradas, del nivel 51 al 60. La tabla sigue la curva de hoy: cada nivel pide un poco más que el anterior. Las diferencias de los últimos niveles son 2100, 2200, 2300, 2400 y 2500, así que el punto de partida sería +2600, +2700… +3500, lo que da 47200, 49900, 52700, 55600, 58600, 61700, 64900, 68200, 71600 y 75100. Esta tabla es la definitiva: no se ajusta.
+- **Por qué hace falta más experiencia.** Hoy, al llegar al tope, la experiencia de más se pierde (`Leveling.clamp_exp()`), y el piloto automático deja de buscar combates en la Fuente al llegar al Nv 50. Con solo subir el tope, la carrera `brumaclara` acabaría con unos 47 900 puntos: el Nv 51. Ninguna tabla que siga creciendo llega al 53 con eso.
+- **Más experiencia en la v3.** Cada enemigo que solo sale en la v3 da un 30 % más de experiencia (`exp_reward` × 1,3, redondeado): los de la Ciénaga, las Cuevas, las Ruinas y la Fuente, el Slime de bruma que llama a otro y los cuatro jefes (la Garza de légamo, el Coloso de cuarzo, el Vigía de la bruma y el Eco de Albor). El oro no cambia. La v3 queda un poco más fácil, porque se llega a cada jefe con algo más de nivel, y se acepta.
+- **El ajuste.** Con el × 1,3 se mide la carrera `brumaclara` del piloto automático hasta «Juego completado (v3)».
+  - Debe acabar entre el **Nv 53 y el 55**. Si no, el multiplicador se mueve entre 1,25 y 1,35, nunca la tabla. Solo si con 1,35 sigue por debajo del 53 se sube el nivel desde el que el piloto automático va a por el Eco de Albor (`autoplay_boss_level` de la Fuente, hoy 50).
+  - El 60 llega después del final, con más o menos una hora u hora y media más de combates en la Fuente.
   - Las derrotas deben seguir en 0 o 1. Si el héroe llega demasiado fuerte al Eco de Albor no es un fallo, mientras el combate no dure menos de la mitad que hoy.
   - Lo medido se apunta en la skill `villaclaro-autoplay`, como en cada versión.
 - **Lo que cambia solo.** `GameState.level_cap()` devuelve `Leveling.MAX_LEVEL` en la parte 3, la validación de la partida (`SaveData`) acepta hasta `MAX_LEVEL` y el panel de depuración sube hasta `MAX_LEVEL`. Hay que revisar que ningún texto, comentario o doc diga «nivel 50» como tope de la v3: el spec de la v3 ya está en `docs/legacy/` y no se toca, pero sí los comentarios de `leveling.gd`, la guía de QA y la skill.
