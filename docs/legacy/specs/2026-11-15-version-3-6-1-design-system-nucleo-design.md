@@ -1,6 +1,6 @@
 # Versión 3.6.1: el design system en un núcleo reutilizable y la capa de Villaclaro
 
-Fecha: 2026-11-15. Estado: spec. Cubre M-98 del [documento maestro](../documento-maestro.md). Es un refactor por dentro: **el juego no cambia** y se ve exactamente igual. Va después de la [3.6.0](2026-11-15-version-3-6-0-design.md) para no mover el design system mientras las versiones anteriores lo tocan. La partida guardada no cambia.
+Fecha: 2026-11-15. Estado: spec. Cubre M-98 del [documento maestro](../../boost/documento-maestro.md). Es un refactor por dentro: **el juego no cambia** y se ve exactamente igual. Va después de la [3.6.0](2026-11-15-version-3-6-0-design.md) para no mover el design system mientras las versiones anteriores lo tocan. La partida guardada no cambia.
 
 ## Objetivo
 

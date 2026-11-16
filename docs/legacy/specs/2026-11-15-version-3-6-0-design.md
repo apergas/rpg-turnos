@@ -1,6 +1,6 @@
 # Versión 3.6.0: el compañero en el mapa, la tienda y el armero
 
-Fecha: 2026-11-15. Estado: spec. Cubre M-96, M-97, M-99 y M-100 del [documento maestro](../documento-maestro.md). Va después de la [3.5.0](2026-11-15-version-3-5-0-design.md), cuyo equipo del compañero también se ve en el mapa. La partida guardada pasa a la **versión 16**, solo por los premios del Coleccionista (M-100); no gana ni pierde campos.
+Fecha: 2026-11-15. Estado: spec. Cubre M-96, M-97, M-99 y M-100 del [documento maestro](../../boost/documento-maestro.md). Va después de la [3.5.0](2026-11-15-version-3-5-0-design.md), cuyo equipo del compañero también se ve en el mapa. La partida guardada pasa a la **versión 16**, solo por los premios del Coleccionista (M-100); no gana ni pierde campos.
 
 ## Objetivo
 

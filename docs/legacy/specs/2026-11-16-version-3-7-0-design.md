@@ -1,6 +1,6 @@
 # Versión 3.7.0: Salir, buscar actualizaciones y sin Incienso
 
-Fecha: 2026-11-16. Estado: spec. Cubre M-101, M-102 y M-103 del [documento maestro](../documento-maestro.md). Va después de la 3.6.2. La partida guardada sigue en la **versión 16**: no gana ni pierde campos.
+Fecha: 2026-11-16. Estado: spec. Cubre M-101, M-102 y M-103 del [documento maestro](../../boost/documento-maestro.md). Va después de la 3.6.2. La partida guardada sigue en la **versión 16**: no gana ni pierde campos.
 
 ## Objetivo
 
