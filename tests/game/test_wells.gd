@@ -5,7 +5,7 @@ extends GutTest
 const Fx := preload("res://tests/fixtures.gd")
 
 
-func test_a_well_fills_the_hp_and_then_stays_dry_for_ten_battles() -> void:
+func test_a_well_fills_the_hp_and_then_stays_dry_for_its_recharge_battles() -> void:
 	var state := Fx.new_state()
 	state.hero.hp = 1
 	assert_eq(Wells.drink(state, "pozo", Wells.HP), Wells.HP_TEXT)

@@ -133,6 +133,10 @@ func test_the_quests_go_to_the_save_and_back() -> void:
 func test_the_caravans_quests_go_with_their_lands_boss() -> void:
 	for id: String in CARAVAN_GONE:
 		assert_eq(QuestLog.data(id).gone, CARAVAN_GONE[id], id)
+	var before := Fx.state_in_part(2)
+	before.quests.talk(before, "caravana", "Tablón")
+	assert_eq(before.quests.stage("pieles_mono"), QuestLog.Stage.ACTIVE,
+		"offered while the Jaguar stands")
 	var state := Fx.state_in_part(2)
 	state.world_flags["jaguar_sombrio"] = true
 	state.quests.talk(state, "caravana", "Tablón")

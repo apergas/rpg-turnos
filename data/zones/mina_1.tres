@@ -53,7 +53,7 @@ npcs = [{
 }, {
 "id": "mina",
 "kind": "armory",
-"look": "MERCHANT",
+"look": "ARMORER_MINE",
 "name": "Herrero",
 "pos": Vector3(-8, 0, 12),
 "yaw": 180.0

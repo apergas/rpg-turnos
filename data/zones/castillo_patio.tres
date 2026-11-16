@@ -106,7 +106,7 @@ npcs = [{
 }, {
 "id": "castillo",
 "kind": "armory",
-"look": "SURVIVOR",
+"look": "ARMORER_CASTLE",
 "name": "Armero",
 "pos": Vector3(-10.2, 0, 14.8),
 "yaw": -150.0

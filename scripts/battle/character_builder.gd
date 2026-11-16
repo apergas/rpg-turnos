@@ -4,7 +4,8 @@ class_name CharacterBuilder extends RefCounted
 ## ActorLooks.LOOKS entry: the model turned to face -Z with its props hidden, weapons on
 ## bones, tints, head texture, cape, hair pieces, the Momia's wraps, the Armadura's ember, an
 ## aura or a corona of light, the hero's stick and, through MistDress, what Brumaclara's people
-## wear (3.8.0); and the caravan companions' gear (dress_companion(); 3.5.0). Static only,
+## wear (3.8.0) and, through SmithDress, the armeros' hammer, apron and miner's cap (3.10.0);
+## and the caravan companions' gear (dress_companion(); 3.5.0). Static only,
 ## keeps no state: it writes into the actor through its builder methods (set_model, set_aura,
 ## set_animations, add_mesh...).
 
@@ -85,6 +86,7 @@ static func build(actor: BattleActor, data: Dictionary) -> void:
 	if data.has("hair"):
 		_add_hair(actor, model, data.hair)
 	MistDress.dress(actor, model, data)
+	SmithDress.dress(actor, model, data)
 	if data.has("aura"):
 		actor.add_ghost(actor.body(), LowPoly.sphere(0.5), data.aura, FOG_AURA_ALPHA, Vector3(0, actor.top_height() * 0.45, 0),
 			Vector3(2.2, 3.2, 2.2))

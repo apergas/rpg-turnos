@@ -30,7 +30,7 @@ const ARMORY_COUNTER := "armory"
 ## are sold everywhere; the Pluma de fénix nowhere (3.6.0: chests and drops only).
 const SHOPS := {
 	VILLACLARO: {
-		"keeper": "Mercader", "armorer": "Armero",
+		"keeper": "Mercader", "armorer": "Armera",
 		"equipment": [Equipment.COPPER_SWORD, Equipment.LEATHER_MAIL, Equipment.WOODEN_SHIELD,
 			"casco_cobre"],
 		"items": [Inventory.POTION, Inventory.ANTIDOTE, Inventory.ALARM, Inventory.WING],
