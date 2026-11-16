@@ -15,25 +15,32 @@ const HEAD_GREY_MIST := preload("res://assets/characters/head_gris_bruma.png")
 const HEAD_BLOND_MIST := preload("res://assets/characters/head_rubio_bruma.png")
 const HEAD_RED_MIST := preload("res://assets/characters/head_pelirrojo_bruma.png")
 const HEAD_BROWN_MIST := preload("res://assets/characters/head_castano_bruma.png")
+## Their cloaks (3.8.0): the cape and the hood (MistDress) of each are one colour. The Vecina
+## wears no cape, so her hood has its own, from her smock.
+const ORVALLA_CLOAK := Color(0.2, 0.24, 0.4)
+const HEALER_CLOAK := Color(0.4, 0.55, 0.7)
+const VILLAGER_CLOAK := Color(0.3, 0.32, 0.42)
+const NEIGHBOUR_HOOD := Color(0.46, 0.34, 0.52)
 
 const LOOKS := {
 	# Brumaclara's people (3.0.0): Knights without helmet, like the caravan's, in the grey
 	# blues of the mist, with the Niebla's skin (3.8.0).
-	# Orvalla, the lighthouse keeper: grey hair in a bun, a long dark-blue cape.
+	# Orvalla, the lighthouse keeper: grey hair under a night-blue hood, the long cape of the
+	# same blue, the crystal pendant.
 	Look.ORVALLA: {
 		"scene": ActorLooks.KNIGHT, "scale": ActorLooks.CHARACTER_SCALE, "top": 1.9,
 		"hide": ActorLooks.PERSON_HIDE, "head_texture": HEAD_GREY_MIST,
-		"hair": {"style": "bun", "color": ActorLooks.HAIR_GREY},
+		"hood": ORVALLA_CLOAK, "pendant": true,
 		"mesh_tints": {"Knight_ArmLeft": SKIN_MIST, "Knight_ArmRight": SKIN_MIST,
 			"Knight_Body": Color(0.55, 0.7, 1.3), "Knight_LegLeft": Color(0.6, 0.6, 0.75),
 			"Knight_LegRight": Color(0.6, 0.6, 0.75)},
-		"cape": Color(0.2, 0.24, 0.4), "anims": ActorLooks.CHARACTER_ANIMS,
+		"cape": ORVALLA_CLOAK, "anims": ActorLooks.CHARACTER_ANIMS,
 	},
 	# Neblí, a child of Brumaclara who has never seen the sun.
 	Look.NEBLI: {
 		"scene": ActorLooks.KNIGHT, "scale": ActorLooks.CHARACTER_SCALE * 0.7, "top": 1.4,
 		"hide": ActorLooks.PERSON_HIDE, "head_texture": HEAD_BLOND_MIST,
-		"hair": {"style": "tail", "color": ActorLooks.HAIR_BLOND},
+		"hair": {"style": "tail", "color": ActorLooks.HAIR_BLOND}, "pendant": true,
 		"mesh_tints": {"Knight_ArmLeft": SKIN_MIST, "Knight_ArmRight": SKIN_MIST,
 			"Knight_Body": Color(0.9, 1.1, 1.6), "Knight_LegLeft": Color(0.8, 0.8, 0.9),
 			"Knight_LegRight": Color(0.8, 0.8, 0.9)},
@@ -42,15 +49,16 @@ const LOOKS := {
 	Look.MIST_VILLAGER_M: {
 		"scene": ActorLooks.KNIGHT, "scale": ActorLooks.CHARACTER_SCALE, "top": 1.9,
 		"hide": ActorLooks.PERSON_HIDE, "head_texture": HEAD_BROWN_MIST,
+		"hood": VILLAGER_CLOAK, "pendant": true,
 		"mesh_tints": {"Knight_ArmLeft": SKIN_MIST, "Knight_ArmRight": SKIN_MIST,
 			"Knight_Body": Color(0.7, 0.75, 1.0), "Knight_LegLeft": Color(0.55, 0.55, 0.65),
 			"Knight_LegRight": Color(0.55, 0.55, 0.65)},
-		"cape": Color(0.3, 0.32, 0.42), "anims": ActorLooks.CHARACTER_ANIMS,
+		"cape": VILLAGER_CLOAK, "anims": ActorLooks.CHARACTER_ANIMS,
 	},
 	Look.MIST_VILLAGER_F: {
 		"scene": ActorLooks.KNIGHT, "scale": ActorLooks.CHARACTER_SCALE, "top": 1.9,
 		"hide": ActorLooks.PERSON_HIDE, "head_texture": HEAD_RED_MIST,
-		"hair": {"style": "bun", "color": ActorLooks.HAIR_RED},
+		"hood": NEIGHBOUR_HOOD, "pendant": true,
 		"mesh_tints": {"Knight_ArmLeft": SKIN_MIST, "Knight_ArmRight": SKIN_MIST,
 			"Knight_Body": Color(1.0, 0.8, 1.3), "Knight_LegLeft": Color(0.7, 0.65, 0.8),
 			"Knight_LegRight": Color(0.7, 0.65, 0.8)},
@@ -60,18 +68,18 @@ const LOOKS := {
 	Look.MIST_HEALER: {
 		"scene": ActorLooks.KNIGHT, "scale": ActorLooks.CHARACTER_SCALE, "top": 1.9,
 		"hide": ActorLooks.PERSON_HIDE, "head_texture": HEAD_BROWN_MIST,
-		"hair": {"style": "tail", "color": ActorLooks.HAIR_BROWN},
+		"hood": HEALER_CLOAK, "pendant": true,
 		"mesh_tints": {"Knight_ArmLeft": SKIN_MIST, "Knight_ArmRight": SKIN_MIST,
 			"Knight_Body": Color(1.6, 1.7, 2.0), "Knight_LegLeft": Color(0.9, 1.0, 1.2),
 			"Knight_LegRight": Color(0.9, 1.0, 1.2)},
-		"cape": Color(0.4, 0.55, 0.7), "anims": ActorLooks.CHARACTER_ANIMS,
+		"cape": HEALER_CLOAK, "anims": ActorLooks.CHARACTER_ANIMS,
 	},
 	# Brumaclara's Herrero de cristal (the shop, from the Coloso on): dark skin, a brown beard,
 	# a violet-grey smock, no cape.
 	Look.MIST_SMITH: {
 		"scene": ActorLooks.KNIGHT, "scale": ActorLooks.CHARACTER_SCALE, "top": 1.9,
 		"hide": ActorLooks.PERSON_HIDE, "head_texture": HEAD_BROWN_MIST,
-		"hair": {"style": "beard", "color": ActorLooks.HAIR_BROWN},
+		"hair": {"style": "beard", "color": ActorLooks.HAIR_BROWN}, "pendant": true,
 		"mesh_tints": {"Knight_ArmLeft": SKIN_MIST, "Knight_ArmRight": SKIN_MIST,
 			"Knight_Body": Color(0.85, 0.72, 1.2), "Knight_LegLeft": Color(0.45, 0.42, 0.5),
 			"Knight_LegRight": Color(0.45, 0.42, 0.5)},

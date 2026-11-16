@@ -3,7 +3,8 @@ class_name CharacterBuilder extends RefCounted
 ## witch, the skeletons, the caravan's people, the companions...), from their
 ## ActorLooks.LOOKS entry: the model turned to face -Z with its props hidden, weapons on
 ## bones, tints, head texture, cape, hair pieces, the Momia's wraps, the Armadura's ember,
-## an aura or a corona of light and the hero's stick; and the caravan companions' gear
+## an aura or a corona of light, the hero's stick and, through MistDress, what Brumaclara's
+## people wear (3.8.0); and the caravan companions' gear
 ## (dress_companion(); 3.5.0). Static only, keeps no state: it writes into the actor through
 ## its builder methods (set_model, set_aura, set_animations, add_mesh...).
 
@@ -83,6 +84,7 @@ static func build(actor: BattleActor, data: Dictionary) -> void:
 		paint_cape(cape, data.cape)
 	if data.has("hair"):
 		_add_hair(actor, model, data.hair)
+	MistDress.dress(actor, model, data)
 	if data.has("aura"):
 		actor.add_ghost(actor.body(), LowPoly.sphere(0.5), data.aura, FOG_AURA_ALPHA, Vector3(0, actor.top_height() * 0.45, 0),
 			Vector3(2.2, 3.2, 2.2))
@@ -160,13 +162,13 @@ static func _add_mummy_wraps(actor: BattleActor, bones: Skeleton3D, color: Color
 			basis = Basis.from_euler(Vector3(0, 0, PI / 2)) * Basis.from_euler(
 				Vector3(deg_to_rad(tilt), 0, 0))
 		basis = basis * Basis.from_scale(Vector3(1, 1, ring[5]))
-		_hang_on_bone(actor, bones, bone, cylinder, color, Transform3D(basis, pos))
+		hang_on_bone(actor, bones, bone, cylinder, color, Transform3D(basis, pos))
 	# Loose ends: a strip from each wrist and one from the hip.
 	var strip := BoxMesh.new()
 	strip.size = Vector3(0.1, 0.5, 0.02)
 	for end: Array in [["wrist.l", Vector3(0.7, 0.86, 0.04)], ["wrist.r", Vector3(-0.7, 0.8, -0.04)],
 			["hips", Vector3(0.2, 0.3, 0.2)]]:
-		_hang_on_bone(actor, bones, end[0], strip, color * 0.92,
+		hang_on_bone(actor, bones, end[0], strip, color * 0.92,
 			Transform3D(Basis.from_euler(Vector3(0.1, 0, 0.08)), end[1]))
 	# The eyes: a dim ember in the dark of the head wrap.
 	var eyes := bones.get_node("Skeleton_Warrior_Eyes") as MeshInstance3D
@@ -178,15 +180,17 @@ static func _add_mummy_wraps(actor: BattleActor, bones: Skeleton3D, color: Color
 	eyes.set_surface_override_material(0, glow)
 
 
-## One piece of the wraps, placed by a transform in the rig's rest pose and hung from a bone.
-static func _hang_on_bone(actor: BattleActor, bones: Skeleton3D, bone: String, mesh: Mesh, color: Color,
-		rig_transform: Transform3D) -> void:
+## One piece (of the Momia's wraps, MistDress's pendant) placed by a transform in the rig's rest
+## pose and hung from a bone; returns its mesh.
+static func hang_on_bone(actor: BattleActor, bones: Skeleton3D, bone: String, mesh: Mesh,
+		color: Color, rig_transform: Transform3D) -> MeshInstance3D:
 	var slot := BoneAttachment3D.new()
 	slot.bone_name = bone
 	bones.add_child(slot)
 	actor.add_mesh(slot, mesh, color, Vector3.ZERO, 0.95)
 	var mi := slot.get_child(-1) as MeshInstance3D
 	mi.transform = bones.get_bone_global_rest(bones.find_bone(bone)).affine_inverse() * rig_transform
+	return mi
 
 
 ## Gives every mesh of an imported model copies of its materials with albedo_color
