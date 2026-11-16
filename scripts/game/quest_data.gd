@@ -21,7 +21,8 @@ enum Kind { HUNT, GATHER, DELIVER, FIND }
 ## already taken goes on whatever happens to the flag.
 @export var needs := ""
 ## A world flag after which the quest is no longer offered ("" for none): the boss of the land
-## it is done in (its land closes behind the boss). A quest already taken goes on.
+## it is done in (its land closes behind the boss). A quest already taken goes on while it can
+## be finished: once the land has closed and it is not ready, it is lost (QuestLog.is_lost()).
 @export var gone := ""
 ## Who hears the report ("" : it ends on the spot, when the goal is reached).
 @export var turn_in_zone := ""

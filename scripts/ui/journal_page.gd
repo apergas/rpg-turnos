@@ -1,9 +1,9 @@
 class_name JournalPage extends VBoxContainer
 ## The Diario of the pause menu: "Qué hacer ahora" (the story's next step), the missions in
-## progress with what each one asks, the missions finished and the Colección (story, missions,
-## bestiary, families, chests and small medals, each count on its own line). Only reads a GameState:
-## call
-## fill() each time it opens.
+## progress with what each one asks, the missions finished, the lost ones (taken, and no longer
+## possible: QuestLog.is_lost()) and the Colección (story, missions, bestiary, families, chests
+## and small medals, each count on its own line). Only reads a GameState: call fill() each time
+## it opens.
 
 ## Long lines wrap past this width.
 const TEXT_WIDTH := 720.0
@@ -17,7 +17,7 @@ func fill(state: GameState) -> void:
 	for child in get_children():
 		remove_child(child)
 		child.queue_free()
-	var journal := state.quests.journal(state.inventory)
+	var journal := state.quests.journal(state.inventory, state.world_flags)
 	_heading("Qué hacer ahora")
 	_line(state.main_goal(), UiTheme.SMALL)
 	_heading("En curso")
@@ -31,6 +31,9 @@ func fill(state: GameState) -> void:
 		_line("Ninguna todavía.", UiTheme.CAPTION)
 	else:
 		_line(", ".join(journal.done), UiTheme.NOTE)
+	if not journal.lost.is_empty():
+		_heading("Perdidas")
+		_line(", ".join(journal.lost), UiTheme.NOTE)
 	_heading("Colección")
 	for line in collection_lines(state):
 		_line(line, UiTheme.SMALL)

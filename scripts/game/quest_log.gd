@@ -93,6 +93,21 @@ func is_active(id: String) -> bool:
 	return stage(id) == Stage.ACTIVE or stage(id) == Stage.REPORT
 
 
+## True if the quest was taken and can't be finished any more: it is of an earlier part than
+## these flags' (its land was left behind), or its gone flag is the boss of a land that has
+## closed (ClosingLands) and it was not ready to hand in. Worked out, never saved: the mission
+## lines leave it out, the Diario lists it under «Perdidas» and its figure stops waiting for it.
+## talk() still pays one that is somehow ready (nothing is taken away).
+func is_lost(id: String, flags: Dictionary, inventory: Inventory) -> bool:
+	if not is_active(id):
+		return false
+	if part_of(id) < StoryState.part(flags):
+		return true
+	var quest := data(id)
+	return quest.gone != "" and flags.get(quest.gone, false) \
+		and not _is_ready(quest, inventory) and not ClosingLands.zones_of(quest.gone).is_empty()
+
+
 ## Takes the quest; a DELIVER hands over what is to be delivered.
 func accept(state: GameState, id: String) -> void:
 	_stages[id] = Stage.ACTIVE
@@ -187,6 +202,7 @@ func talk(state: GameState, zone_id: String, figure: String, short_wait := false
 	for id: String in QUESTS:
 		var quest := data(id)
 		if quest.turn_in_zone == zone_id and quest.turn_in == figure and is_active(id) \
+				and not is_lost(id, state.world_flags, state.inventory) \
 				and not quest.wait_lines.is_empty():
 			if short_wait:
 				lines.append(quest.wait_lines[0])
@@ -252,12 +268,12 @@ func hidden_figures(zone_id: String) -> Array[String]:
 	return hidden
 
 
-## One line per side quest under way, leaving room for the main goal above them
-## (GameState.current_missions() puts it first).
-func status_lines(inventory: Inventory) -> Array[String]:
+## One line per side quest under way and not lost (is_lost()), leaving room for the main goal
+## above them (GameState.current_missions() puts it first).
+func status_lines(inventory: Inventory, flags: Dictionary) -> Array[String]:
 	var lines: Array[String] = []
 	for id: String in QUESTS:
-		if is_active(id):
+		if is_active(id) and not is_lost(id, flags, inventory):
 			lines.append(STATUS_PREFIX + _status(data(id), inventory))
 	var extra := lines.size() - (MAX_STATUS_LINES - 1)
 	if extra > 0:
@@ -299,10 +315,12 @@ func done_count() -> int:
 	return done
 
 
-## For the Diario: {"active": [{"title", "text"}], "done": [titles]}.
-func journal(inventory: Inventory) -> Dictionary:
+## For the Diario: {"active": [{"title", "text"}], "done": [titles], "lost": [titles of the
+## quests taken that can't be finished any more (is_lost())]}.
+func journal(inventory: Inventory, flags: Dictionary) -> Dictionary:
 	var active: Array[Dictionary] = []
 	var done: Array[String] = []
+	var lost: Array[String] = []
 	var village_line := village.status_text()
 	if village_line != "":
 		active.append({"title": Quest.TITLE,
@@ -311,11 +329,13 @@ func journal(inventory: Inventory) -> Dictionary:
 		done.append(Quest.TITLE)
 	for id: String in QUESTS:
 		var quest := data(id)
-		if is_active(id):
+		if is_lost(id, flags, inventory):
+			lost.append(quest.title)
+		elif is_active(id):
 			active.append({"title": quest.title, "text": _journal_text(quest, inventory)})
 		elif stage(id) == Stage.DONE:
 			done.append(quest.title)
-	return {"active": active, "done": done}
+	return {"active": active, "done": done, "lost": lost}
 
 
 ## For the save: only the quests already taken.

@@ -122,7 +122,7 @@ func main_goal() -> String:
 ## the side quests. Never empty. The one place that reads them.
 func current_missions() -> Array[String]:
 	var missions: Array[String] = [main_goal()]
-	missions.append_array(quests.status_lines(inventory))
+	missions.append_array(quests.status_lines(inventory, world_flags))
 	return missions
 
 

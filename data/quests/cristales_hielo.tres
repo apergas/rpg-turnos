@@ -10,6 +10,7 @@ kind = 1
 zone = "caravana"
 giver = "Viajera"
 needs = "gusano_dunas"
+gone = "grifo_cumbre"
 turn_in_zone = "caravana"
 turn_in = "Jefe de caravana"
 target = "cristal_hielo"

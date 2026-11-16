@@ -10,6 +10,7 @@ kind = 1
 zone = "caravana"
 giver = "Tablón"
 needs = "companero"
+gone = "jaguar_sombrio"
 turn_in_zone = "caravana"
 turn_in = "Jefe de caravana"
 target = "piel_mono"
