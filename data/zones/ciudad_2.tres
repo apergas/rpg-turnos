@@ -43,6 +43,7 @@ exits = [{
 "yaw": 0.0
 }]
 npcs = [{
+"gone": "brumaclara",
 "kind": "npc",
 "lines": ["La caravana te esperará aquí. He traído sillas."],
 "look": "CARAVAN_CHIEF",
@@ -51,6 +52,7 @@ npcs = [{
 "pos": Vector3(-3, 0, -8),
 "yaw": 0.0
 }, {
+"gone": "brumaclara",
 "kind": "npc",
 "lines": ["Voy contigo."],
 "look": "BRENA",
@@ -59,6 +61,7 @@ npcs = [{
 "pos": Vector3(3, 0, -8),
 "yaw": 0.0
 }, {
+"gone": "brumaclara",
 "kind": "npc",
 "lines": ["Voy contigo."],
 "look": "TADEO",
@@ -67,6 +70,7 @@ npcs = [{
 "pos": Vector3(3, 0, -8),
 "yaw": 0.0
 }, {
+"gone": "brumaclara",
 "kind": "npc",
 "lines": ["Voy contigo."],
 "look": "ULMA",

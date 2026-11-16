@@ -16,6 +16,9 @@ const TITLE := "Los slimes de Villaclaro"
 ## Shown for a few seconds when a quest ends (QuestLog.done_text()); a finished quest is not
 ## listed any more.
 const DONE_TEXT := "Misión cumplida"
+## How its lines start: it is the main goal while it runs (GameState.main_goal()), said like
+## every other goal of the story (StoryState.GOALS).
+const GOAL_PREFIX := "Objetivo: "
 
 var stage := Stage.OFFER
 var kills := 0
@@ -81,15 +84,15 @@ func boss_available() -> bool:
 	return stage == Stage.BOSS
 
 
-## One line for the mission lists ("" once it is done).
+## One line for the mission lists, the main goal while it runs ("" once it is done).
 func status_text() -> String:
 	match stage:
 		Stage.OFFER:
-			return "Misión: habla con la Abuela Rosa"
+			return GOAL_PREFIX + "habla con la Abuela Rosa"
 		Stage.HUNT:
-			return "Misión: slimes %d / %d" % [kills, GOAL]
+			return GOAL_PREFIX + "vence a los slimes (%d/%d)" % [kills, GOAL]
 		Stage.REPORT:
-			return "Misión: vuelve con la Abuela Rosa"
+			return GOAL_PREFIX + "vuelve con la Abuela Rosa"
 		Stage.BOSS:
-			return "Misión: derrota al Rey Slime"
+			return GOAL_PREFIX + "derrota al Rey Slime"
 	return ""

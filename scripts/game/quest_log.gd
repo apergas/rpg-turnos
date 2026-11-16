@@ -93,6 +93,32 @@ func is_active(id: String) -> bool:
 	return stage(id) == Stage.ACTIVE or stage(id) == Stage.REPORT
 
 
+## True if the quest was taken and can't be finished any more. Never once the v3 is over
+## (StoryState.world_open(): every land is open again), nor while it is ready to hand in
+## (_can_hand_in()). Otherwise it is lost if it is of an earlier part than these flags' (its land
+## was left behind), or if its gone flag is the boss of a land that has closed (ClosingLands).
+## Worked out, never saved: the mission lines leave it out, the Diario lists it under «Perdidas»
+## and its figure stops waiting for it. talk() still pays one that is somehow ready (nothing is
+## taken away).
+func is_lost(id: String, flags: Dictionary, inventory: Inventory) -> bool:
+	if not is_active(id) or StoryState.world_open(flags):
+		return false
+	var quest := data(id)
+	if _can_hand_in(quest, flags, inventory):
+		return false
+	if part_of(id) < StoryState.part(flags):
+		return true
+	return quest.gone != "" and flags.get(quest.gone, false) \
+		and not ClosingLands.zones_of(quest.gone).is_empty()
+
+
+## Ready to hand in (_is_ready()) at a figure of the part these flags are in: what keeps a quest
+## from being lost (is_lost()).
+func _can_hand_in(quest: QuestData, flags: Dictionary, inventory: Inventory) -> bool:
+	return _is_ready(quest, inventory) \
+		and quest.turn_in_zone in ZoneData.zones_of_part(StoryState.part(flags))
+
+
 ## Takes the quest; a DELIVER hands over what is to be delivered.
 func accept(state: GameState, id: String) -> void:
 	_stages[id] = Stage.ACTIVE
@@ -187,6 +213,7 @@ func talk(state: GameState, zone_id: String, figure: String, short_wait := false
 	for id: String in QUESTS:
 		var quest := data(id)
 		if quest.turn_in_zone == zone_id and quest.turn_in == figure and is_active(id) \
+				and not is_lost(id, state.world_flags, state.inventory) \
 				and not quest.wait_lines.is_empty():
 			if short_wait:
 				lines.append(quest.wait_lines[0])
@@ -198,13 +225,16 @@ func talk(state: GameState, zone_id: String, figure: String, short_wait := false
 	return {}
 
 
-## True if the quest may be offered now: still OPEN, of the part of the game these flags are in
-## (StoryState.part(): the meadow of the v3 offers none of the v1's), its needs flag set and its
-## gone flag not.
+## True if the quest may be offered now: still OPEN with its needs flag set, and of the part of
+## the game these flags are in (StoryState.part(): the meadow of the v3 offers none of the v1's)
+## with its gone flag not set. Once the v3 is over (StoryState.world_open(), 3.8.2) every land is
+## open again: any quest never taken is offered, whatever its part or its gone flag.
 func _offered(quest: QuestData, flags: Dictionary) -> bool:
-	return stage(quest.id) == Stage.OPEN \
-		and ZoneData.part_of(quest.zone) == StoryState.part(flags) \
-		and (quest.needs == "" or flags.get(quest.needs, false)) \
+	if stage(quest.id) != Stage.OPEN or not (quest.needs == "" or flags.get(quest.needs, false)):
+		return false
+	if StoryState.world_open(flags):
+		return true
+	return ZoneData.part_of(quest.zone) == StoryState.part(flags) \
 		and (quest.gone == "" or not flags.get(quest.gone, false))
 
 
@@ -252,12 +282,12 @@ func hidden_figures(zone_id: String) -> Array[String]:
 	return hidden
 
 
-## One line per side quest under way, leaving room for the main goal above them
-## (GameState.current_missions() puts it first).
-func status_lines(inventory: Inventory) -> Array[String]:
+## One line per side quest under way and not lost (is_lost()), leaving room for the main goal
+## above them (GameState.current_missions() puts it first).
+func status_lines(inventory: Inventory, flags: Dictionary) -> Array[String]:
 	var lines: Array[String] = []
 	for id: String in QUESTS:
-		if is_active(id):
+		if is_active(id) and not is_lost(id, flags, inventory):
 			lines.append(STATUS_PREFIX + _status(data(id), inventory))
 	var extra := lines.size() - (MAX_STATUS_LINES - 1)
 	if extra > 0:
@@ -299,23 +329,27 @@ func done_count() -> int:
 	return done
 
 
-## For the Diario: {"active": [{"title", "text"}], "done": [titles]}.
-func journal(inventory: Inventory) -> Dictionary:
+## For the Diario: {"active": [{"title", "text"}], "done": [titles], "lost": [titles of the
+## quests taken that can't be finished any more (is_lost())]}.
+func journal(inventory: Inventory, flags: Dictionary) -> Dictionary:
 	var active: Array[Dictionary] = []
 	var done: Array[String] = []
+	var lost: Array[String] = []
 	var village_line := village.status_text()
 	if village_line != "":
 		active.append({"title": Quest.TITLE,
-			"text": _sentence(village_line.trim_prefix(STATUS_PREFIX))})
+			"text": _sentence(village_line.trim_prefix(Quest.GOAL_PREFIX))})
 	elif village.stage == Quest.Stage.DONE:
 		done.append(Quest.TITLE)
 	for id: String in QUESTS:
 		var quest := data(id)
-		if is_active(id):
+		if is_lost(id, flags, inventory):
+			lost.append(quest.title)
+		elif is_active(id):
 			active.append({"title": quest.title, "text": _journal_text(quest, inventory)})
 		elif stage(id) == Stage.DONE:
 			done.append(quest.title)
-	return {"active": active, "done": done}
+	return {"active": active, "done": done, "lost": lost}
 
 
 ## For the save: only the quests already taken.
@@ -334,7 +368,7 @@ func set_from(saved: Dictionary) -> void:
 		if not QUESTS.has(id):
 			continue
 		_stages[id] = clampi(int(saved[id].stage), Stage.OPEN, Stage.DONE) as Stage
-		_counts[id] = int(saved[id].count)
+		_counts[id] = SaveData.whole(saved[id].count)
 
 
 ## Time to go to the turn_in figure.
@@ -382,7 +416,7 @@ func _journal_text(quest: QuestData, inventory: Inventory) -> String:
 	if _is_ready(quest, inventory) and quest.report != "":
 		return _sentence(quest.report)
 	if quest.goal > 1:
-		return "%s (%d / %d)" % [quest.objective, _progress(quest, inventory), quest.goal]
+		return "%s (%d/%d)" % [quest.objective, _progress(quest, inventory), quest.goal]
 	return quest.objective
 
 

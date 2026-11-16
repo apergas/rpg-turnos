@@ -260,11 +260,16 @@ static func prize_accessory_price(shop_id: String) -> int:
 	return maxi(value, PRIZE_ACCESSORY_MIN)
 
 
-## Why state can't buy id now ("" if it can).
+## Why state can't buy id now ("" if it can). A hero with a companion takes no creature either:
+## from the part 2 on a save holds a companion or no one (SaveData._valid_caravan()), so a
+## creature bought in the part 3's Villaclaro left the slot «Partida dañada» (3.8.2; after the
+## v3 the v1's three villages have a Domadora too).
 static func buy_problem(state: GameState, id: String) -> String:
 	if is_ally(id):
+		if Allies.is_companion(state.ally_id):
+			return HAS_COMPANION
 		if Allies.is_companion(id):
-			return HAS_COMPANION if Allies.is_companion(state.ally_id) else ""
+			return ""
 		if state.ally_id == id:
 			return HAS_IT
 		if Allies.tier(state.ally_id) > Allies.tier(id):

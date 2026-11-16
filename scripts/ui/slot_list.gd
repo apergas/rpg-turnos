@@ -1,9 +1,10 @@
 class_name SlotList extends VBoxContainer
 ## The save slots on the title screen, as pages inside one of the title's windows. The list
 ## has a row per slot: "Ranura n" and, under it, SaveData.summary_line() of its save
-## (" · terminada" once the game is finished: the v1's or, in the caravan, the v2's), "Vacía" or "Partida dañada". LOAD
-## (Continuar) only lets usable saves be picked; NEW (Nueva partida) takes any slot and
-## asks first, focus on "No", when it holds a usable save. On a finished game
+## (" · terminada" once the game is finished: the v1's or, in the caravan, the v2's), "Vacía",
+## "Partida dañada" or "Partida de una versión más nueva". LOAD (Continuar) only lets usable
+## saves be picked; NEW (Nueva partida) takes any slot and asks first, focus on "No", when it
+## holds a file (one that can't be opened too). On a finished game
 ## (SaveData.is_finished()) LOAD opens a page with "Continuar" (focused) and "Volver".
 ## Emits chosen(slot) once a slot is
 ## settled and closed on Volver. back() is what Esc and a tap outside do. MANAGE (the title's
@@ -22,11 +23,16 @@ const TITLES := {Mode.LOAD: "Continuar", Mode.NEW: "Nueva partida",
 const SLOT_TEXT := "Ranura %d"
 const EMPTY_TEXT := "Vacía"
 const DAMAGED_TEXT := "Partida dañada"
+const NEWER_TEXT := "Partida de una versión más nueva"
 const FINISHED_TEXT := " · terminada"
 const NEW_CONFIRM := "La partida de la ranura %d se borrará.\n¿Empezar una nueva?"
 const NEW_YES := "Sí, empezar de nuevo"
+## NEW over a file that can't be opened (damaged, or of a newer version).
+const NEW_DAMAGED_CONFIRM := "El archivo de la ranura %d se borrará.\n¿Empezar una nueva?"
 const IMPORT_CONFIRM := "La partida de la ranura %d se sustituirá\npor la del archivo. ¿Seguir?"
 const IMPORT_YES := "Sí, sustituir"
+## Importar over a file that can't be opened.
+const IMPORT_DAMAGED_CONFIRM := "El archivo de la ranura %d se sustituirá\npor el que has elegido. ¿Seguir?"
 ## LOAD on a finished game: its page.
 const CYCLE_CONTINUE := "Continuar"
 const IMPORTED_TEXT := "Partida importada en la ranura %d."
@@ -158,7 +164,7 @@ static func _detail(info: Dictionary) -> String:
 		SaveStore.SlotKind.EMPTY:
 			return EMPTY_TEXT
 		SaveStore.SlotKind.DAMAGED:
-			return DAMAGED_TEXT
+			return NEWER_TEXT if info.get("newer", false) else DAMAGED_TEXT
 	var save: Dictionary = info.save
 	var text := SaveData.summary_line(save)
 	var story: Variant = save.get("story")
@@ -180,10 +186,11 @@ func _on_row(slot: int) -> void:
 			else:
 				chosen.emit(slot)
 		Mode.NEW:
-			if usable:
-				_ask(NEW_CONFIRM % slot, NEW_YES, func() -> void: chosen.emit(slot))
-			else:
+			if _infos[slot - 1].kind == SaveStore.SlotKind.EMPTY:
 				chosen.emit(slot)
+			else:
+				_ask((NEW_CONFIRM if usable else NEW_DAMAGED_CONFIRM) % slot, NEW_YES,
+					func() -> void: chosen.emit(slot))
 		Mode.MANAGE:
 			_sfx(SfxLibrary.ACCEPT)
 			_show_actions("")
@@ -262,10 +269,13 @@ func _on_import() -> void:
 	if not result.ok:
 		_message.text = result.text
 		return
-	if _infos[_slot - 1].kind == SaveStore.SlotKind.USABLE:
-		_ask(IMPORT_CONFIRM % _slot, IMPORT_YES, _write_import.bind(result.save))
-	else:
-		_write_import(result.save)
+	match _infos[_slot - 1].kind:
+		SaveStore.SlotKind.USABLE:
+			_ask(IMPORT_CONFIRM % _slot, IMPORT_YES, _write_import.bind(result.save))
+		SaveStore.SlotKind.DAMAGED:
+			_ask(IMPORT_DAMAGED_CONFIRM % _slot, IMPORT_YES, _write_import.bind(result.save))
+		_:
+			_write_import(result.save)
 
 
 func _write_import(save: Dictionary) -> void:

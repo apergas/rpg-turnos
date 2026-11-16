@@ -264,7 +264,7 @@ func _add_buy_row(id: String) -> void:
 			UiStyle.add_small_text(info_box, Allies.line(id))
 		if why != "":
 			info_box.add_child(_label(why, UiTheme.REASON))
-		if _state.ally_id != "" and why != Shop.HAS_IT and why != Shop.HAS_BETTER \
+		if _state.ally_id != "" and not why in [Shop.HAS_IT, Shop.HAS_BETTER, Shop.HAS_COMPANION] \
 				and not Allies.is_companion(id):
 			info_box.add_child(_label("Sustituye a %s" % Allies.display_name(_state.ally_id),
 				UiTheme.REASON))

@@ -26,6 +26,8 @@ class_name SaveData extends RefCounted
 ## MEDALS_VERSION (1.8.0) adds the small medals taken (medals, sorted), the Coleccionista's prizes
 ## given (medal_prizes), whether he was met (collector_met) and the rounds of the Partida nueva +
 ## (ng_plus; 2.7.0 removed it: always written as 0, read and ignored); an older save gets none, 0, false and 0. CARAVAN_VERSION (2.0.0) changes no field: it marks the saves that may hold the v2 (the caravan's zones, a companion, levels past 20); its `story` may carry `finished_v2` and `v2_start` (2.3.0, without changing the version: an older save has neither and loads with false and []). V3_VERSION (3.0.0) changes no field either: it marks the saves that may hold the v3 (Brumaclara's flag, its zones, levels past 40); its story may carry finished_v3 and v3_start (an older save has neither and loads with false and []). MEDAL_PRIZES_VERSION (3.6.0) changes no field: the Coleccionista's prizes (medal_prizes) count from his table of ten; an older save keeps its medals and pieces and loads with medal_prizes 0, so he gives at once every new prize its medals reach.
+## Every count and amount apply() reads goes through whole(), and the play time is capped with minf():
+## a file edited by hand can't turn them negative or past MAX_NUMBER (3.8.2, no new field).
 
 const VERSION := 16
 ## First version with the story's fields.
@@ -64,6 +66,9 @@ const HERO_FIELDS: Array[String] = ["level", "experience", "hp", "max_hp", "mp",
 ## out of an older save and adds that gold, without a notice (3.7.0: the Incienso, bought
 ## for 20 G).
 const RETIRED_ITEMS := {"incienso": 10}
+## Most a number read from a save may be (gold, items, the hero's numbers, counts, seconds of
+## play): JSON reads every number as a float, and int() turns 1e30 into a negative one.
+const MAX_NUMBER := 9999999
 
 
 static func from_state(state: GameState, player_pos: Vector3, play_time: float) -> Dictionary:
@@ -124,9 +129,9 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 	if not is_valid(data):
 		return {"valid": false, "position": Vector3.ZERO, "play_time": 0.0}
 	for field in HERO_FIELDS:
-		state.hero.set(field, int(data.hero[field]))
+		state.hero.set(field, whole(data.hero[field]))
 	Leveling.sync_skills(state.hero)
-	state.gold = int(data.gold)
+	state.gold = whole(data.gold)
 	state.loadout = Loadout.new()
 	state.loadout.set_slots(_loadout_slots(data))
 	state.bag_equipment.assign(data.get("bag", []))
@@ -134,12 +139,12 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 	state.refresh_equipment()
 	var items := {}
 	for id: String in data.inventory:
-		items[id] = int(data.inventory[id])
+		items[id] = whole(data.inventory[id])
 	state.gold += _sell_retired(items)
 	state.inventory.set_items(items)
 	state.quest.stage = clampi(int(data.quest.stage), Quest.Stage.OFFER, Quest.Stage.DONE) \
 		as Quest.Stage
-	state.quest.kills = int(data.quest.kills)
+	state.quest.kills = whole(data.quest.kills)
 	state.world_flags = {}
 	if int(data.version) >= 4:
 		for flag: String in data.flags:
@@ -160,6 +165,12 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 		state.portal_town = portal.town
 		state.portal_zone = portal.zone
 		state.portal_pos = Vector3(portal.pos[0], 0.0, portal.pos[1])
+		# A portal into a zone this save may not stand in, or into a closed land (before 3.8.2
+		# the city's stayed open into the part 3), is dropped; once the v3 is over all are open.
+		var zones := ZoneData.open_zones(state.world_flags)
+		if not (state.portal_town in zones and state.portal_zone in zones) \
+				or ClosingLands.is_closed(state.portal_zone, state.world_flags):
+			state.close_portal()
 	state.explored = {}
 	var explored: Dictionary = data.get("explored", {})
 	for id: String in explored:
@@ -169,9 +180,9 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 	if int(data.version) >= STORY_VERSION:
 		state.hero.display_name = data.name
 		state.story.set_from(data.story)
-		state.battles = int(data.stats.battles)
-		state.steps = int(data.stats.steps)
-		state.gold_earned = int(data.stats.gold)
+		state.battles = whole(data.stats.battles)
+		state.steps = whole(data.stats.steps)
+		state.gold_earned = whole(data.stats.gold)
 	else:
 		# Before the story: the default name, and the cutscenes already left behind seen.
 		state.hero.display_name = StoryState.DEFAULT_NAME
@@ -204,9 +215,9 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 	state.well_charge = {}
 	var wells: Dictionary = data.get("wells", {})
 	for id: String in wells:
-		state.well_charge[id] = int(wells[id])
+		state.well_charge[id] = whole(wells[id])
 	state.ally_id = data.get("ally", "")
-	state.metal_slime_hp = int(data.get("metal_slime_hp", 0)) \
+	state.metal_slime_hp = whole(data.get("metal_slime_hp", 0)) \
 		if int(data.version) >= METAL_SLIME_VERSION else 0
 	# A save from a Partida nueva + (before 2.7.0) may keep more than the normal max.
 	state.metal_slime_hp = mini(state.metal_slime_hp,
@@ -223,7 +234,7 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 		state.collector_met = data.collector_met
 	var pos: Array = data.position
 	return {"valid": true, "position": Vector3(pos[0], 0.0, pos[1]),
-		"play_time": float(data.play_time)}
+		"play_time": clampf(float(data.play_time), 0.0, MAX_NUMBER)}
 
 
 ## The loadout of data, slot -> id. Before RING_VERSION the one accessory goes to the slot
@@ -246,6 +257,11 @@ static func _sell_retired(items: Dictionary) -> int:
 		gold += int(items.get(id, 0)) * int(RETIRED_ITEMS[id])
 		items.erase(id)
 	return gold
+
+
+## A save's number as an int between 0 and MAX_NUMBER.
+static func whole(value: Variant) -> int:
+	return int(clampf(float(value), 0.0, MAX_NUMBER))
 
 
 ## Before the bestiary: every boss beaten, the common enemies of the zone it guarded and the
@@ -321,9 +337,10 @@ static func is_valid(data: Dictionary) -> bool:
 
 ## The parts don't mix. A save of the part 3 (Brumaclara's flag) has the caravan's flag and the
 ## Devorador beaten, and a version from V3_VERSION on; one with the caravan's flag a version
-## from CARAVAN_VERSION on. The zone and the last village are zones of its part
-## (ZoneData.zones_of_part()); nothing of a later part is in it (_valid_part_content()); the
-## ally is a companion (or none) from the part 2 on, never in the part 1.
+## from CARAVAN_VERSION on. The zone and the last village are zones of its part, or any zone
+## once the v3 is over (ZoneData.open_zones()); nothing of a later part is in it
+## (_valid_part_content()); the ally is a companion (or none) from the part 2 on, never in the
+## part 1.
 static func _valid_caravan(data: Dictionary) -> bool:
 	var flags: Array = data.flags if data.get("flags") is Array else []
 	var in_caravan := StoryState.CARAVAN_FLAG in flags
@@ -336,10 +353,13 @@ static func _valid_caravan(data: Dictionary) -> bool:
 	var part := 3 if in_v3 else (2 if in_caravan else 1)
 	if not _valid_part_content(data, part):
 		return false
-	var ally: String = data.ally if data.get("ally", "") is String else ""
+	var ally: String = data.get("ally", "") if data.get("ally", "") is String else ""
 	if Allies.is_companion(ally) != (in_caravan and ally != ""):
 		return false
-	var zones := ZoneData.zones_of_part(part)
+	var flag_set := {}
+	for flag: Variant in flags:
+		flag_set[flag] = true
+	var zones := ZoneData.open_zones(flag_set)
 	for key in ["zone", "town"]:
 		var zone_id: Variant = data.get(key, "")
 		if zone_id is String and zone_id != "" and not (zone_id in zones):
@@ -454,15 +474,23 @@ static func _valid_portal(data: Dictionary) -> bool:
 	return pos is Array and pos.size() == 2 and pos[0] is float and pos[1] is float
 
 
-## Version 5 field: zone id -> a string (cells that don't fit the zone are ignored).
+## Version 5 field: zone id -> its cells in base64 (cells that don't fit the zone are ignored).
 static func _valid_explored(data: Dictionary) -> bool:
 	var explored: Variant = data.get("explored")
 	if not explored is Dictionary:
 		return false
 	for id: Variant in explored:
-		if not (id is String and id in ZoneData.IDS and explored[id] is String):
+		if not (id is String and id in ZoneData.IDS and explored[id] is String
+				and _is_base64(explored[id])):
 			return false
 	return true
+
+
+## Text Marshalls.raw_to_base64() could have written: its letters in groups of four, "=" only
+## at the end. Anything else would make apply()'s base64_to_raw() print an error.
+static func _is_base64(text: String) -> bool:
+	return text.length() % 4 == 0 \
+		and RegEx.create_from_string("^[A-Za-z0-9+/]*={0,2}$").search(text) != null
 
 
 ## Version 3 fields: every worn id fits its slot, every bag id is equipment and every
@@ -588,7 +616,7 @@ static func summary_line(data: Dictionary) -> String:
 	var version := int(data.version)
 	var hero_name: String = data.name if version >= STORY_VERSION else StoryState.DEFAULT_NAME
 	var zone_id: String = data.zone if version >= 4 else "pradera"
-	var minutes := floori(float(data.play_time) / 60.0)
+	var minutes := floori(clampf(float(data.play_time), 0.0, MAX_NUMBER) / 60.0)
 	var text := "%s · Nv %d · %s · %d:%02d" % [hero_name, int(data.hero.level),
 		ZoneData.by_id(zone_id).short_name, floori(minutes / 60.0), minutes % 60]
 	if is_v3(data):
@@ -630,6 +658,12 @@ static func is_finished_v3(data: Dictionary) -> bool:
 	return is_v3(data) and story is Dictionary and story.get("finished_v3", false) == true
 
 
+## True if data says it was saved by a newer version of the game (a slot list's
+## "Partida de una versión más nueva", an import's IMPORT_NEWER).
+static func is_newer(data: Dictionary) -> bool:
+	return data.get("version") is float and float(data.version) > VERSION
+
+
 const IMPORT_NOT_SAVE := "Ese archivo no es una partida de Villaclaro."
 const IMPORT_NEWER := "Esa partida es de una versión más nueva del juego."
 
@@ -641,7 +675,7 @@ static func from_json(text: String) -> Dictionary:
 	if json.parse(text) != OK or not json.data is Dictionary:
 		return {"ok": false, "save": {}, "text": IMPORT_NOT_SAVE}
 	var data: Dictionary = json.data
-	if data.get("version") is float and int(data.version) > VERSION:
+	if is_newer(data):
 		return {"ok": false, "save": {}, "text": IMPORT_NEWER}
 	if not is_valid(data):
 		return {"ok": false, "save": {}, "text": IMPORT_NOT_SAVE}

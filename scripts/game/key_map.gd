@@ -20,13 +20,23 @@ const NAMES := {MOVE_UP: "Arriba", MOVE_DOWN: "Abajo", MOVE_LEFT: "Izquierda",
 ## The built-in action that follows each one.
 const UI_ACTIONS := {MOVE_UP: "ui_up", MOVE_DOWN: "ui_down", MOVE_LEFT: "ui_left",
 	MOVE_RIGHT: "ui_right", ACCEPT: "ui_accept", CANCEL: "ui_cancel"}
-## Spanish names for the keys Godot would spell in English.
+## Spanish names for the keys Godot would spell in English; a sign shows as the sign itself.
 const KEY_NAMES := {
 	KEY_UP: "Arriba", KEY_DOWN: "Abajo", KEY_LEFT: "Izquierda", KEY_RIGHT: "Derecha",
 	KEY_SPACE: "Espacio", KEY_ESCAPE: "Esc", KEY_BACKSPACE: "Retroceso", KEY_ENTER: "Intro",
 	KEY_KP_ENTER: "Intro numérico", KEY_SHIFT: "Mayús", KEY_CTRL: "Ctrl", KEY_ALT: "Alt",
 	KEY_TAB: "Tab", KEY_DELETE: "Supr", KEY_INSERT: "Insert", KEY_HOME: "Inicio", KEY_END: "Fin",
 	KEY_PAGEUP: "Re Pág", KEY_PAGEDOWN: "Av Pág", KEY_CAPSLOCK: "Bloq Mayús",
+	KEY_PERIOD: ".", KEY_COMMA: ",", KEY_SLASH: "/", KEY_BACKSLASH: "\\", KEY_SEMICOLON: ";",
+	KEY_APOSTROPHE: "'", KEY_QUOTELEFT: "`", KEY_MINUS: "-", KEY_EQUAL: "=", KEY_PLUS: "+",
+	KEY_ASTERISK: "*", KEY_LESS: "<", KEY_GREATER: ">", KEY_BRACKETLEFT: "[",
+	KEY_BRACKETRIGHT: "]", KEY_NUMBERSIGN: "#", KEY_SECTION: "§",
+	KEY_KP_0: "Num 0", KEY_KP_1: "Num 1", KEY_KP_2: "Num 2", KEY_KP_3: "Num 3", KEY_KP_4: "Num 4",
+	KEY_KP_5: "Num 5", KEY_KP_6: "Num 6", KEY_KP_7: "Num 7", KEY_KP_8: "Num 8", KEY_KP_9: "Num 9",
+	KEY_KP_ADD: "Num +", KEY_KP_SUBTRACT: "Num -", KEY_KP_MULTIPLY: "Num *",
+	KEY_KP_DIVIDE: "Num /", KEY_KP_PERIOD: "Num .", KEY_NUMLOCK: "Bloq Num",
+	KEY_SCROLLLOCK: "Bloq Despl", KEY_PRINT: "Impr Pant", KEY_PAUSE: "Pausa", KEY_MENU: "Menú",
+	KEY_META: "Windows",
 }
 const ONLY_KEY := "Esa tecla es la única de «%s»."
 

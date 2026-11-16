@@ -31,7 +31,7 @@ Si este documento contradice el código o los datos del juego, mandan el código
 |---|---|---|---|---|
 | **1. Villaclaro** (v1) | Villaclaro y las aldeas | El Amuleto del Alba se partió en tres y la niebla despertó a los monstruos: recuperar los fragmentos y vencer al Señor de la Niebla | Pradera (Rey Slime), Bosque del Norte (Bruja del bosque), Mina abandonada, 3 plantas (Golem de piedra), Castillo de la Niebla, patio y sala del trono (Señor de la Niebla, dos fases) | Escena `final`, créditos con los números de la partida y "Fin". La partida sigue en Villaclaro; en la sala del trono espera el Eco de la Niebla, reto opcional y repetible |
 | **2. La caravana** (v2) | La Caravana | Tras el final llega una caravana a Villaclaro que va hacia un portal del norte. Unirse a ella, elegir compañero y cruzar sus cuatro tierras | Jungla de Vertiente (Jaguar sombrío), Desierto de Ámbar (Gusano de las dunas), Montaña Helada, 2 plantas (Grifo de la cumbre), Ciudad abandonada, 2 plantas (Guardián de la ciudad y Devorador del portal, dos fases) | Escena `cruce` y créditos de la caravana. La partida sigue en la Caravana, con el portal quieto |
-| **3. Brumaclara** (v3) | Brumaclara, al otro lado del portal, bajo un sol negro | Devolver la luz al faro de Orvalla, recuperar el Amuleto del Alba y llegar a la Fuente de la Niebla | Ciénaga (Garza de légamo), Cuevas de cristal, 2 plantas (Coloso de cuarzo), vuelta a Villaclaro a por el amuleto, Ruinas flotantes, 2 plantas (Vigía de la bruma), La Fuente de la Niebla (Eco de Albor, dos fases) | Una pregunta y **dos finales**: "Devolver el amuleto" (Albor queda libre y guarda la Fuente) o "Acabar con el Eco" (la Niebla vuelve a su sitio). Los dos acaban bien, con Brumaclara de fiesta, los créditos de la v3 con "Fin" y los premios de las familias. La partida sigue en Brumaclara y la Fuente sigue abierta |
+| **3. Brumaclara** (v3) | Brumaclara, al otro lado del portal, bajo un sol negro | Devolver la luz al faro de Orvalla, recuperar el Amuleto del Alba y llegar a la Fuente de la Niebla | Ciénaga (Garza de légamo), Cuevas de cristal, 2 plantas (Coloso de cuarzo), vuelta a Villaclaro a por el amuleto, Ruinas flotantes, 2 plantas (Vigía de la bruma), La Fuente de la Niebla (Eco de Albor, dos fases) | Una pregunta y **dos finales**: "Devolver el amuleto" (Albor queda libre y guarda la Fuente) o "Acabar con el Eco" (la Niebla vuelve a su sitio). Los dos acaban bien, con Brumaclara de fiesta, los créditos de la v3 con "Fin" y los premios de las familias. La partida sigue en Brumaclara, la Fuente sigue abierta y todas las tierras de las tres partes vuelven a abrirse |
 
 ### Camino principal, detallado
 
@@ -62,7 +62,7 @@ Los valores salen de `data/` y `scripts/` de `develop`. Verifica los que puedas 
 ### 3.1. Título, ranuras y partida nueva
 
 - **Título** (`title_screen.gd`): "Villaclaro / La Niebla del Norte" sobre la pradera, la versión abajo a la derecha, "Nueva partida", "Continuar" (gris si no hay ninguna partida usable) y "Opciones". En un móvil Android fuera de pantalla completa, fila "Pantalla completa". En la web, si hay una versión nueva esperando, el aviso "Hay una versión nueva. Recargar".
-- **Tres ranuras** (`slot_list.gd`, `save_store.gd`): cada fila dice "Ranura n" y el nombre, nivel, lugar y tiempo ("· terminada" si la parte está acabada), "Vacía" o "Partida dañada". Una dañada no se puede continuar. "Nueva partida" pide ranura (si todas están vacías va directa a la 1) y pregunta, con el foco en "No", antes de borrar una que funciona. El viejo `save.json` pasa a la ranura 1.
+- **Tres ranuras** (`slot_list.gd`, `save_store.gd`): cada fila dice "Ranura n" y el nombre, nivel, lugar y tiempo ("· terminada" si la parte está acabada), "Vacía", "Partida dañada" o "Partida de una versión más nueva". Una dañada no se puede continuar. "Nueva partida" pide ranura (si todas están vacías va directa a la 1) y pregunta, con el foco en "No", antes de borrar una ranura con un archivo, también una dañada o más nueva. El viejo `save.json` pasa a la ranura 1.
 - **Nombre:** hasta 8 letras, tildes y ñ; vacío queda "Héroe". Luego la dificultad: Fácil (30 % menos de daño recibido, también del veneno, y 25 % más de EXP) o Normal. "Volver" de la dificultad regresa al nombre con lo escrito.
 - **Partida nueva +:** ya no existe (2.7.0). Una partida de antes que estaba en ella carga con los monstruos normales.
 
@@ -74,7 +74,7 @@ Los valores salen de `data/` y `scripts/` de `develop`. Verifica los que puedas 
 - **Slime de Metal:** raro, en la mina; mientras su misión está activa anda suelto y huye corriendo; si escapa conserva sus heridas.
 - **Señales:** tiendas amarillas, posadas rosas, pozos rojos o azules (grises si están secos), salidas verdes; escaleras, palancas, rejas y llaves en las mazmorras. Rótulos sobre Tienda, Armero, Posada, Criaturas, Coleccionista, Jefe de caravana, Orvalla y Tablón.
 - **Mapa de lo explorado:** el cuadrado pequeño (tocarlo abre la página "Mapa", con leyenda) y la línea "Mina · Planta 2". El nombre grande del lugar al llegar.
-- **Salidas cerradas:** tapadas por niebla, con un aviso, hasta vencer al jefe. Algunas salidas solo existen en cierto momento (`needs` y `gone` de `data/zones/*.tres`): en Brumaclara la salida norte lleva a la Ciénaga, luego a las Cuevas, luego a las Ruinas y luego a la Fuente; la tierra de un jefe vencido de la v2 y la v3 ya no se puede visitar, salvo la Fuente.
+- **Salidas cerradas:** tapadas por niebla, con un aviso, hasta vencer al jefe. Algunas salidas solo existen en cierto momento (`needs` y `gone` de `data/zones/*.tres`): en Brumaclara la salida norte lleva a la Ciénaga, luego a las Cuevas, luego a las Ruinas y luego a la Fuente; la tierra de un jefe vencido de la v2 y la v3 ya no se puede visitar, salvo la Fuente. Tras el final, todas las tierras de las tres partes vuelven a abrirse, cada una con su arco: en la Caravana, las cuatro tierras entre las tiendas (jungla al noroeste, desierto al suroeste, montaña al sureste, ciudad al sur) y Villaclaro al este; en Brumaclara, la Ciénaga y las Ruinas al oeste y las Cuevas al este; en la pradera, el bosque al norte y la Caravana al sur. No hay aviso antes de ningún jefe.
 - **Pozos** (`wells.gd`): uno de vida y uno de maná por mapa. Llenan del todo y se secan durante 10 combates, ganados o perdidos. Con todo lleno no se gastan.
 - **Ala de viaje:** vuela al último lugar seguro y deja un portal azul para volver una vez. No se usa dentro de un pueblo ("Ya estás en un lugar seguro"). Otra Ala sustituye al portal. El portal entre la Caravana y Brumaclara es rojizo, distinto.
 - **Compañero o criatura en el mapa** (3.6.0): anda detrás del héroe y se para cuando él se para; en las escenas se aparta y vuelve.
@@ -127,7 +127,7 @@ Curar, Curar+ y Sanación también se usan desde la pausa, página "Hechizos".
 ### 3.5. Objetos, equipo, tiendas y posadas
 
 - **Objetos** (`inventory.gd`): Poción (30 PV, 8 G), Éter (15 PM, 30 G; desde el bosque), Poción grande (100 PV, 40 G), Éter grande (40 PM, 90 G), Elixir (todo, 400 G; Brumaclara), Antídoto (10 G, solo en combate), Despertador (12 G, solo en combate), Ala de viaje (25 G). La Pluma de fénix no se vende: cae de algunos enemigos y sale de cofres. Las Semillas de fuerza, defensa y agilidad (+2 para siempre) solo vienen de misiones. **El Incienso ya no existe** (3.7.0): una partida que lo llevaba lo vende sola al cargar, 10 G cada uno, sin aviso.
-- **Página Objetos:** solo lo usable; los objetos clave, de misión y las medallas no salen ahí.
+- **Página Objetos:** solo lo usable; los objetos de misión no salen ahí, y los objetos clave y las medallas, con su texto, están en el Diario ("Objetos clave").
 - **Equipo:** seis casillas: Arma, Casco, Armadura, Escudo, Anillo y Amuleto. En "Equipo" lo que da cada pieza va en letra pequeña bajo su nombre; los totales de ATK, DEF y VEL solo están en "Estado".
 - **Tienda y armero** (3.6.0, `shop.gd`): en cada pueblo la tienda vende objetos y el armero, equipo. Los dos compran todo a mitad de precio (Palo y Ropa a 1 G; los anillos y amuletos de premio a un precio que depende de la tienda). "Vender" no enseña lo puesto ni lo que no tiene precio. Botón ×5 para objetos. Fila gris "Falta oro".
 
@@ -152,7 +152,7 @@ Curar, Curar+ y Sanación también se usan desde la pausa, página "Hechizos".
 
 ### 3.6. Compañeros y criaturas
 
-- **Criaturas** (parte 1): la Domadora de cada aldea vende una. Gallina de combate 55 G, Lobezno 190 G, Golem pequeño 490 G, Esqueleto leal 750 G. Una sola: la nueva sustituye a la anterior sin devolver oro ("Sustituye a..."); una inferior sale "Ya tienes una mejor". Combate sola, caer no acaba el combate y vuelve curada al siguiente.
+- **Criaturas** (parte 1): la Domadora de cada aldea vende una. Gallina de combate 55 G, Lobezno 190 G, Golem pequeño 490 G, Esqueleto leal 750 G. Una sola: la nueva sustituye a la anterior sin devolver oro ("Sustituye a..."); una inferior sale "Ya tienes una mejor". Con un compañero (partes 2 y 3) no vende su criatura: "Ya tienes compañero". Combate sola, caer no acaba el combate y vuelve curada al siguiente.
 - **Compañeros** (partes 2 y 3): el Jefe de caravana deja elegir gratis a Brena (guerrera), Tadeo (rápido) o Ulma (escudera). No se cambia. Crece en cada tramo y etapa y estrena una pieza de equipo (arma, casco o capa) desde el desierto, visible en combate. Comenta cada tierra nueva al llegar.
 - **Estado:** bajo el compañero o la criatura, sus PV, ATK, DEF y VEL de ese momento.
 
@@ -171,7 +171,7 @@ Curar, Curar+ y Sanación también se usan desde la pausa, página "Hechizos".
 
 ### 3.8. Misiones y Diario
 
-24 misiones secundarias (`data/quests/`), 8 por parte. No bloquean nada ni dan EXP. Marcas "!" y "?". Solo se ofrecen en su parte y nunca tras su flag `gone` (la tierra cerrada). Quien la pidió dice cuánto llevas. En la parte 2 se entregan al Jefe de caravana, que entrega todas en una charla; en la parte 3, a Orvalla.
+24 misiones secundarias (`data/quests/`), 8 por parte. No bloquean nada ni dan EXP. Marcas "!" y "?". Solo se ofrecen en su parte y nunca tras su flag `gone` (la tierra cerrada). Desde la 3.8.2 también las de la parte 2. Una tomada que ya no se puede cumplir (de una parte anterior, o de una tierra cerrada sin estar lista para entregar) es "perdida": sale de las líneas de misión y el Diario la pone en "Perdidas". Tras el final de la v3 no hay perdidas: todas se pueden acabar, y las que no tomaste, de las tres partes, se ofrecen otra vez. Quien la pidió dice cuánto llevas. En la parte 2 se entregan al Jefe de caravana, que entrega todas en una charla; en la parte 3, a Orvalla.
 
 | Parte | Misión | Empieza | Pide | Termina | Premio |
 |---|---|---|---|---|---|
@@ -202,18 +202,19 @@ Curar, Curar+ y Sanación también se usan desde la pausa, página "Hechizos".
 
 Nara, el Superviviente, el Pescador y Ceniza vuelven a su pueblo al encontrarlos.
 
-- **Objetivo principal:** siempre la primera línea; en mazmorras dice el paso siguiente (bajar, palanca, llave, jefe). En el móvil el mapa solo enseña esa línea; las demás están en la pausa. Orvalla dice el paso siguiente de la v3.
-- **Diario:** misiones activas y hechas, y "Colección" (historia, misiones, bestiario, cofres, medallas).
+- **Objetivo principal:** siempre la primera línea; en mazmorras dice el paso siguiente (bajar, palanca, llave, jefe). En el móvil el mapa solo enseña esa línea; las demás están en la pausa. Orvalla dice el paso siguiente de la v3. La misión del pueblo también dice "Objetivo:".
+- **Diario:** misiones activas, hechas y perdidas, "Objetos clave" (con su texto y las medallas) y "Colección" (historia, misiones, bestiario, cofres, medallas).
+- **Tierras que se cierran:** tras su jefe se cierran la jungla, el desierto, la montaña, la ciudad (tras el Devorador), la Ciénaga, las Cuevas y las Ruinas, sin aviso antes del combate. Un portal del Ala hacia esa tierra se cierra con ella. Tras el final de la v3 todas vuelven a abrirse, y la partida se puede guardar en cualquier zona.
 
 ### 3.9. Menú de pausa
 
-Esc, P o el botón ☰. A la izquierda, "Nombre Nv n" y las páginas Estado, Hechizos, Objetos, Equipo, Mapa, Diario y "Bestiario n/total", con las misiones debajo (en el móvil, en 3 columnas). A la derecha, Guardar, Opciones, Salir (pide confirmación: "Lo que no esté guardado se perderá."), **Buscar actualizaciones** (solo en la web) y Cerrar. Mientras está abierta, la versión ("v3.8.0") sale abajo a la derecha. Tocar fuera de una ventana la cierra o retrocede.
+Esc, P o el botón ☰. A la izquierda, "Nombre Nv n" y las páginas Estado, Hechizos, Objetos, Equipo, Mapa, Diario y "Bestiario n/total", con las misiones debajo (en el móvil, en 3 columnas). A la derecha, Guardar, Opciones, Salir (pide confirmación: "Lo que no esté guardado se perderá."), con el foco en "No", **Buscar actualizaciones** (solo en la web) y Cerrar. Mientras está abierta, la versión ("v3.8.2") sale abajo a la derecha. Tocar fuera de una ventana la cierra o retrocede. "Estado" se desplaza si no cabe (textos grandes en el móvil).
 
 ### 3.10. Guardado
 
 - **Autoguardado:** tras hablar con quien avanza la historia o una misión, cada combate ganado o perdido, cofre, cambio de zona, compra y noche en la posada. Nunca en combate. Manual en la pausa.
 - **Dónde:** en un PC, `user://save_1.json` a `save_3.json` y `options.json`; en la web, IndexedDB del navegador. La partida automática usa `save_autoplay.json` y nunca toca las ranuras; `--debug` sí escribe la ranura real.
-- **Formato** (`save_data.gd`): versión 16. Carga guardados de la versión 2 en adelante y los migra (casco, anillo y amuleto, medallas, Incienso). Rechaza uno más nuevo, uno corrupto o uno con datos imposibles: sale "Partida dañada". Una partida de la parte 2 o 3 solo puede estar en zonas de su parte. Una que pase del nivel 50 no se abre en versiones anteriores a la 3.8.0.
+- **Formato** (`save_data.gd`): versión 16. Carga guardados de la versión 2 en adelante y los migra (casco, anillo y amuleto, medallas, Incienso). Rechaza uno corrupto o uno con datos imposibles: sale "Partida dañada". Una de una versión más nueva sale "Partida de una versión más nueva". Los números de un archivo editado a mano se recortan a 9 999 999 al cargarlo; un portal hacia otra parte o una tierra cerrada se quita. En el PC se escribe en `save_n.json.tmp` y se renombra; en la web, directamente. Una partida de la parte 2 o 3 solo puede estar en zonas de su parte, o en cualquiera tras el final de la v3. Una que pase del nivel 50 no se abre en versiones anteriores a la 3.8.0.
 - **Exportar o importar** (Opciones del título): por ranura; descarga `villaclaro-ranura-N.json` (web) o pide dónde (PC). Importar pregunta antes de sustituir ("Sí, sustituir").
 
 ### 3.11. Opciones
@@ -328,7 +329,7 @@ Marca cada prueba: **OK**, **Falla** (con el ID del hallazgo), **Parcial** o **N
 | T-002 | Con partidas en varias ranuras | "Continuar" lista las tres con nombre, nivel, lugar y tiempo, o "Vacía"; carga la elegida donde estaba |
 | T-003 | Partida terminada (de cualquier parte) | " · terminada"; "Continuar" abre "Continuar" / "Volver" y carga en el sitio de después del final |
 | T-004 | "Nueva partida" con todo vacío | Va directa al nombre (ranura 1) |
-| T-005 | "Nueva partida" sobre una ranura ocupada | "La partida de la ranura n se borrará. ¿Empezar una nueva?" con el foco en "No"; "No", Esc y tocar fuera no borran nada |
+| T-005 | "Nueva partida" sobre una ranura ocupada, dañada o más nueva | La pregunta ("La partida..." o "El archivo de la ranura n se borrará") con el foco en "No"; "No", Esc y tocar fuera no borran nada |
 | T-006 | Nombre de 8 letras e intentar una novena; nombre vacío; tilde y ñ; Borrar | No acepta la novena; vacío queda "Héroe"; el nombre sale bien en diálogos y créditos |
 | T-007 | Dificultad: Fácil, Normal y "Volver" | Se aplica la elegida; "Volver" regresa al nombre con lo escrito |
 | T-008 | Prólogo | Se avanza con Enter, clic o toque; una flecha avisa cuando la frase espera; acaba con el objetivo de la Abuela Rosa |
@@ -388,7 +389,7 @@ Marca cada prueba: **OK**, **Falla** (con el ID del hallazgo), **Parcial** o **N
 | T-064 | Sanación con el héroe lleno y el compañero herido | Se puede lanzar y cura la mitad al compañero |
 | T-065 | Curar desde la pausa | Cura y gasta PM |
 | T-066 | Semillas | +2 para siempre, también tras recargar |
-| T-067 | Página Objetos | Solo lo usable; sin objetos clave, de misión ni medallas |
+| T-067 | Página Objetos | Solo lo usable; sin objetos clave, de misión ni medallas (los clave y las medallas, en el Diario) |
 | T-068 | Equipar y quitar en cada casilla (casco, anillo y amuleto incluidos) | Cambian ATK, DEF y VEL en "Estado"; la pieza se ve en el mapa y en combate; "Equipo" no repite totales |
 | T-069 | Inmunidades (Anillo antiveneno, Anillo de savia, Amuleto de hueso...) | El estado no entra y el combate lo avisa |
 
@@ -426,11 +427,11 @@ Marca cada prueba: **OK**, **Falla** (con el ID del hallazgo), **Parcial** o **N
 | T-090 | Cada una de las 24 misiones (tabla de 3.8) | "!" y "?", Diario, cuenta de lo que llevas, premio correcto, sin repetir pago |
 | T-091 | Misiones de recoger | Pieles de mono, cristales, juncos, esquirlas y setas caen mientras se piden, y el combate dice cuántas llevas |
 | T-092 | Entregar varias misiones de la v2 al Jefe, o de la v3 a Orvalla | Todas en una charla |
-| T-093 | Pasar el jefe de una tierra con una misión de ella sin tomar | Ya no se ofrece; una tomada sigue |
-| T-094 | Villaclaro en la parte 3 | No ofrece ninguna misión de la v1 |
+| T-093 | Pasar el jefe de una tierra (v2 o v3) con una misión de ella sin tomar, y con otra tomada sin acabar | La primera ya no se ofrece; la tomada sale en "Perdidas" y no en las líneas de misión; si estaba lista para entregar, se entrega. Tras el final de la v3 la primera se ofrece y la segunda se puede acabar |
+| T-094 | Villaclaro en la parte 3 | Antes del final no ofrece ninguna misión de la v1; tras el final, sí |
 | T-095 | Acabar misiones fuera de orden o tras los jefes | Nada se bloquea |
 | T-096 | Hablar con cada personaje en cada capítulo | Las frases encajan con el momento; a veces una tontería; Orvalla dice el paso siguiente |
-| T-097 | Objetivo principal en cada capítulo y mazmorra | Siempre primero y cierto; 📱 solo esa línea en el mapa |
+| T-097 | Objetivo principal en cada capítulo y mazmorra | Siempre primero, cierto y con "Objetivo:" (también la misión del pueblo); 📱 solo esa línea en el mapa |
 | T-098 | Diario, "Colección" | Historia, misiones, bestiario, cofres y medallas cuadran |
 
 ### 5.8. Parte 1: Villaclaro
@@ -483,8 +484,8 @@ Marca cada prueba: **OK**, **Falla** (con el ID del hallazgo), **Parcial** o **N
 |---|---|---|
 | T-160 | Pregunta final: "Devolver el amuleto" | Escena `final_v3_liberado`; Albor libre en la Fuente y en Brumaclara; asoma el sol; el amuleto queda en la Fuente; créditos de la v3 con "Albor guarda la Fuente" y "Fin"; premios de las familias |
 | T-161 | Pregunta final: "Acabar con el Eco" | Escena `final_v3_vencido`; créditos con "La Niebla ha vuelto a su sitio" |
-| T-162 | Esc o tocar fuera en la pregunta | Elige la última opción |
-| T-163 | Después de los créditos de la v3 | La partida sigue en Brumaclara de fiesta (según el final); Orvalla dice su frase; la Fuente sigue abierta para las misiones que queden |
+| T-162 | Esc o tocar fuera en la pregunta final | No hacen nada: hay que elegir |
+| T-163 | Después de los créditos de la v3 | La partida sigue en Brumaclara de fiesta (según el final); Orvalla dice su frase; la Fuente sigue abierta y vuelven los arcos de la Ciénaga, las Cuevas y las Ruinas |
 | T-164 | Cargar una partida terminada de cada parte | Carga después de su final, coherente |
 
 ### 5.12. Guardado
@@ -494,9 +495,9 @@ Marca cada prueba: **OK**, **Falla** (con el ID del hallazgo), **Parcial** o **N
 | T-170 | Guardar, salir, "Continuar" en cada zona | Todo conservado: posición, nivel, EXP, oro, inventario, equipo, compañero, misiones, cofres, pozos, mapa, portal, medallas, bestiario |
 | T-171 | Ida y vuelta automática (`--autoplay-save`) | `Guardado:` y `Cargado:` idénticas |
 | T-172 | Autoguardado tras cada evento de 3.10; nunca en combate | Cerrar tras cada uno y volver: el último está |
-| T-173 | `save_1.json` corrupto, vacío o de versión 17 | "Partida dañada", no se puede continuar; las otras ranuras funcionan |
-| T-174 | JSON válido con datos falsos (zona inexistente, zona de otra parte, oro negativo, PV 0, objeto inventado) | Lo rechaza como dañada o lo tolera sin romperse |
-| T-175 | Guardados antiguos (sin casco, con un solo accesorio, sin medallas, en Partida nueva +) | Cargan migrados según `save_data.gd` |
+| T-173 | `save_1.json` corrupto, vacío o de versión 17 | "Partida dañada" o "Partida de una versión más nueva", no se puede continuar; las otras ranuras funcionan |
+| T-174 | JSON válido con datos falsos (zona inexistente, zona de otra parte, oro negativo, PV 0, objeto inventado, números enormes, base64 malo, portal de otra parte) | Lo rechaza como dañada o lo tolera sin romperse: los números quedan en 9 999 999 como mucho; sin ERROR en la consola |
+| T-175 | Guardados antiguos (versiones 2 a 15: sin casco, con un solo accesorio, sin medallas, en Partida nueva +) | Cargan migrados según `save_data.gd`, sin error de script |
 | T-176 | Partida de antes de la 3.7.0 con Incienso | No queda ninguno y el oro ha subido 10 G por cada uno |
 | T-177 | Partida de la 3.7.0 parada en el Nv 50 en Brumaclara; ganar un combate | Llega al Nv 51 |
 | T-178 | Partida en el Nv 51-60 | Carga y conserva nivel y EXP |
@@ -504,16 +505,16 @@ Marca cada prueba: **OK**, **Falla** (con el ID del hallazgo), **Parcial** o **N
 | T-180 | 🌐 Exportar en el navegador e importar en la app instalada | La partida pasa entera |
 | T-181 | 📱 Cerrar la pestaña en plena escena, combate o transición | Al volver, partida coherente con el último guardado |
 | T-182 | 📱 Salir a inicio, llamada, bloquear la pantalla | Sigue; el audio se recupera |
-| T-183 | "Salir" en la pausa | Pregunta; "Sí, salir" vuelve al título; lo no guardado se pierde, lo autoguardado no |
+| T-183 | "Salir" en la pausa | Pregunta con el foco en "No"; "Sí, salir" vuelve al título; lo no guardado se pierde, lo autoguardado no |
 
 ### 5.13. Opciones y accesibilidad
 
 | ID | Prueba | Resultado esperado |
 |---|---|---|
 | T-190 | Cada opción desde el título y desde la pausa | Se aplica al momento y se conserva al reiniciar; Dificultad solo en la pausa; Exportar solo en el título; Teclas solo sin táctil |
-| T-191 | Textos grandes en todas las ventanas (también 📱) | Nada se sale ni se corta; estado y menú de combate no se montan |
+| T-191 | Textos grandes en todas las ventanas (también 📱) | Nada se sale ni se corta; "Estado" se desplaza con "Volver" a la vista; estado y menú de combate no se montan |
 | T-192 | Alto contraste | Ventanas opacas, grises más claros |
-| T-193 | Reasignar teclas; la misma tecla en dos acciones | Una tecla, una acción; ninguna acción sin tecla; nombres en castellano |
+| T-193 | Reasignar teclas; la misma tecla en dos acciones; signos y teclado numérico | Una tecla, una acción; ninguna acción sin tecla; nombres en castellano o el propio signo (".", "Num 0", "Bloq Num") |
 | T-194 | Calidad baja y alta | Baja: menos carga y sin partículas, desde el mapa siguiente |
 | T-195 | Cambiar la dificultad a mitad de partida | Se aplica al siguiente combate |
 | T-196 | Todos los menús con teclado, ratón y dedo | Cursor dorado ▶ y fondo en la fila elegida; al cambiar de página la flecha no salta un instante al sitio anterior |
@@ -569,6 +570,15 @@ Marca cada prueba: **OK**, **Falla** (con el ID del hallazgo), **Parcial** o **N
 | T-243 | Borde del héroe en el mapa (`set_map_readable()`) | Se ve en ventana o con `--write-movie`; en headless no hace nada |
 | T-244 | Fuego de antorchas y hogueras; portales (azul del Ala, rojizo del de Brumaclara) | Se ven bien y se distinguen |
 | T-245 | Música y ambiente al cambiar de zona, entrar en combate y en el pueblo | Cambios limpios; el ambiente calla en combate |
+| T-246 | Tocar a un jefe de una tierra que se cierra con cofres, bestias o misiones de ella pendientes | Sin pregunta: el combate empieza como siempre; tras él, la tierra se cierra |
+| T-247 | Acabar la v3 (cada final) y pasar por Brumaclara, la Caravana y la pradera | Vuelven los arcos de la Ciénaga, las Cuevas y las Ruinas; de la jungla, el desierto, la montaña, la ciudad y Villaclaro; del bosque y de la Caravana (al sur de la pradera). Cada uno lleva a su tierra, y al volver apareces delante de él; nada se solapa ni se atraviesa |
+| T-248 | Tras el final, en una tierra de la v1 o la v2: guardar y cargar, morir, usar el Ala, abrir cofres, cazar | La ranura sigue sana; los jefes vencidos siguen vencidos; los grupos se apartan, pero se pueden alcanzar; las misiones que estaban en "Perdidas" vuelven a las líneas y se entregan; las no tomadas tienen "!" |
+| T-249 | Abrir un portal del Ala en la ciudad, volver a la Caravana andando, vencer al Devorador | El portal ya no está; en la parte 3 la ranura sigue sana |
+| T-250 | Diario con objetos clave y medallas | "Objetos clave": cada uno con su texto; "Medalla pequeña ×n" |
+| T-251 | Importar sobre una ranura dañada | Pregunta "El archivo de la ranura n se sustituirá..." antes de sustituir |
+| T-252 | PC: guardar varias veces y mirar user:// | Ningún save_n.json.tmp queda; un .tmp sin su archivo vuelve a ser la partida al abrir el título |
+| T-253 | Domadora con un compañero (Villaclaro en la parte 3, o cualquier pueblo de la v1 tras el final) | "Ya tienes compañero"; no vende la criatura; la ranura sigue sana |
+| T-254 | Tras el final: la Abuela Rosa, el Granjero y el Tablón de Villaclaro; la segunda planta de la ciudad | Frases de después del final (los caminos limpios); en la ciudad no están el Jefe de caravana ni el compañero |
 
 ## 6. Estado conocido
 

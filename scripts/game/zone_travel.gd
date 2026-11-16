@@ -45,14 +45,16 @@ func setup(ctx: SessionContext) -> void:
 ## every caller unfreezes it once the fade is over.
 func switch_zone(zone_id: String, entry_id: String) -> void:
 	var zone := ZoneData.by_id(zone_id)
+	var open := StoryState.world_open(_ctx.state.world_flags)  # every land, after the v3 (3.8.2)
 	if zone_id == CampLook.ZONE:
 		# the land it camps by (2.4.0)
-		zone = CampLook.dressed(zone, _ctx.state.tramo(), _ctx.state.etapa())
+		zone = CampLook.dressed(zone, _ctx.state.tramo(), _ctx.state.etapa(), open)
 	elif zone_id == BrumaclaraLook.ZONE:
+		# what each boss brings back (3.0.0)
 		zone = BrumaclaraLook.dressed(zone, _ctx.state.etapa(),
-			_ctx.state.has_flag(StoryState.ALBOR_FREED))  # what each boss brings back (3.0.0)
+			_ctx.state.has_flag(StoryState.ALBOR_FREED), open)
 	elif zone_id == VillaclaroLook.ZONE:
-		zone = VillaclaroLook.dressed(zone, _ctx.state.part())  # the Niebla on its roads (3.2.0)
+		zone = VillaclaroLook.dressed(zone, _ctx.state.part(), open)  # the Niebla (3.2.0)
 	_ctx.state.zone_id = zone_id
 	var world: World = WORLD_SCENE.instantiate()
 	world.zone = zone

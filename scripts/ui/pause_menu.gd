@@ -3,13 +3,13 @@ class_name PauseMenu extends Control
 ## (mouse and touch), open it while `available`; it pauses the tree until it closes.
 ## Main page: two windows side by side. The hero's ("Héroe Nv X", the pages of
 ## HERO_PAGES and the missions under way) and the system's (Guardar, Opciones, Salir,
-## Buscar actualizaciones on the web only, Cerrar). Other pages: Estado (hero stats, gold,
-## spells), Objetos (items usable outside battle, the Ala de viaje too, and the key items,
-## each with what it does), Equipo (the six slots; choosing one lists the pieces of that
-## slot in the bag, with the comparison, and Quitar), Diario (JournalPage: what to do now,
-## the missions in progress and the finished ones), Opciones (OptionsPanel), Salir (a
-## confirmation before going back to the title) and Actualizar (a newer web version found:
-## WebUpdate answers the two update signals with show_update_line() / show_update_found()).
+## Buscar actualizaciones on the web only, Cerrar). Other pages: Estado (StatusPage, in a
+## ScrollBox), Objetos (items usable outside battle, the Ala de viaje too, each with what it
+## does; the key items are in the Diario), Equipo (the six slots; choosing one lists the
+## pieces of that slot in the bag, with the comparison, and Quitar), Diario (JournalPage),
+## Opciones (OptionsPanel), Salir (a confirmation before going back to the title, «No»
+## focused) and Actualizar (a newer web version found: WebUpdate answers the two update
+## signals with show_update_line() / show_update_found()).
 ## While open, the game's version shows in the bottom right corner. Esc goes back one page.
 ## While WebUpdate installs (set_installing()) the menu can't be closed and Salir does nothing.
 ## Keeps running while paused. Call setup() before adding it to the tree.
@@ -83,15 +83,10 @@ var _main_message: Label
 var _version_label: Label
 ## The Actualizar page's text (NEWER_TEXT).
 var _update_text: Label
-var _hp_bar: StatBar
-var _mp_bar: StatBar
-var _exp_bar: StatBar
-var _stats_label: Label
-var _gold_label: Label
-## Estado's right column: each spell, its MP and what it does.
-var _spells_box: VBoxContainer
-var _ally_label: Label
-var _ally_stats: Label  ## Under the companion's name: its numbers now, in small text.
+## Estado's content, in a ScrollBox.
+var _status: StatusPage
+## Salir's «No»: focused when the page opens (the safe answer).
+var _confirm_no: Button
 var _items_box: VBoxContainer
 var _items_message: Label
 var _equip_box: VBoxContainer
@@ -298,7 +293,7 @@ func _show_page(page: String) -> void:
 		"main":
 			_fill_main()
 		"status":
-			_fill_status()
+			_status.fill(_state)
 		"spells":
 			_set_line(_spells_message, "")
 			_fill_spells()
@@ -319,7 +314,7 @@ func _show_page(page: String) -> void:
 	if page == "options":
 		_options_panel.focus_first()
 	else:
-		var first := _first_button(_pages[page])
+		var first := _confirm_no if page == "confirm" else _first_button(_pages[page])
 		if first:
 			first.grab_focus()
 	_quiet_focus = false
@@ -341,30 +336,6 @@ func _fill_main() -> void:
 		var label := _label("")
 		_mission_box.add_child(label)
 		BattleHud.fit_label(label, line, MISSION_WIDTH)
-
-
-func _fill_status() -> void:
-	var hero := _state.hero
-	_hp_bar.show_hp(hero.hp, hero.max_hp)
-	_mp_bar.show_mp(hero.mp, hero.max_mp)
-	_exp_bar.show_exp(hero)
-	_stats_label.text = "ATK %d   DEF %d   VEL %d" % [hero.total_attack(),
-		hero.total_defense(), hero.total_speed()]
-	_gold_label.text = "%d G" % _state.gold
-	for child in _spells_box.get_children():
-		_spells_box.remove_child(child)
-		child.queue_free()
-	_spells_box.add_child(_label("Hechizos", UiTheme.TITLE))
-	for skill in hero.skills:
-		_spells_box.add_child(_label("%s  %d PM" % [skill.display_name, skill.mp_cost]))
-		UiStyle.add_small_text(_spells_box, skill.description)
-	_ally_label.visible = _state.ally_id != ""
-	_ally_stats.visible = _ally_label.visible
-	if _state.ally_id != "":
-		var id := _state.ally_id
-		BattleHud.fit_label(_ally_label, "%s: %s" % [Allies.kind_name(id), Allies.display_name(id)],
-			TEXT_WIDTH)
-		BattleHud.fit_label(_ally_stats, Allies.stats_text(id, _state.ally_step()), TEXT_WIDTH)
 
 
 ## The message lines always keep their place, so a message never moves the buttons.
@@ -629,29 +600,10 @@ func _main_window() -> VBoxContainer:
 
 func _build_status(stack: VBoxContainer) -> void:
 	var page := _page_box(stack, "status", "Estado")
-	var columns := HBoxContainer.new()
-	columns.add_theme_constant_override("separation", UiTokens.SPACE_6)
-	page.add_child(columns)
-	var left := VBoxContainer.new()
-	left.add_theme_constant_override("separation", UiTokens.SPACE_2)
-	columns.add_child(left)
-	_hp_bar = StatBar.new(StatBar.HP, STATUS_BAR_WIDTH)
-	left.add_child(_hp_bar)
-	_mp_bar = StatBar.new(StatBar.MP, STATUS_BAR_WIDTH)
-	left.add_child(_mp_bar)
-	_exp_bar = StatBar.new(StatBar.EXP, STATUS_BAR_WIDTH)
-	left.add_child(_exp_bar)
-	_stats_label = _label("")
-	left.add_child(_stats_label)
-	_gold_label = _label("", UiTheme.MONEY)
-	left.add_child(_gold_label)
-	_ally_label = _label("")
-	left.add_child(_ally_label)
-	_ally_stats = _label("", UiTheme.CAPTION)
-	left.add_child(_ally_stats)
-	_spells_box = VBoxContainer.new()
-	_spells_box.add_theme_constant_override("separation", 0)
-	columns.add_child(_spells_box)
+	var scroll := ScrollBox.new(LIST_RESERVED)
+	page.add_child(scroll)
+	_status = StatusPage.new()
+	scroll.content.add_child(_status)
 	page.add_child(_back_button())
 
 
@@ -860,9 +812,9 @@ func _build_confirm(stack: VBoxContainer) -> void:
 		if not _installing:
 			title_requested.emit())
 	page.add_child(yes)
-	var no := _button("No")
-	no.pressed.connect(_back_to_main)
-	page.add_child(no)
+	_confirm_no = _button("No")
+	_confirm_no.pressed.connect(_back_to_main)
+	page.add_child(_confirm_no)
 
 
 ## A newer version is published (show_update_found()): Actualizar goes back to the main page,

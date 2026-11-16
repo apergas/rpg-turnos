@@ -7,8 +7,9 @@ class_name TitleScreen extends Node
 ## quit_to_title it frees it and shows the title again. There are three save slots
 ## (SaveStore, SlotList): "Continuar" opens the list and only lets usable saves be picked
 ## (it is disabled when none is; a finished one offers "Continuar" or "Volver"); "Nueva partida" goes straight to the name when every slot is
-## empty (slot 1), else asks for a slot and asks again before replacing a save that works.
-## The old single save.json moves to slot 1 the first time (SaveStore.migrate_legacy()).
+## empty (slot 1), else asks for a slot and asks again before replacing any file in it.
+## The old single save.json moves to slot 1 the first time (SaveStore.migrate_legacy()); a
+## save or the options cut mid-write are mended before anything is read (recover_writes()).
 ## With `-- --autoplay` the name entry types AUTOPLAY_NAME by itself and the new game
 ## starts at once, without the menu. With `--autoplay-save` too, going back to the title
 ## loads the save straight away.
@@ -74,6 +75,7 @@ var _update_window: PanelContainer
 func _ready() -> void:
 	_autoplay = RunFlags.autoplay()
 	_autoplay_save = RunFlags.autoplay_save()
+	SaveStore.recover_writes()
 	_options = SaveStore.load_options()
 	DisplaySettings.apply(get_window(), _options)
 	if Device.is_touch():
