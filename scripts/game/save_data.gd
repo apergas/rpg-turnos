@@ -624,7 +624,8 @@ static func summary_line(data: Dictionary) -> String:
 	var hero_name: String = data.name if version >= STORY_VERSION else StoryState.DEFAULT_NAME
 	var zone_id: String = data.zone if version >= 4 else "pradera"
 	var minutes := floori(clampf(float(data.play_time), 0.0, MAX_NUMBER) / 60.0)
-	var text := "%s · Nv %d · %s · %d:%02d" % [hero_name, int(data.hero.level),
+	var level := mini(int(data.hero.level), Leveling.MAX_LEVEL)
+	var text := "%s · Nv %d · %s · %d:%02d" % [hero_name, level,
 		ZoneData.by_id(zone_id).short_name, floori(minutes / 60.0), minutes % 60]
 	if is_v3(data):
 		text += " · v3"

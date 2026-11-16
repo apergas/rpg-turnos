@@ -150,6 +150,8 @@ func test_a_hero_past_the_top_from_before_3_10_loads_at_the_top(
 	data.hero.mp += extra * Leveling.GAINS.max_mp
 	for field: String in Leveling.GAINS:
 		data.hero[field] += extra * Leveling.GAINS[field]
+	# The slot says the level it loads at.
+	assert_string_contains(SaveData.summary_line(data), "· Nv %d ·" % Leveling.MAX_LEVEL)
 	var state := Fx.new_state()
 	assert_true(SaveData.apply(state, data).valid, "level %d" % level)
 	assert_eq(state.hero.level, Leveling.MAX_LEVEL)
