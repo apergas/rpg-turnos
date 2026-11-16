@@ -165,6 +165,12 @@ static func apply(state: GameState, data: Dictionary) -> Dictionary:
 		state.portal_town = portal.town
 		state.portal_zone = portal.zone
 		state.portal_pos = Vector3(portal.pos[0], 0.0, portal.pos[1])
+		# A portal into another part's zone or a closed land (before 3.8.2 the city's stayed
+		# open into the part 3) is dropped: using it would leave the save on a zone it may not be.
+		var zones := ZoneData.zones_of_part(StoryState.part(state.world_flags))
+		if not (state.portal_town in zones and state.portal_zone in zones) \
+				or ClosingLands.is_closed(state.portal_zone, state.world_flags):
+			state.close_portal()
 	state.explored = {}
 	var explored: Dictionary = data.get("explored", {})
 	for id: String in explored:

@@ -1,6 +1,7 @@
 class_name BattleFlow extends Node
 ## Node, a piece of Game: a battle on top of the map. When the hero touches a group of
-## monsters (World.contact_enemies(), its formation) or the zone's boss, it fades to black,
+## monsters (World.contact_enemies(), its formation) or the zone's boss (first, for the boss of a
+## land that closes behind it, the question of ClosingLands.warning()), it fades to black,
 ## puts a BattleScene over the frozen map and, once it is over, plays back what happened:
 ## a victory's rewards (BattleRewards.after_victory(): gold, medals, quests, a boss's flag,
 ## notice, cutscene and first prize, the families), a fled group left half see-through, a
@@ -81,6 +82,10 @@ func on_encounter(boss: bool) -> void:
 	if _ctx.busy:
 		return
 	_ctx.set_busy.call(true)
+	if boss:
+		var agreed: bool = await _boss_agreed()
+		if not agreed:
+			return
 	battle_started.emit()
 	_ctx.state.battles += 1
 	var enemies: Array[Combatant] = []
@@ -216,3 +221,19 @@ func on_encounter(boss: bool) -> void:
 	_ctx.set_busy.call(false)
 	if after_battle.is_valid():
 		await after_battle.call(outcome)
+
+
+## The boss of a land that closes behind it, with something of it still missing: true to fight
+## now (always if ClosingLands.warning() has nothing to say; on autoplay World.ask() takes
+## "Luchar ahora"). "Volver" gives the map back (set_active() ends the encounter's wait and
+## calms the groups); the boss waits until the hero has walked away from it, as after a battle.
+func _boss_agreed() -> bool:
+	var warning := ClosingLands.warning(_ctx.state, boss_id())
+	if warning == "":
+		return true
+	var answer: int = await _ctx.world.ask(warning, ClosingLands.ANSWERS, ClosingLands.GO_BACK)
+	if answer != ClosingLands.GO_BACK:
+		return true
+	_ctx.set_busy.call(false)
+	_ctx.world.set_active(true)
+	return false

@@ -112,6 +112,17 @@ func is_lost(id: String, flags: Dictionary, inventory: Inventory) -> bool:
 		and not ClosingLands.zones_of(quest.gone).is_empty()
 
 
+## The taken quests boss_id's victory would leave lost (is_lost()): gone with that boss and not
+## ready to hand in (ClosingLands.warning() counts them).
+func lost_with(boss_id: String, inventory: Inventory) -> Array[String]:
+	var ids: Array[String] = []
+	for id: String in QUESTS:
+		var quest := data(id)
+		if is_active(id) and quest.gone == boss_id and not _is_ready(quest, inventory):
+			ids.append(id)
+	return ids
+
+
 ## Takes the quest; a DELIVER hands over what is to be delivered.
 func accept(state: GameState, id: String) -> void:
 	_stages[id] = Stage.ACTIVE

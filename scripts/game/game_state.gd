@@ -190,10 +190,13 @@ func unequip(slot: String) -> void:
 	refresh_equipment()
 
 
-## Records a defeated boss: its world flag and its key item (once). Returns the key
+## Records a defeated boss: its world flag and its key item (once), and an Ala de viaje's
+## portal into the land that closes behind it closes too (ClosingLands). Returns the key
 ## item id it gave ("" if none or already carried).
 func on_boss_defeated(boss: Combatant) -> String:
 	world_flags[boss.id] = true
+	if ClosingLands.is_closed(portal_zone, world_flags):
+		close_portal()
 	if boss.key_item == "" or boss.key_item in key_items:
 		return ""
 	key_items.append(boss.key_item)
