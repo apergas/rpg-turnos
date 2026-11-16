@@ -10,3 +10,6 @@ Idea en una o pocas frases, con las palabras del usuario.
 ```
 
 ---
+
+## 2026-11-16 · Documento del juego en PDF
+Cuando esté todo terminado (implementación, revisiones y publicaciones), un documento en PDF que sea la memoria del juego: la historia como un guion (de qué trata, el objetivo, dónde empieza y dónde acaba), todas las mecánicas y todo lo que se puede hacer, lo concreto de cada zona (misiones, enemigos...) y los detalles técnicos (motor, arquitectura, design system...). Con capturas del juego, de los enemigos, de los compañeros, etc.
