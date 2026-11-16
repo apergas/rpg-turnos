@@ -1,6 +1,6 @@
 # Versión 3.8.2: los arreglos de las dos pasadas de QA
 
-Fecha: 2026-11-16. Estado: hecho. Cubre de M-111 a M-120 del [documento maestro](../documento-maestro.md). Va después de la 3.8.1. Arregla lo que encontraron las dos pasadas de QA sobre la 3.8.0 (QA1: reglas y datos; QA2: historia, guardados, interfaz y textos). La partida guardada sigue en la **versión 16**: no gana ni pierde campos.
+Fecha: 2026-11-16. Estado: hecho. Cubre de M-111 a M-120 del [documento maestro](../../boost/documento-maestro.md). Va después de la 3.8.1. Arregla lo que encontraron las dos pasadas de QA sobre la 3.8.0 (QA1: reglas y datos; QA2: historia, guardados, interfaz y textos). La partida guardada sigue en la **versión 16**: no gana ni pierde campos.
 
 ## Objetivo
 
