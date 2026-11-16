@@ -61,7 +61,7 @@ Si algo de abajo lo contradice, manda esto.
 - **Nueva partida:** pide confirmación si hay una partida guardada que funciona. Una dañada sale como "Continuar (partida dañada)", desactivado.
 - **Objetivo:** el principal va siempre primero. En el móvil, el mapa solo enseña esa línea; las secundarias están en la pausa.
 - **Rótulos:** "Tienda", "Armero", "Posada" y "Criaturas" sobre esas figuras, y su nombre sobre el Coleccionista, el Jefe de caravana, Orvalla y el Tablón.
-- **Web:** el título avisa si hay una versión nueva esperando.
+- **Web:** el título avisa si hay una versión nueva esperando. En la pausa, «Buscar actualizaciones» (solo en la web) mira la versión publicada: si hay una más nueva, pregunta, guarda la partida y recarga el juego.
 - **Equilibrio:** ATK de Golem de barro 32, Araña 29, Espectro 26, Esqueleto guerrero 43, pícaro 40, mago 32, Golem de piedra 50, Señor de la Niebla 52 y 56 en su segunda fase. Prevalece sobre la tabla de enemigos.
 
 ### Mapa
@@ -73,7 +73,7 @@ Si algo de abajo lo contradice, manda esto.
 - **Usar cosas:** Enter o un toque. Hablar, comprar, abrir, tirar, coger, volver.
 - **Aldeas:** tienda (objetos), armero (equipo) y posada, que siempre es gratis. En la tienda y en el armero se puede vender todo. Hay cuatro: Villaclaro, aldea del bosque, refugio de la mina y campamento.
 - **Ala de viaje:** vuela a la última aldea visitada y abre un portal de ida y vuelta. No se usa dentro de una aldea. Otra Ala sustituye al portal abierto.
-- **Pausa:** Esc, P o el botón ☰. Estado, Objetos, Equipo, Diario, Guardar, Opciones, Volver al título, Cerrar.
+- **Pausa:** Esc, P o el botón ☰. Estado, Objetos, Equipo, Diario, Guardar, Opciones, Salir, Buscar actualizaciones (solo en la web), Cerrar. Mientras está abierta, la versión del juego sale abajo a la derecha. «Equipo» no repite los totales de ATK, DEF y VEL: están en «Estado». El Incienso ya no existe.
 
 ### Combate
 
@@ -184,7 +184,7 @@ No lo reportes como defecto, aunque puedes opinar en la sección de diseño:
 | Rama `develop` (`961a22f`) de `https://github.com/apergas/rpg-turnos` | El mismo código que `main`. `CLAUDE.md` describe cada archivo |
 | Rama `feature/qa-docs` del mismo repositorio | El mismo código, más este brief, el reporte de QA y sus capturas (`docs/boost/qa/`) |
 
-El service worker de la web sirve primero de la caché. **Si ya habías abierto el juego antes, puedes estar viendo la versión anterior:** cierra todas las pestañas o limpia los datos del sitio.
+El service worker de la web sirve primero de la caché. **Si ya habías abierto el juego antes, puedes estar viendo la versión anterior:** cierra todas las pestañas o limpia los datos del sitio. Desde la 3.7.0 también sirve «Buscar actualizaciones» en la pausa.
 
 ### 4.2. Ejecutar en un PC
 
@@ -430,6 +430,11 @@ Marca cada prueba: **OK**, **Falla** (con el ID del hallazgo), **Parcial** o **N
 | T-97 | Criatura en combate hasta que caiga | Ataca sola, recibe golpes, caer no acaba el combate, vuelve curada al siguiente |
 | T-98 | 📱 Combate con textos grandes y criatura | Estado y menú no se montan |
 | T-99 | Web: publicar otra versión con el juego ya abierto y recargar | Aviso "Hay una versión nueva. Recargar"; al pulsarlo carga la nueva |
+| T-100 | Web: pausa → «Buscar actualizaciones» con la última versión publicada | «Ya tienes la versión más reciente (vX.Y.Z).» y los botones no se mueven |
+| T-101 | Web: publicar otra versión con el juego abierto; pausa → «Buscar actualizaciones» → «Actualizar» | Se guarda, se recarga y la partida sigue desde su ranura con la versión nueva |
+| T-102 | Web sin conexión: pausa → «Buscar actualizaciones» | «No se ha podido comprobar. Mira tu conexión.» y el juego sigue |
+| T-103 | PC: la pausa | No sale «Buscar actualizaciones»; la versión abajo a la derecha en todas las páginas, sin tapar ninguna ventana |
+| T-104 | Cargar una partida de antes de la 3.7.0 que lleve Incienso | No queda ninguno y el oro ha subido 10 G por cada uno |
 
 ## 8. Pruebas exploratorias
 
