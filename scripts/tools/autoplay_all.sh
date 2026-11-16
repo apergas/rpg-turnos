@@ -15,6 +15,9 @@
 # once (3). AUTOPLAY_DIR: where each run's folder goes (default a new folder under the temp
 # folder; if given it must be missing or empty). EXPECTED: another expected file (to try a
 # failure on a copy). jq reads the JSON when present; without it, sed reads it line by line.
+# A relative GODOT, EXPECTED or AUTOPLAY_DIR is resolved from the repo root (the script moves
+# there first). Supported: Git Bash on Windows and Linux. Not macOS: there user:// is elsewhere
+# (~/Library/Application Support), so the scratch folders would not keep the real save safe.
 set -u
 
 cd "$(dirname "$0")/../.." || exit 2
@@ -66,7 +69,7 @@ run_objects() {
 # A top-level number of the file.
 top_number() {
 	if [ "$have_jq" = 1 ]; then
-		jq -r ".$1" "$EXPECTED" | tr -d '\r'
+		jq -r ".$1" "$EXPECTED" | tr -d '\r' | grep -E '^[0-9]+$'
 	else
 		tr -d '\r' < "$EXPECTED" | sed -n "s/^[[:space:]]*\"$1\": *\([0-9][0-9]*\).*/\1/p"
 	fi
@@ -106,6 +109,12 @@ while IFS= read -r obj; do
 		[ -n "$(str_field "$obj" "$key")$(num_field "$obj" "$key")" ] \
 			|| fail_usage "a la carrera ${name:-?} le falta $key"
 	done
+	if [ -z "$(num_field "$obj" save_version)" ]; then
+		for key in level_min level_max defeats_max; do
+			[ -n "$(num_field "$obj" "$key")" ] || fail_usage "a la carrera $name le falta $key"
+		done
+		[ -n "$(str_field "$obj" play_time)" ] || fail_usage "a la carrera $name le falta play_time"
+	fi
 	names+=("$name")
 	objects+=("$obj")
 done < <(run_objects)
