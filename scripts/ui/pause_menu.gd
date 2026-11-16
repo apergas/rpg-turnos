@@ -11,6 +11,7 @@ class_name PauseMenu extends Control
 ## confirmation before going back to the title) and Actualizar (a newer web version found:
 ## WebUpdate answers the two update signals with show_update_line() / show_update_found()).
 ## While open, the game's version shows in the bottom right corner. Esc goes back one page.
+## While WebUpdate installs (set_installing()) the menu can't be closed and Salir does nothing.
 ## Keeps running while paused. Call setup() before adding it to the tree.
 
 signal save_requested
@@ -53,6 +54,8 @@ const TOUR_STEP := 1.5
 ## The Actualizar page's text: the version published (WebUpdate, show_update_found()).
 const NEWER_TEXT := "Hay una versión nueva: v%s. Se guardará la partida y el juego se recargará."
 
+## What the menu says when the game couldn't be saved (WebUpdate says it too).
+const SAVE_FAILED := "No se pudo guardar."
 ## Says whether the hero is inside a village now (an Ala can't be used there). Set by
 ## Game.
 var in_village: Callable
@@ -68,6 +71,7 @@ var _state: GameState
 var _options: GameOptions
 var _audio: AudioDirector
 var _menu_button: Button
+var _installing := false
 var _shade: ColorRect
 var _window: PanelContainer
 var _pages: Dictionary = {}
@@ -192,7 +196,7 @@ func open_map() -> void:
 
 
 func close() -> void:
-	if not is_open():
+	if not is_open() or _installing:
 		return
 	_page = ""
 	_shade.hide()
@@ -205,9 +209,15 @@ func close() -> void:
 	open_changed.emit(false)
 
 
+## WebUpdate's download is under way (it reloads when done): the menu stays open and Salir
+## does nothing, so nothing played after the save is lost.
+func set_installing(on: bool) -> void:
+	_installing = on
+
+
 ## Game calls it after save_requested with whether the file was written.
 func show_save_result(ok: bool) -> void:
-	_set_line(_main_message, "Partida guardada." if ok else "No se pudo guardar.")
+	_set_line(_main_message, "Partida guardada." if ok else SAVE_FAILED)
 	_sfx(SfxLibrary.SAVE if ok else SfxLibrary.CANCEL)
 
 
@@ -846,7 +856,9 @@ func _build_confirm(stack: VBoxContainer) -> void:
 	var page := _page_box(stack, "confirm", "Salir")
 	page.add_child(_label("Lo que no esté guardado se perderá."))
 	var yes := _button("Sí, salir")
-	yes.pressed.connect(func() -> void: title_requested.emit())
+	yes.pressed.connect(func() -> void:
+		if not _installing:
+			title_requested.emit())
 	page.add_child(yes)
 	var no := _button("No")
 	no.pressed.connect(_back_to_main)

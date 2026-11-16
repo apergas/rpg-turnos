@@ -396,7 +396,6 @@ func set_monsters_shy(on: bool) -> void:
 	_monsters.set_shy(on)
 
 
-
 ## Autoplay: hunt the groups (Game: while the hero is below the zone's autoplay_boss_level).
 func set_autoplay_hunt(on: bool) -> void:
 	_hunter.set_on(on)
