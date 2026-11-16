@@ -9,7 +9,9 @@ class_name WebUpdate extends Node
 ##   which pages.yml writes next to the page, with an HTTPRequest child, and GameVersion.check()
 ##   compares. install() saves like «Guardar», clears this game's caches (cache_prefix()),
 ##   unregisters this page's service worker, downloads the new files past the HTTP cache and
-##   reloads; the engine installs the worker again on start. Never stores Game or a World.
+##   reloads; the engine installs the worker again on start. The pause menu is locked open
+##   (PauseMenu.set_installing()) from the save until the reload or a failure, so nothing
+##   played meanwhile is lost. Never stores Game or a World.
 
 ## A line for the pause menu's message (PauseMenu.show_update_line()).
 signal reported(text: String)
@@ -24,7 +26,6 @@ const LATEST_TEXT := "Ya tienes la versión más reciente (v%s)."
 const UNKNOWN_TEXT := "No se ha podido comprobar. Mira tu conexión."
 const DOWNLOADING_TEXT := "Descargando la versión nueva…"
 const DOWNLOAD_FAILED_TEXT := "No se ha podido descargar. Inténtalo más tarde."
-const SAVE_FAILED_TEXT := "No se pudo guardar."
 ## The export names its worker's caches after the first CACHE_NAME_LENGTH characters of
 ## application/config/name: "Villaclaro: la N-sw-cache-<build>". The origin
 ## (apergas.github.io) is shared with other projects: only these are ever deleted.
@@ -104,6 +105,7 @@ const INSTALL_JS := """
 """
 
 var _ctx: SessionContext
+var _pause: PauseMenu
 var _request: HTTPRequest
 var _checking := false
 var _installing := false
@@ -113,6 +115,7 @@ var _install_done: JavaScriptObject
 
 func setup(ctx: SessionContext, pause: PauseMenu) -> void:
 	_ctx = ctx
+	_pause = pause
 	pause.update_check_requested.connect(check)
 	pause.update_requested.connect(install)
 	reported.connect(pause.show_update_line)
@@ -199,9 +202,10 @@ func install() -> void:
 		return
 	var saved: Dictionary = _ctx.autosave.call(false)
 	if saved.is_empty():
-		reported.emit(SAVE_FAILED_TEXT)
+		reported.emit(PauseMenu.SAVE_FAILED)
 		return
 	_installing = true
+	_pause.set_installing(true)
 	reported.emit(DOWNLOADING_TEXT)
 	if _install_done == null:
 		_install_done = JavaScriptBridge.create_callback(_on_install_done)
@@ -216,4 +220,5 @@ func _on_install_done(args: Array) -> void:
 	if not args.is_empty() and bool(args[0]):
 		JavaScriptBridge.eval("location.reload();", true)
 		return
+	_pause.set_installing(false)
 	reported.emit(DOWNLOAD_FAILED_TEXT)
