@@ -30,6 +30,7 @@ Fecha: 2026-11-16. Estado: spec. Cubre M-104, M-105 y M-107 del [documento maest
   - Las derrotas deben seguir en 0 o 1. Si el héroe llega demasiado fuerte al Eco de Albor no es un fallo, mientras el combate no dure menos de la mitad que hoy.
   - Lo medido se apunta en la skill `villaclaro-autoplay`, como en cada versión.
 - **Lo que cambia solo.** `GameState.level_cap()` devuelve `Leveling.MAX_LEVEL` en la parte 3, la validación de la partida (`SaveData`) acepta hasta `MAX_LEVEL` y el panel de depuración sube hasta `MAX_LEVEL`. Hay que revisar que ningún texto, comentario o doc diga «nivel 50» como tope de la v3: el spec de la v3 ya está en `docs/legacy/` y no se toca, pero sí los comentarios de `leveling.gd`, la guía de QA y la skill.
+- **Cómo quedó:** el multiplicador final es × 1,35 y el `exit_level` de la Fuente es 56, así que sus monstruos siguen combatiendo hasta el Nv 60.
 - Las ventanas «Estado» y el Diario muestran la experiencia que falta para el siguiente nivel con `exp_for_next()`, que ya sabe del tope: no cambian.
 
 ## 2. La gente de Brumaclara (M-105)
@@ -66,6 +67,10 @@ Toda la gente de Brumaclara se reconoce de lejos, y cada uno sigue siendo quien 
 - **Dónde va el código:** los aspectos nuevos y sus constantes van en `ActorLooksV3`, porque `actor_looks.gd` ya está en su tope de líneas. Las piezas las monta `CharacterBuilder`. Si con ellas pasa de ~320 líneas, se separan en un constructor propio (por ejemplo `MistDress`), siguiendo la skill `structuring-godot-code`. `brumaclara.tres` cambia el `look` del Tendero por el suyo.
 - **El rótulo con el nombre** se queda donde está, en `top`. La capucha no puede subirlo ni taparlo.
 
+### Cómo quedó
+
+La capucha es una cogulla lisa (16 lados) con una banda de borde más clara alrededor de la cara, una punta suave por detrás y un pliegue sobre la frente.
+
 ## 3. El aura del nivel máximo (M-107)
 
 ### Lo que ve el jugador
@@ -86,6 +91,10 @@ Toda la gente de Brumaclara se reconoce de lejos, y cada uno sigue siendo quien 
 - **Las chispas:** `CPUParticles3D`, que va igual en la web, con pocas partículas (unas 12 a la vez). En el móvil, menos, siguiendo lo que `DisplaySettings` ya rebaja.
 - **El color:** dorado pálido, el mismo en el mapa y en combate. Los colores del 3D no van a `UiTokens`, que es solo de la interfaz.
 - **Cuándo se pone:** cualquiera que tenga el estado del héroe lo sabe con una regla pura, por ejemplo `Leveling.at_max(hero)`. Al subir al 60 en combate, el destello va después del evento `LEVEL_UP` de ese nivel.
+
+### Cómo quedó
+
+El color es un dorado de llama cálida, `Color(1.0, 0.6, 0.2)`. La envoltura es una columna más ancha en los pies que sube hasta 1,5 veces la altura del héroe y se rompe en lenguas de ruido que ascienden. Tiene 20 chispas (10 en el móvil y ninguna con la calidad baja) que suben por encima de la cabeza.
 
 ## Verificación
 
