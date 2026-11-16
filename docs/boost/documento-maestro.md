@@ -78,3 +78,13 @@ Lo que se ha hecho y lo que queda por hacer en Villaclaro. Una fila por versión
 | 3.8.1 · M-108 | El piloto automático ya no se cuelga: eran dos bucles de lógica del piloto, no Jolt, cuyo aviso sigue siendo ruido conocido ([spec](../legacy/specs/2026-11-16-version-3-8-1-design.md) · [plan](../legacy/plans/2026-11-16-version-3-8-1.md)) | hecho |
 | 3.8.1 · M-109 | Un lanzador que juega todas las carreras del piloto automático y da OK o FALLO ([plan](../legacy/plans/2026-11-16-version-3-8-1.md)) | hecho |
 | 3.8.1 · M-110 | GitHub Actions juega esas carreras en cada subida a `develop` | hecho |
+| 3.8.2 · M-111 | Antes del jefe de una tierra que se cierra para siempre, un aviso si aún te falta algo de ella (cofres, bestias, misiones), con «Luchar ahora» o «Volver»; el portal del Ala hacia esa tierra se cierra con ella ([spec](specs/2026-11-16-version-3-8-2-design.md) · [plan](plans/2026-11-16-version-3-8-2.md)) | plan |
+| 3.8.2 · M-112 | Las misiones de la Caravana dejan de ofrecerse con su tierra cerrada, y las tomadas que ya no se pueden cumplir salen de las líneas de misión y pasan a «Perdidas» en el Diario | plan |
+| 3.8.2 · M-113 | En la pregunta final de la v3, Esc y tocar fuera no eligen nada: hay que escoger | plan |
+| 3.8.2 · M-114 | Las partidas de la 1.0 y anteriores (guardado 2 a 8) vuelven a cargar | plan |
+| 3.8.2 · M-115 | Las ranuras dicen «Partida de una versión más nueva» y preguntan antes de borrar o sustituir cualquier archivo, también uno dañado | plan |
+| 3.8.2 · M-116 | Guardado más seguro: archivo temporal renombrado (fuera de la web) y números de un archivo editado a mano recortados | plan |
+| 3.8.2 · M-117 | «Estado» se desplaza con textos grandes en el móvil | plan |
+| 3.8.2 · M-118 | «Salir» empieza en «No» | plan |
+| 3.8.2 · M-119 | Los objetos clave y las medallas, con su texto, en el Diario | plan |
+| 3.8.2 · M-120 | Textos: cifras «n/m», «Objetivo:» en la misión del pueblo, teclas en castellano, la pregunta de partir, tablones sin mayúsculas y Kenney en los créditos de la parte 1 | plan |
