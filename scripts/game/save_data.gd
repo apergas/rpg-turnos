@@ -61,7 +61,8 @@ const OLDEST_VERSION := 2
 const HERO_FIELDS: Array[String] = ["level", "experience", "hp", "max_hp", "mp", "max_mp",
 	"attack", "defense", "speed"]
 ## Items the game no longer has, with what Shop.sell_price() paid for one: apply() takes them
-## out of an older save and adds that gold, without a notice (3.7.0: the Incienso, 20 G).
+## out of an older save and adds that gold, without a notice (3.7.0: the Incienso, bought
+## for 20 G).
 const RETIRED_ITEMS := {"incienso": 10}
 
 
