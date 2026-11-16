@@ -105,7 +105,8 @@ static func set_level(hero: Combatant, level: int, base_skills: Array[Skill]) ->
 
 
 ## Steps the hero to level, one level of GAINS up or down at a time (current HP and MP go along,
-## as on a level up), then keeps the HP within 1..max and the MP within 0..max.
+## as on a level up), then keeps every stat at 1 or more (a hand-edited save with small numbers
+## can't go negative) and the HP within 1..max and the MP within 0..max.
 static func _walk_to(hero: Combatant, level: int) -> void:
 	while hero.level != level:
 		var step := 1 if level > hero.level else -1
@@ -117,6 +118,8 @@ static func _walk_to(hero: Combatant, level: int) -> void:
 		hero.attack += GAINS.attack * step
 		hero.defense += GAINS.defense * step
 		hero.speed += GAINS.speed * step
+	for field: String in GAINS:
+		hero.set(field, maxi(hero.get(field), 1))
 	hero.hp = clampi(hero.hp, 1, hero.max_hp)
 	hero.mp = clampi(hero.mp, 0, hero.max_mp)
 

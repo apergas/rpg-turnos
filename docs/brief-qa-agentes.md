@@ -231,9 +231,11 @@ Música y Efectos (deslizadores), Velocidad del texto (Lenta, Normal, Rápida), 
 
 La gente de Brumaclara tiene la piel de la Niebla (gris azulado), un cristal pequeño que brilla en el pecho y, salvo Neblí y el Herrero, capucha. Orvalla lleva un farol encendido, la Curandera un cuenco de agua que brilla, el Herrero de cristal brazos de cristal, y el Tendero su capucha verde (ya no se parece al Vecino). El pueblo cambia por etapa (forja, ventanas, guirnaldas, estatua de Albor) y en el epílogo según el final; el sol negro deja asomar el sol si Albor queda libre.
 
-Cada armero viste como su lugar (3.10.0) y lleva un martillo del metal que vende: la Armera de Villaclaro es una bruja (sombrero de pico, túnica gris azul de noche, cobre); el del bosque, un leñador (verde, capa de musgo, delantal, hierro); el Herrero de la mina, un minero con gorro de latón y lámpara (acero); el del castillo, el armero del rey (armadura, yelmo, capa carmesí, platino); el de la Caravana, uno por tramo (jungla: jade; desierto, con capucha: oricalco; montaña, con pieles y capucha blanca: adamantita; ciudad y después: bronce, yelmo y estelar); el de Brumaclara, el Herrero de cristal.
+### 3.14. Los armeros (3.10.0)
 
-### 3.14. Es así a propósito
+Cada armero viste como su lugar y lleva un martillo del metal que vende (todos menos el Herrero de cristal de Brumaclara, que no lleva martillo y sigue como estaba): la Armera de Villaclaro es una bruja (sombrero de pico, túnica gris azul de noche, cobre); el del bosque, un leñador (verde, capa de musgo, delantal, hierro); el Herrero de la mina, un minero con gorro de latón y lámpara (acero); el del castillo, el armero del rey (armadura, yelmo, capa carmesí, platino); el de la Caravana, uno por tramo (jungla: jade; desierto, con capucha: oricalco; montaña, con pieles y capucha blanca: adamantita; ciudad y después: bronce, yelmo y estelar); el de Brumaclara, el Herrero de cristal, sin martillo.
+
+### 3.15. Es así a propósito
 
 No lo reportes como defecto, aunque puedes opinar en "Opiniones de diseño": posadas gratis; solo español; la vertical del móvil no se juega; música y efectos sintetizados; modelos KayKit y Kenney; al perder se conservan las misiones; de los jefes no se huye; el móvil usa menos resolución 3D; la tierra de un jefe vencido de las partes 2 y 3 se cierra; el mundo de la parte 1 queda atrás al partir con la caravana (solo se vuelve a Villaclaro en la parte 3, a por el amuleto); «Buscar actualizaciones» no existe en Windows y Linux.
 

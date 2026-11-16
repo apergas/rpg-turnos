@@ -145,7 +145,7 @@ func test_a_hero_past_the_top_from_before_3_10_loads_at_the_top(
 	var data := at_top.duplicate(true)
 	var extra: int = level - Leveling.MAX_LEVEL
 	data.hero.level = float(level)
-	data.hero.experience = 75100.0
+	data.hero.experience = 75100.0  # the old level-60 EXP (EXP_TABLE of 3.8.0 to 3.9.0)
 	data.hero.hp += extra * Leveling.GAINS.max_hp
 	data.hero.mp += extra * Leveling.GAINS.max_mp
 	for field: String in Leveling.GAINS:

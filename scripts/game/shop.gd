@@ -181,6 +181,14 @@ static func keeper(shop_id: String, counter := ITEMS_COUNTER) -> String:
 	return shop.get("armorer", shop.keeper) if counter == ARMORY_COUNTER else shop.keeper
 
 
+## The buy page's title: "Tienda", or the armero's word as its keeper says it ("Armera" in
+## Villaclaro, "Armero" everywhere else, also for the Herrero de cristal).
+static func counter_title(shop_id: String, counter := ITEMS_COUNTER) -> String:
+	if counter != ARMORY_COUNTER:
+		return "Tienda"
+	return "Armera" if keeper(shop_id, counter) == "Armera" else "Armero"
+
+
 static func sells_ally(shop_id: String) -> bool:
 	# The Caravana's and the Herrero's figure ids (CARAVAN_SHOP, SMITH_SHOP) are not keys.
 	return SHOPS.has(shop_id) and (SHOPS[shop_id].has("ally") or SHOPS[shop_id].has("allies"))
