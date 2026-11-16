@@ -12,7 +12,7 @@ const HEAD_SLOT := "Rig/Skeleton3D/head"
 ## The hood, in the head bone's space (the Knight faces +Z there, before the turn): a smooth
 ## cowl (HOOD_SEGMENTS sides, finer than the hair pieces) whose axis points forward (HOOD_TURN
 ## lays the lathe's Y along +Z), closed at the back, covering the top, the sides and the back of
-## the head down to the neck and open at the front, where a band (the rim, HOOD_RIM_LIGHTEN
+## the head down to the neck and open at the front, where a band along its edge (the rim, HOOD_RIM_LIGHTEN
 ## lighter) frames the face; a soft point (the tip) leans back off the top; a darker flap closes
 ## the nape; a brow fold over the forehead hides the head's own fringe. Tuned with close frames;
 ## its top stays below the look's "top", where the name sign hangs.
@@ -23,14 +23,14 @@ const HOOD_POS := Vector3(0, 0.56, -0.55)
 const HOOD_TURN := Vector3(90, 0, 0)
 const HOOD_SCALE := Vector3(1.0, 1.0, 0.95)
 const HOOD_RIM_LIGHTEN := 0.2
-const RIM_AT := Vector3(0, 0.5, 0.45)
-const RIM_RADIUS := 0.54
-const RIM_THICKNESS := 0.09
-const RIM_SCALE := Vector3(1.0, 1.0, 0.9)
+## The rim: a thin band along the cowl's last stretch, a hair outside it and ending in a lip, on
+## the same axis, so it is the opening's own edge.
+const RIM_PROFILE: Array[Vector2] = [Vector2(0.617, 0.86), Vector2(0.552, 1.0),
+	Vector2(0.49, 1.0)]
 const BROW_PROFILE: Array[Vector2] = [Vector2(0, 0.0), Vector2(0.52, 0.06), Vector2(0.62, 0.4),
 	Vector2(0.56, 0.75), Vector2(0.36, 0.98), Vector2(0, 1.05)]
-const BROW_POS := Vector3(0, 0.7, -0.02)
-const BROW_SCALE := Vector3(0.92, 0.34, 0.97)
+const BROW_POS := Vector3(0, 0.66, -0.02)
+const BROW_SCALE := Vector3(0.92, 0.5, 0.97)
 const NAPE_PROFILE: Array[Vector2] = [Vector2(0, 0.0), Vector2(0.5, 0.12), Vector2(0.44, 0.7),
 	Vector2(0, 1.0)]
 const NAPE_POS := Vector3(0, 0.22, -0.4)
@@ -71,15 +71,7 @@ static func _add_hood(actor: BattleActor, head: Node3D, color: Color) -> void:
 	actor.add_blob(head, NAPE_PROFILE, HOOD_SEGMENTS, color.darkened(NAPE_DARKEN), NAPE_POS,
 		NAPE_TURN, NAPE_SCALE)
 	actor.add_blob(head, TIP_PROFILE, HOOD_SEGMENTS, color, TIP_POS, TIP_TURN)
-	var ring := TorusMesh.new()
-	ring.inner_radius = RIM_RADIUS - RIM_THICKNESS
-	ring.outer_radius = RIM_RADIUS
-	ring.rings = HOOD_SEGMENTS
-	ring.ring_segments = 6
-	actor.add_mesh(head, ring, rim, RIM_AT)
-	var band := head.get_child(-1) as MeshInstance3D
-	band.rotation_degrees = HOOD_TURN
-	band.scale = RIM_SCALE
+	actor.add_blob(head, RIM_PROFILE, HOOD_SEGMENTS, rim, HOOD_POS, HOOD_TURN, HOOD_SCALE)
 
 
 static func _add_pendant(actor: BattleActor, bones: Skeleton3D) -> void:
