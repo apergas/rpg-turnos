@@ -10,3 +10,6 @@ Idea en una o pocas frases, con las palabras del usuario.
 ```
 
 ---
+
+## 2026-11-16 · Capa de Villaclaro del design system fuera de docs
+La capa de Villaclaro del design system vive en `docs/boost/design-system/`: su `tokens.json`, que lee el generador de tokens, y sus documentos (identidad, voz, paleta, componentes). El núcleo común es el submódulo `addons/design_system/`. Tener datos que lee el generador dentro de `docs/` confunde: mover esa capa a una carpeta propia en la raíz (por ejemplo `design/`), cambiando las rutas de `design_system.json` y todo lo que apunte allí (CLAUDE.md, las rutas vigiladas por el hook, los enlaces).
