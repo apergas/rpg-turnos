@@ -100,7 +100,9 @@ static func migrate_legacy() -> void:
 
 ## A rename over a file may remove the old one first (Windows): a write cut right between the
 ## two leaves only the .tmp, already whole, which becomes the file again. A .tmp beside its file
-## was cut before the rename, maybe halfway: it stays, and the next save writes over it. Never on
+## was cut before the rename, maybe halfway: it stays, and the next save writes over it. A lone
+## .tmp is promoted only if it parses as a Dictionary; otherwise it is removed (a crash during the
+## first write to an empty slot leaves the slot empty, not damaged). Never on
 ## autoplay runs (their own file) nor on the web (no .tmp there). The title calls it first.
 static func recover_writes() -> void:
 	if RunFlags.autoplay() or OS.has_feature("web"):
@@ -110,7 +112,19 @@ static func recover_writes() -> void:
 		paths.append(SLOT_PATH % slot)
 	for path in paths:
 		if not FileAccess.file_exists(path) and FileAccess.file_exists(path + TEMP_SUFFIX):
-			DirAccess.rename_absolute(path + TEMP_SUFFIX, path)
+			_promote_temp(path)
+
+
+## Renames path's lone .tmp over it if it holds a whole JSON object, else removes it.
+static func _promote_temp(path: String) -> void:
+	var temp := path + TEMP_SUFFIX
+	var json := JSON.new()
+	if json.parse(FileAccess.get_file_as_string(temp)) == OK and json.data is Dictionary:
+		var error := DirAccess.rename_absolute(temp, path)
+		if error != OK:
+			push_warning("No se pudo recuperar %s (error %d)" % [path, error])
+	else:
+		DirAccess.remove_absolute(temp)
 
 
 static func save_options(options: GameOptions) -> bool:

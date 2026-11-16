@@ -26,8 +26,8 @@ class_name SaveData extends RefCounted
 ## MEDALS_VERSION (1.8.0) adds the small medals taken (medals, sorted), the Coleccionista's prizes
 ## given (medal_prizes), whether he was met (collector_met) and the rounds of the Partida nueva +
 ## (ng_plus; 2.7.0 removed it: always written as 0, read and ignored); an older save gets none, 0, false and 0. CARAVAN_VERSION (2.0.0) changes no field: it marks the saves that may hold the v2 (the caravan's zones, a companion, levels past 20); its `story` may carry `finished_v2` and `v2_start` (2.3.0, without changing the version: an older save has neither and loads with false and []). V3_VERSION (3.0.0) changes no field either: it marks the saves that may hold the v3 (Brumaclara's flag, its zones, levels past 40); its story may carry finished_v3 and v3_start (an older save has neither and loads with false and []). MEDAL_PRIZES_VERSION (3.6.0) changes no field: the Coleccionista's prizes (medal_prizes) count from his table of ten; an older save keeps its medals and pieces and loads with medal_prizes 0, so he gives at once every new prize its medals reach.
-## Every number apply() reads goes through whole(): a file edited by hand can't turn it negative
-## or past MAX_NUMBER (3.8.2, no new field).
+## Every count and amount apply() reads goes through whole(), and the play time is capped with minf():
+## a file edited by hand can't turn them negative or past MAX_NUMBER (3.8.2, no new field).
 
 const VERSION := 16
 ## First version with the story's fields.
@@ -606,7 +606,7 @@ static func summary_line(data: Dictionary) -> String:
 	var version := int(data.version)
 	var hero_name: String = data.name if version >= STORY_VERSION else StoryState.DEFAULT_NAME
 	var zone_id: String = data.zone if version >= 4 else "pradera"
-	var minutes := floori(float(data.play_time) / 60.0)
+	var minutes := floori(minf(float(data.play_time), MAX_NUMBER) / 60.0)
 	var text := "%s · Nv %d · %s · %d:%02d" % [hero_name, int(data.hero.level),
 		ZoneData.by_id(zone_id).short_name, floori(minutes / 60.0), minutes % 60]
 	if is_v3(data):
