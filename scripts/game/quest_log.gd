@@ -93,19 +93,21 @@ func is_active(id: String) -> bool:
 	return stage(id) == Stage.ACTIVE or stage(id) == Stage.REPORT
 
 
-## True if the quest was taken and can't be finished any more: it is of an earlier part than
-## these flags' (its land was left behind), or its gone flag is the boss of a land that has
-## closed (ClosingLands) and it was not ready to hand in. Worked out, never saved: the mission
-## lines leave it out, the Diario lists it under «Perdidas» and its figure stops waiting for it.
-## talk() still pays one that is somehow ready (nothing is taken away).
+## True if the quest was taken and can't be finished any more. Not while it is ready to hand in
+## (_is_ready()) at a figure of the part these flags are in (ZoneData.zones_of_part()). Otherwise
+## it is lost if it is of an earlier part than these flags' (its land was left behind), or if its
+## gone flag is the boss of a land that has closed (ClosingLands). Worked out, never saved: the
+## mission lines leave it out, the Diario lists it under «Perdidas» and its figure stops waiting
+## for it. talk() still pays one that is somehow ready (nothing is taken away).
 func is_lost(id: String, flags: Dictionary, inventory: Inventory) -> bool:
 	if not is_active(id):
 		return false
+	var quest := data(id)
+	if _is_ready(quest, inventory) 			and quest.turn_in_zone in ZoneData.zones_of_part(StoryState.part(flags)):
+		return false
 	if part_of(id) < StoryState.part(flags):
 		return true
-	var quest := data(id)
-	return quest.gone != "" and flags.get(quest.gone, false) \
-		and not _is_ready(quest, inventory) and not ClosingLands.zones_of(quest.gone).is_empty()
+	return quest.gone != "" and flags.get(quest.gone, false) 		and not ClosingLands.zones_of(quest.gone).is_empty()
 
 
 ## Takes the quest; a DELIVER hands over what is to be delivered.
