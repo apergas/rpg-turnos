@@ -16,21 +16,23 @@ const HEAD_BLOND_MIST := preload("res://assets/characters/head_rubio_bruma.png")
 const HEAD_RED_MIST := preload("res://assets/characters/head_pelirrojo_bruma.png")
 const HEAD_BROWN_MIST := preload("res://assets/characters/head_castano_bruma.png")
 ## Their cloaks (3.8.0): the cape and the hood (MistDress) of each are one colour. The Vecina
-## wears no cape, so her hood has its own, from her smock.
+## wears no cape, so her hood has its own, from her smock. The Tendero's is sage green, not the
+## neighbours' grey blue.
 const ORVALLA_CLOAK := Color(0.2, 0.24, 0.4)
 const HEALER_CLOAK := Color(0.4, 0.55, 0.7)
 const VILLAGER_CLOAK := Color(0.3, 0.32, 0.42)
 const NEIGHBOUR_HOOD := Color(0.46, 0.34, 0.52)
+const SHOPKEEPER_CLOAK := Color(0.28, 0.4, 0.36)
 
 const LOOKS := {
 	# Brumaclara's people (3.0.0): Knights without helmet, like the caravan's, in the grey
 	# blues of the mist, with the Niebla's skin (3.8.0).
 	# Orvalla, the lighthouse keeper: grey hair under a night-blue hood, the long cape of the
-	# same blue, the crystal pendant.
+	# same blue, the crystal pendant and her lantern.
 	Look.ORVALLA: {
 		"scene": ActorLooks.KNIGHT, "scale": ActorLooks.CHARACTER_SCALE, "top": 1.9,
 		"hide": ActorLooks.PERSON_HIDE, "head_texture": HEAD_GREY_MIST,
-		"hood": ORVALLA_CLOAK, "pendant": true,
+		"hood": ORVALLA_CLOAK, "pendant": true, "carry": MistDress.CARRY_LANTERN,
 		"mesh_tints": {"Knight_ArmLeft": SKIN_MIST, "Knight_ArmRight": SKIN_MIST,
 			"Knight_Body": Color(0.55, 0.7, 1.3), "Knight_LegLeft": Color(0.6, 0.6, 0.75),
 			"Knight_LegRight": Color(0.6, 0.6, 0.75)},
@@ -64,26 +66,38 @@ const LOOKS := {
 			"Knight_LegRight": Color(0.7, 0.65, 0.8)},
 		"hide_cape": true, "anims": ActorLooks.CHARACTER_ANIMS,
 	},
-	# Brumaclara's Curandera (the inn, from the Garza on): white and pale blue.
+	# Brumaclara's Curandera (the inn, from the Garza on): white and pale blue, a bowl of mist
+	# water.
 	Look.MIST_HEALER: {
 		"scene": ActorLooks.KNIGHT, "scale": ActorLooks.CHARACTER_SCALE, "top": 1.9,
 		"hide": ActorLooks.PERSON_HIDE, "head_texture": HEAD_BROWN_MIST,
-		"hood": HEALER_CLOAK, "pendant": true,
+		"hood": HEALER_CLOAK, "pendant": true, "carry": MistDress.CARRY_BOWL,
 		"mesh_tints": {"Knight_ArmLeft": SKIN_MIST, "Knight_ArmRight": SKIN_MIST,
 			"Knight_Body": Color(1.6, 1.7, 2.0), "Knight_LegLeft": Color(0.9, 1.0, 1.2),
 			"Knight_LegRight": Color(0.9, 1.0, 1.2)},
 		"cape": HEALER_CLOAK, "anims": ActorLooks.CHARACTER_ANIMS,
 	},
 	# Brumaclara's Herrero de cristal (the shop, from the Coloso on): dark skin, a brown beard,
-	# a violet-grey smock, no cape.
+	# a violet-grey smock, no cape, and arms of crystal like the Cuevas' (3.8.0).
 	Look.MIST_SMITH: {
 		"scene": ActorLooks.KNIGHT, "scale": ActorLooks.CHARACTER_SCALE, "top": 1.9,
 		"hide": ActorLooks.PERSON_HIDE, "head_texture": HEAD_BROWN_MIST,
 		"hair": {"style": "beard", "color": ActorLooks.HAIR_BROWN}, "pendant": true,
-		"mesh_tints": {"Knight_ArmLeft": SKIN_MIST, "Knight_ArmRight": SKIN_MIST,
+		"crystal_arms": true, "mesh_tints": {
 			"Knight_Body": Color(0.85, 0.72, 1.2), "Knight_LegLeft": Color(0.45, 0.42, 0.5),
 			"Knight_LegRight": Color(0.45, 0.42, 0.5)},
 		"hide_cape": true, "anims": ActorLooks.CHARACTER_ANIMS,
+	},
+	# Brumaclara's Tendero (the tienda, from the Coloso on; 3.8.0): the neighbours' build in
+	# colours of his own, a sage-green hood and cape over a pale green smock.
+	Look.MIST_SHOPKEEPER: {
+		"scene": ActorLooks.KNIGHT, "scale": ActorLooks.CHARACTER_SCALE, "top": 1.9,
+		"hide": ActorLooks.PERSON_HIDE, "head_texture": HEAD_BROWN_MIST,
+		"hood": SHOPKEEPER_CLOAK, "pendant": true,
+		"mesh_tints": {"Knight_ArmLeft": SKIN_MIST, "Knight_ArmRight": SKIN_MIST,
+			"Knight_Body": Color(0.8, 1.0, 0.85), "Knight_LegLeft": Color(0.5, 0.52, 0.48),
+			"Knight_LegRight": Color(0.5, 0.52, 0.48)},
+		"cape": SHOPKEEPER_CLOAK, "anims": ActorLooks.CHARACTER_ANIMS,
 	},
 	# The Ciénaga (3.0.0). Variants of older figures, in the swamp's colours (CreatureBuilder
 	# builds them: the frog, the snake, the plant), and two new ones (MistCreatureBuilder).
