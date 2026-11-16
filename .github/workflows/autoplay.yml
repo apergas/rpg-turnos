@@ -1,0 +1,70 @@
+# Plays the autoplay runs of scripts/tools/autoplay_expected.json with scripts/tools/autoplay_all.sh
+# on every push to develop (and by hand from the Actions tab), one run per job on its own machine.
+# A failed run turns its job red and keeps its folder (log, scratch data, resumen.txt) as an
+# artifact; nothing is blocked or published. Not on main: Pages publishes there, and what reaches
+# main has been through develop.
+name: Autoplay
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: autoplay-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: 4.7.2
+
+jobs:
+  run:
+    name: ${{ matrix.run }}
+    runs-on: ubuntu-latest
+    # The run's timeout_min in autoplay_expected.json plus 15 minutes to install and import, so
+    # the script reports a hung run and the logs are uploaded before GitHub stops the job.
+    timeout-minutes: ${{ matrix.minutes }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - run: v1
+            minutes: 45
+          - run: v2
+            minutes: 75
+          - run: v3
+            minutes: 75
+          - run: vencer
+            minutes: 30
+          - run: save
+            minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Godot
+        run: |
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          curl -fsSL -o godot.zip "$base/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
+          rm godot.zip
+
+      - name: Import
+        run: ./godot --headless --path . --import
+
+      - name: Play ${{ matrix.run }}
+        env:
+          GODOT: ./godot
+          AUTOPLAY_DIR: ${{ runner.temp }}/autoplay
+        run: bash scripts/tools/autoplay_all.sh "${{ matrix.run }}"
+
+      - name: Keep the logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: autoplay-${{ matrix.run }}
+          path: ${{ runner.temp }}/autoplay
+          if-no-files-found: warn

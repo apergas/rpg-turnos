@@ -75,6 +75,6 @@ Lo que se ha hecho y lo que queda por hacer en Villaclaro. Una fila por versión
 | 3.8.0 · M-104 | Nivel máximo 60 en la v3 ([spec](../legacy/specs/2026-11-16-version-3-8-0-design.md) · [plan](../legacy/plans/2026-11-16-version-3-8-0.md)) | hecho |
 | 3.8.0 · M-105 | La gente de Brumaclara con piel de bruma, capucha y cristal; Orvalla con farol, la Curandera con cuenco y el Herrero con brazos de cristal | hecho |
 | 3.8.0 · M-107 | Un aura dorada suave alrededor del héroe al llegar al nivel 60 | hecho |
-| 3.8.1 · M-108 | El piloto automático ya no se cuelga tras el aviso de Jolt ([spec](specs/2026-11-16-version-3-8-1-design.md) · [plan](plans/2026-11-16-version-3-8-1.md)) | plan |
-| 3.8.1 · M-109 | Un lanzador que juega todas las carreras del piloto automático y da OK o FALLO | plan |
-| 3.8.1 · M-110 | GitHub Actions juega esas carreras en cada subida a `develop` | plan |
+| 3.8.1 · M-108 | El piloto automático ya no se cuelga: eran dos bucles de lógica del piloto, no Jolt, cuyo aviso sigue siendo ruido conocido ([spec](specs/2026-11-16-version-3-8-1-design.md) · [plan](plans/2026-11-16-version-3-8-1.md)) | hecho |
+| 3.8.1 · M-109 | Un lanzador que juega todas las carreras del piloto automático y da OK o FALLO ([plan](plans/2026-11-16-version-3-8-1.md)) | hecho |
+| 3.8.1 · M-110 | GitHub Actions juega esas carreras en cada subida a `develop` | hecho |
