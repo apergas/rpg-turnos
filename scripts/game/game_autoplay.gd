@@ -350,14 +350,17 @@ func _talk_figures(offers: bool) -> void:
 ## Autoplay, in Brumaclara (the v3): the Caravana is ten steps away through the portal. The hero
 ## walks through while its Armero sells gear of the etapa the gold pays for
 ## (Shop.gear_to_buy(): once there, the tienda's usual picks, an Ala or potions, come with it),
-## while a report waits there (the cartas for the Viajera), or for the visit to Villaclaro (the
+## while a report waits there (the cartas for the Viajera), with no Ala de viaje left (Brumaclara
+## sells none before the Coloso: without one a hero too worn for the boss could never retreat to
+## rest, and the run went on for good), or for the visit to Villaclaro (the
 ## Coloso beaten, no amulet yet: on through the Caravana's exit, and the Abuela Rosa's scene
 ## plays on arrival; the route of the meadow and the Caravana's walk him back to the portal).
 func _caravan_errand() -> void:
 	var state := _ctx.state
 	var visit := state.has_flag(StoryState.V3_BOSSES[1]) and not state.has_flag(StoryState.AMULET_FLAG)
 	if not visit and not Shop.gear_to_buy(state, Shop.caravan_shop(state.shop_step())) \
-			and state.quests.reports_here(CampLook.ZONE, state.inventory).is_empty():
+			and state.quests.reports_here(CampLook.ZONE, state.inventory).is_empty() \
+			and state.inventory.count(Inventory.WING) > 0:
 		return
 	print("Recado en la Caravana")
 	# The Caravana's entry from Brumaclara has the village's id; Brumaclara's from it is "portal".
