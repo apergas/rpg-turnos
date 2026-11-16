@@ -7,7 +7,7 @@ extends GutTest
 const Fx := preload("res://tests/fixtures.gd")
 ## A save edited by hand, or broken: [what changes, its new value]. Each is refused.
 const BROKEN := [
-	["version", 1.0], ["version", 17.0], ["hero.hp", 0.0], ["hero.level", 61.0],
+	["version", 1.0], ["version", SaveData.VERSION + 1.0], ["hero.hp", 0.0], ["hero.level", 61.0],
 	["hero.level", 25.0], ["hero.mp", 999.0], ["gold", -5.0], ["zone", "jungla"],
 	["zone", "atlantida"], ["ally", "brena"], ["medals", ["pradera_casa", "pradera_casa"]],
 	["medal_prizes", 1.0], ["key_items", ["llave_inventada"]], ["chests", ["cofre_inventado"]],
