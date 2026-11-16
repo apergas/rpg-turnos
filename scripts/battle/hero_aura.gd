@@ -3,18 +3,17 @@ class_name HeroAura extends Node3D
 ## a see-through, flame-like envelope wider than him at the feet and taller than his head
 ## (shaders/hero_aura.gdshader: additive, no shadow, soft edges, noise tongues that rise and
 ## break up at its top, breathing every BREATH_S) and golden sparks that rise from his feet
-## past his head
-## (CPUParticles3D: SPARKS at a time, PHONE_SPARKS on a phone and none on low quality, as
-## ZoneParticles.half and .enabled say). Its owner builds it with build() and hangs it on the
-## hero's BattleActor: Player on the map (the cutscenes move that same figure), BattleScene in
-## battle. flash() is a short burst of light, when he reaches the top level in a battle. Only
-## the hero wears it. It makes no light and keeps no game state.
+## past his head (CPUParticles3D: SPARKS at a time, PHONE_SPARKS on a phone and none on low
+## quality, as ZoneParticles.half and .enabled say). Its owner builds it with build() and hangs
+## it on the hero's BattleActor: Player on the map (the cutscenes move that same figure),
+## BattleScene in battle. flash() is a short burst of light, when he reaches the top level in a
+## battle. Only the hero wears it. It makes no light and keeps no game state.
 
 const SHADER := preload("res://shaders/hero_aura.gdshader")
-## Pale gold, the same on the map and in battle (a 3D colour: not a UiTokens value).
+## Warm flame gold, the same on the map and in battle (a 3D colour: not a UiTokens value).
 const COLOR := Color(1.0, 0.6, 0.2)
 ## The envelope: a capsule RADIUS wide (the shader widens its feet), HEIGHT_SHARE times the
-## figure's top_height() tall (where the damage numbers go: a little over the head).
+## figure's top_height() tall (that is a little over the head), so it rises well above him.
 const RADIUS := 0.5
 const HEIGHT_SHARE := 1.5
 const SIDES := 16
@@ -22,13 +21,15 @@ const RINGS := 4
 const STRENGTH := 0.85
 const BREATH_S := 2.0
 ## The sparks: how many at a time, how long each lives, how big, how wide the ring at the feet
-## they start from and how far up (share of the top) they fade.
+## they start from and how far up (share of the top, past the head) they fade.
 const SPARKS := 20
 const PHONE_SPARKS := 10
 const SPARK_LIFETIME := 1.6
 const SPARK_SIZE := 0.045
 const SPARK_RING := 0.5
 const SPARK_RISE := 1.4
+## Brighter than COLOR: the dots are small.
+const SPARK_COLOR := Color(1.0, 0.85, 0.5)
 ## The flash: the glow FLASH_PEAK times stronger, back to STRENGTH in FLASH_S seconds.
 const FLASH_PEAK := 6.0
 const FLASH_S := 0.8
@@ -99,7 +100,7 @@ func _add_sparks(top: float, count: int) -> void:
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 	mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
-	mat.albedo_color = Color(1.0, 0.85, 0.5)
+	mat.albedo_color = SPARK_COLOR
 	dot.material = mat
 	_sparks.mesh = dot
 	_sparks.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
