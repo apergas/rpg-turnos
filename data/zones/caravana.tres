@@ -216,7 +216,7 @@ npcs = [{
 }, {
 "id": "caravana",
 "kind": "armory",
-"look": "FARMER",
+"look": "ARMORER_JUNGLE",
 "name": "Armero",
 "pos": Vector3(-8.6, 0, -1),
 "yaw": -90.0

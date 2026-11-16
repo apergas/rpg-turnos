@@ -2,8 +2,9 @@ class_name CampLook extends RefCounted
 ## The caravan's camp (the Caravana) dressed for the land it is camped next to (2.4.0): the
 ## same layout (tents, figures, exits, entries, wells, the campfire, the autoplay route), the
 ## look of that land: its ground, hills, sky, light and fog, its grass, trees and Kenney
-## decoration, its particles and its ambient sound (the music stays the caravan's); by the
-## calmed portal, the v3's mist while Brumaclara needs help. Once the v3 is over
+## decoration, its particles and its ambient sound (the music stays the caravan's), and its
+## Armero dressed like the smiths of that land (ARMORERS, 3.10.0); by the calmed portal, the
+## v3's mist while Brumaclara needs help. Once the v3 is over
 ## (StoryState.world_open(), 3.8.2) the four lands open again round the camp, each through its
 ## own arch (OPEN_EXITS). Pure: dressed() returns a copy of the zone; ZoneTravel builds the
 ## Caravana from it.
@@ -87,6 +88,11 @@ const OPEN_ENTRIES := {
 ## on the new roads, in front of the desert's, the mountain's and the city's arches).
 const OPEN_DECOR := [[Vector3(-8, 0, 2.2), 30.0, "city_column_broken"],
 	[Vector3(-1.5, 0, -3), 200.0, "rubble"]]
+## The Armero for each tramo (3.10.0, M-124): the ActorLooks.Look name of the smith of that land
+## (ActorLooksArmory): the jungle's, the desert's, the mountain's, then the city's, also by the
+## calmed portal and in the v3. data/zones/caravana.tres holds the tramo 1's.
+const ARMORERS := {1: "ARMORER_JUNGLE", 2: "ARMORER_DESERT", 3: "ARMORER_MOUNTAIN",
+	4: "ARMORER_CITY", 5: "ARMORER_CITY"}
 
 
 ## A copy of the Caravana dressed for tramo (GameState.tramo()), by the calmed portal for the
@@ -99,6 +105,7 @@ static func dressed(zone: ZoneData, tramo: int, etapa := 0, open := false) -> Zo
 	var land := ZoneData.by_id(look.from)
 	var camp := zone.duplicate() as ZoneData
 	camp.look_key = "tramo%d" % tramo
+	_dress_armorer(camp, ARMORERS[tramo])
 	for field: String in COPIED:
 		camp.set(field, land.get(field))
 	camp.ground_color = land.get(look.ground)
@@ -134,3 +141,15 @@ static func dressed(zone: ZoneData, tramo: int, etapa := 0, open := false) -> Zo
 		camp.decor = kept
 		camp.reopen_exits(OPEN_EXITS, OPEN_ENTRIES)
 	return camp
+
+
+## Gives the camp's "armory" figure look_name, on a fresh copy of the figures: duplicate() is
+## shallow, so changing the copy's own would change the cached Caravana's.
+static func _dress_armorer(camp: ZoneData, look_name: String) -> void:
+	var figures: Array = []
+	for npc: Dictionary in camp.npcs:
+		var figure: Dictionary = npc.duplicate()
+		if figure.get("kind", "") == "armory":
+			figure.look = look_name
+		figures.append(figure)
+	camp.npcs = figures
