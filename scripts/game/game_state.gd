@@ -155,17 +155,9 @@ func cast_spell(skill: Skill) -> int:
 	return amount
 
 
-## Metres an Incienso still keeps the monsters away (not saved: it ends with the session).
-var repel_m := 0.0
-
-
-## Uses an item outside battle, from the pause menu; see Inventory.use(). An Incienso
-## starts its metres again.
+## Uses an item outside battle, from the pause menu or a figure; see Inventory.use().
 func use_item(id: String) -> Dictionary:
-	var result := inventory.use(id, hero, false)
-	if result.used and result.effect == "repel":
-		repel_m = float(Inventory.ITEMS[id].value)
-	return result
+	return inventory.use(id, hero, false)
 
 
 ## Copies the loadout's bonuses into the hero (battles read total_attack/defense()).

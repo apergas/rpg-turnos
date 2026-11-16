@@ -1,11 +1,10 @@
 class_name MapMonsters extends Node3D
 ## The groups of monsters walking on a map (MonsterGroups, MonsterRoam): placed, moved
 ## every physics tick near the hero, touched (check_contact(): World then starts the
-## battle), taken off when beaten, faded while fled from or while an Incienso burns, and
-## brought back one at a time (tick_refill()); on a dungeon floor also the Slime de Metal
-## (add_rare()). Owned by World, which calls setup() and the per-tick functions in its own
-## order; never stores World. On autoplay it prints "Grupos: n", "Grupo vencido (quedan n)"
-## and "Grupo repuesto (n)".
+## battle), taken off when beaten, faded while fled from, and brought back one at a time
+## (tick_refill()); on a dungeon floor also the Slime de Metal (add_rare()). Owned by World,
+## which calls setup() and the per-tick functions in its own order; never stores World. On
+## autoplay it prints "Grupos: n", "Grupo vencido (quedan n)" and "Grupo repuesto (n)".
 
 ## The groups were replaced or cleared (AutoplayHunter forgets the groups it left alone).
 signal groups_reset
@@ -49,8 +48,6 @@ var _contact := -1
 var _calm_until_ms := 0
 ## Simulation ms counted toward the next group coming back (tick_refill()).
 var _refill_ms := 0.0
-## True while an Incienso keeps the monsters away (Game counts its metres).
-var _repelled := false
 
 
 func setup(zone: ZoneData, player: Player) -> void:
@@ -66,10 +63,6 @@ func set_flags(flags: Dictionary) -> void:
 	_flags = flags
 	for group in _groups:
 		(group.roam as MonsterRoam).set_flags(flags)
-
-
-func is_repelled() -> bool:
-	return _repelled
 
 
 ## The hero is EncounterMeter.LEVEL_GAP levels past the zone (EncounterMeter.is_shy()): the
@@ -159,10 +152,10 @@ func _add_group(pos: Vector3, enemies: Array[Combatant], rare: bool) -> Dictiona
 
 ## A beaten group comes back, one every REFILL_S seconds of play on this map while it has
 ## fewer than _zone.monster_count (MonsterGroups.refill_spot(): never near the hero), fading in.
-## Not during a cutscene or an Incienso, nor on a map without monsters (the Caravana).
+## Not during a cutscene, nor on a map without monsters (the Caravana).
 func tick_refill(delta: float) -> void:
 	if debug_no_groups or _zone.monster_count <= 0 or _zone.formations.is_empty() \
-			or _player.scripted or _repelled or group_count() >= _zone.monster_count:
+			or _player.scripted or group_count() >= _zone.monster_count:
 		_refill_ms = 0.0
 		return
 	_refill_ms += delta * 1000.0
@@ -213,10 +206,9 @@ func move_groups(delta: float) -> void:
 				actor.play_hop()
 
 
-## A group shows half see-through while it can't start a battle: fled from, or an Incienso
-## burning.
+## A group shows half see-through while it can't start a battle: fled from.
 func _fade_group(group: Dictionary) -> void:
-	(group.actor as BattleActor).set_faded(_repelled or not group.armed)
+	(group.actor as BattleActor).set_faded(not group.armed)
 
 
 ## The enemies of the group whose battle is starting (its formation, data: BattleScene
@@ -248,27 +240,13 @@ func end_contact(outcome: int) -> void:
 		_fade_group(group)
 
 
-## An Incienso burning: touching a group starts no battle and every group shows half
-## see-through (the boss still waits where it is).
-func set_repel(on: bool, now_ms: int) -> void:
-	if _repelled == on:
-		return
-	_repelled = on
-	if on:
-		_player.stop_hunt()
-	for group in _groups:
-		_fade_group(group)
-	if not on:
-		calm(now_ms)
-
-
 ## No group starts a battle for MonsterGroups.CALM_MS from now.
 func calm(now_ms: int) -> void:
 	_calm_until_ms = now_ms + MonsterGroups.CALM_MS
 
 
 ## The hero within MonsterGroups.CONTACT_RADIUS of a group starts its battle (true: the
-## map waits for Game), unless it is calm (calm()) or an Incienso burns. A group fled from
+## map waits for Game), unless it is calm (calm()). A group fled from
 ## starts none until the hero is MonsterGroups.REARM_RADIUS away from it.
 func check_contact(pos: Vector3, now_ms: int) -> bool:
 	var calm := now_ms < _calm_until_ms
@@ -280,7 +258,7 @@ func check_contact(pos: Vector3, now_ms: int) -> bool:
 				group.armed = true
 				_fade_group(group)
 			continue
-		if d <= MonsterGroups.CONTACT_RADIUS and not calm and not _repelled:
+		if d <= MonsterGroups.CONTACT_RADIUS and not calm:
 			_contact = i
 			return true
 	return false

@@ -25,7 +25,6 @@ signal quit_to_title
 const HERO_DATA := preload("res://data/hero.tres")
 const FADE_TIME := 0.3
 const TOUCH_HINT := "Toca el suelo para ir allí, o arrastra el dedo para andar."
-const REPEL_END_NOTICE := "El incienso se ha consumido."
 const SAVED_NOTICE := "Partida guardada."
 const MENU_TOUR_DELAY := 1.0
 
@@ -345,15 +344,9 @@ func _set_busy(busy: bool) -> void:
 		_debug.set_available(not busy)
 
 
-## Every STEP_DISTANCE metres walked: two steps for the credits, and the Incienso burns.
+## Every STEP_DISTANCE metres walked: two steps for the credits.
 func _on_stepped() -> void:
 	state.steps += 2
-	if state.repel_m <= 0.0:
-		return
-	state.repel_m = maxf(0.0, state.repel_m - World.STEP_DISTANCE)
-	if state.repel_m == 0.0:
-		_ctx.world.set_repel(false)
-		_ctx.world.show_notice(REPEL_END_NOTICE)
 
 
 ## Updates the map's status window, the quests' marks and sought figures, the hero's weapon
@@ -364,7 +357,6 @@ func _refresh_status() -> void:
 	_ctx.world.refresh_status(state.hero, _ctx.potion_count(), state.gold,
 		missions)
 	_ctx.world.set_monsters_shy(EncounterMeter.is_shy(state.hero.level, _ctx.zone.exit_level))
-	_ctx.world.set_repel(state.repel_m > 0.0)
 	_ctx.world.set_autoplay_hunt(_autopilot != null and _autopilot.hunts())
 	var hidden := state.quests.hidden_figures(_ctx.zone.id)
 	hidden.append_array(_ctx.zone.absent_figures(state.world_flags))
