@@ -1,12 +1,15 @@
 # Plays the autoplay runs of scripts/tools/autoplay_expected.json with scripts/tools/autoplay_all.sh
-# on every push to develop (and by hand from the Actions tab), one run per job on its own machine.
-# A failed run turns its job red and keeps its folder (log, scratch data, resumen.txt) as an
-# artifact; nothing is blocked or published. Not on main: Pages publishes there, and what reaches
-# main has been through develop.
+# on every push to develop, on every pull request into develop (Dependabot's moves of the design
+# system's submodule among them) and by hand from the Actions tab, one run per job on its own
+# machine. A failed run turns its job red and keeps its folder (log, scratch data, resumen.txt) as
+# an artifact; nothing is published. Not on main: Pages publishes there, and what reaches main has
+# been through develop.
 name: Autoplay
 
 on:
   push:
+    branches: [develop]
+  pull_request:
     branches: [develop]
   workflow_dispatch:
 

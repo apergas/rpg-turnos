@@ -4,6 +4,8 @@
 
 - Sin cambios en el juego: ahora tiene pruebas automáticas de sus reglas (combates, niveles, tiendas, partidas guardadas, misiones, historia, bestiario y medallas) y de sus datos, que se pasan solas en cada subida, junto al piloto automático.
 
+Design system: v1.0.0-1-g59a2b4f
+
 ## 3.8.2 (2026)
 
 Arreglos tras dos repasos del juego de arriba abajo.
