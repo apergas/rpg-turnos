@@ -22,7 +22,8 @@ ai_weights = {
 }
 weak = Array[String](["fire"])
 drops = {
-"antidote": 0.12
+"antidote": 0.12,
+"pluma_fenix": 0.02
 }
 attack_status = "poison"
 attack_status_chance = 0.3

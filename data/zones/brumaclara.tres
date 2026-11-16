@@ -112,12 +112,13 @@ npcs = [{
 "lines_by_chapter": {
 12: ["El faro vuelve a dar luz. Hacía un año que no veía mi propia sombra.", "Con la luz se ve la boca de las Cuevas, junto al faro. Dicen que dentro los cristales brillan solos. Y que algo grande los vigila."],
 13: ["Ese cristal late como un corazón. El Herrero lo tiene junto a la forja y no para de cantar.", "Albor... Mi abuela contaba que la Fuente tuvo un guardián. Nadie sabe qué fue de él."],
-14: ["El Sello de Albor. Mi abuela decía que abría la Fuente, y yo creía que era un cuento para dormir.", "Mira el pueblo: hasta el mercado ha vuelto. Y un señor que pregunta por medallas. Lo que hace la luz."],
+14: ["El Sello de Albor. Mi abuela decía que abría la Fuente, y yo creía que era un cuento para dormir.", "Mira el pueblo: hasta el mercado ha vuelto. Y el señor de las medallas dice que por fin ve lo que le traen."],
 15: ["Brumaclara respira tranquila. Hasta el faro parece que ronca.", "Gracias por todo, {nombre}. Si algún día te aburres en tu mundo, ya sabes dónde está el portal."]
 },
 "look": "ORVALLA",
 "name": "Orvalla",
 "pos": Vector3(-2.5, 0, -10.5),
+"sign": "Orvalla",
 "yaw": 180.0
 }, {
 "kind": "npc",
@@ -138,6 +139,7 @@ npcs = [{
 "look": "BOARD",
 "name": "Tablón",
 "pos": Vector3(-4.5, 0, 5.5),
+"sign": "Tablón",
 "yaw": 0.0
 }, {
 "id": "brumaclara",
@@ -149,7 +151,7 @@ npcs = [{
 "yaw": -90.0
 }, {
 "id": "brumaclara",
-"kind": "shop",
+"kind": "armory",
 "look": "MIST_SMITH",
 "name": "Herrero de cristal",
 "needs": "coloso_cuarzo",
@@ -160,8 +162,8 @@ npcs = [{
 "lines": ["Colecciono medallas pequeñas."],
 "look": "CARAVAN_COLLECTOR",
 "name": "Coleccionista",
-"needs": "vigia_bruma",
 "pos": Vector3(-7.0, 0, -11.0),
+"sign": "Coleccionista",
 "yaw": 180.0
 }, {
 "kind": "npc",
@@ -237,6 +239,14 @@ npcs = [{
 "needs": "albor_liberado",
 "pos": Vector3(-3.5, 0, -2.5),
 "yaw": 180.0
+}, {
+"id": "brumaclara",
+"kind": "shop",
+"look": "MIST_VILLAGER_M",
+"name": "Tendero",
+"needs": "coloso_cuarzo",
+"pos": Vector3(8.8, 0, 2.4),
+"yaw": 135.0
 }]
 boss_id = ""
 boss_pos = Vector3(0, 0, 0)

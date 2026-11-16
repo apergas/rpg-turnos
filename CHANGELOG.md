@@ -1,5 +1,44 @@
 # Registro de cambios
 
+## 3.6.2 (2026)
+
+- Al cambiar de página en un menú, la flecha ▶ ya no aparece un instante en el sitio de la página anterior.
+
+## 3.6.1 (2026)
+
+Por dentro: el design system se separa en dos capas, un núcleo que podrá servir a otro juego y lo que es propio de Villaclaro. En pantalla no cambia nada.
+
+## 3.6.0 (2026)
+
+Tu compañero te sigue, cada pueblo tiene armero y el Coleccionista guarda más premios.
+
+- Tu criatura o tu compañero anda detrás de ti por el mapa y se para cuando te paras. En las escenas se aparta un momento y luego vuelve a tu lado.
+- En cada pueblo, la tienda vende los objetos y un armero nuevo vende el equipo. En los dos puedes vender lo que lleves.
+- La Pluma de fénix ya no se vende: la sueltan algunos enemigos de cada tierra y sale de algunos cofres, ahora también en la mina y en el castillo.
+- Ahora hay 40 medallas pequeñas. El Coleccionista te da un anillo o un amuleto cada 4, y te espera en la Caravana y en Brumaclara desde que llegas.
+- Si tu partida es de antes, conservas tus medallas y lo que ya te dio. La próxima vez que hables con él te da de golpe los premios nuevos que te tocan.
+- Una partida guardada en esta versión ya no se abre en las anteriores.
+
+## 3.5.0 (2026)
+
+Combate, compañero y portales.
+
+- Tus hechizos de daño crecen contigo: pegan un 3 % más por cada nivel que tengas por encima del que te los enseñó. Curar sigue igual.
+- Usar un objeto en combate va siempre antes que nadie, como defender o huir: la poción llega antes que el golpe del enemigo más rápido.
+- Brena, Tadeo y Ulma estrenan una pieza de equipo en cada tramo y en cada etapa, desde el desierto: un arma, un casco o una capa. Se ve en combate y les da un poco más de ataque o de defensa.
+- En los combates del Barrio del portal ya no sale el portal detrás, salvo contra el Devorador.
+- El portal entre la Caravana y Brumaclara es ahora rojizo, para no confundirlo con el del Ala de viaje.
+
+## 3.4.0 (2026)
+
+Una interfaz más clara.
+
+- En la tienda, «Vender» solo enseña lo que puedes vender: ni lo que llevas puesto ni lo que no tiene precio. Al vender lo último de algo, el cursor pasa a la fila siguiente.
+- En «Equipo», lo que da cada pieza va en letra pequeña debajo de su nombre.
+- En «Estado», debajo de tu compañero o tu criatura salen sus PV, ATK, DEF y VEL de ese momento. Las criaturas y los compañeros de la tienda enseñan también su VEL.
+- En combate, mientras eliges a quién atacar, el resto del menú se queda en gris y solo responde «Volver».
+- El Coleccionista, el Jefe de caravana, Orvalla y el Tablón llevan su nombre encima, como la Tienda o la Posada.
+
 ## 3.3.0 (2026)
 
 La Fuente de la Niebla y el final de la tercera parte.

@@ -18,6 +18,7 @@ class_name BattleEngine extends RefCounted
 ## A hero who falls with a Pluma de fénix rises once per battle with half his HP (_revive()).
 ## A Despertador used in battle keeps the hero awake until it ends (_wake_guard).
 ## Equipment that keeps a status away says so (no_sleep() for sleep, immune() for poison and silence).
+## The hero's damage spells grow with his level (spell_power(), SPELL_GROWTH); heals never do.
 
 enum State { ONGOING, WON, LOST, FLED }
 ## Who won the surprise roll at the start of a battle (roll_ambush()).
@@ -55,6 +56,9 @@ const DAMAGE_SPREAD := Vector2(0.875, 1.125)
 const INITIATIVE_SPREAD := Vector2(0.5, 1.5)
 const WEAK_MULT := 1.5
 const RESIST_MULT := 0.5
+## The hero's damage spells hit this share harder for each level he has above the one that
+## taught them (spell_power(); 3.5.0). The enemies' and the creatures' spells never grow.
+const SPELL_GROWTH := 0.03
 ## Poison takes this share of max HP at the end of each round.
 const POISON_SHARE := 0.08
 ## Chance of waking up at the end of each round.
@@ -92,7 +96,7 @@ var quest_items := {}
 ## none drop, the battle run on its own). A common enemy beaten leaves one with medal_chance
 ## (the Slime de Metal always, a boss never) while fewer than Medals.MEDALS are carried.
 var medals_carried := -1
-var medal_chance := Medals.DROP_CHANCE
+var medal_chance := Medals.drop_chance(1)
 ## Medals left in this won battle (Game takes them: Medals.take()). Each is also in drops_won
 ## as Inventory.MEDAL, for the victory window, but never in the inventory.
 var medals_won := 0
@@ -239,6 +243,15 @@ func flee_chance() -> float:
 	return clampf(FLEE_BASE + (hero.total_speed() - mean) * FLEE_PER_SPEED, FLEE_MIN, FLEE_MAX)
 
 
+## The power a damage spell of who hits with, before element and spread: the hero's grows
+## SPELL_GROWTH per level above the one that taught it (Leveling.learned_at()); a heal never.
+func spell_power(who: int, skill: Skill) -> float:
+	if who != BattleEvent.HERO:
+		return skill.power
+	var levels := maxi(hero.level - Leveling.learned_at(hero, skill), 0)
+	return skill.power * (1.0 + SPELL_GROWTH * levels)
+
+
 ## Resolves a full round with the hero's command and the enemies' own choices. Returns
 ## an empty array once the battle is over. The command must be usable (can_use()): fleeing
 ## from a boss never is. After a surprise of the hero (ambush HERO) the first round leaves
@@ -349,8 +362,8 @@ func _enemy_command(who: int) -> Dictionary:
 	return cmd_attack(_enemy_target())
 
 
-## Everyone of side standing, fastest roll first (the hero wins ties). Defending or
-## fleeing, the hero goes first.
+## Everyone of side standing, fastest roll first (the hero wins ties). Defending, fleeing or
+## using an item, the hero goes first (3.5.0); an enemy surprise's round leaves him out.
 func _turn_order(hero_cmd: Dictionary, side: int = Side.ALL) -> Array[int]:
 	var rolls := []
 	if side != Side.ENEMIES:
@@ -365,7 +378,7 @@ func _turn_order(hero_cmd: Dictionary, side: int = Side.ALL) -> Array[int]:
 	var order: Array[int] = []
 	for roll in rolls:
 		order.append(roll[1])
-	if side != Side.ENEMIES and hero_cmd.type in [CMD_DEFEND, CMD_FLEE]:
+	if side != Side.ENEMIES and hero_cmd.type in [CMD_DEFEND, CMD_FLEE, CMD_ITEM]:
 		order.erase(BattleEvent.HERO)
 		order.push_front(BattleEvent.HERO)
 	return order
@@ -432,8 +445,8 @@ func _attack(who: int, target: int, events: Array[Dictionary], charged := false)
 		_add_status(target, attacker.attack_status, events)
 
 
-## Spells pay their MP and never miss or crit. Damage ignores DEF and follows the
-## element; a heal restores power HP to the caster.
+## Spells pay their MP and never miss or crit. Damage ignores DEF, grows with the hero's
+## level (spell_power()) and follows the element; a heal restores power HP to the caster.
 func _cast(who: int, cmd: Dictionary, events: Array[Dictionary]) -> void:
 	var caster := _fighter(who)
 	var skill: Skill = cmd.skill
@@ -459,7 +472,7 @@ func _cast(who: int, cmd: Dictionary, events: Array[Dictionary]) -> void:
 			var affinity := _affinity(_fighter(target), skill.element)
 			var mult := WEAK_MULT if affinity == BattleEvent.WEAK \
 				else RESIST_MULT if affinity == BattleEvent.RESIST else 1.0
-			var amount := maxi(1, roundi(skill.power * mult \
+			var amount := maxi(1, roundi(spell_power(who, skill) * mult \
 				* _rng.randf_range(DAMAGE_SPREAD.x, DAMAGE_SPREAD.y)))
 			_hurt(target, amount, false, true, affinity, events)
 		if skill.status != "" and _guarded(target, skill.status):

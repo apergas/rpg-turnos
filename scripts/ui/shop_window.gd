@@ -1,14 +1,16 @@
 class_name ShopWindow extends Control
-## Shop window of the map. run(shop_id) opens it on "¿Comprar o vender?" and returns
+## Shop window of the map. run(shop_id, counter) opens it on "¿Comprar o vender?" and returns
 ## when the player leaves. Comprar lists what the shop sells with its price and, for
 ## equipment, the comparison with what is worn (green ▲ better, red ▼ worse, = same);
-## buying a piece of equipment asks "¿Te lo equipas ahora?". Vender lists what the hero
-## carries at half price (what is worn is listed but can't be sold). Rows that can't be
-## used now are grey with the reason. Keyboard (↑ / ↓, Enter / Space, Esc goes back),
-## mouse and touch. The rules are Shop's; this window only shows them. Emits changed
-## after every purchase, sale or change of equipment. Call setup() before adding it.
-## With `-- --autoplay` run() buys Shop.autoplay_picks() by itself, equips every piece,
-## shows the sell page and prints each message.
+## buying a piece of equipment asks "¿Te lo equipas ahora?". At the tienda
+## (Shop.ITEMS_COUNTER) Comprar lists the items, with ×5; at the armero (ARMORY_COUNTER) the
+## equipment; Vender ignores the counter. Vender lists only what can be
+## sold now (Shop.sell_list(): the bag, never what is worn, and only what has a price) at
+## half price. Rows of Comprar that can't be bought now are grey with the reason. Keyboard
+## (↑ / ↓, Enter / Space, Esc goes back), mouse and touch. The rules are Shop's; this window
+## only shows them. Emits changed after every purchase, sale or change of equipment. Call
+## setup() before adding it. With `-- --autoplay` run() buys Shop.autoplay_picks() by itself,
+## equips every piece, shows the sell page and prints each message.
 
 signal changed
 signal _left
@@ -28,6 +30,8 @@ const ROWS_RESERVED := 220.0
 var _state: GameState
 var _audio: AudioDirector
 var _shop_id := ""
+## Shop.ITEMS_COUNTER or Shop.ARMORY_COUNTER (run()).
+var _counter := Shop.ITEMS_COUNTER
 var _page := ""
 ## Piece just bought, waiting for the "¿Te lo equipas ahora?" answer.
 var _asking := ""
@@ -117,10 +121,13 @@ func _ready() -> void:
 	hide()
 
 
-## Opens the shop of shop_id (a Shop.SHOPS key) and returns when the player leaves.
-func run(shop_id: String) -> void:
+## Opens the shop of shop_id (a Shop.SHOPS key) at counter (Shop.ITEMS_COUNTER: the tienda;
+## Shop.ARMORY_COUNTER: the armero; a tamer and the companions ignore it) and returns when the
+## player leaves.
+func run(shop_id: String, counter := Shop.ITEMS_COUNTER) -> void:
 	_shop_id = shop_id
-	_keeper.text = Shop.keeper(shop_id)
+	_counter = counter
+	_keeper.text = Shop.keeper(shop_id, counter)
 	_set_message("")
 	show()
 	_sfx(SfxLibrary.DIALOGUE)
@@ -181,9 +188,11 @@ func _show_page(page: String, focus_id := "") -> void:
 		"buy":
 			if _shop_id == Shop.COMPANIONS_SHOP:
 				_title.text = "Compañeros"
+			elif Shop.sells_ally(_shop_id):
+				_title.text = "Criaturas"
 			else:
-				_title.text = "Criaturas" if Shop.sells_ally(_shop_id) else "Comprar"
-			for id in Shop.stock(_shop_id):
+				_title.text = "Armero" if _counter == Shop.ARMORY_COUNTER else "Tienda"
+			for id in Shop.stock(_shop_id, _counter):
 				_add_buy_row(id)
 			_add_footer_button("Volver", _back)
 		"sell":
@@ -248,7 +257,9 @@ func _add_buy_row(id: String) -> void:
 	if Shop.is_ally(id):
 		# Stats with the note under them, so a long note never widens the window.
 		var info_box := VBoxContainer.new()
-		info_box.add_child(_label(Allies.stats_text(id)))
+		# A companion as it would join now (its growth so far); a creature never grows.
+		var step := _state.ally_step() if Allies.is_companion(id) else 1
+		info_box.add_child(_label(Allies.stats_text(id, step)))
 		if Allies.line(id) != "":
 			UiStyle.add_small_text(info_box, Allies.line(id))
 		if why != "":
@@ -288,26 +299,21 @@ func _buy_bulk(id: String) -> void:
 	_show_page("buy", id)
 
 
-## Name with the count carried, the price paid, and why it can't be sold if so.
+## Name with the count carried and the price paid (sell_list() lists only what can be sold).
 func _add_sell_row(id: String) -> void:
 	var row := _row()
-	var why := Shop.sell_problem(_state, id, _shop_id)
 	var count := Shop.sell_count(_state, id)
 	var text := Shop.display_name(id) if count <= 1 else "%s ×%d" % [Shop.display_name(id), count]
 	var button := _button(text)
 	button.custom_minimum_size.x = TOUCH_NAME_WIDTH if Device.is_touch() else NAME_WIDTH
-	button.disabled = why != ""
 	button.pressed.connect(_sell.bind(id))
 	button.set_meta("id", id)
 	row.add_child(button)
-	var price := _label("%d G" % Shop.sell_price(id, _shop_id),
-		UiTheme.REASON if why != "" else UiTheme.MONEY)
+	var price := _label("%d G" % Shop.sell_price(id, _shop_id), UiTheme.MONEY)
 	price.custom_minimum_size.x = PRICE_WIDTH
 	row.add_child(price)
 	if not Shop.is_equipment(id):
 		UiStyle.add_description(row, id)
-	if why != "":
-		row.add_child(_label(why, UiTheme.REASON))
 
 
 ## Green ▲ and +n when better, red ▼ and -n when worse, "=" when the same (also used by
@@ -354,7 +360,11 @@ func _answer(equip: bool) -> void:
 	_show_page("buy", bought)
 
 
+## After a sale the cursor stays on the same piece while one is left; once the last one is sold,
+## it goes to the row that takes its place (the next one, or the one before at the end of the
+## list), and to Volver when nothing is left.
 func _sell(id: String) -> void:
+	var at := Shop.sell_list(_state).find(id)
 	var result := Shop.sell(_state, id, _shop_id)
 	_say(result.text)
 	if not result.ok:
@@ -362,7 +372,11 @@ func _sell(id: String) -> void:
 		return
 	_sfx(SfxLibrary.ACCEPT)
 	changed.emit()
-	_show_page("sell", id)
+	var left := Shop.sell_list(_state)
+	var next := id
+	if not left.has(id):
+		next = "" if left.is_empty() else left[clampi(at, 0, left.size() - 1)]
+	_show_page("sell", next)
 
 
 ## Shows text under the list; on autoplay also prints it.
@@ -468,7 +482,7 @@ func _autoplay_run() -> void:
 	await _wait()
 	_show_page("buy")
 	await _wait()
-	for id in Shop.autoplay_picks(_state, _shop_id):
+	for id in Shop.autoplay_picks(_state, _shop_id, _counter):
 		_focus_row(Shop.display_name(id))
 		await _wait()
 		_buy(id)

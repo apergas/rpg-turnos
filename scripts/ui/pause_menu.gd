@@ -75,6 +75,7 @@ var _gold_label: Label
 ## Estado's right column: each spell, its MP and what it does.
 var _spells_box: VBoxContainer
 var _ally_label: Label
+var _ally_stats: Label  ## Under the companion's name: its numbers now, in small text.
 var _items_box: VBoxContainer
 var _items_message: Label
 var _equip_box: VBoxContainer
@@ -316,10 +317,12 @@ func _fill_status() -> void:
 		_spells_box.add_child(_label("%s  %d PM" % [skill.display_name, skill.mp_cost]))
 		UiStyle.add_small_text(_spells_box, skill.description)
 	_ally_label.visible = _state.ally_id != ""
+	_ally_stats.visible = _ally_label.visible
 	if _state.ally_id != "":
-		BattleHud.fit_label(_ally_label, "%s: %s" % [Allies.kind_name(_state.ally_id),
-				Allies.display_name(_state.ally_id)],
+		var id := _state.ally_id
+		BattleHud.fit_label(_ally_label, "%s: %s" % [Allies.kind_name(id), Allies.display_name(id)],
 			TEXT_WIDTH)
+		BattleHud.fit_label(_ally_stats, Allies.stats_text(id, _state.ally_step()), TEXT_WIDTH)
 
 
 ## The message lines always keep their place, so a message never moves the buttons.
@@ -404,8 +407,9 @@ func _use_text(id: String, result: Dictionary) -> String:
 	return "Recuperas %d PV." % result.amount
 
 
-## The six slots with what is worn ("Arma: Palo  ATK +2") and the totals; with a slot
-## chosen, the pieces of that slot in the bag (bonus and comparison), Quitar and Volver.
+## The six slots with what is worn ("Arma: Palo", and "ATK +2" in small text under it; an empty
+## slot says "nada" and has no line under it) and the totals; with a slot chosen, the pieces of
+## that slot in the bag (the comparison beside the name, the effect under it), Quitar and Volver.
 func _fill_equipment() -> void:
 	for child in _equip_box.get_children():
 		_equip_box.remove_child(child)
@@ -415,11 +419,16 @@ func _fill_equipment() -> void:
 	if _equip_slot == "":
 		for slot in Equipment.SLOTS:
 			var worn := loadout.worn(slot)
-			var text := "%s: %s" % [Equipment.SLOT_NAMES[slot], "nada" if worn == "" \
-				else "%s  %s" % [Equipment.display_name(worn), Equipment.effect_text(worn)]]
-			var button := _button(text)
+			# One box per slot: the row and, under it, what the piece gives (never focused).
+			var entry := VBoxContainer.new()
+			entry.add_theme_constant_override("separation", 0)
+			_equip_box.add_child(entry)
+			var button := _button("%s: %s" % [Equipment.SLOT_NAMES[slot],
+				"nada" if worn == "" else Equipment.display_name(worn)])
 			button.pressed.connect(_choose_slot.bind(slot))
-			_equip_box.add_child(button)
+			entry.add_child(button)
+			if worn != "":
+				UiStyle.add_small_text(entry, Equipment.effect_text(worn))
 		_equip_stats.text = "ATK %d   DEF %d   VEL %d" % [hero.total_attack(),
 			hero.total_defense(), hero.total_speed()]
 		_equip_stats.show()
@@ -432,17 +441,20 @@ func _fill_equipment() -> void:
 		if Equipment.slot(id) != _equip_slot or listed.has(id):
 			continue
 		listed.append(id)
+		var entry := VBoxContainer.new()
+		entry.add_theme_constant_override("separation", 0)
+		_equip_box.add_child(entry)
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", UiTokens.SPACE_3)
-		_equip_box.add_child(row)
+		entry.add_child(row)
 		var button := _button(Equipment.display_name(id))
 		button.custom_minimum_size.x = 260.0
 		button.pressed.connect(_on_equip.bind(id))
 		row.add_child(button)
-		row.add_child(_label(Equipment.effect_text(id)))
 		if not _equip_slot in Equipment.ACCESSORY_SLOTS:
 			row.add_child(ShopWindow.comparison(
 				Equipment.bonus(id) - Equipment.bonus(loadout.worn(_equip_slot))))
+		UiStyle.add_small_text(entry, Equipment.effect_text(id))
 	if listed.is_empty():
 		_equip_box.add_child(_label("No llevas otra pieza."))
 	if loadout.worn(_equip_slot) != "":
@@ -594,6 +606,8 @@ func _build_status(stack: VBoxContainer) -> void:
 	left.add_child(_gold_label)
 	_ally_label = _label("")
 	left.add_child(_ally_label)
+	_ally_stats = _label("", UiTheme.CAPTION)
+	left.add_child(_ally_stats)
 	_spells_box = VBoxContainer.new()
 	_spells_box.add_theme_constant_override("separation", 0)
 	columns.add_child(_spells_box)

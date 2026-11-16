@@ -321,7 +321,7 @@ func etapa() -> int:
 
 
 ## How far a companion has grown (Allies.data()'s tramo): the tramo in the v2, 5 + the etapa
-## in the v3 (6 to 9: one more GROWTH step per etapa).
+## in the v3 (6 to 10: one more GROWTH step per etapa, 10 once the Eco de Albor is beaten).
 func ally_step() -> int:
 	return 5 + etapa() if part() == 3 else tramo()
 

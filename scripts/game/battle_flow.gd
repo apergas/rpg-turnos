@@ -24,8 +24,9 @@ const BATTLE_SCENE := preload("res://scenes/battle/battle_scene.tscn")
 
 ## Autoplay meets the postgame boss (only --autoplay-zone=eco; Game sets it).
 var echo_wanted := false
-## The chance of a medal drop (AutoplayStarts.MEDAL_TOUR_CHANCE on the medal tour; Game sets it).
-var medal_chance := Medals.DROP_CHANCE
+## The chance of a medal drop on the medal tour (AutoplayStarts.MEDAL_TOUR_CHANCE; Game sets
+## it); 0 for the part's own (Medals.drop_chance()).
+var medal_chance := 0.0
 ## --autoplay-save on a new game: print the first save after a won battle and quit (Game sets it).
 var print_save := false
 ## await play_scene.call(scene_id): a boss's cutscene (StoryFlow).
@@ -114,9 +115,11 @@ func on_encounter(boss: bool) -> void:
 	battle.zone = _ctx.zone
 	battle.quest_items = _ctx.state.quests.wanted_items(_ctx.state)
 	battle.medals_carried = _ctx.state.medals.size()
-	battle.medal_chance = medal_chance
+	battle.medal_chance = medal_chance if medal_chance > 0.0 \
+		else Medals.drop_chance(_ctx.state.part())
 	if _ctx.state.ally_id != "":
-		battle.ally = Allies.data(_ctx.state.ally_id, _ctx.state.ally_step())
+		battle.ally_step = _ctx.state.ally_step()
+		battle.ally = Allies.data(_ctx.state.ally_id, battle.ally_step)
 	add_child(battle)
 	await _ctx.fade.call(0.0)
 	var outcome: int = await battle.finished

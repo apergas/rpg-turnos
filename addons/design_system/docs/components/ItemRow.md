@@ -1,7 +1,7 @@
 Fila de objeto: nombre, cantidad a la derecha y lo que hace debajo.
 
 ## Cuándo usarla
-Las páginas Objetos (pausa y combate) y la lista de venta.
+Las listas de objetos: usar, vender.
 
 ## Qué aporta quien la usa
 El objeto, cuántos hay, su descripción y, si no se puede usar ahora, el motivo.

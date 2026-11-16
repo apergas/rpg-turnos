@@ -18,7 +18,7 @@ static func give(state: GameState, quest: QuestData) -> Array[String]:
 
 
 ## Puts items (Inventory id -> amount) into the inventory and returns the lines that say so:
-## "Recibes Pluma de fénix ×2." / "Recibes una Semilla de fuerza.". Also used by Medals.
+## "Recibes Poción ×2." / "Recibes una Semilla de fuerza.".
 static func give_items(state: GameState, items: Dictionary) -> Array[String]:
 	var lines: Array[String] = []
 	for id: String in items:

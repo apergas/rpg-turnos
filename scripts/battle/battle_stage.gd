@@ -11,10 +11,10 @@ class_name BattleStage extends RefCounted
 ## sand with a darker track, palms far behind, dunes and the Kenney cacti, scrub and a
 ## broken column. "montana" is snow with a grey track, white peaks and the Kenney pines, tall
 ## stones and snowy cliffs. "ciudad" is the ruined city's yard: the castle's walls half
-## fallen, a reddish floor, the Kenney ruins and, in the portal quarter, the portal behind the
-## enemies. The v3's backdrops (one per land) are V3Backdrops', after this one's
-## sky, sun, fog and black sun. The environment, the mesh and model helpers and the rock and tree
-## models are shared with WorldStage.
+## fallen, a reddish floor, the Kenney ruins and, against the portal quarter's boss, the
+## portal behind the enemies. The v3's backdrops (one per land) are V3Backdrops', after this
+## one's sky, sun, fog and black sun. The environment, the mesh and model helpers and the
+## rock and tree models are shared with WorldStage.
 
 const GRASS := Color(0.32, 0.55, 0.22)
 const DIRT := Color(0.62, 0.5, 0.34)
@@ -176,8 +176,8 @@ const CASTLE_MIST := [
 const LOW_SHADOW_DISTANCE := 35.0
 ## The city backdrop (ciudad): the castle yard's KayKit walls, CITY_LOW_WALLS of them low
 ## (ruined), towers of three heights, a warm reddish floor, two torches, no mist, the Kenney
-## ruins of BACKDROP_DECOR and, in a zone with a portal (zone.portal_flag), the portal
-## standing behind the enemies.
+## ruins of BACKDROP_DECOR and, against the boss of a zone with a portal (zone.portal_flag),
+## the portal standing behind the enemies.
 const CITY_FLOOR := Color(0.27, 0.23, 0.23)
 const CITY_STONE := Color(0.46, 0.41, 0.4)
 ## Indexes of CASTLE_WALLS drawn at DungeonMap.RUIN_HEIGHT.
@@ -236,8 +236,8 @@ const BACKDROP_DECOR := {
 		["obelisk", Vector3(7.5, 0, -8.5), 0.0, 1.0]],
 }
 
-## zone: whose sky, light and backdrop to use (null: the meadow's).
-static func build(root: Node3D, zone: ZoneData = null) -> void:
+## zone: whose sky and light to use (null: the meadow's). boss: the city's portal needs it.
+static func build(root: Node3D, zone: ZoneData = null, boss := false) -> void:
 	build_environment(root, zone)
 	if zone != null and V3Backdrops.has(zone.backdrop):
 		V3Backdrops.build(root, zone)
@@ -246,7 +246,7 @@ static func build(root: Node3D, zone: ZoneData = null) -> void:
 		_build_cave(root)
 		return
 	if zone != null and zone.backdrop == "ciudad":
-		_build_city(root, zone)
+		_build_city(root, zone, boss)
 		return
 	if zone != null and zone.backdrop == "castillo":
 		_build_castle(root, zone)
@@ -479,7 +479,7 @@ static func _build_castle(root: Node3D, zone: ZoneData) -> void:
 		_add_lantern(root)
 
 
-static func _build_city(root: Node3D, zone: ZoneData) -> void:
+static func _build_city(root: Node3D, zone: ZoneData, boss: bool) -> void:
 	var ground := PlaneMesh.new()
 	ground.size = Vector2(80, 80)
 	add_mesh(root, ground, CITY_FLOOR, Vector3.ZERO)
@@ -495,7 +495,7 @@ static func _build_city(root: Node3D, zone: ZoneData) -> void:
 		add_mesh(root, box, CITY_STONE.darkened(CITY_TOWER_SHADE), tower[0] + Vector3(0, tower[1] / 2.0, 0))
 	for flame_pos in CASTLE_TORCHES:
 		_add_torch(root, flame_pos)
-	if zone.portal_flag != "":
+	if zone.portal_flag != "" and boss:
 		var portal := PortalRing.new()
 		portal.stone = zone.rock_color
 		portal.position = CITY_PORTAL_POS

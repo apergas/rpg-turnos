@@ -39,7 +39,8 @@ const SAP_RING := "anillo_savia"
 const FANG_AMULET := "amuleto_colmillo"
 const BONE_AMULET := "amuleto_hueso"
 const DAWN_SWORD := "espada_alba"
-## The Coleccionista's prizes (Medals.PRIZES): never sold.
+## The Coleccionista's prizes before 3.6.0: the Escudo and the Cota (never sold; nobody gives them
+## now, older saves keep them) and the Amuleto, still his prize for 8 medals (Medals.PRIZES).
 const MEDAL_SHIELD := "escudo_medallas"
 const MEDAL_MAIL := "cota_medallas"
 const MEDAL_AMULET := "amuleto_medallas"
@@ -217,6 +218,28 @@ const EQUIPMENT := {
 		"price": 0, "zone": -1, "mesh": ""},
 	MEDAL_AMULET: {"name": "Amuleto de medallas", "article": "un", "slot": AMULET, "bonus": 4,
 		"price": 0, "zone": -1, "mesh": "", "attack": 3},
+	# The Coleccionista's prizes from 3.6.0 (Medals.PRIZES, one every 4 medals): rings and
+	# amulets with no price, sold by the shop (Shop.prize_accessory_price()), each about as good
+	# as the bestiary families' prizes of the part it is usually reached in.
+	"anillo_cobre": {"name": "Anillo de cobre", "article": "un", "slot": RING, "bonus": 2,
+		"price": 0, "zone": -1, "mesh": ""},
+	"anillo_suerte": {"name": "Anillo de la suerte", "article": "un", "slot": RING, "bonus": 3,
+		"price": 0, "zone": -1, "mesh": "", "immune": "sleep"},
+	"amuleto_bronce": {"name": "Amuleto de bronce", "article": "un", "slot": AMULET, "bonus": 2,
+		"price": 0, "zone": -1, "mesh": "", "defense": 6},
+	"anillo_plata": {"name": "Anillo de plata", "article": "un", "slot": RING, "bonus": 3,
+		"price": 0, "zone": -1, "mesh": "", "attack": 6},
+	"amuleto_plata": {"name": "Amuleto de plata", "article": "un", "slot": AMULET, "bonus": 3,
+		"price": 0, "zone": -1, "mesh": "", "immune": "silence"},
+	"anillo_oro": {"name": "Anillo de oro", "article": "un", "slot": RING, "bonus": 4,
+		"price": 0, "zone": -1, "mesh": "", "attack": 8},
+	"amuleto_oro": {"name": "Amuleto de oro", "article": "un", "slot": AMULET, "bonus": 4,
+		"price": 0, "zone": -1, "mesh": "", "defense": 8},
+	"anillo_coleccionista": {"name": "Anillo del coleccionista", "article": "un", "slot": RING,
+		"bonus": 5, "price": 0, "zone": -1, "mesh": "", "attack": 12, "immune": "poison"},
+	"amuleto_coleccionista": {"name": "Amuleto del coleccionista", "article": "un",
+		"slot": AMULET, "bonus": 6, "price": 0, "zone": -1, "mesh": "", "defense": 12,
+		"immune": ["sleep", "silence"]},
 	# The v2's bestiary families' prizes: VEL and ATK, a status kept away with VEL or DEF,
 	# and a sword better than any the v2 sells, the two-handed one in dark red.
 	CLAW_RING: {"name": "Anillo de garra", "article": "un", "slot": RING, "bonus": 3,

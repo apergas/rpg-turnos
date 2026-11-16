@@ -159,16 +159,18 @@ const STAIRS_SAFE_RADIUS := 6.0
 ## (zone id), "entry" (entry id there), "label" (sign text), "lock" (GameState.world_flags
 ## key that opens it, "" for always open), "lock_text" (notice while it is closed), and
 ## optional "needs" / "gone": flags that make it exist (is_present()), and an optional "look":
-## "portal" (drawn as the Ala de viaje's portal, MapProps.PORTAL_LOOK)}.
+## "portal" (the Ala de viaje's portal in reddish tones, MapProps.PORTAL_LOOK)}.
 @export var exits: Array = []
-## Each figure: {"kind": "quest" (the old woman), "shop", "inn", "npc" or "board" (a notice
-## board: read, not talked to), "id" (Shop /
-## Inn id), "look" (BattleActor.Look name), "pos", "yaw" (0 faces -Z; 180 faces the
-## camera), "name" (unique on the map: cutscenes call the figure by it), and what it says:
+## Each figure: {"kind": "quest" (the old woman), "shop" (the tienda), "armory" (the armero:
+## the same "id" as its tienda, Shop.ARMORY_COUNTER), "inn", "npc" or "board" (a notice
+## board: read, not talked to), "id" (Shop / Inn id), "look" (BattleActor.Look name), "pos",
+## "yaw" (0 faces -Z; 180 faces the camera), "name" (unique on the map: cutscenes call the
+## figure by it), and what it says:
 ## "lines" and / or "lines_by_chapter" (StoryState.Chapter -> lines, from that chapter on;
 ## they may hold StoryState.NAME_TAG). The "quest" figure uses them once its quest is done;
-## optional "needs" / "gone": flags that make it exist (is_present())}. Kind "item" is a thing
-## picked up ("Coger · Cantimplora"), with no voice of its own.
+## optional "needs" / "gone": flags that make it exist (is_present()); optional "sign": the text
+## over its head (MapFigures), for a figure with a job its kind gives no sign for ("Coleccionista",
+## "Tablón")}. Kind "item" is a thing picked up ("Coger · Cantimplora"), with no voice of its own.
 @export var npcs: Array = []
 ## The zone's boss (EnemyLibrary id, "" for none) and where it waits.
 @export var boss_id := ""

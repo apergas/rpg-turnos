@@ -27,5 +27,6 @@ ai_weights = {
 }
 weak = Array[String](["thunder"])
 drops = {
-"pocion_grande": 0.08
+"pocion_grande": 0.08,
+"pluma_fenix": 0.02
 }

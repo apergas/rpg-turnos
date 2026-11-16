@@ -55,10 +55,12 @@ Si algo de abajo lo contradice, manda esto.
 - **Marcas del mapa:** tiendas amarillas, posadas rosas, pozos rojos o azules (grises si están secos), salidas verdes.
 - **Criaturas:** la Domadora de cada aldea vende una, que combate sola a tu lado y vuelve curada al combate siguiente: Gallina de combate 55 G, Lobezno 190 G, Golem pequeño 490 G, Esqueleto leal 750 G. Solo se lleva una, y la nueva sustituye a la anterior sin devolver dinero.
 - **Tienda:** botón ×5 para objetos. Palo y Ropa se venden por 1 G.
+- **Pluma de fénix:** no se vende en ninguna tienda; sale de cofres y la sueltan algunos enemigos.
+- **Medallas:** 40. El Coleccionista da un anillo o un amuleto cada 4 (10 premios) y está en todos los pueblos, también en la Caravana y en Brumaclara desde el principio.
 - **Menús:** tocar fuera de una ventana la cierra o retrocede.
 - **Nueva partida:** pide confirmación si hay una partida guardada que funciona. Una dañada sale como "Continuar (partida dañada)", desactivado.
 - **Objetivo:** el principal va siempre primero. En el móvil, el mapa solo enseña esa línea; las secundarias están en la pausa.
-- **Rótulos:** "Tienda", "Posada" y "Criaturas" sobre esas figuras.
+- **Rótulos:** "Tienda", "Armero", "Posada" y "Criaturas" sobre esas figuras, y su nombre sobre el Coleccionista, el Jefe de caravana, Orvalla y el Tablón.
 - **Web:** el título avisa si hay una versión nueva esperando.
 - **Equilibrio:** ATK de Golem de barro 32, Araña 29, Espectro 26, Esqueleto guerrero 43, pícaro 40, mago 32, Golem de piedra 50, Señor de la Niebla 52 y 56 en su segunda fase. Prevalece sobre la tabla de enemigos.
 
@@ -69,7 +71,7 @@ Si algo de abajo lo contradice, manda esto.
   - Pradera y bosque: 5 m de gracia y 2,5 % por metro.
   - Mina y castillo: 4 m de gracia y 4 % por metro.
 - **Usar cosas:** Enter o un toque. Hablar, comprar, abrir, tirar, coger, volver.
-- **Aldeas:** tienda y posada, que siempre es gratis. Hay cuatro: Villaclaro, aldea del bosque, refugio de la mina y campamento.
+- **Aldeas:** tienda (objetos), armero (equipo) y posada, que siempre es gratis. En la tienda y en el armero se puede vender todo. Hay cuatro: Villaclaro, aldea del bosque, refugio de la mina y campamento.
 - **Ala de viaje:** vuela a la última aldea visitada y abre un portal de ida y vuelta. No se usa dentro de una aldea. Otra Ala sustituye al portal abierto.
 - **Pausa:** Esc, P o el botón ☰. Estado, Objetos, Equipo, Diario, Guardar, Opciones, Volver al título, Cerrar.
 
@@ -80,10 +82,10 @@ Por turnos: el héroe contra uno o dos enemigos.
 | Regla | Valor |
 |---|---|
 | Comandos | Atacar, Hechizos, Objetos, Defender, Huir |
-| Iniciativa | `VEL × azar(0,5-1,5)`. Si defiende o huye, el héroe va primero |
+| Iniciativa | `VEL × azar(0,5-1,5)`. Si defiende, huye o usa un objeto, el héroe va primero |
 | Daño físico | `max(1, ATK total − DEF total / 2) × azar(0,875-1,125)`, mínimo 1 |
 | Fallo y crítico | 5 % de fallo. 1/16 de crítico: `ATK × 1,5`, ignora la DEF |
-| Hechizos | Pagan PM, ignoran la DEF, no fallan ni son críticos. Debilidad ×1,5, resistencia ×0,5 |
+| Hechizos | Pagan PM, ignoran la DEF, no fallan ni son críticos. Debilidad ×1,5, resistencia ×0,5. El daño de los del héroe sube un 3 % por cada nivel por encima del que los enseña (Ascuas, desde el 1); curar no cambia |
 | Defender | Reduce a la mitad el daño de esa ronda |
 | Huir | `0,5 + (VEL héroe − VEL media enemiga) × 0,05`, entre 0,2 y 0,95. Contra un jefe no se puede y no pasa el turno |
 | Veneno | 8 % de los PV máximos al final de cada ronda |
@@ -345,7 +347,7 @@ Marca cada prueba: **OK**, **Falla** (con el ID del hallazgo), **Parcial** o **N
 | ID | Prueba | Resultado esperado |
 |---|---|---|
 | T-30 | Todos los comandos en menú y volver | Funcionan. Volver regresa sin perder el turno |
-| T-31 | Dos enemigos: elegir objetivo | Flecha sobre el objetivo. 📱 Solo "Volver" y "¿A quién? Toca al enemigo." |
+| T-31 | Dos enemigos: elegir objetivo | Flecha sobre el objetivo. El resto del menú en gris y el cursor en "Volver". 📱 Solo "Volver" y "¿A quién? Toca al enemigo." |
 | T-32 | Hechizo sin PM, objeto sin poder usarlo | Fila gris con el motivo; no se gasta el turno |
 | T-33 | Veneno, sueño y silencio | Se comportan como en la sección 3 y se limpian al acabar |
 | T-34 | Defender contra la carga del Golem | Reduce el golpe a la mitad |
@@ -361,7 +363,7 @@ Marca cada prueba: **OK**, **Falla** (con el ID del hallazgo), **Parcial** o **N
 |---|---|---|
 | T-40 | Comprar sin oro | Fila gris, "Falta oro" |
 | T-41 | Comprar equipo y equipárselo | Comparación correcta con lo puesto. ATK y DEF cambian |
-| T-42 | Vender | Mitad del precio. No deja vender lo puesto ni lo que no vale nada |
+| T-42 | Vender | Mitad del precio. La lista no enseña lo puesto ni lo que no se vende |
 | T-43 | Posada | Sin preguntar: "Descansa un poco.", gratis, cura PV y PM, guarda. Descansado: "Se te ve en forma." |
 | T-44 | Abrir cada cofre | Da su contenido una vez, también tras recargar |
 | T-45 | Ala de viaje, portal y vuelta | Viaje y vuelta correctos. Dentro de una aldea, gris. Una segunda Ala cierra el portal anterior |
