@@ -55,14 +55,18 @@ navigator.serviceWorker.getRegistration().then(function (reg) {
 """
 ## install()'s JavaScript, formatted with the cache prefix as a JSON string. The old worker
 ## keeps answering this page until it reloads and serves index.* from its cache whatever the
-## request asks, so its caches go first; it then fetches from the network (cache 'reload'
-## refreshes the HTTP cache too) and stores the files again, so they are cleared once more.
+## request asks, so its caches go first. It then unregisters the worker only if its scope is
+## this page's own directory (the origin is shared). It fetches the files the worker lists one
+## after another from the network (cache 'reload' refreshes the HTTP cache too), draining each
+## body without keeping it, so no ~45 MB sits in memory; a bad status fails. The old worker
+## stores them again, so the caches are cleared once more.
 ## Answers window.villaclaroUpdateDone(true), or (false) if anything failed.
 const INSTALL_JS := """
 (function (prefix) {
 	var done = window.villaclaroUpdateDone;
 	var page = location.href.split('#')[0];
-	var files = [page, 'index.html', 'index.js', 'index.wasm', 'index.pck'];
+	var files = [page, 'index.html', 'index.js', 'index.wasm', 'index.pck',
+		'index.audio.worklet.js', 'index.audio.position.worklet.js', 'index.offline.html'];
 	var clear = function () {
 		if (!('caches' in window)) { return Promise.resolve(); }
 		return caches.keys().then(function (keys) {
@@ -71,18 +75,27 @@ const INSTALL_JS := """
 			}).map(function (key) { return caches.delete(key); }));
 		});
 	};
+	var drain = function (reader) {
+		return reader.read().then(function (chunk) {
+			return chunk.done ? null : drain(reader);
+		});
+	};
+	var download = function (name) {
+		return fetch(new URL(name, page), {cache: 'reload'}).then(function (response) {
+			if (!response.ok) { throw new Error(name + ': ' + response.status); }
+			return drain(response.body.getReader());
+		});
+	};
 	clear().then(function () {
 		if (!('serviceWorker' in navigator)) { return false; }
 		return navigator.serviceWorker.getRegistration().then(function (reg) {
-			return reg ? reg.unregister() : false;
+			var own = new URL('./', location.href).href;
+			return reg && reg.scope === own ? reg.unregister() : false;
 		});
 	}).then(function () {
-		return Promise.all(files.map(function (name) {
-			return fetch(new URL(name, page), {cache: 'reload'}).then(function (response) {
-				if (!response.ok) { throw new Error(name + ': ' + response.status); }
-				return response.arrayBuffer();
-			});
-		}));
+		return files.reduce(function (chain, name) {
+			return chain.then(function () { return download(name); });
+		}, Promise.resolve());
 	}).then(clear).then(function () { done(true); }, function (error) {
 		console.error('Villaclaro update:', error);
 		done(false);
