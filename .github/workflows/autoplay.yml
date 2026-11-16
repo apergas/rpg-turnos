@@ -43,6 +43,9 @@ jobs:
             minutes: 25
     steps:
       - uses: actions/checkout@v7
+        with:
+          # The design system's core (addons/design_system) is a submodule.
+          submodules: true
 
       - name: Install Godot
         run: |
