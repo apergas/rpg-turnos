@@ -12,10 +12,10 @@ const HEAD_SLOT := "Rig/Skeleton3D/head"
 ## The hood, in the head bone's space (the Knight faces +Z there, before the turn): a smooth
 ## cowl (HOOD_SEGMENTS sides, finer than the hair pieces) whose axis points forward (HOOD_TURN
 ## lays the lathe's Y along +Z), closed at the back, covering the top, the sides and the back of
-## the head down to the neck and open at the front, where a band along its edge (the rim, HOOD_RIM_LIGHTEN
-## lighter) frames the face; a soft point (the tip) leans back off the top; a darker flap closes
-## the nape; a brow fold over the forehead hides the head's own fringe. Tuned with close frames;
-## its top stays below the look's "top", where the name sign hangs.
+## the head down to the neck and open at the front, where a band along its edge (the rim,
+## HOOD_RIM_LIGHTEN lighter) frames the face; a soft point (the tip) leans back off the top; a
+## darker flap closes the nape; a brow fold over the forehead hides the head's own fringe. Tuned
+## with close frames; its top stays below the look's "top", where the name sign hangs.
 const HOOD_SEGMENTS := 16
 const HOOD_PROFILE: Array[Vector2] = [Vector2(0, 0.0), Vector2(0.3, 0.08), Vector2(0.55, 0.28),
 	Vector2(0.68, 0.55), Vector2(0.66, 0.8), Vector2(0.54, 1.0)]
