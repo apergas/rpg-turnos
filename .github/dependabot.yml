@@ -1,0 +1,14 @@
+# Once a week Dependabot looks at the design system's core (the submodule addons/design_system,
+# github.com/apergas/godot-design-system) and, when its main branch has new commits, opens a pull
+# request against develop that moves the submodule's pointer. tests.yml and autoplay.yml run on it;
+# it is merged by hand (never into main: Pages publishes there).
+version: 2
+updates:
+  - package-ecosystem: gitsubmodule
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "Design system"
+    open-pull-requests-limit: 1
