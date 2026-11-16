@@ -1,12 +1,16 @@
-# Runs the unit tests of tests/ (GUT, vendored in addons/gut/) on every push to develop (and by
-# hand from the Actions tab). A failing test, or an ERROR line in the run (a test file that does
-# not parse), turns the job red; the log and the JUnit report are kept as the artifact "tests".
-# Nothing is blocked or published. The autoplay runs (autoplay.yml) stay the check of the whole
-# game. Not on main: Pages publishes there, and what reaches main has been through develop.
+# Runs the design system's two checks and the unit tests of tests/ (GUT, vendored in addons/gut/)
+# on every push to develop, on every pull request into develop (Dependabot's moves of the design
+# system's submodule among them) and by hand from the Actions tab. A failing check or test, or an
+# ERROR line in the run (a test file that does not parse), turns the job red; the log and the JUnit
+# report are kept as the artifact "tests". Nothing is published. The autoplay runs (autoplay.yml)
+# stay the check of the whole game. Not on main: Pages publishes there, and what reaches main has
+# been through develop.
 name: Tests
 
 on:
   push:
+    branches: [develop]
+  pull_request:
     branches: [develop]
   workflow_dispatch:
 
@@ -41,6 +45,13 @@ jobs:
 
       - name: Import
         run: ./godot --headless --path . --import
+
+      # A new core (a Dependabot pull request) may drop or rename a token Villaclaro overrides, or
+      # change what the tools forbid: both checks fail here instead of on the deploy to main.
+      - name: Design system checks
+        run: |
+          timeout 120 ./godot --headless --path . --script res://addons/design_system/tools/gen_ui_tokens.gd -- --check
+          timeout 120 ./godot --headless --path . --script res://addons/design_system/tools/check_ui_values.gd
 
       - name: Run the tests
         env:
