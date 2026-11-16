@@ -19,7 +19,7 @@ The code says what each script does; this is the map, plus what the code can't t
 - `addons/design_system/` — the design system's core, the same in every game and never edited from one: `tokens/base.json` (the generic tokens), `runtime/` (`DsTheme`, the theme's base, and `MenuCursor`; the only part exported), `tools/` (`gen_ui_tokens.gd`, `check_ui_values.gd`), `hooks/pre-commit` and `docs/` (the generic guides and components). Villaclaro's layer is `design_system.json` (every path the tools read), `docs/boost/design-system/` (identity, voice, palette, its tokens, its components) and `UiTheme`.
 - `data/` — `.tres` resources: hero, enemies, skills, allies, zones, quests, cutscenes.
 - `assets/` — only the models in use (KayKit and Kenney, CC0; `assets/CREDITS.md`); the full packs stay in the git-ignored `assets_src/`.
-- `docs/boost/` — the master document (`documento-maestro.md`), `ideas.md`, specs, plans and the design system; `docs/legacy/` is the record from before it (old specs and plans). `docs/brief-qa-agentes.md` is the QA brief, kept in step with the game: every feature and what a QA checks to prove it.
+- `docs/boost/` — the master document (`documento-maestro.md`), `ideas.md`, the design system, and the specs and plans of the work under way; `docs/legacy/` is the record: every spec and plan of a version already published moves to `docs/legacy/specs/` and `docs/legacy/plans/`, and the master document links them there. `docs/brief-qa-agentes.md` is the QA brief, kept in step with the game: every feature and what a QA checks to prove it.
 
 What the code does not explain:
 

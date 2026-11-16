@@ -1,6 +1,6 @@
 # Versión 3.4.0: una interfaz más clara
 
-Fecha: 2026-11-15. Estado: spec. Cubre M-86 a M-90 del [documento maestro](../documento-maestro.md). Sale de las ideas del 2026-11-14 y 2026-11-15. La partida guardada sigue en la versión 15 y no gana ni pierde campos.
+Fecha: 2026-11-15. Estado: spec. Cubre M-86 a M-90 del [documento maestro](../../boost/documento-maestro.md). Sale de las ideas del 2026-11-14 y 2026-11-15. La partida guardada sigue en la versión 15 y no gana ni pierde campos.
 
 ## Objetivo
 

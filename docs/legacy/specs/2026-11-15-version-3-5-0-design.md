@@ -1,6 +1,6 @@
 # Versión 3.5.0: combate, compañero y portales
 
-Fecha: 2026-11-15. Estado: spec. Cubre M-91 a M-95 del [documento maestro](../documento-maestro.md). Va después de la [3.4.0](2026-11-15-version-3-4-0-design.md), que ya enseña los números del compañero en «Estado». La partida guardada sigue en la versión 15 y no gana ni pierde campos: todo lo nuevo sale del nivel del héroe o del paso del compañero, que ya se calculan.
+Fecha: 2026-11-15. Estado: spec. Cubre M-91 a M-95 del [documento maestro](../../boost/documento-maestro.md). Va después de la [3.4.0](2026-11-15-version-3-4-0-design.md), que ya enseña los números del compañero en «Estado». La partida guardada sigue en la versión 15 y no gana ni pierde campos: todo lo nuevo sale del nivel del héroe o del paso del compañero, que ya se calculan.
 
 ## Objetivo
 
